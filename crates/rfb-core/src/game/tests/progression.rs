@@ -1158,21 +1158,95 @@ fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic(
         Game::new_with_build(17, "demo.build.missing"),
         Err(CoreError::UnknownCharacterBuild(_))
     ));
+}
+
+#[test]
+fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
+    let human = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal Human should create");
+    let half_orc = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        "rfb-legacy.race.half-orc",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal Half-Orc should create");
+
+    let human_attributes = human.effective_player_attributes();
+    let half_orc_attributes = half_orc.effective_player_attributes();
+    assert_eq!(
+        half_orc_attributes.index(AttributeKind::Strength),
+        human_attributes.index(AttributeKind::Strength) + 2
+    );
+    assert_eq!(
+        half_orc_attributes.index(AttributeKind::Intelligence) + 1,
+        human_attributes.index(AttributeKind::Intelligence)
+    );
+    assert_eq!(
+        half_orc_attributes.index(AttributeKind::Constitution),
+        human_attributes.index(AttributeKind::Constitution) + 1
+    );
+    assert_eq!(
+        half_orc_attributes.index(AttributeKind::Charisma) + 1,
+        human_attributes.index(AttributeKind::Charisma)
+    );
+    assert!(half_orc.effective_player_max_hp() > human.effective_player_max_hp());
+
+    let human_skills = human.effective_player_skill_progress();
+    let half_orc_skills = half_orc.effective_player_skill_progress();
+    assert_eq!(
+        half_orc_skills["demo.skill.melee"].current,
+        human_skills["demo.skill.melee"].current + 20
+    );
+    assert_eq!(
+        half_orc_skills["demo.skill.perception"].current + 5,
+        human_skills["demo.skill.perception"].current
+    );
+
+    let shop_factor = |game: &Game| {
+        game.snapshot()
+            .shops
+            .into_iter()
+            .find(|shop| shop.id == "demo.shop.outpost-general-store")
+            .expect("General Store should be projected")
+            .owner
+            .price_factor_percent
+    };
+    assert!(shop_factor(&half_orc) > shop_factor(&human));
+
+    let mut human_experience = human.clone();
+    let mut half_orc_experience = half_orc.clone();
+    human_experience.apply_player_experience(100, &mut Vec::new());
+    half_orc_experience.apply_player_experience(100, &mut Vec::new());
+    assert_eq!(human_experience.progress.experience, 100);
+    assert_eq!(half_orc_experience.progress.experience, 110);
+
+    let default = Game::new_with_build(83, "demo.build.warrior")
+        .expect("Warrior build should retain its Human default");
+    assert_eq!(default.build, human.build);
+    assert_eq!(default.state_hash(), human.state_hash());
+    assert_eq!(default.rng_draw_counter(), human.rng_draw_counter());
+
     assert!(matches!(
         Game::new_with_build_race_and_name(
-            17,
+            83,
             "demo.build.warrior",
             "rfb-legacy.race.high-elf",
-            "Adventurer",
+            Game::DEFAULT_PLAYER_NAME,
         ),
         Err(CoreError::CharacterRaceUnavailable(_))
     ));
     assert!(matches!(
         Game::new_with_build_race_and_name(
-            17,
+            83,
             "demo.build.warrior",
             "demo.race.missing",
-            "Adventurer",
+            Game::DEFAULT_PLAYER_NAME,
         ),
         Err(CoreError::UnknownCharacterRace(_))
     ));
@@ -1236,6 +1310,19 @@ fn half_orc_infravision_and_level_thirty_talent_are_authoritative() {
     let restored = Game::from_save(game.to_save()).expect("Half-Orc save should restore");
     assert_eq!(restored.build, game.build);
     assert_eq!(restored.player_infravision_range(), 3);
+    assert!(
+        restored
+            .progress
+            .locked_mutation_ids
+            .contains("rfb.mutation.sacred-vitality")
+    );
+    assert!(
+        restored
+            .snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
 }
 
 #[test]

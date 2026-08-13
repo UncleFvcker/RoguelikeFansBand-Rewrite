@@ -303,3 +303,14 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 协调版本：pack `1.331.0` / hash
   `340bc4e519c8ded18b69e24d9bb39e66f6e38e3e78832590ecc685d45b6c84c5`、Protocol `1.201`、
   State Hash Schema v100、save v1、baseline `contract-v303`；未刷新既有 fixture。
+
+## main 当前批次：正式种族 Commit 3 新增范围验收
+
+- 同一 Warrior 构筑的 Human/半兽人验收现直接比较属性档位、最大 HP、经验倍率、职业合成
+  技能和商店价格倍率；未显式覆盖 race 时仍与显式 Human 产生完全相同的初始 state hash 与
+  RNG 计数。
+- 半兽人的黑暗抗性、3 格红外视觉、29/30 级奖励边界、选择锁定和 save 往返继续由核心
+  聚焦测试锁定；新增 replay 测试验证 30 级天赋选择命令和最终 state hash 可重放。
+- 非正式 legacy race 与未知 race 仍从角色创建入口拒绝；Web 聚焦测试验证所选
+  `raceId` 原样进入 `NewSessionRequest`。本批不改内容、协议、save 或 State Hash 版本，
+  不刷新也不运行全量 fixture。

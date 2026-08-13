@@ -9,6 +9,7 @@ import {
   PLAYTEST_RACE_IDS,
   canonicalCharacterName,
   canonicalSessionSeed,
+  createNewSessionRequest,
   randomSessionSeed,
 } from "./session-shell.ts";
 
@@ -33,6 +34,23 @@ test("new character creation exposes all formal class slices", () => {
 
 test("new character creation exposes only formal race slices", () => {
   assert.deepEqual(PLAYTEST_RACE_IDS, ["demo.race.rfb-human", "rfb-legacy.race.half-orc"]);
+});
+
+test("new character requests preserve the selected formal race", () => {
+  assert.deepEqual(
+    createNewSessionRequest(
+      "83",
+      "demo.build.warrior",
+      "rfb-legacy.race.half-orc",
+      "Gorbag",
+    ),
+    {
+      seed: "83",
+      buildId: "demo.build.warrior",
+      raceId: "rfb-legacy.race.half-orc",
+      playerName: "Gorbag",
+    },
+  );
 });
 
 test("session seeds canonicalize the complete unsigned 64-bit range", () => {

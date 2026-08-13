@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use rfb_core::stats::experience_required_for_level;
 use rfb_protocol::{Direction, GameCommand, MapScaleDto, MonsterPackBehaviorDto, Position};
 
 use super::*;
@@ -108,6 +109,36 @@ fn floor_replay_preserves_world_map_state() {
 }
 
 #[test]
+fn half_orc_talent_choice_is_replayable() {
+    let initial = level_thirty_half_orc(83);
+    let pending = initial
+        .snapshot()
+        .player
+        .pending_race_mutation_choice
+        .expect("level 30 Half-Orc should require a talent choice");
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    recorder
+        .dispatch(GameCommand::ChooseRaceMutation {
+            reward_id: pending.reward_id,
+            mutation_id: "rfb.mutation.sacred-vitality".to_owned(),
+        })
+        .expect("Half-Orc talent choice should execute");
+    let (final_game, replay) = recorder.finish();
+
+    assert!(
+        final_game
+            .to_save()
+            .player
+            .locked_mutation_ids
+            .iter()
+            .any(|id| id == "rfb.mutation.sacred-vitality")
+    );
+    let verification = verify(&replay, initial).expect("Half-Orc talent replay should verify");
+    assert_eq!(verification.commands_verified, 1);
+    assert_eq!(verification.final_state_hash, final_game.state_hash());
+}
+
+#[test]
 fn replay_tampering_is_rejected() {
     let initial = quiet_game(42);
     let mut recorder = ReplayRecorder::new(initial.clone());
@@ -168,6 +199,34 @@ fn quiet_game(seed: u64) -> Game {
     });
     payload.carried_items.clear();
     Game::from_save(payload).expect("quiet replay fixture should restore")
+}
+
+fn level_thirty_half_orc(seed: u64) -> Game {
+    let mut payload = Game::new_with_build_race_and_name(
+        seed,
+        "demo.build.warrior",
+        "rfb-legacy.race.half-orc",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal Half-Orc should create")
+    .to_save();
+    let progress = payload
+        .player
+        .progress
+        .as_mut()
+        .expect("formal build should save character progress");
+    progress.level = 30;
+    progress.max_level = 30;
+    progress.experience = experience_required_for_level(30);
+    progress.maximum_experience = progress.experience;
+    progress.pending_attribute_increases = 6;
+    for skill in &mut progress.skills {
+        skill.current = skill
+            .base
+            .saturating_add(skill.growth_per_ten_levels.saturating_mul(3))
+            .clamp(0, skill.maximum);
+    }
+    Game::from_save(payload).expect("level 30 Half-Orc replay precondition should restore")
 }
 
 fn path_to_monster_and_three_attacks() -> Vec<GameCommand> {

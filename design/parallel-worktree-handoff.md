@@ -893,3 +893,15 @@ git diff --stat
   `340bc4e519c8ded18b69e24d9bb39e66f6e38e3e78832590ecc685d45b6c84c5`、Protocol
   `1.201`、State Hash Schema v100、save v1、active baseline `contract-v303`。现有 fixture
   均仍选择 Human，不刷新；只运行新增半兽人内容、成长/存档、importer 与 Web 定向测试。
+
+## 46. main 当前交接（正式种族 Commit 3：新增范围验收）
+
+- 新增验收锁定同一 Warrior 构筑下 Human/半兽人的属性、最大 HP、经验倍率、技能和商店
+  价格倍率差异；build 未显式覆盖 race 时继续默认 Human，且初始 state hash/RNG 与显式
+  Human 相同。未正式提升的 legacy race 和未知 race 均不能从请求注入。
+- 既有核心测试覆盖半兽人黑暗抗性、3 格红外视觉、29 级无奖励、30 级进入天赋选择以及
+  选择锁定/save 往返；新增 replay 聚焦测试锁定选择命令及最终 state hash，Web 聚焦测试
+  锁定所选 `raceId` 进入 `NewSessionRequest`。
+- 本批不新增任何内容 ID，不变更 pack `1.331.0`、Protocol `1.201`、State Hash Schema
+  v100、save v1 或 active baseline `contract-v303`。按用户要求不运行、不刷新全量 fixture；
+  合并验收时再统一执行。

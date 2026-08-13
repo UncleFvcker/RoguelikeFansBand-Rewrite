@@ -27,6 +27,15 @@ export const PLAYTEST_RACE_IDS = ["demo.race.rfb-human", "rfb-legacy.race.half-o
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
 
+export function createNewSessionRequest(
+  seed: string,
+  buildId: PlaytestBuildId,
+  raceId: PlaytestRaceId,
+  playerName: string,
+): NewSessionRequest {
+  return { seed, buildId, raceId, playerName };
+}
+
 const MAX_SESSION_SEED = (1n << 64n) - 1n;
 const MAX_CHARACTER_NAME_LENGTH = 32;
 
@@ -263,7 +272,7 @@ export class SessionShell {
       this.#dom.characterNameInput.focus();
       return;
     }
-    void this.#start({ seed, buildId, raceId, playerName });
+    void this.#start(createNewSessionRequest(seed, buildId, raceId, playerName));
   };
 
   readonly #randomizeSeed = (): void => {
