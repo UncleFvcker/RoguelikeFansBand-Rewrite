@@ -279,6 +279,7 @@ mod tests {
             ("demo.build.high-mage-death", (2_000, 4_000)),
             ("demo.build.archer", (4_000, 8_000)),
             ("demo.build.paladin-death", (2_000, 6_000)),
+            ("demo.build.cavalry", (4_000, 8_000)),
         ] {
             let game = Game::new_with_build(1, build_id).expect("official build should create");
             let resolved = game

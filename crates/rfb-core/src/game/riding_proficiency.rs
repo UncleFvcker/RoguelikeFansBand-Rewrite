@@ -12,6 +12,19 @@ pub(super) fn riding_attempt_range(current: u16, level: u16) -> u16 {
     current / 50 + level / 2 + 20
 }
 
+fn rodeo_effective_level(level: u32, unique: bool) -> u32 {
+    let level = if unique {
+        level.saturating_mul(3) / 2
+    } else {
+        level
+    };
+    if level > 60 {
+        60 + (level - 60) / 2
+    } else {
+        level
+    }
+}
+
 pub(super) fn mounted_speed(mount_speed: u16, current: u16, level: u16) -> i32 {
     let mount_speed = i32::from(mount_speed);
     let mut speed = if mount_speed > RFB_BASE_SPEED {
@@ -123,6 +136,144 @@ impl Game {
             .find(|actor| actor.id == mount_id && actor.hp > 0)?;
         self.actor_runtime_definition(mount)
             .map(|definition| definition.level)
+    }
+
+    pub(super) fn try_mount(
+        &mut self,
+        direction: Direction,
+        require_pet: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Option<usize> {
+        if self.riding_actor_id.is_some() {
+            return None;
+        }
+        let position = self.position_in_direction(direction);
+        let Some(index) = self
+            .entities
+            .iter()
+            .position(|entity| entity.hp > 0 && entity.position == position)
+        else {
+            events.push(DomainEvent::RidingUnavailable);
+            return None;
+        };
+        let Some(definition) = self.actor_runtime_definition(&self.entities[index]) else {
+            events.push(DomainEvent::RidingUnavailable);
+            return None;
+        };
+        let target_kind_id = definition.id.clone();
+        let target_level = definition.level;
+        let rideable = definition.rideable;
+        if require_pet && !self.actor_is_player_aligned(&self.entities[index]) {
+            events.push(DomainEvent::RidingNotPet { target_kind_id });
+            return None;
+        }
+        if !rideable {
+            events.push(DomainEvent::RidingUnavailable);
+            return None;
+        }
+        if target_kind_id == "demo.actor.sheep" {
+            events.push(DomainEvent::SheepRidingRefused {
+                response: u8::try_from(self.rng.bounded(3))
+                    .expect("bounded sheep response must fit u8"),
+            });
+            return None;
+        }
+        let range = riding_attempt_range(self.progress.riding_proficiency, self.progress.level);
+        let roll =
+            u32::try_from(self.rng.bounded(u64::from(range)) + 1).expect("mount roll must fit u32");
+        if target_level > roll {
+            events.push(DomainEvent::RidingFailed { target_kind_id });
+            return None;
+        }
+        self.riding_actor_id = Some(self.entities[index].id.clone());
+        events.extend(self.relocate_player(position, changed));
+        events.push(DomainEvent::RidingMounted { target_kind_id });
+        Some(index)
+    }
+
+    pub(super) fn resolve_player_rodeo_effect(
+        &mut self,
+        direction: Direction,
+        expected_entity_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let Some(index) = self.try_mount(direction, false, events, changed) else {
+            return;
+        };
+        debug_assert_eq!(self.entities[index].id, expected_entity_id);
+        if self.actor_is_player_aligned(&self.entities[index]) {
+            return;
+        }
+
+        let definition = self
+            .actor_runtime_definition(&self.entities[index])
+            .expect("mounted rodeo target must remain available");
+        let target_kind_id = definition.id.clone();
+        let unique = definition
+            .tags
+            .iter()
+            .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
+        let untameable = definition
+            .tags
+            .iter()
+            .any(|tag| matches!(tag.as_str(), "guardian" | "questor"));
+        let effective_level = rodeo_effective_level(definition.level, unique);
+        let level = u32::from(self.progress.level);
+        let power = u32::from(self.progress.riding_proficiency / 120)
+            .saturating_add(level.saturating_mul(2) / 3);
+        let deterministic_limit = level.saturating_mul(3) / 2 + level / 5;
+
+        let tame_success = if untameable {
+            events.push(DomainEvent::RodeoUntameable {
+                target_kind_id: target_kind_id.clone(),
+            });
+            false
+        } else if power <= effective_level || effective_level >= deterministic_limit {
+            events.push(DomainEvent::RodeoTooWeak {
+                target_kind_id: target_kind_id.clone(),
+            });
+            false
+        } else {
+            let power_roll = u32::try_from(self.rng.bounded(u64::from(power)) + 1)
+                .expect("rodeo power roll must fit u32");
+            power_roll > effective_level && {
+                let level_roll = u32::try_from(self.rng.bounded(u64::from(level / 5)) + 1)
+                    .expect("rodeo level roll must fit u32");
+                effective_level < level.saturating_mul(3) / 2 + level_roll
+            }
+        };
+
+        if tame_success {
+            let pack = self.entities[index].pack.clone();
+            if let Some(pack) = pack {
+                if pack.role == MonsterPackRoleDto::Leader
+                    || pack.leader_id == self.entities[index].id
+                {
+                    for entity in &mut self.entities {
+                        if entity
+                            .pack
+                            .as_ref()
+                            .is_some_and(|identity| identity.id == pack.id)
+                        {
+                            entity.pack = None;
+                        }
+                    }
+                } else {
+                    self.entities[index].pack = None;
+                }
+            }
+            self.entities[index].controller_id = Some(self.player.id.clone());
+            changed.insert(self.player.position);
+            events.push(DomainEvent::RodeoTamed { target_kind_id });
+        } else {
+            events.push(DomainEvent::RodeoThrownOff {
+                target_kind_id: target_kind_id.clone(),
+            });
+            self.resolve_riding_fall(1, true, events, changed);
+            self.riding_actor_id = None;
+        }
     }
 
     fn gain_riding_proficiency(&mut self, increase: u16) -> Option<DomainEvent> {
@@ -359,5 +510,13 @@ mod tests {
         assert_eq!(riding_proficiency_rank(8_000), ProficiencyRankDto::Master);
         assert_eq!(riding_attempt_range(0, 1), 20);
         assert_eq!(riding_attempt_range(6_000, 1), 140);
+    }
+
+    #[test]
+    fn rodeo_unique_level_adjustment_precedes_high_level_compression() {
+        assert_eq!(rodeo_effective_level(40, false), 40);
+        assert_eq!(rodeo_effective_level(40, true), 60);
+        assert_eq!(rodeo_effective_level(80, false), 70);
+        assert_eq!(rodeo_effective_level(80, true), 90);
     }
 }

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.cavalry-rodeo",
+  "nameKey": "ability-demo-cavalry-rodeo-name",
+  "descriptionKey": "ability-demo-cavalry-rodeo-description",
+  "target": {
+    "modes": ["direction"],
+    "range": 1,
+    "requiresLineOfEffect": true
+  },
+  "abilityProgramId": "demo.ability-program.cavalry-rodeo",
+  "tags": ["cavalry", "class-power", "mounted", "requires-sight"]
+}

@@ -4464,52 +4464,7 @@ impl Game {
             return;
         }
 
-        let Some(index) = self
-            .entities
-            .iter()
-            .position(|entity| entity.hp > 0 && entity.position == target)
-        else {
-            events.push(DomainEvent::RidingUnavailable);
-            return;
-        };
-        let definition = self
-            .content
-            .actor(&self.entities[index].kind_id)
-            .expect("mount actor definition must remain available");
-        if !self.actor_is_player_aligned(&self.entities[index]) {
-            events.push(DomainEvent::RidingNotPet {
-                target_kind_id: definition.id.clone(),
-            });
-            return;
-        }
-        if !definition.rideable {
-            events.push(DomainEvent::RidingUnavailable);
-            return;
-        }
-        if definition.id == "demo.actor.sheep" {
-            events.push(DomainEvent::SheepRidingRefused {
-                response: u8::try_from(self.rng.bounded(3))
-                    .expect("bounded sheep response must fit u8"),
-            });
-            return;
-        }
-        let range = riding_proficiency::riding_attempt_range(
-            self.progress.riding_proficiency,
-            self.progress.level,
-        );
-        let roll =
-            u32::try_from(self.rng.bounded(u64::from(range)) + 1).expect("mount roll must fit u32");
-        if definition.level > roll {
-            events.push(DomainEvent::RidingFailed {
-                target_kind_id: definition.id.clone(),
-            });
-            return;
-        }
-        let target_entity_id = self.entities[index].id.clone();
-        self.riding_actor_id = Some(target_entity_id);
-        let target_kind_id = definition.id.clone();
-        events.extend(self.relocate_player(target, changed));
-        events.push(DomainEvent::RidingMounted { target_kind_id });
+        self.try_mount(direction, true, events, changed);
     }
 
     fn roll_damage(&mut self, dice: u16, sides: u16) -> i32 {
@@ -7084,6 +7039,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             category: category.clone(),
             power: *power,
         },
+        AbilityEffectDefinition::Rodeo => AbilityEffectSpecDto::Rodeo,
         AbilityEffectDefinition::DrainLife {
             damage_dice,
             damage_sides,

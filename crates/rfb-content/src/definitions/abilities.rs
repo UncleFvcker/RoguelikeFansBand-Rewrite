@@ -599,6 +599,7 @@ pub enum AbilityEffectDefinition {
         level_bonus_divisor: u16,
         branches: Vec<AbilityRandomBranchDefinition>,
     },
+    Rodeo,
     NoOp {
         reason: String,
     },

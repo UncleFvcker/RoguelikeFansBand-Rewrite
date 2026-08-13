@@ -270,6 +270,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::TeleportTarget
                     | AbilityEffectDefinition::TeleportLevel
                     | AbilityEffectDefinition::PolymorphTarget
+                    | AbilityEffectDefinition::Rodeo
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(
                 effect,

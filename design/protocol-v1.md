@@ -605,3 +605,8 @@ save 容器保持 v1，不兼容缺少该字段的旧开发存档。
 协议 1.189 / contract-v285 为 `PlayerProgressDto` 增加 `ridingProficiency`，投影骑术
 专用等级、当前值与职业上限；`PlayerProgressSaveDto` 同步增加必填当前值。该权威成长
 状态进入 State Hash Schema v94，save 容器保持 v1，不兼容缺少字段的旧开发存档。
+
+协议 1.190 / contract-v287 为 `AbilityEffectSpecDto` 增加无参数 `rodeo` 变体，使客户端
+能投影正式骑兵职业能力。命令继续使用既有 `UseAbility` 与方向 `TargetSelection`，事件
+继续使用通用 `GameEventDto`；没有新增存档字段或权威状态结构，State Hash Schema 保持
+v94，save 容器保持 v1。

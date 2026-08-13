@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v286`，机器可读政策固定在：
+当前逻辑基线是 `contract-v287`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -169,6 +169,14 @@ Artifact 5%、Great 20%、Good 40%，并由同一 d100 依次分段；Artifact �
 本批不新增内容 ID；Protocol 1.189、State Hash Schema v94 与 save v1 均不变，内容包升至
 1.299.0。现有 26 条 fixture 不进入骑乘命令与落马路径，逐条及全量 verify 零漂移，因而
 不刷新无关快照、零 waiver。
+
+`contract-v287` 导入 RFB 正式骑兵职业及 10 级职业能力“套马”。职业属性、技能、生命、
+经验、宠物维持、骑术和 67 种基础武器熟练度均来自 `master`；出生装备复用既有阔头矛、
+皮鳞甲、短弓和 15–25 支箭，不新增物品 ID。套马先执行强制上马，再按骑术、角色等级、
+目标等级及 Unique 修正判定驯服；guardian/questor 明确不可驯服，失败进入强制落马。
+Protocol 升至 1.190，内容包升至 1.300.0；没有新增权威持久字段，State Hash Schema v94
+与 save v1 不变。现有 26 条 fixture 不进入新职业构筑或套马路径，`verify-all` 零漂移，
+因此不刷新无关快照、零 waiver。
 
 ## 分类验证
 

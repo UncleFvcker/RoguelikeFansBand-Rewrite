@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.cavalry",
+  "nameKey": "build-demo-cavalry-name",
+  "descriptionKey": "build-demo-cavalry-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.cavalry",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.cavalry-player",
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": ["cavalry", "martial", "mounted", "rfb-compatibility"]
+}

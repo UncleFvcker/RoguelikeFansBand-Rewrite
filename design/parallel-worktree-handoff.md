@@ -399,3 +399,23 @@ git diff --stat
   `0075e65b38104d4103be9a4de0b798b4f404fb37857ca5359f949021b8401868`、Protocol `1.189`、
   State Hash Schema v94、save v1、active baseline `contract-v286`（26 条 exact fixture、
   零 waiver）。
+
+## 23. main 当前交接（骑兵正式内容 Commit 3）
+
+- 新增且由 class 方向拥有：`demo.class.cavalry`、`demo.skill-set.cavalry`、
+  `demo.build.cavalry`、`demo.actor.cavalry-player`、`demo.ability.cavalry-rodeo` 与
+  `demo.ability-program.cavalry-rodeo`。没有新增 item、material 或 affix ID；出生只引用
+  既有阔头矛、皮鳞甲、短弓和箭，items 分支不得重复导入同义物品。
+- Cavalry 属性、生命/经验、八项技能、宠物维持除数、骑术 `2000/8000` 与逐武器熟练度
+  均来自 RFB `master`。`audit-demo-weapon-proficiencies` 现核验 5 个正式职业和当前 67 种
+  基础武器。
+- 普通 Ride 继续只接受宠物；套马使用独立 ability effect，先强制上马，再按角色等级、
+  骑术、Unique 等级修正及原版短路 RNG 判定驯服。`guardian` / `questor` 保留不可驯服
+  tag 入口，失败进入共享强制落马事务；核心仍不按 class ID 分支。
+- 新游戏、职业能力方向选择、骑术面板和三套 tileset actor 映射已闭合。中文职业/能力名
+  与说明取自 `master:src/cavalry.c`。
+- 共享协调点：pack `1.300.0` / content hash
+  `bb912c0d2adef96f8930f190e588f6a1a59a94b9df9b70ce59d6634913a4f2d9`、Protocol `1.190`、
+  State Hash Schema v94、save v1、active baseline `contract-v287`（26 条 exact fixture、
+  零 waiver）。本批未导入 arena/battle 世界状态、浮空安全着陆、骑乘羁绊或双手持落马
+  修正；后续应在对应共享系统落地时接入，不在职业内容中造占位状态。

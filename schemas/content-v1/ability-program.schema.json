@@ -2007,6 +2007,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "rodeo",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "reason": {
               "type": "string"
             },

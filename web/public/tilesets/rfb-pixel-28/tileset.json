@@ -114,6 +114,10 @@
       "foreground": "#d9c17f",
       "background": "#3b2c22"
     },
+    "demo.actor.cavalry-player": {
+      "foreground": "#d7a86e",
+      "background": "#43301f"
+    },
     "demo.actor.newt": {
       "foreground": "#96c641",
       "tile": { "x": 1, "y": 2 }

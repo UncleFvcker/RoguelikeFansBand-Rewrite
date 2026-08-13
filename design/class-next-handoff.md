@@ -153,3 +153,18 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 共享协调点：pack 1.277.0、Protocol 1.181、State Hash Schema v90、save v1、active
   baseline contract-v279（26 条 exact fixture、零 waiver）；content hash 为
   `9e84e738fecbc3b74933c4a708c5a89cd77dd7bdd000c11b76c7d57184abec26`。
+
+## main 当前批次：骑兵
+
+- class 方向新增 `demo.class.cavalry`、`demo.skill-set.cavalry`、`demo.build.cavalry`、
+  `demo.actor.cavalry-player`、`demo.ability.cavalry-rodeo`、
+  `demo.ability-program.cavalry-rodeo`；没有新增物品、材料或 affix ID。
+- 原版属性、生命/经验、八项技能、宠物维持除数、骑术 `2000/8000`、逐武器熟练度与
+  15–25 支箭出生数量均已导入。逐武器审计现覆盖 5 个正式职业、67 种基础武器。
+- 套马在 10 级开放，使用 STR、消耗 0、基础失败率 50；先强制上马，再执行等级、骑术、
+  Unique 修正和两次短路随机检定。guardian/questor 不可驯服，失败进入统一强制落马。
+- 新游戏入口、三套 tileset、骑术面板及既有能力方向选择均已接通；中文“骑兵”“套马”
+  及说明使用 `master:src/cavalry.c`。
+- 当前协调点：pack `1.300.0`，content hash
+  `bb912c0d2adef96f8930f190e588f6a1a59a94b9df9b70ce59d6634913a4f2d9`，Protocol `1.190`，
+  State Hash Schema v94，save v1，active baseline `contract-v287`。

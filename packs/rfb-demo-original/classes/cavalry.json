@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.cavalry",
+  "nameKey": "class-demo-cavalry-name",
+  "descriptionKey": "class-demo-cavalry-description",
+  "modifiers": {
+    "strength": 2,
+    "intelligence": -2,
+    "wisdom": -2,
+    "dexterity": 2,
+    "constitution": 2,
+    "charisma": 1
+  },
+  "lifePercent": 111,
+  "experiencePercent": 120,
+  "baseHp": 10,
+  "skillSetId": "demo.skill-set.cavalry",
+  "weaponProficiency": {
+    "defaultInitial": 2000,
+    "defaultMaximum": 7000,
+    "overrides": {
+      "demo.item.ball-and-chain": { "initial": 2000, "maximum": 8000 },
+      "demo.item.broad-spear": { "initial": 4000, "maximum": 8000 },
+      "demo.item.broad-sword": { "initial": 2000, "maximum": 8000 },
+      "demo.item.falchion": { "initial": 2000, "maximum": 8000 },
+      "demo.item.fauchard": { "initial": 2000, "maximum": 8000 },
+      "demo.item.flail": { "initial": 2000, "maximum": 8000 },
+      "demo.item.glaive": { "initial": 2000, "maximum": 8000 },
+      "demo.item.hatchet": { "initial": 2000, "maximum": 8000 },
+      "demo.item.lance": { "initial": 4000, "maximum": 8000 },
+      "demo.item.long-bow": { "initial": 4000, "maximum": 8000 },
+      "demo.item.long-sword": { "initial": 2000, "maximum": 8000 },
+      "demo.item.nunchaku": { "initial": 2000, "maximum": 4000 },
+      "demo.item.sabre": { "initial": 2000, "maximum": 8000 },
+      "demo.item.short-bow": { "initial": 4000, "maximum": 8000 },
+      "demo.item.spear": { "initial": 4000, "maximum": 8000 },
+      "demo.item.trident": { "initial": 2000, "maximum": 8000 },
+      "demo.item.tulwar": { "initial": 2000, "maximum": 8000 },
+      "demo.item.war-hammer": { "initial": 2000, "maximum": 8000 }
+    }
+  },
+  "ridingProficiency": { "initial": 2000, "maximum": 8000 },
+  "ridingCombatExpert": true,
+  "mountedNonArrowBaseShotCap": 100,
+  "petUpkeepDivisor": 35,
+  "abilities": [
+    {
+      "abilityId": "demo.ability.cavalry-rodeo",
+      "minimumLevel": 10,
+      "governingAttribute": "strength",
+      "resourceCost": 0,
+      "baseFailurePercent": 50,
+      "minimumFailurePercent": 0
+    }
+  ],
+  "startingItems": [
+    { "itemKindId": "demo.item.broad-spear", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.leather-scale-mail", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.short-bow", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.arrow", "quantity": 15, "maximumQuantity": 25 }
+  ],
+  "tags": ["cavalry", "martial", "mounted", "rfb-compatibility"]
+}

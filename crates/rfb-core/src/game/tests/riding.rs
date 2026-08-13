@@ -5,25 +5,7 @@ use super::support::{
 use super::*;
 
 fn mounted_expert_game(seed: u64) -> Game {
-    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(std::path::Path::parent)
-        .expect("core crate should be inside the workspace")
-        .join("packs/rfb-demo-original");
-    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
-    let class = artifact
-        .content
-        .classes
-        .iter_mut()
-        .find(|class| class.id == "demo.class.archer")
-        .expect("Archer class should remain available");
-    class.riding_combat_expert = true;
-    class.mounted_non_arrow_base_shot_cap = Some(100);
-    let content = Arc::new(rfb_content::ContentCatalog::from_artifact(
-        rfb_content::encode_content(artifact.content).expect("expert test content should encode"),
-    ));
-    Game::from_content_with_build(seed, content, DEFAULT_WORLD_ID, "demo.build.archer")
-        .expect("expert test game should create")
+    Game::new_with_build(seed, "demo.build.cavalry").expect("Cavalry build should create")
 }
 
 fn mounted_game(seed: u64, mount_level: u32) -> Game {
@@ -322,7 +304,7 @@ fn mounted_weapon_and_projectile_rules_match_original_branches() {
         .find(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "shooting")
         })
-        .expect("Archer should start with a launcher");
+        .expect("Cavalry should start with a launcher");
     launcher.kind_id = "demo.item.sling".to_owned();
     let projectile = expert
         .player_projectile_profile()

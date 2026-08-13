@@ -12830,7 +12830,7 @@ fn proficiency_rank_value(rank: u8) -> u16 {
     [0, 4_000, 6_000, 7_000, 8_000][usize::from(rank)]
 }
 
-/// Checks the four formal class profiles against authoritative `master:s_info.txt`.
+/// Checks the formal class profiles against authoritative `master:s_info.txt`.
 pub fn audit_demo_weapon_proficiencies(
     source: &Path,
     selection_path: &Path,
@@ -12891,6 +12891,7 @@ pub fn audit_demo_weapon_proficiencies(
         ("paladin.json", 5),
         ("high-mage.json", 10),
         ("archer.json", 15),
+        ("cavalry.json", 22),
     ] {
         let class: serde_json::Value =
             serde_json::from_slice(&fs::read(classes_dir.join(file_name))?)?;
@@ -12973,7 +12974,7 @@ pub fn audit_demo_weapon_proficiencies(
     Ok(DemoWeaponProficiencyAuditReport {
         schema_version: 1,
         source_commit,
-        classes_checked: 4,
+        classes_checked: 5,
         base_weapons_checked: base_weapons.len(),
     })
 }

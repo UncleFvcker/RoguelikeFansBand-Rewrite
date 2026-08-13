@@ -683,6 +683,19 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         damage: DamageOutcome,
     },
+    RodeoAlreadyRiding,
+    RodeoUntameable {
+        target_kind_id: String,
+    },
+    RodeoTooWeak {
+        target_kind_id: String,
+    },
+    RodeoTamed {
+        target_kind_id: String,
+    },
+    RodeoThrownOff {
+        target_kind_id: String,
+    },
     RidingUnavailable,
     SheepRidingRefused {
         response: u8,
@@ -2962,6 +2975,27 @@ impl DomainEvent {
                 GameEventOutcomeDto::Damage {
                     resolution: damage.into(),
                 },
+            ),
+            Self::RodeoAlreadyRiding => {
+                dto_without_args("rodeo.already-riding", "rodeo-already-riding")
+            }
+            Self::RodeoUntameable { target_kind_id } => dto(
+                "rodeo.untameable",
+                "rodeo-untameable",
+                [("target", target_kind_id)],
+            ),
+            Self::RodeoTooWeak { target_kind_id } => dto(
+                "rodeo.too-weak",
+                "rodeo-too-weak",
+                [("target", target_kind_id)],
+            ),
+            Self::RodeoTamed { target_kind_id } => {
+                dto("rodeo.tamed", "rodeo-tamed", [("target", target_kind_id)])
+            }
+            Self::RodeoThrownOff { target_kind_id } => dto(
+                "rodeo.thrown-off",
+                "rodeo-thrown-off",
+                [("target", target_kind_id)],
             ),
             Self::RidingUnavailable => dto_without_args("riding.unavailable", "riding-unavailable"),
             Self::SheepRidingRefused { response } => dto_without_args(

@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.299.0");
+    assert_eq!(catalog.pack_version(), "1.300.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -49,11 +49,17 @@ fn compiled_catalog_indexes_current_rfb_content() {
     assert!(catalog.build("demo.build.archer").is_some());
     assert!(catalog.class("demo.class.paladin").is_some());
     assert!(catalog.build("demo.build.paladin-death").is_some());
+    let cavalry = catalog.class("demo.class.cavalry").expect("Cavalry class");
+    assert_eq!(cavalry.pet_upkeep_divisor, 35);
+    assert!(cavalry.riding_combat_expert);
+    assert_eq!(cavalry.mounted_non_arrow_base_shot_cap, Some(100));
+    assert!(catalog.build("demo.build.cavalry").is_some());
     for (class_id, initial, maximum) in [
         ("demo.class.warrior", 0, 6_000),
         ("demo.class.high-mage", 0, 0),
         ("demo.class.archer", 0, 4_000),
         ("demo.class.paladin", 0, 6_000),
+        ("demo.class.cavalry", 2_000, 8_000),
     ] {
         let riding = catalog
             .class(class_id)
@@ -106,6 +112,21 @@ fn compiled_catalog_indexes_current_rfb_content() {
             .any(|ability| ability.ability_id == "demo.ability.paladin-hell-lance")
     );
     assert_eq!(paladin.level_resistances[0].minimum_level, 40);
+    assert_eq!(
+        cavalry
+            .weapon_proficiency
+            .as_ref()
+            .expect("Cavalry weapon proficiency")
+            .overrides["demo.item.short-bow"]
+            .initial,
+        4_000
+    );
+    assert!(
+        cavalry
+            .abilities
+            .iter()
+            .any(|ability| ability.ability_id == "demo.ability.cavalry-rodeo")
+    );
     assert!(
         catalog
             .class("demo.class.archer")

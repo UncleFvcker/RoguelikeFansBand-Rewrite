@@ -69,6 +69,10 @@ pub(super) enum AbilityTargetPlan {
         hostile_candidate_kind_ids: Vec<String>,
         positions: Vec<Position>,
     },
+    Rodeo {
+        direction: Direction,
+        target_entity_id: String,
+    },
     Item {
         item_id: String,
     },
@@ -219,6 +223,12 @@ impl Game {
                 ability_id: ability_id.to_owned(),
                 reason: reason.to_owned(),
             });
+            return Ok(());
+        }
+        if matches!(ability.effect, AbilityEffectDefinition::Rodeo)
+            && self.riding_actor_id.is_some()
+        {
+            events.push(DomainEvent::RodeoAlreadyRiding);
             return Ok(());
         }
 
@@ -615,6 +625,13 @@ impl Game {
             (AbilityEffectDefinition::PolymorphSelf, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_polymorph_self_effect(&ability, events)
             }
+            (
+                AbilityEffectDefinition::Rodeo,
+                AbilityTargetPlan::Rodeo {
+                    direction,
+                    target_entity_id,
+                },
+            ) => self.resolve_player_rodeo_effect(direction, &target_entity_id, events, changed),
             (
                 AbilityEffectDefinition::PolymorphTarget,
                 AbilityTargetPlan::Projectile { path, .. },
@@ -5168,6 +5185,36 @@ impl Game {
             | AbilityEffectDefinition::Amnesia
             | AbilityEffectDefinition::DarkenRoom
             | AbilityEffectDefinition::JumpDamage { .. } => None,
+            AbilityEffectDefinition::Rodeo => {
+                let TargetSelection::Direction { direction } = target else {
+                    return None;
+                };
+                if !ability
+                    .target
+                    .modes
+                    .contains(&AbilityTargetModeDefinition::Direction)
+                    || self.riding_actor_id.is_some()
+                {
+                    return None;
+                }
+                let position = self.position_in_direction(*direction);
+                let target_entity_id = self
+                    .entities
+                    .iter()
+                    .find(|entity| {
+                        entity.hp > 0
+                            && entity.position == position
+                            && self
+                                .actor_runtime_definition(entity)
+                                .is_some_and(|definition| definition.rideable)
+                    })?
+                    .id
+                    .clone();
+                Some(AbilityTargetPlan::Rodeo {
+                    direction: *direction,
+                    target_entity_id,
+                })
+            }
             AbilityEffectDefinition::Teleport => {
                 let TargetSelection::Position { position } = target else {
                     return None;

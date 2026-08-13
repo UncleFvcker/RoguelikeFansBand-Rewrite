@@ -682,8 +682,8 @@ contract-v283 开始消费上述 `artifactGeneration`。生成器按 `sourceInde
 
 包 1.298.0 为职业定义增加必填 `ridingProficiency { initial, maximum }`，两值直接来自
 RFB `master:lib/edit/s_info.txt` 的 `S:2:start:max`，并满足
-`initial <= maximum <= 8000`。现有四职业分别为 Warrior 0/6000、High-Mage 0/0、
-Archer 0/4000、Paladin 0/6000；未来 Cavalry 的权威来源值为 2000/8000。本批没有新增
+`initial <= maximum <= 8000`。当时四职业分别为 Warrior 0/6000、High-Mage 0/0、
+Archer 0/4000、Paladin 0/6000；包 1.300.0 已加入 Cavalry 2000/8000。本批没有新增
 内容 ID；content hash 为 `ce5843c05a1a11cd26f24868777b285ba41363e06e7dcbdfac0615df4e6596cb`。
 
 包 1.299.0 为物品增加可选 `ridingWeaponKind`，只允许 `compatible` 与 `lance`；它保存
@@ -692,3 +692,11 @@ RFB `master:k_info.txt` 的 `OF_RIDING` 身份，`lance` 另承载骑乘长枪�
 `ridingCombatExpert` 与可选 `mountedNonArrowBaseShotCap`，供 Cavalry/Beastmaster 等正式
 职业内容声明原版骑乘特权，核心不硬编码职业 ID。content hash 为
 `0075e65b38104d4103be9a4de0b798b4f404fb37857ca5359f949021b8401868`。
+
+包 1.300.0 导入正式 Cavalry：职业属性、生命/经验、八项技能、宠物维持除数、骑术及
+逐武器熟练度均来自 RFB `master`，出生只引用既有物品。新增无参数能力程序步骤
+`{ "type": "rodeo" }`，只允许 `cast-target` 输入、方向目标和 `range: 1`；它表示先强制
+骑上相邻 rideable actor，再执行骑兵驯服规则。新增内容 ID 为 `demo.class.cavalry`、
+`demo.skill-set.cavalry`、`demo.build.cavalry`、`demo.actor.cavalry-player`、
+`demo.ability.cavalry-rodeo` 与 `demo.ability-program.cavalry-rodeo`，没有新增物品 ID。
+content hash 为 `bb912c0d2adef96f8930f190e588f6a1a59a94b9df9b70ce59d6634913a4f2d9`。
