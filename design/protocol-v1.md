@@ -662,3 +662,8 @@ save 容器保持 v1。
 `create-stair`、`teleport-town`、`self-knowledge` 与 `dimension-door` 能力规格和结构化
 结算结果。城镇传送仍复用既有城镇状态，角色自省只生成只读报告；没有新增持久字段或
 state-hash 输入，State Hash Schema 保持 v97，save 容器保持 v1。
+
+1.198 为咒术第四册增加 `probe`、`create-door`、`device-mastery`、`banish` 与
+`invulnerability` 的窄化能力规格及结构化结算结果。`StatModifiersDto` 增加装置强度修正，
+作为状态授予的权威数值进入存档和 state-hash 输入，因此 State Hash Schema 升至 v98；
+save 容器保持 v1，且不兼容缺少该字段的旧开发存档。

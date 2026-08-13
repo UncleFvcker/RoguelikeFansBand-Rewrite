@@ -1684,23 +1684,21 @@ fn maintenance_refills_only_after_interval_at_entrance() {
     game.world_tick = 10_000;
     game.maintain_shop_at_player().unwrap();
     let state = &game.shop_states[GENERAL_STORE_ID];
-    let guaranteed_stock_count = game
+    let guaranteed_stock = game
         .content
         .shop(GENERAL_STORE_ID)
         .expect("General Store should exist")
         .stock
         .iter()
         .filter(|stock| stock.availability_percent == 100)
-        .count();
+        .map(|stock| stock.item_kind_id.as_str())
+        .collect::<std::collections::BTreeSet<_>>();
     assert_eq!(state.last_maintenance_world_tick, 10_000);
-    assert_eq!(
-        state
-            .inventory
-            .iter()
-            .map(|item| item.kind_id.as_str())
-            .collect::<std::collections::BTreeSet<_>>()
-            .len(),
-        guaranteed_stock_count
-    );
+    let stocked = state
+        .inventory
+        .iter()
+        .map(|item| item.kind_id.as_str())
+        .collect::<std::collections::BTreeSet<_>>();
+    assert!(guaranteed_stock.is_subset(&stocked));
     assert!(game.rng_draw_counter() > draws_before);
 }

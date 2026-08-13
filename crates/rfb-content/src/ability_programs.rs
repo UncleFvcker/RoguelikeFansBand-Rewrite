@@ -239,6 +239,11 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::CreateStair { .. }
                     | AbilityEffectDefinition::SelfKnowledge
                     | AbilityEffectDefinition::Clairvoyance { .. }
+                    | AbilityEffectDefinition::Probe
+                    | AbilityEffectDefinition::CreateDoor { .. }
+                    | AbilityEffectDefinition::DeviceMastery { .. }
+                    | AbilityEffectDefinition::Banish { .. }
+                    | AbilityEffectDefinition::Invulnerability { .. }
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(
                 effect,

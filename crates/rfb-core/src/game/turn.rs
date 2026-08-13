@@ -477,6 +477,10 @@ impl Game {
             self.player.statuses.iter().any(|status| {
                 status.kind_id == STATUS_PLAYER_POLYMORPH && status.remaining_ticks <= 1
             });
+        let invulnerability_expiring =
+            self.player.statuses.iter().any(|status| {
+                status.kind_id == STATUS_INVULNERABILITY && status.remaining_ticks <= 1
+            });
         let player_damage_percent = self.player_incoming_damage_percent();
         let player_tick = process_actor_status_tick(&mut self.player, false, player_damage_percent);
         let player_status_expired = !player_tick.expired.is_empty();
@@ -506,6 +510,9 @@ impl Game {
         if player_race_status_expiring {
             let body_slots = resolve_body_slots(&self.content, self.build.as_ref())?;
             self.reconcile_player_body_slots(body_slots);
+        }
+        if invulnerability_expiring {
+            spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);
         }
         if player_status_expired {
             self.refresh_player_resource_maxima();

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::item_use::VisibleBanishmentOutcome;
 use super::terrain::TerrainChangeSource;
 use super::*;
 
@@ -595,6 +596,21 @@ impl Game {
             }
             (AbilityEffectDefinition::SelfKnowledge, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_self_knowledge_effect(&ability, events);
+            }
+            (AbilityEffectDefinition::Probe, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_probe_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::CreateDoor { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_create_door_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::DeviceMastery { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_device_mastery_effect(&ability, events);
+            }
+            (AbilityEffectDefinition::Banish { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_banish_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::Invulnerability { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_invulnerability_effect(&ability, events);
             }
             (AbilityEffectDefinition::LightArea { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_light_area_effect(&ability, events, changed, removed_entities)?;
@@ -4038,6 +4054,364 @@ impl Game {
         });
     }
 
+    fn resolve_player_probe_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let mut entity_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && self.entity_is_visible_to_player(entity)
+                    && !self.entity_is_fuzzy_to_player(entity)
+                    && has_line_of_effect(self, self.player.position, entity.position)
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        entity_ids.sort();
+
+        let mut targets = Vec::with_capacity(entity_ids.len());
+        for entity_id in entity_ids {
+            let index = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id)
+                .expect("probed entity must remain available");
+            let entity = self.entities[index].clone();
+            let definition = self
+                .actor_runtime_definition(&entity)
+                .expect("probed actor definition must remain available")
+                .clone();
+            let stats = self.actor_derived_stats(&entity, &definition, false);
+            let good = definition.tags.iter().any(|tag| tag == "good");
+            let evil = definition.tags.iter().any(|tag| tag == "evil");
+            let alignment = match (good, evil) {
+                (true, true) => AbilityProbeAlignmentDto::GoodAndEvil,
+                (true, false) => AbilityProbeAlignmentDto::Good,
+                (false, true) => AbilityProbeAlignmentDto::Evil,
+                (false, false) => AbilityProbeAlignmentDto::Neutral,
+            };
+            let faction = if self.actor_is_player_aligned(&entity) {
+                EntityFactionDto::Player
+            } else if self.actor_is_friendly(&entity) {
+                EntityFactionDto::Friendly
+            } else {
+                EntityFactionDto::Hostile
+            };
+            let report = AbilityProbeTargetDto {
+                entity_id,
+                target_kind_id: entity.kind_id,
+                hp: entity.hp,
+                max_hp: entity.max_hp,
+                speed: derived_speed(&stats.speed),
+                alignment,
+                faction,
+            };
+            if self.entities[index].appearance_kind_id.take().is_some() {
+                changed.insert(entity.position);
+            }
+            events.push(DomainEvent::AbilityProbed {
+                ability_id: ability.id.clone(),
+                report: report.clone(),
+            });
+            targets.push(report);
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::Probe {
+                    effect_index: 0,
+                    targets,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_create_door_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::CreateDoor { terrain_id } = &ability.effect else {
+            unreachable!("create-door executor requires a create-door effect");
+        };
+        let occupied = self
+            .entities
+            .iter()
+            .filter(|entity| entity.hp > 0)
+            .map(|entity| entity.position)
+            .chain(self.items.iter().filter_map(|item| match item.location {
+                ItemLocation::Ground(position) => Some(position),
+                _ => None,
+            }))
+            .chain(self.gold_piles.iter().map(|pile| pile.position))
+            .chain(
+                self.floor_connections
+                    .iter()
+                    .map(|connection| connection.position),
+            )
+            .collect::<BTreeSet<_>>();
+        let mut positions = Vec::new();
+        for direction in TERRAIN_INTERACTION_DIRECTIONS {
+            let position = self.position_in_direction(direction);
+            let Some(index) = self.index(position) else {
+                continue;
+            };
+            let Some(terrain) = self.content.terrain(&self.terrain[index]) else {
+                continue;
+            };
+            let blocked_feature = terrain.trap.is_some()
+                || terrain.tags.iter().any(|tag| {
+                    matches!(
+                        tag.as_str(),
+                        "door"
+                            | "passage"
+                            | "permanent"
+                            | "stairs-up"
+                            | "stairs-down"
+                            | "shaft"
+                            | "dungeon-entry"
+                            | "task-entry"
+                            | "shop-entrance"
+                    )
+                });
+            if !terrain.walkable || blocked_feature || occupied.contains(&position) {
+                continue;
+            }
+            self.replace_terrain_from_source(
+                position,
+                terrain_id,
+                TerrainChangeSource::Magic,
+                events,
+                changed,
+            );
+            positions.push(position);
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::CreateDoor {
+                    effect_index: 0,
+                    positions,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_device_mastery_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::DeviceMastery {
+            duration_base,
+            device_power_bonus,
+        } = ability.effect
+        else {
+            unreachable!("device-mastery executor requires a device-mastery effect");
+        };
+        let resolution = apply_ability_status_effect(
+            &mut self.player,
+            &ability.id,
+            0,
+            STATUS_DEVICE_MASTERY,
+            1,
+            u32::from(duration_base),
+            1,
+            u32::from(duration_base),
+            AbilityStatusStackingDefinition::KeepStrongest,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers {
+                device_power_bonus,
+                ..StatModifiers::default()
+            },
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let AbilityEffectResolutionDto::ApplyStatus {
+            applied_duration_ticks,
+            change,
+            ..
+        } = resolution
+        else {
+            unreachable!("device mastery must resolve as a status");
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::DeviceMastery {
+                    effect_index: 0,
+                    duration_base,
+                    duration_ticks: applied_duration_ticks,
+                    device_power_bonus,
+                    change,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_banish_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::Banish { maximum_distance } = ability.effect else {
+            unreachable!("banish executor requires a banish effect");
+        };
+        let mut actor_ids = self.item_visible_actor_ids();
+        actor_ids.sort();
+        let before = actor_ids
+            .iter()
+            .filter_map(|actor_id| {
+                self.entities
+                    .iter()
+                    .find(|entity| entity.id == *actor_id && entity.hp > 0)
+                    .map(|entity| (actor_id.clone(), entity.position))
+            })
+            .collect::<Vec<_>>();
+        let outcomes = self.banish_visible_actors(maximum_distance, actor_ids, changed);
+        let targets = before
+            .into_iter()
+            .zip(outcomes)
+            .map(|((entity_id, from), outcome)| match outcome {
+                VisibleBanishmentOutcome::Resisted { target_kind_id } => AbilityBanishTargetDto {
+                    entity_id,
+                    target_kind_id,
+                    resisted: true,
+                    from,
+                    to: None,
+                },
+                VisibleBanishmentOutcome::NoSpace { target_kind_id } => AbilityBanishTargetDto {
+                    entity_id,
+                    target_kind_id,
+                    resisted: false,
+                    from,
+                    to: None,
+                },
+                VisibleBanishmentOutcome::Banished {
+                    target_kind_id,
+                    resolution,
+                } => AbilityBanishTargetDto {
+                    entity_id,
+                    target_kind_id,
+                    resisted: false,
+                    from,
+                    to: Some(resolution.to),
+                },
+            })
+            .collect();
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::Banish {
+                    effect_index: 0,
+                    maximum_distance,
+                    targets,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_invulnerability_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::Invulnerability {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        } = ability.effect
+        else {
+            unreachable!("invulnerability executor requires an invulnerability effect");
+        };
+        let rolled = u64::try_from(self.roll_damage(duration_dice, duration_sides))
+            .expect("validated invulnerability duration must be non-negative")
+            .saturating_add(u64::from(duration_bonus));
+        let duration_ticks = u32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::InvulnerabilityDuration,
+            rolled,
+        ))
+        .expect("spell-powered invulnerability duration must fit u32");
+        let was_invulnerable = self.player_has_status_kind(STATUS_INVULNERABILITY);
+        let resolution = apply_ability_status_effect(
+            &mut self.player,
+            &ability.id,
+            0,
+            STATUS_INVULNERABILITY,
+            1,
+            duration_ticks,
+            0,
+            0,
+            AbilityStatusStackingDefinition::KeepStrongest,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            0,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let AbilityEffectResolutionDto::ApplyStatus {
+            applied_duration_ticks,
+            change,
+            ..
+        } = resolution
+        else {
+            unreachable!("invulnerability must resolve as a status");
+        };
+        if !was_invulnerable && applied_duration_ticks > 0 {
+            self.apply_invulnerability_opening_virtues();
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::Invulnerability {
+                    effect_index: 0,
+                    duration_ticks: applied_duration_ticks,
+                    change,
+                }],
+            },
+            trace: None,
+        });
+    }
+
     fn resolve_player_fetch_item_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -6957,6 +7331,11 @@ impl Game {
             | AbilityEffectDefinition::CreateStair { .. }
             | AbilityEffectDefinition::SelfKnowledge
             | AbilityEffectDefinition::Clairvoyance { .. }
+            | AbilityEffectDefinition::Probe
+            | AbilityEffectDefinition::CreateDoor { .. }
+            | AbilityEffectDefinition::DeviceMastery { .. }
+            | AbilityEffectDefinition::Banish { .. }
+            | AbilityEffectDefinition::Invulnerability { .. }
             | AbilityEffectDefinition::LightArea { .. }
             | AbilityEffectDefinition::MassSleepOrStasis { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)

@@ -1713,6 +1713,12 @@
       "maxDepth": 50
     },
     {
+      "itemKindId": "demo.item.grimoire-of-power",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 80
+    },
+    {
       "itemKindId": "demo.item.cantrips-for-beginners",
       "weight": 100,
       "quantity": 1,

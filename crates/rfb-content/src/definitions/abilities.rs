@@ -123,6 +123,9 @@ pub enum AbilityLevelScalingField {
     GenocidePower,
     SummonMaximumLevel,
     MaximumWeight,
+    BanishDistance,
+    DeviceMasteryDurationBase,
+    DevicePowerBonus,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -145,6 +148,11 @@ pub enum AbilitySpellPowerField {
     RandomChoiceRoll,
     MaledictionDeathRayPower,
     MaledictionFearPower,
+    MaximumWeight,
+    BanishDistance,
+    DeviceMasteryDurationBase,
+    InvulnerabilityDuration,
+    ClairvoyanceDurationSides,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -381,6 +389,22 @@ pub enum AbilityEffectDefinition {
         telepathy_duration_ticks: u16,
         telepathy_duration_dice: u8,
         telepathy_duration_sides: u16,
+    },
+    Probe,
+    CreateDoor {
+        terrain_id: String,
+    },
+    DeviceMastery {
+        duration_base: u16,
+        device_power_bonus: i32,
+    },
+    Banish {
+        maximum_distance: u16,
+    },
+    Invulnerability {
+        duration_dice: u16,
+        duration_sides: u16,
+        duration_bonus: u16,
     },
     BirdDrop,
     DrainResource {
@@ -849,6 +873,20 @@ fn ability_level_scaling_base_and_limit(
             },
             AbilityLevelScalingField::MaximumWeight,
         ) => Some((u64::from(*maximum_weight_tenths_pound), 1_000_000)),
+        (
+            AbilityEffectDefinition::Banish { maximum_distance },
+            AbilityLevelScalingField::BanishDistance,
+        ) => Some((u64::from(*maximum_distance), 1_000)),
+        (
+            AbilityEffectDefinition::DeviceMastery { duration_base, .. },
+            AbilityLevelScalingField::DeviceMasteryDurationBase,
+        ) => Some((u64::from(*duration_base), 1_000)),
+        (
+            AbilityEffectDefinition::DeviceMastery {
+                device_power_bonus, ..
+            },
+            AbilityLevelScalingField::DevicePowerBonus,
+        ) => Some((u64::try_from(*device_power_bonus).ok()?, 1_000)),
         _ => None,
     }
 }
@@ -1002,6 +1040,21 @@ pub(crate) fn valid_ability_spell_power(
                 AbilitySpellPowerField::MaledictionDeathRayPower
                 | AbilitySpellPowerField::MaledictionFearPower => {
                     matches!(effect, AbilityEffectDefinition::Malediction { .. })
+                }
+                AbilitySpellPowerField::MaximumWeight => {
+                    matches!(effect, AbilityEffectDefinition::FetchItem { .. })
+                }
+                AbilitySpellPowerField::BanishDistance => {
+                    matches!(effect, AbilityEffectDefinition::Banish { .. })
+                }
+                AbilitySpellPowerField::DeviceMasteryDurationBase => {
+                    matches!(effect, AbilityEffectDefinition::DeviceMastery { .. })
+                }
+                AbilitySpellPowerField::InvulnerabilityDuration => {
+                    matches!(effect, AbilityEffectDefinition::Invulnerability { .. })
+                }
+                AbilitySpellPowerField::ClairvoyanceDurationSides => {
+                    matches!(effect, AbilityEffectDefinition::Clairvoyance { .. })
                 }
             };
             valid && unique.insert((definition.effect_index, definition.field))

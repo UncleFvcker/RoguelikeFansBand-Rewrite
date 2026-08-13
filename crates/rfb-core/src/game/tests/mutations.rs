@@ -508,6 +508,8 @@ fn m6_a_berserk_and_invulnerability_reuse_authoritative_status_payloads() {
     assert!(rage.granted_status_immunities.contains(STATUS_FEAR));
 
     let mut invulnerable = m6_game("rfb.mutation.invuln", "demo.build.warrior");
+    let honour_before = invulnerable.virtue_current(VirtueKindDto::Honour);
+    let valour_before = invulnerable.virtue_current(VirtueKindDto::Valour);
     invulnerable.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(5_000) == 0));
     process_m6(&mut invulnerable);
     let status = invulnerable
@@ -518,6 +520,14 @@ fn m6_a_berserk_and_invulnerability_reuse_authoritative_status_payloads() {
         .expect("Invulnerability should apply its shared protection status");
     assert!((9..=16).contains(&status.remaining_ticks));
     assert_eq!(status.incoming_damage_percent, 0);
+    assert_eq!(
+        invulnerable.virtue_current(VirtueKindDto::Honour),
+        honour_before - 2
+    );
+    assert_eq!(
+        invulnerable.virtue_current(VirtueKindDto::Valour),
+        valour_before - 5
+    );
 }
 
 #[test]

@@ -31,6 +31,7 @@ pub const STATUS_SIGHT: &str = "rfb.status.sight";
 pub const STATUS_SEE_INVISIBLE: &str = "rfb.status.see-invisible";
 pub const STATUS_POISON_RESISTANCE: &str = "rfb.status.poison-resistance";
 pub const STATUS_INVULNERABILITY: &str = "rfb.status.invulnerability";
+pub const STATUS_DEVICE_MASTERY: &str = "rfb.status.device-mastery";
 pub const STATUS_GIANT_STRENGTH: &str = "rfb.status.giant-strength";
 pub const STATUS_UNDERSTANDING: &str = "rfb.status.understanding";
 pub const STATUS_INVENTORY_PROTECTION: &str = "rfb.status.inventory-protection";

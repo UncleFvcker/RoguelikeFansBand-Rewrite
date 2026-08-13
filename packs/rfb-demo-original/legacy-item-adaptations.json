@@ -165,6 +165,7 @@
     { "sourceIndex": 504, "sourceName": "[Beginner's Handbook]", "sourceId": "beginners-handbook", "itemId": "demo.item.beginners-handbook", "status": "active", "contract": "class-high-mage-sorcery-first-book" },
     { "sourceIndex": 505, "sourceName": "[Master Sorcerer's Handbook]", "sourceId": "master-sorcerers-handbook", "itemId": "demo.item.master-sorcerers-handbook", "status": "active", "contract": "class-high-mage-sorcery-second-book" },
     { "sourceIndex": 506, "sourceName": "[Pattern Sorcery]", "sourceId": "pattern-sorcery", "itemId": "demo.item.pattern-sorcery", "status": "active", "contract": "class-high-mage-sorcery-third-book" },
+    { "sourceIndex": 507, "sourceName": "[Grimoire of Power]", "sourceId": "grimoire-of-power", "itemId": "demo.item.grimoire-of-power", "status": "active", "contract": "class-high-mage-sorcery-fourth-book" },
     { "sourceIndex": 516, "sourceName": "[Black Prayers]", "sourceId": "black-prayers", "itemId": "demo.item.black-prayers", "status": "active", "contract": "class-high-mage-death-first-book" },
     { "sourceIndex": 517, "sourceName": "[Black Mass]", "sourceId": "black-mass", "itemId": "demo.item.black-mass", "status": "active", "contract": "class-high-mage-death-second-book" },
     { "sourceIndex": 518, "sourceName": "[Black Channels]", "sourceId": "black-channels", "itemId": "demo.item.black-channels", "status": "active", "contract": "contract-v106-death-third-book" },

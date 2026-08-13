@@ -61,6 +61,7 @@ pub(super) fn english_item_name(kind_id: &str) -> Option<&'static str> {
         "demo.item.glyph-severance-scroll" => Some("Scroll of Genocide"),
         "demo.item.granite-tonic" => Some("Potion of Stone Skin"),
         "demo.item.great-clarity-potion" => Some("Potion of Great Clarity"),
+        "demo.item.grimoire-of-power" => Some("[Grimoire of Power]"),
         "demo.item.greater-cleansing-scroll" => Some("Scroll of *Remove Curse*"),
         "demo.item.hallucination-mushroom" => Some("Mushroom of Hallucination"),
         "demo.item.hard-biscuit" => Some("Hard Biscuit"),

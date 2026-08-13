@@ -28,7 +28,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 173,
+      "rngDrawCounter": 174,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -157,7 +157,7 @@
           },
           "stock": [
             {
-              "id": "generated.item.102",
+              "id": "generated.item.103",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 3,
@@ -167,7 +167,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.103",
+              "id": "generated.item.104",
               "kindId": "demo.item.piece-of-elvish-waybread",
               "displayNameKey": "item-demo-piece-of-elvish-waybread-name",
               "quantity": 1,
@@ -177,7 +177,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.104",
+              "id": "generated.item.105",
               "kindId": "demo.item.wooden-torch",
               "displayNameKey": "item-demo-wooden-torch-name",
               "quantity": 4,
@@ -193,7 +193,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.108",
+              "id": "generated.item.109",
               "kindId": "demo.item.brass-lantern",
               "displayNameKey": "item-demo-brass-lantern-name",
               "quantity": 2,
@@ -209,11 +209,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.110",
+              "id": "generated.item.111",
               "kindId": "demo.item.flask-of-oil",
               "displayNameKey": "item-demo-flask-of-oil-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 5,
+              "maximumQuantity": 5,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "fuel": {
@@ -225,7 +225,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.111",
+              "id": "generated.item.112",
               "kindId": "demo.item.fabric-bag",
               "displayNameKey": "item-demo-fabric-bag-name",
               "quantity": 1,
@@ -235,17 +235,17 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.112",
+              "id": "generated.item.113",
               "kindId": "demo.item.hard-biscuit",
               "displayNameKey": "item-demo-hard-biscuit-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 1,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.113",
+              "id": "generated.item.114",
               "kindId": "demo.item.strip-of-venison",
               "displayNameKey": "item-demo-strip-of-venison-name",
               "quantity": 1,
@@ -255,19 +255,9 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.114",
+              "id": "generated.item.115",
               "kindId": "demo.item.water-potion",
               "displayNameKey": "item-demo-water-potion-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 1,
-              "weightTenthsPound": 4,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.115",
-              "kindId": "demo.item.apple-juice",
-              "displayNameKey": "item-demo-apple-juice-name",
               "quantity": 2,
               "maximumQuantity": 2,
               "unitPrice": 1,
@@ -276,20 +266,30 @@
             },
             {
               "id": "generated.item.116",
-              "kindId": "demo.item.pint-of-fine-ale",
-              "displayNameKey": "item-demo-pint-of-fine-ale-name",
+              "kindId": "demo.item.apple-juice",
+              "displayNameKey": "item-demo-apple-juice-name",
               "quantity": 5,
               "maximumQuantity": 5,
+              "unitPrice": 1,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.117",
+              "kindId": "demo.item.pint-of-fine-ale",
+              "displayNameKey": "item-demo-pint-of-fine-ale-name",
+              "quantity": 4,
+              "maximumQuantity": 4,
               "unitPrice": 1,
               "weightTenthsPound": 5,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.117",
+              "id": "generated.item.118",
               "kindId": "demo.item.pint-of-fine-wine",
               "displayNameKey": "item-demo-pint-of-fine-wine-name",
-              "quantity": 4,
-              "maximumQuantity": 4,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 2,
               "weightTenthsPound": 10,
               "quality": "ordinary"
@@ -1337,7 +1337,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1371,7 +1372,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1405,7 +1407,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1439,7 +1442,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1473,7 +1477,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1507,7 +1512,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1541,7 +1547,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1569,7 +1576,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1595,7 +1603,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1636,7 +1645,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1672,7 +1682,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1767,7 +1778,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a5e76efdd694a4988792fffd36d7381585354115a25466088a077553120964f5"
+      "stateHash": "58b922287887da0bc7ed2731730a9688b7931e3e91369a149c6ee75b453182d3"
     },
     "changedCells": [
       {

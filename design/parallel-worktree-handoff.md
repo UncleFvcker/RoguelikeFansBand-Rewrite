@@ -572,3 +572,16 @@ git diff --stat
 - 共享协调点：pack `1.314.0`、Protocol `1.197`、State Hash Schema v97、save v1、
   active baseline `contract-v292`（26 条 exact fixture、零 waiver），content hash
   `6f4b9b896f39b9de6d0560a8f8bf1614a49f64fe0a6f59adff2671eb75e1309a`。
+
+## 35. codex/items-next 当前交接（完整咒术领域）
+
+- 新增《力量魔导书》及 Probe、Create Door、Fetch、Clairvoyance、Device Mastery、
+  Alchemy、Banish、Invulnerability；咒术四册共 32 个正式法术，不含 NoOp。
+- 第四册复用已有隔空取物、透视与炼金事务；新增能力只承载探知、造门、装置精通、
+  可见怪放逐和无敌结界所需的窄行为。无敌结界的开启 virtue 变化与结束整回合僵直
+  对法术、物品和 mutation 来源一致。
+- 《力量魔导书》按 RFB `master` 的 allocation 进入基础池与两家黑市，不进入书店；
+  咒术构筑出生仍只携带第一册，其他领域、通用出生装备和白马旅店奖励不变。
+- 共享协调点：pack `1.315.0`、Protocol `1.198`、State Hash Schema v98、save v1、
+  active baseline `contract-v292`（26 条 exact fixture、零 waiver），content hash
+  `4f10b0c47cc9985900b47664e752dd64736a14abc95324a5aaf33f7a33805d3d`。

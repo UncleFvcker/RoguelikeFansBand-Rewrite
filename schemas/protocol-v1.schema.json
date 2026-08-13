@@ -61,6 +61,39 @@
         "targetCount"
       ]
     },
+    "AbilityBanishTargetDto": {
+      "type": "object",
+      "properties": {
+        "entityId": {
+          "type": "string"
+        },
+        "from": {
+          "$ref": "#/$defs/Position"
+        },
+        "resisted": {
+          "type": "boolean"
+        },
+        "targetKindId": {
+          "type": "string"
+        },
+        "to": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Position"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "entityId",
+        "targetKindId",
+        "resisted",
+        "from"
+      ]
+    },
     "AbilityBeamDamageResolutionDto": {
       "type": "object",
       "properties": {
@@ -717,6 +750,161 @@
             "type",
             "effectIndex",
             "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "targets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/AbilityProbeTargetDto"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "probe"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "targets"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "positions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Position"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "create-door"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "positions"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "change": {
+              "$ref": "#/$defs/AbilityStatusChangeDto"
+            },
+            "devicePowerBonus": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "durationBase": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "durationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "device-mastery"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "durationBase",
+            "durationTicks",
+            "devicePowerBonus",
+            "change"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "maximumDistance": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "targets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/AbilityBanishTargetDto"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "banish"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "maximumDistance",
+            "targets"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "change": {
+              "$ref": "#/$defs/AbilityStatusChangeDto"
+            },
+            "durationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "invulnerability"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "durationTicks",
+            "change"
           ]
         },
         {
@@ -2896,6 +3084,117 @@
         {
           "type": "object",
           "properties": {
+            "type": {
+              "type": "string",
+              "const": "probe"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "terrainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "create-door"
+            }
+          },
+          "required": [
+            "type",
+            "terrainId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "devicePowerBonus": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "durationBase": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "device-mastery"
+            }
+          },
+          "required": [
+            "type",
+            "durationBase",
+            "devicePowerBonus"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "maximumDistance": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "banish"
+            }
+          },
+          "required": [
+            "type",
+            "maximumDistance"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "durationBonus": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "durationDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "durationSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "durationSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
+            "type": {
+              "type": "string",
+              "const": "invulnerability"
+            }
+          },
+          "required": [
+            "type",
+            "durationDice",
+            "durationSides",
+            "durationBonus"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "amount": {
               "type": "integer",
               "format": "uint32",
@@ -3677,6 +3976,7 @@
                 "charisma": 0,
                 "constitution": 0,
                 "defense": 0,
+                "devicePowerBonus": 0,
                 "dexterity": 0,
                 "intelligence": 0,
                 "maxHp": 0,
@@ -4523,6 +4823,55 @@
         "learnedCount",
         "capacity",
         "remainingSlots"
+      ]
+    },
+    "AbilityProbeAlignmentDto": {
+      "type": "string",
+      "enum": [
+        "neutral",
+        "good",
+        "evil",
+        "good-and-evil"
+      ]
+    },
+    "AbilityProbeTargetDto": {
+      "type": "object",
+      "properties": {
+        "alignment": {
+          "$ref": "#/$defs/AbilityProbeAlignmentDto"
+        },
+        "entityId": {
+          "type": "string"
+        },
+        "faction": {
+          "$ref": "#/$defs/EntityFactionDto"
+        },
+        "hp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxHp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "speed": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "targetKindId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "entityId",
+        "targetKindId",
+        "hp",
+        "maxHp",
+        "speed",
+        "alignment",
+        "faction"
       ]
     },
     "AbilityProficiencyRankDto": {
@@ -5664,6 +6013,7 @@
             "charisma": 0,
             "constitution": 0,
             "defense": 0,
+            "devicePowerBonus": 0,
             "dexterity": 0,
             "intelligence": 0,
             "maxHp": 0,
@@ -7993,6 +8343,7 @@
             "charisma": 0,
             "constitution": 0,
             "defense": 0,
+            "devicePowerBonus": 0,
             "dexterity": 0,
             "intelligence": 0,
             "maxHp": 0,
@@ -8478,6 +8829,7 @@
             "charisma": 0,
             "constitution": 0,
             "defense": 0,
+            "devicePowerBonus": 0,
             "dexterity": 0,
             "intelligence": 0,
             "maxHp": 0,
@@ -9363,6 +9715,7 @@
             "charisma": 0,
             "constitution": 0,
             "defense": 0,
+            "devicePowerBonus": 0,
             "dexterity": 0,
             "intelligence": 0,
             "maxHp": 0,
@@ -10373,6 +10726,10 @@
           "format": "int32",
           "default": 0
         },
+        "devicePowerBonus": {
+          "type": "integer",
+          "format": "int32"
+        },
         "dexterity": {
           "type": "integer",
           "format": "int32",
@@ -10408,7 +10765,10 @@
           "format": "int32",
           "default": 0
         }
-      }
+      },
+      "required": [
+        "devicePowerBonus"
+      ]
     },
     "StatusDto": {
       "type": "object",
@@ -10445,6 +10805,7 @@
             "charisma": 0,
             "constitution": 0,
             "defense": 0,
+            "devicePowerBonus": 0,
             "dexterity": 0,
             "intelligence": 0,
             "maxHp": 0,

@@ -153,6 +153,7 @@ fn rodeo_mounts_and_tames_a_wild_adjacent_monster() {
     game.progress.riding_proficiency = 8_000;
     game.debug_ability_casts_succeed = true;
     place_wild_horse(&mut game);
+    game.rng = RfbRng::seeded(0);
 
     let events = cast_rodeo(&mut game);
 

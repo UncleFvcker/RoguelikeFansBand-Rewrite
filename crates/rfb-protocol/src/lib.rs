@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.197";
+pub const PROTOCOL_VERSION: &str = "1.198";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -482,6 +482,42 @@ pub struct StatModifiersDto {
     pub speed: i32,
     #[serde(default)]
     pub spell_power_bonus: i32,
+    pub device_power_bonus: i32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityProbeAlignmentDto {
+    Neutral,
+    Good,
+    Evil,
+    GoodAndEvil,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityProbeTargetDto {
+    pub entity_id: String,
+    pub target_kind_id: String,
+    pub hp: i32,
+    pub max_hp: i32,
+    pub speed: u16,
+    pub alignment: AbilityProbeAlignmentDto,
+    pub faction: EntityFactionDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityBanishTargetDto {
+    pub entity_id: String,
+    pub target_kind_id: String,
+    pub resisted: bool,
+    pub from: Position,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub to: Option<Position>,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -982,6 +1018,24 @@ pub enum AbilityEffectSpecDto {
         telepathy_duration_ticks: u16,
         telepathy_duration_dice: u8,
         telepathy_duration_sides: u16,
+    },
+    Probe,
+    CreateDoor {
+        terrain_id: String,
+    },
+    DeviceMastery {
+        duration_base: u16,
+        device_power_bonus: i32,
+    },
+    Banish {
+        maximum_distance: u16,
+    },
+    Invulnerability {
+        duration_dice: u16,
+        duration_sides: u16,
+        duration_bonus: u16,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        duration_spell_power_bonus: Option<i32>,
     },
     DrainResource {
         amount: u32,
@@ -2130,6 +2184,31 @@ pub enum AbilityEffectResolutionDto {
     Heal {
         effect_index: u8,
         resolution: HealingResolutionDto,
+    },
+    Probe {
+        effect_index: u8,
+        targets: Vec<AbilityProbeTargetDto>,
+    },
+    CreateDoor {
+        effect_index: u8,
+        positions: Vec<Position>,
+    },
+    DeviceMastery {
+        effect_index: u8,
+        duration_base: u16,
+        duration_ticks: u32,
+        device_power_bonus: i32,
+        change: AbilityStatusChangeDto,
+    },
+    Banish {
+        effect_index: u8,
+        maximum_distance: u16,
+        targets: Vec<AbilityBanishTargetDto>,
+    },
+    Invulnerability {
+        effect_index: u8,
+        duration_ticks: u32,
+        change: AbilityStatusChangeDto,
     },
     FetchItem {
         effect_index: u8,
@@ -3660,6 +3739,9 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityRandomBranchSpecDto);
     push_declaration!(AbilitySummonCandidateSpecDto);
     push_declaration!(AbilityTerrainBeamOperationDto);
+    push_declaration!(AbilityProbeAlignmentDto);
+    push_declaration!(AbilityProbeTargetDto);
+    push_declaration!(AbilityBanishTargetDto);
     push_declaration!(AbilityEffectSpecDto);
     push_declaration!(AbilitySummonSpecDto);
     push_declaration!(AbilityDetectSpecDto);

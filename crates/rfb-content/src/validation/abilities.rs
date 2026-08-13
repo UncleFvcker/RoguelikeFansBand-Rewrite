@@ -319,6 +319,26 @@ pub(super) fn validate_abilities(
                         && (1..=100).contains(telepathy_duration_dice)
                         && (1..=10_000).contains(telepathy_duration_sides)
                 }
+                AbilityEffectDefinition::Probe => true,
+                AbilityEffectDefinition::CreateDoor { terrain_id } => !terrain_id.is_empty(),
+                AbilityEffectDefinition::DeviceMastery {
+                    duration_base,
+                    device_power_bonus,
+                } => (1..=1_000).contains(duration_base) && (1..=100).contains(device_power_bonus),
+                AbilityEffectDefinition::Banish { maximum_distance } => {
+                    (1..=1_000).contains(maximum_distance)
+                        || (*maximum_distance == 0
+                            && has_level_scaling(AbilityLevelScalingField::BanishDistance))
+                }
+                AbilityEffectDefinition::Invulnerability {
+                    duration_dice,
+                    duration_sides,
+                    duration_bonus,
+                } => {
+                    (1..=100).contains(duration_dice)
+                        && (1..=10_000).contains(duration_sides)
+                        && *duration_bonus <= 10_000
+                }
                 AbilityEffectDefinition::BirdDrop => true,
                 AbilityEffectDefinition::DrainResource { amount } => {
                     (1..=1_000_000).contains(amount)
@@ -1032,6 +1052,11 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::Clairvoyance { .. }
+            | AbilityEffectDefinition::Probe
+            | AbilityEffectDefinition::CreateDoor { .. }
+            | AbilityEffectDefinition::DeviceMastery { .. }
+            | AbilityEffectDefinition::Banish { .. }
+            | AbilityEffectDefinition::Invulnerability { .. }
             | AbilityEffectDefinition::RefuelEquippedLight { .. }
             | AbilityEffectDefinition::LightArea { .. }
             | AbilityEffectDefinition::AggravateMonsters
@@ -1251,6 +1276,9 @@ pub(super) fn validate_abilities(
         {
             require_reference(terrain_ids, up_terrain_id, &ability.id)?;
             require_reference(terrain_ids, down_terrain_id, &ability.id)?;
+        }
+        if let AbilityEffectDefinition::CreateDoor { terrain_id } = &ability.effect {
+            require_reference(terrain_ids, terrain_id, &ability.id)?;
         }
         normalize_tags(&ability.id, &mut ability.tags)?;
         insert_definition_id(all_ids, &ability.id)?;

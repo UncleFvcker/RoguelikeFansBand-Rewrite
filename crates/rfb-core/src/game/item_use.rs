@@ -85,6 +85,7 @@ pub(super) struct SettledItemUse {
     pub(super) profile_id: Option<String>,
     pub(super) effect: ItemUseEffectDefinition,
     pub(super) plan: ItemUsePlan,
+    pub(super) device_power_bonus: i32,
 }
 
 impl Game {
@@ -2315,12 +2316,16 @@ impl Game {
         } else {
             self.items[index].quantity -= 1;
         }
+        let device_power_bonus = difficulty
+            .map(|_| self.effective_player_device_power_bonus())
+            .unwrap_or(0);
         self.resolve_inventory_item_effect(
             SettledItemUse {
                 kind_id,
                 profile_id,
                 effect,
                 plan,
+                device_power_bonus,
             },
             events,
             changed,
@@ -2340,6 +2345,7 @@ impl Game {
             profile_id,
             effect,
             plan,
+            device_power_bonus,
         } = settled;
         match (effect, plan) {
             (
@@ -2583,6 +2589,7 @@ impl Game {
                 profile_id,
                 effect,
                 plan,
+                device_power_bonus,
                 events,
                 changed,
                 removed_entities,
@@ -3278,6 +3285,8 @@ impl Game {
         incoming_damage_percent: u8,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
+        let was_invulnerable = status_kind_id == STATUS_INVULNERABILITY
+            && self.player_has_status_kind(STATUS_INVULNERABILITY);
         let resisted = self.player_status_immunities().contains(status_kind_id)
             || resistance_type
                 .is_some_and(|damage_type| self.item_status_resisted(damage_type, status_kind_id));
@@ -3326,6 +3335,12 @@ impl Game {
         };
         if noticed {
             self.mark_item_aware(source_kind_id);
+        }
+        if status_kind_id == STATUS_INVULNERABILITY
+            && !was_invulnerable
+            && self.player_has_status_kind(STATUS_INVULNERABILITY)
+        {
+            self.apply_invulnerability_opening_virtues();
         }
         events.push(DomainEvent::ItemStatusResolved {
             source_kind_id: source_kind_id.to_owned(),

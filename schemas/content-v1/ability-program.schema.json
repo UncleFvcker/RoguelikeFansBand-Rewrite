@@ -634,6 +634,115 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "probe",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "terrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "create-door",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "terrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "devicePowerBonus": {
+              "format": "int32",
+              "type": "integer"
+            },
+            "durationBase": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "device-mastery",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationBase",
+            "devicePowerBonus"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "maximumDistance": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "banish",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "maximumDistance"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationBonus": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "invulnerability",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationDice",
+            "durationSides",
+            "durationBonus"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "bird-drop",
               "type": "string"
             }
@@ -1607,6 +1716,7 @@
                 "charisma": 0,
                 "constitution": 0,
                 "defense": 0,
+                "devicePowerBonus": 0,
                 "dexterity": 0,
                 "intelligence": 0,
                 "maxHp": 0,
@@ -2521,7 +2631,10 @@
         "control-power",
         "genocide-power",
         "summon-maximum-level",
-        "maximum-weight"
+        "maximum-weight",
+        "banish-distance",
+        "device-mastery-duration-base",
+        "device-power-bonus"
       ],
       "type": "string"
     },
@@ -2747,6 +2860,11 @@
           "type": "integer"
         },
         "defense": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "devicePowerBonus": {
           "default": 0,
           "format": "int32",
           "type": "integer"

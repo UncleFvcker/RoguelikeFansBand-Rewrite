@@ -91,7 +91,10 @@
         "control-power",
         "genocide-power",
         "summon-maximum-level",
-        "maximum-weight"
+        "maximum-weight",
+        "banish-distance",
+        "device-mastery-duration-base",
+        "device-power-bonus"
       ],
       "type": "string"
     },
@@ -131,7 +134,12 @@
         "recharge-power",
         "random-choice-roll",
         "malediction-death-ray-power",
-        "malediction-fear-power"
+        "malediction-fear-power",
+        "maximum-weight",
+        "banish-distance",
+        "device-mastery-duration-base",
+        "invulnerability-duration",
+        "clairvoyance-duration-sides"
       ],
       "type": "string"
     },

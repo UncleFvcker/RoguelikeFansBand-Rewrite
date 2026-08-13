@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json","formatVersion":1,"abilityId":"demo.ability.sorcery-device-mastery","minimumLevel":37,"resourceId":"demo.resource.mana","resourceCost":55,"baseFailurePercent":75,"firstSuccessExperience":3700}

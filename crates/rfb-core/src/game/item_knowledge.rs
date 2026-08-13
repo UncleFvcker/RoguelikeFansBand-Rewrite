@@ -24,6 +24,9 @@ impl Game {
                     spell_power_bonus: total
                         .spell_power_bonus
                         .saturating_add(affix.modifiers.spell_power_bonus),
+                    device_power_bonus: total
+                        .device_power_bonus
+                        .saturating_add(affix.modifiers.device_power_bonus),
                     strength: total.strength.saturating_add(affix.modifiers.strength),
                     intelligence: total
                         .intelligence

@@ -53,6 +53,11 @@ fn sorcery_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
         "test.pattern-sorcery",
         "demo.item.pattern-sorcery",
     );
+    give_inventory_item(
+        &mut game,
+        "test.grimoire-of-power",
+        "demo.item.grimoire-of-power",
+    );
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
@@ -60,6 +65,26 @@ fn sorcery_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
         .current = 100;
     game.debug_ability_casts_succeed = true;
     game
+}
+
+fn grant_spell_power(game: &mut Game, bonus: i32) {
+    game.player.statuses.push(StatusInstance {
+        kind_id: "test.status.spell-power".to_owned(),
+        intensity: 1,
+        remaining_ticks: 100,
+        source_id: Some("test.sorcery-spell-power".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto {
+            spell_power_bonus: bonus,
+            ..StatModifiersDto::default()
+        },
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
 }
 
 #[test]
@@ -79,6 +104,8 @@ fn sorcery_high_mage_birth_keeps_only_the_first_book_and_realm() {
         .collect::<BTreeSet<_>>();
     assert!(carried.contains("demo.item.beginners-handbook"));
     assert!(!carried.contains("demo.item.master-sorcerers-handbook"));
+    assert!(!carried.contains("demo.item.pattern-sorcery"));
+    assert!(!carried.contains("demo.item.grimoire-of-power"));
     assert!(!carried.contains("demo.item.cantrips-for-beginners"));
     assert!(!carried.contains("demo.item.black-prayers"));
 
@@ -89,7 +116,7 @@ fn sorcery_high_mage_birth_keeps_only_the_first_book_and_realm() {
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 24);
+    assert_eq!(learned.len(), 32);
     assert!(
         learned
             .iter()
@@ -566,6 +593,453 @@ fn sorcery_create_stair_respects_surface_and_permanent_terrain() {
         .as_str(),
         "demo.terrain.stairs-up" | "demo.terrain.stairs-down"
     ));
+}
+
+#[test]
+fn sorcery_fourth_book_projection_uses_level_and_spell_power() {
+    let ability_ids = [
+        "demo.ability.sorcery-fetch",
+        "demo.ability.sorcery-clairvoyance",
+        "demo.ability.sorcery-device-mastery",
+        "demo.ability.sorcery-banish",
+        "demo.ability.sorcery-invulnerability",
+    ];
+    let projected = |bonus| {
+        let mut game = sorcery_high_mage_game(0x504f_5745_525f_3530, 50, &ability_ids);
+        grant_spell_power(&mut game, bonus);
+        game.snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>()
+    };
+
+    let positive = projected(7);
+    assert!(matches!(
+        positive["demo.ability.sorcery-fetch"].effects.as_slice(),
+        [AbilityEffectSpecDto::FetchItem {
+            maximum_weight_tenths_pound: 1_153
+        }]
+    ));
+    assert!(matches!(
+        positive["demo.ability.sorcery-clairvoyance"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Clairvoyance {
+            telepathy_duration_ticks: 25,
+            telepathy_duration_dice: 1,
+            telepathy_duration_sides: 46,
+        }]
+    ));
+    assert!(matches!(
+        positive["demo.ability.sorcery-device-mastery"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::DeviceMastery {
+            duration_base: 7,
+            device_power_bonus: 5,
+        }]
+    ));
+    assert!(matches!(
+        positive["demo.ability.sorcery-banish"].effects.as_slice(),
+        [AbilityEffectSpecDto::Banish {
+            maximum_distance: 307
+        }]
+    ));
+    assert!(matches!(
+        positive["demo.ability.sorcery-invulnerability"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Invulnerability {
+            duration_dice: 1,
+            duration_sides: 4,
+            duration_bonus: 4,
+            duration_spell_power_bonus: Some(7),
+        }]
+    ));
+
+    let negative = projected(-20);
+    assert!(matches!(
+        negative["demo.ability.sorcery-fetch"].effects.as_slice(),
+        [AbilityEffectSpecDto::FetchItem {
+            maximum_weight_tenths_pound: 0
+        }]
+    ));
+    assert!(matches!(
+        negative["demo.ability.sorcery-clairvoyance"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Clairvoyance {
+            telepathy_duration_sides: 0,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        negative["demo.ability.sorcery-banish"].effects.as_slice(),
+        [AbilityEffectSpecDto::Banish {
+            maximum_distance: 0
+        }]
+    ));
+
+    let mut suppressed = sorcery_high_mage_game(
+        0x504f_5745_525f_4e45,
+        50,
+        &[
+            "demo.ability.sorcery-clairvoyance",
+            "demo.ability.sorcery-device-mastery",
+        ],
+    );
+    grant_spell_power(&mut suppressed, -20);
+    suppressed
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Sorcery High-Mage should retain mana")
+        .current = 1_000;
+    suppressed
+        .resolve_player_ability(
+            "demo.ability.sorcery-clairvoyance",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("negative spell power Clairvoyance should resolve");
+    assert_eq!(
+        suppressed
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_TELEPATHY)
+            .expect("Clairvoyance should retain its fixed duration")
+            .remaining_ticks,
+        25
+    );
+    suppressed
+        .resolve_player_ability(
+            "demo.ability.sorcery-device-mastery",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("zero-duration Device Mastery should resolve");
+    assert!(!suppressed.player_has_status_kind(STATUS_DEVICE_MASTERY));
+}
+
+#[test]
+fn sorcery_probe_reveals_true_identity_and_create_door_uses_only_empty_floor() {
+    let mut probe =
+        sorcery_high_mage_game(0x5052_4f42_455f_3038, 8, &["demo.ability.sorcery-probe"]);
+    clear_monsters(&mut probe);
+    let target = Position {
+        x: probe.player.position.x + 1,
+        y: probe.player.position.y,
+    };
+    replace_terrain(&mut probe, target, "demo.terrain.floor");
+    let mut actor = actor_from_runtime_spawn(
+        "test.sorcery.probe",
+        "demo.actor.small-kobold",
+        target,
+        8,
+        110,
+        100,
+        true,
+    );
+    actor.hp = 5;
+    actor.appearance_kind_id = Some("demo.actor.large-kobold".to_owned());
+    probe.entities.push(actor);
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+    probe
+        .resolve_player_ability(
+            "demo.ability.sorcery-probe",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut changed,
+            &mut Vec::new(),
+        )
+        .expect("Probe should resolve");
+    assert_eq!(probe.entities[0].appearance_kind_id, None);
+    assert!(changed.contains(&target));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityProbed { report, .. }
+            if report.entity_id == "test.sorcery.probe"
+                && report.target_kind_id == "demo.actor.small-kobold"
+                && report.hp == 5
+                && report.max_hp == 8
+                && report.speed == 110
+                && report.alignment == AbilityProbeAlignmentDto::Evil
+                && report.faction == EntityFactionDto::Hostile
+    )));
+
+    let mut doors = sorcery_high_mage_game(
+        0x444f_4f52_535f_3138,
+        18,
+        &["demo.ability.sorcery-create-door"],
+    );
+    clear_monsters(&mut doors);
+    let origin = doors.player.position;
+    let surroundings = TERRAIN_INTERACTION_DIRECTIONS
+        .into_iter()
+        .map(|direction| doors.position_in_direction(direction))
+        .collect::<Vec<_>>();
+    for position in surroundings {
+        replace_terrain(&mut doors, position, "demo.terrain.floor");
+    }
+    let occupied = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    let permanent = Position {
+        x: origin.x - 1,
+        y: origin.y,
+    };
+    give_inventory_item(&mut doors, "test.door.blocker", "demo.item.dagger");
+    doors
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.door.blocker")
+        .expect("door blocker should exist")
+        .location = ItemLocation::Ground(occupied);
+    replace_terrain(&mut doors, permanent, "demo.terrain.permanent-wall");
+    doors
+        .resolve_player_ability(
+            "demo.ability.sorcery-create-door",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Create Door should resolve");
+    assert_eq!(
+        doors.terrain[doors.index(occupied).unwrap()],
+        "demo.terrain.floor"
+    );
+    assert_eq!(
+        doors.terrain[doors.index(permanent).unwrap()],
+        "demo.terrain.permanent-wall"
+    );
+    let created = Position {
+        x: origin.x,
+        y: origin.y - 1,
+    };
+    assert_eq!(
+        doors.terrain[doors.index(created).unwrap()],
+        "demo.terrain.door-closed"
+    );
+}
+
+#[test]
+fn sorcery_device_mastery_banish_and_invulnerability_commit_shared_rules() {
+    let mut mastery = sorcery_high_mage_game(
+        0x4445_5649_4345_3530,
+        50,
+        &["demo.ability.sorcery-device-mastery"],
+    );
+    grant_spell_power(&mut mastery, 7);
+    mastery
+        .resolve_player_ability(
+            "demo.ability.sorcery-device-mastery",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Device Mastery should resolve");
+    let status = mastery
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_DEVICE_MASTERY)
+        .expect("Device Mastery should apply its status");
+    assert!((8..=14).contains(&status.remaining_ticks));
+    assert_eq!(status.granted_modifiers.device_power_bonus, 5);
+    assert_eq!(mastery.effective_player_device_power_bonus(), 5);
+    assert_eq!(device_power_value(100, 5), 125);
+
+    clear_monsters(&mut mastery);
+    let target_position = Position {
+        x: mastery.player.position.x + 1,
+        y: mastery.player.position.y,
+    };
+    replace_terrain(&mut mastery, target_position, "demo.terrain.floor");
+    mastery.entities.push(actor_from_runtime_spawn(
+        "test.device-mastery.target",
+        "demo.actor.small-kobold",
+        target_position,
+        100,
+        110,
+        100_000,
+        true,
+    ));
+    let wand_id = mastery
+        .items
+        .iter_mut()
+        .find(|item| item.kind_id == "demo.item.magic-missile-wand")
+        .map(|item| {
+            item.activation
+                .as_mut()
+                .expect("starting wand should carry its activation")
+                .device_check_difficulty = 0;
+            item.id.clone()
+        })
+        .expect("Sorcery High-Mage should retain the shared starting wand");
+    let mut plain = mastery.clone();
+    plain
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_DEVICE_MASTERY);
+    mastery.rng = RfbRng::seeded(32);
+    plain.rng = RfbRng::seeded(32);
+    for game in [&mut mastery, &mut plain] {
+        dispatch_next(
+            game,
+            GameCommand::UseItem {
+                item_id: wand_id.clone(),
+                target: Some(TargetSelection::Direction {
+                    direction: Direction::East,
+                }),
+            },
+        );
+    }
+    let remaining_hp = |game: &Game| {
+        game.entities
+            .iter()
+            .find(|actor| actor.id == "test.device-mastery.target")
+            .expect("device target should survive the comparison")
+            .hp
+    };
+    assert!(
+        remaining_hp(&mastery) < remaining_hp(&plain),
+        "Device Mastery should increase actual device damage"
+    );
+
+    let mut banish =
+        sorcery_high_mage_game(0x4241_4e49_5348_3431, 41, &["demo.ability.sorcery-banish"]);
+    clear_monsters(&mut banish);
+    let origin = banish.player.position;
+    let ordinary = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    let guardian = Position {
+        x: origin.x + 2,
+        y: origin.y,
+    };
+    replace_terrain(&mut banish, ordinary, "demo.terrain.floor");
+    replace_terrain(&mut banish, guardian, "demo.terrain.floor");
+    banish.entities.push(actor_from_runtime_spawn(
+        "test.banish.ordinary",
+        "demo.actor.small-kobold",
+        ordinary,
+        8,
+        110,
+        100,
+        true,
+    ));
+    banish.entities.push(actor_from_runtime_spawn(
+        "test.banish.guardian",
+        "demo.actor.warrens-keeper",
+        guardian,
+        100,
+        110,
+        100,
+        true,
+    ));
+    let mut events = Vec::new();
+    banish
+        .resolve_player_ability(
+            "demo.ability.sorcery-banish",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Banish should resolve");
+    let ordinary_after = banish
+        .entities
+        .iter()
+        .find(|actor| actor.id == "test.banish.ordinary")
+        .unwrap()
+        .position;
+    let guardian_after = banish
+        .entities
+        .iter()
+        .find(|actor| actor.id == "test.banish.guardian")
+        .unwrap()
+        .position;
+    assert_ne!(ordinary_after, ordinary);
+    assert_eq!(guardian_after, guardian);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::Banish { targets, .. }]
+                if targets.iter().any(|target| target.entity_id == "test.banish.guardian" && target.resisted))
+    )));
+
+    let mut invulnerable = sorcery_high_mage_game(
+        0x494e_5655_4c4e_3432,
+        42,
+        &["demo.ability.sorcery-invulnerability"],
+    );
+    for (slot, kind) in [
+        VirtueKindDto::Unlife,
+        VirtueKindDto::Honour,
+        VirtueKindDto::Sacrifice,
+        VirtueKindDto::Valour,
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        invulnerable.virtues[slot] = VirtueDto { kind, value: 0 };
+    }
+    invulnerable
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Sorcery High-Mage should retain mana")
+        .current = 1_000;
+    let mut invulnerability_events = Vec::new();
+    invulnerable
+        .resolve_player_ability(
+            "demo.ability.sorcery-invulnerability",
+            TargetSelection::SelfTarget,
+            &mut invulnerability_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Invulnerability should resolve");
+    assert!(
+        invulnerable.player_has_status_kind(STATUS_INVULNERABILITY),
+        "{invulnerability_events:?}"
+    );
+    assert_eq!(invulnerable.virtue_current(VirtueKindDto::Unlife), -2);
+    assert_eq!(invulnerable.virtue_current(VirtueKindDto::Honour), -2);
+    assert_eq!(invulnerable.virtue_current(VirtueKindDto::Sacrifice), -3);
+    assert_eq!(invulnerable.virtue_current(VirtueKindDto::Valour), -5);
+    let status = invulnerable
+        .player
+        .statuses
+        .iter_mut()
+        .find(|status| status.kind_id == STATUS_INVULNERABILITY)
+        .expect("Invulnerability should apply its shared status");
+    assert_eq!(status.incoming_damage_percent, 0);
+    assert!((5..=8).contains(&status.remaining_ticks));
+    status.remaining_ticks = 1;
+    let energy_before = invulnerable.player.energy_need;
+    invulnerable
+        .process_status_tick(
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+            false,
+        )
+        .expect("Invulnerability expiration should resolve");
+    assert_eq!(
+        invulnerable.player.energy_need,
+        energy_before + STANDARD_ACTION_COST
+    );
 }
 
 #[test]

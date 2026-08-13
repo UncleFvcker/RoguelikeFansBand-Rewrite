@@ -774,3 +774,110 @@ fn arcane_fourth_book_completes_the_original_realm_and_acquisition() {
         }
     ));
 }
+
+#[test]
+fn sorcery_fourth_book_completes_the_original_realm_and_keeps_rare_books_out_of_bookstores() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let books = content
+        .ability_books
+        .iter()
+        .filter(|book| book.realm_id.as_deref() == Some("sorcery"))
+        .collect::<Vec<_>>();
+    assert_eq!(books.len(), 4);
+    assert!(books.iter().all(|book| book.ability_ids.len() == 8));
+    let ability_ids = books
+        .iter()
+        .flat_map(|book| book.ability_ids.iter())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(ability_ids.len(), 32);
+    assert!(
+        content
+            .abilities
+            .iter()
+            .filter(|ability| ability_ids.contains(&ability.id))
+            .all(|ability| ability
+                .effect
+                .ordered_effects()
+                .iter()
+                .all(|effect| !matches!(effect, AbilityEffectDefinition::NoOp { .. })))
+    );
+
+    let fourth = books
+        .iter()
+        .find(|book| book.rank == Some(4))
+        .expect("Sorcery fourth book should compile");
+    assert_eq!(fourth.id, "demo.ability-book.grimoire-of-power");
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.grimoire-of-power")
+        .expect("Grimoire of Power item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (80, 30, 100_000, Some(fourth.id.as_str()))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Grimoire of Power should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (80, u16::MAX, 33)
+    );
+    let stocked = content
+        .shops
+        .iter()
+        .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+        .collect::<Vec<_>>();
+    assert_eq!(stocked.len(), 2);
+    assert!(
+        stocked
+            .iter()
+            .all(|shop| shop.category == ShopCategory::BlackMarket)
+    );
+
+    let expected = [
+        ("demo.ability.sorcery-probe", 8, 8, 30, 160),
+        ("demo.ability.sorcery-create-door", 18, 20, 75, 1_800),
+        ("demo.ability.sorcery-fetch", 20, 20, 65, 1_400),
+        ("demo.ability.sorcery-clairvoyance", 25, 30, 70, 3_000),
+        ("demo.ability.sorcery-device-mastery", 37, 55, 75, 3_700),
+        ("demo.ability.sorcery-alchemy", 40, 40, 80, 7_000),
+        ("demo.ability.sorcery-banish", 41, 43, 50, 8_200),
+        ("demo.ability.sorcery-invulnerability", 42, 65, 75, 10_500),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+}

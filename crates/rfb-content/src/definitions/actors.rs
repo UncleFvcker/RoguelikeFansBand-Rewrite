@@ -626,6 +626,8 @@ pub struct StatModifiers {
     pub speed: i32,
     #[serde(default)]
     pub spell_power_bonus: i32,
+    #[serde(default)]
+    pub device_power_bonus: i32,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]

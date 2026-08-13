@@ -1074,6 +1074,7 @@ fn stat_modifiers_to_dto(modifiers: &StatModifiers) -> StatModifiersDto {
         charisma: modifiers.charisma,
         speed: modifiers.speed,
         spell_power_bonus: modifiers.spell_power_bonus,
+        device_power_bonus: modifiers.device_power_bonus,
     }
 }
 
@@ -1090,6 +1091,7 @@ fn stat_modifiers_from_dto(modifiers: StatModifiersDto) -> StatModifiers {
         charisma: modifiers.charisma,
         speed: modifiers.speed,
         spell_power_bonus: modifiers.spell_power_bonus,
+        device_power_bonus: modifiers.device_power_bonus,
     }
 }
 
@@ -1161,6 +1163,7 @@ fn affix_property_bundle_out_of_range(properties: &AffixPropertyBundleDefinition
             modifiers.charisma,
             modifiers.speed,
             modifiers.spell_power_bonus,
+            modifiers.device_power_bonus,
         ]
         .into_iter()
         .any(|value| !(-100..=100).contains(&value))

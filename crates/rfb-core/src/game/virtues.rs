@@ -178,6 +178,13 @@ pub(super) fn validate_virtues(virtues: &[VirtueDto]) -> bool {
 }
 
 impl Game {
+    pub(super) fn apply_invulnerability_opening_virtues(&mut self) {
+        self.add_virtue(VirtueKindDto::Unlife, -2);
+        self.add_virtue(VirtueKindDto::Honour, -2);
+        self.add_virtue(VirtueKindDto::Sacrifice, -3);
+        self.add_virtue(VirtueKindDto::Valour, -5);
+    }
+
     pub(super) fn virtue_current(&self, kind: VirtueKindDto) -> i16 {
         self.virtues
             .iter()

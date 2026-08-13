@@ -398,6 +398,7 @@ impl Game {
                 charisma: definition.modifiers.charisma,
                 speed: definition.modifiers.speed,
                 spell_power_bonus: definition.modifiers.spell_power_bonus,
+                device_power_bonus: definition.modifiers.device_power_bonus,
             })
     }
 
@@ -594,6 +595,9 @@ impl Game {
                     spell_power_bonus: total
                         .spell_power_bonus
                         .saturating_add(affix.modifiers.spell_power_bonus),
+                    device_power_bonus: total
+                        .device_power_bonus
+                        .saturating_add(affix.modifiers.device_power_bonus),
                 }
             },
         );
@@ -772,6 +776,9 @@ impl Game {
                     spell_power_bonus: total
                         .spell_power_bonus
                         .saturating_add(item.spell_power_bonus),
+                    device_power_bonus: total
+                        .device_power_bonus
+                        .saturating_add(item.device_power_bonus),
                 }
             })
     }
@@ -780,6 +787,13 @@ impl Game {
         self.player.statuses.iter().fold(
             self.equipment_modifiers().spell_power_bonus,
             |total, status| total.saturating_add(status.granted_modifiers.spell_power_bonus),
+        )
+    }
+
+    pub(super) fn effective_player_device_power_bonus(&self) -> i32 {
+        self.player.statuses.iter().fold(
+            self.equipment_modifiers().device_power_bonus,
+            |total, status| total.saturating_add(status.granted_modifiers.device_power_bonus),
         )
     }
 

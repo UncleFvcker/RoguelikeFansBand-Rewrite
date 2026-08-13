@@ -11,6 +11,7 @@ impl Game {
         profile_id: Option<String>,
         effect: ItemUseEffectDefinition,
         plan: ItemUsePlan,
+        device_power_bonus: i32,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -47,10 +48,16 @@ impl Game {
             .clone();
         let target_stats =
             self.actor_derived_stats(&self.entities[target_index], &definition, false);
-        let raw_damage = self
-            .roll_damage(damage_dice, damage_sides)
-            .saturating_add(i32::from(damage_bonus))
-            .max(0);
+        let raw_damage = i32::try_from(device_power_value(
+            u64::try_from(
+                self.roll_damage(damage_dice, damage_sides)
+                    .saturating_add(i32::from(damage_bonus))
+                    .max(0),
+            )
+            .expect("non-negative device damage must fit u64"),
+            device_power_bonus,
+        ))
+        .expect("device-powered damage must fit i32");
         let damage_type = DamageType::from(damage_type);
         if self.try_reflect_player_bolt(
             target_index,

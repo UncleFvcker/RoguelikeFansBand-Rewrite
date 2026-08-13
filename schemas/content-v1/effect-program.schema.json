@@ -1005,6 +1005,7 @@
                 "charisma": 0,
                 "constitution": 0,
                 "defense": 0,
+                "devicePowerBonus": 0,
                 "dexterity": 0,
                 "intelligence": 0,
                 "maxHp": 0,
@@ -2390,6 +2391,11 @@
           "type": "integer"
         },
         "defense": {
+          "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "devicePowerBonus": {
           "default": 0,
           "format": "int32",
           "type": "integer"

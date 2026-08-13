@@ -1177,7 +1177,7 @@
             "x": 46,
             "y": 16
           },
-          "hp": 75,
+          "hp": 84,
           "speed": 109,
           "energyNeed": 19
         }
@@ -1210,7 +1210,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1244,7 +1245,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1278,7 +1280,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1312,7 +1315,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         },
@@ -1340,7 +1344,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "unexamined"
         }
@@ -1366,7 +1371,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "equipmentBonuses": {
             "meleeAttacks": 0,
@@ -1407,7 +1413,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1443,7 +1450,8 @@
             "constitution": 0,
             "charisma": 0,
             "speed": 0,
-            "spellPowerBonus": 0
+            "spellPowerBonus": 0,
+            "devicePowerBonus": 0
           },
           "identification": "identified",
           "quality": "ordinary",
@@ -1484,7 +1492,7 @@
           "discovered": true
         },
         {
-          "itemId": "generated.item.177",
+          "itemId": "generated.item.176",
           "discovered": true
         },
         {
@@ -1522,7 +1530,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 178,
+      "nextItemInstanceSerial": 177,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1530,26 +1538,14 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "23fcbf6a7ad95528743606c76423de01a41d8a6c5390052f54077d439578bcff"
+      "stateHash": "73955c5df04f2489afe02dd17af22c513981bd0f96cd0e5605fd1d89f66f8813"
     },
     "events": [
       {
-        "kind": "combat.projectile-hit",
-        "messageKey": "projectile-hit",
+        "kind": "combat.projectile-miss",
+        "messageKey": "projectile-miss",
         "args": {
-          "damage": "9",
           "target": "demo.actor.adobe-golem"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 12,
-            "armorReduction": 3,
-            "resistanceAdjustment": 0,
-            "finalDamage": 9,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
         },
         "trace": {
           "origin": {

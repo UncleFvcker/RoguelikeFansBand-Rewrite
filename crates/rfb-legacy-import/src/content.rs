@@ -2347,6 +2347,7 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
         (SORCERY_BOOK_TVAL, SORCERY_FIRST_BOOK_SVAL) => Some(SORCERY_FIRST_BOOK_ID),
         (SORCERY_BOOK_TVAL, SORCERY_SECOND_BOOK_SVAL) => Some(SORCERY_SECOND_BOOK_ID),
         (SORCERY_BOOK_TVAL, SORCERY_THIRD_BOOK_SVAL) => Some(SORCERY_THIRD_BOOK_ID),
+        (SORCERY_BOOK_TVAL, SORCERY_FOURTH_BOOK_SVAL) => Some(SORCERY_FOURTH_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_FIRST_BOOK_SVAL) => Some(ARCANE_FIRST_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_SECOND_BOOK_SVAL) => Some(ARCANE_SECOND_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_THIRD_BOOK_SVAL) => Some(ARCANE_THIRD_BOOK_ID),
@@ -9132,6 +9133,8 @@ const SORCERY_SECOND_BOOK_SVAL: u16 = 1;
 const SORCERY_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.sorcery-master-sorcerers-handbook";
 const SORCERY_THIRD_BOOK_SVAL: u16 = 2;
 const SORCERY_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.sorcery-pattern-sorcery";
+const SORCERY_FOURTH_BOOK_SVAL: u16 = 3;
+const SORCERY_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.sorcery-grimoire-of-power";
 const ARCANE_BOOK_TVAL: u16 = 96;
 const ARCANE_FIRST_BOOK_SVAL: u16 = 0;
 const ARCANE_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-cantrips-for-beginners";
@@ -18218,6 +18221,7 @@ F:BRAND_VAMP | HOLD_LIFE
             (SORCERY_FIRST_BOOK_SVAL, SORCERY_FIRST_BOOK_ID),
             (SORCERY_SECOND_BOOK_SVAL, SORCERY_SECOND_BOOK_ID),
             (SORCERY_THIRD_BOOK_SVAL, SORCERY_THIRD_BOOK_ID),
+            (SORCERY_FOURTH_BOOK_SVAL, SORCERY_FOURTH_BOOK_ID),
         ] {
             let sorcery_book = LegacyItemEntry {
                 tval: SORCERY_BOOK_TVAL,

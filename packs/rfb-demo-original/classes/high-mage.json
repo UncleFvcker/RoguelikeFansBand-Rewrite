@@ -150,7 +150,8 @@
         "abilityBookIds": [
           "demo.ability-book.beginners-handbook",
           "demo.ability-book.master-sorcerers-handbook",
-          "demo.ability-book.pattern-sorcery"
+          "demo.ability-book.pattern-sorcery",
+          "demo.ability-book.grimoire-of-power"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -177,7 +178,15 @@
           { "abilityId": "demo.ability.sorcery-self-knowledge", "minimumLevel": 15, "resourceCost": 12, "baseFailurePercent": 65 },
           { "abilityId": "demo.ability.sorcery-teleport-level", "minimumLevel": 17, "resourceCost": 12, "baseFailurePercent": 50 },
           { "abilityId": "demo.ability.sorcery-word-of-recall", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 65 },
-          { "abilityId": "demo.ability.sorcery-dimension-door", "minimumLevel": 36, "resourceCost": 35, "baseFailurePercent": 70 }
+          { "abilityId": "demo.ability.sorcery-dimension-door", "minimumLevel": 36, "resourceCost": 35, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.sorcery-probe", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.sorcery-create-door", "minimumLevel": 18, "resourceCost": 20, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.sorcery-fetch", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.sorcery-clairvoyance", "minimumLevel": 25, "resourceCost": 30, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.sorcery-device-mastery", "minimumLevel": 37, "resourceCost": 55, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.sorcery-alchemy", "minimumLevel": 40, "resourceCost": 40, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.sorcery-banish", "minimumLevel": 41, "resourceCost": 43, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.sorcery-invulnerability", "minimumLevel": 42, "resourceCost": 65, "baseFailurePercent": 75 }
         ]
       }
     ]

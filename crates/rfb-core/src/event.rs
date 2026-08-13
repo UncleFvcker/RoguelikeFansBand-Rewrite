@@ -5,7 +5,8 @@ use std::collections::BTreeMap;
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
-    AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
+    AbilityProbeAlignmentDto, AbilityProbeTargetDto, AbilitySummonResolutionDto,
+    AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
     AbilityVisibleDamageResolutionDto, CheckResolutionDto, Direction, GameEventDto,
     GameEventOutcomeDto, HealingResolutionDto, ItemCurseRemovalResolutionDto,
     ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentResolutionDto,
@@ -180,6 +181,10 @@ pub(crate) enum DomainEvent {
         ability_id: String,
         name_key: String,
         report: SelfKnowledgeReport,
+    },
+    AbilityProbed {
+        ability_id: String,
+        report: AbilityProbeTargetDto,
     },
     MonsterAbilityDecision {
         resolution: MonsterAbilityDecisionResolutionDto,
@@ -1718,6 +1723,27 @@ impl DomainEvent {
                     ("resources", report.resources),
                 ],
             ),
+            Self::AbilityProbed { ability_id, report } => {
+                let alignment = match report.alignment {
+                    AbilityProbeAlignmentDto::Neutral => "neutral",
+                    AbilityProbeAlignmentDto::Good => "good",
+                    AbilityProbeAlignmentDto::Evil => "evil",
+                    AbilityProbeAlignmentDto::GoodAndEvil => "good-and-evil",
+                };
+                dto(
+                    "ability.probe",
+                    "ability-probe",
+                    [
+                        ("source", ability_id),
+                        ("target", report.target_kind_id),
+                        ("hp", report.hp.to_string()),
+                        ("maxHp", report.max_hp.to_string()),
+                        ("speed", report.speed.to_string()),
+                        ("alignment", alignment.to_owned()),
+                        ("faction", format!("{:?}", report.faction).to_lowercase()),
+                    ],
+                )
+            }
             Self::MonsterAbilityDecision { resolution } => {
                 let target = resolution
                     .selected_ability_id
