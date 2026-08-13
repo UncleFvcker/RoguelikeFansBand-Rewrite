@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.kin-cthugha-the-living-flame",
+  "input": "self",
+  "steps": [
+    {
+      "actorKindId": "demo.actor.cthugha-the-living-flame",
+      "count": 2,
+      "durationTurns": 10000,
+      "radius": 2,
+      "type": "summon"
+    }
+  ]
+}

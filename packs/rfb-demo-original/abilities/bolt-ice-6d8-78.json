@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.bolt-ice-6d8-78",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-legacy-bolt-ice-6d8-78-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.bolt-ice-6d8-78",
+  "nameKey": "ability-legacy-bolt-ice-6d8-78-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

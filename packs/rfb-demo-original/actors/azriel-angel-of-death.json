@@ -1,0 +1,224 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 765,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 20,
+  "contactAuras": [
+    {
+      "damageDice": 5,
+      "damageSides": 5,
+      "damageType": "nether"
+    }
+  ],
+  "damageDice": 6,
+  "damageSides": 12,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.paladin"
+  },
+  "defense": 19,
+  "descriptionKey": "actor-demo-azriel-angel-of-death-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 75000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "A",
+  "hitPointDice": {
+    "dice": 65,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.azriel-angel-of-death",
+  "level": 80,
+  "maxHp": 6500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.touch-60",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.touch-60",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.touch-60",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.touch-60",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d280-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-nether-10d10-210",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.psy-spear-1d120-100",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l80-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-240",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-angel-l80-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-mana-33-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-cold-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-dragon-l80-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.invulnerability-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-light-10d10-370",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 40,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-azriel-angel-of-death-name",
+  "reflectsBolts": true,
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "nether": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "angel",
+    "good",
+    "kin-glyph-65",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

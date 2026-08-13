@@ -6666,6 +6666,162 @@
       "id": "mahishasura-the-buffalo-demon",
       "tags": ["orc-cave"],
       "omittedFlags": ["ATTR_MULTI", "MALE"]
+    },
+    {
+      "sourceIndex": 815,
+      "id": "unmaker",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 816,
+      "id": "cyberdemon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 874,
+      "id": "spectral-wyrm",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1154,
+      "id": "pit-fiend",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 817,
+      "id": "hela-queen-of-the-dead",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE", "NORSE2"]
+    },
+    {
+      "sourceIndex": 818,
+      "id": "the-mouth-of-sauron",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 819,
+      "id": "klingsor-evil-master-of-magic",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 820,
+      "id": "corwin-lord-of-avalon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 821,
+      "id": "the-emperor-quylthulg",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+    },
+    {
+      "sourceIndex": 823,
+      "id": "cthugha-the-living-flame",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1141,
+      "id": "tsukuyomi-spirit-of-moon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 720,
+      "id": "greater-balrog",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 824,
+      "id": "benedict-the-ideal-warrior",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 865,
+      "id": "lourph",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1083,
+      "id": "ultimate-magus",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1142,
+      "id": "amaterasu-spirit-of-sun",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE"]
+    },
+    {
+      "sourceIndex": 765,
+      "id": "azriel-angel-of-death",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 825,
+      "id": "the-witch-king-of-angmar",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 826,
+      "id": "cyaegha",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1085,
+      "id": "spellwarp-automaton",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1087,
+      "id": "tonberry",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1088,
+      "id": "ninja-tonberry",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1089,
+      "id": "master-tonberry",
+      "tags": ["orc-cave"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 1164,
+      "id": "mothra",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1250,
+      "id": "polyphemus-the-blind-cyclops",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1361,
+      "id": "shesha-the-infinite",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["HINDU2", "MALE", "POS_GAIN_AC"]
     }
   ]
 }

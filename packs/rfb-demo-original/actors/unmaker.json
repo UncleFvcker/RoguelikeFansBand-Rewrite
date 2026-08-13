@@ -1,0 +1,182 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 815,
+    "maxDepth": 999,
+    "multiplies": true,
+    "randomMovementPercent": 50,
+    "rarity": 4
+  },
+  "attack": 19,
+  "contactAuras": [
+    {
+      "damageDice": 3,
+      "damageSides": 5,
+      "damageType": "fire"
+    },
+    {
+      "damageDice": 3,
+      "damageSides": 5,
+      "damageType": "cold"
+    },
+    {
+      "damageDice": 3,
+      "damageSides": 5,
+      "damageType": "electricity"
+    }
+  ],
+  "damageDice": 10,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "percent": 60
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "fine"
+  },
+  "defense": 5,
+  "descriptionKey": "actor-demo-unmaker-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 3000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 6,
+    "forceMaximum": true,
+    "sides": 66
+  },
+  "id": "demo.actor.unmaker",
+  "killsWeakerBodies": true,
+  "level": 77,
+  "maxHp": 396,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength",
+              "dexterity",
+              "constitution",
+              "intelligence",
+              "wisdom",
+              "charisma"
+            ],
+            "chancePercent": 50,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "disenchant"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "drain-charges"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 10,
+            "amountSides": 10,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-unmaker-name",
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "gravity": "resistant",
+    "inertia": "resistant",
+    "light": "resistant",
+    "nexus": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant",
+    "shards": "resistant",
+    "sound": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "cold-blooded",
+    "kin-glyph-69",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "shapechanger"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true,
+    "destroysWalls": true
+  }
+}

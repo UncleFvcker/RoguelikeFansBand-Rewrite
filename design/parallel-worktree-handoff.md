@@ -461,3 +461,13 @@ git diff --stat
 - 共享协调点：pack `1.305.0` / content hash
   `f368e19819dc892d9514fe9204c19660a0fc6bba68cd4cad4fdbc4fec12ddc2c`；Protocol `1.189`、
   State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
+
+## 29. monsters-next 当前交接（P67 L77–80 直接导入）
+
+- P67A 导入 L77–78 的 11 个普通分配 actor，P67B 导入 L79–80 的 15 个普通分配 actor；
+  全部保留 RFB master 的 source index、层级、权威中文名和 Orc Cave 分配。
+- 本批只新增现有运行时可表达的参数化 ability/program，没有新增 importer 例外、DTO、运行时、
+  协议、存档或 state-hash 字段，也不刷新无关 replay fixture。
+- 共享协调点：pack `1.306.0` / content hash
+  `a9628dbec24ccc3ec4363bbc6a7a6ae13ac1706984925cc71872d13c9b999514`；Protocol `1.189`、
+  State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-master-tonberry",
+  "descriptionKey": "ability-legacy-kin-master-tonberry-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-master-tonberry",
+  "nameKey": "ability-legacy-kin-master-tonberry-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

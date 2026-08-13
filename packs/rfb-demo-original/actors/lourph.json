@@ -1,0 +1,145 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 865,
+    "maxDepth": 999,
+    "rarity": 7
+  },
+  "attack": 19,
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "physical",
+  "defense": 11,
+  "descriptionKey": "actor-demo-lourph-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1000,
+  "formatVersion": 1,
+  "glyph": "S",
+  "hitPointDice": {
+    "dice": 23,
+    "sides": 7
+  },
+  "id": "demo.actor.lourph",
+  "killsWeakerBodies": true,
+  "level": 79,
+  "maxHp": 92,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 5,
+            "damageSides": 5,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength",
+              "dexterity",
+              "constitution",
+              "intelligence",
+              "wisdom",
+              "charisma"
+            ],
+            "chancePercent": 80,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-lourph-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "light": "vulnerable",
+    "nether": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 140,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "cold-blooded",
+    "empty-mind",
+    "kin-glyph-83",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "spider"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true
+  }
+}

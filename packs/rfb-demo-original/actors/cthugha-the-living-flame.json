@@ -1,0 +1,150 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 823,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 19,
+  "contactAuras": [
+    {
+      "damageDice": 4,
+      "damageSides": 5,
+      "damageType": "fire"
+    },
+    {
+      "damageDice": 4,
+      "damageSides": 5,
+      "damageType": "electricity"
+    }
+  ],
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items"
+  },
+  "defense": 10,
+  "descriptionKey": "actor-demo-cthugha-the-living-flame-description",
+  "experienceValue": 35000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 50,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.cthugha-the-living-flame",
+  "killsWeakerBodies": true,
+  "level": 78,
+  "light": {
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 5000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 12,
+            "damageSides": 10,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 12,
+            "damageSides": 10,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 8,
+            "damageSides": 8,
+            "damageType": "plasma",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.kin-cthugha-the-living-flame",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-cthugha-the-living-flame-name",
+  "resistances": {
+    "electricity": "resistant",
+    "fire": "immune",
+    "plasma": "resistant"
+  },
+  "role": "monster",
+  "speed": 133,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "eldritch-horror",
+    "evil",
+    "kin-glyph-69",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true
+  }
+}

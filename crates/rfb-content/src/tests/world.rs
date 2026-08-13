@@ -733,7 +733,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 664);
+    assert_eq!(orc_cave.len(), 690);
 
     for id in [
         "demo.actor.bunyip",
@@ -766,10 +766,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 56];
+    let mut level_counts = [0_usize; 60];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=76).contains(&actor.level));
+        assert!((21..=80).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -782,7 +782,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 6, 6, 4, 4, 6, 7,
+            6, 9, 6, 6, 4, 4, 6, 7, 4, 7, 5, 10,
         ]
     );
 
@@ -5139,6 +5139,57 @@ fn p66_level_71_76_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p67_level_77_80_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("unmaker", 815, 77),
+        ("cyberdemon", 816, 77),
+        ("spectral-wyrm", 874, 77),
+        ("pit-fiend", 1154, 77),
+        ("hela-queen-of-the-dead", 817, 78),
+        ("the-mouth-of-sauron", 818, 78),
+        ("klingsor-evil-master-of-magic", 819, 78),
+        ("corwin-lord-of-avalon", 820, 78),
+        ("the-emperor-quylthulg", 821, 78),
+        ("cthugha-the-living-flame", 823, 78),
+        ("tsukuyomi-spirit-of-moon", 1141, 78),
+        ("greater-balrog", 720, 79),
+        ("benedict-the-ideal-warrior", 824, 79),
+        ("lourph", 865, 79),
+        ("ultimate-magus", 1083, 79),
+        ("amaterasu-spirit-of-sun", 1142, 79),
+        ("azriel-angel-of-death", 765, 80),
+        ("the-witch-king-of-angmar", 825, 80),
+        ("cyaegha", 826, 80),
+        ("spellwarp-automaton", 1085, 80),
+        ("tonberry", 1087, 80),
+        ("ninja-tonberry", 1088, 80),
+        ("master-tonberry", 1089, 80),
+        ("mothra", 1164, 80),
+        ("polyphemus-the-blind-cyclops", 1250, 80),
+        ("shesha-the-infinite", 1361, 80),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+}
+
+#[test]
 fn p64b_low_risk_mappings_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -5619,6 +5670,7 @@ fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
             "demo.actor.angel",
             "demo.actor.archangel",
             "demo.actor.archon",
+            "demo.actor.azriel-angel-of-death",
             "demo.actor.cherub",
             "demo.actor.fallen-angel",
             "demo.actor.planetar",
@@ -7434,7 +7486,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        598
+        622
     );
 }
 
@@ -7531,7 +7583,7 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
                 .filter(|drop| drop.theme_table_id.as_deref() == Some("demo.loot-table.warrior"))
         })
         .collect::<Vec<_>>();
-    assert_eq!(warrior_drops.len(), 92);
+    assert_eq!(warrior_drops.len(), 93);
     assert!(
         warrior_drops
             .iter()

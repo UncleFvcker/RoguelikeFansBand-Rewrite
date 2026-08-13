@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-polyphemus-the-blind-cyclops",
+  "descriptionKey": "ability-legacy-kin-polyphemus-the-blind-cyclops-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-polyphemus-the-blind-cyclops",
+  "nameKey": "ability-legacy-kin-polyphemus-the-blind-cyclops-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}
