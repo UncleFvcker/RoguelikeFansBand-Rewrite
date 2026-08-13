@@ -762,6 +762,8 @@ pub struct LegacyBodyTemplate {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LegacyCharacterEntry {
     pub id: String,
+    pub name: String,
+    pub description: String,
     pub stats: [i32; 6],
     pub skills: [i32; 8],
     pub extra_skills: [i32; 8],
@@ -769,6 +771,7 @@ pub struct LegacyCharacterEntry {
     pub base_hp: i32,
     pub exp: i32,
     pub infra: i32,
+    pub shop_adjust: i32,
     pub flags: Vec<String>,
     pub hooks: Vec<String>,
     pub dynamic: bool,
@@ -786,6 +789,8 @@ impl Default for LegacyCharacterEntry {
     fn default() -> Self {
         Self {
             id: String::new(),
+            name: String::new(),
+            description: String::new(),
             stats: [0; 6],
             skills: [0; 8],
             extra_skills: [0; 8],
@@ -793,6 +798,7 @@ impl Default for LegacyCharacterEntry {
             base_hp: 0,
             exp: 100,
             infra: 0,
+            shop_adjust: 110,
             flags: Vec::new(),
             hooks: Vec::new(),
             dynamic: false,
@@ -4997,7 +5003,13 @@ pub fn parse_character_block(name: &str, body: &str) -> LegacyCharacterEntry {
             entry.hooks.push("dynamic-adjustment".to_owned());
             continue;
         }
-        let rhs = rest[eq_index + 1..].trim().trim_end_matches(';').trim_end();
+        let rhs = rest[eq_index + 1..]
+            .split("/*")
+            .next()
+            .expect("split always yields the leading assignment")
+            .trim()
+            .trim_end_matches(';')
+            .trim_end();
         let literal: Option<i32> = rhs.parse().ok();
         if let Some(position) = CHARACTER_STAT_KEYS.iter().position(|key| *key == lhs) {
             match literal {
@@ -5022,7 +5034,17 @@ pub fn parse_character_block(name: &str, body: &str) -> LegacyCharacterEntry {
             }
         } else {
             match lhs {
-                "name" | "desc" | "subname" | "subdesc" | "shop_adjust" => {}
+                "name" => {
+                    entry.name = serde_json::from_str(rhs).unwrap_or_default();
+                }
+                "desc" => {
+                    entry.description = serde_json::from_str(rhs).unwrap_or_default();
+                }
+                "subname" | "subdesc" => {}
+                "shop_adjust" => match literal {
+                    Some(value) => entry.shop_adjust = value,
+                    None => entry.dynamic = true,
+                },
                 "life" => match literal {
                     Some(value) => entry.life = value,
                     None => entry.dynamic = true,
@@ -5851,6 +5873,7 @@ fn race_json(
         "descriptionKey": format!("race-legacy-{}-description", entry.id),
         "lifePercent": entry.life.clamp(25, 400),
         "experiencePercent": entry.exp.clamp(25, 500),
+        "shopAdjustPercent": entry.shop_adjust.clamp(50, 200),
         "baseHp": entry.base_hp.clamp(-1_000, 1_000),
         "skillSetId": format!("rfb-legacy.skill-set.race-{}", entry.id),
         "kinCategory": format!("kin-glyph-{}", u32::from(legacy_race_kin_glyph(&entry.id))),
@@ -7261,6 +7284,9 @@ fn melee_effect_json(
         "TIME" if effect.dice.is_none() => serde_json::json!({ "type": "time" }),
         "SLOW" => serde_json::json!({ "type": "slow" }),
         "INERTIA" if effect.dice.is_none() => serde_json::json!({ "type": "inertia" }),
+        "POLYMORPH" if effect.dice.is_none() => {
+            serde_json::json!({ "type": "polymorph-player" })
+        }
         "STUN" => {
             let (duration_dice, duration_sides) = effect.dice?;
             serde_json::json!({
@@ -11875,6 +11901,247 @@ pub fn sync_demo_wilderness(
         replace_wilderness_property(&world_source, &wilderness_json)?,
     )?;
     Ok(selection.towns.len() + selection.dungeons.len())
+}
+
+const P62_POLYMORPH_RACES: &[(u16, &str, bool)] = &[
+    (1, "tonberry", true),
+    (3, "hobbit", true),
+    (4, "gnome", true),
+    (5, "dwarf", true),
+    (6, "snotling", true),
+    (7, "half-troll", true),
+    (8, "amberite", true),
+    (9, "high-elf", true),
+    (10, "barbarian", true),
+    (11, "ogre", true),
+    (12, "half-giant", true),
+    (13, "half-titan", true),
+    (14, "cyclops", true),
+    (15, "yeek", true),
+    (16, "klackon", true),
+    (17, "kobold", true),
+    (18, "nibelung", true),
+    (19, "dark-elf", true),
+    (21, "mindflayer", true),
+    (22, "imp", true),
+    (23, "golem", true),
+    (24, "skeleton", true),
+    (25, "zombie", true),
+    (26, "vampire", true),
+    (27, "spectre", true),
+    (28, "sprite", true),
+    (29, "beastman", true),
+    (30, "ent", true),
+    (31, "archon", true),
+    (32, "balrog", true),
+    (33, "dunadan", true),
+    (34, "shadow-fairy", true),
+    (35, "kutar", true),
+    (36, "android", false),
+    (37, "doppelganger", true),
+    (51, "centaur", true),
+    (60, "wood-elf", true),
+    (63, "half-orc", true),
+    (64, "einheri", true),
+    (67, "boit", true),
+    (70, "tomte", true),
+    (74, "maia", true),
+    (1_007, "small-kobold", false),
+    (1_008, "mangy-leper", false),
+];
+
+fn legacy_races_by_id(
+    source: &Path,
+    source_commit: &str,
+) -> Result<BTreeMap<String, LegacyCharacterEntry>, LegacyImportError> {
+    let source_objects = list_legacy_c_sources(source, source_commit)?
+        .into_iter()
+        .map(|path| {
+            let text = read_legacy_object_at(source, source_commit, &path)?;
+            Ok(text)
+        })
+        .collect::<Result<Vec<_>, LegacyImportError>>()?;
+    let mut races = BTreeMap::new();
+    for text in &source_objects {
+        for (name, body) in extract_race_blocks(text) {
+            let mut entry = parse_character_block(&name, &body);
+            if let Some(hook) = entry.calc_bonuses_fn.clone() {
+                let (resistances, free_act, speed) = parse_calc_bonuses_defenses(text, &hook);
+                entry.resistances = resistances;
+                entry.free_act = free_act;
+                entry.speed = speed;
+            }
+            races.entry(entry.id.clone()).or_insert(entry);
+        }
+    }
+    Ok(races)
+}
+
+fn write_p62_locale_block(
+    path: &Path,
+    entries: &[(String, String, String)],
+    chinese: bool,
+) -> Result<(), LegacyImportError> {
+    const START: &str = "# P62 polymorph forms (generated)";
+    const END: &str = "# /P62 polymorph forms";
+    let mut source = fs::read_to_string(path)?;
+    if let Some(start) = source.find(START) {
+        let end = source[start..]
+            .find(END)
+            .map(|offset| start + offset + END.len())
+            .ok_or_else(|| {
+                LegacyImportError::InvalidDemoMonsterSelection(format!(
+                    "{} has an unterminated P62 locale block",
+                    path.display()
+                ))
+            })?;
+        source.replace_range(start..end, "");
+    }
+    source = source.trim_end().to_owned();
+    source.push_str("\n\n");
+    source.push_str(START);
+    source.push('\n');
+    for (id, name, description) in entries {
+        let display_name = if chinese {
+            name.clone()
+        } else {
+            id.split('-')
+                .map(|part| {
+                    let mut chars = part.chars();
+                    chars.next().map_or_else(String::new, |first| {
+                        first.to_uppercase().collect::<String>() + chars.as_str()
+                    })
+                })
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
+        let display_description = if chinese && !description.is_empty() {
+            description.replace('\n', "\n    ")
+        } else if chinese {
+            "RFB 临时变形形态。".to_owned()
+        } else {
+            "Temporary RFB polymorph form.".to_owned()
+        };
+        source.push_str(&format!(
+            "race-legacy-{id}-name = {display_name}\nrace-legacy-{id}-description = {display_description}\n"
+        ));
+    }
+    source.push_str(END);
+    source.push('\n');
+    fs::write(path, source)?;
+    Ok(())
+}
+
+pub fn sync_demo_polymorph_races(
+    source: &Path,
+    pack_root: &Path,
+) -> Result<usize, LegacyImportError> {
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let races_by_id = legacy_races_by_id(source, &source_commit)?;
+    let races_output = pack_root.join("races");
+    let skill_sets_output = pack_root.join("skillSets");
+    fs::create_dir_all(&races_output)?;
+    fs::create_dir_all(&skill_sets_output)?;
+    let standard_slots = serde_json::from_slice::<serde_json::Value>(&fs::read(
+        races_output.join("rfb-human.json"),
+    )?)?
+    .get("bodySlots")
+    .and_then(serde_json::Value::as_array)
+    .ok_or_else(|| {
+        LegacyImportError::InvalidDemoMonsterSelection(
+            "demo human race has no standard body slots".to_owned(),
+        )
+    })?
+    .iter()
+    .map(|slot| {
+        let id = slot.get("id").and_then(serde_json::Value::as_str);
+        let slot_type = slot.get("slotType").and_then(serde_json::Value::as_str);
+        id.zip(slot_type)
+            .map(|(id, slot_type)| (id.to_owned(), slot_type.to_owned()))
+            .ok_or_else(|| {
+                LegacyImportError::InvalidDemoMonsterSelection(
+                    "demo human race has an invalid body slot".to_owned(),
+                )
+            })
+    })
+    .collect::<Result<Vec<_>, LegacyImportError>>()?;
+    let mut locale_entries = Vec::with_capacity(P62_POLYMORPH_RACES.len());
+    let mut report = ContentImportReport::default();
+    for (legacy_index, id, random_candidate) in P62_POLYMORPH_RACES {
+        let entry = races_by_id.get(*id).ok_or_else(|| {
+            LegacyImportError::InvalidDemoMonsterSelection(format!("missing P62 race source {id}"))
+        })?;
+        if entry.dynamic || entry.name.is_empty() {
+            return Err(LegacyImportError::InvalidDemoMonsterSelection(format!(
+                "P62 race source {id} is dynamic or unnamed"
+            )));
+        }
+        let body_slots = if *id == "centaur" {
+            standard_slots
+                .iter()
+                .filter(|(_, slot_type)| slot_type != "boots")
+                .cloned()
+                .collect::<Vec<_>>()
+        } else {
+            standard_slots.clone()
+        };
+        let mut race = race_json(entry, &body_slots, &mut report);
+        race["legacyIndex"] = serde_json::json!(legacy_index);
+        let mut tags = vec!["legacy-import"];
+        if *random_candidate {
+            tags.push("polymorph-candidate");
+        }
+        if entry.flags.iter().any(|flag| flag == "RACE_NO_POLY") {
+            tags.push("polymorph-immune");
+        }
+        race["tags"] = serde_json::json!(tags);
+        fs::write(
+            races_output.join(format!("{id}.json")),
+            serde_json::to_string_pretty(&race)? + "\n",
+        )?;
+        let mut skill_set = character_skill_set_json(entry, &format!("race-{id}"));
+        if let Some(entries) = skill_set
+            .get_mut("entries")
+            .and_then(serde_json::Value::as_array_mut)
+        {
+            for skill in entries {
+                if let Some(skill_id) = skill.get_mut("skillId")
+                    && let Some(id) = skill_id.as_str()
+                {
+                    *skill_id =
+                        serde_json::json!(id.replacen("rfb-legacy.skill.", "demo.skill.", 1));
+                }
+            }
+        }
+        fs::write(
+            skill_sets_output.join(format!("race-{id}.json")),
+            serde_json::to_string_pretty(&skill_set)? + "\n",
+        )?;
+        locale_entries.push((
+            (*id).to_owned(),
+            entry.name.clone(),
+            entry.description.clone(),
+        ));
+    }
+    write_p62_locale_block(
+        &pack_root
+            .parent()
+            .and_then(Path::parent)
+            .unwrap_or(pack_root)
+            .join("locales/en-US/content.ftl"),
+        &locale_entries,
+        false,
+    )?;
+    write_p62_locale_block(
+        &pack_root
+            .parent()
+            .and_then(Path::parent)
+            .unwrap_or(pack_root)
+            .join("locales/zh-CN/content.ftl"),
+        &locale_entries,
+        true,
+    )?;
+    Ok(P62_POLYMORPH_RACES.len())
 }
 
 pub fn sync_demo_monsters(

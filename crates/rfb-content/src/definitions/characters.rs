@@ -83,6 +83,10 @@ pub struct RaceDefinition {
     pub schema: String,
     pub format_version: u16,
     pub id: String,
+    /// Original RFB race or mimic index. Temporary-form mechanics use this
+    /// stable source identity instead of depending on localized names.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub legacy_index: Option<u16>,
     pub name_key: String,
     pub description_key: String,
     #[serde(default)]

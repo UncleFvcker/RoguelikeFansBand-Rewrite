@@ -709,6 +709,20 @@ impl Game {
             return Err(CoreError::InvalidSave("character progress is invalid"));
         }
         self.validate_actor(&self.player, ActorRole::Player)?;
+        let expected_body_slots = self
+            .player
+            .statuses
+            .iter()
+            .find_map(|status| status.granted_race_id.as_deref())
+            .and_then(|race_id| self.content.race(race_id))
+            .map(body_slots_for_race)
+            .map(Ok)
+            .unwrap_or_else(|| resolve_body_slots(&self.content, self.build.as_ref()))?;
+        if self.body_slots != expected_body_slots {
+            return Err(CoreError::InvalidSave(
+                "player body slots do not match the active race",
+            ));
+        }
         if self.index(self.player.position).is_none() {
             return Err(CoreError::InvalidSave("player position is invalid"));
         }
@@ -1442,7 +1456,14 @@ impl Game {
         }) && actor
             .statuses
             .windows(2)
-            .all(|window| window[0].kind_id < window[1].kind_id);
+            .all(|window| window[0].kind_id < window[1].kind_id)
+            && (expected_role != ActorRole::Player
+                || actor
+                    .statuses
+                    .iter()
+                    .filter(|status| status.granted_race_id.is_some())
+                    .count()
+                    <= 1);
         let resistance_memory_is_valid = if actor.observed_player_resistances.is_empty() {
             true
         } else {

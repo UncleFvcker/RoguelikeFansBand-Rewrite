@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 22,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-archon-description",
+  "experiencePercent": 200,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.archon",
+  "kinCategory": "kin-glyph-65",
+  "legacyIndex": 31,
+  "lifePercent": 103,
+  "modifiers": {
+    "charisma": 3,
+    "constitution": 2,
+    "dexterity": 1,
+    "strength": 2,
+    "wisdom": 4
+  },
+  "nameKey": "race-legacy-archon-name",
+  "shopAdjustPercent": 90,
+  "skillSetId": "rfb-legacy.skill-set.race-archon",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

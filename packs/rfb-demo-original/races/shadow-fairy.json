@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 13,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-shadow-fairy-description",
+  "experiencePercent": 140,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.shadow-fairy",
+  "kinCategory": "kin-glyph-104",
+  "legacyIndex": 34,
+  "lifePercent": 91,
+  "modifiers": {
+    "charisma": -3,
+    "constitution": -1,
+    "dexterity": 1,
+    "intelligence": 2,
+    "strength": -2,
+    "wisdom": 2
+  },
+  "nameKey": "race-legacy-shadow-fairy-name",
+  "resistances": {
+    "light": "vulnerable"
+  },
+  "shopAdjustPercent": 110,
+  "skillSetId": "rfb-legacy.skill-set.race-shadow-fairy",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

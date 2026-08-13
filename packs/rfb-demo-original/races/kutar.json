@@ -1,0 +1,90 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 21,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-kutar-description",
+  "experiencePercent": 175,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.kutar",
+  "kinCategory": "kin-glyph-104",
+  "legacyIndex": 35,
+  "lifePercent": 102,
+  "modifiers": {
+    "charisma": 2,
+    "constitution": 2,
+    "dexterity": 1,
+    "intelligence": -1,
+    "wisdom": -1
+  },
+  "nameKey": "race-legacy-kutar-name",
+  "resistances": {
+    "confusion": "resistant"
+  },
+  "shopAdjustPercent": 95,
+  "skillSetId": "rfb-legacy.skill-set.race-kutar",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

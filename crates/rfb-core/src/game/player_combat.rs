@@ -1052,7 +1052,8 @@ impl Game {
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
                     | MeleeBlowEffectDefinition::Disenchant { .. }
                     | MeleeBlowEffectDefinition::Amnesia { .. }
-                    | MeleeBlowEffectDefinition::Time { .. } => None,
+                    | MeleeBlowEffectDefinition::Time { .. }
+                    | MeleeBlowEffectDefinition::PolymorphPlayer { .. } => None,
                     MeleeBlowEffectDefinition::Unlife {
                         amount_dice,
                         amount_sides,

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 12,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-doppelganger-description",
+  "experiencePercent": 150,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.doppelganger",
+  "kinCategory": "kin-glyph-112",
+  "legacyIndex": 37,
+  "lifePercent": 85,
+  "modifiers": {
+    "charisma": -3,
+    "constitution": -3,
+    "dexterity": -3,
+    "intelligence": -3,
+    "strength": -3,
+    "wisdom": -3
+  },
+  "nameKey": "race-legacy-doppelganger-name",
+  "shopAdjustPercent": 150,
+  "skillSetId": "rfb-legacy.skill-set.race-doppelganger",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

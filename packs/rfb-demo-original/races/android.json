@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 26,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-android-description",
+  "experiencePercent": 200,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.android",
+  "kinCategory": "kin-glyph-103",
+  "legacyIndex": 36,
+  "lifePercent": 108,
+  "modifiers": {
+    "constitution": 3,
+    "dexterity": 1,
+    "intelligence": -1,
+    "strength": 3,
+    "wisdom": -5
+  },
+  "nameKey": "race-legacy-android-name",
+  "resistances": {
+    "poison": "resistant"
+  },
+  "shopAdjustPercent": 120,
+  "skillSetId": "rfb-legacy.skill-set.race-android",
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "legacy-import",
+    "polymorph-immune"
+  ]
+}

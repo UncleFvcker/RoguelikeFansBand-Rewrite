@@ -471,6 +471,11 @@ impl Game {
                     self.player_resource_maxima(),
                 )
             });
+        let player_race_status_expiring = self
+            .player
+            .statuses
+            .iter()
+            .any(|status| status.granted_race_id.is_some() && status.remaining_ticks <= 1);
         let player_damage_percent = self.player_incoming_damage_percent();
         let player_tick = process_actor_status_tick(&mut self.player, false, player_damage_percent);
         let player_status_expired = !player_tick.expired.is_empty();
@@ -496,6 +501,10 @@ impl Game {
                 &previous_resource_maxima,
                 events,
             );
+        }
+        if player_race_status_expiring {
+            let body_slots = resolve_body_slots(&self.content, self.build.as_ref())?;
+            self.reconcile_player_body_slots(body_slots);
         }
         if player_status_expired {
             self.refresh_player_resource_maxima();

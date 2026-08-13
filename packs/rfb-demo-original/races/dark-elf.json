@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 18,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-dark-elf-description",
+  "experiencePercent": 155,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.dark-elf",
+  "kinCategory": "kin-glyph-104",
+  "legacyIndex": 19,
+  "lifePercent": 97,
+  "modifiers": {
+    "charisma": 3,
+    "constitution": -2,
+    "dexterity": 2,
+    "intelligence": 3,
+    "strength": -1,
+    "wisdom": 2
+  },
+  "nameKey": "race-legacy-dark-elf-name",
+  "resistances": {
+    "dark": "resistant"
+  },
+  "shopAdjustPercent": 120,
+  "skillSetId": "rfb-legacy.skill-set.race-dark-elf",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

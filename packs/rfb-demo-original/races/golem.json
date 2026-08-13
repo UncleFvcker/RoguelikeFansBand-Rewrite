@@ -1,0 +1,93 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 23,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-golem-description",
+  "experiencePercent": 185,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.golem",
+  "kinCategory": "kin-glyph-103",
+  "legacyIndex": 23,
+  "lifePercent": 105,
+  "modifiers": {
+    "constitution": 4,
+    "dexterity": -2,
+    "intelligence": -5,
+    "strength": 4,
+    "wisdom": -5
+  },
+  "nameKey": "race-legacy-golem-name",
+  "resistances": {
+    "poison": "resistant"
+  },
+  "shopAdjustPercent": 120,
+  "skillSetId": "rfb-legacy.skill-set.race-golem",
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

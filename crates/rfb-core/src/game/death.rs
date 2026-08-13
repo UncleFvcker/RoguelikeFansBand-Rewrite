@@ -236,6 +236,7 @@ impl Game {
                 | MeleeBlowEffectDefinition::Time { .. }
                 | MeleeBlowEffectDefinition::Slow { .. }
                 | MeleeBlowEffectDefinition::Inertia { .. }
+                | MeleeBlowEffectDefinition::PolymorphPlayer { .. }
                 | MeleeBlowEffectDefinition::Stun { .. }
                 | MeleeBlowEffectDefinition::Terrify { .. }
                 | MeleeBlowEffectDefinition::Disenchant { .. }

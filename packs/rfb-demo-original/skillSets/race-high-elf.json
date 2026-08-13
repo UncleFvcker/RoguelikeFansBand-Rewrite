@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json",
+  "entries": [
+    {
+      "base": 4,
+      "skillId": "demo.skill.disarming"
+    },
+    {
+      "base": 9,
+      "skillId": "demo.skill.device"
+    },
+    {
+      "base": 12,
+      "skillId": "demo.skill.saving-throw"
+    },
+    {
+      "base": 4,
+      "skillId": "demo.skill.stealth"
+    },
+    {
+      "base": 3,
+      "skillId": "demo.skill.search"
+    },
+    {
+      "base": 14,
+      "skillId": "demo.skill.perception"
+    },
+    {
+      "base": 10,
+      "skillId": "demo.skill.melee"
+    },
+    {
+      "base": 15,
+      "skillId": "demo.skill.ranged"
+    }
+  ],
+  "formatVersion": 1,
+  "id": "rfb-legacy.skill-set.race-high-elf"
+}

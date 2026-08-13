@@ -372,3 +372,18 @@ git diff --stat
   `ea49544398120d561c201e480e8dce5b918c75d326a73b786ea4c0d371ad7a7b`、Protocol `1.189`、
   State Hash Schema v94、save v1、active baseline `contract-v285`（26 条 exact fixture、
   零 waiver）。旧开发存档不兼容缺少 `defeatedLimitedActorCounts` 的 payload。
+
+## 22. monsters-next 当前交接（P62 玩家临时变形）
+
+- 新增 actor `demo.actor.lord-of-change`（source index 745，中文名“万变魔君”）及近战效果
+  `polymorph-player`；两次爪击各自保留原版 20% 门控，效果只改变玩家临时形态，不调用
+  怪物目标变形逻辑。
+- 临时形态复用既有 `grantedRaceId` 状态，导入 44 个仅供变形使用的 race profile 与
+  `legacyIndex`。原版分支按屁精、伊克、小狗头人、疥癣麻风病人及 0–74 race index
+  拒绝重掷执行；这些 profile 不开放为出生 build。
+- 身体槽随形态立即调整，不合槽装备移入背包或落在脚下；状态到期恢复永久种族身体，
+  但不自动重新装备。免疫、豁免、形态与持续时间维持原版 RNG 顺序。
+- 共享协调点：pack `1.299.0` / content hash
+  `3d83f462010420e8054c18476f7589d859c8e2e9a1c175a08bd3797e120d4c83`、Protocol `1.189`、
+  State Hash Schema v94、save v1。没有新增存档或状态哈希字段，active replay baseline
+  继续使用 `contract-v285`；行为契约记录为 `contract-v286-player-polymorph`。

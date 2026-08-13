@@ -6,7 +6,8 @@ use rfb_legacy_import::{
     content::{
         audit_demo_item_names, audit_demo_items, audit_demo_monsters, audit_demo_mutations,
         audit_demo_weapon_proficiencies, import_content, sync_demo_ability_ground_items,
-        sync_demo_item_destruction, sync_demo_items, sync_demo_monsters, sync_demo_wilderness,
+        sync_demo_item_destruction, sync_demo_items, sync_demo_monsters, sync_demo_polymorph_races,
+        sync_demo_wilderness,
     },
     inspect_file, record_catalog, verify_catalog,
 };
@@ -24,7 +25,7 @@ fn main() -> ExitCode {
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args_os().skip(1);
     let mode = args.next().ok_or(
-        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | sync-demo-item-destruction <selection> <adaptations> <items> | sync-demo-ability-ground-items <abilities> <programs> | audit-demo-monsters <selection> <minimum-level> <maximum-level> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
+        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content|sync-demo-polymorph-races> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | sync-demo-item-destruction <selection> <adaptations> <items> | sync-demo-ability-ground-items <abilities> <programs> | audit-demo-monsters <selection> <minimum-level> <maximum-level> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
     )?;
     let path = PathBuf::from(args.next().ok_or(
         "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | sync-demo-item-destruction <selection> <adaptations> <items> | sync-demo-ability-ground-items <abilities> <programs> | audit-demo-monsters <selection> <minimum-level> <maximum-level> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
@@ -220,6 +221,15 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
             )?);
             println!("{}", sync_demo_monsters(&source, &path, &output)?);
         }
+        "sync-demo-polymorph-races" => {
+            if args.next().is_some() {
+                return Err("sync-demo-polymorph-races accepts exactly one pack path".into());
+            }
+            let source = PathBuf::from(env::var_os("RFB_LEGACY_SOURCE").ok_or(
+                "sync-demo-polymorph-races requires RFB_LEGACY_SOURCE to point at the legacy repository",
+            )?);
+            println!("{}", sync_demo_polymorph_races(&source, &path)?);
+        }
         "sync-demo-wilderness" => {
             let output =
                 PathBuf::from(args.next().ok_or(
@@ -235,7 +245,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         _ => {
             return Err(
-                "mode must be inspect-prefix, record-catalog, verify-catalog, import-content, audit-demo-item-names, audit-demo-items, audit-demo-weapon-proficiencies, audit-demo-monsters, audit-demo-mutations, sync-demo-items, sync-demo-item-destruction, sync-demo-ability-ground-items, sync-demo-monsters, or sync-demo-wilderness".into(),
+                "mode must be inspect-prefix, record-catalog, verify-catalog, import-content, audit-demo-item-names, audit-demo-items, audit-demo-weapon-proficiencies, audit-demo-monsters, audit-demo-mutations, sync-demo-items, sync-demo-item-destruction, sync-demo-ability-ground-items, sync-demo-monsters, sync-demo-polymorph-races, or sync-demo-wilderness".into(),
             );
         }
     }

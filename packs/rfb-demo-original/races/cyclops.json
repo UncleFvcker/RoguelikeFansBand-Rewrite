@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 24,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-cyclops-description",
+  "experiencePercent": 155,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.cyclops",
+  "kinCategory": "kin-glyph-80",
+  "legacyIndex": 14,
+  "lifePercent": 108,
+  "modifiers": {
+    "charisma": -1,
+    "constitution": 4,
+    "dexterity": -3,
+    "intelligence": -3,
+    "strength": 4,
+    "wisdom": -2
+  },
+  "nameKey": "race-legacy-cyclops-name",
+  "resistances": {
+    "sound": "resistant"
+  },
+  "shopAdjustPercent": 135,
+  "skillSetId": "rfb-legacy.skill-set.race-cyclops",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

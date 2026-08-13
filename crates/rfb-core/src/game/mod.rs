@@ -20,12 +20,12 @@ use crate::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_ANTI_MAGIC,
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
         STATUS_CONFUSION, STATUS_FEAR, STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE,
-        STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY, STATUS_PARALYSIS, STATUS_POISON,
-        STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW,
-        STATUS_STUN, STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI,
-        STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
-        StatusApplication, StatusChange, StatusInstance, StatusStacking, apply_effect,
-        apply_status, resolve_damage,
+        STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY, STATUS_PARALYSIS,
+        STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION,
+        STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_TELEPATHY,
+        STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI, STATUS_UNDERSTANDING, STATUS_UNWELL,
+        STATUS_VENGEANCE, STATUS_WRAITHFORM, StatusApplication, StatusChange, StatusInstance,
+        StatusStacking, apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
     event::{
@@ -70,7 +70,7 @@ use rfb_content::{
     MutationActivationDefinition, MutationPeriodicEffectDefinition, PlayerAbilityDefinition,
     ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
     ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
+    ProceduralStreamerCandidateDefinition, RaceDefinition, SkillKind, SlayLevel, SlayTarget,
     StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
     TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
     affix_is_compatible_with_item,
@@ -574,6 +574,19 @@ fn standard_body_slots() -> Vec<BodySlot> {
         .collect()
 }
 
+fn body_slots_for_race(race: &RaceDefinition) -> Vec<BodySlot> {
+    if race.body_slots.is_empty() {
+        return standard_body_slots();
+    }
+    race.body_slots
+        .iter()
+        .map(|slot| BodySlot {
+            id: slot.id.clone(),
+            slot_type: slot.slot_type.clone(),
+        })
+        .collect()
+}
+
 /// Body slots come from the build's race when it declares any, otherwise
 /// the standard template applies. Games without a build use the standard
 /// template as well.
@@ -585,17 +598,7 @@ fn resolve_body_slots(
         return Ok(standard_body_slots());
     };
     let (_, race, _, _) = build_definitions(content, identity)?;
-    if race.body_slots.is_empty() {
-        return Ok(standard_body_slots());
-    }
-    Ok(race
-        .body_slots
-        .iter()
-        .map(|slot| BodySlot {
-            id: slot.id.clone(),
-            slot_type: slot.slot_type.clone(),
-        })
-        .collect())
+    Ok(body_slots_for_race(race))
 }
 
 fn body_slot_instance_for_type<'a>(

@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 10,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-snotling-description",
+  "experiencePercent": 45,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.snotling",
+  "kinCategory": "kin-glyph-111",
+  "legacyIndex": 6,
+  "lifePercent": 85,
+  "modifiers": {
+    "charisma": -5,
+    "constitution": -2,
+    "dexterity": -2,
+    "intelligence": -2,
+    "strength": -2,
+    "wisdom": -2
+  },
+  "nameKey": "race-legacy-snotling-name",
+  "shopAdjustPercent": 125,
+  "skillSetId": "rfb-legacy.skill-set.race-snotling",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

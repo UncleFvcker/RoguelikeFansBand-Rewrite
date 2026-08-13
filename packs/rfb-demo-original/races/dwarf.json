@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 22,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-dwarf-description",
+  "experiencePercent": 135,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.dwarf",
+  "kinCategory": "kin-glyph-104",
+  "legacyIndex": 5,
+  "lifePercent": 103,
+  "modifiers": {
+    "charisma": 1,
+    "constitution": 2,
+    "dexterity": -2,
+    "intelligence": -2,
+    "strength": 2,
+    "wisdom": 2
+  },
+  "nameKey": "race-legacy-dwarf-name",
+  "shopAdjustPercent": 115,
+  "skillSetId": "rfb-legacy.skill-set.race-dwarf",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

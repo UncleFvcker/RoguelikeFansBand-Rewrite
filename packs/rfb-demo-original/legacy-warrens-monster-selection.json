@@ -6192,6 +6192,12 @@
       "id": "nazgul",
       "tags": ["orc-cave"],
       "omittedFlags": ["MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 745,
+      "id": "lord-of-change",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
     }
   ]
 }

@@ -12,6 +12,7 @@ use rfb_protocol::{
 pub const STATUS_HASTE: &str = "rfb.status.haste";
 pub const STATUS_SLOW: &str = "rfb.status.slow";
 pub const STATUS_POISON: &str = "rfb.status.poison";
+pub const STATUS_PLAYER_POLYMORPH: &str = "rfb.status.player-polymorph";
 pub const STATUS_BLEEDING: &str = "rfb.status.bleeding";
 pub const STATUS_STUN: &str = "rfb.status.stun";
 pub const STATUS_FEAR: &str = "rfb.status.fear";
@@ -281,6 +282,11 @@ pub fn apply_status(
     statuses: &mut Vec<StatusInstance>,
     application: StatusApplication,
 ) -> StatusChange {
+    if application.status.granted_race_id.is_some() {
+        statuses.retain(|status| {
+            status.granted_race_id.is_none() || status.kind_id == application.status.kind_id
+        });
+    }
     let Some(index) = statuses
         .iter()
         .position(|status| status.kind_id == application.status.kind_id)

@@ -1,0 +1,85 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 10,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-mangy-leper-description",
+  "experiencePercent": 100,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.mangy-leper",
+  "kinCategory": "kin-glyph-112",
+  "legacyIndex": 1008,
+  "lifePercent": 88,
+  "modifiers": {
+    "charisma": -3,
+    "constitution": -3,
+    "dexterity": -1,
+    "strength": -1
+  },
+  "nameKey": "race-legacy-mangy-leper-name",
+  "shopAdjustPercent": 110,
+  "skillSetId": "rfb-legacy.skill-set.race-mangy-leper",
+  "tags": [
+    "legacy-import"
+  ]
+}

@@ -2,6 +2,14 @@
 
 use super::*;
 
+const RFB_RACE_SNOTLING: u16 = 6;
+const RFB_RACE_YEEK: u16 = 15;
+const RFB_MIMIC_SMALL_KOBOLD: u16 = 1_007;
+const RFB_MIMIC_MANGY_LEPER: u16 = 1_008;
+const RFB_MAX_RACES: u16 = 75;
+const POLYMORPH_CANDIDATE_TAG: &str = "polymorph-candidate";
+const POLYMORPH_IMMUNE_TAG: &str = "polymorph-immune";
+
 pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<u8> {
     match effect {
         MeleeBlowEffectDefinition::Damage { chance_percent, .. }
@@ -22,6 +30,7 @@ pub(super) fn melee_effect_chance(effect: &MeleeBlowEffectDefinition) -> Option<
         | MeleeBlowEffectDefinition::Time { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Inertia { chance_percent }
+        | MeleeBlowEffectDefinition::PolymorphPlayer { chance_percent }
         | MeleeBlowEffectDefinition::Stun { chance_percent, .. }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
         | MeleeBlowEffectDefinition::Disenchant { chance_percent }
@@ -304,6 +313,173 @@ impl Game {
                 source_kind_id,
             ),
         );
+    }
+
+    fn player_is_polymorph_immune(&self) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == POLYMORPH_IMMUNE_TAG))
+    }
+
+    fn permanent_player_race_legacy_index(&self) -> Option<u16> {
+        self.build
+            .as_ref()
+            .and_then(|identity| self.content.race(&identity.race_id))
+            .and_then(|race| race.legacy_index)
+    }
+
+    fn polymorph_race_id(&mut self) -> Option<String> {
+        let base_index = self.permanent_player_race_legacy_index();
+        let branch = self.rng.bounded(5);
+        let fixed_index = if branch == 0 && base_index != Some(RFB_RACE_SNOTLING) {
+            Some(RFB_RACE_SNOTLING)
+        } else if branch <= 1 && base_index != Some(RFB_RACE_YEEK) {
+            Some(RFB_RACE_YEEK)
+        } else if branch <= 2 {
+            Some(RFB_MIMIC_SMALL_KOBOLD)
+        } else if branch <= 3 {
+            Some(RFB_MIMIC_MANGY_LEPER)
+        } else {
+            None
+        };
+        if let Some(index) = fixed_index {
+            return self
+                .content
+                .race_by_legacy_index(index)
+                .map(|race| race.id.clone());
+        }
+        loop {
+            let index = u16::try_from(self.rng.bounded(u64::from(RFB_MAX_RACES)))
+                .expect("RFB race roll must fit u16");
+            if base_index == Some(index) {
+                continue;
+            }
+            let Some(race) = self.content.race_by_legacy_index(index) else {
+                continue;
+            };
+            if race.tags.iter().any(|tag| tag == POLYMORPH_CANDIDATE_TAG) {
+                return Some(race.id.clone());
+            }
+        }
+    }
+
+    pub(super) fn reconcile_player_body_slots(&mut self, next_slots: Vec<BodySlot>) {
+        let old_slot_types = self
+            .body_slots
+            .iter()
+            .map(|slot| (slot.id.as_str(), slot.slot_type.as_str()))
+            .collect::<BTreeMap<_, _>>();
+        let mut equipped_indices = self
+            .items
+            .iter()
+            .enumerate()
+            .filter(|(_, item)| matches!(item.location, ItemLocation::Equipped { .. }))
+            .map(|(index, item)| (item.id.clone(), index))
+            .collect::<Vec<_>>();
+        equipped_indices.sort_by(|left, right| left.0.cmp(&right.0));
+        let mut occupied = BTreeSet::new();
+        let mut plan = Vec::with_capacity(equipped_indices.len());
+        for (_, item_index) in equipped_indices {
+            let ItemLocation::Equipped { slot_id } = &self.items[item_index].location else {
+                unreachable!("equipped item plan must retain its location")
+            };
+            let old_slot_type = old_slot_types.get(slot_id.as_str()).copied();
+            let declared_slot_type = self
+                .content
+                .item(&self.items[item_index].kind_id)
+                .and_then(|definition| definition.equipment_slot.as_deref());
+            let compatible = |slot: &BodySlot| {
+                declared_slot_type
+                    .is_some_and(|declared| item_can_occupy_slot_type(declared, &slot.slot_type))
+                    && !occupied.contains(&slot.id)
+            };
+            let next_slot = next_slots
+                .iter()
+                .find(|slot| slot.id == *slot_id && compatible(slot))
+                .or_else(|| {
+                    next_slots.iter().find(|slot| {
+                        old_slot_type == Some(slot.slot_type.as_str()) && compatible(slot)
+                    })
+                })
+                .or_else(|| next_slots.iter().find(|slot| compatible(slot)))
+                .map(|slot| slot.id.clone());
+            if let Some(slot_id) = &next_slot {
+                occupied.insert(slot_id.clone());
+            }
+            plan.push((item_index, next_slot));
+        }
+        let mut unequipped = Vec::new();
+        for (item_index, slot_id) in plan {
+            self.items[item_index].location = slot_id.map_or(ItemLocation::Inventory, |slot_id| {
+                ItemLocation::Equipped { slot_id }
+            });
+            if matches!(self.items[item_index].location, ItemLocation::Inventory) {
+                unequipped.push(item_index);
+            }
+        }
+        self.body_slots = next_slots;
+        unequipped.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
+        while self.inventory_used_slots() > self.inventory_slot_capacity() {
+            let item_index = unequipped.pop().or_else(|| {
+                self.items
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, item)| item.location == ItemLocation::Inventory)
+                    .max_by(|(_, left), (_, right)| left.id.cmp(&right.id))
+                    .map(|(index, _)| index)
+            });
+            let Some(item_index) = item_index else {
+                break;
+            };
+            self.items[item_index].location = ItemLocation::Ground(self.player.position);
+        }
+    }
+
+    pub(super) fn resolve_player_polymorph(
+        &mut self,
+        source_kind_id: &str,
+        source_level: u32,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        if self.player_is_polymorph_immune()
+            || self.monster_saving_throw(source_kind_id, source_level, events)
+        {
+            return;
+        }
+        let Some(race_id) = self.polymorph_race_id() else {
+            return;
+        };
+        let duration = 51_u32.saturating_add(
+            u32::try_from(self.rng.bounded(50)).expect("polymorph duration roll must fit u32"),
+        );
+        let race = self
+            .content
+            .race(&race_id)
+            .expect("selected polymorph race must remain available");
+        let next_slots = body_slots_for_race(race);
+        let status = StatusInstance {
+            kind_id: STATUS_PLAYER_POLYMORPH.to_owned(),
+            intensity: 1,
+            remaining_ticks: duration,
+            source_id: Some(source_kind_id.to_owned()),
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
+            granted_race_id: Some(race_id),
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        };
+        apply_status(
+            &mut self.player.statuses,
+            StatusApplication {
+                status,
+                stacking: StatusStacking::Replace,
+            },
+        );
+        self.reconcile_player_body_slots(next_slots);
+        self.refresh_player_resource_maxima();
+        self.clamp_player_hp_to_effective_max();
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -668,7 +844,8 @@ impl Game {
                     | MeleeBlowEffectDefinition::DrainExperience { .. }
                     | MeleeBlowEffectDefinition::Disenchant { .. }
                     | MeleeBlowEffectDefinition::Amnesia { .. }
-                    | MeleeBlowEffectDefinition::Time { .. } => None,
+                    | MeleeBlowEffectDefinition::Time { .. }
+                    | MeleeBlowEffectDefinition::PolymorphPlayer { .. } => None,
                     MeleeBlowEffectDefinition::Unlife {
                         amount_dice,
                         amount_sides,
@@ -1620,6 +1797,10 @@ impl Game {
                             5
                         };
                         self.minor_slow = self.minor_slow.saturating_add(amount).min(10);
+                        None
+                    }
+                    MeleeBlowEffectDefinition::PolymorphPlayer { .. } => {
+                        self.resolve_player_polymorph(&kind_id, definition.level, events);
                         None
                     }
                     MeleeBlowEffectDefinition::Stun {

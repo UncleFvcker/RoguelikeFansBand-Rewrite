@@ -6,7 +6,23 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.298.0");
+    assert_eq!(catalog.pack_version(), "1.299.0");
+    assert_eq!(catalog.races().count(), 46);
+    assert_eq!(
+        catalog
+            .race_by_legacy_index(6)
+            .expect("P62 Snotling form")
+            .id,
+        "rfb-legacy.race.snotling"
+    );
+    assert!(
+        catalog
+            .race_by_legacy_index(36)
+            .expect("P62 Android immunity profile")
+            .tags
+            .iter()
+            .any(|tag| tag == "polymorph-immune")
+    );
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog

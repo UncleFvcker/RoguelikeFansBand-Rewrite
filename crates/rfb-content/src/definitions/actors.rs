@@ -237,6 +237,10 @@ pub enum MeleeBlowEffectDefinition {
         #[serde(default)]
         chance_percent: Option<u8>,
     },
+    PolymorphPlayer {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
     Stun {
         #[serde(default)]
         chance_percent: Option<u8>,
