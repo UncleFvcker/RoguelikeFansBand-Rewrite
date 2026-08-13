@@ -718,7 +718,8 @@ impl Game {
             .player
             .statuses
             .iter()
-            .find_map(|status| status.granted_race_id.as_deref())
+            .find(|status| status.kind_id == STATUS_PLAYER_POLYMORPH)
+            .and_then(|status| status.granted_race_id.as_deref())
             .and_then(|race_id| self.content.race(race_id))
             .map(body_slots_for_race)
             .map(Ok)
