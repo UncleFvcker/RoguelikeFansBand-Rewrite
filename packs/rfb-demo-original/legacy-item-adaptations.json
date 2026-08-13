@@ -167,6 +167,7 @@
     { "sourceIndex": 518, "sourceName": "[Black Channels]", "sourceId": "black-channels", "itemId": "demo.item.black-channels", "status": "active", "contract": "contract-v106-death-third-book" },
     { "sourceIndex": 519, "sourceName": "[Necronomicon]", "sourceId": "necronomicon", "itemId": "demo.item.necronomicon", "status": "active", "contract": "contract-v107-death-fourth-book" },
     { "sourceIndex": 524, "sourceName": "[Cantrips for Beginners]", "sourceId": "cantrips-for-beginners", "itemId": "demo.item.cantrips-for-beginners", "status": "active", "contract": "class-high-mage-arcane-first-book" },
+    { "sourceIndex": 525, "sourceName": "[Minor Arcana]", "sourceId": "minor-arcana", "itemId": "demo.item.minor-arcana", "status": "active", "contract": "class-high-mage-arcane-second-book" },
     { "sourceIndex": 600, "sourceName": "Wooden Torch", "sourceId": "wooden-torch", "itemId": "demo.item.wooden-torch", "status": "active", "contract": "contract-v159-fuel-light" },
     { "sourceIndex": 601, "sourceName": "Brass Lantern", "sourceId": "brass-lantern", "itemId": "demo.item.brass-lantern", "status": "active", "contract": "contract-v159-fuel-light" },
     { "sourceIndex": 602, "sourceName": "Flask of oil", "sourceId": "flask-of-oil", "itemId": "demo.item.flask-of-oil", "status": "active", "contract": "contract-v159-fuel-light" },

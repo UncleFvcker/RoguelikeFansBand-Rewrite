@@ -606,3 +606,9 @@ save 容器保持 v1，不兼容缺少该字段的旧开发存档。
 `terrain-beam`、`heal-dice` 与 `reduce-status` 投影，并为状态削减增加结构化结算结果。
 这些表面只承载区域照明、门闩/门陷阱射线与骰式治疗；没有新增待处理输入或存档字段，
 State Hash Schema 保持 v93，save 容器保持 v1。
+
+协议 1.190 / Arcane 第二册为探测规格与结算增加 `throughWalls`，为
+`reduce-status` 增加可选 `currentDivisor`，并增加窄化的 `refuel-equipped-light` 规格与
+结构化结算结果。它们分别承载原版穿墙探测、`max(100, current / 5)` 解毒和已装备火把/
+提灯补充一半最大燃料；没有新增待处理输入或存档字段，State Hash Schema 保持 v93，
+save 容器保持 v1。

@@ -2303,6 +2303,7 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
         (DEATH_BOOK_TVAL, DEATH_THIRD_BOOK_SVAL) => Some(DEATH_THIRD_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_FOURTH_BOOK_SVAL) => Some(DEATH_FOURTH_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_FIRST_BOOK_SVAL) => Some(ARCANE_FIRST_BOOK_ID),
+        (ARCANE_BOOK_TVAL, ARCANE_SECOND_BOOK_SVAL) => Some(ARCANE_SECOND_BOOK_ID),
         _ => None,
     }
 }
@@ -8969,6 +8970,8 @@ const DEATH_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.death-necronomicon";
 const ARCANE_BOOK_TVAL: u16 = 96;
 const ARCANE_FIRST_BOOK_SVAL: u16 = 0;
 const ARCANE_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-cantrips-for-beginners";
+const ARCANE_SECOND_BOOK_SVAL: u16 = 1;
+const ARCANE_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-minor-arcana";
 const LEGACY_VAMPIRE_LORD_RACE_ID: &str = "rfb-legacy.race.vampire-lord-form";
 const LEGACY_VAMPIRE_LORD_SKILL_SET_ID: &str = "rfb-legacy.skill-set.race-vampire-lord-form";
 const LEGACY_SLAYING_WEAPON_AFFIX_ID: &str = "rfb-legacy.affix.slaying";
@@ -17211,10 +17214,19 @@ F:BRAND_VAMP | HOLD_LIFE
         );
         let later_arcane_book = LegacyItemEntry {
             tval: ARCANE_BOOK_TVAL,
-            sval: 1,
+            sval: 2,
             ..LegacyItemEntry::default()
         };
         assert_eq!(player_ability_book_for_item(&later_arcane_book), None);
+        let second_arcane_book = LegacyItemEntry {
+            tval: ARCANE_BOOK_TVAL,
+            sval: ARCANE_SECOND_BOOK_SVAL,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(
+            player_ability_book_for_item(&second_arcane_book),
+            Some(ARCANE_SECOND_BOOK_ID)
+        );
     }
 
     #[test]

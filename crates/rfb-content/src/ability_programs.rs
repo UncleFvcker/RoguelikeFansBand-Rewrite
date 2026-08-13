@@ -214,6 +214,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Summon { .. }
                     | AbilityEffectDefinition::SummonCategory { .. }
                     | AbilityEffectDefinition::Detect { .. }
+                    | AbilityEffectDefinition::RefuelEquippedLight { .. }
                     | AbilityEffectDefinition::LightArea { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
                     | AbilityEffectDefinition::RemoveStatus { .. }

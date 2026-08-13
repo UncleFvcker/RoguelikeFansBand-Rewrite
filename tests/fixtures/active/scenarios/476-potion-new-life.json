@@ -36,7 +36,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 364,
+      "rngDrawCounter": 680,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -339,14 +339,14 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 108,
+            "potential": 118,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 118,
+            "potential": 98,
             "effective": 11,
             "index": 8
           },
@@ -360,14 +360,14 @@
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 128,
+            "potential": 148,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 118,
+            "potential": 108,
             "effective": 15,
             "index": 12
           },
@@ -1619,7 +1619,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 179,
+      "nextItemInstanceSerial": 177,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1627,7 +1627,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "2059ba7239270661c583f79e87d3a202ef15baff5ac697e94e331010cf6585bd"
+      "stateHash": "46984d14b52c36a958fad84b1dc2d50656d68da6632bff51e36f89953e76975d"
     },
     "events": [
       {
@@ -1639,6 +1639,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "2059ba7239270661c583f79e87d3a202ef15baff5ac697e94e331010cf6585bd"
+    "saveRoundTripStateHash": "46984d14b52c36a958fad84b1dc2d50656d68da6632bff51e36f89953e76975d"
   }
 }

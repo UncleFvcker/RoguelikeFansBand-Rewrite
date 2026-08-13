@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.189";
+pub const PROTOCOL_VERSION: &str = "1.190";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1079,6 +1079,11 @@ pub enum AbilityEffectSpecDto {
         category: String,
         radius: u8,
         persistent: bool,
+        #[serde(default)]
+        through_walls: bool,
+    },
+    RefuelEquippedLight {
+        maximum_fraction_divisor: u16,
     },
     TransformTerrain {
         source_terrain_ids: Vec<String>,
@@ -1183,6 +1188,8 @@ pub enum AbilityEffectSpecDto {
     ReduceStatus {
         status_kind_id: String,
         amount: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        current_divisor: Option<u32>,
     },
     VisibleDamage {
         damage_dice: u16,
@@ -1338,6 +1345,8 @@ pub struct AbilityDetectSpecDto {
     pub radius: u8,
     #[serde(default)]
     pub persistent: bool,
+    #[serde(default)]
+    pub through_walls: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1984,6 +1993,8 @@ pub struct AbilityDetectResolutionDto {
     #[serde(default)]
     pub persistent: bool,
     #[serde(default)]
+    pub through_walls: bool,
+    #[serde(default)]
     pub detected_positions: Vec<Position>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub detected_entity_ids: Vec<String>,
@@ -2235,6 +2246,13 @@ pub enum AbilityEffectResolutionDto {
         status_kind_id: String,
         before: u32,
         after: u32,
+    },
+    RefuelEquippedLight {
+        effect_index: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        item_id: Option<String>,
+        before: u16,
+        after: u16,
     },
     Skipped {
         effect_index: u8,

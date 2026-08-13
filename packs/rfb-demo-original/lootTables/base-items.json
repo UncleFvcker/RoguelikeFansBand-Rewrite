@@ -1687,6 +1687,13 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.minor-arcana",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 15,
+      "maxDepth": 50
+    },
+    {
       "itemKindId": "demo.item.stone-ring-scroll",
       "weight": 16,
       "quantity": 1,

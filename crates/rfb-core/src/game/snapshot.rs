@@ -457,11 +457,13 @@ impl Game {
                             category,
                             radius,
                             persistent,
+                            through_walls,
                         } => Some(AbilityDetectSpecDto {
                             subject: ability_detect_subject_dto(*subject),
                             category: category.clone(),
                             radius: *radius,
                             persistent: *persistent,
+                            through_walls: *through_walls,
                         }),
                         _ => None,
                     },

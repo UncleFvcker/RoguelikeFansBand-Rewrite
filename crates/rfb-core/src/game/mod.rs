@@ -3177,14 +3177,13 @@ impl Game {
             .map(|(_, _, _, position)| position)
             .collect::<Vec<_>>();
         if persistent {
-            if category == "map" {
-                for position in &positions {
-                    let index = self
-                        .index(*position)
-                        .expect("mapped position must remain valid");
-                    self.explored[index] = true;
-                }
-            } else {
+            for position in &positions {
+                let index = self
+                    .index(*position)
+                    .expect("detected position must remain valid");
+                self.explored[index] = true;
+            }
+            if category != "map" {
                 let concealed_positions = positions
                     .iter()
                     .copied()
@@ -3257,7 +3256,30 @@ impl Game {
                 if distance > u32::from(radius)
                     || (!through_walls && !self.is_visible(*position))
                     || !self.content.item(&item.kind_id).is_some_and(|definition| {
-                        category == "item" || definition.tags.iter().any(|tag| tag == category)
+                        category == "item"
+                            || definition.tags.iter().any(|tag| tag == category)
+                            || (category == "magic-item"
+                                && (definition.artifact_generation.is_some()
+                                    || definition.tags.iter().any(|tag| tag == "artifact")
+                                    || !item.affix_ids.is_empty()
+                                    || !item.rolled_affixes.is_empty()
+                                    || definition.device_generation.is_some()
+                                    || definition.tags.iter().any(|tag| {
+                                        matches!(
+                                            tag.as_str(),
+                                            "jewelry"
+                                                | "device"
+                                                | "scroll"
+                                                | "potion"
+                                                | "book"
+                                                | "spellbook"
+                                        )
+                                    })
+                                    || (definition.equipment_slot.is_some()
+                                        && (item.enchantments.to_armor > 0
+                                            || item.enchantments.to_hit
+                                                + item.enchantments.to_damage
+                                                > 0))))
                     })
                 {
                     return None;
@@ -7064,11 +7086,18 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             category,
             radius,
             persistent,
+            through_walls,
         } => AbilityEffectSpecDto::Detect {
             subject: ability_detect_subject_dto(*subject),
             category: category.clone(),
             radius: *radius,
             persistent: *persistent,
+            through_walls: *through_walls,
+        },
+        AbilityEffectDefinition::RefuelEquippedLight {
+            maximum_fraction_divisor,
+        } => AbilityEffectSpecDto::RefuelEquippedLight {
+            maximum_fraction_divisor: *maximum_fraction_divisor,
         },
         AbilityEffectDefinition::TransformTerrain {
             source_terrain_ids,
@@ -7206,9 +7235,11 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::ReduceStatus {
             status_kind_id,
             amount,
+            current_divisor,
         } => AbilityEffectSpecDto::ReduceStatus {
             status_kind_id: status_kind_id.clone(),
             amount: *amount,
+            current_divisor: *current_divisor,
         },
         AbilityEffectDefinition::VisibleDamage {
             damage_dice,

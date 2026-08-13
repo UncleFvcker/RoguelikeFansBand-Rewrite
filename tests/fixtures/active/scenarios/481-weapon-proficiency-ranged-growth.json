@@ -45,7 +45,7 @@
       "turn": 1,
       "worldTick": 9,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 169,
+      "rngDrawCounter": 167,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1162,12 +1162,12 @@
             "x": 46,
             "y": 16
           },
-          "hp": 71,
+          "hp": 84,
           "speed": 109,
           "energyNeed": 19
         }
       ],
-      "groundItemCount": 3,
+      "groundItemCount": 2,
       "inventoryStackCount": 5,
       "equipmentCount": 3,
       "inventory": [
@@ -1456,10 +1456,6 @@
           "discovered": true
         },
         {
-          "itemId": "generated.item.170",
-          "discovered": true
-        },
-        {
           "itemId": "generated.item.2",
           "discovered": true
         },
@@ -1502,26 +1498,14 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "46182cdeb1cc82b383b9abf1e5473c2b12aee3209d2c386f6c822a7e2a32f1d2"
+      "stateHash": "18b0a169134af7e8e84ded8f1ba869d88f1702c9d33d8d3efc721a9de6c1023a"
     },
     "events": [
       {
-        "kind": "combat.projectile-hit",
-        "messageKey": "projectile-hit",
+        "kind": "combat.projectile-miss",
+        "messageKey": "projectile-miss",
         "args": {
-          "damage": "13",
           "target": "demo.actor.adobe-golem"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 17,
-            "armorReduction": 4,
-            "resistanceAdjustment": 0,
-            "finalDamage": 13,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
         },
         "trace": {
           "origin": {
@@ -1549,8 +1533,8 @@
         }
       },
       {
-        "kind": "combat.projectile-ammo-recovered",
-        "messageKey": "projectile-ammo-recovered",
+        "kind": "combat.projectile-ammo-broken",
+        "messageKey": "projectile-ammo-broken",
         "args": {
           "target": "demo.item.arrow"
         }

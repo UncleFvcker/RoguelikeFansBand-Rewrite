@@ -668,6 +668,10 @@ impl Game {
                 self.resolve_player_detection_effect(&ability, events, changed);
             }
             (
+                AbilityEffectDefinition::RefuelEquippedLight { .. },
+                AbilityTargetPlan::SelfTarget,
+            ) => self.resolve_player_refuel_equipped_light_effect(&ability, events),
+            (
                 AbilityEffectDefinition::TransformTerrain { .. },
                 AbilityTargetPlan::TerrainTransform { center, positions },
             ) => {
@@ -2812,22 +2816,13 @@ impl Game {
                         AbilityEffectDefinition::ReduceStatus {
                             status_kind_id,
                             amount,
+                            current_divisor,
                         } => {
-                            let (before, after) = self
-                                .player
-                                .statuses
-                                .iter()
-                                .position(|status| status.kind_id == *status_kind_id)
-                                .map_or((0, 0), |status_index| {
-                                    let before = self.player.statuses[status_index].remaining_ticks;
-                                    let after = before.saturating_sub(*amount);
-                                    if after == 0 {
-                                        self.player.statuses.remove(status_index);
-                                    } else {
-                                        self.player.statuses[status_index].remaining_ticks = after;
-                                    }
-                                    (before, after)
-                                });
+                            let (before, after) = self.reduce_player_status(
+                                status_kind_id,
+                                *amount,
+                                *current_divisor,
+                            );
                             AbilityEffectResolutionDto::ReduceStatus {
                                 effect_index,
                                 status_kind_id: status_kind_id.clone(),
@@ -3193,25 +3188,12 @@ impl Game {
         let AbilityEffectDefinition::ReduceStatus {
             ref status_kind_id,
             amount,
+            current_divisor,
         } = ability.effect
         else {
             unreachable!("status reduction executor requires a reduce-status effect");
         };
-        let (before, after) = self
-            .player
-            .statuses
-            .iter()
-            .position(|status| status.kind_id == *status_kind_id)
-            .map_or((0, 0), |index| {
-                let before = self.player.statuses[index].remaining_ticks;
-                let after = before.saturating_sub(amount);
-                if after == 0 {
-                    self.player.statuses.remove(index);
-                } else {
-                    self.player.statuses[index].remaining_ticks = after;
-                }
-                (before, after)
-            });
+        let (before, after) = self.reduce_player_status(status_kind_id, amount, current_divisor);
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {
@@ -3220,6 +3202,80 @@ impl Game {
                 effects: vec![AbilityEffectResolutionDto::ReduceStatus {
                     effect_index: 0,
                     status_kind_id: status_kind_id.clone(),
+                    before,
+                    after,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn reduce_player_status(
+        &mut self,
+        status_kind_id: &str,
+        minimum_amount: u32,
+        current_divisor: Option<u32>,
+    ) -> (u32, u32) {
+        self.player
+            .statuses
+            .iter()
+            .position(|status| status.kind_id == status_kind_id)
+            .map_or((0, 0), |index| {
+                let before = self.player.statuses[index].remaining_ticks;
+                let amount = current_divisor.map_or(minimum_amount, |divisor| {
+                    minimum_amount.max(before / divisor)
+                });
+                let after = before.saturating_sub(amount);
+                if after == 0 {
+                    self.player.statuses.remove(index);
+                } else {
+                    self.player.statuses[index].remaining_ticks = after;
+                }
+                (before, after)
+            })
+    }
+
+    fn resolve_player_refuel_equipped_light_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::RefuelEquippedLight {
+            maximum_fraction_divisor,
+        } = ability.effect
+        else {
+            unreachable!("light refuel executor requires a light refuel effect");
+        };
+        let mut item_id = None;
+        let mut before = 0;
+        let mut after = 0;
+        if let Some(item) = self.items.iter_mut().find(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "light")
+                && item.fuel.is_some_and(|fuel| {
+                    matches!(
+                        fuel.kind,
+                        rfb_protocol::ItemFuelKindDto::Torch
+                            | rfb_protocol::ItemFuelKindDto::Lantern
+                    )
+                })
+        }) {
+            item_id = Some(item.id.clone());
+            let fuel = item.fuel.as_mut().expect("selected light must retain fuel");
+            before = fuel.current;
+            fuel.current = fuel
+                .current
+                .saturating_add(fuel.maximum / maximum_fraction_divisor)
+                .min(fuel.maximum);
+            after = fuel.current;
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::RefuelEquippedLight {
+                    effect_index: 0,
+                    item_id,
                     before,
                     after,
                 }],
@@ -5326,23 +5382,24 @@ impl Game {
             category,
             radius,
             persistent,
+            through_walls,
         } = &ability.effect
         else {
             unreachable!("detection executor requires a detection effect");
         };
         let (detected_positions, detected_entity_ids) = match subject {
             AbilityDetectSubjectDefinition::Terrain => (
-                self.detect_terrain_positions(category, *radius, *persistent, false),
+                self.detect_terrain_positions(category, *radius, *persistent, *through_walls),
                 Vec::new(),
             ),
             AbilityDetectSubjectDefinition::Actor => self.detect_actor_positions(category, *radius),
             AbilityDetectSubjectDefinition::Item => {
-                let detected = self.detect_item_positions(category, *radius, false);
+                let detected = self.detect_item_positions(category, *radius, *through_walls);
                 self.mark_item_instances_discovered(&detected.1);
                 detected
             }
             AbilityDetectSubjectDefinition::Gold => {
-                let detected = self.detect_gold_positions(*radius, false);
+                let detected = self.detect_gold_positions(*radius, *through_walls);
                 self.mark_gold_piles_discovered(&detected.1);
                 detected
             }
@@ -5389,6 +5446,7 @@ impl Game {
                 category: category.clone(),
                 radius: *radius,
                 persistent: *persistent,
+                through_walls: *through_walls,
                 detected_positions,
                 detected_entity_ids,
             },
@@ -5842,6 +5900,14 @@ impl Game {
                         .modes
                         .contains(&AbilityTargetModeDefinition::SelfTarget))
                 .then_some(AbilityTargetPlan::Detect)
+            }
+            AbilityEffectDefinition::RefuelEquippedLight { .. } => {
+                (matches!(target, TargetSelection::SelfTarget)
+                    && ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget))
+                .then_some(AbilityTargetPlan::SelfTarget)
             }
             AbilityEffectDefinition::TransformTerrain {
                 ref source_terrain_ids,

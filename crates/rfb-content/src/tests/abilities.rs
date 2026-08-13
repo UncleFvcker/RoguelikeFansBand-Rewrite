@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use super::*;
 
 #[test]
@@ -180,7 +182,174 @@ fn arcane_first_book_keeps_the_original_spell_table_and_narrow_effects() {
         AbilityEffectDefinition::Sequence { effects }
             if matches!(effects.as_slice(), [
                 AbilityEffectDefinition::HealDice { dice: 2, sides: 8 },
-                AbilityEffectDefinition::ReduceStatus { status_kind_id, amount: 10 }
+                AbilityEffectDefinition::ReduceStatus { status_kind_id, amount: 10, .. }
             ] if status_kind_id == "rfb.status.bleeding")
     ));
+}
+
+#[test]
+fn arcane_second_book_keeps_the_original_spell_table_and_narrow_effects() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.minor-arcana")
+        .expect("Arcane second book should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("arcane"));
+    assert_eq!(book.rank, Some(2));
+    assert_eq!(book.ability_ids.len(), 8);
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.minor-arcana")
+        .expect("Minor Arcana item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (15, 30, 250, Some("demo.ability-book.minor-arcana"),)
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == "demo.item.minor-arcana")
+        })
+        .expect("Minor Arcana should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (15, 50, 100)
+    );
+
+    let expected = [
+        ("demo.ability.arcane-detect-doors-traps", 6, 5, 30, 42),
+        ("demo.ability.arcane-phlogiston", 7, 7, 50, 49),
+        ("demo.ability.arcane-detect-treasure", 8, 7, 40, 48),
+        ("demo.ability.arcane-detect-enchantment", 8, 8, 40, 48),
+        ("demo.ability.arcane-detect-objects", 9, 8, 40, 54),
+        ("demo.ability.arcane-cure-poison", 10, 9, 40, 60),
+        ("demo.ability.arcane-resist-cold", 10, 10, 40, 50),
+        ("demo.ability.arcane-resist-fire", 11, 10, 40, 55),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    for id in [
+        "demo.ability.arcane-detect-doors-traps",
+        "demo.ability.arcane-detect-treasure",
+        "demo.ability.arcane-detect-enchantment",
+        "demo.ability.arcane-detect-objects",
+    ] {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        assert!(ability.effect.ordered_effects().iter().all(|effect| {
+            matches!(
+                effect,
+                AbilityEffectDefinition::Detect {
+                    radius: 30,
+                    through_walls: true,
+                    ..
+                }
+            )
+        }));
+    }
+
+    let phlogiston = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-phlogiston")
+        .expect("Phlogiston should compile");
+    assert!(matches!(
+        phlogiston.effect,
+        AbilityEffectDefinition::RefuelEquippedLight {
+            maximum_fraction_divisor: 2
+        }
+    ));
+
+    let cure = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-cure-poison")
+        .expect("Cure Poison should compile");
+    assert!(matches!(
+        &cure.effect,
+        AbilityEffectDefinition::ReduceStatus {
+            status_kind_id,
+            amount: 100,
+            current_divisor: Some(5),
+        } if status_kind_id == "rfb.status.poison"
+    ));
+
+    for (id, status_kind_id, damage_type) in [
+        (
+            "demo.ability.arcane-resist-cold",
+            "rfb.status.resist-cold",
+            ActorDamageType::Cold,
+        ),
+        (
+            "demo.ability.arcane-resist-fire",
+            "rfb.status.resist-fire",
+            ActorDamageType::Fire,
+        ),
+    ] {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        assert!(matches!(
+            &ability.effect,
+            AbilityEffectDefinition::ApplyStatus {
+                status_kind_id: actual_status,
+                duration_ticks: 20,
+                duration_dice: 1,
+                duration_sides: 20,
+                granted_resistances,
+                ..
+            } if actual_status == status_kind_id
+                && granted_resistances.get(&damage_type)
+                    == Some(&ActorResistanceLevel::Resistant)
+        ));
+        assert_eq!(
+            ability
+                .spell_power_fields
+                .iter()
+                .map(|field| field.field)
+                .collect::<BTreeSet<_>>(),
+            BTreeSet::from([
+                AbilitySpellPowerField::StatusDurationTicks,
+                AbilitySpellPowerField::StatusDurationSides,
+            ])
+        );
+    }
 }

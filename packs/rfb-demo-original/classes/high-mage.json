@@ -103,7 +103,8 @@
       {
         "realmId": "arcane",
         "abilityBookIds": [
-          "demo.ability-book.cantrips-for-beginners"
+          "demo.ability-book.cantrips-for-beginners",
+          "demo.ability-book.minor-arcana"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -114,7 +115,15 @@
           { "abilityId": "demo.ability.arcane-blink", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 23 },
           { "abilityId": "demo.ability.arcane-light-area", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 33 },
           { "abilityId": "demo.ability.arcane-trap-door-destruction", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 23 },
-          { "abilityId": "demo.ability.arcane-cure-light-wounds", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 33 }
+          { "abilityId": "demo.ability.arcane-cure-light-wounds", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 33 },
+          { "abilityId": "demo.ability.arcane-detect-doors-traps", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.arcane-phlogiston", "minimumLevel": 7, "resourceCost": 7, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.arcane-detect-treasure", "minimumLevel": 8, "resourceCost": 7, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-detect-enchantment", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-detect-objects", "minimumLevel": 9, "resourceCost": 8, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-cure-poison", "minimumLevel": 10, "resourceCost": 9, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-resist-cold", "minimumLevel": 10, "resourceCost": 10, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-resist-fire", "minimumLevel": 11, "resourceCost": 10, "baseFailurePercent": 40 }
         ]
       }
     ]

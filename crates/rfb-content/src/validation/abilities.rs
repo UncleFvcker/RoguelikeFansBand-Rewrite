@@ -534,6 +534,7 @@ pub(super) fn validate_abilities(
                     category,
                     radius,
                     persistent,
+                    ..
                 } => {
                     !category.is_empty()
                         && category.len() <= 64
@@ -556,7 +557,9 @@ pub(super) fn validate_abilities(
                             }
                             AbilityDetectSubjectDefinition::Item => {
                                 !persistent
-                                    && (category == "item" || item_tag_values.contains(category))
+                                    && (category == "item"
+                                        || category == "magic-item"
+                                        || item_tag_values.contains(category))
                             }
                             AbilityDetectSubjectDefinition::Gold => {
                                 !persistent && category == "gold"
@@ -566,6 +569,9 @@ pub(super) fn validate_abilities(
                             }
                         }
                 }
+                AbilityEffectDefinition::RefuelEquippedLight {
+                    maximum_fraction_divisor,
+                } => (1..=100).contains(maximum_fraction_divisor),
                 AbilityEffectDefinition::TransformTerrain {
                     source_terrain_ids,
                     target_terrain_id,
@@ -708,7 +714,12 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::ReduceStatus {
                     status_kind_id,
                     amount,
-                } => validate_id(status_kind_id).is_ok() && (1..=1_000_000).contains(amount),
+                    current_divisor,
+                } => {
+                    validate_id(status_kind_id).is_ok()
+                        && (1..=1_000_000).contains(amount)
+                        && current_divisor.is_none_or(|divisor| (1..=1_000_000).contains(&divisor))
+                }
                 AbilityEffectDefinition::VisibleDamage {
                     damage_dice,
                     damage_sides,
@@ -940,6 +951,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::Heal { .. }
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
+            | AbilityEffectDefinition::RefuelEquippedLight { .. }
             | AbilityEffectDefinition::LightArea { .. }
             | AbilityEffectDefinition::AggravateMonsters
             | AbilityEffectDefinition::Recall { .. }

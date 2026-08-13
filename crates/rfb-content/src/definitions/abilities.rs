@@ -496,6 +496,11 @@ pub enum AbilityEffectDefinition {
         radius: u8,
         #[serde(default)]
         persistent: bool,
+        #[serde(default)]
+        through_walls: bool,
+    },
+    RefuelEquippedLight {
+        maximum_fraction_divisor: u16,
     },
     TransformTerrain {
         source_terrain_ids: Vec<String>,
@@ -590,6 +595,8 @@ pub enum AbilityEffectDefinition {
     ReduceStatus {
         status_kind_id: String,
         amount: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        current_divisor: Option<u32>,
     },
     VisibleDamage {
         damage_dice: u16,

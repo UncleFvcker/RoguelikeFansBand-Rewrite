@@ -284,6 +284,10 @@
         "subject": {
           "$ref": "#/$defs/AbilityDetectSubjectDto",
           "default": "terrain"
+        },
+        "throughWalls": {
+          "type": "boolean",
+          "default": false
         }
       },
       "required": [
@@ -310,6 +314,10 @@
         "subject": {
           "$ref": "#/$defs/AbilityDetectSubjectDto",
           "default": "terrain"
+        },
+        "throughWalls": {
+          "type": "boolean",
+          "default": false
         }
       },
       "required": [
@@ -1563,6 +1571,45 @@
             "type",
             "effectIndex",
             "statusKindId",
+            "before",
+            "after"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "after": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "before": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "itemId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "refuel-equipped-light"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
             "before",
             "after"
           ]
@@ -3227,6 +3274,10 @@
               "$ref": "#/$defs/AbilityDetectSubjectDto",
               "default": "terrain"
             },
+            "throughWalls": {
+              "type": "boolean",
+              "default": false
+            },
             "type": {
               "type": "string",
               "const": "detect"
@@ -3237,6 +3288,25 @@
             "category",
             "radius",
             "persistent"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "maximumFractionDivisor": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "refuel-equipped-light"
+            }
+          },
+          "required": [
+            "type",
+            "maximumFractionDivisor"
           ]
         },
         {
@@ -3767,6 +3837,14 @@
           "properties": {
             "amount": {
               "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "currentDivisor": {
+              "type": [
+                "integer",
+                "null"
+              ],
               "format": "uint32",
               "minimum": 0
             },

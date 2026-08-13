@@ -17,6 +17,7 @@ fn arcane_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
     game.progress.max_level = level;
     game.learned_abilities
         .extend(ability_ids.iter().map(|id| (*id).to_owned()));
+    give_inventory_item(&mut game, "test.minor-arcana", "demo.item.minor-arcana");
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
@@ -27,7 +28,7 @@ fn arcane_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
 }
 
 #[test]
-fn arcane_high_mage_birth_and_first_book_are_isolated_from_death() {
+fn arcane_high_mage_birth_keeps_only_the_first_book_and_is_isolated_from_death() {
     let game = Game::new_with_build(0x4152_4341_4e45, ARCANE_HIGH_MAGE_BUILD_ID)
         .expect("Arcane High-Mage build should create");
     let carried = game
@@ -42,6 +43,7 @@ fn arcane_high_mage_birth_and_first_book_are_isolated_from_death() {
         .map(|item| item.kind_id.as_str())
         .collect::<BTreeSet<_>>();
     assert!(carried.contains("demo.item.cantrips-for-beginners"));
+    assert!(!carried.contains("demo.item.minor-arcana"));
     assert!(!carried.contains("demo.item.black-prayers"));
 
     let learned = game
@@ -51,7 +53,7 @@ fn arcane_high_mage_birth_and_first_book_are_isolated_from_death() {
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 8);
+    assert_eq!(learned.len(), 16);
     assert!(
         learned
             .iter()
@@ -63,6 +65,226 @@ fn arcane_high_mage_birth_and_first_book_are_isolated_from_death() {
         .expect("Zap should be projected");
     assert_eq!(zap.minimum_level, 1);
     assert_eq!(zap.base_resource_cost, 1);
+}
+
+#[test]
+fn arcane_phlogiston_adds_half_capacity_and_caps_an_equipped_light() {
+    let mut game = arcane_high_mage_game(
+        0x5048_4c4f_4749_5354,
+        11,
+        &["demo.ability.arcane-phlogiston"],
+    );
+    give_inventory_item(&mut game, "test.phlogiston-torch", "demo.item.wooden-torch");
+    let torch = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.phlogiston-torch")
+        .expect("test torch should exist");
+    torch.location = ItemLocation::Equipped {
+        slot_id: "light".to_owned(),
+    };
+    torch
+        .fuel
+        .as_mut()
+        .expect("torch should carry fuel")
+        .current = 1_000;
+
+    for expected in [3_500, 5_000] {
+        game.resources
+            .get_mut("demo.resource.mana")
+            .expect("Arcane High-Mage should retain mana")
+            .current = 100;
+        game.resolve_player_ability(
+            "demo.ability.arcane-phlogiston",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Phlogiston should resolve");
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == "test.phlogiston-torch")
+                .and_then(|item| item.fuel)
+                .expect("torch should retain fuel")
+                .current,
+            expected
+        );
+    }
+}
+
+#[test]
+fn arcane_cure_poison_uses_the_original_fractional_reduction() {
+    let mut game = arcane_high_mage_game(
+        0x4355_5245_504f_4953,
+        11,
+        &["demo.ability.arcane-cure-poison"],
+    );
+    game.player.statuses.push(StatusInstance {
+        kind_id: "rfb.status.poison".to_owned(),
+        intensity: 1,
+        remaining_ticks: 1_000,
+        source_id: Some("test.poison".to_owned()),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+
+    game.resolve_player_ability(
+        "demo.ability.arcane-cure-poison",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Poison should resolve");
+    assert_eq!(game.player.statuses[0].remaining_ticks, 800);
+
+    game.player.statuses[0].remaining_ticks = 80;
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Arcane High-Mage should retain mana")
+        .current = 100;
+    game.resolve_player_ability(
+        "demo.ability.arcane-cure-poison",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Poison should resolve low-level poisoning");
+    assert!(
+        game.player
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != "rfb.status.poison")
+    );
+}
+
+#[test]
+fn arcane_resist_cold_and_fire_create_independent_spell_powered_statuses() {
+    let mut game = arcane_high_mage_game(
+        0x5245_5349_5354_3139,
+        11,
+        &[
+            "demo.ability.arcane-resist-cold",
+            "demo.ability.arcane-resist-fire",
+        ],
+    );
+    for ability_id in [
+        "demo.ability.arcane-resist-cold",
+        "demo.ability.arcane-resist-fire",
+    ] {
+        game.resources
+            .get_mut("demo.resource.mana")
+            .expect("Arcane High-Mage should retain mana")
+            .current = 100;
+        game.resolve_player_ability(
+            ability_id,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap_or_else(|error| panic!("{ability_id} should resolve: {error:?}"));
+    }
+
+    for (status_kind_id, damage_type) in [
+        ("rfb.status.resist-cold", DamageType::Cold),
+        ("rfb.status.resist-fire", DamageType::Fire),
+    ] {
+        let status = game
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == status_kind_id)
+            .unwrap_or_else(|| panic!("{status_kind_id} should be active"));
+        assert!((21..=40).contains(&status.remaining_ticks));
+        assert_eq!(
+            status.granted_resistances.get(&damage_type),
+            Some(&ResistanceLevel::Resistant)
+        );
+    }
+}
+
+#[test]
+fn arcane_magic_item_detection_uses_instance_identity_and_enchantment() {
+    let mut game = arcane_high_mage_game(0x4445_5445_4354_3139, 11, &[]);
+    let position = Position {
+        x: game.player.position.x + 2,
+        y: game.player.position.y,
+    };
+    for (id, kind_id) in [
+        ("test.magic-potion", "demo.item.antidote-potion"),
+        ("test.plain-dagger", "demo.item.dagger"),
+        ("test.enchanted-dagger", "demo.item.dagger"),
+        ("test.ego-dagger", "demo.item.dagger"),
+    ] {
+        give_inventory_item(&mut game, id, kind_id);
+        game.items
+            .iter_mut()
+            .find(|item| item.id == id)
+            .expect("test item should exist")
+            .location = ItemLocation::Ground(position);
+    }
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.enchanted-dagger")
+        .expect("enchanted dagger should exist")
+        .enchantments
+        .to_hit = 1;
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.ego-dagger")
+        .expect("ego dagger should exist")
+        .affix_ids
+        .push("rfb-legacy.affix.slaying".to_owned());
+
+    let (_, ids) = game.detect_item_positions("magic-item", 30, true);
+    assert!(ids.contains(&"test.magic-potion".to_owned()));
+    assert!(ids.contains(&"test.enchanted-dagger".to_owned()));
+    assert!(ids.contains(&"test.ego-dagger".to_owned()));
+    assert!(!ids.contains(&"test.plain-dagger".to_owned()));
+}
+
+#[test]
+fn arcane_door_trap_detection_remembers_stairs_through_walls() {
+    let mut game = arcane_high_mage_game(
+        0x444f_4f52_5452_4150,
+        11,
+        &["demo.ability.arcane-detect-doors-traps"],
+    );
+    let wall = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    let stairs = Position {
+        x: game.player.position.x + 2,
+        y: game.player.position.y,
+    };
+    let wall_index = game.index(wall).expect("wall position should exist");
+    let stairs_index = game.index(stairs).expect("stairs position should exist");
+    game.terrain[wall_index] = "demo.terrain.wall".to_owned();
+    game.terrain[stairs_index] = "demo.terrain.stairs-down".to_owned();
+    game.explored[stairs_index] = false;
+    assert!(!game.is_visible(stairs));
+
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.arcane-detect-doors-traps",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Detect Doors & Traps should resolve");
+    assert!(game.explored[stairs_index], "events: {events:#?}");
 }
 
 #[test]

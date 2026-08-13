@@ -360,11 +360,14 @@ git diff --stat
   State Hash Schema v93、save v1、active baseline `contract-v284`（26 条 exact fixture、
   零 waiver）。`codex/items-next` 与 `codex/monsters-next` 分支及工作树继续保留。
 
-## 21. items-next 奥秘第一册
+## 21. items-next 奥秘前两册
 
-- `codex/items-next` 新增 `high-mage-arcane` 构筑与《初学者戏法》八个法术；死亡构筑、
-  High Mage 通用出生装备及白马旅店奖励保持不变。
-- 共享协调点推进至 pack `1.298.0` / content hash
-  `7ae890722fe23f69f9f598bb970b6c3d4c706e7e30eeff1ba361f8457514b9be`、Protocol `1.189`；
+- `codex/items-next` 新增 `high-mage-arcane` 构筑、《初学者戏法》和《小阿卡纳》共十六个
+  法术；Arcane 出生仍只携带第一册，死亡构筑、High Mage 通用出生装备及白马旅店奖励
+  保持不变。
+- 第二册复用正式物品、商店与基础池路径；运行时只增加穿墙探测、已装备光源补充燃料和
+  按当前值比例削减状态三个窄表面。寒冷/火焰抗性继续使用既有独立状态和 spell power。
+- 共享协调点推进至 pack `1.299.0` / content hash（见当前
+  `content.lock.json`）、Protocol `1.190`；
   State Hash Schema v93、save v1、active baseline 仍为 `contract-v284`。书店新增固定库存改变
   新局商店实例序号与后续 RNG，因此按 policy 刷新并复验全部 26 条 active fixture，零 waiver。
