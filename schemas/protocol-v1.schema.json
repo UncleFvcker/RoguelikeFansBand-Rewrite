@@ -527,6 +527,12 @@
             }
           ]
         },
+        "townTargets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AbilityTownTargetDto"
+          }
+        },
         "uiGroupNameKey": {
           "type": [
             "string",
@@ -1378,6 +1384,120 @@
             "effectIndex",
             "fromFloorId",
             "toFloorId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "terrainId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "create-stair"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "position"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "fromTownId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "toTownId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "teleport-town"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "toTownId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "self-knowledge"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "destination": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Position"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "failed": {
+              "type": "boolean"
+            },
+            "requested": {
+              "$ref": "#/$defs/Position"
+            },
+            "type": {
+              "type": "string",
+              "const": "dimension-door"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "requested",
+            "failed"
           ]
         },
         {
@@ -3723,6 +3843,69 @@
         {
           "type": "object",
           "properties": {
+            "downTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "create-stair"
+            },
+            "upTerrainId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "upTerrainId",
+            "downTerrainId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "teleport-town"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "self-knowledge"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "range": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "dimension-door"
+            }
+          },
+          "required": [
+            "type",
+            "range"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "statusKindId": {
               "type": "string"
             },
@@ -4611,6 +4794,21 @@
         "sourceTerrainIds",
         "targetTerrainId",
         "radius"
+      ]
+    },
+    "AbilityTownTargetDto": {
+      "type": "object",
+      "properties": {
+        "townId": {
+          "type": "string"
+        },
+        "townNameKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "townId",
+        "townNameKey"
       ]
     },
     "AbilityVisibleDamageResolutionDto": {
@@ -10383,6 +10581,7 @@
         "position",
         "entity",
         "item",
+        "town",
         "self"
       ]
     },
@@ -10450,6 +10649,22 @@
           "required": [
             "type",
             "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "townId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "town"
+            }
+          },
+          "required": [
+            "type",
+            "townId"
           ]
         },
         {

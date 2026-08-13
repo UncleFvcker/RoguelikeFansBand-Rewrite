@@ -149,7 +149,8 @@
         "realmId": "sorcery",
         "abilityBookIds": [
           "demo.ability-book.beginners-handbook",
-          "demo.ability-book.master-sorcerers-handbook"
+          "demo.ability-book.master-sorcerers-handbook",
+          "demo.ability-book.pattern-sorcery"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -168,7 +169,15 @@
           { "abilityId": "demo.ability.sorcery-teleport-away", "minimumLevel": 13, "resourceCost": 8, "baseFailurePercent": 50 },
           { "abilityId": "demo.ability.sorcery-haste-self", "minimumLevel": 17, "resourceCost": 10, "baseFailurePercent": 50 },
           { "abilityId": "demo.ability.sorcery-true-detection", "minimumLevel": 24, "resourceCost": 15, "baseFailurePercent": 60 },
-          { "abilityId": "demo.ability.sorcery-true-identify", "minimumLevel": 28, "resourceCost": 20, "baseFailurePercent": 65 }
+          { "abilityId": "demo.ability.sorcery-true-identify", "minimumLevel": 28, "resourceCost": 20, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.sorcery-inventory-protection", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.sorcery-create-stair", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.sorcery-esp", "minimumLevel": 12, "resourceCost": 9, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.sorcery-teleport-town", "minimumLevel": 15, "resourceCost": 25, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.sorcery-self-knowledge", "minimumLevel": 15, "resourceCost": 12, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.sorcery-teleport-level", "minimumLevel": 17, "resourceCost": 12, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.sorcery-word-of-recall", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.sorcery-dimension-door", "minimumLevel": 36, "resourceCost": 35, "baseFailurePercent": 70 }
         ]
       }
     ]

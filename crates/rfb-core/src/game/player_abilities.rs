@@ -201,6 +201,9 @@ impl Game {
             };
             apply_ability_level_scaling(effect, &scaling, level);
         }
+        if let AbilityEffectDefinition::DimensionDoor { range } = &ability.effect {
+            ability.target.range = *range;
+        }
     }
 
     pub(super) fn apply_player_spell_power(ability: &mut AbilityDefinition, bonus: i32) {
@@ -225,6 +228,9 @@ impl Game {
                 }
             };
             apply_ability_spell_power(effect, definition, bonus);
+        }
+        if let AbilityEffectDefinition::DimensionDoor { range } = &ability.effect {
+            ability.target.range = *range;
         }
     }
 

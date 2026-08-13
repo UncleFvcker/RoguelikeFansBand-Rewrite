@@ -657,3 +657,8 @@ save 容器保持 v1。
 1.195 中进入 State Hash Schema v97，save 容器保持 v1，不兼容缺少新字段的旧开发存档。
 
 1.196 为咒术领域 30 级后的批量鉴定增加 `mass-identify` 能力投影。该变化只扩展能力 DTO；不增加命令、存档字段或 state-hash 输入，State Hash Schema 保持 v97。
+
+1.197 为咒术第三册增加 `town` 目标及已访问城镇候选投影，并增加窄化的
+`create-stair`、`teleport-town`、`self-knowledge` 与 `dimension-door` 能力规格和结构化
+结算结果。城镇传送仍复用既有城镇状态，角色自省只生成只读报告；没有新增持久字段或
+state-hash 输入，State Hash Schema 保持 v97，save 容器保持 v1。

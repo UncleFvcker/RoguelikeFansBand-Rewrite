@@ -559,3 +559,16 @@ git diff --stat
 - 共享协调点：pack `1.313.0`、Protocol `1.196`、State Hash Schema v97、save v1、
   active baseline `contract-v292`（26 条 exact fixture、零 waiver），content hash
   `e25d28799149de140f2991a6762e68d39090b85b323c286fd23d88e13860bb30`。
+
+## 34. codex/items-next 当前交接（咒术领域第三册）
+
+- 新增《图案咒术》及第三册八个正式法术；High Mage 咒术构筑出生仍只携带第一册，
+  Death、Arcane 构筑、通用出生装备和白马旅店奖励保持不变。
+- Create Stair 受地表、任务层和永久地形限制；Teleport Town 只列出已经访问且当前可达的
+  城镇；Self Knowledge 复用只读角色报告。Dimension Door 使用 RFB 距离、失败随机传送、
+  额外行动能量和 Astral Guide 规则，取消目标不消费资源或 RNG。
+- 《图案咒术》按原版 allocation 进入基础物品池和两家黑市；importer 仅显式接入
+  tval 91、sval 2，不预建后续领域。
+- 共享协调点：pack `1.314.0`、Protocol `1.197`、State Hash Schema v97、save v1、
+  active baseline `contract-v292`（26 条 exact fixture、零 waiver），content hash
+  `6f4b9b896f39b9de6d0560a8f8bf1614a49f64fe0a6f59adff2671eb75e1309a`。

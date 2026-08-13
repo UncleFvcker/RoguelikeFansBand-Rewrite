@@ -1484,7 +1484,7 @@
           "discovered": true
         },
         {
-          "itemId": "generated.item.174",
+          "itemId": "generated.item.177",
           "discovered": true
         },
         {
@@ -1522,7 +1522,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 175,
+      "nextItemInstanceSerial": 178,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1530,7 +1530,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "898edde9b07c77edddbc116191359c183e7d5b67bf83c536eeca5418b70d3e06"
+      "stateHash": "23fcbf6a7ad95528743606c76423de01a41d8a6c5390052f54077d439578bcff"
     },
     "events": [
       {

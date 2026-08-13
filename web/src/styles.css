@@ -905,6 +905,10 @@ h1 {
   font-size: 0.7rem;
 }
 
+.ability-town-target {
+  max-width: 11rem;
+}
+
 .ability-actions button:disabled {
   cursor: not-allowed;
   opacity: 0.48;

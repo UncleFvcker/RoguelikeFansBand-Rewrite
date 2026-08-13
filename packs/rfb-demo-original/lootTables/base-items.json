@@ -1082,6 +1082,13 @@
       "minDepth": 5
     },
     {
+      "itemKindId": "demo.item.pattern-sorcery",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45,
+      "maxDepth": 90
+    },
+    {
       "itemKindId": "demo.item.pair-of-hard-leather-boots",
       "weight": 100,
       "quantity": 1,

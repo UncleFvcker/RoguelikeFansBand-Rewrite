@@ -176,6 +176,11 @@ pub(crate) enum DomainEvent {
         resolution: AbilityEffectsResolutionDto,
         trace: Option<ProjectileTrace>,
     },
+    AbilitySelfKnowledge {
+        ability_id: String,
+        name_key: String,
+        report: SelfKnowledgeReport,
+    },
     MonsterAbilityDecision {
         resolution: MonsterAbilityDecisionResolutionDto,
     },
@@ -1682,6 +1687,37 @@ impl DomainEvent {
                     None => event,
                 }
             }
+            Self::AbilitySelfKnowledge {
+                ability_id,
+                name_key,
+                report,
+            } => dto(
+                "ability.self-knowledge",
+                "item-use-self-knowledge",
+                [
+                    ("source", ability_id),
+                    ("nameKey", name_key),
+                    ("level", report.level.to_string()),
+                    ("hp", report.hp.to_string()),
+                    ("maxHp", report.max_hp.to_string()),
+                    ("gold", report.gold.to_string()),
+                    ("nutrition", report.nutrition.to_string()),
+                    ("attack", report.attack.to_string()),
+                    ("defense", report.defense.to_string()),
+                    ("meleeSkill", report.melee_skill.to_string()),
+                    ("armorClass", report.armor_class.to_string()),
+                    ("speed", report.speed.to_string()),
+                    ("strength", report.attributes[0].clone()),
+                    ("intelligence", report.attributes[1].clone()),
+                    ("wisdom", report.attributes[2].clone()),
+                    ("dexterity", report.attributes[3].clone()),
+                    ("constitution", report.attributes[4].clone()),
+                    ("charisma", report.attributes[5].clone()),
+                    ("statuses", report.statuses),
+                    ("resistances", report.resistances),
+                    ("resources", report.resources),
+                ],
+            ),
             Self::MonsterAbilityDecision { resolution } => {
                 let target = resolution
                     .selected_ability_id

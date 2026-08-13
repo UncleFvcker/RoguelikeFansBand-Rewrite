@@ -307,6 +307,7 @@ action-ability-study = Study
 action-ability-study-prayer = Study prayer
 action-ability-forget = Forget
 action-ability-cast = Cast
+action-ability-town-target = Destination town
 action-resource-rest = Rest until recovered
 panel-summon-command-title = Summon Command
 summon-command-status = { $mode } · { $count } active · upkeep { $upkeep }%

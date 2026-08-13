@@ -243,6 +243,94 @@ fn sorcery_first_two_books_keep_the_original_spell_table() {
 }
 
 #[test]
+fn sorcery_third_book_keeps_the_original_spell_table_and_acquisition() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.pattern-sorcery")
+        .expect("Pattern Sorcery should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("sorcery"));
+    assert_eq!(book.rank, Some(3));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.pattern-sorcery")
+        .expect("Pattern Sorcery item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (45, 30, 15_000, Some("demo.ability-book.pattern-sorcery"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Pattern Sorcery should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (45, 90, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.sorcery-inventory-protection", 2, 2, 20, 30),
+        ("demo.ability.sorcery-create-stair", 8, 8, 70, 320),
+        ("demo.ability.sorcery-esp", 12, 9, 50, 300),
+        ("demo.ability.sorcery-teleport-town", 15, 25, 60, 600),
+        ("demo.ability.sorcery-self-knowledge", 15, 12, 65, 750),
+        ("demo.ability.sorcery-teleport-level", 17, 12, 50, 425),
+        ("demo.ability.sorcery-word-of-recall", 20, 20, 65, 380),
+        ("demo.ability.sorcery-dimension-door", 36, 35, 70, 3_600),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+    assert!(content.abilities.iter().all(|ability| {
+        !book.ability_ids.contains(&ability.id)
+            || !matches!(ability.effect, AbilityEffectDefinition::NoOp { .. })
+    }));
+}
+
+#[test]
 fn arcane_second_book_keeps_the_original_spell_table_and_narrow_effects() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = artifact.content;

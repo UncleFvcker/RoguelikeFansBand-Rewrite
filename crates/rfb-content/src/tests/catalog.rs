@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.313.0");
+    assert_eq!(catalog.pack_version(), "1.314.0");
     assert_eq!(catalog.races().count(), 46);
     assert_eq!(
         catalog
@@ -86,6 +86,12 @@ fn compiled_catalog_indexes_current_rfb_content() {
             .item("demo.item.master-sorcerers-handbook")
             .and_then(|item| item.ability_book_id.as_deref()),
         Some("demo.ability-book.master-sorcerers-handbook")
+    );
+    assert_eq!(
+        catalog
+            .item("demo.item.pattern-sorcery")
+            .and_then(|item| item.ability_book_id.as_deref()),
+        Some("demo.ability-book.pattern-sorcery")
     );
     assert_eq!(
         catalog

@@ -32,6 +32,7 @@
         "position",
         "entity",
         "item",
+        "town",
         "self"
       ],
       "type": "string"

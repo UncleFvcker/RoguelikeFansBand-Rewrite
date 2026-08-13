@@ -1592,7 +1592,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 181,
+      "nextItemInstanceSerial": 182,
       "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
@@ -1613,7 +1613,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b33d3903a49ce5bf7375858a406ee6206a57a544fdb4b1319b18bb15acfef72c"
+      "stateHash": "e9a67c5d04102e0b1b495046794d613c773d6a2f80b1875488548a1edb0419a5"
     },
     "events": [
       {
@@ -1634,6 +1634,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "b33d3903a49ce5bf7375858a406ee6206a57a544fdb4b1319b18bb15acfef72c"
+    "saveRoundTripStateHash": "e9a67c5d04102e0b1b495046794d613c773d6a2f80b1875488548a1edb0419a5"
   }
 }

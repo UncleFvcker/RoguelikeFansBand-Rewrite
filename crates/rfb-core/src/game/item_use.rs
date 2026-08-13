@@ -1940,6 +1940,15 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemSelfKnowledge {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            report: self.self_knowledge_report(),
+        });
+        true
+    }
+
+    pub(super) fn self_knowledge_report(&self) -> SelfKnowledgeReport {
         let player = self.player_dto();
         let attribute = |value: rfb_protocol::AttributeValueDto| {
             format!(
@@ -1971,34 +1980,29 @@ impl Game {
             .collect::<Vec<_>>();
         resources.sort();
         let attributes = player.progress.attributes;
-        events.push(DomainEvent::ItemSelfKnowledge {
-            source_kind_id: source_kind_id.to_owned(),
-            display_name_key: self.item_display_name_key(source_kind_id),
-            report: SelfKnowledgeReport {
-                level: player.progress.level,
-                hp: player.hp,
-                max_hp: player.max_hp,
-                gold: player.gold,
-                nutrition: player.nutrition,
-                attack: player.attack,
-                defense: player.defense,
-                melee_skill: player.melee_skill,
-                armor_class: player.armor_class,
-                speed: player.speed,
-                attributes: [
-                    attribute(attributes.strength),
-                    attribute(attributes.intelligence),
-                    attribute(attributes.wisdom),
-                    attribute(attributes.dexterity),
-                    attribute(attributes.constitution),
-                    attribute(attributes.charisma),
-                ],
-                statuses: statuses.join(","),
-                resistances: resistances.join(","),
-                resources: resources.join(","),
-            },
-        });
-        true
+        SelfKnowledgeReport {
+            level: player.progress.level,
+            hp: player.hp,
+            max_hp: player.max_hp,
+            gold: player.gold,
+            nutrition: player.nutrition,
+            attack: player.attack,
+            defense: player.defense,
+            melee_skill: player.melee_skill,
+            armor_class: player.armor_class,
+            speed: player.speed,
+            attributes: [
+                attribute(attributes.strength),
+                attribute(attributes.intelligence),
+                attribute(attributes.wisdom),
+                attribute(attributes.dexterity),
+                attribute(attributes.constitution),
+                attribute(attributes.charisma),
+            ],
+            statuses: statuses.join(","),
+            resistances: resistances.join(","),
+            resources: resources.join(","),
+        }
     }
 
     fn resolve_item_sequence(

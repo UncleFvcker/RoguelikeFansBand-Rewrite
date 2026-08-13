@@ -525,6 +525,9 @@ impl Game {
                         })
                         .collect(),
                     target_spec: ability_target_spec_dto(ability),
+                    town_targets: matches!(ability.effect, AbilityEffectDefinition::TeleportTown)
+                        .then(|| self.teleport_town_targets())
+                        .unwrap_or_default(),
                     learned,
                     book_item_id: book_item_id.clone(),
                     can_study: source == AbilitySourceDto::Learned

@@ -48,6 +48,11 @@ fn sorcery_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
         "test.master-sorcerers-handbook",
         "demo.item.master-sorcerers-handbook",
     );
+    give_inventory_item(
+        &mut game,
+        "test.pattern-sorcery",
+        "demo.item.pattern-sorcery",
+    );
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
@@ -84,7 +89,7 @@ fn sorcery_high_mage_birth_keeps_only_the_first_book_and_realm() {
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 16);
+    assert_eq!(learned.len(), 24);
     assert!(
         learned
             .iter()
@@ -264,6 +269,303 @@ fn sorcery_mass_stasis_suspends_visible_non_unique_monsters_only() {
         DomainEvent::AbilityEffectsResolved { resolution, .. }
             if resolution.target_entity_id.as_deref() == Some("test.stasis.unique")
     )));
+}
+
+#[test]
+fn sorcery_third_book_statuses_use_the_original_spell_powered_durations() {
+    let mut game = sorcery_high_mage_game(
+        0x534f_5243_4552_5933,
+        12,
+        &[
+            "demo.ability.sorcery-inventory-protection",
+            "demo.ability.sorcery-esp",
+        ],
+    );
+    for ability_id in [
+        "demo.ability.sorcery-inventory-protection",
+        "demo.ability.sorcery-esp",
+    ] {
+        game.resources
+            .get_mut("demo.resource.mana")
+            .expect("Sorcery High-Mage should retain mana")
+            .current = 100;
+        game.resolve_player_ability(
+            ability_id,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("third-book status spell should resolve");
+    }
+    let protection = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_INVENTORY_PROTECTION)
+        .expect("Inventory Protection should apply");
+    assert!((31..=60).contains(&protection.remaining_ticks));
+    let telepathy = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_TELEPATHY)
+        .expect("ESP should apply telepathy");
+    assert!((26..=55).contains(&telepathy.remaining_ticks));
+}
+
+#[test]
+fn sorcery_self_knowledge_reuses_the_read_only_character_report() {
+    let mut game = sorcery_high_mage_game(
+        0x5345_4c46_4b4e_4f57,
+        15,
+        &["demo.ability.sorcery-self-knowledge"],
+    );
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.sorcery-self-knowledge",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Self Knowledge should resolve");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilitySelfKnowledge { ability_id, report, .. }
+            if ability_id == "demo.ability.sorcery-self-knowledge"
+                && report.level == 15
+                && report.max_hp == game.effective_player_max_hp()
+    )));
+}
+
+#[test]
+fn sorcery_teleport_town_lists_only_visited_destinations_and_moves_without_a_fare() {
+    let mut game = sorcery_high_mage_game(
+        0x5445_4c45_544f_574e,
+        15,
+        &["demo.ability.sorcery-teleport-town"],
+    );
+    game.town_states
+        .insert("demo.town.anambar".to_owned(), TownState { visited: true });
+    let ability = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "demo.ability.sorcery-teleport-town")
+        .expect("Teleport Town should be projected");
+    assert_eq!(ability.target_spec.modes, [TargetModeDto::Town]);
+    assert_eq!(
+        ability
+            .town_targets
+            .iter()
+            .map(|target| target.town_id.as_str())
+            .collect::<Vec<_>>(),
+        ["demo.town.anambar"]
+    );
+    let gold = game.gold;
+    game.resolve_player_ability(
+        "demo.ability.sorcery-teleport-town",
+        TargetSelection::Town {
+            town_id: "demo.town.anambar".to_owned(),
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Teleport Town should resolve");
+    assert_eq!(
+        game.current_town().map(|town| town.id.as_str()),
+        Some("demo.town.anambar")
+    );
+    assert_eq!(game.gold, gold);
+}
+
+#[test]
+fn sorcery_dimension_door_cancellation_is_atomic_and_failed_steps_cost_extra_energy() {
+    let mut cancelled = sorcery_high_mage_game(
+        0x4449_4d45_4e53_494f,
+        36,
+        &["demo.ability.sorcery-dimension-door"],
+    );
+    let mana = cancelled.resources["demo.resource.mana"].current;
+    let draws = cancelled.rng_draw_counter();
+    cancelled
+        .resolve_player_ability(
+            "demo.ability.sorcery-dimension-door",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("a cancelled Dimension Door target should be rejected cleanly");
+    assert_eq!(cancelled.resources["demo.resource.mana"].current, mana);
+    assert_eq!(cancelled.rng_draw_counter(), draws);
+
+    let mut ordinary = sorcery_high_mage_game(
+        0x4449_4d45_4e53_4941,
+        36,
+        &["demo.ability.sorcery-dimension-door"],
+    );
+    clear_monsters(&mut ordinary);
+    let invalid = Position {
+        x: ordinary.player.position.x + 1,
+        y: ordinary.player.position.y,
+    };
+    replace_terrain(&mut ordinary, invalid, "demo.terrain.permanent-wall");
+    let mut guided = ordinary.clone();
+    guided
+        .progress
+        .active_mutation_ids
+        .insert("rfb.mutation.astral-guide".to_owned());
+    let ordinary_tick = ordinary.world_tick;
+    let guided_tick = guided.world_tick;
+    for game in [&mut ordinary, &mut guided] {
+        dispatch_next(
+            game,
+            GameCommand::CastAbility {
+                ability_id: "demo.ability.sorcery-dimension-door".to_owned(),
+                target: TargetSelection::Position { position: invalid },
+            },
+        );
+    }
+    assert_eq!(ordinary.world_tick - ordinary_tick, 15);
+    assert_eq!(guided.world_tick - guided_tick, 10);
+    assert_ne!(ordinary.player.position, invalid);
+    assert_ne!(guided.player.position, invalid);
+}
+
+#[test]
+fn sorcery_dimension_door_success_uses_one_failure_roll_and_one_extra_energy_charge() {
+    let mut ordinary = (0_u64..100)
+        .find_map(|offset| {
+            let game = sorcery_high_mage_game(
+                0x4449_4d45_4e53_5000 + offset,
+                36,
+                &["demo.ability.sorcery-dimension-door"],
+            );
+            let mut probe = game.rng.clone();
+            let _ability_roll = probe.bounded(100);
+            (probe.bounded(13) != 0).then_some(game)
+        })
+        .expect("a successful Dimension Door seed should be available");
+    clear_monsters(&mut ordinary);
+    let target = Position {
+        x: ordinary.player.position.x + 1,
+        y: ordinary.player.position.y,
+    };
+    replace_terrain(&mut ordinary, target, "demo.terrain.floor");
+    let mut guided = ordinary.clone();
+    guided
+        .progress
+        .active_mutation_ids
+        .insert("rfb.mutation.astral-guide".to_owned());
+    let ordinary_tick = ordinary.world_tick;
+    let guided_tick = guided.world_tick;
+    for game in [&mut ordinary, &mut guided] {
+        dispatch_next(
+            game,
+            GameCommand::CastAbility {
+                ability_id: "demo.ability.sorcery-dimension-door".to_owned(),
+                target: TargetSelection::Position { position: target },
+            },
+        );
+        assert_eq!(game.player.position, target);
+    }
+    assert_eq!(ordinary.world_tick - ordinary_tick, 13);
+    assert_eq!(guided.world_tick - guided_tick, 10);
+}
+
+#[test]
+fn sorcery_create_stair_respects_surface_and_permanent_terrain() {
+    let mut surface = sorcery_high_mage_game(
+        0x5354_4149_5253_5552,
+        8,
+        &["demo.ability.sorcery-create-stair"],
+    );
+    let before = surface.terrain[surface
+        .index(surface.player.position)
+        .expect("player should stand in bounds")]
+    .clone();
+    surface
+        .resolve_player_ability(
+            "demo.ability.sorcery-create-stair",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("surface Create Stair should resolve without changing terrain");
+    assert_eq!(
+        surface.terrain[surface
+            .index(surface.player.position)
+            .expect("player should remain in bounds")],
+        before
+    );
+
+    let mut dungeon = sorcery_high_mage_game(
+        0x5354_4149_5244_554e,
+        8,
+        &["demo.ability.sorcery-create-stair"],
+    );
+    descend_one_floor(&mut dungeon);
+    let position = dungeon.player.position;
+    replace_terrain(&mut dungeon, position, "demo.terrain.floor");
+
+    let mut task = dungeon.clone();
+    task.current_floor_id = "demo.floor.trouble-at-home".to_owned();
+    let task_draws = task.rng_draw_counter();
+    task.resolve_player_ability(
+        "demo.ability.sorcery-create-stair",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("task-floor Create Stair should resolve without changing terrain");
+    assert_eq!(
+        task.terrain[task
+            .index(position)
+            .expect("player should remain in bounds")],
+        "demo.terrain.floor"
+    );
+    assert_eq!(task.rng_draw_counter(), task_draws + 1);
+
+    let mut permanent = dungeon.clone();
+    replace_terrain(&mut permanent, position, "demo.terrain.permanent-wall");
+    permanent
+        .resolve_player_ability(
+            "demo.ability.sorcery-create-stair",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("permanent-terrain Create Stair should resolve without changing terrain");
+    assert_eq!(
+        permanent.terrain[permanent
+            .index(position)
+            .expect("player should remain in bounds")],
+        "demo.terrain.permanent-wall"
+    );
+
+    dungeon
+        .resolve_player_ability(
+            "demo.ability.sorcery-create-stair",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("dungeon Create Stair should resolve");
+    assert!(matches!(
+        dungeon.terrain[dungeon
+            .index(position)
+            .expect("player should remain in bounds")]
+        .as_str(),
+        "demo.terrain.stairs-up" | "demo.terrain.stairs-down"
+    ));
 }
 
 #[test]

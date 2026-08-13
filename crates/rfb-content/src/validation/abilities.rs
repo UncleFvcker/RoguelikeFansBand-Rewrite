@@ -338,6 +338,18 @@ pub(super) fn validate_abilities(
                 }
                 AbilityEffectDefinition::TeleportTarget
                 | AbilityEffectDefinition::TeleportLevel => true,
+                AbilityEffectDefinition::CreateStair {
+                    up_terrain_id,
+                    down_terrain_id,
+                } => {
+                    !up_terrain_id.is_empty()
+                        && !down_terrain_id.is_empty()
+                        && up_terrain_id != down_terrain_id
+                }
+                AbilityEffectDefinition::TeleportTown | AbilityEffectDefinition::SelfKnowledge => {
+                    true
+                }
+                AbilityEffectDefinition::DimensionDoor { range } => (1..=255).contains(range),
                 AbilityEffectDefinition::FetchItem {
                     maximum_weight_tenths_pound,
                 } => {
@@ -940,6 +952,10 @@ pub(super) fn validate_abilities(
             == [AbilityTargetModeDefinition::Item]
             && ability.target.range == 0
             && !ability.target.requires_line_of_effect;
+        let town_target_rule = ability.target.modes.as_slice()
+            == [AbilityTargetModeDefinition::Town]
+            && ability.target.range == 0
+            && !ability.target.requires_line_of_effect;
         let valid_target = match &ability.effect {
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::Malediction { .. }
@@ -959,6 +975,12 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
             AbilityEffectDefinition::TeleportLevel => self_target_rule || projectile_target_rule,
+            AbilityEffectDefinition::DimensionDoor { .. } => {
+                ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
+                    && (1..=255).contains(&ability.target.range)
+                    && !ability.target.requires_line_of_effect
+            }
+            AbilityEffectDefinition::TeleportTown => town_target_rule,
             AbilityEffectDefinition::FetchItem { .. }
             | AbilityEffectDefinition::ConsumeTerrain { .. }
             | AbilityEffectDefinition::MeleeThenTeleport { .. }
@@ -1024,6 +1046,8 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::AreaDestruction { .. }
             | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
             | AbilityEffectDefinition::PolymorphSelf
+            | AbilityEffectDefinition::CreateStair { .. }
+            | AbilityEffectDefinition::SelfKnowledge
             | AbilityEffectDefinition::NoOp { .. } => self_target_rule,
             AbilityEffectDefinition::Detect { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
@@ -1219,6 +1243,14 @@ pub(super) fn validate_abilities(
             for wall_terrain_id in wall_terrain_ids {
                 require_reference(terrain_ids, wall_terrain_id, &ability.id)?;
             }
+        }
+        if let AbilityEffectDefinition::CreateStair {
+            up_terrain_id,
+            down_terrain_id,
+        } = &ability.effect
+        {
+            require_reference(terrain_ids, up_terrain_id, &ability.id)?;
+            require_reference(terrain_ids, down_terrain_id, &ability.id)?;
         }
         normalize_tags(&ability.id, &mut ability.tags)?;
         insert_definition_id(all_ids, &ability.id)?;

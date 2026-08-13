@@ -1513,6 +1513,20 @@ impl Game {
             }
             _ => None,
         };
+        let dimension_door = match &action {
+            GameAction::CastAbility { ability_id, .. }
+                if !self.player_has_astral_guide()
+                    && self.content.ability(ability_id).is_some_and(|ability| {
+                        matches!(
+                            ability.effect,
+                            AbilityEffectDefinition::DimensionDoor { .. }
+                        )
+                    }) =>
+            {
+                Some(ability_id.clone())
+            }
+            _ => None,
+        };
         let automatic_pickup_after_move = matches!(&action, GameAction::Move { .. });
         let recover_after_wait = matches!(&action, GameAction::Wait);
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
@@ -2358,6 +2372,33 @@ impl Game {
                 })
             }) {
                 action_cost /= 3;
+            }
+            if let Some(ability_id) = dimension_door {
+                let failed = events.iter().find_map(|event| match event {
+                    DomainEvent::AbilityEffectsResolved {
+                        ability_id: resolved_id,
+                        resolution,
+                        ..
+                    } if *resolved_id == ability_id => {
+                        resolution.effects.iter().find_map(|effect| match effect {
+                            AbilityEffectResolutionDto::DimensionDoor { failed, .. } => {
+                                Some(*failed)
+                            }
+                            _ => None,
+                        })
+                    }
+                    _ => None,
+                });
+                if let Some(failed) = failed {
+                    let extra = STANDARD_ACTION_COST
+                        .saturating_mul(i32::from(60_u16.saturating_sub(self.progress.level)))
+                        / 100;
+                    action_cost = action_cost.saturating_add(extra).saturating_add(if failed {
+                        extra
+                    } else {
+                        0
+                    });
+                }
             }
             spend_energy(&mut self.player.energy_need, action_cost);
             self.advance_until_player_ready(
@@ -3538,6 +3579,7 @@ impl Game {
             TargetSelection::Position { .. } => AbilityTargetModeDefinition::Position,
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
+            TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         if !ability.target.modes.contains(&mode) {
@@ -3556,6 +3598,7 @@ impl Game {
             TargetSelection::Position { .. } => AbilityTargetModeDefinition::Position,
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
+            TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         if !ability.target.modes.contains(&mode) {
@@ -3578,6 +3621,7 @@ impl Game {
             }
             TargetSelection::SelfTarget => None,
             TargetSelection::Item { .. } => None,
+            TargetSelection::Town { .. } => None,
         }
     }
 
@@ -3610,6 +3654,7 @@ impl Game {
             }
             TargetSelection::SelfTarget => None,
             TargetSelection::Item { .. } => None,
+            TargetSelection::Town { .. } => None,
         }
     }
 
@@ -4050,6 +4095,7 @@ impl Game {
             TargetSelection::Position { .. } => AbilityTargetModeDefinition::Position,
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
+            TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         target_definition
@@ -6569,6 +6615,14 @@ fn apply_ability_level_scaling(
             ))
             .expect("validated level-scaled radius must fit u8");
         }
+        (AbilityEffectDefinition::DimensionDoor { range }, AbilityLevelScalingField::Radius) => {
+            *range = u16::try_from(scaled_ability_level_value(
+                u64::from(*range),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled dimension door range must fit u16");
+        }
         (
             AbilityEffectDefinition::ApplyStatus { intensity, .. }
             | AbilityEffectDefinition::VisibleApplyStatus { intensity, .. },
@@ -6728,6 +6782,10 @@ fn apply_ability_spell_power(
             *radius =
                 u8::try_from(scaled(u64::from(*radius))).expect("spell-powered radius must fit u8");
         }
+        (AbilityEffectDefinition::DimensionDoor { range }, AbilitySpellPowerField::Radius) => {
+            *range = u16::try_from(scaled(u64::from(*range)))
+                .expect("spell-powered dimension door range must fit u16");
+        }
         (
             AbilityEffectDefinition::ApplyStatus { duration_ticks, .. }
             | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. },
@@ -6834,6 +6892,18 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         }
         AbilityEffectDefinition::TeleportTarget => AbilityEffectSpecDto::TeleportTarget,
         AbilityEffectDefinition::TeleportLevel => AbilityEffectSpecDto::TeleportLevel,
+        AbilityEffectDefinition::CreateStair {
+            up_terrain_id,
+            down_terrain_id,
+        } => AbilityEffectSpecDto::CreateStair {
+            up_terrain_id: up_terrain_id.clone(),
+            down_terrain_id: down_terrain_id.clone(),
+        },
+        AbilityEffectDefinition::TeleportTown => AbilityEffectSpecDto::TeleportTown,
+        AbilityEffectDefinition::SelfKnowledge => AbilityEffectSpecDto::SelfKnowledge,
+        AbilityEffectDefinition::DimensionDoor { range } => {
+            AbilityEffectSpecDto::DimensionDoor { range: *range }
+        }
         AbilityEffectDefinition::Damage {
             damage_dice,
             damage_sides,
@@ -7507,6 +7577,7 @@ fn target_spec_dto(target: &AbilityTargetDefinition) -> TargetSpecDto {
                 AbilityTargetModeDefinition::Position => TargetModeDto::Position,
                 AbilityTargetModeDefinition::Entity => TargetModeDto::Entity,
                 AbilityTargetModeDefinition::Item => TargetModeDto::Item,
+                AbilityTargetModeDefinition::Town => TargetModeDto::Town,
                 AbilityTargetModeDefinition::SelfTarget => TargetModeDto::SelfTarget,
             })
             .collect(),

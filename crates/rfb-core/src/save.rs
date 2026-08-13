@@ -570,6 +570,7 @@ fn validate_item_runtime_state(
                                 AbilityTargetModeDefinition::Position => TargetModeDto::Position,
                                 AbilityTargetModeDefinition::Entity => TargetModeDto::Entity,
                                 AbilityTargetModeDefinition::Item => TargetModeDto::Item,
+                                AbilityTargetModeDefinition::Town => TargetModeDto::Town,
                                 AbilityTargetModeDefinition::SelfTarget => {
                                     TargetModeDto::SelfTarget
                                 }

@@ -7,9 +7,10 @@ use rfb_content::{
     TownFacilityCategory, TownFacilityDefinition, WildernessLocationDefinition, WorldDefinition,
 };
 use rfb_protocol::{
-    HomeDto, HomeItemDto, HomeStateSaveDto, InnTravelDestinationDto, ItemEnchantmentsDto,
-    ItemIdentifyResolutionDto, ItemQualityDto, MapScaleDto, Position, ShopCategoryDto, ShopDto,
-    ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto, TownDto, TownStateSaveDto,
+    AbilityTownTargetDto, HomeDto, HomeItemDto, HomeStateSaveDto, InnTravelDestinationDto,
+    ItemEnchantmentsDto, ItemIdentifyResolutionDto, ItemQualityDto, MapScaleDto, Position,
+    ShopCategoryDto, ShopDto, ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto,
+    TownDto, TownStateSaveDto,
 };
 
 use crate::{
@@ -1286,18 +1287,70 @@ impl Game {
             self.inn_travel_unavailable_reason(facility_id, destination_town_id)
                 .is_none()
         );
+        self.relocate_to_town(destination_town_id)?;
+        self.gold -= INN_TRAVEL_COST;
+
+        Ok(InnTravelOutcome {
+            facility_id: facility_id.to_owned(),
+            destination_town_id: destination_town_id.to_owned(),
+            cost: INN_TRAVEL_COST,
+            gold_balance: self.gold,
+        })
+    }
+
+    pub(super) fn teleport_town_targets(&self) -> Vec<AbilityTownTargetDto> {
+        if self.map_scale != MapScaleDto::Local || !self.is_wilderness_floor() {
+            return Vec::new();
+        }
+        let current_town_id = self.current_town().map(|town| town.id.as_str());
+        let Some(world) = self.content.world(&self.world_id) else {
+            return Vec::new();
+        };
+        let mut targets = world_town_ids(world)
+            .filter(|town_id| Some(*town_id) != current_town_id)
+            .filter(|town_id| {
+                self.town_states
+                    .get(*town_id)
+                    .is_some_and(|state| state.visited)
+            })
+            .filter_map(|town_id| {
+                let town = self.content.town(town_id)?;
+                (world_town_position(world, town_id).is_some()
+                    && town_inn(town, &self.content).is_some())
+                .then(|| AbilityTownTargetDto {
+                    town_id: town.id.clone(),
+                    town_name_key: town.name_key.clone(),
+                })
+            })
+            .collect::<Vec<_>>();
+        targets.sort_by(|left, right| left.town_id.cmp(&right.town_id));
+        targets
+    }
+
+    pub(super) fn teleport_town_target_available(&self, town_id: &str) -> bool {
+        self.teleport_town_targets()
+            .iter()
+            .any(|target| target.town_id == town_id)
+    }
+
+    pub(super) fn teleport_to_town(&mut self, town_id: &str) -> Result<(), CoreError> {
+        debug_assert!(self.teleport_town_target_available(town_id));
+        self.relocate_to_town(town_id)
+    }
+
+    fn relocate_to_town(&mut self, destination_town_id: &str) -> Result<(), CoreError> {
         let world = self
             .content
             .world(&self.world_id)
             .expect("active world must remain available");
         let destination_position = world_town_position(world, destination_town_id)
-            .expect("validated inn destination must remain available");
+            .expect("validated town destination must remain available");
         let destination_town = self
             .content
             .town(destination_town_id)
-            .expect("validated inn destination town must remain available");
+            .expect("validated destination town must remain available");
         let destination_inn = town_inn(destination_town, &self.content)
-            .expect("validated inn destination must retain an inn");
+            .expect("validated destination town must retain an inn");
         let destination_inn_position = position_from_content(destination_inn.entrance_position);
 
         let player_id = self.player.id.clone();
@@ -1309,15 +1362,12 @@ impl Game {
                     && Some(actor.id.as_str()) != riding_actor_id
             });
         self.entities = retained;
-
         self.store_visible_town_states();
         self.wilderness_position = Some(destination_position);
         self.wilderness_view_offset = Position::default();
         let arrival = self
             .town_local_to_wilderness_view_position(destination_town_id, destination_inn_position)
-            .ok_or(CoreError::InvalidSave(
-                "inn travel destination is unavailable",
-            ))?;
+            .ok_or(CoreError::InvalidSave("town destination is unavailable"))?;
         self.activate_wilderness_position(Some(arrival), false)?;
         self.mark_current_town_visited();
         self.mark_shop_visited_at_player()?;
@@ -1330,14 +1380,7 @@ impl Game {
             self.summon_command.guard_position = Some(self.player.position);
         }
         self.world_travel_destination = None;
-        self.gold -= INN_TRAVEL_COST;
-
-        Ok(InnTravelOutcome {
-            facility_id: facility_id.to_owned(),
-            destination_town_id: destination_town_id.to_owned(),
-            cost: INN_TRAVEL_COST,
-            gold_balance: self.gold,
-        })
+        Ok(())
     }
 
     pub(super) fn deposit_at_home(

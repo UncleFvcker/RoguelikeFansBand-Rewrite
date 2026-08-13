@@ -29,6 +29,14 @@ pub(super) enum AbilityTargetPlan {
     RandomTeleport {
         candidates: Vec<Position>,
     },
+    DimensionDoor {
+        requested: Position,
+        destination_valid: bool,
+        fallback_candidates: Vec<Position>,
+    },
+    Town {
+        town_id: String,
+    },
     FetchItem {
         path: Vec<Position>,
     },
@@ -563,6 +571,30 @@ impl Game {
                 AbilityTargetPlan::RandomTeleport { candidates },
             ) => {
                 self.resolve_player_random_teleport_effect(&ability, candidates, events, changed);
+            }
+            (
+                AbilityEffectDefinition::DimensionDoor { .. },
+                AbilityTargetPlan::DimensionDoor {
+                    requested,
+                    destination_valid,
+                    fallback_candidates,
+                },
+            ) => self.resolve_player_dimension_door_effect(
+                &ability,
+                requested,
+                destination_valid,
+                fallback_candidates,
+                events,
+                changed,
+            ),
+            (AbilityEffectDefinition::TeleportTown, AbilityTargetPlan::Town { town_id }) => {
+                self.resolve_player_teleport_town_effect(&ability, &town_id, events)?
+            }
+            (AbilityEffectDefinition::CreateStair { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_create_stair_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::SelfKnowledge, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_self_knowledge_effect(&ability, events);
             }
             (AbilityEffectDefinition::LightArea { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_light_area_effect(&ability, events, changed, removed_entities)?;
@@ -3851,6 +3883,161 @@ impl Game {
         self.resolve_player_teleport_effect(ability, candidates[index], events, changed);
     }
 
+    fn resolve_player_dimension_door_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        requested: Position,
+        destination_valid: bool,
+        fallback_candidates: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let failure_sides = u64::from(self.progress.level / 10 + 10);
+        let failed = !destination_valid || self.rng.bounded(failure_sides) == 0;
+        let destination = if failed {
+            (!fallback_candidates.is_empty()).then(|| {
+                let index = usize::try_from(self.rng.bounded(fallback_candidates.len() as u64))
+                    .expect("bounded dimension door fallback index must fit usize");
+                fallback_candidates[index]
+            })
+        } else {
+            Some(requested)
+        };
+        if let Some(destination) = destination {
+            self.resolve_player_teleport_effect(ability, destination, events, changed);
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::DimensionDoor {
+                    effect_index: 0,
+                    requested,
+                    destination,
+                    failed,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_teleport_town_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        town_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<(), CoreError> {
+        let from_town_id = self.current_town().map(|town| town.id.clone());
+        self.teleport_to_town(town_id)?;
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::TeleportTown {
+                    effect_index: 0,
+                    from_town_id,
+                    to_town_id: town_id.to_owned(),
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
+    fn resolve_player_create_stair_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::CreateStair {
+            up_terrain_id,
+            down_terrain_id,
+        } = &ability.effect
+        else {
+            unreachable!("create stair executor requires a create stair effect");
+        };
+        let position = self.player.position;
+        let terrain_is_permanent = self
+            .index(position)
+            .and_then(|index| self.content.terrain(&self.terrain[index]))
+            .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "permanent"));
+        let blocked = self.is_wilderness_floor()
+            || self.current_floor_task_id().is_some()
+            || terrain_is_permanent
+            || self
+                .floor_connections
+                .iter()
+                .any(|connection| connection.position == position);
+        let (can_create_up, can_create_down) = if blocked {
+            (false, false)
+        } else {
+            self.content
+                .world(&self.world_id)
+                .and_then(|world| {
+                    world
+                        .procedural_floors
+                        .iter()
+                        .find(|floor| floor.id == self.current_floor_id)
+                })
+                .map_or((false, false), |floor| {
+                    (true, floor.next_floor_id.is_some())
+                })
+        };
+        let terrain_id = match (can_create_up, can_create_down) {
+            (true, true) if self.rng.bounded(100) < 50 => Some(up_terrain_id.clone()),
+            (true, true) => Some(down_terrain_id.clone()),
+            (true, false) => Some(up_terrain_id.clone()),
+            (false, true) => Some(down_terrain_id.clone()),
+            (false, false) => None,
+        };
+        if let Some(terrain_id) = terrain_id.as_deref() {
+            self.replace_terrain_from_source(
+                position,
+                terrain_id,
+                TerrainChangeSource::Magic,
+                events,
+                changed,
+            );
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::CreateStair {
+                    effect_index: 0,
+                    position,
+                    terrain_id,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_self_knowledge_effect(
+        &self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        events.push(DomainEvent::AbilitySelfKnowledge {
+            ability_id: ability.id.clone(),
+            name_key: ability.name_key.clone(),
+            report: self.self_knowledge_report(),
+        });
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::SelfKnowledge { effect_index: 0 }],
+            },
+            trace: None,
+        });
+    }
+
     fn resolve_player_fetch_item_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -6271,6 +6458,37 @@ impl Game {
                 let candidates = self.random_teleport_candidates(u16::from(radius));
                 (!candidates.is_empty()).then_some(AbilityTargetPlan::RandomTeleport { candidates })
             }
+            AbilityEffectDefinition::DimensionDoor { range } => {
+                let TargetSelection::Position { position } = target else {
+                    return None;
+                };
+                if ability.target.modes.as_slice() != [AbilityTargetModeDefinition::Position] {
+                    return None;
+                }
+                let destination_valid = self.index(*position).is_some()
+                    && rfb_distance(self.player.position, *position) <= u32::from(range)
+                    && self.is_walkable(*position)
+                    && !self
+                        .entities
+                        .iter()
+                        .any(|entity| entity.hp > 0 && entity.position == *position);
+                Some(AbilityTargetPlan::DimensionDoor {
+                    requested: *position,
+                    destination_valid,
+                    fallback_candidates: self.random_teleport_candidates(
+                        self.progress.level.saturating_add(2).saturating_mul(2),
+                    ),
+                })
+            }
+            AbilityEffectDefinition::TeleportTown => {
+                let TargetSelection::Town { town_id } = target else {
+                    return None;
+                };
+                self.teleport_town_target_available(town_id)
+                    .then(|| AbilityTargetPlan::Town {
+                        town_id: town_id.clone(),
+                    })
+            }
             AbilityEffectDefinition::FetchItem { .. } => self
                 .ability_path(ability, target)
                 .map(|path| AbilityTargetPlan::FetchItem { path }),
@@ -6736,6 +6954,8 @@ impl Game {
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
+            | AbilityEffectDefinition::CreateStair { .. }
+            | AbilityEffectDefinition::SelfKnowledge
             | AbilityEffectDefinition::Clairvoyance { .. }
             | AbilityEffectDefinition::LightArea { .. }
             | AbilityEffectDefinition::MassSleepOrStasis { .. } => {

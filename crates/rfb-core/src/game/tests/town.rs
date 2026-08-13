@@ -1092,6 +1092,8 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             ("demo.item.minor-arcana", 250),
             ("demo.item.major-arcana", 1_000),
             ("demo.item.manual-of-mastery", 2_500),
+            ("demo.item.beginners-handbook", 100),
+            ("demo.item.master-sorcerers-handbook", 1_000),
         ])
     );
     let book = shop

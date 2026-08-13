@@ -1206,6 +1206,73 @@
         {
           "additionalProperties": false,
           "properties": {
+            "downTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "create-stair",
+              "type": "string"
+            },
+            "upTerrainId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "upTerrainId",
+            "downTerrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "teleport-town",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "self-knowledge",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "range": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "dimension-door",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "range"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "actorKindId": {
               "type": "string"
             },
@@ -2462,7 +2529,8 @@
       "enum": [
         "self",
         "cast-target",
-        "item"
+        "item",
+        "town"
       ],
       "type": "string"
     },

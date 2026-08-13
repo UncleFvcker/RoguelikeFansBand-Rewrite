@@ -33,6 +33,7 @@ pub enum AbilityTargetModeDefinition {
     Position,
     Entity,
     Item,
+    Town,
     #[serde(rename = "self")]
     SelfTarget,
 }
@@ -464,6 +465,15 @@ pub enum AbilityEffectDefinition {
     },
     TeleportTarget,
     TeleportLevel,
+    CreateStair {
+        up_terrain_id: String,
+        down_terrain_id: String,
+    },
+    TeleportTown,
+    SelfKnowledge,
+    DimensionDoor {
+        range: u16,
+    },
     Summon {
         actor_kind_id: String,
         count: u8,
@@ -778,6 +788,9 @@ fn ability_level_scaling_base_and_limit(
         (AbilityEffectDefinition::BlinkSelf { radius }, AbilityLevelScalingField::Radius) => {
             Some((u64::from(*radius), 255))
         }
+        (AbilityEffectDefinition::DimensionDoor { range }, AbilityLevelScalingField::Radius) => {
+            Some((u64::from(*range), 255))
+        }
         (
             AbilityEffectDefinition::BoltOrBeamDamage {
                 beam_chance_percent,
@@ -952,6 +965,7 @@ pub(crate) fn valid_ability_spell_power(
                     AbilityEffectDefinition::AreaDamage { .. }
                         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                         | AbilityEffectDefinition::ConeDamage { .. }
+                        | AbilityEffectDefinition::DimensionDoor { .. }
                 ),
                 AbilitySpellPowerField::StatusDurationTicks => matches!(
                     effect,

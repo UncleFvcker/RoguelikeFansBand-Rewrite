@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.196";
+pub const PROTOCOL_VERSION: &str = "1.197";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -623,6 +623,7 @@ pub enum TargetModeDto {
     Position,
     Entity,
     Item,
+    Town,
     #[serde(rename = "self")]
     SelfTarget,
 }
@@ -655,6 +656,9 @@ pub enum TargetSelection {
     },
     Item {
         item_id: String,
+    },
+    Town {
+        town_id: String,
     },
     #[serde(rename = "self")]
     SelfTarget,
@@ -1145,6 +1149,15 @@ pub enum AbilityEffectSpecDto {
     },
     TeleportTarget,
     TeleportLevel,
+    CreateStair {
+        up_terrain_id: String,
+        down_terrain_id: String,
+    },
+    TeleportTown,
+    SelfKnowledge,
+    DimensionDoor {
+        range: u16,
+    },
     RemoveStatus {
         status_kind_id: String,
     },
@@ -1330,6 +1343,8 @@ pub struct AbilityDto {
     #[serde(default)]
     pub effects: Vec<AbilityEffectSpecDto>,
     pub target_spec: TargetSpecDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub town_targets: Vec<AbilityTownTargetDto>,
     pub learned: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub book_item_id: Option<String>,
@@ -1337,6 +1352,14 @@ pub struct AbilityDto {
     #[serde(default)]
     pub can_forget: bool,
     pub can_cast: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityTownTargetDto {
+    pub town_id: String,
+    pub town_name_key: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -2231,6 +2254,28 @@ pub enum AbilityEffectResolutionDto {
         effect_index: u8,
         from_floor_id: String,
         to_floor_id: String,
+    },
+    CreateStair {
+        effect_index: u8,
+        position: Position,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        terrain_id: Option<String>,
+    },
+    TeleportTown {
+        effect_index: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        from_town_id: Option<String>,
+        to_town_id: String,
+    },
+    SelfKnowledge {
+        effect_index: u8,
+    },
+    DimensionDoor {
+        effect_index: u8,
+        requested: Position,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        destination: Option<Position>,
+        failed: bool,
     },
     TeleportAway {
         effect_index: u8,
@@ -3619,6 +3664,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilitySummonSpecDto);
     push_declaration!(AbilityDetectSpecDto);
     push_declaration!(AbilityTerrainTransformSpecDto);
+    push_declaration!(AbilityTownTargetDto);
     push_declaration!(AbilityDto);
     push_declaration!(TargetSelection);
     push_declaration!(ProjectileProfileDto);

@@ -307,6 +307,7 @@ action-ability-study = 研习
 action-ability-study-prayer = 学习祈祷
 action-ability-forget = 遗忘
 action-ability-cast = 施放
+action-ability-town-target = 目标城镇
 action-resource-rest = 休息至恢复
 panel-summon-command-title = 召唤物指令
 summon-command-status = { $mode } · 当前 { $count } 个 · 维持 { $upkeep }%
