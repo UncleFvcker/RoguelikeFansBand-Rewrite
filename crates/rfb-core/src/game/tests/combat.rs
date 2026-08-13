@@ -1445,6 +1445,18 @@ fn hold_life_can_save_against_unlife_without_changing_life_force_or_monster_powe
         })
         .expect("Hold Life should save for at least one deterministic seed");
 
+    let mut imaginative = protected.clone();
+    imaginative
+        .progress
+        .active_mutation_ids
+        .insert(HUMAN_INT_MUTATION_ID.to_owned());
+    imaginative.rng = RfbRng::seeded(save_seed);
+    imaginative
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("Human intelligence must not alter Hold Life");
+    assert_eq!(imaginative.progress.life_force, 1_000);
+    assert_eq!(imaginative.entities[0].power_per_mille, 1_000);
+
     let mut unprotected = monster_effect_game(save_seed, effect);
     unprotected.progress.level = 50;
     unprotected

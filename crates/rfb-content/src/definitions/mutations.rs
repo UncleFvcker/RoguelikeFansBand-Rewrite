@@ -127,6 +127,8 @@ pub struct MutationActivationDefinition {
 pub enum MutationPeriodicEffectDefinition {
     ApplyStatus {
         trigger_one_in: u32,
+        #[serde(default)]
+        skip_if_present: bool,
         status_kind_id: String,
         intensity: u16,
         duration_ticks: u32,
@@ -191,6 +193,12 @@ pub struct MutationDefinition {
     pub armor_class: i32,
     #[serde(default)]
     pub saving_throw_skill: i32,
+    #[serde(default)]
+    pub device_skill: i32,
+    #[serde(default)]
+    pub melee_skill: i32,
+    #[serde(default)]
+    pub ranged_skill: i32,
     #[serde(default)]
     pub saving_throw_skill_per_five_levels: i32,
     #[serde(default)]

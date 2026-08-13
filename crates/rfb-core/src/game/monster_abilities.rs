@@ -1919,7 +1919,39 @@ impl Game {
         difficulty: u32,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        let ability_stat = self.player_derived_stats().saving_throw_skill;
+        self.monster_saving_throw_with_modifier(source_kind_id, difficulty, 0, events)
+    }
+
+    pub(super) fn monster_fear_saving_throw(
+        &mut self,
+        source_kind_id: &str,
+        difficulty: u32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let modifier = if self.player_has_mutation(HUMAN_INT_MUTATION_ID) {
+            -10
+        } else {
+            0
+        };
+        self.monster_saving_throw_with_modifier(source_kind_id, difficulty, modifier, events)
+    }
+
+    fn monster_saving_throw_with_modifier(
+        &mut self,
+        source_kind_id: &str,
+        difficulty: u32,
+        ability_modifier: i32,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let mut ability_stat = self.player_derived_stats().saving_throw_skill;
+        if ability_modifier != 0 {
+            ability_stat = ability_stat.with_modifier(
+                StatLayer::Status,
+                HUMAN_INT_MUTATION_ID,
+                ability_modifier,
+                StatBounds::NON_NEGATIVE,
+            );
+        }
         let mut difficulty_pipeline = DerivedStatsPipeline::new();
         difficulty_pipeline.add(
             StatKind::ActionDifficulty,

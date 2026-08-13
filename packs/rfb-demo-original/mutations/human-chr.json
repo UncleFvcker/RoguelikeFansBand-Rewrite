@@ -7,5 +7,9 @@
   "rating": "bad",
   "sourceIndex": 151,
   "randomWeight": 0,
+  "deviceSkill": -10,
+  "meleeSkill": -16,
+  "rangedSkill": -10,
+  "spellFailureModifierPercent": 10,
   "removesOnGain": []
 }

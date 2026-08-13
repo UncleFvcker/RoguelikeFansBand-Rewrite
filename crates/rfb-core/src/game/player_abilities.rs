@@ -302,8 +302,11 @@ impl Game {
 
     fn casting_attribute_kind(attribute: CastingAttribute) -> AttributeKind {
         match attribute {
+            CastingAttribute::Strength => AttributeKind::Strength,
             CastingAttribute::Intelligence => AttributeKind::Intelligence,
             CastingAttribute::Wisdom => AttributeKind::Wisdom,
+            CastingAttribute::Dexterity => AttributeKind::Dexterity,
+            CastingAttribute::Constitution => AttributeKind::Constitution,
             CastingAttribute::Charisma => AttributeKind::Charisma,
         }
     }
@@ -427,7 +430,8 @@ impl Game {
                 ),
                 95,
             );
-        u8::try_from(chance).expect("bounded mutation failure chance must fit u8")
+        u8::try_from(chance.max(self.player_spell_failure_minimum_percent()))
+            .expect("bounded mutation failure chance must fit u8")
     }
 
     pub(super) fn class_ability_failure_percent(&self, activation: &ClassAbilityDefinition) -> u8 {
@@ -462,7 +466,8 @@ impl Game {
                 ),
                 95,
             );
-        u8::try_from(chance).expect("bounded class ability failure chance must fit u8")
+        u8::try_from(chance.max(self.player_spell_failure_minimum_percent()))
+            .expect("bounded class ability failure chance must fit u8")
     }
 
     pub(super) fn mutation_resource_cost(&self, activation: &MutationActivationDefinition) -> u32 {
@@ -865,6 +870,10 @@ impl Game {
             profile,
             ability,
             self.player_spell_failure_modifier_percent(),
+        )
+        .max(
+            u8::try_from(self.player_spell_failure_minimum_percent())
+                .expect("mutation spell failure minimum must fit u8"),
         )
     }
 

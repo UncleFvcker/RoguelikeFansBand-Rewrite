@@ -305,8 +305,11 @@ pub struct ClassLevelResistanceDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum CastingAttribute {
+    Strength,
     Intelligence,
     Wisdom,
+    Dexterity,
+    Constitution,
     Charisma,
 }
 

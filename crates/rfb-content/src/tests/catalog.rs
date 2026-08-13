@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use super::*;
 
 #[test]
@@ -6,8 +8,49 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.314.0");
+    assert_eq!(catalog.pack_version(), "1.315.0");
     assert_eq!(catalog.races().count(), 46);
+    let human_weakness = catalog
+        .race("demo.race.rfb-human")
+        .expect("formal Human race should exist")
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "human-weakness")
+        .expect("Human should receive the level 35 weakness");
+    assert_eq!(human_weakness.minimum_level, 35);
+    let RaceMutationSelectionDefinition::CastingAttribute {
+        default_mutation_id,
+        mutation_ids_by_attribute,
+    } = &human_weakness.selection
+    else {
+        panic!("Human weakness should follow the class casting attribute");
+    };
+    assert_eq!(default_mutation_id, "rfb.mutation.human-str");
+    assert_eq!(
+        mutation_ids_by_attribute,
+        &BTreeMap::from([
+            (
+                CastingAttribute::Intelligence,
+                "rfb.mutation.human-int".to_owned(),
+            ),
+            (
+                CastingAttribute::Wisdom,
+                "rfb.mutation.human-wis".to_owned(),
+            ),
+            (
+                CastingAttribute::Dexterity,
+                "rfb.mutation.human-dex".to_owned(),
+            ),
+            (
+                CastingAttribute::Constitution,
+                "rfb.mutation.human-con".to_owned(),
+            ),
+            (
+                CastingAttribute::Charisma,
+                "rfb.mutation.human-chr".to_owned(),
+            ),
+        ])
+    );
     assert_eq!(
         catalog
             .race_by_legacy_index(6)
@@ -501,7 +544,7 @@ fn mutation_definitions_match_the_frozen_legacy_ledger() {
             .iter()
             .filter(|mutation| mutation["status"] == "active")
             .count(),
-        119
+        125
     );
 }
 
@@ -962,6 +1005,37 @@ fn fourth_passive_mutation_batch_keeps_innate_attack_and_combat_semantics() {
             .stealth_skill,
         3
     );
+    assert_eq!(
+        catalog
+            .mutation("rfb.mutation.human-int")
+            .unwrap()
+            .resistances
+            .get(&ActorDamageType::Fear),
+        Some(&ActorResistanceLevel::Vulnerable)
+    );
+    assert!(matches!(
+        catalog
+            .mutation("rfb.mutation.human-con")
+            .unwrap()
+            .periodic_effect,
+        Some(MutationPeriodicEffectDefinition::ApplyStatus {
+            trigger_one_in: 200,
+            skip_if_present: true,
+            ref status_kind_id,
+            duration_ticks: 50,
+            ..
+        }) if status_kind_id == "rfb.status.unwell"
+    ));
+    let human_charisma = catalog.mutation("rfb.mutation.human-chr").unwrap();
+    assert_eq!(
+        (
+            human_charisma.device_skill,
+            human_charisma.melee_skill,
+            human_charisma.ranged_skill,
+            human_charisma.spell_failure_modifier_percent,
+        ),
+        (-10, -16, -10, 10)
+    );
 
     let ledger: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
@@ -980,6 +1054,12 @@ fn fourth_passive_mutation_batch_keeps_innate_attack_and_combat_semantics() {
         "rfb.mutation.motion",
         "rfb.mutation.untouchable",
         "rfb.mutation.tread-softly",
+        "rfb.mutation.human-str",
+        "rfb.mutation.human-int",
+        "rfb.mutation.human-wis",
+        "rfb.mutation.human-dex",
+        "rfb.mutation.human-con",
+        "rfb.mutation.human-chr",
     ] {
         let entry = entries
             .iter()
@@ -994,18 +1074,6 @@ fn fourth_passive_mutation_batch_keeps_innate_attack_and_combat_semantics() {
         (
             "rfb.mutation.vortex-melee",
             "vortex-race-innate-attack-identity",
-        ),
-        (
-            "rfb.mutation.human-str",
-            "player-critical-hit-balance-penalty",
-        ),
-        (
-            "rfb.mutation.human-dex",
-            "combat-strain-and-temporary-dexterity-loss",
-        ),
-        (
-            "rfb.mutation.human-chr",
-            "spell-failure-and-ranged-device-accuracy-modifiers",
         ),
     ] {
         let entry = entries
@@ -1248,6 +1316,7 @@ fn mutation_transaction_metadata_rejects_duplicate_order_and_invalid_removals() 
     invalid_periodic.mutations[0].periodic_effect =
         Some(MutationPeriodicEffectDefinition::ApplyStatus {
             trigger_one_in: 0,
+            skip_if_present: false,
             status_kind_id: "rfb.status.test".to_owned(),
             intensity: 1,
             duration_ticks: 1,
@@ -1417,7 +1486,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
             .iter()
             .filter(|entry| entry["status"] == "active")
             .count(),
-        119
+        125
     );
     assert_eq!(
         entries

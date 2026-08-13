@@ -7,5 +7,6 @@
   "rating": "bad",
   "sourceIndex": 147,
   "randomWeight": 0,
+  "resistances": { "fear": "vulnerable" },
   "removesOnGain": []
 }

@@ -646,3 +646,21 @@ git diff --stat
   `8e2f9f3df586082903fbebf797fc86ae7096e1a6b3ba6141831cc827a29b415d`、Protocol
   `1.199`、State Hash Schema v98、save v1、active baseline `contract-v298`。正式内容未
   使用新字段，26 条 active fixture 只复验、不刷新 assertions，零 waiver。
+
+## 39. main 当前交接（Human Commit 3：六种弱点与 35 级奖励）
+
+- 本批不新增 item、ability、material、affix、race、class、build 或 mutation ID；正式
+  Human 复用既有 `rfb.mutation.human-str` 至 `rfb.mutation.human-chr` 六项稳定身份，
+  其他方向不得创建同义弱点。
+- `demo.race.rfb-human` 在 35 级按职业施法属性自动获得并锁定弱点：INT 对应 human-int、
+  WIS 对应 human-wis，DEX/CON/CHR 映射为未来职业保留，非施法职业默认 human-str。
+  当前高阶法师获得 INT、圣骑士获得 WIS，战士、弓箭手、骑兵和狙击手获得 STR。
+- 六项行为对齐 `master:src/races_a.c`、`mut_a.c`、`fear.c` 与其战斗调用点：STR 在一次
+  近战事务首次暴击后封锁后续暴击并增加 20% 行动能量；INT 只降低恐惧专用检定且不再
+  错接生命力吸取；WIS 只屏蔽敌对邪恶怪物的心灵感应；DEX 按原版近战、射击和闪避
+  概率施加 50+1d50 的速度 -10；CON 仅在未不适时 1/200 触发 50 回合不适；CHR 应用
+  装置 -10、近战 -16、射击 -10、法术失败率 +10、最低失败率 1% 和额外 1/20 强制失手。
+- 共享协调点：pack `1.315.0` / content hash
+  `a2fc4f79fbd069387d5fbb9a08364221b2cf15c15a609448056cd4fd4b11a4ca`、Protocol
+  `1.199`、State Hash Schema v98、save v1、active baseline `contract-v299`。无新增权威
+  状态；现有 26 条 fixture 均未触发 35 级奖励，只复验、不刷新 assertions，零 waiver。

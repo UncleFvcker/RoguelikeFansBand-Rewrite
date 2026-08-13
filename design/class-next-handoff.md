@@ -246,3 +246,13 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `8b89d37d689db0c180feb1dbe213a3aa30aef910bd72a12a6c3d1af8222296dc`、Protocol
   `1.198`、State Hash Schema v98、save v1、active baseline `contract-v296`。现有 26 条
   fixture 不选择 Sniper，只复验、不刷新。
+
+## main 当前批次：Human Commit 3 六种弱点与 35 级奖励
+
+- 不新增内容 ID；正式 Human 在 35 级复用并锁定既有六项 `rfb.mutation.human-*`。
+  高阶法师按 INT、圣骑士按 WIS、现有非施法职业按 STR 自动映射，DEX/CON/CHR 映射已
+  留给未来正式职业。
+- 六种弱点的战斗、恐惧、心灵感应、周期状态、技能与法术失败行为均已按 RFB master
+  接入；降级、重新升级和 save/replay 不重复授予。
+- 协调版本：pack `1.315.0`、Protocol `1.199`、State Hash Schema v98、save v1、
+  active baseline `contract-v299`。

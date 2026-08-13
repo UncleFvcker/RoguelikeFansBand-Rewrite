@@ -282,6 +282,10 @@
               "minimum": 0,
               "type": "integer"
             },
+            "skipIfPresent": {
+              "default": false,
+              "type": "boolean"
+            },
             "stacking": {
               "$ref": "#/$defs/AbilityStatusStackingDefinition"
             },
@@ -819,6 +823,11 @@
     "description": {
       "type": "string"
     },
+    "deviceSkill": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
     "dispelResistancePercent": {
       "default": 0,
       "format": "uint8",
@@ -863,6 +872,11 @@
       "type": "boolean"
     },
     "lightRadius": {
+      "default": 0,
+      "format": "int32",
+      "type": "integer"
+    },
+    "meleeSkill": {
       "default": 0,
       "format": "int32",
       "type": "integer"
@@ -929,6 +943,11 @@
       "format": "uint8",
       "maximum": 255,
       "minimum": 0,
+      "type": "integer"
+    },
+    "rangedSkill": {
+      "default": 0,
+      "format": "int32",
       "type": "integer"
     },
     "rating": {

@@ -3201,10 +3201,8 @@
         "lose:mutation-bad-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "player-critical-hit-balance-penalty"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3223,10 +3221,8 @@
         "lose:mutation-bad-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-passive-bonus-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3245,10 +3241,8 @@
         "lose:mutation-bad-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-cross-system-query"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3267,10 +3261,8 @@
         "lose:mutation-bad-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "combat-strain-and-temporary-dexterity-loss"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3289,10 +3281,8 @@
         "lose:mutation-bad-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "mutation-periodic-effect-system"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     },
     {
@@ -3311,10 +3301,8 @@
         "lose:mutation-bad-luck=>weight-1"
       ],
       "removesOnGain": [],
-      "status": "blocked",
-      "blockers": [
-        "spell-failure-and-ranged-device-accuracy-modifiers"
-      ],
+      "status": "active",
+      "blockers": [],
       "sourceNoNumericEffect": false
     }
   ]

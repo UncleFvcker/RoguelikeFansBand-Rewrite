@@ -227,6 +227,47 @@ fn casting_attribute_race_reward_uses_the_class_profile() {
 }
 
 #[test]
+fn formal_human_weakness_uses_each_current_build_casting_attribute_once() {
+    for (build_id, expected_mutation_id) in [
+        ("demo.build.warrior", HUMAN_STR_MUTATION_ID),
+        ("demo.build.archer", HUMAN_STR_MUTATION_ID),
+        ("demo.build.cavalry", HUMAN_STR_MUTATION_ID),
+        ("demo.build.sniper", HUMAN_STR_MUTATION_ID),
+        ("demo.build.high-mage-death", HUMAN_INT_MUTATION_ID),
+        ("demo.build.high-mage-arcane", HUMAN_INT_MUTATION_ID),
+        ("demo.build.paladin-death", HUMAN_WIS_MUTATION_ID),
+    ] {
+        let mut game = Game::new_with_build(0, build_id).expect("formal build should create");
+        game.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+
+        assert!(
+            game.progress
+                .active_mutation_ids
+                .contains(expected_mutation_id)
+        );
+        assert!(
+            game.progress
+                .locked_mutation_ids
+                .contains(expected_mutation_id)
+        );
+        let restored = Game::from_save(game.to_save()).expect("Human weakness should reload");
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+
+    let mut warrior = Game::new_with_build(0, "demo.build.warrior").unwrap();
+    warrior.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+    warrior.apply_player_experience_drain(u64::MAX, "test", &mut Vec::new());
+    let mut regained_events = Vec::new();
+    warrior
+        .apply_unscaled_player_experience(experience_required_for_level(35), &mut regained_events);
+    assert!(!regained_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MutationGained { mutation_id, .. }
+            if mutation_id == HUMAN_STR_MUTATION_ID
+    )));
+}
+
+#[test]
 fn attribute_potentials_project_save_hash_and_reject_invalid_values() {
     let game = Game::new(42);
     let projected = game.snapshot().player.progress.attributes;
@@ -645,6 +686,21 @@ fn esp_respects_mind_flags_and_conceals_nonvisual_identity() {
     assert!(!normal.entity_is_visible_by_telepathy(&normal.entities[0]));
     assert!(normal.gain_mutation("rfb.mutation.esp", &mut Vec::new()));
     assert!(normal.entity_is_visible_by_telepathy(&normal.entities[0]));
+    assert!(normal.gain_mutation(HUMAN_WIS_MUTATION_ID, &mut Vec::new()));
+    assert!(!normal.entity_is_visible_by_telepathy(&normal.entities[0]));
+    let position_index = normal
+        .index(position)
+        .expect("monster position should be in bounds");
+    normal.glow[position_index] = true;
+    assert!(normal.entity_is_visually_visible_to_player(&normal.entities[0]));
+    assert!(normal.entity_is_visible_to_player(&normal.entities[0]));
+    normal.entities[0].controller_id = Some(normal.player.id.clone());
+    assert!(normal.entity_is_visible_by_telepathy(&normal.entities[0]));
+    normal.entities[0].controller_id = None;
+    normal
+        .progress
+        .active_mutation_ids
+        .remove(HUMAN_WIS_MUTATION_ID);
     normal.apply_player_melee_status(crate::effect::STATUS_BLINDNESS, 100, "test.blindness");
     let projected = normal
         .snapshot()

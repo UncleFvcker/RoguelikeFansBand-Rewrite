@@ -167,7 +167,9 @@ fn sniping_profiles_and_concentration_requirements_are_strict() {
 
 #[test]
 fn race_level_mutation_rewards_are_strict_and_canonical() {
-    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut artifact =
+        compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    human_level_mutation_rewards(&mut artifact.content).clear();
     let choice = RaceLevelMutationRewardDefinition {
         id: "talent".to_owned(),
         minimum_level: 20,

@@ -194,13 +194,6 @@ impl Game {
             9, 10, 12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
         ];
         let mut player_level = i32::from(self.progress.level);
-        if self
-            .progress
-            .active_mutation_ids
-            .contains("rfb.mutation.human-int")
-        {
-            player_level = player_level.saturating_sub(10).max(1);
-        }
         player_level = if player_level <= 40 {
             player_level.saturating_add(5)
         } else {
@@ -1440,6 +1433,7 @@ impl Game {
                     source_kind_id: kind_id.clone(),
                     method_id: blow.method_id,
                 });
+                self.check_human_dexterity_sprain(150, events);
                 continue;
             }
 

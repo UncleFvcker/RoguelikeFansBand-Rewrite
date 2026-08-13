@@ -11,6 +11,23 @@
   "shopAdjustPercent": 100,
   "baseHp": 20,
   "skillSetId": "demo.skill-set.human",
+  "levelMutationRewards": [
+    {
+      "id": "human-weakness",
+      "minimumLevel": 35,
+      "selection": {
+        "type": "casting-attribute",
+        "defaultMutationId": "rfb.mutation.human-str",
+        "mutationIdsByAttribute": {
+          "intelligence": "rfb.mutation.human-int",
+          "wisdom": "rfb.mutation.human-wis",
+          "dexterity": "rfb.mutation.human-dex",
+          "constitution": "rfb.mutation.human-con",
+          "charisma": "rfb.mutation.human-chr"
+        }
+      }
+    }
+  ],
   "kinCategory": "kin-glyph-112",
   "bodySlots": [
     { "id": "right-hand", "slotType": "weapon" },

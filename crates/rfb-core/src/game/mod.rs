@@ -11,7 +11,9 @@ use crate::resistance::{
 };
 use crate::{
     action::GameAction,
-    check::{CheckContext, CheckKind, resolve_check},
+    check::{
+        CheckContext, CheckKind, CheckResult, resolve_check, resolve_check_with_forced_failure,
+    },
     combat::{
         adjacent, apply_melee_armor_reduction, monster_melee_skill, rating_to_armor_class,
         rating_to_combat_value, resolve_armored_damage,
@@ -151,6 +153,12 @@ mod virtues;
 mod weapon_proficiency;
 mod wilderness;
 mod world;
+
+const HUMAN_STR_MUTATION_ID: &str = "rfb.mutation.human-str";
+const HUMAN_INT_MUTATION_ID: &str = "rfb.mutation.human-int";
+const HUMAN_WIS_MUTATION_ID: &str = "rfb.mutation.human-wis";
+const HUMAN_DEX_MUTATION_ID: &str = "rfb.mutation.human-dex";
+const HUMAN_CHR_MUTATION_ID: &str = "rfb.mutation.human-chr";
 
 #[cfg(test)]
 use abilities::AbilityTargetPlan;
@@ -4139,7 +4147,15 @@ impl Game {
         else {
             return false;
         };
-        let ability = self.player_derived_stats().melee_skill;
+        let mut ability = self.player_derived_stats().melee_skill;
+        if self.player_has_mutation(HUMAN_INT_MUTATION_ID) {
+            ability = ability.with_modifier(
+                StatLayer::Status,
+                HUMAN_INT_MUTATION_ID,
+                -10,
+                StatBounds::NON_NEGATIVE,
+            );
+        }
         let mut difficulty = DerivedStatsPipeline::new();
         difficulty.add_with_origin(
             StatKind::ActionDifficulty,
@@ -5566,6 +5582,12 @@ impl Game {
         }
         self.actor_runtime_definition(entity)
             .is_some_and(|definition| {
+                if self.player_has_mutation(HUMAN_WIS_MUTATION_ID)
+                    && !self.actor_is_player_side(entity)
+                    && definition.tags.iter().any(|tag| tag == "evil")
+                {
+                    return false;
+                }
                 if definition.tags.iter().any(|tag| tag == "empty-mind") {
                     false
                 } else if definition.tags.iter().any(|tag| tag == "weird-mind") {

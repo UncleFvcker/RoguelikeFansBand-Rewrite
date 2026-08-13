@@ -75,6 +75,15 @@ impl CheckResult {
 
 #[must_use]
 pub fn resolve_check(rng: &mut RfbRng, context: CheckContext) -> CheckResult {
+    resolve_check_with_forced_failure(rng, context, None)
+}
+
+#[must_use]
+pub fn resolve_check_with_forced_failure(
+    rng: &mut RfbRng,
+    context: CheckContext,
+    forced_failure_one_in: Option<u64>,
+) -> CheckResult {
     let percentile_roll = u8::try_from(rng.bounded(100)).expect("percentile roll must fit u8");
     let threshold = context.difficulty.value.max(0).saturating_mul(3) / 4;
     if percentile_roll < 5 {
@@ -94,6 +103,15 @@ pub fn resolve_check(rng: &mut RfbRng, context: CheckContext) -> CheckResult {
             } else {
                 CheckOutcome::Failure
             },
+            percentile_roll,
+            contest_roll: None,
+            threshold,
+        };
+    }
+    if forced_failure_one_in.is_some_and(|one_in| rng.bounded(one_in) == 0) {
+        return CheckResult {
+            context,
+            outcome: CheckOutcome::Failure,
             percentile_roll,
             contest_roll: None,
             threshold,
@@ -170,6 +188,23 @@ mod tests {
         };
 
         assert_eq!(result.outcome, CheckOutcome::Failure);
+        assert_eq!(result.contest_roll, None);
+    }
+
+    #[test]
+    fn forced_failure_is_checked_after_the_automatic_percentile_bands() {
+        let seed = (0..u64::MAX)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                let percentile = rng.bounded(100);
+                percentile >= 10 && rng.bounded(1) == 0
+            })
+            .expect("a non-automatic percentile roll should exist");
+        let mut rng = RfbRng::seeded(seed);
+        let result = resolve_check_with_forced_failure(&mut rng, context(60, 20), Some(1));
+
+        assert_eq!(result.outcome, CheckOutcome::Failure);
+        assert!(result.percentile_roll >= 10);
         assert_eq!(result.contest_roll, None);
     }
 }

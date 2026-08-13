@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v298`，机器可读政策固定在：
+当前逻辑基线是 `contract-v299`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -335,3 +335,10 @@ Human，因此公共初始化的生命与技能投影发生预期变化，全部
 状态完全由既有锁定变异集合派生，不新增权威状态或存档字段；正式 Human 尚未配置奖励，
 所以 26 条 active fixture 经 `verify-all` 复验零漂移，不刷新 assertions、零 waiver。
 Protocol 升至 1.199，State Hash Schema v98、内容包 1.314.0 与 save v1 保持不变。
+
+`contract-v299` 为正式 Human 配置 35 级弱点，并恢复 `master` 的六种弱点行为：力量暴击
+失衡、智力恐惧等级惩罚、感知邪恶心智断联、敏捷战斗扭伤、体质周期不适和魅力马虎
+惩罚。当前七个正式 build 按施法属性自动获得并锁定对应弱点，非施法职业使用力量弱点；
+既有 26 条 active fixture 均未达到 35 级且未持有这些弱点，经 `verify-all` 复验零漂移，
+不刷新 assertions、零 waiver。Protocol 1.199、State Hash Schema v98 与 save v1 均不变，
+内容包升至 1.315.0。

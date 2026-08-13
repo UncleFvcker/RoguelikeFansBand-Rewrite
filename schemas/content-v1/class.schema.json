@@ -153,8 +153,11 @@
     },
     "CastingAttribute": {
       "enum": [
+        "strength",
         "intelligence",
         "wisdom",
+        "dexterity",
+        "constitution",
         "charisma"
       ],
       "type": "string"

@@ -85,7 +85,16 @@
                 "charisma": {
                   "type": "string"
                 },
+                "constitution": {
+                  "type": "string"
+                },
+                "dexterity": {
+                  "type": "string"
+                },
                 "intelligence": {
+                  "type": "string"
+                },
+                "strength": {
                   "type": "string"
                 },
                 "wisdom": {

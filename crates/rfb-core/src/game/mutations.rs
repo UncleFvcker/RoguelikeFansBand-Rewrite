@@ -137,6 +137,7 @@ impl Game {
         match effect {
             MutationPeriodicEffectDefinition::ApplyStatus {
                 trigger_one_in,
+                skip_if_present,
                 status_kind_id,
                 intensity,
                 duration_ticks,
@@ -144,6 +145,9 @@ impl Game {
                 duration_sides,
                 stacking,
             } => {
+                if *skip_if_present && self.player_has_status_kind(status_kind_id) {
+                    return Ok(());
+                }
                 if self.rng.bounded(u64::from(*trigger_one_in)) != 0 {
                     return Ok(());
                 }
@@ -1659,6 +1663,47 @@ impl Game {
             .fold(0_i32, |total, mutation| {
                 total.saturating_add(mutation.spell_failure_modifier_percent)
             })
+    }
+
+    pub(super) fn player_has_mutation(&self, mutation_id: &str) -> bool {
+        self.progress.active_mutation_ids.contains(mutation_id)
+    }
+
+    pub(super) fn player_spell_failure_minimum_percent(&self) -> i32 {
+        i32::from(self.player_has_mutation(HUMAN_CHR_MUTATION_ID))
+    }
+
+    pub(super) fn resolve_player_hit_check(&mut self, context: CheckContext) -> CheckResult {
+        let forced_failure_one_in = self
+            .player_has_mutation(HUMAN_CHR_MUTATION_ID)
+            .then_some(20);
+        resolve_check_with_forced_failure(&mut self.rng, context, forced_failure_one_in)
+    }
+
+    pub(super) fn check_human_dexterity_sprain(
+        &mut self,
+        trigger_one_in: u64,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        if !self.player_has_mutation(HUMAN_DEX_MUTATION_ID)
+            || self.rng.bounded(trigger_one_in) != 0
+            || self.player_has_status_kind(STATUS_SLOW)
+        {
+            return;
+        }
+        let duration = 51_u32.saturating_add(
+            u32::try_from(self.rng.bounded(50)).expect("sprain duration must fit u32"),
+        );
+        self.apply_simple_periodic_status(
+            HUMAN_DEX_MUTATION_ID,
+            STATUS_SLOW,
+            duration,
+            StatusStacking::Replace,
+            100,
+        );
+        if let Some(mutation) = self.content.mutation(HUMAN_DEX_MUTATION_ID) {
+            self.record_periodic_mutation(mutation, events);
+        }
     }
 
     pub(super) fn player_auto_identifies_items(&self) -> bool {

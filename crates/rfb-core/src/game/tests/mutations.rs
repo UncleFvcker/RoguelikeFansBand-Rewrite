@@ -35,6 +35,7 @@ fn periodic_catalog(
             .expect("periodic contract mutation should exist")
             .periodic_effect = Some(MutationPeriodicEffectDefinition::ApplyStatus {
             trigger_one_in,
+            skip_if_present: false,
             status_kind_id: PERIODIC_STATUS_ID.to_owned(),
             intensity: 1,
             duration_ticks,
@@ -101,6 +102,172 @@ fn seed_matching(mut predicate: impl FnMut(&mut RfbRng) -> bool) -> u64 {
     (0..u64::MAX)
         .find(|seed| predicate(&mut RfbRng::seeded(*seed)))
         .expect("a matching deterministic seed should exist")
+}
+
+#[test]
+fn human_strength_stops_later_criticals_and_adds_one_fifth_action_energy() {
+    let mut game = m6_game(HUMAN_STR_MUTATION_ID, "demo.build.warrior");
+    game.player.energy_need = 0;
+    let mut allow_criticals = true;
+
+    let first = game.roll_player_melee_critical_multiplier(10_000, 0, &mut allow_criticals);
+    let draws_after_first = game.rng_draw_counter();
+    let second = game.roll_player_melee_critical_multiplier(10_000, 0, &mut allow_criticals);
+
+    assert!(first > 100);
+    assert_eq!(second, 100);
+    assert!(!allow_criticals);
+    assert_eq!(game.player.energy_need, STANDARD_ACTION_COST / 5);
+    assert_eq!(game.rng_draw_counter(), draws_after_first);
+}
+
+#[test]
+fn human_dexterity_sprain_applies_one_speed_penalty_and_still_rolls_while_slow() {
+    let mut game = m6_game(HUMAN_DEX_MUTATION_ID, "demo.build.warrior");
+    let speed_before = game.player_derived_stats().speed.value;
+    let mut events = Vec::new();
+
+    game.check_human_dexterity_sprain(1, &mut events);
+    let slow = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_SLOW)
+        .expect("a forced sprain should slow the player")
+        .clone();
+    assert!((51..=100).contains(&slow.remaining_ticks));
+    assert_eq!(game.player_derived_stats().speed.value, speed_before - 10);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MutationPeriodicTriggered { mutation_id, .. }
+            if mutation_id == HUMAN_DEX_MUTATION_ID
+    )));
+
+    let draws_before = game.rng_draw_counter();
+    game.check_human_dexterity_sprain(1, &mut events);
+    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_SLOW)
+            .unwrap()
+            .remaining_ticks,
+        slow.remaining_ticks
+    );
+}
+
+#[test]
+fn human_constitution_only_rolls_for_unwell_when_the_status_is_absent() {
+    let mut game = m6_game("rfb.mutation.human-con", "demo.build.warrior");
+    let seed = seed_matching(|rng| rng.bounded(200) == 0);
+    game.rng = RfbRng::seeded(seed);
+    game.process_periodic_mutations(
+        true,
+        false,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Human illness should process");
+    let unwell = game
+        .player
+        .statuses
+        .iter_mut()
+        .find(|status| status.kind_id == STATUS_UNWELL)
+        .expect("the forced Human illness roll should apply unwell");
+    assert_eq!(unwell.remaining_ticks, 50);
+    unwell.remaining_ticks = 100;
+
+    let draws_before = game.rng_draw_counter();
+    game.process_periodic_mutations(
+        true,
+        false,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("an existing illness should skip its mutation roll");
+    assert_eq!(game.rng_draw_counter(), draws_before);
+}
+
+#[test]
+fn human_intelligence_only_reduces_fear_checks() {
+    let base = m6_game(HUMAN_INT_MUTATION_ID, "demo.build.warrior");
+    let difficulty = u32::try_from(base.player_derived_stats().saving_throw_skill.value.max(1))
+        .expect("saving throw skill must fit u32");
+    let seed = (0..4_096)
+        .find(|seed| {
+            let mut ordinary = base.clone();
+            ordinary.rng = RfbRng::seeded(*seed);
+            let ordinary_saved =
+                ordinary.monster_saving_throw("demo.actor.fearmaster", difficulty, &mut Vec::new());
+            let mut fear = base.clone();
+            fear.rng = RfbRng::seeded(*seed);
+            let fear_saved = fear.monster_fear_saving_throw(
+                "demo.actor.fearmaster",
+                difficulty,
+                &mut Vec::new(),
+            );
+            ordinary_saved && !fear_saved
+        })
+        .expect("the ten-point Human fear penalty should change a deterministic check");
+
+    let mut ordinary = base.clone();
+    ordinary.rng = RfbRng::seeded(seed);
+    assert!(ordinary.monster_saving_throw("demo.actor.fearmaster", difficulty, &mut Vec::new()));
+    let mut fear = base;
+    fear.rng = RfbRng::seeded(seed);
+    assert!(!fear.monster_fear_saving_throw("demo.actor.fearmaster", difficulty, &mut Vec::new()));
+}
+
+#[test]
+fn human_charisma_applies_skill_spell_and_forced_hit_penalties() {
+    let mut normal = m6_game(HUMAN_CHR_MUTATION_ID, "demo.build.high-mage-death");
+    normal.progress.active_mutation_ids.clear();
+    let careless = m6_game(HUMAN_CHR_MUTATION_ID, "demo.build.high-mage-death");
+    let normal_stats = normal.player_derived_stats();
+    let careless_stats = careless.player_derived_stats();
+    assert_eq!(
+        careless_stats.device_skill.value,
+        normal_stats.device_skill.value - 10
+    );
+    assert_eq!(
+        careless_stats.melee_skill.value,
+        normal_stats.melee_skill.value - 16
+    );
+    assert_eq!(
+        careless_stats.ranged_skill.value,
+        normal_stats.ranged_skill.value - 10
+    );
+    assert_eq!(careless.player_spell_failure_minimum_percent(), 1);
+
+    let failure_for = |game: &Game| {
+        game.snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == "demo.ability.death-detect-unlife")
+            .expect("the first Death spell should be projected")
+            .failure_percent
+    };
+    assert_eq!(failure_for(&careless), failure_for(&normal) + 10);
+
+    let seed = seed_matching(|rng| rng.bounded(100) >= 10 && rng.bounded(20) == 0);
+    let mut forced = careless;
+    forced.rng = RfbRng::seeded(seed);
+    let mut stats = DerivedStatsPipeline::new();
+    stats.add(StatKind::MeleeSkill, StatLayer::Base, "test", 100);
+    stats.add(StatKind::ArmorClass, StatLayer::Base, "test", 0);
+    let result = forced.resolve_player_hit_check(CheckContext {
+        kind: CheckKind::MeleeHit,
+        actor_id: forced.player.id.clone(),
+        target_id: Some("test.target".to_owned()),
+        ability: stats.resolve(StatKind::MeleeSkill, StatBounds::NON_NEGATIVE),
+        difficulty: stats.resolve(StatKind::ArmorClass, StatBounds::NON_NEGATIVE),
+    });
+    assert!(!result.succeeded());
+    assert_eq!(result.contest_roll, None);
 }
 
 #[test]

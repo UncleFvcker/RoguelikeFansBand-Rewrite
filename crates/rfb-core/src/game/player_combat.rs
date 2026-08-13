@@ -310,6 +310,7 @@ impl Game {
         }
         self.sniper_concentration = 0;
         self.apply_ranged_easy_tiring_fatigue(7_500_i32.saturating_div(profile.base_shot));
+        self.check_human_dexterity_sprain(250, events);
         if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Retreat) {
             let radius = 10_u16.saturating_add(u16::from(starting_concentration).saturating_mul(2));
             let candidates = self.random_teleport_candidates(radius);
@@ -526,17 +527,15 @@ impl Game {
             )
         };
         changed.insert(self.entities[index].position);
-        if !resolve_check(
-            &mut self.rng,
-            CheckContext {
+        if !self
+            .resolve_player_hit_check(CheckContext {
                 kind: CheckKind::ProjectileHit,
                 actor_id: self.player.id.clone(),
                 target_id: Some(target_entity_id.clone()),
                 ability: ranged_skill,
                 difficulty: focused_armor_class,
-            },
-        )
-        .succeeded()
+            })
+            .succeeded()
         {
             events.push(DomainEvent::ProjectileMissed {
                 target_kind_id,
@@ -1161,6 +1160,7 @@ impl Game {
         let mut vampiric_drain_remaining = 50_i32;
         let mut retaliation_blow_index = 0_usize;
         let mut touched_surviving_target = false;
+        let mut allow_criticals = true;
         'profiles: for profile in profiles {
             let vampiric_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
                 self.items
@@ -1176,19 +1176,25 @@ impl Game {
             for _ in 0..profile.attacks {
                 self.apply_easy_tiring_fatigue(50);
                 if profile.melee_skill.value <= 0
-                    || !resolve_check(
-                        &mut self.rng,
-                        CheckContext {
+                    || !self
+                        .resolve_player_hit_check(CheckContext {
                             kind: CheckKind::MeleeHit,
                             actor_id: self.player.id.clone(),
                             target_id: Some(self.entities[index].id.clone()),
                             ability: profile.melee_skill.clone(),
                             difficulty: target.armor_class.clone(),
-                        },
-                    )
-                    .succeeded()
+                        })
+                        .succeeded()
                 {
                     events.push(profile.miss_event(&target_kind));
+                    self.check_human_dexterity_sprain(
+                        if profile.source_item_id.is_some() {
+                            250
+                        } else {
+                            300
+                        },
+                        events,
+                    );
                     continue;
                 }
 
@@ -1198,12 +1204,22 @@ impl Game {
                     .saturating_div(10);
                 if let Some(weight) = profile.critical_weight_tenths_pound {
                     base_damage = base_damage
-                        .saturating_mul(
-                            self.roll_innate_critical_multiplier(weight, profile.to_hit),
-                        )
+                        .saturating_mul(self.roll_player_melee_critical_multiplier(
+                            weight,
+                            profile.to_hit,
+                            &mut allow_criticals,
+                        ))
                         .saturating_div(100);
                 }
                 let rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
+                self.check_human_dexterity_sprain(
+                    if profile.source_item_id.is_some() {
+                        500
+                    } else {
+                        300
+                    },
+                    events,
+                );
                 let damage_type = profile.damage_type;
                 let resistance = self.entities[index].resistances.level(damage_type);
                 let damage =
@@ -1418,6 +1434,26 @@ impl Game {
             900..=1_299 => 350,
             _ => 400,
         }
+    }
+
+    pub(super) fn roll_player_melee_critical_multiplier(
+        &mut self,
+        weight_tenths_pound: u16,
+        to_hit: i32,
+        allow_criticals: &mut bool,
+    ) -> i32 {
+        if !*allow_criticals {
+            return 100;
+        }
+        let multiplier = self.roll_innate_critical_multiplier(weight_tenths_pound, to_hit);
+        if multiplier > 100 && self.player_has_mutation(HUMAN_STR_MUTATION_ID) {
+            *allow_criticals = false;
+            self.player.energy_need = self
+                .player
+                .energy_need
+                .saturating_add(STANDARD_ACTION_COST / 5);
+        }
+        multiplier
     }
 
     pub(super) fn resolve_monster_contact_auras(

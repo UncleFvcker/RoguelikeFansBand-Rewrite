@@ -7,5 +7,16 @@
   "rating": "bad",
   "sourceIndex": 150,
   "randomWeight": 0,
+  "periodicEffect": {
+    "type": "apply-status",
+    "triggerOneIn": 200,
+    "skipIfPresent": true,
+    "statusKindId": "rfb.status.unwell",
+    "intensity": 1,
+    "durationTicks": 50,
+    "durationDice": 0,
+    "durationSides": 0,
+    "stacking": "replace"
+  },
   "removesOnGain": []
 }
