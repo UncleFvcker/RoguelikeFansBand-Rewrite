@@ -1,0 +1,104 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "attack": 25,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 8,
+      "damageSides": 8,
+      "damageType": "electricity"
+    }
+  ],
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 19,
+  "descriptionKey": "actor-demo-the-resurrection-machine-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 146410,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 128,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.the-resurrection-machine",
+  "level": 100,
+  "maxHp": 15488,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.summon-dead-unique-l100-1d2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 100
+  },
+  "nameKey": "actor-demo-the-resurrection-machine-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "nether": "resistant",
+    "poison": "immune",
+    "shards": "resistant",
+    "sound": "resistant",
+    "time": "resistant"
+  },
+  "role": "monster",
+  "speed": 152,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "fixed-placement",
+    "fixed-unique",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

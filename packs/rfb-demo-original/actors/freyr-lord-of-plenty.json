@@ -1,0 +1,192 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1342,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 12,
+  "damageSides": 9,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 12,
+  "descriptionKey": "actor-demo-freyr-lord-of-plenty-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 68728,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 90,
+    "forceMaximum": true,
+    "sides": 90
+  },
+  "id": "demo.actor.freyr-lord-of-plenty",
+  "level": 85,
+  "light": {
+    "intrinsic": false,
+    "radius": 2
+  },
+  "maxHp": 8100,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 12,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 9,
+            "durationSides": 9,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 12,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "slow"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 12,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "drain-charges"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 9,
+            "amountSides": 9,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-light-10d10-390",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-720",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.psy-spear-1d170-150",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.animate-dead",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-animal-l85-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-fire-1d595-20",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l85-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 45,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-freyr-lord-of-plenty-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "gravity": "resistant",
+    "inertia": "resistant",
+    "light": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 135,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "norse",
+    "orc-cave",
+    "unique"
+  ]
+}

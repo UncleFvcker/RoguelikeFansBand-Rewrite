@@ -1,0 +1,142 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 855,
+    "maxDepth": 999,
+    "rarity": 1
+  },
+  "attack": 23,
+  "capturePolicy": "pet-only",
+  "damageDice": 30,
+  "damageSides": 9,
+  "damageType": "physical",
+  "defense": 20,
+  "descriptionKey": "actor-demo-the-destroyer-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 125000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 200,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.the-destroyer",
+  "level": 94,
+  "maxHp": 20000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit-120",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit-120",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit-120",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit-120",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d329-50",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-the-destroyer-name",
+  "reflectsBolts": true,
+  "regenerates": true,
+  "resistances": {
+    "acid": "immune",
+    "cold": "immune",
+    "disenchant": "resistant",
+    "disintegrate": "resistant",
+    "electricity": "immune",
+    "fire": "immune",
+    "gravity": "resistant",
+    "inertia": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "plasma": "resistant",
+    "poison": "immune",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

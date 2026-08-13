@@ -1,0 +1,249 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 841,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 12,
+  "damageSides": 12,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 15,
+  "descriptionKey": "actor-demo-shuma-gorath-description",
+  "experienceValue": 60000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "e",
+  "hitPointDice": {
+    "dice": 85,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.shuma-gorath",
+  "level": 88,
+  "maxHp": 8500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 12,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "charisma"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "intelligence"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "wisdom"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.psy-spear-1d176-150",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.hand-of-doom",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-mana-10d10-402",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.amnesia",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-264",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.banish",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.teleport-level",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drain-mana-45",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l88-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.kin-shuma-gorath",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-cyber-l88-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-hound-l88-1d2-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-hydra-l88-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l88-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-unique-l88-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l88-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-dragon-l88-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.animate-dead",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.anti-magic",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-shuma-gorath-name",
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "demon",
+    "eldritch-horror",
+    "evil",
+    "kin-glyph-101",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ]
+}

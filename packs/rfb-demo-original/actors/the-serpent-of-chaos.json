@@ -1,0 +1,260 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "attack": 25,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 4,
+      "damageSides": 6,
+      "damageType": "shards"
+    },
+    {
+      "chancePercent": 20,
+      "damageDice": 6,
+      "damageSides": 6,
+      "damageType": "chaos"
+    },
+    {
+      "chancePercent": 10,
+      "damageDice": 3,
+      "damageSides": 3,
+      "damageType": "disenchant"
+    }
+  ],
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      },
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 17,
+  "descriptionKey": "actor-demo-the-serpent-of-chaos-description",
+  "experienceValue": 300000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "J",
+  "hitPointDice": {
+    "dice": 200,
+    "forceMaximum": true,
+    "sides": 150
+  },
+  "id": "demo.actor.the-serpent-of-chaos",
+  "killsWeakerBodies": true,
+  "level": 100,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 30000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 19,
+            "damageSides": 10,
+            "type": "shatter"
+          },
+          {
+            "chancePercent": 30,
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 19,
+            "damageSides": 10,
+            "type": "shatter"
+          },
+          {
+            "chancePercent": 30,
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 19,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength",
+              "dexterity",
+              "constitution",
+              "intelligence",
+              "wisdom",
+              "charisma"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "drain-charges"
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-mana-33-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nuke-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-chaos-10d10-200",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-shards-1d1-599",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.hand-of-doom",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-1d1-199",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.anti-magic",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l100-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-cyber-l100-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-guardian-l99-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l100-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-dragon-l100-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-unique-l100-1d2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 35,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-the-serpent-of-chaos-name",
+  "reflectsBolts": true,
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "nether": "resistant",
+    "poison": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 155,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "fixed-placement",
+    "fixed-unique",
+    "guardian",
+    "kin-glyph-74",
+    "legacy-import",
+    "nonliving",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

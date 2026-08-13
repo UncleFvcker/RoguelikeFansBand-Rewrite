@@ -1,0 +1,219 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyDungeonIndices": [
+      7
+    ],
+    "legacyIndex": 1149,
+    "maxDepth": 999,
+    "rarity": 1
+  },
+  "attack": 9,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 1,
+      "damageSides": 3,
+      "damageType": "nether"
+    }
+  ],
+  "damageDice": 3,
+  "damageSides": 6,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.mage"
+  },
+  "defense": 8,
+  "descriptionKey": "actor-demo-helga-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 5000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "p",
+  "hitPointDice": {
+    "dice": 40,
+    "forceMaximum": true,
+    "sides": 40
+  },
+  "id": "demo.actor.helga",
+  "level": 39,
+  "light": {
+    "darkness": true,
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 1600,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 30,
+            "amountSides": 6,
+            "type": "drain-experience"
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.wail",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "attributes": [
+              "strength",
+              "dexterity",
+              "constitution",
+              "intelligence",
+              "wisdom",
+              "charisma"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-117",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-nether-10d10-89",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-10d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.animate-dead",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.shriek",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-nether-5d5-69",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-helga-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "nether": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "human",
+    "kin-glyph-112",
+    "legacy-import",
+    "no-quest",
+    "unique",
+    "witch-sister",
+    "witch-wood"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

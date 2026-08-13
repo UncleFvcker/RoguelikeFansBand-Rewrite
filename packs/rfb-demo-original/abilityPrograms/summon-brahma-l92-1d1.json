@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.summon-brahma-l92-1d1",
+  "input": "self",
+  "steps": [
+    {
+      "batchCandidates": [
+        {
+          "actorKindId": "demo.actor.brahma-the-creating-spirit",
+          "weight": 1
+        }
+      ],
+      "category": "hindu",
+      "countDice": 1,
+      "countSides": 1,
+      "durationTurns": 10000,
+      "maximumLevel": 92,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}

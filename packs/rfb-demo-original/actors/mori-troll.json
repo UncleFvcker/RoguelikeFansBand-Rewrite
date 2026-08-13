@@ -1,0 +1,71 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "town"
+    ],
+    "legacyIndex": 1060,
+    "maxDepth": 999,
+    "rarity": 255,
+    "wildOnly": true
+  },
+  "attack": 1,
+  "capturePolicy": "pet-only",
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-mori-troll-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 0,
+  "formatVersion": 1,
+  "glyph": "T",
+  "hitPointDice": {
+    "dice": 35,
+    "forceMaximum": true,
+    "sides": 20
+  },
+  "id": "demo.actor.mori-troll",
+  "level": 0,
+  "light": {
+    "intrinsic": false,
+    "radius": 1
+  },
+  "maxHp": 700,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-mori-troll-name",
+  "role": "monster",
+  "speed": 109,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "fixed-unique",
+    "giant",
+    "human",
+    "kin-glyph-84",
+    "legacy-import",
+    "town",
+    "unique"
+  ]
+}

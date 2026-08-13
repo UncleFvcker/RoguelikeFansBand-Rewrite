@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.brain-smash-1d1-199",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 199,
+      "damageDice": 1,
+      "damageSides": 1,
+      "damageType": "psi",
+      "type": "damage"
+    },
+    {
+      "durationTicks": 80,
+      "intensity": 1,
+      "resistanceType": "psi",
+      "stacking": "extend",
+      "statusKindId": "rfb.status.blindness",
+      "type": "apply-status"
+    },
+    {
+      "durationTicks": 80,
+      "intensity": 1,
+      "resistanceType": "psi",
+      "stacking": "extend",
+      "statusKindId": "rfb.status.confusion",
+      "type": "apply-status"
+    },
+    {
+      "durationTicks": 20,
+      "intensity": 1,
+      "resistanceType": "psi",
+      "stacking": "extend",
+      "statusKindId": "rfb.status.paralysis",
+      "type": "apply-status"
+    },
+    {
+      "durationTicks": 80,
+      "intensity": 1,
+      "resistanceType": "psi",
+      "stacking": "extend",
+      "statusKindId": "rfb.status.slow",
+      "type": "apply-status"
+    }
+  ]
+}

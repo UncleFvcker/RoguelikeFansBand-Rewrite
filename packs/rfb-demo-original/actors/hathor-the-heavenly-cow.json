@@ -1,0 +1,208 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1271,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 20,
+  "capturePolicy": "pet-only",
+  "damageDice": 10,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 13,
+  "descriptionKey": "actor-demo-hathor-the-heavenly-cow-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 62920,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 66,
+    "forceMaximum": true,
+    "sides": 110
+  },
+  "id": "demo.actor.hathor-the-heavenly-cow",
+  "level": 82,
+  "maxHp": 7260,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 4,
+            "durationSides": 4,
+            "type": "stun"
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 4,
+            "durationSides": 4,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.kick",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "slow"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 4,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "light",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 4,
+            "damageType": "acid",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l82-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.animate-dead",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-animal-l82-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d164-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-light-10d10-378",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink-other",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-egyptian-l82-1d2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 37,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-hathor-the-heavenly-cow-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "egyptian",
+    "good",
+    "kin-glyph-113",
+    "legacy-import",
+    "no-quest",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

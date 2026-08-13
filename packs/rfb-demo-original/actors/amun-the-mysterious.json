@@ -1,0 +1,275 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1266,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 24,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 4,
+      "damageSides": 4,
+      "damageType": "fire"
+    },
+    {
+      "damageDice": 4,
+      "damageSides": 4,
+      "damageType": "electricity"
+    },
+    {
+      "damageDice": 5,
+      "damageSides": 5,
+      "damageType": "light"
+    }
+  ],
+  "damageDice": 14,
+  "damageSides": 14,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 17,
+  "descriptionKey": "actor-demo-amun-the-mysterious-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 133100,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 121,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.amun-the-mysterious",
+  "level": 97,
+  "maxHp": 14641,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 4,
+            "durationSides": 9,
+            "type": "stun"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "plasma",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 15,
+            "damageSides": 15,
+            "damageType": "fire",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 12,
+            "damageSides": 12,
+            "damageType": "electricity",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 60,
+            "damageDice": 6,
+            "damageSides": 6,
+            "damageType": "gravity",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 60,
+            "damageDice": 6,
+            "damageSides": 6,
+            "damageType": "nexus",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 11,
+            "damageSides": 11,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 1,
+            "amountSides": 49,
+            "type": "drain-resource"
+          },
+          {
+            "type": "inertia"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-plasma-17-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-egyptian-l97-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-force-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-gravity-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drain-mana-49",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-light-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-light-10d10-438",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-confusion-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-inertia-17-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-10d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.hand-of-doom",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nuke-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-amun-the-mysterious-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "disenchant": "resistant",
+    "electricity": "immune",
+    "fire": "immune",
+    "light": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant",
+    "shards": "resistant",
+    "sound": "resistant"
+  },
+  "role": "monster",
+  "speed": 133,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "egyptian",
+    "invisible",
+    "kin-glyph-113",
+    "legacy-import",
+    "no-quest",
+    "orc-cave",
+    "shapechanger",
+    "unique"
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "wood"
+    ],
+    "legacyIndex": 1370,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 10,
+  "damageSides": 12,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.archer"
+  },
+  "defense": 17,
+  "descriptionKey": "actor-demo-rama-the-exiled-prince-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 83490,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "p",
+  "hitPointDice": {
+    "dice": 128,
+    "forceMaximum": true,
+    "sides": 110
+  },
+  "id": "demo.actor.rama-the-exiled-prince",
+  "level": 86,
+  "maxHp": 14080,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-1d1-399",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-vanara-l86-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l86-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-rama-the-exiled-prince-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "disintegrate": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "nether": "resistant"
+  },
+  "role": "monster",
+  "speed": 135,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "good",
+    "hindu",
+    "human",
+    "kin-glyph-112",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

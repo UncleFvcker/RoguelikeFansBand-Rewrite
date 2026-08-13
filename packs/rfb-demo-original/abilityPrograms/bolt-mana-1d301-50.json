@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.bolt-mana-1d301-50",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 50,
+      "damageDice": 1,
+      "damageSides": 301,
+      "damageType": "mana",
+      "type": "damage"
+    }
+  ]
+}

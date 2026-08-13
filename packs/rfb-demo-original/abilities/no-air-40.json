@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.no-air-40",
+  "descriptionKey": "ability-legacy-no-air-40-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.no-air-40",
+  "nameKey": "ability-legacy-no-air-40-name",
+  "tags": [
+    "legacy-import",
+    "monster-only",
+    "monster-no-air"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

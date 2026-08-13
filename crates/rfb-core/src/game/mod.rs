@@ -23,10 +23,10 @@ use crate::{
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
         STATUS_CONFUSION, STATUS_DEVICE_MASTERY, STATUS_FEAR, STATUS_GIANT_STRENGTH,
         STATUS_HALLUCINATION, STATUS_HASTE, STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY,
-        STATUS_PARALYSIS, STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL,
-        STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW,
-        STATUS_STUN, STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI,
-        STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
+        STATUS_NO_AIR, STATUS_PARALYSIS, STATUS_PLAYER_POLYMORPH, STATUS_POISON,
+        STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT,
+        STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE,
+        STATUS_TSUYOSHI, STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
         StatusApplication, StatusChange, StatusInstance, StatusStacking, apply_effect,
         apply_status, resolve_damage,
     },
@@ -3064,6 +3064,7 @@ impl Game {
                     && excluded_category
                         .is_none_or(|category| !actor_matches_category(definition, category))
                     && !definition.tags.iter().any(|tag| tag == "guardian")
+                    && actor_answers_summons(definition)
                     && definition.allocation.as_ref().is_none_or(|allocation| {
                         monster_ecology::actor_allocation_matches_task(allocation, current_task_id)
                     })
@@ -6505,6 +6506,10 @@ fn actor_matches_category(definition: &rfb_content::ActorDefinition, category: &
             .any(|tag| matches!(tag.as_str(), "demon" | "undead" | "nonliving"));
     }
     definition.tags.iter().any(|tag| tag == category)
+}
+
+fn actor_answers_summons(definition: &rfb_content::ActorDefinition) -> bool {
+    !definition.tags.iter().any(|tag| tag == "no-summon")
 }
 
 /// FrogComposband's melee `slay_tiers`, expressed in tenths. Integer

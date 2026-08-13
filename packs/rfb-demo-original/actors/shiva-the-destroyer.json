@@ -1,0 +1,275 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1380,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 23,
+  "capturePolicy": "pet-only",
+  "damageDice": 13,
+  "damageSides": 14,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 18,
+  "descriptionKey": "actor-demo-shiva-the-destroyer-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 133342,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 121,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.shiva-the-destroyer",
+  "level": 94,
+  "maxHp": 14641,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 9,
+            "durationSides": 10,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 7,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 6,
+            "damageType": "time",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength",
+              "dexterity",
+              "constitution",
+              "intelligence",
+              "wisdom",
+              "charisma"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 6,
+            "amountSides": 6,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.summon-family-shiva-the-destroyer",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-dark-10d10-426",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.anti-magic",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-time-2d94-31",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-mana-10d10-426",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-plasma-8d7-160",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.hand-of-doom",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-electricity-1d654-20",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-fire-1d654-20",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-time-33-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-1d1-249",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-electricity-15d15-376",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-kin-glyph-74-l94-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-kin-glyph-110-l94-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 40
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-shiva-the-destroyer-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "disintegrate": "resistant",
+    "electricity": "immune",
+    "fire": "immune",
+    "gravity": "resistant",
+    "inertia": "resistant",
+    "nether": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant",
+    "shards": "resistant",
+    "sound": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 140,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "aura-fear",
+    "hindu",
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

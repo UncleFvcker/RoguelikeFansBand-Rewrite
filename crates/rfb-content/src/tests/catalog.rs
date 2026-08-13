@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.320.0");
+    assert_eq!(catalog.pack_version(), "1.330.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -339,6 +339,8 @@ fn formal_human_matches_rfb_static_profile() {
         "demo.build.warrior",
         "demo.build.high-mage-death",
         "demo.build.high-mage-arcane",
+        "demo.build.high-mage-sorcery",
+        "demo.build.high-mage-armageddon",
         "demo.build.archer",
         "demo.build.paladin-death",
         "demo.build.cavalry",
@@ -350,6 +352,406 @@ fn formal_human_matches_rfb_static_profile() {
             "{build_id} must continue to use the formal Human race"
         );
     }
+}
+
+#[test]
+fn p76_complex_monsters_and_their_shared_mechanisms_compile_into_the_pack() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let actors = [
+        (822, "qlzqqlzuup-the-lord-of-flesh"),
+        (844, "kaschei-the-immortal"),
+        (848, "shub-niggurath-black-goat-of-the-woods"),
+        (849, "nodens-lord-of-the-great-abyss"),
+        (859, "the-unicorn-of-order"),
+        (861, "morgoth-lord-of-darkness"),
+        (1098, "hades-ruler-of-the-underworld"),
+        (1099, "athena-the-goddess-of-wisdom"),
+        (1100, "ares-the-god-of-war"),
+        (1102, "apollo-the-sun-god"),
+        (1103, "artemis-the-moon-goddess"),
+        (1104, "hephaestus-the-smith-god"),
+        (1105, "hera-queen-of-the-gods"),
+        (1107, "aphrodite-the-goddess-of-love"),
+        (1161, "atropos-the-sister-of-fate"),
+        (1180, "tik-srvzllat"),
+        (1259, "osiris-the-reborn"),
+        (1265, "ptah-the-divine-craftsman"),
+        (1281, "aijem-the-walrus"),
+        (1365, "vayu-the-embodied-wind"),
+        (1372, "vishnu-the-preserver"),
+        (1373, "lakshmi-the-goddess-of-prosperity"),
+        (1380, "shiva-the-destroyer"),
+        (1382, "parvati-the-goddess-of-hidden-power"),
+    ];
+    for (legacy_index, id) in actors {
+        let actor = catalog
+            .actor(&format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P76 actor {id} should compile"));
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} should retain its authoritative source index"
+        );
+    }
+
+    let has_ability = |actor_id: &str, ability_id: &str| {
+        catalog
+            .actor(actor_id)
+            .and_then(|actor| actor.monster_casting.as_ref())
+            .is_some_and(|casting| {
+                casting
+                    .abilities
+                    .iter()
+                    .any(|candidate| candidate.ability_id == ability_id)
+            })
+    };
+    assert!(has_ability(
+        "demo.actor.morgoth-lord-of-darkness",
+        "rfb-legacy.ability.summon-unique-l100-1d2"
+    ));
+    assert!(has_ability(
+        "demo.actor.osiris-the-reborn",
+        "rfb-legacy.ability.summon-family-osiris-the-reborn"
+    ));
+    assert!(has_ability(
+        "demo.actor.vayu-the-embodied-wind",
+        "rfb-legacy.ability.breath-air-17-250-r3"
+    ));
+    assert!(has_ability(
+        "demo.actor.vayu-the-embodied-wind",
+        "rfb-legacy.ability.no-air-40"
+    ));
+    assert!(has_ability(
+        "demo.actor.aijem-the-walrus",
+        "rfb-legacy.ability.chicken-1d1-199"
+    ));
+
+    let kaschei = catalog
+        .actor("demo.actor.kaschei-the-immortal")
+        .expect("Kaschei should compile");
+    assert!(matches!(
+        kaschei.contact_effects.as_slice(),
+        [MeleeBlowEffectDefinition::Unlife {
+            amount_dice: 2,
+            amount_sides: 6,
+            chance_percent: Some(50)
+        }]
+    ));
+    let unicorn = catalog
+        .actor("demo.actor.the-unicorn-of-order")
+        .expect("Unicorn of Order should compile");
+    assert!(
+        unicorn
+            .contact_auras
+            .iter()
+            .any(|aura| { aura.damage_type == ActorDamageType::Time && aura.ravages_time })
+    );
+}
+
+#[test]
+fn p77_location_bound_monsters_and_resurrection_mechanism_compile_into_the_pack() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    for id in [
+        "godzilla",
+        "greater-cyber-wyrm-angel-daemon-lich",
+        "sauron-the-sorcerer",
+        "oberon-king-of-amber",
+        "the-serpent-of-chaos",
+        "the-resurrection-machine",
+    ] {
+        assert!(
+            catalog.actor(&format!("demo.actor.{id}")).is_some(),
+            "P77 actor {id} should compile"
+        );
+    }
+
+    let godzilla = catalog.actor("demo.actor.godzilla").expect("Godzilla");
+    let godzilla_allocation = godzilla.allocation.as_ref().expect("ocean allocation");
+    assert_eq!(godzilla_allocation.legacy_index, 832);
+    assert!(godzilla_allocation.wild_only);
+    assert_eq!(godzilla_allocation.habitats, [ActorHabitat::Ocean]);
+
+    let wyrm = catalog
+        .actor("demo.actor.greater-cyber-wyrm-angel-daemon-lich")
+        .expect("Greater Cyber Wyrm Angel Daemon Lich");
+    let wyrm_allocation = wyrm.allocation.as_ref().expect("wilderness allocation");
+    assert_eq!(wyrm_allocation.legacy_index, 1337);
+    assert!(wyrm_allocation.habitats.contains(&ActorHabitat::All));
+    assert!(wyrm_allocation.habitats.contains(&ActorHabitat::Ocean));
+    assert_eq!(
+        wyrm.monster_casting
+            .as_ref()
+            .expect("the full original casting profile")
+            .abilities
+            .len(),
+        94
+    );
+
+    for id in [
+        "sauron-the-sorcerer",
+        "oberon-king-of-amber",
+        "the-serpent-of-chaos",
+        "the-resurrection-machine",
+    ] {
+        assert!(
+            catalog
+                .actor(&format!("demo.actor.{id}"))
+                .expect("fixed identity actor")
+                .allocation
+                .is_none(),
+            "{id} should require explicit placement"
+        );
+    }
+
+    let serpent = catalog
+        .actor("demo.actor.the-serpent-of-chaos")
+        .expect("Serpent of Chaos");
+    assert!(serpent.tags.iter().any(|tag| tag == "guardian"));
+    assert!(serpent.contact_auras.iter().any(|aura| {
+        aura.damage_type == ActorDamageType::Chaos && aura.chance_percent == Some(20)
+    }));
+    assert!(serpent.contact_auras.iter().any(|aura| {
+        aura.damage_type == ActorDamageType::Disenchant && aura.chance_percent == Some(10)
+    }));
+
+    let resurrection = catalog
+        .ability("rfb-legacy.ability.summon-dead-unique-l100-1d2")
+        .expect("S_DEAD_UNIQ should compile");
+    assert!(
+        resurrection
+            .tags
+            .iter()
+            .any(|tag| tag == "monster-dead-unique-summon")
+    );
+    assert!(matches!(
+        &resurrection.effect,
+        AbilityEffectDefinition::SummonCategory {
+            category,
+            count_dice: 1,
+            count_sides: 2,
+            maximum_level: 100,
+            ..
+        } if category == "unique"
+    ));
+}
+
+#[test]
+fn p78_direct_monsters_compile_with_original_levels_and_existing_mechanics() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    for (id, level, legacy_index) in [
+        ("warrens-keeper", 7, 135),
+        ("swamp-rat", 10, 1297),
+        ("plague-monk", 14, 1293),
+        ("skaven-assassin", 14, 1294),
+        ("clay-golem", 15, 261),
+        ("magic-mushroom-patch", 15, 267),
+        ("rat-ogre", 15, 1295),
+        ("master-rogue", 23, 376),
+        ("mummified-human", 24, 390),
+        ("samurai", 25, 901),
+        ("black-knight", 28, 442),
+        ("trap-master", 28, 1036),
+        ("nekhbet-the-vulture-mother", 57, 1258),
+        ("thoth-the-voice-of-ra", 60, 1246),
+        ("loki-the-trickster", 85, 835),
+        ("shuma-gorath", 88, 841),
+        ("pandemonium", 94, 1200),
+        ("zombified-serpent-of-chaos", 127, 883),
+    ] {
+        let actor = catalog
+            .actor(&format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P78 actor {id} should compile"));
+        assert_eq!(actor.level, level, "P78 actor {id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "P78 actor {id} source index"
+        );
+        let allocation_tag = if id == "warrens-keeper" {
+            "warrens"
+        } else {
+            "orc-cave"
+        };
+        assert!(actor.tags.iter().any(|tag| tag == allocation_tag));
+    }
+
+    let mushroom = catalog
+        .actor("demo.actor.magic-mushroom-patch")
+        .expect("Magic mushroom patch");
+    assert!(
+        mushroom
+            .monster_casting
+            .as_ref()
+            .expect("original casting profile")
+            .abilities
+            .iter()
+            .any(|ability| ability.ability_id == "rfb-legacy.ability.polymorph-target")
+    );
+
+    let serpent = catalog
+        .actor("demo.actor.zombified-serpent-of-chaos")
+        .expect("Zombified Serpent of Chaos");
+    assert!(serpent.tags.iter().any(|tag| tag == "unique2"));
+    assert!(serpent.contact_auras.iter().any(|aura| {
+        aura.damage_type == ActorDamageType::Shards && aura.chance_percent.is_none()
+    }));
+    assert!(serpent.contact_auras.iter().any(|aura| {
+        aura.damage_type == ActorDamageType::Chaos && aura.chance_percent == Some(40)
+    }));
+    assert!(serpent.contact_auras.iter().any(|aura| {
+        aura.damage_type == ActorDamageType::Disenchant && aura.chance_percent == Some(20)
+    }));
+}
+
+#[test]
+fn p79_norse_and_olympian_summoners_compile_with_original_retinues() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    for (id, level, legacy_index) in [
+        ("einheri-berserker", 65, 1344),
+        ("hermes-the-messenger-god", 86, 1101),
+        ("zeus-king-of-the-olympians", 90, 1096),
+        ("odin-the-all-father", 90, 1343),
+    ] {
+        let actor = catalog
+            .actor(&format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P79 actor {id} should compile"));
+        assert_eq!(actor.level, level);
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index)
+        );
+    }
+
+    let einheri = catalog
+        .actor("demo.actor.einheri-berserker")
+        .expect("Einheri berserker");
+    assert_eq!(
+        einheri
+            .allocation
+            .as_ref()
+            .expect("Asgard allocation")
+            .legacy_dungeon_indices,
+        [39]
+    );
+    assert!(einheri.tags.iter().any(|tag| tag == "asgard"));
+
+    for (ability_id, target_id, count_sides) in [
+        (
+            "rfb-legacy.ability.summon-magic-mushroom-patch-l15-1d16",
+            "demo.actor.magic-mushroom-patch",
+            16,
+        ),
+        (
+            "rfb-legacy.ability.summon-shambler-l67-1d4",
+            "demo.actor.shambler",
+            4,
+        ),
+    ] {
+        let ability = catalog.ability(ability_id).expect("P79 fixed retinue");
+        assert!(matches!(
+            &ability.effect,
+            AbilityEffectDefinition::SummonCategory {
+                count_dice: 1,
+                count_sides: sides,
+                count_bonus: 0,
+                maximum_count: None,
+                batch_candidates,
+                ..
+            } if *sides == count_sides
+                && batch_candidates.as_slice() == [AbilitySummonCandidateDefinition {
+                    actor_kind_id: target_id.to_owned(),
+                    weight: 1,
+                }]
+        ));
+    }
+
+    let odin = catalog
+        .ability("rfb-legacy.ability.summon-odin-retinue-1d4-max1")
+        .expect("Odin retinue");
+    assert!(matches!(
+        &odin.effect,
+        AbilityEffectDefinition::SummonCategory {
+            count_dice: 1,
+            count_sides: 4,
+            count_bonus: 0,
+            maximum_count: Some(1),
+            batch_candidates,
+            ..
+        } if batch_candidates.as_slice() == [
+            AbilitySummonCandidateDefinition {
+                actor_kind_id: "demo.actor.einheri-berserker".to_owned(),
+                weight: 1,
+            },
+            AbilitySummonCandidateDefinition {
+                actor_kind_id: "demo.actor.valkyrie".to_owned(),
+                weight: 1,
+            },
+        ]
+    ));
+}
+
+#[test]
+fn p80_variant_maintainer_compiles_with_software_bug_summon() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let actor = catalog
+        .actor("demo.actor.the-variant-maintainer")
+        .expect("Variant Maintainer should compile");
+    assert_eq!(actor.level, 14);
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(1094)
+    );
+    assert!(actor.tags.iter().any(|tag| tag == "unique"));
+    let casting = actor
+        .monster_casting
+        .as_ref()
+        .expect("Variant Maintainer casting profile");
+    assert_eq!(casting.frequency_percent, 33);
+    assert_eq!(
+        casting
+            .abilities
+            .iter()
+            .map(|entry| entry.ability_id.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "rfb-legacy.ability.summon-software-bug-l14-1d3-1",
+            "rfb-legacy.ability.polymorph-target",
+        ]
+    );
+
+    let summon = catalog
+        .ability("rfb-legacy.ability.summon-software-bug-l14-1d3-1")
+        .expect("software bug summon should compile");
+    assert!(matches!(
+        &summon.effect,
+        AbilityEffectDefinition::SummonCategory {
+            count_dice: 1,
+            count_sides: 3,
+            count_bonus: 1,
+            batch_candidates,
+            ..
+        } if batch_candidates.as_slice() == [AbilitySummonCandidateDefinition {
+            actor_kind_id: "demo.actor.software-bug".to_owned(),
+            weight: 1,
+        }]
+    ));
 }
 
 #[test]
@@ -1094,17 +1496,17 @@ fn fourth_passive_mutation_batch_keeps_innate_attack_and_combat_semantics() {
         assert_eq!(entry["status"], "active", "{id}");
         assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
     }
-    for (id, blocker) in [(
-        "rfb.mutation.vortex-melee",
-        "vortex-race-innate-attack-identity",
-    )] {
-        let entry = entries
-            .iter()
-            .find(|entry| entry["id"] == id)
-            .unwrap_or_else(|| panic!("{id}"));
-        assert_eq!(entry["status"], "blocked", "{id}");
-        assert_eq!(entry["blockers"], serde_json::json!([blocker]), "{id}");
-    }
+    let id = "rfb.mutation.vortex-melee";
+    let entry = entries
+        .iter()
+        .find(|entry| entry["id"] == id)
+        .unwrap_or_else(|| panic!("{id}"));
+    assert_eq!(entry["status"], "blocked", "{id}");
+    assert_eq!(
+        entry["blockers"],
+        serde_json::json!(["vortex-race-innate-attack-identity"]),
+        "{id}"
+    );
 }
 
 #[test]

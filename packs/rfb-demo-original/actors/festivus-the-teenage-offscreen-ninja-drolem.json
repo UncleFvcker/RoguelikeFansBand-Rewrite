@@ -1,0 +1,219 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1230,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 15,
+  "damageSides": 8,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.ninja"
+  },
+  "defense": 19,
+  "descriptionKey": "actor-demo-festivus-the-teenage-offscreen-ninja-drolem-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 70422,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 110,
+    "forceMaximum": true,
+    "sides": 77
+  },
+  "id": "demo.actor.festivus-the-teenage-offscreen-ninja-drolem",
+  "level": 91,
+  "light": {
+    "darkness": true,
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 8470,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 15,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 4,
+            "durationSides": 8,
+            "type": "bleeding"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 50,
+            "damageDice": 1,
+            "damageSides": 75,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 15,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 14,
+            "damageSides": 4,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 8,
+            "durationSides": 14,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 8,
+            "damageSides": 8,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-poison-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.jump-confusion-1d1-99",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.jump-fire-l91",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.jump-poison-l91",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-confusion-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.darkness",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-100d1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 30
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "pass-wall",
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-festivus-the-teenage-offscreen-ninja-drolem-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "immune",
+    "light": "resistant",
+    "poison": "immune",
+    "shards": "resistant",
+    "sound": "resistant",
+    "water": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 135,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "dragon",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

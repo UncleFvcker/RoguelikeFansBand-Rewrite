@@ -1,0 +1,165 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "ocean",
+      "shore",
+      "swamp"
+    ],
+    "legacyIndex": 615,
+    "maxDepth": 999,
+    "randomMovementPercent": 25,
+    "rarity": 3,
+    "wildOnly": true
+  },
+  "attack": 9,
+  "capturePolicy": "pet-only",
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      },
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 4,
+  "descriptionKey": "actor-demo-moire-queen-of-rebma-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 3509,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 20,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.moire-queen-of-rebma",
+  "killsWeakerBodies": true,
+  "level": 39,
+  "maxHp": 2000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-ice-6d8-59",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-water-10d10-59",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-cold-1d116-20",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d78-50",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-moire-queen-of-rebma-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "human",
+    "kin-glyph-69",
+    "legacy-import",
+    "ocean",
+    "shore",
+    "swamp",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true
+  }
+}

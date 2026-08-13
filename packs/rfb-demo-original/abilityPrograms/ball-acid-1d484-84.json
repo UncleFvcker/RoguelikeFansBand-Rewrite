@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.ball-acid-1d484-84",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 84,
+      "damageDice": 1,
+      "damageSides": 484,
+      "damageType": "acid",
+      "radius": 2,
+      "type": "area-damage"
+    }
+  ]
+}

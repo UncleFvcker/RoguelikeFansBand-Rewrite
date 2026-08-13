@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-raphael-the-messenger",
+  "descriptionKey": "ability-legacy-kin-raphael-the-messenger-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-raphael-the-messenger",
+  "nameKey": "ability-legacy-kin-raphael-the-messenger-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

@@ -1,0 +1,176 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1260,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 14,
+  "damageSides": 16,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 15,
+  "descriptionKey": "actor-demo-seth-the-disintegrator-description",
+  "experienceValue": 91960,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "H",
+  "hitPointDice": {
+    "dice": 110,
+    "forceMaximum": true,
+    "sides": 176
+  },
+  "id": "demo.actor.seth-the-disintegrator",
+  "killsWeakerBodies": true,
+  "level": 91,
+  "maxHp": 19360,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 16,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 6,
+            "durationSides": 10,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 16,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 6,
+            "durationSides": 8,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 14,
+            "damageSides": 16,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-force-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d318-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-1d1-272",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-electricity-15d15-200",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-confusion-17-400-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-seth-the-disintegrator-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "dark": "resistant",
+    "disintegrate": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "nether": "resistant",
+    "sound": "resistant"
+  },
+  "role": "monster",
+  "speed": 133,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "egyptian",
+    "evil",
+    "kin-glyph-72",
+    "legacy-import",
+    "no-quest",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true,
+    "picksUpItems": true
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1031,
+    "maxDepth": 999,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 30,
+  "damageSides": 9,
+  "damageType": "physical",
+  "defense": 20,
+  "descriptionKey": "actor-demo-wahha-man-the-golden-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 50000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 100,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.wahha-man-the-golden",
+  "level": 85,
+  "light": {
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 10000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-wahha-man-the-golden-name",
+  "reflectsBolts": true,
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "gravity": "resistant",
+    "inertia": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "good",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

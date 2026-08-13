@@ -1,0 +1,176 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1242,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 12,
+  "damageSides": 4,
+  "damageType": "disenchant",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 15,
+  "descriptionKey": "actor-demo-anubis-keeper-of-the-balance-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 50000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "H",
+  "hitPointDice": {
+    "dice": 80,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.anubis-keeper-of-the-balance",
+  "level": 88,
+  "maxHp": 8000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 12,
+            "damageSides": 4,
+            "damageType": "disenchant",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 12,
+            "damageSides": 4,
+            "damageType": "disenchant",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 12,
+            "damageSides": 4,
+            "damageType": "disenchant",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 12,
+            "damageSides": 4,
+            "damageType": "disenchant",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-light-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-light-10d10-402",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-dark-10d10-402",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.hand-of-doom",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.banish",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-264",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.anti-magic",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-anubis-keeper-of-the-balance-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "egyptian",
+    "kin-glyph-72",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ]
+}

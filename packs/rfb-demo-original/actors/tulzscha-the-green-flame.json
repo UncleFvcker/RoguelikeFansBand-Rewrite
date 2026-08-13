@@ -1,0 +1,162 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 842,
+    "maxDepth": 999,
+    "randomMovementPercent": 25,
+    "rarity": 4
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 4,
+      "damageSides": 6,
+      "damageType": "fire"
+    },
+    {
+      "damageDice": 4,
+      "damageSides": 6,
+      "damageType": "cold"
+    }
+  ],
+  "damageDice": 2,
+  "damageSides": 50,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 10,
+  "descriptionKey": "actor-demo-tulzscha-the-green-flame-description",
+  "experienceValue": 60000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 100,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.tulzscha-the-green-flame",
+  "level": 89,
+  "light": {
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 10000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 50,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 50,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 50,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 50,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-cold-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "nameKey": "actor-demo-tulzscha-the-green-flame-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "immune",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "tags": [
+    "demon",
+    "eldritch-horror",
+    "evil",
+    "kin-glyph-69",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

@@ -1,0 +1,202 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1349,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 9,
+  "damageSides": 18,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.warrior"
+  },
+  "defense": 15,
+  "descriptionKey": "actor-demo-thor-the-thunderer-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 86000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 150,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.thor-the-thunderer",
+  "level": 86,
+  "maxHp": 15000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 9,
+            "damageSides": 18,
+            "type": "shatter"
+          },
+          {
+            "durationDice": 3,
+            "durationSides": 9,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-electricity-1d516-32",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-electricity-15d15-258",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-shards-1d1-429",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-plasma-8d7-126",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 30
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-thor-the-thunderer-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "cold": "resistant",
+    "electricity": "immune",
+    "fire": "resistant",
+    "plasma": "resistant",
+    "shards": "resistant",
+    "sound": "resistant"
+  },
+  "role": "monster",
+  "speed": 135,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "aura-fear",
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "norse",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

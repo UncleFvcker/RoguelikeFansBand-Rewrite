@@ -1,0 +1,226 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 836,
+    "maxDepth": 999,
+    "randomMovementPercent": 25,
+    "rarity": 6
+  },
+  "attack": 21,
+  "damageDice": 1,
+  "damageSides": 30,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      },
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 9,
+  "descriptionKey": "actor-demo-star-spawn-of-cthulhu-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 34000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "U",
+  "hitPointDice": {
+    "dice": 75,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.star-spawn-of-cthulhu",
+  "level": 86,
+  "maxHp": 7500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 30,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "charisma"
+            ],
+            "chancePercent": 66,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 30,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 30,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "drain-charges"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 11,
+            "damageSides": 11,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "disenchant"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l86-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l86-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drain-mana-44",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-acid-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l86-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-258",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.mind-blast-7d7",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-nuke-20d6-172",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.animate-dead",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-star-spawn-of-cthulhu-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "immune",
+    "nether": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "aura-fear",
+    "demon",
+    "eldritch-horror",
+    "evil",
+    "kin-glyph-85",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true
+  }
+}

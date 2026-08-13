@@ -1,0 +1,236 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1372,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 23,
+  "capturePolicy": "pet-only",
+  "damageDice": 14,
+  "damageSides": 15,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 18,
+  "descriptionKey": "actor-demo-vishnu-the-preserver-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 133342,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 160,
+    "forceMaximum": true,
+    "sides": 110
+  },
+  "id": "demo.actor.vishnu-the-preserver",
+  "level": 94,
+  "maxHp": 17600,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 15,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 7,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 15,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 7,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "time",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 4,
+            "damageSides": 6,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.summon-family-vishnu-the-preserver",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-550",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-light-10d10-426",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.anti-magic",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-time-2d94-31",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-mana-10d10-426",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-force-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-ice-6d8-150",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-plasma-8d7-160",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-fire-1d654-20",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d94-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 40,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-vishnu-the-preserver-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "disintegrate": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "gravity": "resistant",
+    "inertia": "resistant",
+    "light": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 140,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "hindu",
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "nonliving",
+    "orc-cave",
+    "unique"
+  ]
+}

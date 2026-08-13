@@ -1,0 +1,154 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1207,
+    "maxDepth": 999,
+    "rarity": 6
+  },
+  "attack": 24,
+  "capturePolicy": "pet-only",
+  "damageDice": 20,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 25,
+  "descriptionKey": "actor-demo-the-etheric-dimensional-phase-automaton-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 55000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 255,
+    "forceMaximum": true,
+    "sides": 20
+  },
+  "id": "demo.actor.the-etheric-dimensional-phase-automaton",
+  "level": 96,
+  "maxHp": 5100,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 20,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 20,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 20,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-gravity-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-time-33-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d336-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-dark-10d10-434",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50
+  },
+  "nameKey": "actor-demo-the-etheric-dimensional-phase-automaton-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune",
+    "time": "resistant"
+  },
+  "role": "monster",
+  "speed": 150,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "invisible",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "unique"
+  ]
+}

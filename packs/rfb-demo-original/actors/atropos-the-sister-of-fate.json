@@ -1,0 +1,175 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1161,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 30,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      },
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 13,
+  "descriptionKey": "actor-demo-atropos-the-sister-of-fate-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 48000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "p",
+  "hitPointDice": {
+    "dice": 96,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.atropos-the-sister-of-fate",
+  "level": 90,
+  "maxHp": 9600,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 1,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 30,
+            "damageSides": 1,
+            "damageType": "time",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 30,
+            "damageSides": 1,
+            "damageType": "time",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.world",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l90-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-unique-l90-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-amberite-l90-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.paralyze",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-270",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "nameKey": "actor-demo-atropos-the-sister-of-fate-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "kin-glyph-112",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

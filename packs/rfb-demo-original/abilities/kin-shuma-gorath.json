@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-shuma-gorath",
+  "descriptionKey": "ability-legacy-kin-shuma-gorath-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-shuma-gorath",
+  "nameKey": "ability-legacy-kin-shuma-gorath-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

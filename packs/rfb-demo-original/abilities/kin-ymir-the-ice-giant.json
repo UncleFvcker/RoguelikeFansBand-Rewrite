@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-ymir-the-ice-giant",
+  "descriptionKey": "ability-legacy-kin-ymir-the-ice-giant-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-ymir-the-ice-giant",
+  "nameKey": "ability-legacy-kin-ymir-the-ice-giant-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

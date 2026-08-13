@@ -711,3 +711,154 @@ git diff --stat
   旧开发存档。
 - `codex/items-next` 分支及工作树继续保留。内容 hash 与 26 条 active fixture 在本次合并
   验收中统一重新生成并复验。
+## 33. monsters-next 当前交接（P73 L81–90 直接导入）
+
+- P73A 导入 L81–85 的 19 个普通分配 actor，P73B 导入 L86–90 的 24 个普通分配 actor；
+  全部保留 RFB master 的 source index、层级、权威中文名和 Orc Cave 分配。
+- 本批新增 97 个由现有运行时表达的参数化 ability/program，并补齐 Sky Drake 到 Great Wyrm
+  of Power 的权威进化链；没有新增 DTO、协议、存档或 state-hash 字段，不刷新 replay fixture。
+- 怪物同步器的进化关联改为使用权威 source index，允许普通版和唯一版 Metal Babble 这类
+  同名记录共存，且不会把进化目标错误绑定到同名 actor。
+- 共享协调点：pack `1.313.0` / content hash
+  `d8486a55c802382012ad85738f199162cd0bed95bb824b335c89c9fdb42911ea`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变。
+
+## 34. monsters-next 当前交接（P74 L91–127 直接导入）
+
+- P74A 导入 L91–95 的 11 个普通分配 actor，P74B 导入 L96–127 的 8 个普通分配 actor；
+  全部保留 RFB master 的 source index、层级、权威中文名和 Orc Cave 分配。
+- 本批只新增 42 个由现有运行时表达的参数化 ability/program；没有新增 DTO、协议、存档或
+  state-hash 字段，也不刷新 replay fixture。
+- L81–127 联合审计为 62 selected、0 direct、54 blocked、6 excluded；blocked 留给后续机制
+  批次，excluded 仍表示地点限制。
+- 共享协调点：pack `1.314.0` / content hash
+  `3f329afbe222276e0f6d2b9c7861d5f065af4ec8633774bab3cbc6b1f2490818`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变。
+
+## 35. monsters-next 当前交接（P75A 分类召唤）
+
+- 新增 `S_CYBER`、`S_CAT` 与按施术者所属神系选择候选的 `S_PANTHEON` 映射；补齐 cyber、
+  Egyptian、Olympian 与 `no-summon` 内容标签。玩家与怪物分类召唤共用 `no-summon`
+  候选过滤，原版 `NO_SUMMON` 怪物仍可自然生成，但不会响应召唤。
+- 实际安全解锁 14 个 actor：7 个 Cyberdemon 召唤者、Freyja 与 Durga、Hathor、Frigg、
+  Indra、Amun，以及 a Plain Gold Ring；新增 61 个参数化 ability/program。原计划预计的
+  另外 7 个在首个分类 blocker 消除后暴露出 `S_UNIQUE` 或专属 `S_SPECIAL`，继续留在后续批次，
+  不以 omission 降级导入。
+- L81–127 联合审计为 76 selected、0 direct、40 blocked、6 excluded；没有新增 DTO、协议、
+  存档或 state-hash 字段，也不刷新 replay fixture。
+- 共享协调点：pack `1.315.0` / content hash
+  `3eca5a0bf28bde9471cd9f4f58bcf4f066d592a920e4d3ab7a08852dab10b74c`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变。
+
+## 36. monsters-next 当前交接（P75B 固定召唤与低风险战斗映射）
+
+- 新增 `BR_HOLY_FIRE` 与 `JMP_SHARDS` 映射，分别复用现有吐息和 JumpDamage：信使拉斐尔
+  使用 17% 当前生命、上限 250、半径 3 的神圣之火吐息；战斗越前使用等级 85 的碎片跳跃。
+- 7 个 `S_SPECIAL` 均通过现有分类召唤 DTO 的单一 `batchCandidates` 精确绑定原版对象：
+  伐楼拿召唤 `1d2+2` 摩伽罗，德墨忒尔召唤 `1d4` 树人，贾斯特肖恩召唤 `1d4` 绵羊，
+  波塞冬召唤 `1d4` 高等克拉肯，塔洛斯召唤 `1d3` 法术扭曲自动机，梵天与辩才天女
+  互相召唤 1 个对方。伐楼拿与波塞冬复用 P70 的 `monster-water-flow` 前置地形效果。
+- 本批实际导入 9 个 actor，新增 32 个参数化 ability/program；L81–127 联合审计为
+  85 selected、0 direct、31 blocked、6 excluded。没有新增 DTO、协议、存档或 state-hash
+  字段，也不刷新 replay fixture。
+- 共享协调点：pack `1.316.0` / content hash
+  `19bdab0f1a5b6b61246636ee8716198734ffe8b18924cea403acac64a97b1c27`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变。
+
+## 37. monsters-next 当前交接（P76 复杂召唤与战斗机制）
+
+- P76 导入 24 个 L83–100 actor：`S_UNIQUE` 使用施术者等级向下 40 级的唯一怪物窗口；
+  奥林匹斯与印度神系的 12 条 `S_SPECIAL` 保留原版家庭成员、分支概率、唯一额度及 Hades
+  熔岩流语义。家庭召唤只在候选仍可生成且附近有合法位置时施放。
+- Vayu 的 `BR_AIR` 保留无视抗性、飞行减伤和声音抗性眩晕，Aijem 的 `CHICKEN` 保留固定
+  伤害、眩晕与恐惧；同步补齐其后续暴露的 `NO_AIR` 窒息状态。Kaschei 的 `UNLIFE`、
+  Unicorn of Order 的 TIME/STUN 接触效果和 Ares 的 STUN 使用显式接触效果，不伪造生命伤害。
+- 本批新增 24 个 actor、91 个参数化 ability/program；L81–127 联合审计为 109 selected、
+  3 direct、4 blocked、6 excluded。剩余 direct/blocked 不属于 P76：Loki、Shuma-Gorath、
+  Pandemonium，以及 Hermes、Zeus、Odin、Zombified Serpent of Chaos。
+- 共享协调点：pack `1.317.0` / content hash
+  `b40fc1696472d37277ec6630dfd26135b0e92244261989366cf670d9fbe7c1c8`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变，不刷新 replay fixture。
+
+## 38. monsters-next 当前交接（P77 地点与固定身份怪物）
+
+- P77 导入哥斯拉与高等赛博巨龙天使恶魔巫妖两个荒野怪物，以及巫师索伦、安珀之王
+  奥伯龙、混沌之蛇和复活机器四个只供地图显式放置的固定身份怪物。哥斯拉保持真正的
+  ocean-only 分配；高等赛博巨龙天使恶魔巫妖的 `WILD_ALL` 优先于附带的 `WILD_OCEAN`，
+  可在全部荒野地形生成，并完整保留原版 94 项施法表。
+- 混沌之蛇补齐 GUARDIAN 分类、混沌/劣化接触光环与 `S_GUARDIAN`；候选严格限制在
+  100 级以下的 guardian。复活机器的 `S_DEAD_UNIQ` 每次掷 `1d2`，每个实例先执行半径 5
+  的崩解清场，再从已死亡且当前不存在的普通 Unique 中按原版权重复活；无候选或 1/13
+  回退到星际之刃。复活实例保存其 summon 身份，再次死亡不会重复消耗唯一生命周期额度。
+- 本批新增 6 个 actor、50 个参数化 ability/program；L81–127 联合审计为 109 selected、
+  4 direct、3 blocked、6 excluded。六个 P77 actor 因地点限制均显示 excluded，但已经导入并
+  由 selection 管理；剩余 direct/blocked 为后续非 P77 内容。
+- 共享协调点：pack `1.318.0` / content hash
+  `600467a34cfc7157f16a490db22ba5db32befa077c5d40aa7a783956f1d3b254`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变，不刷新 replay fixture。
+
+## 39. monsters-next 当前交接（P78 直接怪物导入）
+
+- P78 将 18 条原版来源记录纳入 selection：低阶的沼泽鼠、瘟疫武僧、斯卡文刺客、黏土魔像、
+  魔法蘑菇丛、鼠巨魔、大师级盗贼、木乃伊人类、武士、黑骑士、陷阱大师，以及高阶的秃鹫之母
+  涅赫贝特、拉之声托特、欺诈者洛基、舒玛-哥拉斯、群魔殿和僵尸化混沌之蛇。
+- 狗头人领主穆加什已由 `demo.actor.warrens-keeper` 表达并占用原版 source index 135；本批把该
+  现有 actor 登记进 importer selection，不创建重复身份。其余 17 个 actor 为新增内容，并生成
+  42 个仅参数不同的既有 ability/program；未扩张运行时、协议、存档或状态哈希结构。
+- L1–127 联合审计为 1213 selected、32 direct、5 blocked、113 excluded；P78 的 18 条来源均为
+  selected。剩余项属于后续批次，不是本批回归。
+- 共享协调点：pack `1.319.0` / content hash
+  `74ea1074f2225f0e4798564df735747c49a4b0954c297ad0ac9fc0ef3a93d6cd`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变，不刷新 replay fixture。
+
+## 40. monsters-next 当前交接（P79 北欧与奥林匹斯召唤者）
+
+- P79 导入英灵狂战士、信使神赫尔墨斯、奥林匹斯之王宙斯和众神之父奥丁。英灵狂战士
+  保留 `legacyDungeonIndices: [39]` 与 `asgard` 标签，不进入 Orc Cave 全局分配；其余三只
+  保留原版神系标签和分配。
+- `S_SPECIAL` 延续既有参数化分类召唤：宙斯召唤 `1d4` 蹒跚怪，赫尔墨斯召唤 `1d16`
+  魔法蘑菇丛；奥丁先掷 `1d4` 并封顶为一只，再等权选择英灵狂战士或女武神。为表达赫尔墨斯
+  的原版数量，分类召唤内容校验上限从 8 放宽到 16；DTO、协议与执行结构不变。
+- 同步补齐 P78 的稳定身份声明：source 135 的原版 ID 是 `mughash-the-kobold-lord`，内容 ID
+  继续为既有 `warrens-keeper`，由 selection 的 `sourceId` 明确关联，不复制 actor。
+- L1–127 联合审计为 1216 selected、32 direct、2 blocked、113 excluded。赫尔墨斯、宙斯和奥丁
+  均为 selected；英灵狂战士因 Asgard 地点限制保持预期的 excluded，但已由 selection 管理。
+- 本批新增 4 个 actor、10 个参数化 ability/program。共享协调点：pack `1.320.0` / content
+  hash `a04b31e159f7c73a8f0a607e85cdeac4f44fd5795c087b548f2ea1359521bc01`；Protocol
+  `1.195`、State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact
+  fixture、零 waiver）均不变，不刷新 replay fixture。
+
+## 41. monsters-next 当前交接（P80 变体维护者）
+
+- P80 导入变体维护者，保留原版 14 级、Unique、33% 施法频率、两次混乱打击、随机移动、
+  飞行、掉落和 Orc Cave 分配；普通 `POLYMORPH` 继续复用既有目标变形能力。
+- `S_SOFTWARE_BUG` 使用既有分类召唤 DTO，固定候选为软件漏洞，数量为原版 `1d3+1`；
+  变体维护者死亡时在半径 2 的合法位置额外尝试生成 4 只软件漏洞。该死亡分支复用现有
+  actor 生成、召唤身份和到期机制，不增加内容 DTO、协议、存档或 state-hash 字段。
+- L1–127 联合审计为 1217 selected、32 direct、1 blocked、113 excluded；唯一 remaining
+  blocker 是 3 级邋遢霍比特人的正式主题掉落表，与 P80 无关。
+- 本批新增 1 个 actor、1 个 ability/program。共享协调点：pack `1.321.0` / content hash
+  `bd1900b263d9419d05285c268ec9da0ee56917af81b2d7d8815179152b8ec2af`；Protocol
+  `1.195`、State Hash Schema v97、save v1、active baseline `contract-v292` 均不变；现有
+  replay fixture 不包含变体维护者，因此不刷新 fixture。
+
+## 43. main 当前交接（monsters P73–P85 增量整合）
+
+- `codex/monsters-next` 的 P73–P85 已与 main 的完整四领域 High Mage、狙击手、Human 弱点
+  和半神天赋合并；高阶参数化怪物能力、神系/家庭/固定召唤、复活唯一怪物、空气吐息、
+  鸡叫、无空气状态与 main/items 的状态和战斗事务同时保留。
+- 内容包含 P81 霍比特人掉落主题、P82 海洋与荒野 Unique、P83 地牢名册、Camelot 骑士召唤
+  与名册，以及 0 级荒野居民。怪物来源选择账本同时承认 items 已闭合的 `NO_STUN` 和
+  monsters 已闭合的 Egyptian 标签，不把已实现标记继续列为 omission。
+- 合并后的共享协调点为 pack `1.330.0`、Protocol `1.201`、State Hash Schema v100、
+  save v1、active baseline `contract-v303`，content hash
+  `f41fcdc2089191ecc635320b4c0b1dd554e1667e39941bc496a9437db7d6665e`。26 条 active fixture
+  在本次合并验收中统一重新生成并复验。
+- `codex/monsters-next` 与 `codex/items-next` 分支及工作树继续保留。

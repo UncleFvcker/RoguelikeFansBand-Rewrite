@@ -1,0 +1,178 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "escort": true,
+    "legacyIndex": 1364,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 14,
+  "damageSides": 15,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 16,
+  "descriptionKey": "actor-demo-hanuman-the-monkey-god-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 79860,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Y",
+  "hitPointDice": {
+    "dice": 68,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.hanuman-the-monkey-god",
+  "level": 85,
+  "maxHp": 8228,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 15,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 15,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 15,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-1d1-254",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.beam-holy-fire-1d1-169",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-hanuman-the-monkey-god-name",
+  "reflectsBolts": true,
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "electricity": "immune",
+    "fire": "immune",
+    "gravity": "resistant",
+    "nexus": "resistant",
+    "plasma": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 150,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "good",
+    "hindu",
+    "kin-glyph-89",
+    "legacy-import",
+    "orc-cave",
+    "trump",
+    "unique"
+  ]
+}

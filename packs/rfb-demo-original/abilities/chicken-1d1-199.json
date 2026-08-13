@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.chicken-1d1-199",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-legacy-chicken-1d1-199-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.chicken-1d1-199",
+  "nameKey": "ability-legacy-chicken-1d1-199-name",
+  "tags": [
+    "legacy-import",
+    "damage",
+    "monster-chicken"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "town"
+    ],
+    "legacyIndex": 11,
+    "maxDepth": 0,
+    "randomMovementPercent": 25,
+    "rarity": 1,
+    "wildOnly": true
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-raving-lunatic-description",
+  "experienceValue": 0,
+  "formatVersion": 1,
+  "glyph": "t",
+  "hitPointDice": {
+    "dice": 4,
+    "sides": 4
+  },
+  "id": "demo.actor.raving-lunatic",
+  "level": 0,
+  "maxHp": 10,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "nameKey": "actor-demo-raving-lunatic-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "human",
+    "kin-glyph-116",
+    "legacy-import",
+    "town"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "town"
+    ],
+    "legacyIndex": 3,
+    "maxDepth": 0,
+    "randomMovementPercent": 25,
+    "rarity": 3,
+    "wildOnly": true
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-sparrow-description",
+  "experienceValue": 0,
+  "formatVersion": 1,
+  "glyph": "B",
+  "hitPointDice": {
+    "dice": 1,
+    "sides": 1
+  },
+  "id": "demo.actor.sparrow",
+  "level": 0,
+  "maxHp": 1,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-sparrow-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseWeight": 0,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "kin-glyph-66",
+    "legacy-import",
+    "town"
+  ]
+}

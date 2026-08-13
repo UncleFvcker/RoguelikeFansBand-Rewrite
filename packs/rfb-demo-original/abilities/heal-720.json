@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.heal-720",
+  "descriptionKey": "ability-legacy-heal-720-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.heal-720",
+  "nameKey": "ability-legacy-heal-720-name",
+  "tags": [
+    "legacy-import",
+    "heal"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

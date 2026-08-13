@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.summon-family-apollo-the-sun-god",
+  "descriptionKey": "ability-legacy-summon-family-apollo-the-sun-god-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.summon-family-apollo-the-sun-god",
+  "nameKey": "ability-legacy-summon-family-apollo-the-sun-god-name",
+  "tags": [
+    "legacy-import",
+    "summon",
+    "monster-only",
+    "monster-family-summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

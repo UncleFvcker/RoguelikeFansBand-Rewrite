@@ -1,0 +1,211 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1258,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 14,
+  "capturePolicy": "pet-only",
+  "damageDice": 10,
+  "damageSides": 9,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 11,
+  "descriptionKey": "actor-demo-nekhbet-the-vulture-mother-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 25652,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "B",
+  "hitPointDice": {
+    "dice": 22,
+    "forceMaximum": true,
+    "sides": 187
+  },
+  "id": "demo.actor.nekhbet-the-vulture-mother",
+  "level": 57,
+  "maxHp": 4114,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 8,
+            "durationSides": 6,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 8,
+            "durationSides": 6,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 6,
+            "amountSides": 5,
+            "type": "unlife"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "drain-charges"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d1-113",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-electricity-15d15-100",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-nether-10d10-107",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-force-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-gravity-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.slow",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-10d15",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-nekhbet-the-vulture-mother-name",
+  "reflectsBolts": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "nether": "resistant",
+    "poison": "immune",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "cold-blooded",
+    "egyptian",
+    "kin-glyph-66",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

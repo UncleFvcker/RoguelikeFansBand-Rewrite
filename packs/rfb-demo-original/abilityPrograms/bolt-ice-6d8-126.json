@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.bolt-ice-6d8-126",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 126,
+      "damageDice": 6,
+      "damageSides": 8,
+      "damageType": "ice",
+      "type": "damage"
+    }
+  ]
+}

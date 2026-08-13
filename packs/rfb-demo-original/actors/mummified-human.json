@@ -1,0 +1,94 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 390,
+    "maxDepth": 70,
+    "rarity": 1
+  },
+  "attack": 6,
+  "damageDice": 2,
+  "damageSides": 4,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items"
+  },
+  "defense": 3,
+  "descriptionKey": "actor-demo-mummified-human-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "evolution": {
+    "nextActorKindId": "demo.actor.greater-mummy",
+    "requiredExperience": 4000
+  },
+  "experienceValue": 70,
+  "formatVersion": 1,
+  "glyph": "z",
+  "hitPointDice": {
+    "dice": 17,
+    "sides": 9
+  },
+  "id": "demo.actor.mummified-human",
+  "level": 24,
+  "maxHp": 85,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-mummified-human-name",
+  "resistances": {
+    "cold": "resistant",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "evil",
+    "kin-glyph-122",
+    "legacy-import",
+    "orc-cave",
+    "undead"
+  ]
+}

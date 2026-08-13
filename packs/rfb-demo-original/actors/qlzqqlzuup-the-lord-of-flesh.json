@@ -1,0 +1,129 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 822,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 23,
+  "capturePolicy": "pet-only",
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items"
+  },
+  "defense": 0,
+  "descriptionKey": "actor-demo-qlzqqlzuup-the-lord-of-flesh-description",
+  "experienceValue": 50000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Q",
+  "hitPointDice": {
+    "dice": 65,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.qlzqqlzuup-the-lord-of-flesh",
+  "level": 92,
+  "maxHp": 6500,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l92-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l92-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l92-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-dragon-l92-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-angel-l92-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-hydra-l92-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-spider-l92-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-ant-l92-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-hound-l92-1d2-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-unique-l92-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-amberite-l92-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l92-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-dragon-l92-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.kin-qlzqqlzuup-the-lord-of-flesh",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 100
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-qlzqqlzuup-the-lord-of-flesh-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "evil",
+    "invisible",
+    "kin-glyph-81",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

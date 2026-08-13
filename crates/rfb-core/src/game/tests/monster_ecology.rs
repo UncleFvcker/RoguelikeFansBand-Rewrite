@@ -59,6 +59,25 @@ fn p55a_ocean_monsters_require_a_deep_water_wilderness_cell() {
     ));
 }
 
+#[test]
+fn p77_wild_all_overrides_an_additional_ocean_habitat() {
+    let game = Game::new(0);
+    let grass = game
+        .content
+        .terrain("demo.terrain.surface-grass")
+        .expect("surface grass should exist");
+    let wyrm = game
+        .content
+        .actor("demo.actor.greater-cyber-wyrm-angel-daemon-lich")
+        .expect("P77 should import the wilderness-wide wyrm");
+
+    assert!(actor_matches_surface_habitat(
+        wyrm,
+        grass,
+        Some(WildernessTerrain::Grass),
+    ));
+}
+
 fn eldritch_seed(saving_throw_skill: i32, consequence_saves: &[bool]) -> u64 {
     let threshold = u64::try_from(saving_throw_skill.saturating_sub(9).clamp(0, 100))
         .expect("clamped saving throw must fit u64");

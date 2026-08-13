@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.psy-spear-1d141-100",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-legacy-psy-spear-1d141-100-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.psy-spear-1d141-100",
+  "nameKey": "ability-legacy-psy-spear-1d141-100-name",
+  "tags": [
+    "beam",
+    "legacy-import",
+    "psi"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

@@ -1,0 +1,203 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1353,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 9,
+  "damageSides": 9,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 14,
+  "descriptionKey": "actor-demo-njord-lord-of-the-vanir-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 63404,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 88,
+    "forceMaximum": true,
+    "sides": 99
+  },
+  "id": "demo.actor.njord-lord-of-the-vanir",
+  "level": 84,
+  "light": {
+    "intrinsic": false,
+    "radius": 2
+  },
+  "maxHp": 8712,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 9,
+            "damageSides": 9,
+            "damageType": "acid",
+            "type": "damage"
+          },
+          {
+            "durationDice": 3,
+            "durationSides": 9,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 9,
+            "damageSides": 9,
+            "damageType": "electricity",
+            "type": "damage"
+          },
+          {
+            "durationDice": 3,
+            "durationSides": 9,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "slow"
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 9,
+            "amountSides": 9,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-acid-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-600",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.psy-spear-1d168-150",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d84-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-acid-1d484-84",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-ice-1d168-50",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 40,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-njord-lord-of-the-vanir-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "gravity": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 135,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "norse",
+    "orc-cave",
+    "unique"
+  ]
+}

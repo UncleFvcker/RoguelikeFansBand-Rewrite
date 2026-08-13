@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.summon-makara-l50-1d2-2",
+  "input": "self",
+  "steps": [
+    {
+      "batchCandidates": [
+        {
+          "actorKindId": "demo.actor.makara",
+          "weight": 1
+        }
+      ],
+      "category": "mount-meru",
+      "countBonus": 2,
+      "countDice": 1,
+      "countSides": 2,
+      "durationTurns": 10000,
+      "maximumLevel": 50,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}

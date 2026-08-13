@@ -1,0 +1,148 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1086,
+    "maxDepth": 999,
+    "rarity": 15
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 25,
+  "descriptionKey": "actor-demo-talos-masterwork-spellwarp-automaton-description",
+  "experienceValue": 70000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 150,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.talos-masterwork-spellwarp-automaton",
+  "level": 90,
+  "maxHp": 15000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 15,
+            "damageSides": 15,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 15,
+            "damageSides": 15,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 15,
+            "damageSides": 15,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 15,
+            "damageSides": 15,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-mana-33-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-spellwarp-automaton-l80-1d3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "nameKey": "actor-demo-talos-masterwork-spellwarp-automaton-name",
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "confusion": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "disintegrate": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "force": "resistant",
+    "gravity": "resistant",
+    "hell-fire": "resistant",
+    "holy-fire": "resistant",
+    "ice": "resistant",
+    "inertia": "resistant",
+    "light": "resistant",
+    "mana": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "nuke": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant",
+    "shards": "resistant",
+    "sound": "resistant",
+    "storm": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 115,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "kin-glyph-103",
+    "legacy-import",
+    "no-quest",
+    "nonliving",
+    "orc-cave",
+    "resist-all",
+    "resist-teleport",
+    "unique"
+  ]
+}

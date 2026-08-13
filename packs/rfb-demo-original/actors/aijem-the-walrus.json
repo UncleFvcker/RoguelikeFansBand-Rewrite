@@ -1,0 +1,207 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "snow"
+    ],
+    "legacyIndex": 1281,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 20,
+  "capturePolicy": "pet-only",
+  "damageDice": 13,
+  "damageSides": 15,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 16,
+  "descriptionKey": "actor-demo-aijem-the-walrus-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 61710,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "q",
+  "hitPointDice": {
+    "dice": 58,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.aijem-the-walrus",
+  "level": 83,
+  "light": {
+    "intrinsic": false,
+    "radius": 2
+  },
+  "maxHp": 7018,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 15,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.punch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 6,
+            "damageSides": 6,
+            "type": "poison"
+          },
+          {
+            "chancePercent": 66,
+            "durationDice": 6,
+            "durationSides": 6,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "stun"
+          },
+          {
+            "type": "slow"
+          }
+        ],
+        "methodId": "rfb.blow.kick",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 9,
+            "durationSides": 9,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-fire-1d498-166",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-shards-1d1-499",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.chicken-1d1-199",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.traps",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-249",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l83-1d3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-aijem-the-walrus-name",
+  "reflectsBolts": true,
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "gravity": "resistant",
+    "inertia": "resistant",
+    "poison": "resistant",
+    "shards": "resistant",
+    "sound": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "kin-glyph-113",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

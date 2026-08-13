@@ -1,0 +1,227 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1384,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 14,
+  "damageSides": 14,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.warrior"
+  },
+  "defense": 17,
+  "descriptionKey": "actor-demo-kali-mother-of-rage-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 120879,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 121,
+    "forceMaximum": true,
+    "sides": 101
+  },
+  "id": "demo.actor.kali-mother-of-rage",
+  "killsWeakerBodies": true,
+  "level": 90,
+  "maxHp": 12221,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 9,
+            "durationSides": 10,
+            "type": "bleeding"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 33,
+            "damageDice": 6,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 7,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 6,
+            "damageType": "time",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength",
+              "dexterity",
+              "constitution",
+              "intelligence",
+              "wisdom",
+              "charisma"
+            ],
+            "type": "drain-attributes"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 33,
+            "damageDice": 6,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-mana-33-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-time-33-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-sound-17-450-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 36
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-kali-mother-of-rage-name",
+  "rangedMelee": true,
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "disintegrate": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "nether": "resistant",
+    "sound": "resistant",
+    "time": "resistant"
+  },
+  "role": "monster",
+  "speed": 140,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "aura-fear",
+    "hindu",
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

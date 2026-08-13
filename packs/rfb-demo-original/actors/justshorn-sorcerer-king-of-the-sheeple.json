@@ -1,0 +1,238 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1225,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 14,
+  "damageSides": 14,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.mage"
+  },
+  "defense": 17,
+  "descriptionKey": "actor-demo-justshorn-sorcerer-king-of-the-sheeple-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 87846,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "p",
+  "hitPointDice": {
+    "dice": 77,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.justshorn-sorcerer-king-of-the-sheeple",
+  "level": 86,
+  "maxHp": 9317,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 75,
+            "durationDice": 3,
+            "durationSides": 6,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.punch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 20,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 80,
+            "durationDice": 4,
+            "durationSides": 8,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.kick",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 36,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 75,
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 50,
+            "type": "poison"
+          },
+          {
+            "chancePercent": 60,
+            "damageDice": 6,
+            "damageSides": 6,
+            "type": "confusion"
+          },
+          {
+            "chancePercent": 44,
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.sting",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.psy-spear-1d192-192",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-mana-5d11-363",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d301-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.hand-of-doom",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.banish",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d172-86",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-plasma-11d11-121",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-fire-1d484-20",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-ice-1d172-121",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-sheep-l3-1d4",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-justshorn-sorcerer-king-of-the-sheeple-name",
+  "reflectsBolts": true,
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "nexus": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 131,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "human",
+    "kin-glyph-112",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

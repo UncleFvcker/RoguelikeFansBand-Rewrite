@@ -1,0 +1,128 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1181,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 24,
+  "capturePolicy": "pet-only",
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 5,
+  "descriptionKey": "actor-demo-dor-description",
+  "experienceValue": 50000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "e",
+  "hitPointDice": {
+    "dice": 55,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.dor",
+  "level": 97,
+  "maxHp": 5500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-shards-1d1-581",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 100
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-dor-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "poison": "resistant",
+    "shards": "resistant"
+  },
+  "role": "monster",
+  "speed": 125,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "kin-glyph-101",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "unique"
+  ]
+}

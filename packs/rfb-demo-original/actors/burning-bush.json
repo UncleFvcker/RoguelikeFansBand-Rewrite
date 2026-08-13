@@ -1,0 +1,90 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 60,
+      "dice": 1,
+      "sides": 4
+    },
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1307,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 6,
+  "contactAuras": [
+    {
+      "damageDice": 2,
+      "damageSides": 4,
+      "damageType": "fire"
+    }
+  ],
+  "damageDice": 3,
+  "damageSides": 4,
+  "damageType": "fire",
+  "defense": 3,
+  "descriptionKey": "actor-demo-burning-bush-description",
+  "experienceValue": 40,
+  "formatVersion": 1,
+  "glyph": "#",
+  "hitPointDice": {
+    "dice": 14,
+    "sides": 8
+  },
+  "id": "demo.actor.burning-bush",
+  "level": 26,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 63,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 4,
+            "damageType": "fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-burning-bush-name",
+  "resistances": {
+    "fire": "immune",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "kin-glyph-35",
+    "legacy-import",
+    "plains-of-oz"
+  ]
+}

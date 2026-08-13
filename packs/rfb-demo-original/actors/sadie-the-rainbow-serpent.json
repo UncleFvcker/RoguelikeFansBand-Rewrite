@@ -1,0 +1,204 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1331,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 10,
+  "capturePolicy": "pet-only",
+  "damageDice": 2,
+  "damageSides": 13,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 9,
+  "descriptionKey": "actor-demo-sadie-the-rainbow-serpent-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 6655,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "J",
+  "hitPointDice": {
+    "dice": 16,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.sadie-the-rainbow-serpent",
+  "level": 40,
+  "light": {
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 1936,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 2,
+            "durationSides": 5,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 2,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 2,
+            "durationSides": 5,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-acid-20-900-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-light-17-400-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-confusion-17-400-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d40-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 30
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-sadie-the-rainbow-serpent-name",
+  "reflectsBolts": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "immune",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "nexus": "resistant",
+    "poison": "resistant",
+    "sound": "resistant",
+    "water": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 122,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "animal",
+    "kin-glyph-74",
+    "legacy-import",
+    "no-quest",
+    "plains-of-oz",
+    "unique"
+  ]
+}

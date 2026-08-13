@@ -1,0 +1,185 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 830,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.mage"
+  },
+  "defense": 12,
+  "descriptionKey": "actor-demo-cantoras-the-skeletal-lord-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 75000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "s",
+  "hitPointDice": {
+    "dice": 75,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.cantoras-the-skeletal-lord",
+  "level": 84,
+  "maxHp": 7500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "amountDice": 80,
+            "amountSides": 6,
+            "type": "drain-experience"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 80,
+            "amountSides": 6,
+            "type": "drain-experience"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 5,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 3,
+            "damageSides": 5,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.slow",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-ice-6d8-126",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d294-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d168-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-nether-10d10-218",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l84-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.animate-dead",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.psy-spear-1d168-150",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 100,
+    "smart": true
+  },
+  "nameKey": "actor-demo-cantoras-the-skeletal-lord-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseWeight": 0,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "cold": "immune",
+    "fire": "resistant",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 140,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "aura-fear",
+    "cold-blooded",
+    "evil",
+    "kin-glyph-115",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "undead",
+    "unique"
+  ]
+}

@@ -159,7 +159,7 @@ impl Game {
         )
     }
 
-    fn resolve_monster_unlife_against_player(
+    pub(super) fn resolve_monster_unlife_against_player(
         &mut self,
         source_index: usize,
         amount: u16,

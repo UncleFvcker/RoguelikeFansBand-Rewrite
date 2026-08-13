@@ -1,0 +1,204 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "escort": true,
+    "legacyIndex": 852,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 23,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 4,
+      "damageSides": 6,
+      "damageType": "fire"
+    },
+    {
+      "damageDice": 4,
+      "damageSides": 6,
+      "damageType": "cold"
+    },
+    {
+      "damageDice": 4,
+      "damageSides": 6,
+      "damageType": "electricity"
+    }
+  ],
+  "damageDice": 35,
+  "damageSides": 5,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 15,
+  "descriptionKey": "actor-demo-azathoth-seething-nuclear-chaos-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 100000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 99,
+    "forceMaximum": true,
+    "sides": 99
+  },
+  "id": "demo.actor.azathoth-seething-nuclear-chaos",
+  "level": 93,
+  "maxHp": 9801,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 35,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 20,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 15,
+            "damageSides": 5,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 35,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 20,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 15,
+            "damageSides": 5,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crawl",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d186-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l93-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disenchant-17-500-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-mana-33-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "nameKey": "actor-demo-azathoth-seething-nuclear-chaos-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "disenchant": "resistant",
+    "disintegrate": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "aura-fear",
+    "demon",
+    "eldritch-horror",
+    "empty-mind",
+    "evil",
+    "kin-glyph-69",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true,
+    "destroysWalls": true
+  }
+}

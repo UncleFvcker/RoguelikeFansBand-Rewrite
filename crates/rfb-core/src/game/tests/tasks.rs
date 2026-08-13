@@ -1797,7 +1797,9 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
         .items
         .iter()
         .filter(|item| !item_ids_before_guardian.contains(&item.id))
-        .find(|item| item.kind_id == "demo.item.ring")
+        .find(|item| {
+            item.kind_id == "demo.item.ring" && item.affix_ids == ["rfb-legacy.affix.combat"]
+        })
         .expect("Othrod should drop the fixed Combat ring");
     assert_eq!(
         combat_ring.location,

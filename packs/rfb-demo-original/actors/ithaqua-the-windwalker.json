@@ -1,0 +1,214 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "escort": true,
+    "legacyIndex": 828,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 20,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 4,
+      "damageSides": 5,
+      "damageType": "cold"
+    },
+    {
+      "damageDice": 4,
+      "damageSides": 5,
+      "damageType": "electricity"
+    }
+  ],
+  "damageDice": 8,
+  "damageSides": 12,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 12,
+  "descriptionKey": "actor-demo-ithaqua-the-windwalker-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 50000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Y",
+  "hitPointDice": {
+    "dice": 55,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.ithaqua-the-windwalker",
+  "level": 82,
+  "maxHp": 5500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 12,
+            "damageType": "cold",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 12,
+            "damageType": "cold",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 12,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 12,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-electricity-8d8-54",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-electricity-1d246-16",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.psy-spear-1d164-150",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d287-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-cold-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l82-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l82-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.kin-ithaqua-the-windwalker",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.mind-blast-7d7",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-chaos-10d10-164",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d164-50",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-ithaqua-the-windwalker-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 140,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "demon",
+    "eldritch-horror",
+    "evil",
+    "invisible",
+    "kin-glyph-89",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-great-wyrm-of-power",
+  "descriptionKey": "ability-legacy-kin-great-wyrm-of-power-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-great-wyrm-of-power",
+  "nameKey": "ability-legacy-kin-great-wyrm-of-power-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

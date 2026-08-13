@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-richard-wong-master-of-time",
+  "descriptionKey": "ability-legacy-kin-richard-wong-master-of-time-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-richard-wong-master-of-time",
+  "nameKey": "ability-legacy-kin-richard-wong-master-of-time-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

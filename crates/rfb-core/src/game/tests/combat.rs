@@ -507,30 +507,35 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
                 damage_dice: 1,
                 damage_sides: 1,
                 chance_percent: None,
+                ravages_time: false,
             },
             rfb_content::ActorContactAuraDefinition {
                 damage_type: rfb_content::ActorDamageType::Electricity,
                 damage_dice: 1,
                 damage_sides: 1,
                 chance_percent: None,
+                ravages_time: false,
             },
             rfb_content::ActorContactAuraDefinition {
                 damage_type: rfb_content::ActorDamageType::Ice,
                 damage_dice: 1,
                 damage_sides: 1,
                 chance_percent: None,
+                ravages_time: false,
             },
             rfb_content::ActorContactAuraDefinition {
                 damage_type: rfb_content::ActorDamageType::Light,
                 damage_dice: 1,
                 damage_sides: 1,
                 chance_percent: None,
+                ravages_time: false,
             },
             rfb_content::ActorContactAuraDefinition {
                 damage_type: rfb_content::ActorDamageType::Curse,
                 damage_dice: 1,
                 damage_sides: 1,
                 chance_percent: None,
+                ravages_time: false,
             },
         ];
     });
@@ -546,7 +551,7 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
                 .expect("test monster should exist")
                 .clone();
             let mut events = Vec::new();
-            game.resolve_monster_contact_auras(&definition, &mut events);
+            game.resolve_monster_contact_auras(0, &definition, &mut events, &mut BTreeSet::new());
             events
                 .iter()
                 .any(|event| {
@@ -881,6 +886,50 @@ fn amberite_death_can_curse_equipment_and_apply_multiple_nonlethal_ty_curses() {
             .expect("blood curse should apply its status");
         assert!((82..=164).contains(&status.remaining_ticks));
         assert_eq!(status.source_id.as_deref(), Some("demo.actor.small-kobold"));
+    }
+}
+
+#[test]
+fn variant_maintainer_death_leaves_four_software_bugs() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 80, y: 20 };
+    let origin = Position { x: 20, y: 20 };
+    let maintainer = game.generated_actor(
+        "test.actor.variant-maintainer".to_owned(),
+        "demo.actor.the-variant-maintainer",
+        origin,
+    );
+    game.entities.push(maintainer);
+    let mut changed = BTreeSet::new();
+    game.resolve_actor_death_without_rewards(
+        0,
+        None,
+        &mut Vec::new(),
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .expect("Variant Maintainer death should resolve");
+
+    assert_eq!(game.entities.len(), 4);
+    for bug in &game.entities {
+        assert_eq!(bug.kind_id, "demo.actor.software-bug");
+        assert!(
+            origin
+                .x
+                .abs_diff(bug.position.x)
+                .max(origin.y.abs_diff(bug.position.y))
+                <= 2
+        );
+        let summon = bug.summon.as_ref().expect("death bugs remain summons");
+        assert_eq!(summon.owner_id, "test.actor.variant-maintainer");
+        assert_eq!(
+            summon.source_ability_id,
+            "rfb-legacy.ability.summon-software-bug-l14-1d3-1"
+        );
+        assert_eq!(summon.remaining_turns, 10_000);
+        assert!(changed.contains(&bug.position));
     }
 }
 

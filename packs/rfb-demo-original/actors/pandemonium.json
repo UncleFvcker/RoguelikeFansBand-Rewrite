@@ -1,0 +1,255 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1200,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 23,
+  "capturePolicy": "pet-only",
+  "damageDice": 30,
+  "damageSides": 2,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 5,
+  "descriptionKey": "actor-demo-pandemonium-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 50000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 88,
+    "forceMaximum": true,
+    "sides": 88
+  },
+  "id": "demo.actor.pandemonium",
+  "level": 94,
+  "maxHp": 7744,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 30,
+            "damageSides": 2,
+            "damageType": "nether",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 30,
+            "damageSides": 2,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 30,
+            "damageSides": 2,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-gravity-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-chaos-10d10-94",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-fire-1d329-10",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-dark-10d10-426",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-nether-10d10-144",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-acid-1d282-15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-cold-1d141-10",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.psy-spear-1d141-100",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d329-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-282",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.mind-blast-7d7",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-light-10d10-426",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-electricity-1d141-8",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l94-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-cyber-l94-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l94-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-dragon-l94-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l94-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-unique-l94-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-angel-l94-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-hound-l94-1d2-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "pass-wall"
+    ]
+  },
+  "nameKey": "actor-demo-pandemonium-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 140,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "kin-glyph-69",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "shapechanger",
+    "unique"
+  ]
+}

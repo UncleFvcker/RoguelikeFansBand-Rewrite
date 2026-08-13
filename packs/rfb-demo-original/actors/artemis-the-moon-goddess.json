@@ -1,0 +1,105 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1103,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 12,
+  "descriptionKey": "actor-demo-artemis-the-moon-goddess-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 30000,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 70,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.artemis-the-moon-goddess",
+  "level": 86,
+  "light": {
+    "intrinsic": false,
+    "radius": 2
+  },
+  "maxHp": 7000,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-258",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-family-artemis-the-moon-goddess",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-artemis-the-moon-goddess-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "disenchant": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "poison": "resistant",
+    "sound": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "aura-fear",
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "olympian",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

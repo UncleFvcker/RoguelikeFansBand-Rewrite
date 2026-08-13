@@ -4060,6 +4060,24 @@ fn p55b_eagle_summon_includes_unseen_unique_eagles() {
 }
 
 #[test]
+fn p75a_no_summon_monsters_are_rejected_by_shared_candidate_filter() {
+    let game = Game::new(0);
+    let ring = game
+        .content
+        .actor("demo.actor.a-plain-gold-ring")
+        .expect("P75A Plain Gold Ring should compile");
+    assert!(ring.tags.iter().any(|tag| tag == "no-summon"));
+    assert!(!actor_answers_summons(ring));
+
+    let cyberdemon = game
+        .content
+        .actor("demo.actor.cyberdemon")
+        .expect("Cyberdemon should remain available");
+    assert!(cyberdemon.tags.iter().any(|tag| tag == "cyber"));
+    assert!(actor_answers_summons(cyberdemon));
+}
+
+#[test]
 fn p56b_gospel_summon_caps_one_d_four_at_three_tracking_pixels() {
     fn summon(seed: u64, capped: bool) -> Vec<String> {
         let mut game = Game::new(seed);
@@ -4292,6 +4310,131 @@ fn p70_aegir_rolls_count_then_floods_then_selects_one_retinue_kind() {
                     && resolution.target_terrain_id == "demo.terrain.surface-water-deep"
         )));
     }
+}
+
+#[test]
+fn p79_special_summons_keep_hermes_count_and_odin_retinue_choice() {
+    fn summon(seed: u64, caster_kind_id: &str, ability_id: &str) -> Vec<String> {
+        let mut game = Game::new(0);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 80, y: 20 };
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.p79-caster",
+            caster_kind_id,
+            Position { x: 20, y: 20 },
+            10_000,
+            140,
+            100,
+            true,
+        ));
+        let ability = game
+            .content
+            .ability(ability_id)
+            .expect("P79 special summon should compile")
+            .clone();
+        game.rng = RfbRng::seeded(seed);
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("P79 summon should have candidates and space");
+        game.resolve_monster_ability_plan(
+            0,
+            caster_kind_id,
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .summon
+        .expect("P79 special should summon")
+        .summoned_kind_ids
+    }
+
+    let hermes_seed = (0..256)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(16) == 15
+        })
+        .expect("bounded seeds should cover a sixteen summon roll");
+    assert_eq!(
+        summon(
+            hermes_seed,
+            "demo.actor.hermes-the-messenger-god",
+            "rfb-legacy.ability.summon-magic-mushroom-patch-l15-1d16",
+        ),
+        vec!["demo.actor.magic-mushroom-patch".to_owned(); 16]
+    );
+
+    let expected_odin = |seed| {
+        let mut rng = RfbRng::seeded(seed);
+        let _discarded_count = rng.bounded(4);
+        if rng.bounded(2) == 0 {
+            "demo.actor.einheri-berserker"
+        } else {
+            "demo.actor.valkyrie"
+        }
+    };
+    for target in ["demo.actor.einheri-berserker", "demo.actor.valkyrie"] {
+        let seed = (0..128)
+            .find(|seed| expected_odin(*seed) == target)
+            .expect("bounded seeds should cover both Odin retinue choices");
+        assert_eq!(
+            summon(
+                seed,
+                "demo.actor.odin-the-all-father",
+                "rfb-legacy.ability.summon-odin-retinue-1d4-max1",
+            ),
+            [target.to_owned()]
+        );
+    }
+}
+
+#[test]
+fn p80_variant_maintainer_cast_summons_only_software_bugs() {
+    let mut game = Game::new(0);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 80, y: 20 };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.p80-caster",
+        "demo.actor.the-variant-maintainer",
+        Position { x: 20, y: 20 },
+        225,
+        120,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.summon-software-bug-l14-1d3-1")
+        .expect("software bug summon should compile")
+        .clone();
+    game.rng = RfbRng::seeded(
+        (0..128)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                rng.bounded(3) == 2
+            })
+            .expect("bounded seeds should cover a four-bug summon"),
+    );
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("software bug summon should have space");
+    let summon = game
+        .resolve_monster_ability_plan(
+            0,
+            "demo.actor.the-variant-maintainer",
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .summon
+        .expect("software bug summon should resolve");
+    assert_eq!(
+        summon.summoned_kind_ids,
+        vec!["demo.actor.software-bug".to_owned(); 4]
+    );
 }
 
 #[test]
@@ -4843,6 +4986,429 @@ fn vampiric_transformation_overlays_race_but_preserves_body_slots() {
         .expect("temporary race should reload");
     assert_eq!(restored.snapshot(), game.snapshot());
     assert_eq!(restored.body_slots, body_slots);
+}
+
+#[test]
+fn p76_unique_summons_use_the_caster_level_window_and_exclude_unique2() {
+    let mut game = Game::new(241);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 80, y: 20 };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.ptah",
+        "demo.actor.ptah-the-divine-craftsman",
+        Position { x: 20, y: 20 },
+        1_000,
+        135,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.summon-unique-l83-1d2")
+        .expect("P76 S_UNIQUE ability should compile")
+        .clone();
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("P76 S_UNIQUE should have eligible candidates");
+    let MonsterAbilityTargetPlan::SummonCategory {
+        candidate_kind_ids, ..
+    } = plan.target
+    else {
+        panic!("S_UNIQUE should remain a category summon");
+    };
+    assert!(!candidate_kind_ids.is_empty());
+    for kind_id in candidate_kind_ids {
+        let candidate = game
+            .content
+            .actor(&kind_id)
+            .expect("planned unique candidate should exist");
+        assert!((43..=83).contains(&candidate.level));
+        assert!(candidate.tags.iter().any(|tag| tag == "unique"));
+        assert!(!candidate.tags.iter().any(|tag| tag == "unique2"));
+    }
+}
+
+#[test]
+fn p76_osiris_family_summon_creates_horus_and_isis_as_one_cast() {
+    let mut game = Game::new(251);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 80, y: 20 };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.osiris",
+        "demo.actor.osiris-the-reborn",
+        Position { x: 20, y: 20 },
+        1_000,
+        135,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.summon-family-osiris-the-reborn")
+        .expect("P76 Osiris family summon should compile")
+        .clone();
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("Osiris should have family candidates and space");
+    let resolution = game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.osiris-the-reborn",
+        &plan,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    let summon = resolution.summon.expect("Osiris should summon family");
+    assert_eq!(
+        summon.summoned_kind_ids,
+        [
+            "demo.actor.horus-the-ancient".to_owned(),
+            "demo.actor.isis-the-great-goddess".to_owned(),
+        ]
+    );
+    assert_eq!(summon.duration_turns, 10_000);
+}
+
+#[test]
+fn p83_gertrude_summons_each_available_sister_once() {
+    fn summon(defeated_sister: Option<&str>) -> Vec<String> {
+        let mut game = Game::new(277);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 80, y: 20 };
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.gertrude",
+            "demo.actor.gertrude",
+            Position { x: 20, y: 20 },
+            2_420,
+            120,
+            100,
+            true,
+        ));
+        if let Some(kind_id) = defeated_sister {
+            game.defeated_limited_actor_counts
+                .insert(kind_id.to_owned(), 1);
+        }
+        let ability = game
+            .content
+            .ability("rfb-legacy.ability.summon-gertrude-sisters-l40-1d1-1")
+            .expect("Gertrude sister summon should compile")
+            .clone();
+        let plan = game
+            .monster_ability_target_plan(0, ability.clone(), 1)
+            .expect("at least one available sister should produce a summon plan");
+        let summon = game
+            .resolve_monster_ability_plan(
+                0,
+                "demo.actor.gertrude",
+                &plan,
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .summon
+            .expect("Gertrude sister summon should resolve");
+        assert_eq!(summon.duration_turns, 10_000);
+        assert!(matches!(
+            game.monster_ability_target_plan(0, ability, 1),
+            Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                ..
+            })
+        ));
+        summon.summoned_kind_ids
+    }
+
+    let mut both = summon(None);
+    both.sort();
+    assert_eq!(
+        both,
+        ["demo.actor.aude".to_owned(), "demo.actor.helga".to_owned()]
+    );
+    assert_eq!(
+        summon(Some("demo.actor.aude")),
+        ["demo.actor.helga".to_owned()]
+    );
+}
+
+#[test]
+fn p76_air_breath_is_unresisted_and_levitation_reduces_damage_by_one_quarter() {
+    fn cast(levitating: bool) -> (i32, i32, bool) {
+        let mut game = Game::new(257);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 20, y: 20 };
+        game.player.hp = 1_000;
+        if levitating {
+            game.progress
+                .active_mutation_ids
+                .insert("rfb.mutation.wings".to_owned());
+        }
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.vayu",
+            "demo.actor.vayu-the-embodied-wind",
+            Position { x: 21, y: 20 },
+            1_000,
+            135,
+            100,
+            true,
+        ));
+        let ability = game
+            .content
+            .ability("rfb-legacy.ability.breath-air-17-250-r3")
+            .expect("P76 BR_AIR should compile")
+            .clone();
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("adjacent player should be a valid air-breath target");
+        let resolution = game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.vayu-the-embodied-wind",
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        );
+        let AbilityEffectResolutionDto::Damage { resolution, .. } =
+            &resolution.targets[0].effects[0]
+        else {
+            panic!("BR_AIR should damage the player");
+        };
+        (
+            resolution.raw_damage,
+            resolution.final_damage,
+            game.player_has_status_kind(STATUS_STUN),
+        )
+    }
+
+    let ordinary = cast(false);
+    let levitating = cast(true);
+    assert_eq!(ordinary.0, 170);
+    assert_eq!(ordinary.1, 170);
+    assert_eq!(levitating.0, 170);
+    assert_eq!(levitating.1, 128);
+    assert!(ordinary.2 && levitating.2);
+}
+
+#[test]
+fn p76_chicken_deals_flat_damage_and_applies_sound_stun_and_fear() {
+    let mut game = Game::new(263);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 20, y: 20 };
+    game.player.hp = 1_000;
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.aijem",
+        "demo.actor.aijem-the-walrus",
+        Position { x: 21, y: 20 },
+        1_000,
+        135,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.chicken-1d1-199")
+        .expect("P76 CHICKEN should compile")
+        .clone();
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("adjacent player should be a valid chicken target");
+    let resolution = game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.aijem-the-walrus",
+        &plan,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    let AbilityEffectResolutionDto::Damage { resolution, .. } = &resolution.effects[0] else {
+        panic!("CHICKEN should damage the player");
+    };
+    assert_eq!(resolution.raw_damage, 200);
+    assert_eq!(resolution.final_damage, 200);
+    assert!(game.player_has_status_kind(STATUS_STUN));
+    assert!(game.player_has_status_kind(STATUS_FEAR));
+}
+
+#[test]
+fn p76_no_air_applies_once_for_forty_ticks() {
+    let mut game = Game::new(269);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 20, y: 20 };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.vayu",
+        "demo.actor.vayu-the-embodied-wind",
+        Position { x: 21, y: 20 },
+        1_000,
+        135,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.no-air-40")
+        .expect("P76 NO_AIR should compile")
+        .clone();
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("adjacent living player should be a valid no-air target");
+    game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.vayu-the-embodied-wind",
+        &plan,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    let status = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_NO_AIR)
+        .expect("NO_AIR should apply its status");
+    assert_eq!(status.remaining_ticks, 40);
+
+    let resolutions = game.resolve_monster_player_effects(
+        "generated.actor.vayu",
+        "demo.actor.vayu-the-embodied-wind",
+        &plan.ability,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    );
+    assert!(matches!(
+        resolutions.as_slice(),
+        [AbilityEffectResolutionDto::Skipped {
+            reason: AbilityEffectSkipReasonDto::Ineligible,
+            ..
+        }]
+    ));
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_NO_AIR)
+            .expect("recast should keep the original no-air status")
+            .remaining_ticks,
+        40
+    );
+}
+
+fn p77_resurrection_machine_game() -> (Game, rfb_content::AbilityDefinition) {
+    let mut game = Game::new(277);
+    clear_monsters(&mut game);
+    game.player.position = Position { x: 80, y: 20 };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.resurrection-machine",
+        "demo.actor.the-resurrection-machine",
+        Position { x: 20, y: 20 },
+        15_488,
+        152,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.summon-dead-unique-l100-1d2")
+        .expect("P77 S_DEAD_UNIQ should compile")
+        .clone();
+    (game, ability)
+}
+
+#[test]
+fn p77_dead_unique_resurrection_preserves_the_spent_lifetime_slot() {
+    let (mut game, ability) = p77_resurrection_machine_game();
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.defeated_limited_actor_counts
+        .insert("demo.actor.fangorn".to_owned(), 1);
+    let seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            let _ = rng.bounded(2);
+            rng.bounded(13) != 0
+        })
+        .expect("bounded seed search should avoid the Star Blade fallback");
+    game.rng = RfbRng::seeded(seed);
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("the Resurrection Machine should always target itself");
+    let summon = game
+        .resolve_monster_ability_plan(
+            0,
+            "demo.actor.the-resurrection-machine",
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .summon
+        .expect("S_DEAD_UNIQ should summon");
+    assert_eq!(summon.summoned_kind_ids[0], "demo.actor.fangorn");
+
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("a resurrected dead unique should survive save and restore");
+    let resurrected_index = restored
+        .entities
+        .iter()
+        .position(|actor| actor.kind_id == "demo.actor.fangorn")
+        .expect("Fangorn should remain resurrected");
+    restored
+        .resolve_actor_death_without_rewards(
+            resurrected_index,
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("the resurrected unique should be removable");
+    assert_eq!(
+        restored
+            .defeated_limited_actor_counts
+            .get("demo.actor.fangorn"),
+        Some(&1),
+        "re-killing a resurrection must not spend a second lifetime slot"
+    );
+}
+
+#[test]
+fn p77_dead_unique_summon_disintegrates_radius_five_and_falls_back_to_star_blades() {
+    let (mut game, ability) = p77_resurrection_machine_game();
+    game.terrain.fill("demo.terrain.wall".to_owned());
+    game.rng = RfbRng::seeded(0);
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("the Resurrection Machine should always target itself");
+    let summon = game
+        .resolve_monster_ability_plan(
+            0,
+            "demo.actor.the-resurrection-machine",
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .summon
+        .expect("S_DEAD_UNIQ should summon its fallback");
+
+    assert!(!summon.summoned_kind_ids.is_empty());
+    assert!(
+        summon
+            .summoned_kind_ids
+            .iter()
+            .all(|kind_id| kind_id == "demo.actor.star-blade")
+    );
+    for position in [
+        Position { x: 15, y: 20 },
+        Position { x: 20, y: 15 },
+        Position { x: 25, y: 20 },
+        Position { x: 20, y: 25 },
+    ] {
+        let index = game.index(position).expect("radius-five cell should exist");
+        assert_eq!(game.terrain[index], "demo.terrain.floor");
+    }
 }
 
 fn place_test_ground_item(game: &mut Game, id: &str, kind_id: &str, position: Position) {

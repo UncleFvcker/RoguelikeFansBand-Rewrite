@@ -1,0 +1,174 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1390,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 15,
+  "descriptionKey": "actor-demo-saraswati-goddess-of-knowledge-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 70180,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 84,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.saraswati-goddess-of-knowledge",
+  "level": 90,
+  "light": {
+    "intrinsic": false,
+    "radius": 2
+  },
+  "maxHp": 10164,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "drain-charges"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 8,
+            "amountSides": 8,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 8,
+            "damageSides": 8,
+            "damageType": "acid",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 8,
+            "damageSides": 8,
+            "damageType": "electricity",
+            "type": "damage"
+          },
+          {
+            "durationDice": 3,
+            "durationSides": 3,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l90-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-brahma-l92-1d1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.amnesia",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-acid-1d640-60",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d152-90",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-saraswati-goddess-of-knowledge-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "immune",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "sound": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "good",
+    "hindu",
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

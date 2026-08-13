@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.bolt-time-2d86-28",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 28,
+      "damageDice": 2,
+      "damageSides": 86,
+      "damageType": "time",
+      "type": "damage"
+    }
+  ]
+}

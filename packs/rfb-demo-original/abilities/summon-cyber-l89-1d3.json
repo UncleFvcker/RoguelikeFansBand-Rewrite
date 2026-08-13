@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.summon-cyber-l89-1d3",
+  "descriptionKey": "ability-legacy-summon-cyber-l89-1d3-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.summon-cyber-l89-1d3",
+  "nameKey": "ability-legacy-summon-cyber-l89-1d3-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

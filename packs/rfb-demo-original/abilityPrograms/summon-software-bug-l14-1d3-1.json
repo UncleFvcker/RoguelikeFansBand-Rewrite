@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.summon-software-bug-l14-1d3-1",
+  "input": "self",
+  "steps": [
+    {
+      "batchCandidates": [
+        {
+          "actorKindId": "demo.actor.software-bug",
+          "weight": 1
+        }
+      ],
+      "category": "bug",
+      "countBonus": 1,
+      "countDice": 1,
+      "countSides": 3,
+      "durationTurns": 10000,
+      "maximumLevel": 14,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}

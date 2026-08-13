@@ -53,6 +53,7 @@ const DEMO_SAMURAI_DROP_TABLE_ID: &str = "demo.loot-table.samurai";
 const DEMO_ROGUE_DROP_TABLE_ID: &str = "demo.loot-table.rogue";
 const DEMO_DWARF_DROP_TABLE_ID: &str = "demo.loot-table.dwarf";
 const DEMO_NINJA_DROP_TABLE_ID: &str = "demo.loot-table.ninja";
+const DEMO_HOBBIT_DROP_TABLE_ID: &str = "demo.loot-table.hobbit";
 const DEMO_CORPSE_ITEM_ID: &str = "demo.item.corpse-remains";
 const DEMO_SKELETON_ITEM_ID: &str = "demo.item.skeleton-remains";
 
@@ -70,6 +71,7 @@ fn demo_drop_theme_table_id(theme: &str) -> Option<&'static str> {
         "DROP_ROGUE" => Some(DEMO_ROGUE_DROP_TABLE_ID),
         "DROP_DWARF" => Some(DEMO_DWARF_DROP_TABLE_ID),
         "DROP_NINJA" => Some(DEMO_NINJA_DROP_TABLE_ID),
+        "DROP_HOBBIT" => Some(DEMO_HOBBIT_DROP_TABLE_ID),
         _ => None,
     }
 }
@@ -171,7 +173,6 @@ fn demo_monster_location_restrictions(entry: &LegacyMonsterEntry) -> Vec<String>
     for (flag, reason) in [
         ("WILD_ONLY", "wilderness-only"),
         ("WILD_OCEAN", "ocean-only"),
-        ("FIXED_UNIQUE", "fixed-unique"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             restrictions.push(reason.to_owned());
@@ -213,7 +214,6 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "CHAR_CLEAR"
             | "CHAR_MULTI"
             | "FEMALE"
-            | "KNIGHT"
             | "MALE"
             | "NASTY_GLYPH"
             | "POS_GAIN_AC"
@@ -227,7 +227,6 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "POS_SUST_STR"
             | "POS_SUST_WIS"
             | "POS_TELEPATHY"
-            | "EGYPTIAN"
             | "EGYPTIAN2"
             | "HINDU2"
             | "NORSE2"
@@ -1084,14 +1083,6 @@ fn kebab(raw: &str) -> String {
         id.pop();
     }
     id
-}
-
-fn actor_file_stem(raw: &str) -> String {
-    kebab(
-        &raw.chars()
-            .filter(|ch| !matches!(ch, '\'' | '’'))
-            .collect::<String>(),
-    )
 }
 
 fn resolve_legacy_content_commit(source: &Path) -> Result<String, LegacyImportError> {
@@ -7757,6 +7748,7 @@ fn map_jump_spell_token(
         "JMP_LIGHT" | "JMP_LITE" => "light",
         "JMP_NETHER" => "nether",
         "JMP_NEXUS" => "nexus",
+        "JMP_SHARDS" => "shards",
         "JMP_DISINTEGRATE" => "disintegrate",
         "JMP_HELL_FIRE" => "hell-fire",
         _ => return None,
@@ -8047,6 +8039,10 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "COLD_BLOOD"
             | "NORSE"
             | "HINDU"
+            | "EGYPTIAN"
+            | "OLYMPIAN"
+            | "NO_SUMMON"
+            | "KNIGHT"
     ) {
         return true;
     }
@@ -8193,6 +8189,9 @@ fn monster_json(
     if entry.index == 622 {
         tags.push("night-mare".to_owned());
     }
+    if entry.index == 816 {
+        tags.push("cyber".to_owned());
+    }
     for (flag, tag) in [
         ("ANIMAL", "animal"),
         ("EVIL", "evil"),
@@ -8219,6 +8218,10 @@ fn monster_json(
         ("AMBERITE", "amberite"),
         ("NORSE", "norse"),
         ("HINDU", "hindu"),
+        ("EGYPTIAN", "egyptian"),
+        ("OLYMPIAN", "olympian"),
+        ("NO_SUMMON", "no-summon"),
+        ("KNIGHT", "knight"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -8258,6 +8261,11 @@ fn monster_json(
     }
     if entry.flags.iter().any(|flag| flag == "NO_QUEST") {
         tags.push("no-quest".to_owned());
+    }
+    if entry.flags.iter().any(|flag| flag == "KNIGHT")
+        && entry.flags.iter().any(|flag| flag == "DUNGEON_2")
+    {
+        tags.push("camelot-knight".to_owned());
     }
     if entry
         .glyph
@@ -8452,6 +8460,9 @@ fn monster_json(
                 "HOLY_FIRE" => "holy-fire",
                 "CAUSE_2" | "CAUSE_3" => "curse",
                 "SHARDS" => "shards",
+                "TIME" => "time",
+                "CHAOS" => "chaos",
+                "DISENCHANT" => "disenchant",
                 _ => return None,
             };
             let (damage_dice, damage_sides) = aura.dice?;
@@ -8462,6 +8473,9 @@ fn monster_json(
             });
             if let Some(chance_percent) = aura.chance_percent {
                 value["chancePercent"] = serde_json::json!(chance_percent);
+            }
+            if aura.token == "TIME" {
+                value["ravagesTime"] = serde_json::json!(true);
             }
             Some(value)
         })
@@ -8481,6 +8495,15 @@ fn monster_json(
     );
     if !contact_auras.is_empty() {
         value["contactAuras"] = serde_json::json!(contact_auras);
+    }
+    let contact_effects = entry
+        .auras
+        .iter()
+        .filter(|aura| matches!(aura.token.as_str(), "UNLIFE" | "STUN"))
+        .filter_map(|aura| melee_effect_json(aura, entry.level))
+        .collect::<Vec<_>>();
+    if !contact_effects.is_empty() {
+        value["contactEffects"] = serde_json::json!(contact_effects);
     }
     if let Some(casting) = monster_casting {
         value["monsterCasting"] = casting;
@@ -8591,6 +8614,7 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "GIANT"
                 | "NONLIVING"
                 | "UNIQUE"
+                | "GUARDIAN"
                 | "THIEF"
                 | "AQUATIC"
                 | "CAN_FLY"
@@ -8808,6 +8832,11 @@ fn demo_monster_json(
                     | "CAUSE_2"
                     | "CAUSE_3"
                     | "SHARDS"
+                    | "UNLIFE"
+                    | "STUN"
+                    | "TIME"
+                    | "CHAOS"
+                    | "DISENCHANT"
             ) || aura.dice.is_none()
         })
     {
@@ -8818,6 +8847,7 @@ fn demo_monster_json(
     }
     let primary_blow = entry.blows.first();
     if primary_blow.is_none()
+        && selection.id != "artemis-the-moon-goddess"
         && !entry
             .flags
             .iter()
@@ -8943,6 +8973,9 @@ fn demo_monster_json(
     if entry.index == 622 {
         tags.insert("night-mare".to_owned());
     }
+    if entry.index == 816 {
+        tags.insert("cyber".to_owned());
+    }
     if entry.flags.iter().any(|flag| flag == "KAGE") {
         tags.insert("shadower-appearance".to_owned());
     }
@@ -8958,6 +8991,7 @@ fn demo_monster_json(
         ("TROLL", "troll"),
         ("GIANT", "giant"),
         ("NONLIVING", "nonliving"),
+        ("GUARDIAN", "guardian"),
         ("COLD_BLOOD", "cold-blooded"),
         ("UNIQUE", "unique"),
         ("THIEF", "thief"),
@@ -8982,10 +9016,19 @@ fn demo_monster_json(
         ("AMBERITE", "amberite"),
         ("NORSE", "norse"),
         ("HINDU", "hindu"),
+        ("EGYPTIAN", "egyptian"),
+        ("OLYMPIAN", "olympian"),
+        ("NO_SUMMON", "no-summon"),
+        ("KNIGHT", "knight"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
         }
+    }
+    if entry.flags.iter().any(|flag| flag == "KNIGHT")
+        && entry.flags.iter().any(|flag| flag == "DUNGEON_2")
+    {
+        tags.insert("camelot-knight".to_owned());
     }
     value["tags"] = serde_json::json!(tags);
     if selection
@@ -9299,6 +9342,28 @@ fn map_spell_token(
     caster_kind_id: &str,
     abilities: &mut BTreeMap<String, serde_json::Value>,
 ) -> Option<String> {
+    if token == "NO_AIR" {
+        let id = "rfb-legacy.ability.no-air-40".to_owned();
+        abilities.entry(id.clone()).or_insert_with(|| {
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                "formatVersion": 1,
+                "id": id,
+                "nameKey": "ability-legacy-no-air-40-name",
+                "descriptionKey": "ability-legacy-no-air-40-description",
+                "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+                "effect": {
+                    "type": "apply-status",
+                    "statusKindId": "rfb.status.no-air",
+                    "intensity": 1,
+                    "durationTicks": 40,
+                    "stacking": "keep-strongest"
+                },
+                "tags": ["legacy-import", "monster-only", "monster-no-air"],
+            })
+        });
+        return Some(id);
+    }
     if token == "WORLD" {
         let id = "rfb-legacy.ability.world".to_owned();
         abilities.entry(id.clone()).or_insert_with(|| {
@@ -9648,7 +9713,7 @@ fn parse_explicit_damage_dice(spec: &str) -> Option<(u32, u32, u32)> {
 /// Looks up a summon token base: candidate category tag plus the legacy
 /// default count dice `(dice, sides, bonus)`. Categories map through the
 /// type-flag tags stamped on imported actors; glyph-class and unique summon
-/// types stay unmapped.
+/// types stay unmapped until their candidate rule is explicitly supported.
 fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> {
     let entry = match base {
         "S_MONSTER" => ("legacy-import", (1, 3, 1)),
@@ -9668,8 +9733,15 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_LOUSE" => ("louse", (1, 3, 1)),
         "S_NIGHTMARE" => ("night-mare", (1, 3, 1)),
         "S_AMBERITE" => ("amberite", (1, 2, 0)),
+        "S_SERPENT" => ("kin-glyph-74", (1, 3, 1)),
         "S_NAGA" => ("kin-glyph-110", (1, 3, 1)),
         "S_VANARA" => ("vanara", (1, 3, 1)),
+        "S_CYBER" => ("cyber", (1, 3, 0)),
+        "S_CAT" => ("cat", (1, 3, 1)),
+        "S_UNIQUE" => ("unique", (1, 2, 0)),
+        "S_GUARDIAN" => ("guardian", (1, 2, 0)),
+        "S_CAMELOT" => ("camelot-knight", (1, 2, 0)),
+        "S_KNIGHT" => ("knight", (1, 2, 0)),
         _ => return None,
     };
     Some(entry)
@@ -9689,9 +9761,43 @@ fn map_summon_spell_token(
         Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
         None => (token, None),
     };
+    if base == "S_SOFTWARE_BUG" {
+        let suffix = "summon-software-bug-l14-1d3-1";
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities.entry(id.clone()).or_insert_with(|| {
+            let mut ability = summon_category_ability(suffix, "bug", 14, 1, 3, 1, None);
+            ability["effect"]["batchCandidates"] = serde_json::json!([{
+                "actorKindId": "demo.actor.software-bug",
+                "weight": 1,
+            }]);
+            ability
+        });
+        return Some(id);
+    }
+    if base == "S_DEAD_UNIQ" {
+        let maximum_level = u32::from(level.max(1));
+        let suffix = format!("summon-dead-unique-l{maximum_level}-1d2");
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities.entry(id.clone()).or_insert_with(|| {
+            let mut ability =
+                summon_category_ability(&suffix, "unique", maximum_level, 1, 2, 0, None);
+            ability["tags"] =
+                serde_json::json!(["legacy-import", "summon", "monster-dead-unique-summon",]);
+            ability
+        });
+        return Some(id);
+    }
     if base == "S_PANTHEON" {
         let category = match caster_kind_id.rsplit('.').next()? {
-            "heimdall-guardian-of-bifrost" => "norse",
+            "heimdall-guardian-of-bifrost"
+            | "frigg-queen-of-asgard"
+            | "freyja-lady-of-the-slain"
+            | "odin-the-all-father" => "norse",
+            "indra-the-heavenly-king-of-meru" => "hindu",
+            "aphrodite-the-goddess-of-love"
+            | "hermes-the-messenger-god"
+            | "zeus-king-of-the-olympians" => "olympian",
+            "amun-the-mysterious" | "hathor-the-heavenly-cow" => "egyptian",
             _ => return None,
         };
         let suffix = format!("summon-{category}-l{level}-1d2");
@@ -9702,6 +9808,42 @@ fn map_summon_spell_token(
         return Some(id);
     }
     if base == "S_SPECIAL" {
+        let caster_tail = caster_kind_id.rsplit('.').next()?;
+        if matches!(
+            caster_tail,
+            "athena-the-goddess-of-wisdom"
+                | "ares-the-god-of-war"
+                | "apollo-the-sun-god"
+                | "artemis-the-moon-goddess"
+                | "hephaestus-the-smith-god"
+                | "hades-ruler-of-the-underworld"
+                | "hera-queen-of-the-gods"
+                | "osiris-the-reborn"
+                | "lakshmi-the-goddess-of-prosperity"
+                | "vishnu-the-preserver"
+                | "shiva-the-destroyer"
+                | "parvati-the-goddess-of-hidden-power"
+        ) {
+            let suffix = format!("summon-family-{caster_tail}");
+            let id = format!("rfb-legacy.ability.{suffix}");
+            abilities.entry(id.clone()).or_insert_with(|| {
+                serde_json::json!({
+                    "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                    "formatVersion": 1,
+                    "id": id,
+                    "nameKey": format!("ability-legacy-{suffix}-name"),
+                    "descriptionKey": format!("ability-legacy-{suffix}-description"),
+                    "minimumLevel": 1,
+                    "resourceId": LEGACY_RESOURCE_ID,
+                    "resourceCost": 1,
+                    "baseFailurePercent": 20,
+                    "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+                    "effect": { "type": "no-op", "reason": "monster-family-summon" },
+                    "tags": ["legacy-import", "summon", "monster-only", "monster-family-summon"],
+                })
+            });
+            return Some(id);
+        }
         if caster_kind_id.rsplit('.').next()? == "aegir-god-king-of-the-sea-giants" {
             let suffix = "summon-aegir-retinue-1d4";
             let id = format!("rfb-legacy.ability.{suffix}");
@@ -9747,77 +9889,237 @@ fn map_summon_spell_token(
             });
             return Some(id);
         }
-        let (suffix, category, maximum_level, dice, sides, bonus, maximum_count) =
-            match caster_kind_id.rsplit('.').next()? {
-                "zoopi-the-cube-king" => (
-                    "summon-gelatinous-cube-l16-1d3",
-                    "gelatinous-cube",
-                    16,
-                    1,
-                    3,
-                    0,
-                    None,
-                ),
-                "rolento" => (
-                    "summon-hand-grenade-l38-1d3-1",
-                    "hand-grenade",
-                    38,
-                    1,
-                    3,
-                    1,
-                    None,
-                ),
-                "santa-claus" => ("summon-reindeer-l52-1d4", "reindeer", 52, 1, 4, 0, None),
-                "jack-of-lanterns" => (
-                    "summon-death-pumpkin-l52-1d4",
-                    "death-pumpkin",
-                    52,
-                    1,
-                    4,
-                    0,
-                    None,
-                ),
-                "bull-gates" => (
-                    "summon-internet-exploder-l52-1d4",
-                    "internet-exploder",
-                    52,
-                    1,
-                    4,
-                    0,
-                    None,
-                ),
-                "the-gospel-of-mug" => (
-                    "summon-tracking-pixel-l56-1d4-max3",
-                    "tracking-pixel",
-                    56,
-                    1,
-                    4,
-                    0,
-                    Some(3),
-                ),
-                "the-nightmare-dragon" => (
-                    "summon-night-mare-l39-1d3-2",
-                    "night-mare",
-                    39,
-                    1,
-                    3,
-                    2,
-                    None,
-                ),
-                "caldarm-the-third" => (
-                    "summon-clone-of-locke-l65-1d3",
-                    "clone-of-locke",
-                    65,
-                    1,
-                    3,
-                    0,
-                    None,
-                ),
-                _ => return None,
-            };
+        if caster_kind_id.rsplit('.').next()? == "odin-the-all-father" {
+            let suffix = "summon-odin-retinue-1d4-max1";
+            let id = format!("rfb-legacy.ability.{suffix}");
+            abilities.entry(id.clone()).or_insert_with(|| {
+                let mut ability =
+                    summon_category_ability(suffix, "kin-glyph-112", 65, 1, 4, 0, Some(1));
+                ability["effect"]["batchCandidates"] = serde_json::json!([
+                    {
+                        "actorKindId": "demo.actor.einheri-berserker",
+                        "weight": 1,
+                    },
+                    {
+                        "actorKindId": "demo.actor.valkyrie",
+                        "weight": 1,
+                    },
+                ]);
+                ability
+            });
+            return Some(id);
+        }
+        if caster_tail == "gertrude" {
+            let suffix = "summon-gertrude-sisters-l40-1d1-1";
+            let id = format!("rfb-legacy.ability.{suffix}");
+            abilities.entry(id.clone()).or_insert_with(|| {
+                summon_category_ability(suffix, "witch-sister", 40, 1, 1, 1, Some(2))
+            });
+            return Some(id);
+        }
+        let (
+            suffix,
+            category,
+            maximum_level,
+            dice,
+            sides,
+            bonus,
+            maximum_count,
+            batch_candidate,
+            water_flow,
+        ) = match caster_kind_id.rsplit('.').next()? {
+            "zoopi-the-cube-king" => (
+                "summon-gelatinous-cube-l16-1d3",
+                "gelatinous-cube",
+                16,
+                1,
+                3,
+                0,
+                None,
+                None,
+                false,
+            ),
+            "rolento" => (
+                "summon-hand-grenade-l38-1d3-1",
+                "hand-grenade",
+                38,
+                1,
+                3,
+                1,
+                None,
+                None,
+                false,
+            ),
+            "santa-claus" => (
+                "summon-reindeer-l52-1d4",
+                "reindeer",
+                52,
+                1,
+                4,
+                0,
+                None,
+                None,
+                false,
+            ),
+            "jack-of-lanterns" => (
+                "summon-death-pumpkin-l52-1d4",
+                "death-pumpkin",
+                52,
+                1,
+                4,
+                0,
+                None,
+                None,
+                false,
+            ),
+            "bull-gates" => (
+                "summon-internet-exploder-l52-1d4",
+                "internet-exploder",
+                52,
+                1,
+                4,
+                0,
+                None,
+                None,
+                false,
+            ),
+            "the-gospel-of-mug" => (
+                "summon-tracking-pixel-l56-1d4-max3",
+                "tracking-pixel",
+                56,
+                1,
+                4,
+                0,
+                Some(3),
+                None,
+                false,
+            ),
+            "the-nightmare-dragon" => (
+                "summon-night-mare-l39-1d3-2",
+                "night-mare",
+                39,
+                1,
+                3,
+                2,
+                None,
+                None,
+                false,
+            ),
+            "caldarm-the-third" => (
+                "summon-clone-of-locke-l65-1d3",
+                "clone-of-locke",
+                65,
+                1,
+                3,
+                0,
+                None,
+                None,
+                false,
+            ),
+            "zeus-king-of-the-olympians" => (
+                "summon-shambler-l67-1d4",
+                "kin-glyph-69",
+                67,
+                1,
+                4,
+                0,
+                None,
+                Some("demo.actor.shambler"),
+                false,
+            ),
+            "hermes-the-messenger-god" => (
+                "summon-magic-mushroom-patch-l15-1d16",
+                "kin-glyph-44",
+                15,
+                1,
+                16,
+                0,
+                None,
+                Some("demo.actor.magic-mushroom-patch"),
+                false,
+            ),
+            "varuna-lord-of-water" => (
+                "summon-makara-l50-1d2-2",
+                "mount-meru",
+                50,
+                1,
+                2,
+                2,
+                None,
+                Some("demo.actor.makara"),
+                true,
+            ),
+            "demeter-the-goddess-of-nature" => (
+                "summon-ent-l46-1d4",
+                "giant",
+                46,
+                1,
+                4,
+                0,
+                None,
+                Some("demo.actor.ent"),
+                false,
+            ),
+            "justshorn-sorcerer-king-of-the-sheeple" => (
+                "summon-sheep-l3-1d4",
+                "sheep",
+                3,
+                1,
+                4,
+                0,
+                None,
+                Some("demo.actor.sheep"),
+                false,
+            ),
+            "poseidon-lord-of-seas-and-storm" => (
+                "summon-greater-kraken-l63-1d4",
+                "ocean",
+                63,
+                1,
+                4,
+                0,
+                None,
+                Some("demo.actor.greater-kraken"),
+                true,
+            ),
+            "talos-masterwork-spellwarp-automaton" => (
+                "summon-spellwarp-automaton-l80-1d3",
+                "nonliving",
+                80,
+                1,
+                3,
+                0,
+                None,
+                Some("demo.actor.spellwarp-automaton"),
+                false,
+            ),
+            "brahma-the-creating-spirit" => (
+                "summon-saraswati-l90-1d1",
+                "hindu",
+                90,
+                1,
+                1,
+                0,
+                None,
+                Some("demo.actor.saraswati-goddess-of-knowledge"),
+                false,
+            ),
+            "saraswati-goddess-of-knowledge" => (
+                "summon-brahma-l92-1d1",
+                "hindu",
+                92,
+                1,
+                1,
+                0,
+                None,
+                Some("demo.actor.brahma-the-creating-spirit"),
+                false,
+            ),
+            _ => return None,
+        };
         let id = format!("rfb-legacy.ability.{suffix}");
         abilities.entry(id.clone()).or_insert_with(|| {
-            summon_category_ability(
+            let mut ability = summon_category_ability(
                 suffix,
                 category,
                 maximum_level,
@@ -9825,7 +10127,22 @@ fn map_summon_spell_token(
                 sides,
                 bonus,
                 maximum_count,
-            )
+            );
+            if let Some(actor_kind_id) = batch_candidate {
+                ability["effect"]["batchCandidates"] = serde_json::json!([{
+                    "actorKindId": actor_kind_id,
+                    "weight": 1,
+                }]);
+            }
+            if water_flow {
+                ability["tags"] = serde_json::json!([
+                    "legacy-import",
+                    "summon",
+                    "monster-only",
+                    "monster-water-flow",
+                ]);
+            }
+            ability
         });
         return Some(id);
     }
@@ -9857,14 +10174,29 @@ fn map_summon_spell_token(
     if dice * sides + bonus > 8 {
         return None;
     }
-    let maximum_level = u32::from(level.max(1));
+    let maximum_level = if base == "S_GUARDIAN" {
+        u32::from(level.clamp(1, 99))
+    } else {
+        u32::from(level.max(1))
+    };
     let mut suffix = format!("summon-{category}-l{maximum_level}-{dice}d{sides}");
     if bonus > 0 {
         suffix.push_str(&format!("-{bonus}"));
     }
     let id = format!("rfb-legacy.ability.{suffix}");
     abilities.entry(id.clone()).or_insert_with(|| {
-        summon_category_ability(&suffix, category, maximum_level, dice, sides, bonus, None)
+        let mut ability =
+            summon_category_ability(&suffix, category, maximum_level, dice, sides, bonus, None);
+        if base == "S_KNIGHT" {
+            ability["effect"]["batchCandidates"] = serde_json::json!([
+                { "actorKindId": "demo.actor.novice-paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.white-knight", "weight": 1 },
+                { "actorKindId": "demo.actor.ultra-elite-paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.knight-templar", "weight": 1 },
+            ]);
+        }
+        ability
     });
     Some(id)
 }
@@ -9956,6 +10288,7 @@ fn breath_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32))> {
         "BR_INERTIA" => ("inertia", (17, 250)),
         "BR_PLASMA" => ("plasma", (17, 250)),
         "BR_HELL_FIRE" => ("hell-fire", (17, 250)),
+        "BR_HOLY_FIRE" => ("holy-fire", (17, 250)),
         "BR_GRAVITY" => ("gravity", (33, 200)),
         "BR_FORCE" => ("force", (33, 200)),
         "BR_MANA" => ("mana", (33, 250)),
@@ -9976,6 +10309,60 @@ fn map_damage_spell_token(
         Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
         None => (token, None),
     };
+    if base == "BR_AIR" {
+        let hp_percent = match explicit {
+            Some(spec) => spec.strip_suffix('%')?.parse::<u32>().ok()?.clamp(1, 100),
+            None => 17,
+        };
+        let suffix = format!("breath-air-{hp_percent}-250-r{breath_radius}");
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities.entry(id.clone()).or_insert_with(|| {
+            let mut ability =
+                breath_spell_ability(&suffix, "force", hp_percent, 250, breath_radius);
+            ability["tags"] =
+                serde_json::json!(["breath", "damage", "legacy-import", "monster-air-breath",]);
+            ability
+        });
+        return Some(id);
+    }
+    if base == "CHICKEN" {
+        let (dice, sides, bonus) = explicit.and_then(parse_explicit_damage_dice).unwrap_or((
+            1,
+            1,
+            (5 * u32::from(level) / 2).saturating_sub(1),
+        ));
+        let dice = dice.clamp(1, 100);
+        let sides = sides.clamp(1, 10_000);
+        let bonus = bonus.min(10_000);
+        let mut suffix = format!("chicken-{dice}d{sides}");
+        if bonus > 0 {
+            suffix.push_str(&format!("-{bonus}"));
+        }
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities.entry(id.clone()).or_insert_with(|| {
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                "formatVersion": 1,
+                "id": id,
+                "nameKey": format!("ability-legacy-{suffix}-name"),
+                "descriptionKey": format!("ability-legacy-{suffix}-description"),
+                "minimumLevel": 1,
+                "resourceId": LEGACY_RESOURCE_ID,
+                "resourceCost": 1,
+                "baseFailurePercent": 20,
+                "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+                "effect": {
+                    "type": "damage",
+                    "damageDice": dice,
+                    "damageSides": sides,
+                    "damageBonus": bonus,
+                    "damageType": "physical"
+                },
+                "tags": ["legacy-import", "damage", "monster-chicken"],
+            })
+        });
+        return Some(id);
+    }
     if let Some((damage_type, (default_percent, max_damage))) = breath_spell_defaults(base) {
         // Explicit overrides use the legacy `BR_X(N%)` form and only replace
         // the percentage; the elemental cap stays.
@@ -12454,23 +12841,20 @@ pub fn sync_demo_monsters(
         .iter()
         .map(|monster| monster.source_index)
         .collect::<BTreeSet<_>>();
-    let mut actor_ids_by_source_name = BTreeMap::new();
+    let mut actor_ids_by_source_index = BTreeMap::new();
     for monster in &selection.monsters {
-        let source = by_index.get(&monster.source_index).ok_or_else(|| {
+        by_index.get(&monster.source_index).ok_or_else(|| {
             LegacyImportError::InvalidDemoMonsterSelection(format!(
                 "unknown legacy source index {}",
                 monster.source_index
             ))
         })?;
-        if actor_ids_by_source_name
-            .insert(
-                actor_file_stem(&source.name),
-                format!("demo.actor.{}", monster.id),
-            )
+        if actor_ids_by_source_index
+            .insert(monster.source_index, format!("demo.actor.{}", monster.id))
             .is_some()
         {
             return Err(LegacyImportError::InvalidDemoMonsterSelection(
-                "selected monster source names must be unique".to_owned(),
+                "selected monster source indexes must be unique".to_owned(),
             ));
         }
     }
@@ -12493,9 +12877,15 @@ pub fn sync_demo_monsters(
             let Some(actor_id) = actor["id"].as_str() else {
                 continue;
             };
+            let Some(source_index) = actor["allocation"]["legacyIndex"].as_u64() else {
+                continue;
+            };
+            let Ok(source_index) = u32::try_from(source_index) else {
+                continue;
+            };
             if actor_id == format!("demo.actor.{stem}") {
-                actor_ids_by_source_name
-                    .entry(stem.to_owned())
+                actor_ids_by_source_index
+                    .entry(source_index)
                     .or_insert_with(|| actor_id.to_owned());
             }
         }
@@ -12588,8 +12978,7 @@ pub fn sync_demo_monsters(
         )?;
     }
     for entry in &entries {
-        let source_name = actor_file_stem(&entry.name);
-        let Some(actor_id) = actor_ids_by_source_name.get(&source_name) else {
+        let Some(actor_id) = actor_ids_by_source_index.get(&entry.index) else {
             continue;
         };
         let actor_path = output.join(format!(
@@ -12609,14 +12998,12 @@ pub fn sync_demo_monsters(
             && required_experience > 0
             && target_index > 0
         {
-            let target = by_index.get(&target_index).ok_or_else(|| {
+            by_index.get(&target_index).ok_or_else(|| {
                 LegacyImportError::InvalidDemoMonsterSelection(format!(
                     "{actor_id} references unknown evolution target {target_index}"
                 ))
             })?;
-            if let Some(next_actor_kind_id) =
-                actor_ids_by_source_name.get(&actor_file_stem(&target.name))
-            {
+            if let Some(next_actor_kind_id) = actor_ids_by_source_index.get(&target_index) {
                 actor["evolution"] = serde_json::json!({
                     "requiredExperience": required_experience,
                     "nextActorKindId": next_actor_kind_id,
@@ -13946,6 +14333,14 @@ mod tests {
     }
 
     #[test]
+    fn demo_monster_import_maps_hobbit_drop_theme() {
+        assert_eq!(
+            demo_drop_theme_table_id("DROP_HOBBIT"),
+            Some("demo.loot-table.hobbit")
+        );
+    }
+
+    #[test]
     fn demo_monster_audit_separates_location_scope_from_mechanism_status() {
         let camelot = LegacyMonsterEntry {
             flags: vec!["DUNGEON_2".to_owned()],
@@ -13956,7 +14351,7 @@ mod tests {
             vec!["camelot-only"]
         );
 
-        let wilderness_unique = LegacyMonsterEntry {
+        let wilderness_fixed_unique = LegacyMonsterEntry {
             flags: vec![
                 "WILD_ONLY".to_owned(),
                 "WILD_OCEAN".to_owned(),
@@ -13965,9 +14360,14 @@ mod tests {
             ..LegacyMonsterEntry::default()
         };
         assert_eq!(
-            demo_monster_location_restrictions(&wilderness_unique),
-            vec!["wilderness-only", "ocean-only", "fixed-unique"]
+            demo_monster_location_restrictions(&wilderness_fixed_unique),
+            vec!["wilderness-only", "ocean-only"]
         );
+        let fixed_unique = LegacyMonsterEntry {
+            flags: vec!["FIXED_UNIQUE".to_owned()],
+            ..LegacyMonsterEntry::default()
+        };
+        assert!(demo_monster_location_restrictions(&fixed_unique).is_empty());
 
         assert_eq!(
             demo_monster_audit_status(true, 1, false, true),
@@ -13999,7 +14399,7 @@ mod tests {
         assert!(demo_monster_audit_omission_is_safe("POS_SUST_DEX"));
         assert!(demo_monster_audit_omission_is_safe("POS_SUST_INT"));
         assert!(demo_monster_audit_omission_is_safe("KILL_EXP"));
-        assert!(demo_monster_audit_omission_is_safe("EGYPTIAN"));
+        assert!(demo_monster_flag_is_handled("EGYPTIAN"));
         assert!(demo_monster_audit_omission_is_safe("EGYPTIAN2"));
         assert!(demo_monster_audit_omission_is_safe("HINDU2"));
         assert!(demo_monster_audit_omission_is_safe("NORSE2"));
@@ -14011,6 +14411,38 @@ mod tests {
         assert!(demo_monster_flag_is_handled("WILD_OCEAN"));
         assert!(demo_monster_flag_is_handled("NORSE"));
         assert!(demo_monster_flag_is_handled("HINDU"));
+        assert!(demo_monster_flag_is_handled("OLYMPIAN"));
+        assert!(demo_monster_flag_is_handled("NO_SUMMON"));
+        assert!(demo_monster_flag_is_handled("KNIGHT"));
+        assert!(!demo_monster_audit_omission_is_safe("KNIGHT"));
+    }
+
+    #[test]
+    fn knight_flag_adds_generic_and_camelot_summon_tags() {
+        let monsters = parse_r_info(
+            "N:1:generic knight\nG:p:w\nI:110:1d1:1:1:1:1\nW:5:1:1:1:0:0\nB:HIT:HURT(1d1)\nF:KNIGHT\n\
+             N:2:Camelot knight\nG:p:w\nI:110:1d1:1:1:1:1\nW:5:1:1:1:0:0\nB:HIT:HURT(1d1)\nF:KNIGHT | DUNGEON_2\n",
+        )
+        .expect("synthetic knights should parse");
+
+        for (monster, id, is_camelot) in [
+            (&monsters[0], "generic-knight", false),
+            (&monsters[1], "camelot-knight", true),
+        ] {
+            let selection = DemoMonsterSelectionEntry {
+                source_index: monster.index,
+                source_id: None,
+                id: id.to_owned(),
+                tags: Vec::new(),
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            };
+            let actor = demo_monster_json(monster, &selection, &mut BTreeMap::new())
+                .expect("KNIGHT should import as a content tag");
+            let tags = actor["tags"].as_array().expect("tags should be an array");
+            assert!(tags.iter().any(|tag| tag == "knight"));
+            assert_eq!(tags.iter().any(|tag| tag == "camelot-knight"), is_camelot);
+        }
     }
 
     #[test]
@@ -16007,6 +16439,20 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
         assert_eq!(outcome.report.not_applicable_spells["MAPPING"], 1);
         assert_eq!(outcome.report.unmapped_spells.len(), 0);
         assert_eq!(outcome.report.monsters_with_unmapped_spells, 0);
+
+        let mut abilities = BTreeMap::new();
+        let holy_fire = map_spell_token(
+            "BR_HOLY_FIRE",
+            89,
+            2,
+            "demo.actor.raphael-the-messenger",
+            &mut abilities,
+        )
+        .expect("BR_HOLY_FIRE should map");
+        assert_eq!(holy_fire, "rfb-legacy.ability.breath-holy-fire-17-250-r2");
+        assert_eq!(abilities[&holy_fire]["effect"]["damageType"], "holy-fire");
+        assert_eq!(abilities[&holy_fire]["effect"]["hpPercent"], 17);
+        assert_eq!(abilities[&holy_fire]["effect"]["maxDamage"], 250);
     }
 
     #[test]
@@ -16036,6 +16482,7 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
             ("JMP_FIRE", 31, "jump-fire-l31", "fire", 0, 0, 31),
             ("JMP_ICE", 50, "jump-ice-l50", "ice", 0, 0, 50),
             ("JMP_NETHER", 60, "jump-nether-l60", "nether", 0, 0, 60),
+            ("JMP_SHARDS", 85, "jump-shards-l85", "shards", 0, 0, 85),
             (
                 "JMP_DISINTEGRATE",
                 70,
@@ -16245,6 +16692,26 @@ F:ANIMAL | COLD_BLOOD\n";
     }
 
     #[test]
+    fn olympian_and_no_summon_flags_become_runtime_tags() {
+        let monsters = parse_r_info(
+            "N:1044:Olympian test\nG:P:w\nI:110:1d1:1:1:1:1\nW:1:1:1:1:0:0\nB:HIT:HURT(1d1)\nF:UNIQUE | OLYMPIAN | NO_SUMMON\n",
+        )
+        .expect("synthetic Olympian should parse");
+        let selection: DemoMonsterSelectionEntry = serde_json::from_value(serde_json::json!({
+            "sourceIndex": 1044,
+            "id": "olympian-test",
+            "tags": ["warrens"],
+            "omittedFlags": []
+        }))
+        .expect("synthetic selection should parse");
+        let actor = demo_monster_json(&monsters[0], &selection, &mut BTreeMap::new())
+            .expect("P75A flags should be handled");
+        let tags = actor["tags"].as_array().expect("tags should be an array");
+        assert!(tags.iter().any(|tag| tag == "olympian"));
+        assert!(tags.iter().any(|tag| tag == "no-summon"));
+    }
+
+    #[test]
     fn summon_tokens_map_to_category_and_kin_abilities() {
         const SUMMONER_R_INFO: &str = "\
 N:5:test bone caller\n\
@@ -16253,7 +16720,7 @@ I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
 F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF | NO_STUN\n\
-S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LOUSE | S_CYBER\n";
+S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LOUSE | S_CYBER | S_CAT\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
 
@@ -16324,10 +16791,12 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 "rfb-legacy.ability.summon-spider-l20-1d3-1",
                 "rfb-legacy.ability.summon-hydra-l20-1d3-1",
                 "rfb-legacy.ability.summon-louse-l20-1d3-1",
+                "rfb-legacy.ability.summon-cyber-l20-1d3",
+                "rfb-legacy.ability.summon-cat-l20-1d3-1",
             ]
         );
-        // Uniques and cyber summons stay honest gaps.
-        assert_eq!(outcome.report.unmapped_spells["S_CYBER"], 1);
+        assert!(!outcome.report.unmapped_spells.contains_key("S_CYBER"));
+        assert!(!outcome.report.unmapped_spells.contains_key("S_CAT"));
 
         let kin = outcome
             .ability_files
@@ -16430,6 +16899,54 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
             tags.iter().any(|tag| tag == "legacy-import")
                 && tags.iter().any(|tag| tag == "kin-glyph-76")
         }));
+    }
+
+    #[test]
+    fn camelot_and_knight_summons_keep_their_exact_candidate_rules() {
+        let mut abilities = BTreeMap::new();
+        let camelot_id = map_spell_token(
+            "S_CAMELOT(1d2)",
+            32,
+            4,
+            "demo.actor.arthur-pendragon",
+            &mut abilities,
+        )
+        .expect("Camelot summon should map");
+        assert_eq!(
+            camelot_id,
+            "rfb-legacy.ability.summon-camelot-knight-l32-1d2"
+        );
+        let camelot = &abilities[&camelot_id]["effect"];
+        assert_eq!(camelot["category"], "camelot-knight");
+        assert_eq!(camelot["maximumLevel"], 32);
+        assert_eq!(camelot["countDice"], 1);
+        assert_eq!(camelot["countSides"], 2);
+        assert!(camelot.get("batchCandidates").is_none());
+
+        let knight_id = map_spell_token(
+            "S_KNIGHT(1d2)",
+            26,
+            10,
+            "demo.actor.camelot-knight",
+            &mut abilities,
+        )
+        .expect("exact knight summon should map");
+        assert_eq!(knight_id, "rfb-legacy.ability.summon-knight-l26-1d2");
+        let knight = &abilities[&knight_id]["effect"];
+        assert_eq!(knight["category"], "knight");
+        assert_eq!(knight["maximumLevel"], 26);
+        assert_eq!(knight["countDice"], 1);
+        assert_eq!(knight["countSides"], 2);
+        assert_eq!(
+            knight["batchCandidates"],
+            serde_json::json!([
+                { "actorKindId": "demo.actor.novice-paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.white-knight", "weight": 1 },
+                { "actorKindId": "demo.actor.ultra-elite-paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.knight-templar", "weight": 1 },
+            ])
+        );
     }
 
     #[test]
@@ -16690,6 +17207,67 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         assert_eq!(nightmare["countDice"], 1);
         assert_eq!(nightmare["countSides"], 3);
         assert_eq!(nightmare["countBonus"], 2);
+        for (caster, expected_id, target, sides) in [
+            (
+                "demo.actor.zeus-king-of-the-olympians",
+                "rfb-legacy.ability.summon-shambler-l67-1d4",
+                "demo.actor.shambler",
+                4,
+            ),
+            (
+                "demo.actor.hermes-the-messenger-god",
+                "rfb-legacy.ability.summon-magic-mushroom-patch-l15-1d16",
+                "demo.actor.magic-mushroom-patch",
+                16,
+            ),
+        ] {
+            let id = map_spell_token("S_SPECIAL", 90, 2, caster, &mut abilities)
+                .unwrap_or_else(|| panic!("{caster} special should map"));
+            assert_eq!(id, expected_id);
+            let effect = &abilities[&id]["effect"];
+            assert_eq!(effect["countDice"], 1);
+            assert_eq!(effect["countSides"], sides);
+            assert_eq!(
+                effect["batchCandidates"],
+                serde_json::json!([{ "actorKindId": target, "weight": 1 }])
+            );
+        }
+        let odin_id = map_spell_token(
+            "S_SPECIAL",
+            90,
+            2,
+            "demo.actor.odin-the-all-father",
+            &mut abilities,
+        )
+        .expect("Odin special should map");
+        assert_eq!(odin_id, "rfb-legacy.ability.summon-odin-retinue-1d4-max1");
+        let odin = &abilities[&odin_id]["effect"];
+        assert_eq!(odin["countDice"], 1);
+        assert_eq!(odin["countSides"], 4);
+        assert_eq!(odin["maximumCount"], 1);
+        assert_eq!(
+            odin["batchCandidates"],
+            serde_json::json!([
+                { "actorKindId": "demo.actor.einheri-berserker", "weight": 1 },
+                { "actorKindId": "demo.actor.valkyrie", "weight": 1 },
+            ])
+        );
+        let gertrude_id =
+            map_spell_token("S_SPECIAL", 40, 3, "demo.actor.gertrude", &mut abilities)
+                .expect("Gertrude special should map");
+        assert_eq!(
+            gertrude_id,
+            "rfb-legacy.ability.summon-gertrude-sisters-l40-1d1-1"
+        );
+        let gertrude = &abilities[&gertrude_id]["effect"];
+        assert_eq!(gertrude["type"], "summon-category");
+        assert_eq!(gertrude["category"], "witch-sister");
+        assert_eq!(gertrude["maximumLevel"], 40);
+        assert_eq!(gertrude["countDice"], 1);
+        assert_eq!(gertrude["countSides"], 1);
+        assert_eq!(gertrude["countBonus"], 1);
+        assert_eq!(gertrude["maximumCount"], 2);
+        assert!(gertrude.get("batchCandidates").is_none());
         let caldarm_id = map_spell_token(
             "S_SPECIAL",
             79,
@@ -16708,6 +17286,114 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         assert_eq!(caldarm["countDice"], 1);
         assert_eq!(caldarm["countSides"], 3);
         assert!(caldarm.get("countBonus").is_none());
+        for (
+            caster,
+            expected_id,
+            category,
+            maximum_level,
+            sides,
+            bonus,
+            actor_kind_id,
+            water_flow,
+        ) in [
+            (
+                "demo.actor.varuna-lord-of-water",
+                "rfb-legacy.ability.summon-makara-l50-1d2-2",
+                "mount-meru",
+                50,
+                2,
+                2,
+                "demo.actor.makara",
+                true,
+            ),
+            (
+                "demo.actor.demeter-the-goddess-of-nature",
+                "rfb-legacy.ability.summon-ent-l46-1d4",
+                "giant",
+                46,
+                4,
+                0,
+                "demo.actor.ent",
+                false,
+            ),
+            (
+                "demo.actor.justshorn-sorcerer-king-of-the-sheeple",
+                "rfb-legacy.ability.summon-sheep-l3-1d4",
+                "sheep",
+                3,
+                4,
+                0,
+                "demo.actor.sheep",
+                false,
+            ),
+            (
+                "demo.actor.poseidon-lord-of-seas-and-storm",
+                "rfb-legacy.ability.summon-greater-kraken-l63-1d4",
+                "ocean",
+                63,
+                4,
+                0,
+                "demo.actor.greater-kraken",
+                true,
+            ),
+            (
+                "demo.actor.talos-masterwork-spellwarp-automaton",
+                "rfb-legacy.ability.summon-spellwarp-automaton-l80-1d3",
+                "nonliving",
+                80,
+                3,
+                0,
+                "demo.actor.spellwarp-automaton",
+                false,
+            ),
+            (
+                "demo.actor.brahma-the-creating-spirit",
+                "rfb-legacy.ability.summon-saraswati-l90-1d1",
+                "hindu",
+                90,
+                1,
+                0,
+                "demo.actor.saraswati-goddess-of-knowledge",
+                false,
+            ),
+            (
+                "demo.actor.saraswati-goddess-of-knowledge",
+                "rfb-legacy.ability.summon-brahma-l92-1d1",
+                "hindu",
+                92,
+                1,
+                0,
+                "demo.actor.brahma-the-creating-spirit",
+                false,
+            ),
+        ] {
+            let id = map_spell_token("S_SPECIAL", 90, 2, caster, &mut abilities)
+                .unwrap_or_else(|| panic!("{caster} special should map"));
+            assert_eq!(id, expected_id);
+            let ability = &abilities[&id];
+            let effect = &ability["effect"];
+            assert_eq!(effect["category"], category);
+            assert_eq!(effect["maximumLevel"], maximum_level);
+            assert_eq!(effect["countDice"], 1);
+            assert_eq!(effect["countSides"], sides);
+            assert_eq!(
+                effect
+                    .get("countBonus")
+                    .and_then(serde_json::Value::as_u64)
+                    .unwrap_or(0),
+                bonus
+            );
+            assert_eq!(
+                effect["batchCandidates"],
+                serde_json::json!([{ "actorKindId": actor_kind_id, "weight": 1 }])
+            );
+            assert_eq!(
+                ability["tags"]
+                    .as_array()
+                    .is_some_and(|tags| tags.iter().any(|tag| tag == "monster-water-flow")),
+                water_flow,
+            );
+        }
         assert!(
             map_spell_token(
                 "S_SPECIAL",
@@ -16717,6 +17403,30 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 &mut abilities,
             )
             .is_none()
+        );
+    }
+
+    #[test]
+    fn variant_maintainer_summons_only_software_bugs() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token(
+            "S_SOFTWARE_BUG",
+            14,
+            2,
+            "demo.actor.the-variant-maintainer",
+            &mut abilities,
+        )
+        .expect("software bug summon should map");
+        assert_eq!(id, "rfb-legacy.ability.summon-software-bug-l14-1d3-1");
+        let effect = &abilities[&id]["effect"];
+        assert_eq!(effect["countDice"], 1);
+        assert_eq!(effect["countSides"], 3);
+        assert_eq!(effect["countBonus"], 1);
+        assert_eq!(
+            effect["batchCandidates"],
+            serde_json::json!([
+                { "actorKindId": "demo.actor.software-bug", "weight": 1 }
+            ])
         );
     }
 
@@ -16752,24 +17462,32 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
     }
 
     #[test]
-    fn heimdall_pantheon_summon_targets_norse_uniques() {
+    fn pantheon_summons_follow_the_casters_pantheon() {
         let mut abilities = BTreeMap::new();
-        let id = map_spell_token(
-            "S_PANTHEON",
-            77,
-            3,
-            "demo.actor.heimdall-guardian-of-bifrost",
-            &mut abilities,
-        )
-        .expect("Heimdall pantheon summon should map");
-        assert_eq!(id, "rfb-legacy.ability.summon-norse-l77-1d2");
-        let effect = &abilities[&id]["effect"];
-        assert_eq!(effect["type"], "summon-category");
-        assert_eq!(effect["category"], "norse");
-        assert_eq!(effect["maximumLevel"], 77);
-        assert_eq!(effect["countDice"], 1);
-        assert_eq!(effect["countSides"], 2);
-        assert!(effect.get("countBonus").is_none());
+        for (caster, category) in [
+            ("heimdall-guardian-of-bifrost", "norse"),
+            ("odin-the-all-father", "norse"),
+            ("indra-the-heavenly-king-of-meru", "hindu"),
+            ("zeus-king-of-the-olympians", "olympian"),
+            ("amun-the-mysterious", "egyptian"),
+        ] {
+            let id = map_spell_token(
+                "S_PANTHEON",
+                77,
+                3,
+                &format!("demo.actor.{caster}"),
+                &mut abilities,
+            )
+            .unwrap_or_else(|| panic!("{caster} pantheon summon should map"));
+            assert_eq!(id, format!("rfb-legacy.ability.summon-{category}-l77-1d2"));
+            let effect = &abilities[&id]["effect"];
+            assert_eq!(effect["type"], "summon-category");
+            assert_eq!(effect["category"], category);
+            assert_eq!(effect["maximumLevel"], 77);
+            assert_eq!(effect["countDice"], 1);
+            assert_eq!(effect["countSides"], 2);
+            assert!(effect.get("countBonus").is_none());
+        }
         assert!(
             map_spell_token(
                 "S_PANTHEON",
@@ -16779,6 +17497,231 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 &mut abilities,
             )
             .is_none()
+        );
+    }
+
+    #[test]
+    fn p76_spell_mappings_keep_unique_family_air_chicken_and_no_air_semantics() {
+        let mut abilities = BTreeMap::new();
+
+        let unique = map_spell_token(
+            "S_UNIQUE",
+            83,
+            3,
+            "demo.actor.ptah-the-divine-craftsman",
+            &mut abilities,
+        )
+        .expect("S_UNIQUE should map");
+        assert_eq!(abilities[&unique]["effect"]["category"], "unique");
+        assert_eq!(abilities[&unique]["effect"]["maximumLevel"], 83);
+        assert_eq!(abilities[&unique]["effect"]["countDice"], 1);
+        assert_eq!(abilities[&unique]["effect"]["countSides"], 2);
+
+        let family = map_spell_token(
+            "S_SPECIAL",
+            86,
+            3,
+            "demo.actor.athena-the-goddess-of-wisdom",
+            &mut abilities,
+        )
+        .expect("Athena family summon should map");
+        assert_eq!(abilities[&family]["effect"]["type"], "no-op");
+        assert!(
+            abilities[&family]["tags"]
+                .as_array()
+                .is_some_and(|tags| { tags.iter().any(|tag| tag == "monster-family-summon") })
+        );
+
+        let air = map_spell_token(
+            "BR_AIR",
+            86,
+            3,
+            "demo.actor.vayu-the-embodied-wind",
+            &mut abilities,
+        )
+        .expect("BR_AIR should map");
+        assert_eq!(abilities[&air]["effect"]["type"], "breath-damage");
+        assert_eq!(abilities[&air]["effect"]["damageType"], "force");
+        assert_eq!(abilities[&air]["effect"]["hpPercent"], 17);
+        assert_eq!(abilities[&air]["effect"]["maxDamage"], 250);
+
+        let chicken = map_spell_token(
+            "CHICKEN(200)",
+            83,
+            3,
+            "demo.actor.aijem-the-walrus",
+            &mut abilities,
+        )
+        .expect("CHICKEN should map");
+        assert_eq!(abilities[&chicken]["effect"]["type"], "damage");
+        assert_eq!(abilities[&chicken]["effect"]["damageDice"], 1);
+        assert_eq!(abilities[&chicken]["effect"]["damageSides"], 1);
+        assert_eq!(abilities[&chicken]["effect"]["damageBonus"], 199);
+
+        let no_air = map_spell_token(
+            "NO_AIR",
+            86,
+            3,
+            "demo.actor.vayu-the-embodied-wind",
+            &mut abilities,
+        )
+        .expect("NO_AIR should map");
+        assert_eq!(
+            abilities[&no_air]["effect"]["statusKindId"],
+            "rfb.status.no-air"
+        );
+        assert_eq!(abilities[&no_air]["effect"]["durationTicks"], 40);
+
+        let pantheon = map_spell_token(
+            "S_PANTHEON",
+            86,
+            3,
+            "demo.actor.aphrodite-the-goddess-of-love",
+            &mut abilities,
+        )
+        .expect("Aphrodite pantheon summon should map");
+        assert_eq!(abilities[&pantheon]["effect"]["category"], "olympian");
+
+        let serpent = map_spell_token(
+            "S_SERPENT",
+            94,
+            3,
+            "demo.actor.shiva-the-destroyer",
+            &mut abilities,
+        )
+        .expect("S_SERPENT should map");
+        assert_eq!(abilities[&serpent]["effect"]["category"], "kin-glyph-74");
+    }
+
+    #[test]
+    fn p76_contact_effects_preserve_stun_time_and_unlife_without_fake_damage() {
+        let mut monsters = parse_r_info(
+            "N:1:test P76 auras\nG:P:r\nI:130:70d100:30:120:0:100\nW:90:3:999:30000:0:0\nB:HIT:HURT(1d1)\nA:HOLY_FIRE(4d4):STUN(1d3, 50%):TIME(1d3, 20%):UNLIFE(2d6, 50%)\n",
+        )
+        .expect("synthetic P76 aura monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1,
+                source_id: None,
+                id: "test-p76-auras".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("P76 contact effects should import");
+
+        assert_eq!(actor["contactAuras"][0]["damageType"], "holy-fire");
+        assert_eq!(actor["contactAuras"][1]["damageType"], "time");
+        assert_eq!(actor["contactAuras"][1]["ravagesTime"], true);
+        assert_eq!(
+            actor["contactEffects"],
+            serde_json::json!([
+                {"type": "stun", "durationDice": 1, "durationSides": 3, "chancePercent": 50},
+                {"type": "unlife", "amountDice": 2, "amountSides": 6, "chancePercent": 50}
+            ])
+        );
+    }
+
+    #[test]
+    fn p77_guardian_and_dead_unique_summons_keep_their_narrow_semantics() {
+        let mut abilities = BTreeMap::new();
+        let guardian = map_spell_token(
+            "S_GUARDIAN",
+            100,
+            3,
+            "demo.actor.the-serpent-of-chaos",
+            &mut abilities,
+        )
+        .expect("S_GUARDIAN should map");
+        assert_eq!(abilities[&guardian]["effect"]["category"], "guardian");
+        assert_eq!(abilities[&guardian]["effect"]["countDice"], 1);
+        assert_eq!(abilities[&guardian]["effect"]["countSides"], 2);
+        assert_eq!(abilities[&guardian]["effect"]["maximumLevel"], 99);
+
+        let dead_unique = map_spell_token(
+            "S_DEAD_UNIQ",
+            100,
+            3,
+            "demo.actor.the-resurrection-machine",
+            &mut abilities,
+        )
+        .expect("S_DEAD_UNIQ should map");
+        assert_eq!(abilities[&dead_unique]["effect"]["category"], "unique");
+        assert_eq!(abilities[&dead_unique]["effect"]["countDice"], 1);
+        assert_eq!(abilities[&dead_unique]["effect"]["countSides"], 2);
+        assert!(
+            abilities[&dead_unique]["tags"]
+                .as_array()
+                .expect("ability tags")
+                .iter()
+                .any(|tag| tag == "monster-dead-unique-summon")
+        );
+    }
+
+    #[test]
+    fn p77_guardian_and_serpent_contact_auras_import_without_omission() {
+        let mut monsters = parse_r_info(
+            "N:862:The Serpent of Chaos\nG:J:v\nI:155:200d150:25:130:0:100\nW:100:1:999:300000:0:0\nB:CRUSH:SHATTER(19d10)\nA:SHARDS(4d6):CHAOS(6d6, 20%):DISENCHANT(3d3, 10%)\nF:GUARDIAN | FIXED_UNIQUE\nS:1_IN_3 | S_GUARDIAN\n",
+        )
+        .expect("synthetic Serpent should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 862,
+                source_id: None,
+                id: "the-serpent-of-chaos".to_owned(),
+                tags: vec!["fixed-placement".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("P77 Serpent mechanics should import");
+
+        assert!(
+            actor["tags"]
+                .as_array()
+                .expect("actor tags")
+                .iter()
+                .any(|tag| tag == "guardian")
+        );
+        assert_eq!(
+            actor["contactAuras"],
+            serde_json::json!([
+                {"damageDice": 4, "damageSides": 6, "damageType": "shards"},
+                {"chancePercent": 20, "damageDice": 6, "damageSides": 6, "damageType": "chaos"},
+                {"chancePercent": 10, "damageDice": 3, "damageSides": 3, "damageType": "disenchant"}
+            ])
+        );
+        assert!(actor.get("allocation").is_none());
+    }
+
+    #[test]
+    fn p76_artemis_is_the_narrow_no_melee_family_summoner_exception() {
+        let mut monsters = parse_r_info(
+            "N:1103:Artemis, the Moon Goddess\nG:P:s\nI:130:70d100:30:120:0:100\nW:86:3:999:30000:0:0\nS:1_IN_3 | S_SPECIAL\n",
+        )
+        .expect("synthetic Artemis should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1103,
+                source_id: None,
+                id: "artemis-the-moon-goddess".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("Artemis should import without invented blows");
+        assert_eq!(
+            actor["meleeRoutine"]["blows"],
+            serde_json::json!([]),
+            "Artemis keeps an explicitly empty routine instead of invented blows"
         );
     }
 
@@ -17247,6 +18190,24 @@ A:1/1
         let entry = &selection.items[0];
         assert_eq!(entry.expected_source_id(), "set-of-leather-gloves");
         assert_eq!(entry.id, "leather-gloves");
+    }
+
+    #[test]
+    fn demo_monster_selection_can_keep_a_stable_id_distinct_from_the_source_name() {
+        let selection: DemoMonsterSelection = serde_json::from_value(serde_json::json!({
+            "schemaVersion": 1,
+            "monsters": [{
+                "sourceIndex": 135,
+                "sourceId": "mughash-the-kobold-lord",
+                "id": "warrens-keeper",
+                "tags": ["warrens"]
+            }]
+        }))
+        .expect("selection alias should parse");
+
+        let entry = &selection.monsters[0];
+        assert_eq!(entry.expected_source_id(), "mughash-the-kobold-lord");
+        assert_eq!(entry.id, "warrens-keeper");
     }
 
     #[test]

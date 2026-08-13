@@ -116,6 +116,7 @@
   "role": "monster",
   "speed": 120,
   "tags": [
+    "cyber",
     "demon",
     "evil",
     "kin-glyph-85",

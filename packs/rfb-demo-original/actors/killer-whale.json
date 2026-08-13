@@ -1,0 +1,75 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "ocean"
+    ],
+    "legacyIndex": 363,
+    "maxDepth": 80,
+    "rarity": 1,
+    "wildOnly": true
+  },
+  "attack": 5,
+  "damageDice": 8,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 5,
+  "descriptionKey": "actor-demo-killer-whale-description",
+  "experienceValue": 85,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 30,
+    "sides": 10
+  },
+  "id": "demo.actor.killer-whale",
+  "level": 22,
+  "maxHp": 165,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-killer-whale-name",
+  "resistances": {
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 115,
+  "tags": [
+    "animal",
+    "kin-glyph-108",
+    "legacy-import",
+    "ocean"
+  ]
+}

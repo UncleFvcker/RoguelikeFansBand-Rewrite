@@ -5,9 +5,71 @@ use super::monster_ecology::{BANOR_KIND_ID, BANOR_RUPART_COMBINED_KIND_ID, RUPAR
 use super::*;
 
 const BANOR_RUPART_TRANSFORM_TAG: &str = "monster-banor-rupart-transform";
+const MONSTER_AIR_BREATH_TAG: &str = "monster-air-breath";
+const MONSTER_CHICKEN_TAG: &str = "monster-chicken";
+pub(super) const MONSTER_DEAD_UNIQUE_SUMMON_TAG: &str = "monster-dead-unique-summon";
+const MONSTER_FAMILY_SUMMON_TAG: &str = "monster-family-summon";
 const MONSTER_WATER_FLOW_TAG: &str = "monster-water-flow";
 const MONSTER_WATER_FLOW_TERRAIN_ID: &str = "demo.terrain.surface-water-deep";
 const MONSTER_WATER_FLOW_RADIUS: u8 = 8;
+const MONSTER_LAVA_FLOW_TERRAIN_ID: &str = "demo.terrain.surface-lava-deep";
+const MONSTER_FAMILY_SUMMON_DURATION_TURNS: u16 = 10_000;
+const MONSTER_DEAD_UNIQUE_DISINTEGRATION_RADIUS: u8 = 5;
+const STAR_BLADE_KIND_ID: &str = "demo.actor.star-blade";
+
+fn monster_family_summon_candidates(source_kind_id: &str) -> Option<&'static [&'static str]> {
+    Some(match source_kind_id {
+        "demo.actor.athena-the-goddess-of-wisdom" => &[
+            "demo.actor.zeus-king-of-the-olympians",
+            "demo.actor.ultimate-magus",
+        ],
+        "demo.actor.ares-the-god-of-war" => &[
+            "demo.actor.zeus-king-of-the-olympians",
+            "demo.actor.hera-queen-of-the-gods",
+        ],
+        "demo.actor.apollo-the-sun-god" => &[
+            "demo.actor.artemis-the-moon-goddess",
+            "demo.actor.fenghuang",
+        ],
+        "demo.actor.artemis-the-moon-goddess" => &["demo.actor.apollo-the-sun-god"],
+        "demo.actor.hephaestus-the-smith-god" => &[
+            "demo.actor.zeus-king-of-the-olympians",
+            "demo.actor.hera-queen-of-the-gods",
+            "demo.actor.spellwarp-automaton",
+        ],
+        "demo.actor.hades-ruler-of-the-underworld" => {
+            &["demo.actor.greater-balrog", "demo.actor.archlich"]
+        }
+        "demo.actor.hera-queen-of-the-gods" => &[
+            "demo.actor.ares-the-god-of-war",
+            "demo.actor.hephaestus-the-smith-god",
+            "demo.actor.death-beast",
+        ],
+        "demo.actor.osiris-the-reborn" => &[
+            "demo.actor.horus-the-ancient",
+            "demo.actor.isis-the-great-goddess",
+        ],
+        "demo.actor.lakshmi-the-goddess-of-prosperity" => &["demo.actor.vishnu-the-preserver"],
+        "demo.actor.vishnu-the-preserver" => &[
+            "demo.actor.rama-the-exiled-prince",
+            "demo.actor.krishna-avatar-of-vishnu",
+            "demo.actor.lakshmi-the-goddess-of-prosperity",
+            "demo.actor.shesha-the-infinite",
+        ],
+        "demo.actor.shiva-the-destroyer" => &[
+            "demo.actor.parvati-the-goddess-of-hidden-power",
+            "demo.actor.ganesha-the-elephant-god",
+            "demo.actor.karthikeya-the-six-headed-warrior",
+            "demo.actor.vasuki-the-serpent-king",
+        ],
+        "demo.actor.parvati-the-goddess-of-hidden-power" => &[
+            "demo.actor.karthikeya-the-six-headed-warrior",
+            "demo.actor.ganesha-the-elephant-god",
+            "demo.actor.shiva-the-destroyer",
+        ],
+        _ => return None,
+    })
+}
 
 fn prepare_curse_damage(
     rolled: i32,
@@ -27,6 +89,16 @@ fn prepare_curse_damage(
         damage.min(current_hp.saturating_sub(1))
     } else {
         damage
+    }
+}
+
+fn rfb_monster_stun_amount(damage: i32) -> i32 {
+    let damage = damage.max(1);
+    match damage {
+        1..=10 => damage,
+        11..=100 => 10 + (damage - 10) * 15 / 90,
+        101..=500 => 25 + (damage - 100) * 25 / 400,
+        _ => 50,
     }
 }
 
@@ -58,12 +130,15 @@ impl Game {
                 .max(1),
         )
         .unwrap_or(1);
-        let unique_bonus = definition
+        let unique_bonus = if definition
             .tags
             .iter()
             .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
-            .then(|| definition.level / 5)
-            .unwrap_or(0);
+        {
+            definition.level / 5
+        } else {
+            0
+        };
         let monster_power = u64::from(definition.level.saturating_add(unique_bonus).max(1));
         let mut monster_saves = || {
             let player_roll = self.rng.bounded(player_power) + 1;
@@ -76,6 +151,314 @@ impl Game {
         entity.friendly = true;
         if !monster_saves() {
             entity.controller_id = Some(self.player.id.clone());
+        }
+    }
+
+    fn resolve_monster_chicken_riders(
+        &mut self,
+        source_index: usize,
+        source_entity_id: &str,
+        source_kind_id: &str,
+        target: &MonsterHostileTarget,
+    ) {
+        if !target.is_player() || self.player_is_dead() {
+            return;
+        }
+        let sound_resistance = self.effective_player_resistances().level(DamageType::Sound);
+        self.record_monster_player_resistance(
+            source_entity_id,
+            DamageType::Sound,
+            sound_resistance,
+        );
+        if matches!(
+            sound_resistance,
+            ResistanceLevel::Vulnerable | ResistanceLevel::Normal
+        ) {
+            let duration = self.roll_damage(1, 20);
+            self.apply_player_melee_status(STATUS_STUN, duration, source_kind_id);
+        }
+        let fear_resistance = self.effective_player_resistances().level(DamageType::Fear);
+        self.record_monster_player_resistance(source_entity_id, DamageType::Fear, fear_resistance);
+        let fear_duration = self
+            .actor_runtime_definition(&self.entities[source_index])
+            .map_or(1, super::monster_combat::melee_terrify_duration);
+        let duration = resisted_status_duration(
+            u32::try_from(fear_duration).unwrap_or(u32::MAX),
+            fear_resistance,
+        );
+        self.apply_player_melee_status(
+            STATUS_FEAR,
+            i32::try_from(duration).unwrap_or(i32::MAX),
+            source_kind_id,
+        );
+    }
+
+    fn dead_unique_resurrection_candidates(&self, maximum_level: u16) -> Vec<(String, u32)> {
+        let in_task = self.current_floor_task_id().is_some();
+        let in_wilderness = self.is_wilderness_floor();
+        let mut candidates = self
+            .content
+            .actor_definitions()
+            .filter(|definition| {
+                let camelot = definition
+                    .allocation
+                    .as_ref()
+                    .is_some_and(|allocation| allocation.legacy_dungeon_indices.contains(&2));
+                definition.role == ActorRole::Monster
+                    && definition.finite_lifetime_instance_limit() == Some(1)
+                    && definition.level <= u32::from(maximum_level)
+                    && (definition.level >= 45 || camelot)
+                    && self
+                        .defeated_limited_actor_counts
+                        .get(&definition.id)
+                        .is_some_and(|count| *count > 0)
+                    && self.actor_kind_occupied_instance_count(&definition.id) == 0
+                    && !definition
+                        .movement
+                        .modes
+                        .contains(&ActorMovementMode::Aquatic)
+                    && actor_answers_summons(definition)
+                    && !(in_wilderness
+                        && definition.tags.iter().any(|tag| tag == "evil")
+                        && !definition.tags.iter().any(|tag| tag == "good"))
+                    && !(in_task && definition.tags.iter().any(|tag| tag == "no-quest"))
+            })
+            .map(|definition| {
+                let rarity_weight = definition
+                    .allocation
+                    .as_ref()
+                    .map_or(1, |allocation| (100 / allocation.rarity).max(1));
+                let level_delta = u32::from(maximum_level).saturating_sub(definition.level);
+                let weight = rarity_weight
+                    .checked_shr(level_delta / 8)
+                    .unwrap_or(0)
+                    .max(1);
+                (
+                    definition.id.clone(),
+                    definition.level,
+                    definition
+                        .allocation
+                        .as_ref()
+                        .map_or(u32::MAX, |allocation| allocation.legacy_index),
+                    weight,
+                )
+            })
+            .collect::<Vec<_>>();
+        candidates.sort_by_key(|(_, level, legacy_index, _)| (*level, *legacy_index));
+        candidates
+            .into_iter()
+            .map(|(id, _, _, weight)| (id, weight))
+            .collect()
+    }
+
+    fn resolve_dead_unique_disintegration(
+        &mut self,
+        ability_id: &str,
+        center: Position,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Vec<Position> {
+        let radius = i32::from(MONSTER_DEAD_UNIQUE_DISINTEGRATION_RADIUS);
+        let mut footprint = Vec::new();
+        for y in center.y - radius..=center.y + radius {
+            for x in center.x - radius..=center.x + radius {
+                let position = Position { x, y };
+                if self.index(position).is_some()
+                    && rfb_distance(center, position)
+                        <= u32::from(MONSTER_DEAD_UNIQUE_DISINTEGRATION_RADIUS)
+                {
+                    footprint.push(position);
+                }
+            }
+        }
+        self.resolve_ground_item_projectile_effects(
+            ability_id,
+            &footprint,
+            DamageType::Disintegrate,
+            false,
+            events,
+            changed,
+            removed_entities,
+        );
+
+        let connections = self
+            .floor_connections
+            .iter()
+            .map(|connection| connection.position)
+            .collect::<BTreeSet<_>>();
+        let mut replacements = Vec::new();
+        for position in footprint {
+            if connections.contains(&position) {
+                continue;
+            }
+            let Some(index) = self.index(position) else {
+                continue;
+            };
+            let Some(terrain) = self.content.terrain(&self.terrain[index]) else {
+                continue;
+            };
+            if terrain.tags.iter().any(|tag| tag == "permanent") {
+                continue;
+            }
+            let target_id = terrain
+                .monster_destroy_to_terrain_id
+                .as_ref()
+                .or_else(|| {
+                    terrain
+                        .digging
+                        .as_ref()
+                        .and_then(|digging| digging.result_terrain_id.as_ref())
+                })
+                .or(terrain.bash_to_terrain_id.as_ref());
+            if let Some(target_id) = target_id
+                && target_id != &terrain.id
+            {
+                replacements.push((position, terrain.id.clone(), target_id.clone()));
+            }
+        }
+
+        let mut groups = BTreeMap::<(String, String), Vec<Position>>::new();
+        for (position, source_id, target_id) in replacements {
+            self.replace_terrain_from_source(
+                position,
+                &target_id,
+                super::terrain::TerrainChangeSource::Monster,
+                events,
+                changed,
+            );
+            groups
+                .entry((source_id, target_id))
+                .or_default()
+                .push(position);
+        }
+        let mut transformed = Vec::new();
+        for ((source_id, target_id), positions) in groups {
+            transformed.extend(positions.iter().copied());
+            events.push(DomainEvent::AbilityTerrainTransformed {
+                ability_id: ability_id.to_owned(),
+                resolution: AbilityTerrainTransformResolutionDto {
+                    center,
+                    radius: MONSTER_DEAD_UNIQUE_DISINTEGRATION_RADIUS,
+                    source_terrain_ids: vec![source_id],
+                    target_terrain_id: target_id,
+                    transformed_positions: positions,
+                },
+            });
+        }
+        transformed
+    }
+
+    fn resolve_monster_dead_unique_summon_plan(
+        &mut self,
+        source_index: usize,
+        plan: &MonsterAbilityPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> MonsterAbilityPlanResolution {
+        let AbilityEffectDefinition::SummonCategory {
+            maximum_level,
+            count_dice,
+            count_sides,
+            count_bonus,
+            maximum_count,
+            radius,
+            duration_turns,
+            ..
+        } = plan.ability.effect
+        else {
+            unreachable!("dead-unique summon must retain its category effect");
+        };
+        let owner_id = self.entities[source_index].id.clone();
+        let source_kind_id = self.entities[source_index].kind_id.clone();
+        let origin = self.entities[source_index].position;
+        let rolled = self
+            .roll_damage(u16::from(count_dice), u16::from(count_sides))
+            .saturating_add(i32::from(count_bonus))
+            .max(1);
+        let count = usize::try_from(rolled)
+            .unwrap_or(1)
+            .min(maximum_count.map_or(usize::MAX, usize::from));
+        let mut affected_positions = Vec::new();
+        let mut candidates = self.dead_unique_resurrection_candidates(maximum_level);
+        let mut entity_ids = Vec::with_capacity(count);
+        let mut summoned_kind_ids = Vec::with_capacity(count);
+        let mut positions = Vec::with_capacity(count);
+
+        for _ in 0..count {
+            affected_positions.extend(self.resolve_dead_unique_disintegration(
+                &plan.ability.id,
+                origin,
+                events,
+                changed,
+                removed_entities,
+            ));
+            let kind_id = if candidates.is_empty() || self.rng.bounded(13) == 0 {
+                STAR_BLADE_KIND_ID.to_owned()
+            } else {
+                let weights = candidates
+                    .iter()
+                    .map(|(_, weight)| *weight)
+                    .collect::<Vec<_>>();
+                candidates[self.roll_weighted_index(&weights)].0.clone()
+            };
+            let Some(position) = self
+                .open_positions_around_for_actor_kind(origin, radius, &kind_id)
+                .into_iter()
+                .next()
+            else {
+                continue;
+            };
+            let definition = self
+                .content
+                .actor(&kind_id)
+                .expect("dead-unique fallback actor must remain available")
+                .clone();
+            let id = self.summon_entity_id(&plan.ability.id, entity_ids.len());
+            let mut entity = spawn_actor_from_definition(
+                &mut self.rng,
+                &definition,
+                &id,
+                position,
+                INITIAL_MONSTER_ENERGY_NEED,
+                true,
+            );
+            self.maybe_initialize_chameleon_form(&mut entity);
+            entity.summon = Some(SummonIdentity {
+                owner_id: owner_id.clone(),
+                source_ability_id: plan.ability.id.clone(),
+                remaining_turns: duration_turns,
+            });
+            changed.insert(position);
+            affected_positions.push(position);
+            entity_ids.push(id);
+            summoned_kind_ids.push(kind_id.clone());
+            positions.push(position);
+            self.entities.push(entity);
+            if kind_id != STAR_BLADE_KIND_ID {
+                candidates.retain(|(candidate, _)| candidate != &kind_id);
+            }
+        }
+        affected_positions.sort_unstable_by_key(|position| (position.y, position.x));
+        affected_positions.dedup();
+        MonsterAbilityPlanResolution {
+            target_entity_id: owner_id.clone(),
+            target_kind_id: source_kind_id,
+            affected_positions,
+            summon: Some(AbilitySummonResolutionDto {
+                owner_id,
+                actor_kind_id: "dead-unique".to_owned(),
+                entity_ids,
+                positions,
+                duration_turns,
+                hostile: false,
+                group: false,
+                summoned_kind_ids,
+            }),
+            effects: Vec::new(),
+            targets: Vec::new(),
+            trace: None,
         }
     }
 
@@ -237,13 +620,18 @@ impl Game {
         }
     }
 
-    fn monster_water_flow_positions(&self, center: Position) -> Vec<Position> {
+    fn monster_flow_positions(
+        &self,
+        center: Position,
+        terrain_id: &str,
+        radius: u8,
+    ) -> Vec<Position> {
         let connections = self
             .floor_connections
             .iter()
             .map(|connection| connection.position)
             .collect::<BTreeSet<_>>();
-        self.area_damage_cells(center, MONSTER_WATER_FLOW_RADIUS)
+        self.area_damage_cells(center, radius)
             .into_iter()
             .map(|(_, position)| position)
             .filter(|position| !connections.contains(position))
@@ -251,13 +639,258 @@ impl Game {
                 let index = self
                     .index(*position)
                     .expect("water-flow footprint positions must remain in bounds");
-                self.terrain[index] != MONSTER_WATER_FLOW_TERRAIN_ID
+                self.terrain[index] != terrain_id
                     && self
                         .content
                         .terrain(&self.terrain[index])
                         .is_some_and(|terrain| !terrain.tags.iter().any(|tag| tag == "permanent"))
             })
             .collect()
+    }
+
+    fn monster_family_actor_is_available(&self, actor_kind_id: &str) -> bool {
+        self.content.actor(actor_kind_id).is_some()
+            && self.actor_kind_available_instance_count(actor_kind_id) > 0
+    }
+
+    fn resolve_monster_family_summon_plan(
+        &mut self,
+        source_index: usize,
+        plan: &MonsterAbilityPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> MonsterAbilityPlanResolution {
+        let source_kind_id = self.entities[source_index].kind_id.clone();
+        let owner_id = self.entities[source_index].id.clone();
+        let origin = self.entities[source_index].position;
+        let one_in = |game: &mut Self, sides: u64| game.rng.bounded(sides) == 0;
+        let available =
+            |game: &Self, kind_id: &str| game.monster_family_actor_is_available(kind_id);
+        let repeated = |kind_ids: &[&'static str], count: usize| {
+            (0..count)
+                .flat_map(|_| kind_ids.iter().copied())
+                .collect::<Vec<_>>()
+        };
+
+        let requested_kind_ids = match source_kind_id.as_str() {
+            "demo.actor.hades-ruler-of-the-underworld" => {
+                let count = usize::try_from(self.roll_damage(1, 2)).unwrap_or(1);
+                repeated(&["demo.actor.greater-balrog", "demo.actor.archlich"], count)
+            }
+            "demo.actor.athena-the-goddess-of-wisdom" => {
+                if one_in(self, 3) && available(self, "demo.actor.zeus-king-of-the-olympians") {
+                    vec!["demo.actor.zeus-king-of-the-olympians"]
+                } else {
+                    let count = usize::try_from(self.roll_damage(1, 2)).unwrap_or(1);
+                    repeated(&["demo.actor.ultimate-magus"], count)
+                }
+            }
+            "demo.actor.ares-the-god-of-war" => vec![
+                "demo.actor.zeus-king-of-the-olympians",
+                "demo.actor.hera-queen-of-the-gods",
+            ],
+            "demo.actor.apollo-the-sun-god" => {
+                if one_in(self, 3) && available(self, "demo.actor.artemis-the-moon-goddess") {
+                    vec!["demo.actor.artemis-the-moon-goddess"]
+                } else {
+                    let initial_count = usize::try_from(self.roll_damage(1, 4)).unwrap_or(1);
+                    repeated(&["demo.actor.fenghuang"], initial_count)
+                }
+            }
+            "demo.actor.artemis-the-moon-goddess" => vec!["demo.actor.apollo-the-sun-god"],
+            "demo.actor.hephaestus-the-smith-god" => {
+                if one_in(self, 3) && available(self, "demo.actor.zeus-king-of-the-olympians") {
+                    vec!["demo.actor.zeus-king-of-the-olympians"]
+                } else if one_in(self, 3) && available(self, "demo.actor.hera-queen-of-the-gods") {
+                    vec!["demo.actor.hera-queen-of-the-gods"]
+                } else {
+                    let initial_count = usize::try_from(self.roll_damage(1, 4)).unwrap_or(1);
+                    repeated(&["demo.actor.spellwarp-automaton"], initial_count)
+                }
+            }
+            "demo.actor.hera-queen-of-the-gods" => {
+                if one_in(self, 3) && available(self, "demo.actor.ares-the-god-of-war") {
+                    vec!["demo.actor.ares-the-god-of-war"]
+                } else if one_in(self, 3) && available(self, "demo.actor.hephaestus-the-smith-god")
+                {
+                    vec!["demo.actor.hephaestus-the-smith-god"]
+                } else {
+                    let initial_count = usize::try_from(self.roll_damage(1, 4)).unwrap_or(1);
+                    repeated(&["demo.actor.death-beast"], initial_count)
+                }
+            }
+            "demo.actor.osiris-the-reborn" => vec![
+                "demo.actor.horus-the-ancient",
+                "demo.actor.isis-the-great-goddess",
+            ],
+            "demo.actor.lakshmi-the-goddess-of-prosperity" => {
+                vec!["demo.actor.vishnu-the-preserver"]
+            }
+            "demo.actor.vishnu-the-preserver" => {
+                let avatar_available = available(self, "demo.actor.rama-the-exiled-prince")
+                    || available(self, "demo.actor.krishna-avatar-of-vishnu");
+                if one_in(self, 3) && avatar_available {
+                    vec![
+                        "demo.actor.rama-the-exiled-prince",
+                        "demo.actor.krishna-avatar-of-vishnu",
+                    ]
+                } else if one_in(self, 2)
+                    && available(self, "demo.actor.lakshmi-the-goddess-of-prosperity")
+                {
+                    vec!["demo.actor.lakshmi-the-goddess-of-prosperity"]
+                } else {
+                    vec!["demo.actor.shesha-the-infinite"]
+                }
+            }
+            "demo.actor.shiva-the-destroyer" => {
+                let family_available = [
+                    "demo.actor.parvati-the-goddess-of-hidden-power",
+                    "demo.actor.ganesha-the-elephant-god",
+                    "demo.actor.karthikeya-the-six-headed-warrior",
+                ]
+                .into_iter()
+                .any(|kind_id| available(self, kind_id));
+                if !one_in(self, 3) && family_available {
+                    let mut first = "demo.actor.karthikeya-the-six-headed-warrior";
+                    let mut second = "demo.actor.ganesha-the-elephant-god";
+                    if !available(self, first) {
+                        first = "demo.actor.parvati-the-goddess-of-hidden-power";
+                    } else if !available(self, second) {
+                        second = "demo.actor.parvati-the-goddess-of-hidden-power";
+                    } else if available(self, "demo.actor.parvati-the-goddess-of-hidden-power")
+                        && !one_in(self, 3)
+                    {
+                        if one_in(self, 2) {
+                            first = "demo.actor.parvati-the-goddess-of-hidden-power";
+                        } else {
+                            second = "demo.actor.parvati-the-goddess-of-hidden-power";
+                        }
+                    }
+                    vec![first, second]
+                } else {
+                    // The authoritative source assigns Nandi and immediately
+                    // overwrites it with Vasuki; preserve the resulting target.
+                    vec!["demo.actor.vasuki-the-serpent-king"]
+                }
+            }
+            "demo.actor.parvati-the-goddess-of-hidden-power" => {
+                let mut first = "demo.actor.karthikeya-the-six-headed-warrior";
+                let mut second = "demo.actor.ganesha-the-elephant-god";
+                if !available(self, first) && one_in(self, 2) {
+                    first = "demo.actor.shiva-the-destroyer";
+                } else if !available(self, second) && one_in(self, 2) {
+                    second = "demo.actor.shiva-the-destroyer";
+                } else if available(self, "demo.actor.shiva-the-destroyer") && one_in(self, 4) {
+                    if one_in(self, 2) {
+                        first = "demo.actor.shiva-the-destroyer";
+                    } else {
+                        second = "demo.actor.shiva-the-destroyer";
+                    }
+                }
+                vec![first, second]
+            }
+            _ => unreachable!("validated family summoner must retain a runtime branch"),
+        };
+
+        let mut affected_positions = Vec::new();
+        if source_kind_id == "demo.actor.hades-ruler-of-the-underworld" {
+            let transformed_positions = self.monster_flow_positions(
+                origin,
+                MONSTER_LAVA_FLOW_TERRAIN_ID,
+                MONSTER_WATER_FLOW_RADIUS,
+            );
+            let source_terrain_ids = transformed_positions
+                .iter()
+                .filter_map(|position| {
+                    self.index(*position)
+                        .map(|index| self.terrain[index].clone())
+                })
+                .collect::<BTreeSet<_>>()
+                .into_iter()
+                .collect::<Vec<_>>();
+            for position in &transformed_positions {
+                self.replace_terrain_from_source(
+                    *position,
+                    MONSTER_LAVA_FLOW_TERRAIN_ID,
+                    super::terrain::TerrainChangeSource::Monster,
+                    events,
+                    changed,
+                );
+            }
+            events.push(DomainEvent::AbilityTerrainTransformed {
+                ability_id: plan.ability.id.clone(),
+                resolution: AbilityTerrainTransformResolutionDto {
+                    center: origin,
+                    radius: MONSTER_WATER_FLOW_RADIUS,
+                    source_terrain_ids,
+                    target_terrain_id: MONSTER_LAVA_FLOW_TERRAIN_ID.to_owned(),
+                    transformed_positions: transformed_positions.clone(),
+                },
+            });
+            affected_positions = transformed_positions;
+        }
+
+        let mut entity_ids = Vec::new();
+        let mut summoned_kind_ids = Vec::new();
+        let mut positions = Vec::new();
+        for kind_id in requested_kind_ids {
+            if !self.monster_family_actor_is_available(kind_id) {
+                continue;
+            }
+            let Some(position) = self
+                .open_positions_around_for_actor_kind(origin, 2, kind_id)
+                .into_iter()
+                .next()
+            else {
+                continue;
+            };
+            let definition = self
+                .content
+                .actor(kind_id)
+                .expect("validated family summon candidate must remain available")
+                .clone();
+            let id = self.summon_entity_id(&plan.ability.id, entity_ids.len());
+            let mut entity = spawn_actor_from_definition(
+                &mut self.rng,
+                &definition,
+                &id,
+                position,
+                INITIAL_MONSTER_ENERGY_NEED,
+                true,
+            );
+            self.maybe_initialize_chameleon_form(&mut entity);
+            entity.summon = Some(SummonIdentity {
+                owner_id: owner_id.clone(),
+                source_ability_id: plan.ability.id.clone(),
+                remaining_turns: MONSTER_FAMILY_SUMMON_DURATION_TURNS,
+            });
+            changed.insert(position);
+            affected_positions.push(position);
+            entity_ids.push(id);
+            summoned_kind_ids.push(kind_id.to_owned());
+            positions.push(position);
+            self.entities.push(entity);
+        }
+        affected_positions.sort_unstable_by_key(|position| (position.y, position.x));
+        affected_positions.dedup();
+        MonsterAbilityPlanResolution {
+            target_entity_id: owner_id.clone(),
+            target_kind_id: source_kind_id,
+            affected_positions,
+            summon: Some(AbilitySummonResolutionDto {
+                owner_id,
+                actor_kind_id: "family".to_owned(),
+                entity_ids,
+                positions,
+                duration_turns: MONSTER_FAMILY_SUMMON_DURATION_TURNS,
+                hostile: false,
+                group: false,
+                summoned_kind_ids,
+            }),
+            effects: Vec::new(),
+            targets: Vec::new(),
+            trace: None,
+        }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -646,13 +1279,26 @@ impl Game {
             .collect::<BTreeMap<_, _>>();
         let target_actors =
             self.monster_targets_in_footprint(source_index, target, affected_positions);
+        let air_breath = plan
+            .ability
+            .tags
+            .iter()
+            .any(|tag| tag == MONSTER_AIR_BREATH_TAG);
         let mut targets = Vec::with_capacity(target_actors.len());
         for affected_target in target_actors {
             let lateral_distance = lateral_distances
                 .get(&affected_target.position())
                 .copied()
                 .unwrap_or(0);
-            let prepared = rfb_area_damage(raw_damage, lateral_distance);
+            let mut prepared = rfb_area_damage(raw_damage, lateral_distance);
+            if air_breath && affected_target.is_player() && self.player_levitates() {
+                prepared = prepared.saturating_sub(prepared / 4);
+            }
+            let resolved_damage_type = if air_breath && affected_target.is_player() {
+                DamageType::Physical
+            } else {
+                DamageType::from(*damage_type)
+            };
             let effect = self.resolve_monster_damage_to_hostile(
                 source_entity_id,
                 source_kind_id,
@@ -660,10 +1306,45 @@ impl Game {
                 0,
                 raw_damage,
                 prepared,
-                DamageType::from(*damage_type),
+                resolved_damage_type,
                 &affected_target,
                 events,
             );
+            if air_breath && !self.player_is_dead() {
+                if affected_target.is_player() {
+                    let sound_resistance =
+                        self.effective_player_resistances().level(DamageType::Sound);
+                    self.record_monster_player_resistance(
+                        source_entity_id,
+                        DamageType::Sound,
+                        sound_resistance,
+                    );
+                    if matches!(
+                        sound_resistance,
+                        ResistanceLevel::Vulnerable | ResistanceLevel::Normal
+                    ) {
+                        let duration = self.roll_damage(1, 20);
+                        self.apply_player_melee_status(STATUS_STUN, duration, source_kind_id);
+                    }
+                } else if let Some(target_index) = self
+                    .entities
+                    .iter()
+                    .position(|entity| entity.id == affected_target.entity_id() && entity.hp > 0)
+                    && matches!(
+                        self.entities[target_index]
+                            .resistances
+                            .level(DamageType::Force),
+                        ResistanceLevel::Vulnerable | ResistanceLevel::Normal
+                    )
+                {
+                    self.apply_actor_melee_status(
+                        target_index,
+                        STATUS_STUN,
+                        rfb_monster_stun_amount(prepared),
+                        source_kind_id,
+                    );
+                }
+            }
             changed.insert(affected_target.position());
             targets.push(MonsterAbilityTargetResolutionDto {
                 target_entity_id: affected_target.entity_id().to_owned(),
@@ -1136,6 +1817,30 @@ impl Game {
             MonsterAbilityTargetPlan::BanorRupartSplit { .. }
             | MonsterAbilityTargetPlan::BanorRupartMerge { .. } => self
                 .resolve_banor_rupart_transform_plan(source_index, plan, changed, removed_entities),
+            MonsterAbilityTargetPlan::SelfTarget
+                if plan
+                    .ability
+                    .tags
+                    .iter()
+                    .any(|tag| tag == MONSTER_DEAD_UNIQUE_SUMMON_TAG) =>
+            {
+                self.resolve_monster_dead_unique_summon_plan(
+                    source_index,
+                    plan,
+                    events,
+                    changed,
+                    removed_entities,
+                )
+            }
+            MonsterAbilityTargetPlan::SelfTarget
+                if plan
+                    .ability
+                    .tags
+                    .iter()
+                    .any(|tag| tag == MONSTER_FAMILY_SUMMON_TAG) =>
+            {
+                self.resolve_monster_family_summon_plan(source_index, plan, events, changed)
+            }
             MonsterAbilityTargetPlan::SelfTarget => {
                 let target_entity_id = self.entities[source_index].id.clone();
                 let target_kind_id = self.entities[source_index].kind_id.clone();
@@ -1187,6 +1892,19 @@ impl Game {
                     events,
                     changed,
                 );
+                if plan
+                    .ability
+                    .tags
+                    .iter()
+                    .any(|tag| tag == MONSTER_CHICKEN_TAG)
+                {
+                    self.resolve_monster_chicken_riders(
+                        source_index,
+                        &source_entity_id,
+                        source_kind_id,
+                        target,
+                    );
+                }
                 let transitioned = self.current_floor_id != floor_id;
                 if !transitioned {
                     changed.insert(target.position());
@@ -1331,7 +2049,11 @@ impl Game {
                     .any(|tag| tag == MONSTER_WATER_FLOW_TAG)
                 {
                     let center = self.entities[source_index].position;
-                    let transformed_positions = self.monster_water_flow_positions(center);
+                    let transformed_positions = self.monster_flow_positions(
+                        center,
+                        MONSTER_WATER_FLOW_TERRAIN_ID,
+                        MONSTER_WATER_FLOW_RADIUS,
+                    );
                     let source_terrain_ids = transformed_positions
                         .iter()
                         .filter_map(|position| {
@@ -1811,7 +2533,9 @@ impl Game {
                         .actor_derived_stats(&self.entities[target_index], definition, false)
                         .armor_class
                         .value;
-                    let prepared = if damage_type == DamageType::Physical {
+                    let prepared = if damage_type == DamageType::Physical
+                        && !ability.tags.iter().any(|tag| tag == MONSTER_CHICKEN_TAG)
+                    {
                         apply_melee_armor_reduction(raw_damage, armor_class)
                     } else {
                         raw_damage
@@ -2079,7 +2803,9 @@ impl Game {
                         .max(0);
                     let damage_type = DamageType::from(*damage_type);
                     let target = self.player_derived_stats();
-                    let prepared = if damage_type == DamageType::Physical {
+                    let prepared = if damage_type == DamageType::Physical
+                        && !ability.tags.iter().any(|tag| tag == MONSTER_CHICKEN_TAG)
+                    {
                         apply_melee_armor_reduction(raw_damage, target.armor_class.value)
                     } else {
                         raw_damage
@@ -2301,38 +3027,52 @@ impl Game {
                     grants_wall_passage,
                     incoming_damage_percent,
                 } => {
-                    let effective = self.effective_player_resistances();
-                    let immunities = self.player_status_immunities();
-                    let target_level = u32::from(self.progress.level);
-                    let resolution = apply_ability_status_effect(
-                        &mut self.player,
-                        &ability.id,
-                        effect_index,
-                        status_kind_id,
-                        *intensity,
-                        *duration_ticks,
-                        *duration_dice,
-                        *duration_sides,
-                        *stacking,
-                        *resistance_type,
-                        *power,
-                        granted_resistances,
-                        granted_brands,
-                        granted_modifiers,
-                        granted_equipment_bonuses,
-                        granted_status_immunities,
-                        granted_race_id.as_deref(),
-                        *grants_wall_passage,
-                        *incoming_damage_percent,
-                        Some(target_level),
-                        Some((&effective, &immunities)),
-                        &mut self.rng,
-                    );
-                    if let Some(damage_type) = resistance_type.map(DamageType::from) {
-                        let level = effective.level(damage_type);
-                        self.record_monster_player_resistance(source_entity_id, damage_type, level);
+                    if status_kind_id == STATUS_NO_AIR
+                        && (self.player_is_nonliving()
+                            || self.player_has_status_kind(STATUS_NO_AIR))
+                    {
+                        AbilityEffectResolutionDto::Skipped {
+                            effect_index,
+                            reason: AbilityEffectSkipReasonDto::Ineligible,
+                        }
+                    } else {
+                        let effective = self.effective_player_resistances();
+                        let immunities = self.player_status_immunities();
+                        let target_level = u32::from(self.progress.level);
+                        let resolution = apply_ability_status_effect(
+                            &mut self.player,
+                            &ability.id,
+                            effect_index,
+                            status_kind_id,
+                            *intensity,
+                            *duration_ticks,
+                            *duration_dice,
+                            *duration_sides,
+                            *stacking,
+                            *resistance_type,
+                            *power,
+                            granted_resistances,
+                            granted_brands,
+                            granted_modifiers,
+                            granted_equipment_bonuses,
+                            granted_status_immunities,
+                            granted_race_id.as_deref(),
+                            *grants_wall_passage,
+                            *incoming_damage_percent,
+                            Some(target_level),
+                            Some((&effective, &immunities)),
+                            &mut self.rng,
+                        );
+                        if let Some(damage_type) = resistance_type.map(DamageType::from) {
+                            let level = effective.level(damage_type);
+                            self.record_monster_player_resistance(
+                                source_entity_id,
+                                damage_type,
+                                level,
+                            );
+                        }
+                        resolution
                     }
-                    resolution
                 }
                 AbilityEffectDefinition::RemoveStatus { status_kind_id } => {
                     if self.player_resists_dispel() {
@@ -2444,6 +3184,52 @@ impl Game {
             {
                 (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
             }
+            AbilityEffectDefinition::SummonCategory { .. }
+                if ability
+                    .tags
+                    .iter()
+                    .any(|tag| tag == MONSTER_DEAD_UNIQUE_SUMMON_TAG) =>
+            {
+                (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
+            }
+            AbilityEffectDefinition::NoOp { .. }
+                if ability
+                    .tags
+                    .iter()
+                    .any(|tag| tag == MONSTER_FAMILY_SUMMON_TAG) =>
+            {
+                let candidate_kind_ids = monster_family_summon_candidates(
+                    self.entities[index].kind_id.as_str(),
+                )
+                .ok_or(MonsterAbilityPlanRejection {
+                    reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                    enemy_target_count: 0,
+                    friendly_risk_count: 0,
+                })?;
+                let available = candidate_kind_ids
+                    .iter()
+                    .copied()
+                    .filter(|kind_id| self.monster_family_actor_is_available(kind_id));
+                if available.clone().next().is_none() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                if !available.into_iter().any(|kind_id| {
+                    !self
+                        .open_positions_around_for_actor_kind(origin, 2, kind_id)
+                        .is_empty()
+                }) {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
+            }
             AbilityEffectDefinition::Summon {
                 actor_kind_id,
                 count,
@@ -2496,9 +3282,13 @@ impl Game {
                         .iter()
                         .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
                     definition.role == ActorRole::Monster
+                        && (category != "unique"
+                            || definition.level >= u32::from(maximum_level.saturating_sub(40)))
                         && definition.level <= u32::from(*maximum_level)
                         && definition.tags.iter().any(|tag| tag == category)
-                        && !definition.tags.iter().any(|tag| tag == "guardian")
+                        && (category == "guardian"
+                            || !definition.tags.iter().any(|tag| tag == "guardian"))
+                        && actor_answers_summons(definition)
                         && definition.allocation.as_ref().is_none_or(|allocation| {
                             monster_ecology::actor_allocation_matches_task(
                                 allocation,

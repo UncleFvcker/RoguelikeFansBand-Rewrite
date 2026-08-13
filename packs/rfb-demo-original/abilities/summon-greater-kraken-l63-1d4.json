@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.summon-greater-kraken-l63-1d4",
+  "descriptionKey": "ability-legacy-summon-greater-kraken-l63-1d4-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.summon-greater-kraken-l63-1d4",
+  "nameKey": "ability-legacy-summon-greater-kraken-l63-1d4-name",
+  "tags": [
+    "legacy-import",
+    "summon",
+    "monster-only",
+    "monster-water-flow"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-gothmog-the-high-captain-of-balrogs",
+  "descriptionKey": "ability-legacy-kin-gothmog-the-high-captain-of-balrogs-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-gothmog-the-high-captain-of-balrogs",
+  "nameKey": "ability-legacy-kin-gothmog-the-high-captain-of-balrogs-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

@@ -1,0 +1,239 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1389,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 23,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 2,
+      "damageSides": 5,
+      "damageType": "curse"
+    }
+  ],
+  "damageDice": 10,
+  "damageSides": 10,
+  "damageType": "disenchant",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 18,
+  "descriptionKey": "actor-demo-brahma-the-creating-spirit-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 99220,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 111,
+    "forceMaximum": true,
+    "sides": 99
+  },
+  "id": "demo.actor.brahma-the-creating-spirit",
+  "level": 92,
+  "maxHp": 10989,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "disenchant",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "acid",
+            "type": "damage"
+          },
+          {
+            "durationDice": 4,
+            "durationSides": 4,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "disenchant",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "electricity",
+            "type": "damage"
+          },
+          {
+            "durationDice": 4,
+            "durationSides": 4,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "disenchant",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "fire",
+            "type": "damage"
+          },
+          {
+            "durationDice": 4,
+            "durationSides": 4,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "disenchant",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "cold",
+            "type": "damage"
+          },
+          {
+            "durationDice": 4,
+            "durationSides": 4,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l92-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-saraswati-l90-1d1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-1d1-299",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-chaos-10d10-160",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.hand-of-doom",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.invulnerability-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.anti-magic",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-brahma-the-creating-spirit-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "nether": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "good",
+    "hindu",
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

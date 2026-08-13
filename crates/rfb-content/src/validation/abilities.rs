@@ -537,12 +537,12 @@ pub(super) fn validate_abilities(
                             || (*maximum_level == 0
                                 && has_level_scaling(AbilityLevelScalingField::SummonMaximumLevel)))
                         && (1..=8).contains(count_dice)
-                        && (1..=8).contains(count_sides)
+                        && (1..=16).contains(count_sides)
                         && u16::from(*count_dice) * u16::from(*count_sides)
                             + u16::from(*count_bonus)
-                            <= 8
+                            <= 16
                         && maximum_count.is_none_or(|maximum_count| {
-                            (1..=8).contains(&maximum_count)
+                            (1..=16).contains(&maximum_count)
                                 && u16::from(maximum_count)
                                     <= u16::from(*count_dice) * u16::from(*count_sides)
                                         + u16::from(*count_bonus)

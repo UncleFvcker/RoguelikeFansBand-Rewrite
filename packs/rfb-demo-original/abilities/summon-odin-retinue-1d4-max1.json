@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.summon-odin-retinue-1d4-max1",
+  "descriptionKey": "ability-legacy-summon-odin-retinue-1d4-max1-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.summon-odin-retinue-1d4-max1",
+  "nameKey": "ability-legacy-summon-odin-retinue-1d4-max1-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

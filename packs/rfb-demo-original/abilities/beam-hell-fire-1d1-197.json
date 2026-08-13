@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.beam-hell-fire-1d1-197",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-legacy-beam-hell-fire-1d1-197-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.beam-hell-fire-1d1-197",
+  "nameKey": "ability-legacy-beam-hell-fire-1d1-197-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

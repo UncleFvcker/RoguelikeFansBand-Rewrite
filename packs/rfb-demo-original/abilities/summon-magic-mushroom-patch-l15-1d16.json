@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.summon-magic-mushroom-patch-l15-1d16",
+  "descriptionKey": "ability-legacy-summon-magic-mushroom-patch-l15-1d16-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.summon-magic-mushroom-patch-l15-1d16",
+  "nameKey": "ability-legacy-summon-magic-mushroom-patch-l15-1d16-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

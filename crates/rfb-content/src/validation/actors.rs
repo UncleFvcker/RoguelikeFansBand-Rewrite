@@ -132,7 +132,7 @@ pub(super) fn validate_actors(
                     .is_some_and(|distance| !(2..=16).contains(&distance))
                 || casting.flee_hp_percent > 99
                 || casting.abilities.is_empty()
-                || casting.abilities.len() > 64
+                || casting.abilities.len() > 128
                 || casting.abilities.iter().any(|candidate| {
                     validate_id(&candidate.ability_id).is_err()
                         || !(1..=1_000_000).contains(&candidate.weight)
@@ -335,11 +335,26 @@ pub(super) fn validate_actors(
                         | ActorDamageType::Disintegrate
                         | ActorDamageType::Curse
                         | ActorDamageType::Shards
-                ) || !(1..=100).contains(&aura.damage_dice)
+                        | ActorDamageType::Time
+                        | ActorDamageType::Chaos
+                        | ActorDamageType::Disenchant
+                ) || (aura.ravages_time != (aura.damage_type == ActorDamageType::Time))
+                    || !(1..=100).contains(&aura.damage_dice)
                     || !(1..=10_000).contains(&aura.damage_sides)
                     || aura
                         .chance_percent
                         .is_some_and(|chance| !(1..=100).contains(&chance))
+            })
+        {
+            return Err(ContentError::InvalidActorStats(actor.id.clone()));
+        }
+        if actor.contact_effects.len() > 8
+            || actor.contact_effects.iter().any(|effect| {
+                !matches!(
+                    effect,
+                    MeleeBlowEffectDefinition::Unlife { .. }
+                        | MeleeBlowEffectDefinition::Stun { .. }
+                ) || !valid_melee_effect(effect)
             })
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));

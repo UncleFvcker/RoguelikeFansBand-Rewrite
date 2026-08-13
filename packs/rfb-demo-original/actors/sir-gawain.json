@@ -1,0 +1,142 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyDungeonIndices": [
+      2
+    ],
+    "legacyIndex": 1113,
+    "maxDepth": 999,
+    "rarity": 1
+  },
+  "attack": 7,
+  "capturePolicy": "pet-only",
+  "damageDice": 14,
+  "damageSides": 6,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 9,
+  "descriptionKey": "actor-demo-sir-gawain-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 2299,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "p",
+  "hitPointDice": {
+    "dice": 40,
+    "forceMaximum": true,
+    "sides": 20
+  },
+  "id": "demo.actor.sir-gawain",
+  "level": 29,
+  "light": {
+    "intrinsic": false,
+    "radius": 1
+  },
+  "maxHp": 800,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-14d6",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d101-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-camelot-knight-l29-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-87",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-sir-gawain-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 122,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "camelot",
+    "camelot-knight",
+    "good",
+    "human",
+    "kin-glyph-112",
+    "knight",
+    "legacy-import",
+    "no-quest",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

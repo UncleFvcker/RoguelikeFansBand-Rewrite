@@ -1,0 +1,95 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1205,
+    "maxDepth": 999,
+    "rarity": 6
+  },
+  "attack": 24,
+  "capturePolicy": "pet-only",
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 13,
+  "descriptionKey": "actor-demo-the-babbage-analytical-engine-description",
+  "experienceValue": 60000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 100,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.the-babbage-analytical-engine",
+  "level": 96,
+  "maxHp": 10000,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.shriek",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.kin-the-babbage-analytical-engine",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 100
+  },
+  "movement": {
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-the-babbage-analytical-engine-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 140,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyDungeonIndices": [
+      2
+    ],
+    "legacyIndex": 1116,
+    "maxDepth": 999,
+    "rarity": 1
+  },
+  "attack": 5,
+  "capturePolicy": "pet-only",
+  "damageDice": 3,
+  "damageSides": 8,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 6,
+  "descriptionKey": "actor-demo-sir-kay-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "experienceValue": 1000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "p",
+  "hitPointDice": {
+    "dice": 30,
+    "forceMaximum": true,
+    "sides": 20
+  },
+  "id": "demo.actor.sir-kay",
+  "level": 22,
+  "light": {
+    "intrinsic": false,
+    "radius": 1
+  },
+  "maxHp": 600,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 3,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-fire-9d8-7",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-camelot-knight-l22-1d2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-sir-kay-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "fire": "resistant"
+  },
+  "role": "monster",
+  "speed": 117,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "camelot",
+    "camelot-knight",
+    "evil",
+    "human",
+    "kin-glyph-112",
+    "knight",
+    "legacy-import",
+    "no-quest",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

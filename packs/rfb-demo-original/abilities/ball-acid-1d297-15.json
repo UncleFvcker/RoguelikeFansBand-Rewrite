@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.ball-acid-1d297-15",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-legacy-ball-acid-1d297-15-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.ball-acid-1d297-15",
+  "nameKey": "ability-legacy-ball-acid-1d297-15-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

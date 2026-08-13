@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "ocean"
+    ],
+    "legacyIndex": 482,
+    "maxDepth": 70,
+    "rarity": 3,
+    "wildOnly": true
+  },
+  "attack": 8,
+  "damageDice": 8,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 8,
+  "descriptionKey": "actor-demo-giant-squid-description",
+  "evolution": {
+    "nextActorKindId": "demo.actor.lesser-kraken",
+    "requiredExperience": 50000
+  },
+  "experienceValue": 600,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 80,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.giant-squid",
+  "level": 32,
+  "maxHp": 800,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-acid-20-900-r2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-poison-17-600-r2",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 5
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-giant-squid-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "water": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "animal",
+    "kin-glyph-108",
+    "legacy-import",
+    "ocean"
+  ]
+}
