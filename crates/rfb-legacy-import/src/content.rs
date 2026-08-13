@@ -14638,6 +14638,43 @@ mod tests {
     }
 
     #[test]
+    fn p87a_tidal_cave_plan_locks_identity_ecology_guardian_and_reward() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let plan = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 33)
+            .expect("Tidal cave should have an implementation plan");
+
+        assert_eq!(plan.source_name, "Tidal cave");
+        assert_eq!(plan.id, "demo.dungeon.tidal-cave");
+        assert_eq!(plan.position, DemoWildernessPosition { x: 47, y: 53 });
+        assert_eq!((plan.minimum_depth, plan.maximum_depth), (15, 27));
+        assert_eq!(plan.monster_divisor, 16);
+        assert_eq!(
+            plan.generation_flags,
+            ["CAVE", "WATER_RIVER", "LAKE_WATER", "CAVERN"]
+        );
+        assert_eq!(
+            plan.monster_preferences,
+            ["CAN_SWIM", "WILD_SHORE", "AQUATIC"]
+        );
+        assert_eq!(plan.guardian.source_index, 431);
+        assert_eq!(plan.guardian.source_name, "Grendel");
+        assert_eq!(plan.guardian.chinese_name, "格伦戴尔");
+        assert_eq!(plan.guardian.level, 27);
+        assert_eq!(
+            plan.final_object,
+            DemoDungeonObjectPlan { tval: 75, sval: 68 }
+        );
+        assert_eq!(plan.final_ego_source_index, None);
+        assert_eq!(plan.substitute_source_index, None);
+    }
+
+    #[test]
     fn melee_effect_parser_preserves_order_dice_and_independent_chances() {
         let blow = parse_blow("SLASH:HURT(10d1):POISON(4d4, 50%):CUT(2d3, 30%)", 1)
             .expect("synthetic blow should parse");

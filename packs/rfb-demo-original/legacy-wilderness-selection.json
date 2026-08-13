@@ -119,6 +119,33 @@
         "level": 32
       },
       "finalObject": { "tval": 34, "sval": 10 }
+    },
+    {
+      "sourceIndex": 33,
+      "sourceName": "Tidal cave",
+      "id": "demo.dungeon.tidal-cave",
+      "position": { "x": 47, "y": 53 },
+      "minimumDepth": 15,
+      "maximumDepth": 27,
+      "monsterDivisor": 16,
+      "generationFlags": [
+        "CAVE",
+        "WATER_RIVER",
+        "LAKE_WATER",
+        "CAVERN"
+      ],
+      "monsterPreferences": [
+        "CAN_SWIM",
+        "WILD_SHORE",
+        "AQUATIC"
+      ],
+      "guardian": {
+        "sourceIndex": 431,
+        "sourceName": "Grendel",
+        "chineseName": "格伦戴尔",
+        "level": 27
+      },
+      "finalObject": { "tval": 75, "sval": 68 }
     }
   ]
 }
