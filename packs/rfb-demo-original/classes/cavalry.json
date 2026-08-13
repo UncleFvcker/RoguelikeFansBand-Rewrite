@@ -28,6 +28,7 @@
       "demo.item.flail": { "initial": 2000, "maximum": 8000 },
       "demo.item.glaive": { "initial": 2000, "maximum": 8000 },
       "demo.item.hatchet": { "initial": 2000, "maximum": 8000 },
+      "demo.item.heavy-lance": { "initial": 4000, "maximum": 8000 },
       "demo.item.lance": { "initial": 4000, "maximum": 8000 },
       "demo.item.long-bow": { "initial": 4000, "maximum": 8000 },
       "demo.item.long-sword": { "initial": 2000, "maximum": 8000 },

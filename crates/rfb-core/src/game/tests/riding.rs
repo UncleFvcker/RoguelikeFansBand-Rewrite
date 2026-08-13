@@ -260,6 +260,15 @@ fn mounted_weapon_and_projectile_rules_match_original_branches() {
     );
     assert_eq!(lance.damage_dice, 4);
 
+    game.items[weapon_index].kind_id = "demo.item.heavy-lance".to_owned();
+    let heavy_lance = game.player_melee_profile(&game.player_derived_stats());
+    assert_eq!(heavy_lance.to_hit, 15);
+    assert_eq!(
+        heavy_lance.melee_skill.value,
+        game.player_derived_stats().melee_skill.value + 15
+    );
+    assert_eq!(heavy_lance.damage_dice, 6);
+
     assert_eq!(
         riding_proficiency::mounted_projectile_to_hit_adjustment(
             true,

@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.300.0");
+    assert_eq!(catalog.pack_version(), "1.301.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -120,6 +120,19 @@ fn compiled_catalog_indexes_current_rfb_content() {
             .overrides["demo.item.short-bow"]
             .initial,
         4_000
+    );
+    let cavalry_weapon_proficiency = cavalry
+        .weapon_proficiency
+        .as_ref()
+        .expect("Cavalry weapon proficiency");
+    assert_eq!(cavalry_weapon_proficiency.default_initial, 2_000);
+    assert_eq!(cavalry_weapon_proficiency.default_maximum, 7_000);
+    assert_eq!(
+        (
+            cavalry_weapon_proficiency.overrides["demo.item.heavy-lance"].initial,
+            cavalry_weapon_proficiency.overrides["demo.item.heavy-lance"].maximum,
+        ),
+        (4_000, 8_000)
     );
     assert!(
         cavalry

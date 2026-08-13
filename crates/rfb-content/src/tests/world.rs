@@ -6896,7 +6896,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 307);
+    assert_eq!(base_items.entries.len(), 308);
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -6944,7 +6944,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 283);
+    assert_eq!(active_source_items.len(), 284);
 
     let source_items_without_allocations =
         BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
@@ -6958,7 +6958,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 273);
+    assert_eq!(expected_item_ids.len(), 274);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -7248,6 +7248,7 @@ fn low_mid_equipment_uses_source_allocations_and_theme_predicates() {
         ("demo.item.beaked-axe", 15, 100),
         ("demo.item.broad-axe", 15, 100),
         ("demo.item.glaive", 20, 100),
+        ("demo.item.heavy-lance", 43, 25),
         ("demo.item.lance", 10, 100),
         ("demo.item.battle-axe", 15, 100),
         ("demo.item.nunchaku", 16, 50),

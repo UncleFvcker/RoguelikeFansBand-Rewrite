@@ -28,6 +28,8 @@ test("committed ASCII and image manifests pass strict parsing", () => {
   assert.equal(ascii.mode, "ascii");
   assert.equal(image.mode, "image");
   assert.equal(image.atlas?.columns, 3);
+  assert.equal(ascii.mappings["demo.item.heavy-lance"]?.glyph, "/");
+  assert.equal(image.mappings["demo.item.heavy-lance"]?.glyph, "/");
 });
 
 test("RFB 28px manifest exposes the expanded atlas and standalone player art", () => {
@@ -253,6 +255,7 @@ test("RFB 28px manifest exposes the expanded atlas and standalone player art", (
   for (const id of ["demo.actor.crow", "demo.actor.crow-of-durthang"]) {
     assert.deepEqual(image.mappings[id]?.tile, { x: 0, y: 6 });
   }
+  assert.equal(image.mappings["demo.item.heavy-lance"]?.glyph, "/");
   for (const id of [
     "demo.actor.creeping-copper-coins",
     "demo.actor.creeping-silver-coins",

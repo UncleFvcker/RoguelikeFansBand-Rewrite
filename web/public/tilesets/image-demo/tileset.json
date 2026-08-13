@@ -187,6 +187,10 @@
       "glyph": "$",
       "foreground": "#c9b7dd",
       "background": "#241f29"
+    },
+    "demo.item.heavy-lance": {
+      "glyph": "/",
+      "foreground": "#a7acba"
     }
   },
   "fallback": {

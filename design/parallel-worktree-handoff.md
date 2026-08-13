@@ -419,3 +419,18 @@ git diff --stat
   State Hash Schema v94、save v1、active baseline `contract-v287`（26 条 exact fixture、
   零 waiver）。本批未导入 arena/battle 世界状态、浮空安全着陆、骑乘羁绊或双手持落马
   修正；后续应在对应共享系统落地时接入，不在职业内容中造占位状态。
+
+## 24. main 当前交接（重型骑枪 Commit 1）
+
+- 新增并由 class 方向拥有 `demo.item.heavy-lance`；items 分支不得重复导入同义物品。
+  固定来源为 `master:k_info.txt` source index 107 / tval 22 / sval 29，中文名严格使用
+  `重型骑枪`。本批没有新增 ability、material、affix 或神器 ID。
+- 内容保留等级 43、`A:43/4`、40.0 磅、价值 700、`4d10`，并通过既有
+  `ridingWeaponKind: lance` 复用骑乘 `+15` 命中与 `+2` 伤害骰规则；基础物品表使用
+  depth 43 / weight 25。`master:s_info.txt` 的 Cavalry `W:3:29:1:4` 要求重型骑枪与普通
+  Lance 一样使用 `4000/8000` 显式熟练度；其余四职业使用各自原版默认值。逐武器审计现
+  核验 5 个正式职业和 68 种基础武器。
+- 当前协调点：pack `1.301.0` / content hash
+  `b7e20a37795ab1381bb3f3d6e8e9d991215ee04a7ad0bd1b83cde948c1b2b08a`、Protocol `1.190`、
+  State Hash Schema v94、save v1、active baseline `contract-v287`。本批只增加内容，不改变
+  协议、权威状态或共享初始化；现有 exact fixtures 不需要刷新。

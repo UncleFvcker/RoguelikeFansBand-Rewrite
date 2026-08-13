@@ -135,6 +135,7 @@ fn riding_weapons_match_the_existing_rfb_master_subset() {
             "demo.item.fauchard",
             "demo.item.flail",
             "demo.item.glaive",
+            "demo.item.heavy-lance",
             "demo.item.lance",
             "demo.item.long-sword",
             "demo.item.pain",
@@ -148,7 +149,7 @@ fn riding_weapons_match_the_existing_rfb_master_subset() {
         .map(|id| {
             (
                 id,
-                if id == "demo.item.lance" {
+                if matches!(id, "demo.item.heavy-lance" | "demo.item.lance") {
                     RidingWeaponKindDefinition::Lance
                 } else {
                     RidingWeaponKindDefinition::Compatible
@@ -906,6 +907,14 @@ fn selected_legacy_equipment_keeps_fixed_source_values_and_slots() {
         ("demo.item.beaked-axe", 408, 120, "weapon", 0, Some((2, 7))),
         ("demo.item.broad-axe", 304, 130, "weapon", 0, Some((2, 7))),
         ("demo.item.glaive", 363, 190, "weapon", 0, Some((2, 7))),
+        (
+            "demo.item.heavy-lance",
+            700,
+            400,
+            "weapon",
+            0,
+            Some((4, 10)),
+        ),
         ("demo.item.lance", 230, 300, "weapon", 0, Some((2, 10))),
         ("demo.item.battle-axe", 334, 170, "weapon", 0, Some((2, 9))),
         ("demo.item.nunchaku", 120, 60, "weapon", 0, Some((2, 4))),

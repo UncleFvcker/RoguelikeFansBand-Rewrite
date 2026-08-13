@@ -866,6 +866,10 @@
     "demo.actor.creeping-mithril-coins": {
       "foreground": "#9bf0fd",
       "tile": { "x": 1, "y": 3 }
+    },
+    "demo.item.heavy-lance": {
+      "glyph": "/",
+      "foreground": "#a7acba"
     }
   },
   "fallback": {

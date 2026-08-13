@@ -20,8 +20,8 @@
     "toHit": 0
   },
   "mogaminatorRare": false,
-  "ridingWeaponKind": "compatible",
   "nameKey": "item-demo-long-sword-name",
+  "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",
     "rfb-compatibility",

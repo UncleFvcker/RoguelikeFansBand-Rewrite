@@ -732,6 +732,12 @@
       "minDepth": 40
     },
     {
+      "itemKindId": "demo.item.heavy-lance",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 43
+    },
+    {
       "itemKindId": "demo.item.holy-prayer-scroll",
       "weight": 100,
       "quantity": 1,

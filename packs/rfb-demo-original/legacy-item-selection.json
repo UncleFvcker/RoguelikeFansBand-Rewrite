@@ -43,6 +43,7 @@
     { "sourceIndex": 99, "id": "halberd" },
     { "sourceIndex": 102, "id": "lance" },
     { "sourceIndex": 103, "id": "battle-axe" },
+    { "sourceIndex": 107, "id": "heavy-lance" },
     { "sourceIndex": 120, "id": "club" },
     { "sourceIndex": 121, "id": "whip" },
     { "sourceIndex": 122, "sourceId": "quarterstaff", "id": "quarterstaff" },

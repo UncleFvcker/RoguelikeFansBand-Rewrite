@@ -3446,6 +3446,14 @@ fn item_json_with_terrain(
             "damageSides": sides.clamp(1, 10_000),
         });
     }
+    if entry.flags.iter().any(|flag| flag == "RIDING") {
+        value["ridingWeaponKind"] =
+            serde_json::json!(if matches!((entry.tval, entry.sval), (22, 20 | 29)) {
+                "lance"
+            } else {
+                "compatible"
+            });
+    }
     if shape.launcher {
         // Instruments and other exotic entries share the legacy bow tval;
         // only launchers with a canonical ammo partner keep the profile.
@@ -3525,7 +3533,8 @@ fn item_json_with_terrain(
     apply_equipment_fold(&mut value, &equipment);
     apply_item_destruction_properties(&mut value, entry.tval, &entry.flags);
     for flag in &entry.flags {
-        if flag == "NO_REMOVE" || item_destruction_flag_is_mapped(flag) {
+        if matches!(flag.as_str(), "NO_REMOVE" | "RIDING") || item_destruction_flag_is_mapped(flag)
+        {
             continue;
         }
         account_item_flag(
@@ -4063,7 +4072,7 @@ fn apply_item_destruction_properties(value: &mut serde_json::Value, tval: u16, f
 
 /// Display-only object flags with no Rewrite behaviour to express.
 fn item_flag_not_applicable(flag: &str) -> bool {
-    matches!(flag, "SHOW_MODS" | "HIDE_TYPE" | "FULL_NAME" | "RIDING")
+    matches!(flag, "SHOW_MODS" | "HIDE_TYPE" | "FULL_NAME")
 }
 
 #[derive(Debug, Default)]
