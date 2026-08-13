@@ -18,6 +18,7 @@ import type {
   PlayerProgressDto,
   ProficiencyRankDto,
   ResourcePoolDto,
+  SniperConcentrationDto,
   SummonCommandDto,
   SummonCommandModeDto,
   WeaponProficiencyCategoryDto,
@@ -259,6 +260,7 @@ export class StatusPanel {
       state.player.resources ?? [],
       state.player.abilityLearning,
       state.player.progress?.level ?? 1,
+      state.player.sniperConcentration,
     );
     this.#renderSummonCommand(
       state.player.summonCommand,
@@ -696,6 +698,7 @@ export class StatusPanel {
     resources: ResourcePoolDto[],
     learning: AbilityLearningDto | null | undefined,
     playerLevel: number,
+    concentration: SniperConcentrationDto | null | undefined,
   ): void {
     const document = this.#dom.abilityList.ownerDocument;
     this.#dom.resourceList.replaceChildren();
@@ -709,18 +712,43 @@ export class StatusPanel {
         !resources.some(
           (resource) => resource.restRecoveryAmount > 0 && resource.current < resource.maximum,
         ));
-    if (resources.length === 0) {
+    if (resources.length === 0 && !concentration) {
       const unavailable = document.createElement("li");
       unavailable.className = "resource-empty";
       unavailable.textContent = this.#localization.format("resource-unavailable");
       this.#dom.resourceList.append(unavailable);
     }
-    if (resources.length === 0 && abilities.length === 0) {
+    if (resources.length === 0 && !concentration && abilities.length === 0) {
       const unavailable = document.createElement("li");
       unavailable.className = "ability-empty";
       unavailable.textContent = this.#localization.format("ability-unavailable");
       this.#dom.abilityList.append(unavailable);
       return;
+    }
+    if (concentration) {
+      const row = document.createElement("li");
+      row.className = "resource-row";
+      const heading = document.createElement("div");
+      heading.className = "resource-heading";
+      const label = document.createElement("span");
+      label.className = "resource-name";
+      label.textContent = this.#localization.format("sniper-concentration");
+      const value = document.createElement("strong");
+      value.className = "resource-value";
+      value.textContent = `${concentration.current} / ${concentration.maximum}`;
+      heading.append(label, value);
+      const meter = document.createElement("span");
+      meter.className = "resource-meter";
+      meter.setAttribute("role", "progressbar");
+      meter.setAttribute("aria-label", label.textContent);
+      meter.setAttribute("aria-valuemin", "0");
+      meter.setAttribute("aria-valuemax", String(concentration.maximum));
+      meter.setAttribute("aria-valuenow", String(concentration.current));
+      const fill = document.createElement("span");
+      fill.style.width = `${concentration.maximum > 0 ? concentration.current / concentration.maximum * 100 : 0}%`;
+      meter.append(fill);
+      row.append(heading, meter);
+      this.#dom.resourceList.append(row);
     }
     for (const resource of resources) {
       const row = document.createElement("li");
@@ -978,6 +1006,12 @@ export class StatusPanel {
       element.textContent = this.#localization.format(key, args);
       details.append(element);
     };
+    if (ability.minimumConcentration > 0) {
+      append("ability-concentration-summary", { concentration: ability.minimumConcentration });
+    }
+    if (ability.hitPointCost > 0) {
+      append("ability-hit-point-cost-summary", { cost: ability.hitPointCost });
+    }
     if (ability.areaRadius != null) append("ability-area-summary", { radius: ability.areaRadius });
     if (ability.beamDamage) append("ability-beam-summary");
     if (ability.coneRadius != null) append("ability-cone-summary", { radius: ability.coneRadius });

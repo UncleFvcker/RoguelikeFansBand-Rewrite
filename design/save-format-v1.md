@@ -449,3 +449,7 @@ contract-v290 为 `ItemSaveDto`、`InventoryItemSaveDto`、`EquipmentItemSaveDto
 捕获球、kind 是可捕获怪物、生命与速度有效；未知、免疫或放在普通物品上的状态均严格拒绝。
 该状态进入 State Hash Schema v96；Protocol 升至 1.192，save 容器保持 v1，不提供旧开发
 存档兼容默认值。
+contract-v293 为 `PlayerSaveDto` 增加必填 `sniperConcentration` 与
+`probedActorKindIds`。载入要求非零专注不超过当前职业/等级上限，侦察集合不得重复、必须
+引用存在的 actor kind，且两项非空状态都要求当前职业声明 `snipingProfile`。两项进入
+State Hash Schema v98；Protocol 升至 1.196，save 容器保持 v1，不提供旧开发存档默认值。

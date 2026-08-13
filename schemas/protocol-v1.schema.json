@@ -454,11 +454,24 @@
           "maximum": 255,
           "minimum": 0
         },
+        "hitPointCost": {
+          "type": "integer",
+          "format": "uint32",
+          "default": 0,
+          "minimum": 0
+        },
         "id": {
           "type": "string"
         },
         "learned": {
           "type": "boolean"
+        },
+        "minimumConcentration": {
+          "type": "integer",
+          "format": "uint8",
+          "default": 0,
+          "maximum": 255,
+          "minimum": 0
         },
         "minimumLevel": {
           "type": "integer",
@@ -2202,6 +2215,46 @@
         {
           "type": "object",
           "properties": {
+            "after": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "before": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "maximum": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "concentrate"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "before",
+            "after",
+            "maximum"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "effectIndex": {
               "type": "integer",
               "format": "uint8",
@@ -3757,6 +3810,18 @@
             "type",
             "category",
             "power"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "concentrate"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
@@ -9331,6 +9396,16 @@
             "null"
           ]
         },
+        "sniperConcentration": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SniperConcentrationDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "speed": {
           "type": "integer",
           "format": "uint16",
@@ -10138,6 +10213,27 @@
         "troll",
         "giant",
         "dragon"
+      ]
+    },
+    "SniperConcentrationDto": {
+      "type": "object",
+      "properties": {
+        "current": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "maximum": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "current",
+        "maximum"
       ]
     },
     "StatModifiersDto": {

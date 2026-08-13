@@ -1613,7 +1613,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "1443b016811d95d8b454b18ece8bd0ba887ce4c16da6331d38537d351b31e6e4"
+      "stateHash": "d7f1c20a5983b8ef1ab5e42fa61450f968c4f120c45948c0fb85e5247b982e0f"
     },
     "events": [
       {
@@ -1628,9 +1628,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "1443b016811d95d8b454b18ece8bd0ba887ce4c16da6331d38537d351b31e6e4"
+        "stateHash": "d7f1c20a5983b8ef1ab5e42fa61450f968c4f120c45948c0fb85e5247b982e0f"
       }
     ],
-    "saveRoundTripStateHash": "1443b016811d95d8b454b18ece8bd0ba887ce4c16da6331d38537d351b31e6e4"
+    "saveRoundTripStateHash": "d7f1c20a5983b8ef1ab5e42fa61450f968c4f120c45948c0fb85e5247b982e0f"
   }
 }

@@ -98,6 +98,7 @@ pub(in crate::game) struct ResolvedProjectileProfile {
     pub(in crate::game) ammo_item_id: Option<String>,
     pub(in crate::game) ammo_kind_id: String,
     pub(in crate::game) ammunition_weight_tenths_pound: u16,
+    pub(in crate::game) ammunition_type: AmmunitionTypeDefinition,
     pub(in crate::game) ammo_break_chance_percent: u8,
     pub(in crate::game) energy_cost: i32,
     pub(in crate::game) source_item_id: String,
@@ -926,6 +927,23 @@ impl Game {
             .map(|slot| slot.slot_type.as_str())
     }
 
+    pub(super) fn sniping_profile(&self) -> Option<&rfb_content::SnipingProfileDefinition> {
+        self.character_definitions()
+            .and_then(|(_, _, class, _)| class.sniping_profile.as_ref())
+    }
+
+    pub(super) fn sniper_max_concentration(&self) -> Option<u8> {
+        self.sniping_profile()
+            .map(|profile| profile.maximum_concentration(self.progress.level))
+    }
+
+    pub(super) fn sniper_concentration_bonus_percent(&self, concentration: u8) -> i32 {
+        self.sniping_profile().map_or(0, |profile| {
+            i32::from(concentration)
+                .saturating_mul(i32::from(profile.concentration_bonus_percent_per_level))
+        })
+    }
+
     pub(super) fn player_projectile_profile(&self) -> Option<ResolvedProjectileProfile> {
         self.items.iter().find_map(|item| {
             let ItemLocation::Equipped { slot_id } = &item.location else {
@@ -1005,6 +1023,14 @@ impl Game {
                         ranged_skill.max(100)
                     };
                     let class = self.character_definitions().map(|(_, _, class, _)| class);
+                    let sniping_profile = class.and_then(|class| class.sniping_profile.as_ref());
+                    if let Some(sniping) = sniping_profile {
+                        let excess = base_shot.saturating_sub(100);
+                        base_shot = 100_i32.saturating_add(
+                            excess.saturating_mul(i32::from(sniping.base_shot_excess_percent))
+                                / 100,
+                        );
+                    }
                     let mounted_to_hit = self.riding_mount_level().map_or(0, |mount_level| {
                         riding_proficiency::mounted_projectile_to_hit_adjustment(
                             class.is_some_and(|class| class.riding_combat_expert),
@@ -1047,6 +1073,18 @@ impl Game {
                     let ammunition_to_damage = ammo_profile.to_damage.saturating_add(i32::from(
                         ammunition.map_or(0, |item| item.enchantments.to_damage),
                     ));
+                    let sniping_to_hit = sniping_profile
+                        .filter(|sniping| {
+                            sniping.preferred_ammunition_type == profile.ammunition_type
+                        })
+                        .map_or(0, |sniping| {
+                            i32::from(sniping.preferred_ammunition_to_hit_base).saturating_add(
+                                i32::from(
+                                    self.progress.level
+                                        / sniping.preferred_ammunition_to_hit_level_divisor,
+                                ),
+                            )
+                        });
                     let launcher_to_damage = profile
                         .to_damage
                         .saturating_add(i32::from(item.enchantments.to_damage));
@@ -1057,6 +1095,7 @@ impl Game {
                             .saturating_add(i32::from(item.enchantments.to_hit))
                             .saturating_add(heavy_to_hit)
                             .saturating_add(mounted_to_hit)
+                            .saturating_add(sniping_to_hit)
                             .saturating_add(ammunition_to_hit),
                         to_damage: ammunition_to_damage
                             .saturating_mul(i32::from(profile.damage_multiplier_percent))
@@ -1075,6 +1114,7 @@ impl Game {
                         ammo_item_id: ammunition.map(|item| item.id.clone()),
                         ammo_kind_id: ammo_definition.id.clone(),
                         ammunition_weight_tenths_pound: ammo_definition.weight_tenths_pound,
+                        ammunition_type: profile.ammunition_type,
                         ammo_break_chance_percent,
                         energy_cost,
                         source_item_id: item.id.clone(),

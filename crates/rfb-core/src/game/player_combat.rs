@@ -7,6 +7,7 @@ fn projectile_raw_damage(
     ammunition_slay_multiplier: i32,
     ammunition_to_damage: i32,
     ammunition_critical_multiplier_percent: i32,
+    concentration_bonus_percent: i32,
     damage_multiplier_percent: u16,
     launcher_to_damage: i32,
 ) -> i32 {
@@ -16,8 +17,37 @@ fn projectile_raw_damage(
         .saturating_add(ammunition_to_damage)
         .saturating_mul(ammunition_critical_multiplier_percent)
         / 100;
+    let ammunition_damage =
+        ammunition_damage.saturating_mul(100_i32.saturating_add(concentration_bonus_percent)) / 100;
     ammunition_damage.saturating_mul(i32::from(damage_multiplier_percent)) / 100
         + launcher_to_damage
+}
+
+fn concentrated_target_armor_class(armor_class: i32, concentration: u8) -> i32 {
+    armor_class.saturating_mul(10_i32.saturating_sub(i32::from(concentration))) / 10
+}
+
+fn projectile_critical_chance(
+    to_hit: i32,
+    ranged_skill: i32,
+    level: u16,
+    class_bonus_percent_per_level: u8,
+    concentration_bonus_percent: i32,
+    ammunition_critical_chance_percent: u16,
+) -> i64 {
+    let base = i64::from(to_hit)
+        .saturating_mul(3)
+        .saturating_add(i64::from(ranged_skill).saturating_mul(2))
+        .max(0);
+    let chance = base.saturating_add(
+        base.saturating_mul(i64::from(level))
+            .saturating_mul(i64::from(class_bonus_percent_per_level))
+            / 100,
+    );
+    chance
+        .saturating_add(chance.saturating_mul(i64::from(concentration_bonus_percent)) / 100)
+        .saturating_mul(i64::from(ammunition_critical_chance_percent))
+        / 100
 }
 
 impl Game {
@@ -48,6 +78,8 @@ impl Game {
             });
             return Ok(());
         };
+        let concentration = self.sniper_concentration;
+        self.sniper_concentration = 0;
         let (trace, target_index) = self.trace_projectile_path(path);
         if let Some(index) = target_index {
             let definition = self
@@ -87,6 +119,19 @@ impl Game {
                 );
             }
             let target = self.actor_derived_stats(&self.entities[index], &definition, false);
+            let concentration_bonus = self.sniper_concentration_bonus_percent(concentration);
+            let focused_armor_class = if concentration == 0 {
+                target.armor_class.clone()
+            } else {
+                let value =
+                    concentrated_target_armor_class(target.armor_class.value, concentration);
+                target.armor_class.with_modifier(
+                    StatLayer::Class,
+                    "sniper-concentration",
+                    value.saturating_sub(target.armor_class.value),
+                    StatBounds::NON_NEGATIVE,
+                )
+            };
             changed.insert(self.entities[index].position);
             if !resolve_check(
                 &mut self.rng,
@@ -95,7 +140,7 @@ impl Game {
                     actor_id: self.player.id.clone(),
                     target_id: Some(self.entities[index].id.clone()),
                     ability: ranged_skill,
-                    difficulty: target.armor_class.clone(),
+                    difficulty: focused_armor_class,
                 },
             )
             .succeeded()
@@ -109,6 +154,8 @@ impl Game {
                     profile.ammunition_weight_tenths_pound,
                     profile.to_hit,
                     attacker.ranged_skill.value,
+                    profile.ammunition_type,
+                    concentration,
                 );
                 let ammunition_slay_multiplier = self.player_projectile_damage_multiplier(
                     &profile,
@@ -120,6 +167,7 @@ impl Game {
                     ammunition_slay_multiplier,
                     profile.ammunition_to_damage,
                     ammunition_critical_multiplier,
+                    concentration_bonus,
                     profile.damage_multiplier_percent,
                     profile.launcher_to_damage,
                 )
@@ -724,22 +772,29 @@ impl Game {
         ammunition_weight_tenths_pound: u16,
         to_hit: i32,
         ranged_skill: i32,
+        ammunition_type: AmmunitionTypeDefinition,
+        concentration: u8,
     ) -> i32 {
         let bonus_per_level = self.character_definitions().map_or(0, |(_, _, class, _)| {
             class.projectile_critical_chance_bonus_percent_per_level
         });
-        if bonus_per_level == 0 {
+        let sniping_profile = self.sniping_profile().copied();
+        if bonus_per_level == 0 && sniping_profile.is_none() {
             return 100;
         }
-        let base_chance = i64::from(to_hit)
-            .saturating_mul(3)
-            .saturating_add(i64::from(ranged_skill).saturating_mul(2))
-            .max(0);
-        let chance = base_chance.saturating_add(
-            base_chance
-                .saturating_mul(i64::from(self.progress.level))
-                .saturating_mul(i64::from(bonus_per_level))
-                / 100,
+        let concentration_bonus = self.sniper_concentration_bonus_percent(concentration);
+        let ammunition_critical_percent = sniping_profile
+            .filter(|profile| ammunition_type == profile.preferred_ammunition_type)
+            .map_or(100, |profile| {
+                profile.preferred_ammunition_critical_chance_percent
+            });
+        let chance = projectile_critical_chance(
+            to_hit,
+            ranged_skill,
+            self.progress.level,
+            bonus_per_level,
+            concentration_bonus,
+            ammunition_critical_percent,
         );
         let roll = i64::try_from(self.rng.bounded(5_000) + 1)
             .expect("projectile critical roll must fit i64");
@@ -1316,13 +1371,23 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-    use super::projectile_raw_damage;
+    use super::{
+        concentrated_target_armor_class, projectile_critical_chance, projectile_raw_damage,
+    };
 
     #[test]
     fn ammunition_damage_and_bonus_are_scaled_before_launcher_bonus() {
-        assert_eq!(projectile_raw_damage(7, 10, 2, 100, 250, 3), 25);
-        assert_eq!(projectile_raw_damage(7, 10, 2, 100, 350, 3), 34);
-        assert_eq!(projectile_raw_damage(7, 10, 2, 200, 250, 3), 48);
-        assert_eq!(projectile_raw_damage(7, 24, 2, 100, 250, 3), 48);
+        assert_eq!(projectile_raw_damage(7, 10, 2, 100, 0, 250, 3), 25);
+        assert_eq!(projectile_raw_damage(7, 10, 2, 100, 0, 350, 3), 34);
+        assert_eq!(projectile_raw_damage(7, 10, 2, 200, 0, 250, 3), 48);
+        assert_eq!(projectile_raw_damage(7, 24, 2, 100, 0, 250, 3), 48);
+        assert_eq!(projectile_raw_damage(7, 10, 2, 100, 30, 250, 3), 30);
+    }
+
+    #[test]
+    fn concentration_reduces_armor_and_scales_critical_chance_before_bolt_bonus() {
+        assert_eq!(concentrated_target_armor_class(50, 3), 35);
+        assert_eq!(projectile_critical_chance(10, 100, 50, 0, 0, 150), 345);
+        assert_eq!(projectile_critical_chance(10, 100, 50, 0, 30, 150), 448);
     }
 }

@@ -192,3 +192,14 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 当前协调点：pack `1.303.0`，content hash
   `538cce0f525d1530dbb109f4cf75074c69130b09eebca10d672628ad770467e5`，Protocol `1.192`，
   State Hash Schema v96，save v1，active baseline `contract-v290`。
+
+## main 当前批次：狙击手 Commit 1 专注底座
+
+- 未新增正式内容 ID。新增可选 `snipingProfile`、`concentrate` 效果及职业能力的
+  `minimumConcentration` / `hitPointCost`；正式 Sniper class/build/skillset/出生内容和
+  箭术能力仍属于后续单职业提交。
+- 专注、弩栓命中/暴击、超额射速折半、AC 与弹药段伤害修正按 RFB master 接入；Web
+  面板投影专注当前值/上限。
+- `sniperConcentration` 与预留给 Commit 3 的 `probedActorKindIds` 已进入 save/hash，旧开发
+  存档不兼容。协调版本：pack `1.312.0`、Protocol `1.196`、State Hash Schema v98、
+  active baseline `contract-v293`。

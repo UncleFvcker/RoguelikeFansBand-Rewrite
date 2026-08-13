@@ -7,8 +7,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    AbilityLevelScalingDefinition, ActorDamageType, ActorResistanceLevel, StatModifiers,
-    default_percent,
+    AbilityLevelScalingDefinition, ActorDamageType, ActorResistanceLevel, AmmunitionTypeDefinition,
+    StatModifiers, default_percent,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -177,6 +177,9 @@ pub struct ClassDefinition {
     pub casting_profile: Option<CastingProfileDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub abilities: Vec<ClassAbilityDefinition>,
+    /// Optional RFB sniper shooting and concentration rules.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sniping_profile: Option<SnipingProfileDefinition>,
     /// Intrinsic resistance tiers gained when the character reaches a class
     /// level threshold.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -202,6 +205,34 @@ pub struct ClassDefinition {
     #[serde(default)]
     pub special_item_tags: Vec<String>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct SnipingProfileDefinition {
+    pub preferred_ammunition_type: AmmunitionTypeDefinition,
+    pub preferred_ammunition_to_hit_base: i16,
+    pub preferred_ammunition_to_hit_level_divisor: u16,
+    /// Percentage of shooting speed above 100 retained by the class.
+    pub base_shot_excess_percent: u16,
+    pub preferred_ammunition_critical_chance_percent: u16,
+    pub base_concentration_maximum: u8,
+    pub concentration_level_offset: u16,
+    pub concentration_level_divisor: u16,
+    /// Per-concentration percentage used for ammunition damage, critical
+    /// chance, and target-armor reduction.
+    pub concentration_bonus_percent_per_level: u8,
+}
+
+impl SnipingProfileDefinition {
+    #[must_use]
+    pub fn maximum_concentration(self, level: u16) -> u8 {
+        let level_bonus = level.saturating_add(self.concentration_level_offset)
+            / self.concentration_level_divisor;
+        u8::try_from(u16::from(self.base_concentration_maximum).saturating_add(level_bonus))
+            .unwrap_or(u8::MAX)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -302,8 +333,20 @@ pub struct ClassAbilityDefinition {
     #[serde(default)]
     pub resource_id: Option<String>,
     pub resource_cost: u32,
+    #[serde(default, skip_serializing_if = "is_zero_u8")]
+    pub minimum_concentration: u8,
+    #[serde(default, skip_serializing_if = "is_zero_u32")]
+    pub hit_point_cost: u32,
     pub base_failure_percent: u8,
     pub minimum_failure_percent: u8,
+}
+
+const fn is_zero_u8(value: &u8) -> bool {
+    *value == 0
+}
+
+const fn is_zero_u32(value: &u32) -> bool {
+    *value == 0
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

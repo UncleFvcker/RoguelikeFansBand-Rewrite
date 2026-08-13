@@ -655,3 +655,6 @@ save 容器保持 v1。
 `unique` 的隐式生命周期上限仍为 1，`unique2` 仍只限制同时存活一只；显式
 `lifetimeInstanceLimit` 可提供更高的跨楼层、跨死亡总额度。该权威表在组合后的协议
 1.195 中进入 State Hash Schema v97，save 容器保持 v1，不兼容缺少新字段的旧开发存档。
+协议 1.196 / contract-v293 为 `AbilityEffectSpecDto` 增加 `concentrate`，为 `AbilityDto`
+增加专注门槛与生命成本，并以 `PlayerDto.sniperConcentration` 投影狙击手专注当前值和
+等级上限。命令继续复用 `CastAbility` 与普通射击，不增加新的待处理输入状态。

@@ -133,6 +133,12 @@ impl Game {
                 .map(crate::effect::StatusInstance::to_dto)
                 .collect(),
             confusing_strike_ready: self.confusing_strike_ready,
+            sniper_concentration: self.sniper_max_concentration().map(|maximum| {
+                rfb_protocol::SniperConcentrationDto {
+                    current: self.sniper_concentration,
+                    maximum,
+                }
+            }),
             resistances: self.effective_player_resistances().to_dtos(),
             progress: self.player_progress_dto(),
             build: self.player_build_dto(),
@@ -337,6 +343,8 @@ impl Game {
                     resource_id,
                     base_resource_cost,
                     resource_cost,
+                    minimum_concentration,
+                    hit_point_cost,
                     failure_percent,
                     progress,
                     cooldown_remaining,
@@ -352,6 +360,8 @@ impl Game {
                             casting_profile.map(|profile| profile.resource_id.clone()),
                             activation.cost,
                             self.mutation_resource_cost(activation),
+                            0,
+                            0,
                             self.mutation_failure_percent(activation),
                             AbilityProgress {
                                 proficiency: 0,
@@ -374,6 +384,8 @@ impl Game {
                             activation.resource_id.clone(),
                             activation.resource_cost,
                             activation.resource_cost,
+                            activation.minimum_concentration,
+                            activation.hit_point_cost,
                             self.class_ability_failure_percent(activation),
                             AbilityProgress {
                                 proficiency: 0,
@@ -396,6 +408,8 @@ impl Game {
                             Some(player.resource_id.clone()),
                             player.resource_cost,
                             self.ability_effective_resource_cost(ability, progress),
+                            0,
+                            0,
                             self.ability_failure_percent(casting_profile?, ability),
                             progress,
                             self.ability_cooldown_remaining(ability),
@@ -417,6 +431,9 @@ impl Game {
                 };
                 let book = ability_books.get(&ability_id);
                 let level_available = self.progress.level >= minimum_level;
+                let concentration_available = self.sniper_concentration >= minimum_concentration;
+                let hit_points_available =
+                    hit_point_cost <= u32::try_from(self.player.hp.max(0)).unwrap_or(0);
                 let resource_available = if resource_cost == 0 {
                     true
                 } else if source == AbilitySourceDto::Mutation {
@@ -444,6 +461,8 @@ impl Game {
                     resource_id,
                     base_resource_cost,
                     resource_cost,
+                    minimum_concentration,
+                    hit_point_cost,
                     failure_percent,
                     proficiency: progress.proficiency,
                     proficiency_cap: progress.proficiency_cap,
@@ -538,7 +557,11 @@ impl Game {
                     can_forget: source == AbilitySourceDto::Learned && learned,
                     can_cast: match source {
                         AbilitySourceDto::Class | AbilitySourceDto::Mutation => {
-                            level_available && resource_available && cooldown_remaining == 0
+                            level_available
+                                && concentration_available
+                                && hit_points_available
+                                && resource_available
+                                && cooldown_remaining == 0
                         }
                         AbilitySourceDto::Learned => {
                             learned

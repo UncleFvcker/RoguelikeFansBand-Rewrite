@@ -546,3 +546,20 @@ git diff --stat
   active baseline `contract-v292`（26 条 exact fixture、零 waiver），content hash
   `f66b18b842e434ef84787e664a4fe94107a27b2f47bbf0a6ddffb087c0c0284b`。
   `codex/monsters-next` 分支及工作树继续保留。
+
+## 33. main 当前交接（狙击手 Commit 1：专注底座）
+
+- 本批不新增正式 item、ability、material、affix、class 或 build ID；正式狙击手内容留给
+  后续单职业导入。items/monsters 分支无需预留或重复创建任何身份。
+- `ClassDefinition.snipingProfile` 保存原版狙击手当前需要的射击派生与专注公式；
+  `ClassAbilityDefinition.minimumConcentration/hitPointCost` 为后续箭术提供通用门槛与生命
+  成本。新 `concentrate` 效果仅允许有 sniping profile 的职业使用。
+- `sniperConcentration` 与 `probedActorKindIds` 一次性进入 save/state hash；后者在 Commit 3
+  的“侦察”能力使用前保持空集合。读档严格拒绝非狙击手状态、超上限专注、重复/未知
+  actor kind。
+- 普通射击按清零前专注计算 AC、弹药段伤害和暴击；有效射击后清零。其他实际耗时命令
+  清零；未知能力、非法目标、资源/生命不足和缺弹等前置拒绝不清零、不增加 RNG。
+- 当前协调点：pack `1.312.0` / content hash
+  `f66b18b842e434ef84787e664a4fe94107a27b2f47bbf0a6ddffb087c0c0284b`、Protocol `1.196`、
+  State Hash Schema v98、save v1、active baseline `contract-v293`（26 条 exact fixture、
+  零 waiver）。

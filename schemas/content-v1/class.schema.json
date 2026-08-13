@@ -143,6 +143,14 @@
       ],
       "type": "string"
     },
+    "AmmunitionTypeDefinition": {
+      "enum": [
+        "shot",
+        "arrow",
+        "bolt"
+      ],
+      "type": "string"
+    },
     "CastingAttribute": {
       "enum": [
         "intelligence",
@@ -422,6 +430,17 @@
           ],
           "default": null
         },
+        "hitPointCost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "minimumConcentration": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
         "minimumFailurePercent": {
           "format": "uint8",
           "maximum": 255,
@@ -599,6 +618,76 @@
       "required": [
         "initial",
         "maximum"
+      ],
+      "type": "object"
+    },
+    "SnipingProfileDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "baseConcentrationMaximum": {
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "baseShotExcessPercent": {
+          "description": "Percentage of shooting speed above 100 retained by the class.",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "concentrationBonusPercentPerLevel": {
+          "description": "Per-concentration percentage used for ammunition damage, critical\nchance, and target-armor reduction.",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "concentrationLevelDivisor": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "concentrationLevelOffset": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "preferredAmmunitionCriticalChancePercent": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "preferredAmmunitionToHitBase": {
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "integer"
+        },
+        "preferredAmmunitionToHitLevelDivisor": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "preferredAmmunitionType": {
+          "$ref": "#/$defs/AmmunitionTypeDefinition"
+        }
+      },
+      "required": [
+        "preferredAmmunitionType",
+        "preferredAmmunitionToHitBase",
+        "preferredAmmunitionToHitLevelDivisor",
+        "baseShotExcessPercent",
+        "preferredAmmunitionCriticalChancePercent",
+        "baseConcentrationMaximum",
+        "concentrationLevelOffset",
+        "concentrationLevelDivisor",
+        "concentrationBonusPercentPerLevel"
       ],
       "type": "object"
     },
@@ -897,6 +986,17 @@
     },
     "skillSetId": {
       "type": "string"
+    },
+    "snipingProfile": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SnipingProfileDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Optional RFB sniper shooting and concentration rules."
     },
     "specialItemTags": {
       "default": [],

@@ -687,6 +687,8 @@ pub(crate) fn player_to_save(
             .map(StatusInstance::to_save_dto)
             .collect(),
         confusing_strike_ready: false,
+        sniper_concentration: 0,
+        probed_actor_kind_ids: Vec::new(),
         resistances: player.resistances.to_save_dtos(),
         progress: Some(PlayerProgressSaveDto {
             attributes: NaturalAttributeSetSaveDto {

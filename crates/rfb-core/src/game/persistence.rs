@@ -600,7 +600,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV94<'a> {
+struct StateHashPayloadV98<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -953,6 +953,27 @@ impl Game {
             value: bond.value,
         });
         let confusing_strike_ready = payload.player.confusing_strike_ready;
+        let sniper_concentration = payload.player.sniper_concentration;
+        let saved_probed_actor_kind_ids = payload.player.probed_actor_kind_ids.clone();
+        let probed_actor_kind_ids = saved_probed_actor_kind_ids
+            .iter()
+            .cloned()
+            .collect::<BTreeSet<_>>();
+        let sniping_profile = build
+            .as_ref()
+            .and_then(|identity| content.class(&identity.class_id))
+            .and_then(|class| class.sniping_profile.as_ref());
+        if sniping_profile.is_none_or(|profile| {
+            sniper_concentration > profile.maximum_concentration(progress.level)
+        }) && sniper_concentration != 0
+            || probed_actor_kind_ids.len() != saved_probed_actor_kind_ids.len()
+            || (!probed_actor_kind_ids.is_empty() && sniping_profile.is_none())
+            || probed_actor_kind_ids
+                .iter()
+                .any(|actor_kind_id| content.actor(actor_kind_id).is_none())
+        {
+            return Err(CoreError::InvalidSave("player sniper state is invalid"));
+        }
         let minor_slow = payload.player.minor_slow;
         if minor_slow > 10 {
             return Err(CoreError::InvalidSave("player minor slow is invalid"));
@@ -1362,6 +1383,8 @@ impl Game {
             summon_command,
             recall,
             confusing_strike_ready,
+            sniper_concentration,
+            probed_actor_kind_ids,
             minor_slow,
             minor_slow_energy,
             chaos_patron_id,
@@ -1487,7 +1510,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV94 {
+        let payload = StateHashPayloadV98 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1618,6 +1641,8 @@ impl Game {
                     value: bond.value,
                 });
         player.confusing_strike_ready = self.confusing_strike_ready;
+        player.sniper_concentration = self.sniper_concentration;
+        player.probed_actor_kind_ids = self.probed_actor_kind_ids.iter().cloned().collect();
         player.minor_slow = self.minor_slow;
         player.minor_slow_energy = self.minor_slow_energy;
         player.chaos_patron_id = self.chaos_patron_id.clone();

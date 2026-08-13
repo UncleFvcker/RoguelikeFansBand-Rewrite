@@ -37,6 +37,7 @@ mod progression;
 mod riding;
 mod riding_bond;
 mod snapshots;
+mod sniper;
 pub(crate) mod support;
 mod tasks;
 mod town;

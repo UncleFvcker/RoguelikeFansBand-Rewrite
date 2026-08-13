@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.195";
+pub const PROTOCOL_VERSION: &str = "1.196";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1152,6 +1152,7 @@ pub enum AbilityEffectSpecDto {
         category: String,
         power: u16,
     },
+    Concentrate,
     Rodeo,
     DrainLife {
         damage_dice: u16,
@@ -1295,6 +1296,10 @@ pub struct AbilityDto {
     #[serde(default)]
     pub base_resource_cost: u32,
     pub resource_cost: u32,
+    #[serde(default)]
+    pub minimum_concentration: u8,
+    #[serde(default)]
+    pub hit_point_cost: u32,
     pub failure_percent: u8,
     #[serde(default)]
     pub proficiency: u16,
@@ -2384,6 +2389,12 @@ pub enum AbilityEffectResolutionDto {
         to_hit: ItemEnchantmentComponentResolutionDto,
         to_damage: ItemEnchantmentComponentResolutionDto,
     },
+    Concentrate {
+        effect_index: u8,
+        before: u8,
+        after: u8,
+        maximum: u8,
+    },
     NoOp {
         effect_index: u8,
         reason: String,
@@ -2663,6 +2674,14 @@ pub struct StatusDto {
     pub incoming_damage_percent: u8,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct SniperConcentrationDto {
+    pub current: u8,
+    pub maximum: u8,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -2727,6 +2746,8 @@ pub struct PlayerDto {
     pub statuses: Vec<StatusDto>,
     #[serde(default)]
     pub confusing_strike_ready: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sniper_concentration: Option<SniperConcentrationDto>,
     #[serde(default)]
     pub resistances: Vec<ResistanceDto>,
     #[serde(default, skip_serializing_if = "is_default_player_progress")]
@@ -3671,6 +3692,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(SummonCommandResolutionDto);
     push_declaration!(PetUpkeepDto);
     push_declaration!(PetDto);
+    push_declaration!(SniperConcentrationDto);
     push_declaration!(ResourceRecoveryResolutionDto);
     push_declaration!(MonsterDisplacementResolutionDto);
     push_declaration!(RestStopReasonDto);
@@ -3781,6 +3803,8 @@ pub struct PlayerSaveDto {
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub confusing_strike_ready: bool,
+    pub sniper_concentration: u8,
+    pub probed_actor_kind_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub resistances: Vec<ResistanceSaveDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4794,6 +4818,7 @@ mod tests {
                 },
                 statuses: Vec::new(),
                 confusing_strike_ready: false,
+                sniper_concentration: None,
                 resistances: Vec::new(),
                 progress: PlayerProgressDto::default(),
                 build: None,
@@ -4948,6 +4973,8 @@ mod tests {
         current["player"]["activeMutationIds"] = serde_json::json!([]);
         current["player"]["lockedMutationIds"] = serde_json::json!([]);
         current["player"]["minorSlowEnergy"] = serde_json::json!(0);
+        current["player"]["sniperConcentration"] = serde_json::json!(0);
+        current["player"]["probedActorKindIds"] = serde_json::json!([]);
         current["reproductionSuppressed"] = serde_json::json!(false);
         current["defeatedLimitedActorCounts"] = serde_json::json!([]);
         current["generatedArtifactIds"] = serde_json::json!([]);
@@ -5013,6 +5040,8 @@ mod tests {
             pending_mutation_direction: None,
             statuses: Vec::new(),
             confusing_strike_ready: false,
+            sniper_concentration: 0,
+            probed_actor_kind_ids: Vec::new(),
             resistances: Vec::new(),
             progress: None,
             active_mutation_ids: Vec::new(),

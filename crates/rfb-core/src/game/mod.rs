@@ -206,7 +206,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 97;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 98;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -902,6 +902,8 @@ pub struct Game {
     summon_command: SummonCommandDto,
     recall: Option<RecallStateDto>,
     confusing_strike_ready: bool,
+    sniper_concentration: u8,
+    probed_actor_kind_ids: BTreeSet<String>,
     minor_slow: u8,
     minor_slow_energy: u16,
     chaos_patron_id: Option<String>,
@@ -1246,6 +1248,8 @@ impl Game {
             summon_command: SummonCommandDto::default(),
             recall: None,
             confusing_strike_ready: false,
+            sniper_concentration: 0,
+            probed_actor_kind_ids: BTreeSet::new(),
             minor_slow: 0,
             minor_slow_energy: 0,
             chaos_patron_id,
@@ -1519,6 +1523,16 @@ impl Game {
         let mut turn_advance = 1_u32;
         if advances_world {
             self.decrement_ability_cooldowns(1);
+        }
+        if (advances_world || matches!(&action, GameAction::Rest { turns } if *turns > 0))
+            && !matches!(
+                &action,
+                GameAction::CastAbility { .. }
+                    | GameAction::Fire { .. }
+                    | GameAction::FireTarget { .. }
+            )
+        {
+            self.sniper_concentration = 0;
         }
 
         match action {
@@ -7254,6 +7268,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             category: category.clone(),
             power: *power,
         },
+        AbilityEffectDefinition::Concentrate => AbilityEffectSpecDto::Concentrate,
         AbilityEffectDefinition::Rodeo => AbilityEffectSpecDto::Rodeo,
         AbilityEffectDefinition::DrainLife {
             damage_dice,

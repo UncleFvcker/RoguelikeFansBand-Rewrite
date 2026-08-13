@@ -776,7 +776,7 @@ pub(super) fn validate_abilities(
                     validate_id(affix_id).is_ok()
                 }
                 AbilityEffectDefinition::RandomChoice { .. } => false,
-                AbilityEffectDefinition::Rodeo => true,
+                AbilityEffectDefinition::Concentrate | AbilityEffectDefinition::Rodeo => true,
                 AbilityEffectDefinition::NoOp { reason } => {
                     !reason.is_empty() && reason.len() <= 128 && reason.is_ascii()
                 }
@@ -960,6 +960,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::JumpDamage { .. } => self_target_rule,
             AbilityEffectDefinition::Control { .. } => projectile_target_rule,
             AbilityEffectDefinition::Rodeo => projectile_target_rule && ability.target.range == 1,
+            AbilityEffectDefinition::Concentrate => self_target_rule,
             AbilityEffectDefinition::BreathDamage { .. } => projectile_target_rule,
             AbilityEffectDefinition::Teleport => {
                 !self_targeted

@@ -258,6 +258,22 @@ pub(super) fn validate_characters(
         {
             return Err(ContentError::InvalidRidingProficiency(class.id.clone()));
         }
+        if class.sniping_profile.is_some_and(|profile| {
+            !(-100..=100).contains(&profile.preferred_ammunition_to_hit_base)
+                || profile.preferred_ammunition_to_hit_level_divisor == 0
+                || !(1..=100).contains(&profile.base_shot_excess_percent)
+                || !(100..=500).contains(&profile.preferred_ammunition_critical_chance_percent)
+                || profile.base_concentration_maximum == 0
+                || profile.concentration_level_divisor == 0
+                || profile.concentration_bonus_percent_per_level == 0
+                || profile.concentration_bonus_percent_per_level > 20
+                || u16::from(profile.base_concentration_maximum).saturating_add(
+                    (50_u16.saturating_add(profile.concentration_level_offset))
+                        / profile.concentration_level_divisor,
+                ) > 10
+        }) {
+            return Err(ContentError::InvalidCharacterSource(class.id.clone()));
+        }
         if let Some(profile) = &mut class.casting_profile {
             profile
                 .realm_profiles
@@ -392,6 +408,8 @@ pub(super) fn validate_characters(
             if !class_ability_ids.insert(activation.ability_id.clone())
                 || !(1..=100).contains(&activation.minimum_level)
                 || activation.resource_cost > 1_000_000
+                || activation.minimum_concentration > 10
+                || activation.hit_point_cost > 1_000_000
                 || activation.base_failure_percent > 95
                 || activation.minimum_failure_percent > 95
                 || (activation.resource_id.is_none() && activation.resource_cost != 0)
@@ -400,7 +418,14 @@ pub(super) fn validate_characters(
                 || abilities
                     .iter()
                     .find(|ability| ability.id == activation.ability_id)
-                    .is_none_or(|ability| ability.player.is_some())
+                    .is_none_or(|ability| {
+                        ability.player.is_some()
+                            || (matches!(
+                                ability.effect,
+                                crate::AbilityEffectDefinition::Concentrate
+                            ) && class.sniping_profile.is_none())
+                    })
+                || (activation.minimum_concentration != 0 && class.sniping_profile.is_none())
             {
                 return Err(ContentError::InvalidCharacterSource(class.id.clone()));
             }

@@ -213,6 +213,8 @@ mod tests {
                 pending_mutation_direction: None,
                 statuses: Vec::new(),
                 confusing_strike_ready: false,
+                sniper_concentration: 0,
+                probed_actor_kind_ids: Vec::new(),
                 resistances: Vec::new(),
                 progress: None,
                 active_mutation_ids: Vec::new(),

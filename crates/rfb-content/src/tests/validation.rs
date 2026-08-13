@@ -74,3 +74,57 @@ fn class_level_resistance_thresholds_are_strict() {
         Err(ContentError::InvalidCharacterSource(id)) if id == "demo.class.paladin"
     ));
 }
+
+#[test]
+fn sniping_profiles_and_concentration_requirements_are_strict() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let profile = SnipingProfileDefinition {
+        preferred_ammunition_type: AmmunitionTypeDefinition::Bolt,
+        preferred_ammunition_to_hit_base: 10,
+        preferred_ammunition_to_hit_level_divisor: 5,
+        base_shot_excess_percent: 50,
+        preferred_ammunition_critical_chance_percent: 150,
+        base_concentration_maximum: 2,
+        concentration_level_offset: 5,
+        concentration_level_divisor: 10,
+        concentration_bonus_percent_per_level: 10,
+    };
+    let mut valid = artifact.content.clone();
+    let archer = valid
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.archer")
+        .expect("Archer class should exist");
+    archer.sniping_profile = Some(profile);
+    archer.abilities[0].minimum_concentration = 1;
+    archer.abilities[0].hit_point_cost = 1;
+    assert!(validate_and_normalize(&mut valid).is_ok());
+
+    let mut no_profile = artifact.content.clone();
+    no_profile
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.archer")
+        .expect("Archer class should exist")
+        .abilities[0]
+        .minimum_concentration = 1;
+    assert!(matches!(
+        validate_and_normalize(&mut no_profile),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "demo.class.archer"
+    ));
+
+    let mut invalid_divisor = artifact.content;
+    let archer = invalid_divisor
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.archer")
+        .expect("Archer class should exist");
+    archer.sniping_profile = Some(SnipingProfileDefinition {
+        concentration_level_divisor: 0,
+        ..profile
+    });
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_divisor),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "demo.class.archer"
+    ));
+}

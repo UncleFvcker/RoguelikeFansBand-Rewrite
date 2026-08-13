@@ -200,7 +200,13 @@ impl Game {
                 let activation = class_activation
                     .as_ref()
                     .expect("class ability source requires an activation");
-                (self.progress.level < activation.minimum_level).then_some("level-too-low")
+                if self.progress.level < activation.minimum_level {
+                    Some("level-too-low")
+                } else if self.sniper_concentration < activation.minimum_concentration {
+                    Some("concentration-too-low")
+                } else {
+                    None
+                }
             }
             AbilitySourceDto::Learned => {
                 let player = Self::player_ability_parameters(&ability);
@@ -322,6 +328,13 @@ impl Game {
             .as_deref()
             .and_then(|id| self.resources.get(id))
             .map_or(0, |pool| pool.current);
+        let class_hit_point_cost = if source == AbilitySourceDto::Class {
+            class_activation
+                .as_ref()
+                .map_or(0, |activation| activation.hit_point_cost)
+        } else {
+            0
+        };
         if source != AbilitySourceDto::Mutation
             && resource_cost > 0
             && resource_id
@@ -342,12 +355,13 @@ impl Game {
         let hp_paid = if source == AbilitySourceDto::Mutation {
             resource_cost.saturating_sub(resource_paid)
         } else {
-            0
+            class_hit_point_cost
         };
         let affordable = if source == AbilitySourceDto::Mutation {
             hp_paid <= u32::try_from(self.player.hp.max(0)).unwrap_or(0)
         } else {
             resource_before >= resource_cost
+                && hp_paid <= u32::try_from(self.player.hp.max(0)).unwrap_or(0)
         };
         if !affordable {
             events.push(DomainEvent::AbilityCastUnavailable {
@@ -381,6 +395,9 @@ impl Game {
             self.player.hp = self.player.hp.saturating_sub(
                 i32::try_from(hp_paid).expect("validated mutation cost must fit i32"),
             );
+        }
+        if !matches!(ability.effect, AbilityEffectDefinition::Concentrate) {
+            self.sniper_concentration = 0;
         }
         let resource_after = resource_before.saturating_sub(resource_paid);
         let percentile_roll =
@@ -629,6 +646,9 @@ impl Game {
             ) => self.resolve_player_drain_item_magic_effect(&ability, &item_id, events),
             (AbilityEffectDefinition::ReportMagic, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_report_magic_effect(&ability, events)
+            }
+            (AbilityEffectDefinition::Concentrate, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_concentrate_effect(&ability, events)
             }
             (AbilityEffectDefinition::Earthquake { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_earthquake_effect(&ability, events, changed, removed_entities)?;
@@ -3612,6 +3632,32 @@ impl Game {
         });
     }
 
+    fn resolve_player_concentrate_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let maximum = self
+            .sniper_max_concentration()
+            .expect("validated concentrate ability requires a sniping profile");
+        let before = self.sniper_concentration;
+        self.sniper_concentration = before.saturating_add(1).min(maximum);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::Concentrate {
+                    effect_index: 0,
+                    before,
+                    after: self.sniper_concentration,
+                    maximum,
+                }],
+            },
+            trace: None,
+        });
+    }
+
     pub(super) fn resolve_player_restore_vitality_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -6543,6 +6589,7 @@ impl Game {
             AbilityEffectDefinition::VisibleDamage { .. }
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
             | AbilityEffectDefinition::AggravateMonsters
+            | AbilityEffectDefinition::Concentrate
             | AbilityEffectDefinition::NoOp { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability

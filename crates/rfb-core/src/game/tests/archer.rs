@@ -255,6 +255,8 @@ fn archer_breakage_and_projectile_critical_hooks_are_active() {
             profile.ammunition_weight_tenths_pound,
             profile.to_hit,
             ranged_skill,
+            profile.ammunition_type,
+            0,
         );
         (multiplier > 100).then_some(multiplier)
     });
@@ -264,7 +266,10 @@ fn archer_breakage_and_projectile_critical_hooks_are_active() {
     );
 
     let mut warrior = Game::new(19);
-    assert_eq!(warrior.roll_projectile_critical_multiplier(2, 0, 500), 100);
+    assert_eq!(
+        warrior.roll_projectile_critical_multiplier(2, 0, 500, AmmunitionTypeDefinition::Arrow, 0,),
+        100
+    );
 }
 
 #[test]
