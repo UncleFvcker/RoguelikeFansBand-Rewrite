@@ -3631,6 +3631,131 @@ fn orc_cave_o7_binds_othrod_depths_ecology_and_final_reward() {
 }
 
 #[test]
+fn p86c_camelot_binds_depths_ecology_layout_and_mirror_shield_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.camelot")
+        .expect("Camelot should be active");
+    assert_eq!(dungeon.legacy_index, Some(2));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.camelot-depth-20");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.arthur-pendragon"
+    );
+    assert!(
+        world
+            .wilderness
+            .as_ref()
+            .expect("Middle-earth should retain wilderness")
+            .locations
+            .iter()
+            .any(|location| matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 7, y: 59 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.camelot"
+            ))
+    );
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.camelot"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 16);
+    assert_eq!(floors.first().map(|floor| floor.depth), Some(20));
+    assert_eq!(floors.last().map(|floor| floor.depth), Some(35));
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.camelot-entrance")
+    );
+    for floor in &floors {
+        assert_eq!((floor.width, floor.height), (96, 33));
+        assert_eq!(floor.wall_terrain_id, "demo.terrain.wall");
+        assert_eq!(floor.closed_door_terrain_id, "demo.terrain.door-secret");
+        assert_eq!(floor.trap_terrain_id, "demo.terrain.warren-snare");
+        let layout = floor.layout.as_ref().expect("Camelot should use a layout");
+        let rooms = layout
+            .rooms
+            .as_ref()
+            .expect("Camelot should generate rooms");
+        assert_eq!(rooms.shapes.len(), 1);
+        assert_eq!(rooms.shapes[0].shape, ProceduralRoomShape::Rectangle);
+        assert_eq!(
+            layout
+                .streamers
+                .iter()
+                .map(|streamer| streamer.terrain_id.as_str())
+                .collect::<BTreeSet<_>>(),
+            ["demo.terrain.magma-vein", "demo.terrain.quartz-vein"]
+                .into_iter()
+                .collect()
+        );
+    }
+
+    let final_floor = floors.last().expect("Camelot should have a final floor");
+    assert!(final_floor.final_floor);
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("depth 35 should contain Arthur");
+    assert_eq!(guardian.instance_id, "demo.guardian.camelot.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.arthur-pendragon");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.camelot-final-reward")
+    );
+
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.camelot")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Camelot should use global allocation");
+    assert_eq!(policy.special_div, 32);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+    assert_eq!(
+        policy
+            .preferred_tags
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>(),
+        ["knight"].into_iter().collect()
+    );
+    assert_eq!(
+        policy
+            .preferred_glyphs
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>(),
+        ["p", "H", "g", "d"].into_iter().collect()
+    );
+
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.camelot-final-reward")
+        .expect("Arthur should have a fixed reward table");
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.mirror-shield");
+    assert_eq!(reward.affix_weights[0].affix_id, None);
+}
+
+#[test]
 fn p40_chameleon_retains_the_authoritative_form_change_marker() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let chameleon = artifact

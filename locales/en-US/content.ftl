@@ -2978,6 +2978,7 @@ actor-demo-vampire-description = A creature recorded in the original RFB bestiar
 actor-demo-ghoulking-name = Ghoulking
 actor-demo-ghoulking-description = A creature recorded in the original RFB bestiary as Ghoulking.
 floor-demo-orc-cave-depth-name = Orc Cave
+floor-demo-camelot-depth-name = Camelot
 item-demo-ring-name = Ring
 item-demo-ring-description = A plain ring ready to receive magical properties.
 affix-legacy-combat-name = of Combat
@@ -3564,6 +3565,8 @@ ability-legacy-kin-othrod-lord-of-the-orcs-name = Summon kin
 ability-legacy-kin-othrod-lord-of-the-orcs-description = Summons two orc kin of level 32 or lower.
 terrain-demo-orc-cave-entrance-name = entrance to the Orc Cave
 terrain-demo-orc-cave-entrance-description = A dark tunnel descends into the Orc Cave.
+terrain-demo-camelot-entrance-name = entrance to Camelot
+terrain-demo-camelot-entrance-description = A passage leads to the legendary land of Camelot.
 
 
 floor-demo-outpost-sewer-name = The Sewer

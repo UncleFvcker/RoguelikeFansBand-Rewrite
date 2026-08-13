@@ -23,6 +23,11 @@
       "sourceIndex": 3,
       "sourceName": "Orc cave",
       "id": "demo.dungeon.orc-cave"
+    },
+    {
+      "sourceIndex": 2,
+      "sourceName": "Camelot",
+      "id": "demo.dungeon.camelot"
     }
   ],
   "townPlans": [

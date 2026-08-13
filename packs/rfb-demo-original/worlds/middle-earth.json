@@ -229,6 +229,14 @@
           "x": 30,
           "y": 45
         }
+      },
+      {
+        "dungeonId": "demo.dungeon.camelot",
+        "kind": "dungeon",
+        "position": {
+          "x": 7,
+          "y": 59
+        }
       }
     ],
     "rows": [
@@ -705,6 +713,12 @@
       "legacyIndex": 3,
       "rootFloorId": "demo.floor.orc-cave-depth-15",
       "guardianActorKindId": "demo.actor.othrod-lord-of-the-orcs"
+    },
+    {
+      "id": "demo.dungeon.camelot",
+      "legacyIndex": 2,
+      "rootFloorId": "demo.floor.camelot-depth-20",
+      "guardianActorKindId": "demo.actor.arthur-pendragon"
     }
   ],
   "campaign": {
@@ -2118,6 +2132,680 @@
       "finalFloor": true,
       "guardian": { "instanceId": "demo.guardian.orc-cave.1", "actorKindId": "demo.actor.othrod-lord-of-the-orcs", "rewardLootTableId": "demo.loot-table.orc-cave-final-reward" },
       "depth": 32,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-20",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 9, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "entryTerrainId": "demo.terrain.camelot-entrance",
+      "nextFloorId": "demo.floor.camelot-depth-21",
+      "depth": 20,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-21",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-20",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 9, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-22",
+      "depth": 21,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-22",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-21",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 9, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-23",
+      "depth": 22,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-23",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-22",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 9, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-24",
+      "depth": 23,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-24",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-23",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 10, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-25",
+      "depth": 24,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-25",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-24",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 10, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-26",
+      "depth": 25,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-26",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-25",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 10, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-27",
+      "depth": 26,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-27",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-26",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 10, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-28",
+      "depth": 27,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-28",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-27",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 11, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-29",
+      "depth": 28,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-29",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-28",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 11, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-30",
+      "depth": 29,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-30",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-29",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 11, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-31",
+      "depth": 30,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-31",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-30",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 11, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-32",
+      "depth": 31,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-32",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-31",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 12, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-33",
+      "depth": 32,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-33",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-32",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 12, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-34",
+      "depth": 33,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-34",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-33",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 12, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "nextFloorId": "demo.floor.camelot-depth-35",
+      "depth": 34,
+      "width": 96,
+      "height": 33,
+      "wallTerrainId": "demo.terrain.wall",
+      "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret",
+      "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [],
+      "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.camelot-depth-35",
+      "nameKey": "floor-demo-camelot-depth-name",
+      "returnFloorId": "demo.floor.camelot-depth-34",
+      "dungeonId": "demo.dungeon.camelot",
+      "encounterTableId": "demo.encounter-table.camelot",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.camelot-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.camelot-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": {
+        "actorSlots": 12, "lootPlacements": 8,
+        "roomPlacements": 6, "roomAreaTiles": 800,
+        "streamerPlacements": 2, "streamerAreaTiles": 32
+      },
+      "layout": {
+        "rooms": {
+          "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11,
+          "shapes": [{ "shape": "rectangle", "weight": 1 }]
+        },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 } }
+      },
+      "finalFloor": true,
+      "guardian": { "instanceId": "demo.guardian.camelot.1", "actorKindId": "demo.actor.arthur-pendragon", "rewardLootTableId": "demo.loot-table.camelot-final-reward" },
+      "depth": 35,
       "width": 96,
       "height": 33,
       "wallTerrainId": "demo.terrain.wall",
