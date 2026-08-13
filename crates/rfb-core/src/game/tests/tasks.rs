@@ -1837,3 +1837,173 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
     );
     assert_eq!(surface.campaign.status, CampaignStatusDto::Active);
 }
+
+#[test]
+fn p86d_camelot_entrance_recall_conquest_and_reward_round_trip() {
+    let mut game =
+        Game::new_with_build(1111, "demo.build.warrior").expect("Middle-earth should create");
+    game.player
+        .resistances
+        .set(DamageType::Physical, ResistanceLevel::Immune);
+
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 7, y: 59 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.wilderness_position, Some(Position { x: 7, y: 59 }));
+    assert_eq!(
+        game.terrain
+            .iter()
+            .filter(|terrain| terrain.as_str() == "demo.terrain.camelot-entrance")
+            .count(),
+        1
+    );
+    place_player_on_terrain(&mut game, "demo.terrain.camelot-entrance");
+
+    for depth in 20..=27 {
+        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(update.floor_id, format!("demo.floor.camelot-depth-{depth}"));
+        assert_eq!(update.campaign.status, CampaignStatusDto::Active);
+        if depth < 27 {
+            game.entities.clear();
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        }
+    }
+
+    let mid_depth_hash = game.state_hash();
+    game = Game::from_save(game.to_save()).expect("Camelot depth 27 should round-trip");
+    assert_eq!(game.state_hash(), mid_depth_hash);
+    assert_eq!(game.current_floor_id, "demo.floor.camelot-depth-27");
+    game.entities.clear();
+    game.recall = Some(RecallStateDto {
+        dungeon_id: "demo.dungeon.camelot".to_owned(),
+        floor_id: "demo.floor.camelot-depth-27".to_owned(),
+        remaining_turns: Some(1),
+    });
+    let recalled = dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(recalled.floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.wilderness_position, Some(Position { x: 7, y: 59 }));
+    assert!(
+        recalled
+            .events
+            .iter()
+            .any(|event| event.kind == "item.recall-triggered")
+    );
+
+    place_player_on_terrain(&mut game, "demo.terrain.camelot-entrance");
+    for depth in 20..=35 {
+        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(update.floor_id, format!("demo.floor.camelot-depth-{depth}"));
+        assert_eq!(update.campaign.status, CampaignStatusDto::Active);
+        if depth < 35 {
+            game.entities.clear();
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        }
+    }
+
+    let guardian_index = game
+        .entities
+        .iter()
+        .position(|entity| entity.id == "demo.guardian.camelot.1")
+        .expect("Camelot depth 35 should spawn Arthur");
+    assert_eq!(
+        game.entities[guardian_index].kind_id,
+        "demo.actor.arthur-pendragon"
+    );
+    let guardian_position = game.entities[guardian_index].position;
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.mirror-shield")
+            .count(),
+        0
+    );
+    game.entities[guardian_index].hp = 1;
+    game.entities[guardian_index].statuses = vec![StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 3,
+        remaining_ticks: 1,
+        source_id: Some(game.player.id.clone()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    }];
+
+    let conquered = dispatch_next(&mut game, GameCommand::Wait);
+    assert!(
+        conquered
+            .events
+            .iter()
+            .any(|event| event.kind == "dungeon.guardian-defeated")
+    );
+    assert!(
+        conquered
+            .events
+            .iter()
+            .all(|event| event.kind != "campaign.victorious")
+    );
+    assert_eq!(conquered.campaign.status, CampaignStatusDto::Active);
+    assert_eq!(conquered.campaign.conquered_dungeons, 1);
+    assert_eq!(conquered.campaign.score, 10_000);
+    assert!(game.dungeon_states["demo.dungeon.camelot"].guardian_defeated);
+    let mirror_shield = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.mirror-shield")
+        .expect("Arthur should drop the fixed Mirror Shield");
+    assert_eq!(
+        mirror_shield.location,
+        ItemLocation::Ground(guardian_position)
+    );
+    assert_eq!(mirror_shield.quality, ItemQualityDto::Ordinary);
+    assert!(mirror_shield.affix_ids.is_empty());
+
+    game.entities.clear();
+    let after_conquest = dispatch_next(&mut game, GameCommand::Wait);
+    assert!(
+        after_conquest
+            .events
+            .iter()
+            .all(|event| event.kind != "dungeon.guardian-defeated")
+    );
+    assert_eq!(after_conquest.campaign.conquered_dungeons, 1);
+    assert_eq!(after_conquest.campaign.score, 10_000);
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.mirror-shield")
+            .count(),
+        1
+    );
+
+    let conquered_hash = game.state_hash();
+    let mut restored = Game::from_save(game.to_save()).expect("Camelot conquest should round-trip");
+    assert_eq!(restored.state_hash(), conquered_hash);
+    assert!(restored.dungeon_states["demo.dungeon.camelot"].guardian_defeated);
+
+    for expected_depth in (20..=34).rev() {
+        place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
+        let update = dispatch_next(&mut restored, GameCommand::TraverseStairs);
+        assert_eq!(
+            update.floor_id,
+            format!("demo.floor.camelot-depth-{expected_depth}")
+        );
+        restored.entities.clear();
+    }
+    place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
+    let surface = dispatch_next(&mut restored, GameCommand::TraverseStairs);
+    assert_eq!(surface.floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(restored.wilderness_position, Some(Position { x: 7, y: 59 }));
+    assert_eq!(surface.campaign.status, CampaignStatusDto::Active);
+}
