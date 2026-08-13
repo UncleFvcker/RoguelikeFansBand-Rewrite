@@ -597,3 +597,20 @@ git diff --stat
   `f66b18b842e434ef84787e664a4fe94107a27b2f47bbf0a6ddffb087c0c0284b`、Protocol `1.198`、
   State Hash Schema v98、save v1、active baseline `contract-v295`（26 条 exact fixture、
   零 waiver）。现有 fixture 不进入尚未正式绑定的狙击手路径，验证后不刷新 assertions。
+
+## 36. main 当前交接（狙击手 Commit 4：正式职业内容与 UI）
+
+- class 方向正式拥有 `demo.class.sniper`、`demo.skill-set.sniper`、
+  `demo.build.sniper`、`demo.actor.sniper-player`，以及 17 对
+  `demo.ability.sniper-*` / `demo.ability-program.sniper-*`。其他方向不得重复创建同义 ID。
+- 本批未新增 item、affix、resource、material 或 ability book ID；出生只引用现有
+  `demo.item.dagger`、`demo.item.soft-leather-armour`、`demo.item.light-crossbow` 与
+  `demo.item.bolt`。
+- RFB master 职业数据、逐武器熟练度 N:27、0/0 骑术、20–30 随机弩栓和十七项能力参数
+  已闭合。逐武器审计现核验 6 个正式职业和 68 种基础武器。
+- New Game、双语职业/能力文案、十六项“狙击”分组、探测怪物独立入口和三套 tileset
+  映射已接通。`CLASS_SENSE1_SLOW | CLASS_SENSE1_STRONG` 等待通用装备感知系统。
+- 共享协调点：pack `1.313.0` / content hash
+  `8b89d37d689db0c180feb1dbe213a3aa30aef910bd72a12a6c3d1af8222296dc`、Protocol
+  `1.198`、State Hash Schema v98、save v1、active baseline `contract-v296`。内容变化
+  不改变既有构筑初始化或 state-hash 输入，26 条 active fixture 只复验、不刷新。

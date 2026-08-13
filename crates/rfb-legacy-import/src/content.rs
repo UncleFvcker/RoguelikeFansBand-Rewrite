@@ -13462,6 +13462,7 @@ pub fn audit_demo_weapon_proficiencies(
         ("high-mage.json", 10),
         ("archer.json", 15),
         ("cavalry.json", 22),
+        ("sniper.json", 27),
     ] {
         let class: serde_json::Value =
             serde_json::from_slice(&fs::read(classes_dir.join(file_name))?)?;
@@ -13544,7 +13545,7 @@ pub fn audit_demo_weapon_proficiencies(
     Ok(DemoWeaponProficiencyAuditReport {
         schema_version: 1,
         source_commit,
-        classes_checked: 5,
+        classes_checked: 6,
         base_weapons_checked: base_weapons.len(),
     })
 }

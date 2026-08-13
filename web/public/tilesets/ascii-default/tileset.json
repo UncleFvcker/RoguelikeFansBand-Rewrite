@@ -122,6 +122,10 @@
       "foreground": "#d7a86e",
       "background": "#43301f"
     },
+    "demo.actor.sniper-player": {
+      "foreground": "#b9d7dd",
+      "background": "#24343a"
+    },
     "core.gold.copper": {
       "glyph": "$",
       "foreground": "#c98254",

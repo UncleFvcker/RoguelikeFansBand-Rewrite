@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json",
+  "formatVersion": 1,
+  "id": "demo.skill-set.sniper",
+  "entries": [
+    { "skillId": "demo.skill.device", "base": 24, "growthPerTenLevels": 10 },
+    { "skillId": "demo.skill.disarming", "base": 25, "growthPerTenLevels": 12 },
+    { "skillId": "demo.skill.melee", "base": 35, "growthPerTenLevels": 12 },
+    { "skillId": "demo.skill.perception", "base": 18 },
+    { "skillId": "demo.skill.ranged", "base": 72, "growthPerTenLevels": 28 },
+    { "skillId": "demo.skill.saving-throw", "base": 28, "growthPerTenLevels": 10 },
+    { "skillId": "demo.skill.search", "base": 32 },
+    { "skillId": "demo.skill.stealth", "base": 5 }
+  ]
+}

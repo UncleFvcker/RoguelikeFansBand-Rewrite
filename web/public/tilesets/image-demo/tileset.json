@@ -133,6 +133,11 @@
       "background": "#43301f",
       "tile": { "x": 2, "y": 0 }
     },
+    "demo.actor.sniper-player": {
+      "foreground": "#b9d7dd",
+      "background": "#24343a",
+      "tile": { "x": 2, "y": 0 }
+    },
     "core.gold.copper": {
       "glyph": "$",
       "foreground": "#c98254",

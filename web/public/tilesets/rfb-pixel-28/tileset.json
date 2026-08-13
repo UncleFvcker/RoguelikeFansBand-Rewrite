@@ -118,6 +118,10 @@
       "foreground": "#d7a86e",
       "background": "#43301f"
     },
+    "demo.actor.sniper-player": {
+      "foreground": "#b9d7dd",
+      "background": "#24343a"
+    },
     "demo.actor.newt": {
       "foreground": "#96c641",
       "tile": { "x": 1, "y": 2 }

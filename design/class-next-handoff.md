@@ -229,3 +229,20 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 协调版本：pack `1.312.0`、Protocol `1.198`、State Hash Schema v98、save v1、
   active baseline `contract-v295`。现有 26 条 fixture 不进入未正式绑定的狙击手能力路径，
   因而只复验、不刷新断言。
+
+## main 当前批次：狙击手 Commit 4 正式职业内容与 UI
+
+- class 方向新增并拥有 `demo.class.sniper`、`demo.skill-set.sniper`、
+  `demo.build.sniper`、`demo.actor.sniper-player`，以及 `demo.ability.sniper-*` 与同名
+  `demo.ability-program.sniper-*` 的 17 对正式身份；items/monsters 分支不得重复创建。
+- 本批不新增 item、affix、resource、material 或 ability book ID。出生引用现有匕首、
+  软皮甲、轻弩和 20–30 支弩栓。
+- 属性、life/base HP/经验、八项技能、宠物维持除数、逐武器熟练度和骑术均来自 RFB
+  `master:src/sniper.c` 与 `master:lib/edit/s_info.txt`。审计现覆盖 6 个正式职业和 68 种
+  基础武器。
+- New Game、双语文案、能力分组、player actor 与三套 tileset 已接通。原版强力慢速物品
+  感知等待共享装备感知系统，不在职业代码中造占位实现。
+- 协调点：pack `1.313.0` / content hash
+  `8b89d37d689db0c180feb1dbe213a3aa30aef910bd72a12a6c3d1af8222296dc`、Protocol
+  `1.198`、State Hash Schema v98、save v1、active baseline `contract-v296`。现有 26 条
+  fixture 不选择 Sniper，只复验、不刷新。

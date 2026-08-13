@@ -11,6 +11,11 @@ const CONCENTRATE_ABILITY_ID: &str = "test.ability.sniper-concentrate";
 const TECHNIQUE_ABILITY_ID: &str = "test.ability.sniper-technique";
 const SHINING_SHOT_ABILITY_ID: &str = "test.ability.sniper-shining-shot";
 const PROBE_ABILITY_ID: &str = "test.ability.sniper-probe";
+const FORMAL_SNIPER_BUILD_ID: &str = "demo.build.sniper";
+
+fn formal_sniper_game(seed: u64) -> Game {
+    Game::new_with_build(seed, FORMAL_SNIPER_BUILD_ID).expect("Sniper build should create")
+}
 
 fn sniper_game(seed: u64) -> Game {
     static CONTENT: OnceLock<Arc<ContentCatalog>> = OnceLock::new();
@@ -194,6 +199,214 @@ fn equip_light_crossbow(game: &mut Game) {
         .find(|item| item.id == "test.sniper-bolt")
         .expect("test bolt should exist")
         .quantity = 20;
+}
+
+#[test]
+fn sniper_birth_uses_original_identity_skills_proficiencies_kit_and_techniques() {
+    let game = formal_sniper_game(0x0053_4e49_5045_5200);
+    let snapshot = game.snapshot();
+    let build = snapshot
+        .player
+        .build
+        .expect("Sniper should project its build");
+
+    assert_eq!(build.build_id, FORMAL_SNIPER_BUILD_ID);
+    assert_eq!(build.class_id, "demo.class.sniper");
+    assert_eq!((build.life_percent, build.experience_percent), (100, 110));
+    assert_eq!(snapshot.player.kind_id, "demo.actor.sniper-player");
+    let attributes = snapshot.player.progress.attributes;
+    assert_eq!(attributes.strength.effective, 15);
+    assert_eq!(attributes.intelligence.effective, 12);
+    assert_eq!(attributes.wisdom.effective, 12);
+    assert_eq!(attributes.dexterity.effective, 15);
+    assert_eq!(attributes.constitution.effective, 14);
+    assert_eq!(attributes.charisma.effective, 13);
+
+    let skill = |id: &str| {
+        snapshot
+            .player
+            .progress
+            .skills
+            .iter()
+            .find(|skill| skill.id == id)
+            .expect("original Sniper skill should be projected")
+    };
+    for (id, base, growth) in [
+        ("demo.skill.disarming", 25, 12),
+        ("demo.skill.device", 24, 10),
+        ("demo.skill.saving-throw", 28, 10),
+        ("demo.skill.stealth", 5, 0),
+        ("demo.skill.search", 32, 0),
+        ("demo.skill.perception", 18, 0),
+        ("demo.skill.melee", 35, 12),
+        ("demo.skill.ranged", 72, 28),
+    ] {
+        assert_eq!(
+            (skill(id).base, skill(id).growth_per_ten_levels),
+            (base, growth)
+        );
+    }
+
+    assert_eq!(snapshot.player.progress.riding_proficiency.current, 0);
+    assert_eq!(snapshot.player.progress.riding_proficiency.maximum, 0);
+    let light_crossbow = snapshot
+        .player
+        .progress
+        .weapon_proficiencies
+        .iter()
+        .find(|entry| entry.item_kind_id == "demo.item.light-crossbow")
+        .expect("Sniper light-crossbow proficiency");
+    assert_eq!(
+        (light_crossbow.current, light_crossbow.maximum),
+        (4_000, 8_000)
+    );
+
+    for kind_id in [
+        "demo.item.dagger",
+        "demo.item.soft-leather-armour",
+        "demo.item.light-crossbow",
+    ] {
+        assert!(game.items.iter().any(|item| {
+            item.kind_id == kind_id && matches!(item.location, ItemLocation::Equipped { .. })
+        }));
+    }
+    let bolts = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.bolt")
+        .expect("Sniper should start with bolts");
+    assert!((20..=30).contains(&bolts.quantity));
+
+    let class = game
+        .content
+        .class("demo.class.sniper")
+        .expect("Sniper class should exist");
+    assert_eq!(class.base_hp, 4);
+    assert_eq!(class.pet_upkeep_divisor, 40);
+    let profile = class.sniping_profile.expect("Sniper profile");
+    assert_eq!(
+        profile.preferred_ammunition_type,
+        AmmunitionTypeDefinition::Bolt
+    );
+    assert_eq!(profile.preferred_ammunition_to_hit_base, 10);
+    assert_eq!(profile.preferred_ammunition_to_hit_level_divisor, 5);
+    assert_eq!(profile.base_shot_excess_percent, 50);
+    assert_eq!(profile.preferred_ammunition_critical_chance_percent, 150);
+
+    let expected = [
+        ("demo.ability.sniper-concentrate", 1, 0, 0),
+        ("demo.ability.sniper-shining-arrow", 2, 1, 0),
+        ("demo.ability.sniper-retreat-shot", 3, 1, 0),
+        ("demo.ability.sniper-disarming-shot", 5, 1, 0),
+        ("demo.ability.sniper-burning-shot", 8, 2, 0),
+        ("demo.ability.sniper-shatter-shot", 10, 2, 0),
+        ("demo.ability.sniper-freezing-shot", 13, 2, 0),
+        ("demo.ability.sniper-knockback-shot", 18, 2, 0),
+        ("demo.ability.sniper-piercing-shot", 22, 3, 0),
+        ("demo.ability.sniper-evil-shot", 25, 4, 0),
+        ("demo.ability.sniper-holy-shot", 26, 4, 0),
+        ("demo.ability.sniper-exploding-shot", 30, 3, 0),
+        ("demo.ability.sniper-double-shot", 32, 4, 0),
+        ("demo.ability.sniper-thunder-shot", 36, 3, 0),
+        ("demo.ability.sniper-needle-shot", 40, 3, 0),
+        ("demo.ability.sniper-saint-stars-arrow", 48, 7, 0),
+        ("demo.ability.sniper-probe-monsters", 15, 0, 20),
+    ];
+    assert_eq!(snapshot.player.abilities.len(), expected.len());
+    for (id, level, concentration, hp) in expected {
+        let ability = snapshot
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .expect("formal Sniper ability");
+        assert_eq!(ability.source, AbilitySourceDto::Class);
+        assert_eq!(
+            (
+                ability.minimum_level,
+                ability.minimum_concentration,
+                ability.hit_point_cost,
+            ),
+            (level, concentration, hp)
+        );
+        assert_eq!(
+            ability.ui_group_name_key.as_deref(),
+            (id != "demo.ability.sniper-probe-monsters")
+                .then_some("ability-group-demo-sniper-sniping-name")
+        );
+    }
+    for (id, mode) in [
+        (
+            "demo.ability.sniper-shining-arrow",
+            SniperShotModeDto::Shining,
+        ),
+        (
+            "demo.ability.sniper-retreat-shot",
+            SniperShotModeDto::Retreat,
+        ),
+        (
+            "demo.ability.sniper-disarming-shot",
+            SniperShotModeDto::Disarm,
+        ),
+        (
+            "demo.ability.sniper-burning-shot",
+            SniperShotModeDto::Burning,
+        ),
+        (
+            "demo.ability.sniper-shatter-shot",
+            SniperShotModeDto::Shatter,
+        ),
+        (
+            "demo.ability.sniper-freezing-shot",
+            SniperShotModeDto::Freezing,
+        ),
+        (
+            "demo.ability.sniper-knockback-shot",
+            SniperShotModeDto::Knockback,
+        ),
+        (
+            "demo.ability.sniper-piercing-shot",
+            SniperShotModeDto::Piercing,
+        ),
+        ("demo.ability.sniper-evil-shot", SniperShotModeDto::Evil),
+        ("demo.ability.sniper-holy-shot", SniperShotModeDto::Holy),
+        (
+            "demo.ability.sniper-exploding-shot",
+            SniperShotModeDto::Exploding,
+        ),
+        ("demo.ability.sniper-double-shot", SniperShotModeDto::Double),
+        (
+            "demo.ability.sniper-thunder-shot",
+            SniperShotModeDto::Thunder,
+        ),
+        ("demo.ability.sniper-needle-shot", SniperShotModeDto::Needle),
+        (
+            "demo.ability.sniper-saint-stars-arrow",
+            SniperShotModeDto::Final,
+        ),
+    ] {
+        let ability = snapshot
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .expect("formal Sniper shot");
+        assert_eq!(ability.effects, [AbilityEffectSpecDto::SniperShot { mode }]);
+    }
+    let concentrate = snapshot
+        .player
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.sniper-concentrate")
+        .expect("formal Concentrate");
+    assert_eq!(concentrate.effects, [AbilityEffectSpecDto::Concentrate]);
+    let probe = snapshot
+        .player
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.sniper-probe-monsters")
+        .expect("formal Probe Monsters");
+    assert_eq!(probe.effects, [AbilityEffectSpecDto::ProbeMonsters]);
 }
 
 fn prepare_shooting_line(game: &mut Game) {

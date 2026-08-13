@@ -25,6 +25,7 @@ test("new character creation exposes all formal class slices", () => {
     "demo.build.archer",
     "demo.build.paladin-death",
     "demo.build.cavalry",
+    "demo.build.sniper",
   ]);
   assert.equal(PLAYTEST_BUILD_IDS.some((id) => id.startsWith("rfb-legacy.")), false);
 });

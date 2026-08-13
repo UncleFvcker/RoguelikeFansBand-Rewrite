@@ -321,3 +321,7 @@ Random Telepathy、Nausea、Warning 与 Wraithform 复用变异移除、属性�
 v98，并刷新公共状态投影；Commit 2/3 只增加能力效果、typed event 与未正式绑定的运行时
 路径，最终 Protocol 为 1.198。后两批现有 26 条 fixture 均不进入狙击手能力路径，
 `verify-all` 零漂移，因此不刷新 assertions、零 waiver。
+
+`contract-v296` 将共享底座绑定为正式 Sniper class/build：新增 17 项职业能力、原版出生
+装备和 New Game/UI 内容，但没有改变协议、权威状态、公共初始化或既有构筑 RNG。现有
+26 条 fixture 不选择狙击手构筑，`verify-all` 零漂移，因此不刷新 assertions、零 waiver。

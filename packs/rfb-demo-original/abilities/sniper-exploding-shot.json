@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.sniper-exploding-shot",
+  "nameKey": "ability-demo-sniper-exploding-shot-name",
+  "descriptionKey": "ability-demo-sniper-exploding-shot-description",
+  "target": {
+    "modes": [
+      "direction",
+      "position",
+      "entity"
+    ],
+    "range": 20,
+    "requiresLineOfEffect": true
+  },
+  "abilityProgramId": "demo.ability-program.sniper-exploding-shot",
+  "tags": [
+    "class-technique",
+    "projectile",
+    "requires-sight",
+    "sniper"
+  ]
+}

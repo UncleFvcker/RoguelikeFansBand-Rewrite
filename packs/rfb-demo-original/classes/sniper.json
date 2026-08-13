@@ -1,0 +1,70 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/class.schema.json",
+  "formatVersion": 1,
+  "id": "demo.class.sniper",
+  "nameKey": "class-demo-sniper-name",
+  "descriptionKey": "class-demo-sniper-description",
+  "modifiers": {
+    "strength": 2,
+    "intelligence": -1,
+    "wisdom": -1,
+    "dexterity": 2,
+    "constitution": 1,
+    "charisma": 0
+  },
+  "lifePercent": 100,
+  "experiencePercent": 110,
+  "baseHp": 4,
+  "skillSetId": "demo.skill-set.sniper",
+  "weaponProficiency": {
+    "defaultInitial": 2000,
+    "defaultMaximum": 4000,
+    "overrides": {
+      "demo.item.dagger": { "initial": 4000, "maximum": 4000 },
+      "demo.item.heavy-crossbow": { "initial": 4000, "maximum": 8000 },
+      "demo.item.light-crossbow": { "initial": 4000, "maximum": 8000 },
+      "demo.item.long-bow": { "initial": 4000, "maximum": 8000 },
+      "demo.item.short-bow": { "initial": 4000, "maximum": 8000 },
+      "demo.item.sling": { "initial": 4000, "maximum": 8000 }
+    }
+  },
+  "ridingProficiency": { "initial": 0, "maximum": 0 },
+  "petUpkeepDivisor": 40,
+  "snipingProfile": {
+    "preferredAmmunitionType": "bolt",
+    "preferredAmmunitionToHitBase": 10,
+    "preferredAmmunitionToHitLevelDivisor": 5,
+    "baseShotExcessPercent": 50,
+    "preferredAmmunitionCriticalChancePercent": 150,
+    "baseConcentrationMaximum": 2,
+    "concentrationLevelOffset": 5,
+    "concentrationLevelDivisor": 10,
+    "concentrationBonusPercentPerLevel": 10
+  },
+  "abilities": [
+    { "abilityId": "demo.ability.sniper-concentrate", "minimumLevel": 1, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 0, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-shining-arrow", "minimumLevel": 2, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 1, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-retreat-shot", "minimumLevel": 3, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 1, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-disarming-shot", "minimumLevel": 5, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 1, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-burning-shot", "minimumLevel": 8, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 2, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-shatter-shot", "minimumLevel": 10, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 2, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-freezing-shot", "minimumLevel": 13, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 2, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-knockback-shot", "minimumLevel": 18, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 2, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-piercing-shot", "minimumLevel": 22, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 3, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-evil-shot", "minimumLevel": 25, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 4, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-holy-shot", "minimumLevel": 26, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 4, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-exploding-shot", "minimumLevel": 30, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 3, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-double-shot", "minimumLevel": 32, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 4, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-thunder-shot", "minimumLevel": 36, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 3, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-needle-shot", "minimumLevel": 40, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 3, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-saint-stars-arrow", "minimumLevel": 48, "uiGroupNameKey": "ability-group-demo-sniper-sniping-name", "governingAttribute": "dexterity", "resourceCost": 0, "minimumConcentration": 7, "baseFailurePercent": 0, "minimumFailurePercent": 0 },
+    { "abilityId": "demo.ability.sniper-probe-monsters", "minimumLevel": 15, "governingAttribute": "intelligence", "resourceCost": 0, "hitPointCost": 20, "baseFailurePercent": 80, "minimumFailurePercent": 0 }
+  ],
+  "startingItems": [
+    { "itemKindId": "demo.item.dagger", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.soft-leather-armour", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.light-crossbow", "quantity": 1, "equipped": true },
+    { "itemKindId": "demo.item.bolt", "quantity": 20, "maximumQuantity": 30 }
+  ],
+  "tags": ["martial", "ranged", "rfb-compatibility", "sniper"]
+}

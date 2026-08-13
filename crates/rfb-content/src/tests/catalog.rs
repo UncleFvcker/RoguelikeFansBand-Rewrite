@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.312.0");
+    assert_eq!(catalog.pack_version(), "1.313.0");
     assert_eq!(catalog.races().count(), 46);
     assert_eq!(
         catalog
@@ -89,12 +89,17 @@ fn compiled_catalog_indexes_current_rfb_content() {
     assert!(cavalry.riding_combat_expert);
     assert_eq!(cavalry.mounted_non_arrow_base_shot_cap, Some(100));
     assert!(catalog.build("demo.build.cavalry").is_some());
+    let sniper = catalog.class("demo.class.sniper").expect("Sniper class");
+    assert_eq!(sniper.pet_upkeep_divisor, 40);
+    assert!(sniper.sniping_profile.is_some());
+    assert!(catalog.build("demo.build.sniper").is_some());
     for (class_id, initial, maximum) in [
         ("demo.class.warrior", 0, 6_000),
         ("demo.class.high-mage", 0, 0),
         ("demo.class.archer", 0, 4_000),
         ("demo.class.paladin", 0, 6_000),
         ("demo.class.cavalry", 2_000, 8_000),
+        ("demo.class.sniper", 0, 0),
     ] {
         let riding = catalog
             .class(class_id)
@@ -175,6 +180,20 @@ fn compiled_catalog_indexes_current_rfb_content() {
             .iter()
             .any(|ability| ability.ability_id == "demo.ability.cavalry-rodeo")
     );
+    let sniper_weapon_proficiency = sniper
+        .weapon_proficiency
+        .as_ref()
+        .expect("Sniper weapon proficiency");
+    assert_eq!(sniper_weapon_proficiency.default_initial, 2_000);
+    assert_eq!(sniper_weapon_proficiency.default_maximum, 4_000);
+    assert_eq!(
+        (
+            sniper_weapon_proficiency.overrides["demo.item.light-crossbow"].initial,
+            sniper_weapon_proficiency.overrides["demo.item.light-crossbow"].maximum,
+        ),
+        (4_000, 8_000)
+    );
+    assert_eq!(sniper.abilities.len(), 17);
     assert!(
         catalog
             .class("demo.class.archer")
