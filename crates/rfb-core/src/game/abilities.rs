@@ -2240,6 +2240,19 @@ impl Game {
         let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
         let (affected_positions, targets) =
             self.cone_damage_targets(&trace.traversed, direction, *radius);
+        let damage_type = DamageType::from(*damage_type);
+        self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
+        if ability.affects_ground_items {
+            self.resolve_ground_item_projectile_effects(
+                &ability.id,
+                &affected_positions,
+                damage_type,
+                true,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         changed.extend(affected_positions.iter().copied());
         let base_raw_damage = self
             .roll_damage(*damage_dice, *damage_sides)
@@ -2257,7 +2270,7 @@ impl Game {
             resolution: AbilityConeDamageResolutionDto {
                 radius: *radius,
                 base_raw_damage,
-                damage_type: DamageType::from(*damage_type).into(),
+                damage_type: damage_type.into(),
                 affected_positions,
                 target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
             },
@@ -2275,7 +2288,7 @@ impl Game {
             self.resolve_ability_damage_to_entity(
                 index,
                 &ability.id,
-                DamageType::from(*damage_type),
+                damage_type,
                 falloff_damage,
                 trace.clone(),
                 events,

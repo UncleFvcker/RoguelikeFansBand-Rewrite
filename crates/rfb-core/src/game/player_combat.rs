@@ -109,7 +109,12 @@ impl Game {
         let stun_amount = monster_stun_amount(raw_damage);
 
         match damage_type {
-            DamageType::Plasma
+            DamageType::Ice if !stun_immune => {
+                let intensity =
+                    u16::try_from(self.rng.bounded(15) + 1).expect("ice stun roll must fit u16");
+                self.apply_actor_melee_status(index, STATUS_STUN, i32::from(intensity), ability_id);
+            }
+            DamageType::Plasma | DamageType::Water
                 if !stun_immune
                     && !matches!(
                         resistance,
@@ -416,7 +421,10 @@ impl Game {
         changed.insert(self.entities[index].position);
         let target = self.actor_derived_stats(&self.entities[index], &definition, false);
         let resistance = resistance_override.unwrap_or_else(|| {
-            let direct = self.entities[index].resistances.level(damage_type);
+            let direct = self.entities[index].resistances.level(match damage_type {
+                DamageType::Ice => DamageType::Cold,
+                damage_type => damage_type,
+            });
             if damage_type == DamageType::Rocket && direct == ResistanceLevel::Normal {
                 match self.entities[index].resistances.level(DamageType::Shards) {
                     ResistanceLevel::Resistant

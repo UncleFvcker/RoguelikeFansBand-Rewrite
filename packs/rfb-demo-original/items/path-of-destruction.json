@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.path-of-destruction",
+  "nameKey": "item-demo-path-of-destruction-name",
+  "descriptionKey": "item-demo-path-of-destruction-description",
+  "glyph": "?",
+  "weightTenthsPound": 30,
+  "baseValue": 15000,
+  "generationLevel": 45,
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "elementalDestructionVulnerabilities": ["fire"],
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "abilityBookId": "demo.ability-book.path-of-destruction",
+  "tags": ["armageddon", "book", "spellbook"]
+}

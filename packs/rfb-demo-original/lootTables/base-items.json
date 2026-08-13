@@ -1760,6 +1760,13 @@
       "maxDepth": 50
     },
     {
+      "itemKindId": "demo.item.path-of-destruction",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45,
+      "maxDepth": 90
+    },
+    {
       "itemKindId": "demo.item.stone-ring-scroll",
       "weight": 16,
       "quantity": 1,

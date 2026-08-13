@@ -23,7 +23,8 @@ fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
         | AbilityEffectDefinition::AreaDamage { .. }
         | AbilityEffectDefinition::BeamDamage { .. }
         | AbilityEffectDefinition::BoltOrBeamDamage { .. }
-        | AbilityEffectDefinition::BoltOrAreaDamage { .. } => true,
+        | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+        | AbilityEffectDefinition::ConeDamage { .. } => true,
         AbilityEffectDefinition::Sequence { effects } => {
             effects.iter().any(effect_can_affect_ground_items)
         }

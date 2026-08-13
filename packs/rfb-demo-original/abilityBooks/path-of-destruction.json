@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.path-of-destruction",
+  "nameKey": "ability-book-demo-path-of-destruction-name",
+  "descriptionKey": "ability-book-demo-path-of-destruction-description",
+  "realmId": "armageddon",
+  "rank": 3,
+  "abilityIds": [
+    "demo.ability.armageddon-ice-bolt",
+    "demo.ability.armageddon-water-ball",
+    "demo.ability.armageddon-breathe-lightning",
+    "demo.ability.armageddon-breathe-frost",
+    "demo.ability.armageddon-breathe-fire",
+    "demo.ability.armageddon-breathe-acid",
+    "demo.ability.armageddon-breathe-plasma",
+    "demo.ability.armageddon-breathe-gravity"
+  ],
+  "tags": ["armageddon", "spellbook"]
+}

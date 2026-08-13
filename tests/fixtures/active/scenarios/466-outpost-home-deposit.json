@@ -295,7 +295,7 @@
           "playerAtEntrance": true,
           "storedItems": [
             {
-              "id": "generated.item.189",
+              "id": "generated.item.185",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 1,
@@ -1619,7 +1619,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.189",
+          "itemId": "generated.item.185",
           "discovered": true
         },
         {
@@ -1657,7 +1657,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 190,
+      "nextItemInstanceSerial": 186,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1665,7 +1665,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b8340c9c2ce69fa0b0966767d526c2df602618ab04ac83c96530eb07471f9a61"
+      "stateHash": "a01c0e3303a330976e48ea002d5ca5bf51cf64c5d2f73d2b7292e30da0f3016e"
     },
     "events": [
       {
@@ -1673,7 +1673,7 @@
         "messageKey": "home-deposit-success",
         "args": {
           "facility": "demo.town-facility.outpost-home",
-          "item": "generated.item.189",
+          "item": "generated.item.185",
           "quantity": "1",
           "target": "demo.item.ration-of-food"
         }

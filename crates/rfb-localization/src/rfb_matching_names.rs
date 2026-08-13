@@ -139,6 +139,7 @@ pub(super) fn english_item_name(kind_id: &str) -> Option<&'static str> {
         "demo.item.black-prayers" => Some("[Black Prayers]"),
         "demo.item.book-of-elements" => Some("[Book of Elements]"),
         "demo.item.earth-wind-and-fire" => Some("[Earth, Wind and Fire]"),
+        "demo.item.path-of-destruction" => Some("[Path of Destruction]"),
         "demo.item.stone-ring-scroll" => Some("Scroll of Wall of Stone"),
         "demo.item.strength-renewal-tonic" => Some("Potion of Restore Strength"),
         "demo.item.strip-of-venison" => Some("Strip of Venison"),

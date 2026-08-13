@@ -1611,7 +1611,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 189,
+      "nextItemInstanceSerial": 185,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1619,7 +1619,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "99529fbef4e503f7933f9247f15c2d2c424eb7a1ec5eb4523e114feca91a96c1"
+      "stateHash": "4de34b2ece572479a4daf7104150831729e6251bbf39144328a421457e3dfa9f"
     },
     "events": [
       {
@@ -1632,7 +1632,7 @@
       {
         "step": 2,
         "kind": "command-sequence",
-        "stateHash": "99529fbef4e503f7933f9247f15c2d2c424eb7a1ec5eb4523e114feca91a96c1"
+        "stateHash": "4de34b2ece572479a4daf7104150831729e6251bbf39144328a421457e3dfa9f"
       }
     ]
   }

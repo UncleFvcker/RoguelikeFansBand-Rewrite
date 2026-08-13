@@ -279,7 +279,7 @@
           },
           "stock": [
             {
-              "id": "generated.item.184",
+              "id": "generated.item.180",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 5,
@@ -289,7 +289,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.185",
+              "id": "generated.item.181",
               "kindId": "demo.item.hard-biscuit",
               "displayNameKey": "item-demo-hard-biscuit-name",
               "quantity": 5,
@@ -299,7 +299,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.186",
+              "id": "generated.item.182",
               "kindId": "demo.item.strip-of-venison",
               "displayNameKey": "item-demo-strip-of-venison-name",
               "quantity": 2,
@@ -309,7 +309,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.187",
+              "id": "generated.item.183",
               "kindId": "demo.item.water-potion",
               "displayNameKey": "item-demo-water-potion-name",
               "quantity": 5,
@@ -319,7 +319,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.188",
+              "id": "generated.item.184",
               "kindId": "demo.item.apple-juice",
               "displayNameKey": "item-demo-apple-juice-name",
               "quantity": 3,
@@ -1683,7 +1683,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 189,
+      "nextItemInstanceSerial": 185,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1691,7 +1691,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "6dec9973f45e0ff05e42c8ef6575ff781cf25320313a22ac1581aaa3fd9dfab0"
+      "stateHash": "876981098132d76a27dad0c7e2cdf5a8fccb196279f0bbb26295f1f02a000da1"
     },
     "events": [
       {

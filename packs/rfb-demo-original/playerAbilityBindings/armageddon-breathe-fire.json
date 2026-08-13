@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.armageddon-breathe-fire",
+  "minimumLevel": 24,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 22,
+  "baseFailurePercent": 60,
+  "firstSuccessExperience": 120
+}

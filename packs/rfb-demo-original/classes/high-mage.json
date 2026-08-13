@@ -193,7 +193,8 @@
         "realmId": "armageddon",
         "abilityBookIds": [
           "demo.ability-book.book-of-elements",
-          "demo.ability-book.earth-wind-and-fire"
+          "demo.ability-book.earth-wind-and-fire",
+          "demo.ability-book.path-of-destruction"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -212,7 +213,15 @@
           { "abilityId": "demo.ability.armageddon-thunderclap", "minimumLevel": 23, "resourceCost": 19, "baseFailurePercent": 50 },
           { "abilityId": "demo.ability.armageddon-windblast", "minimumLevel": 26, "resourceCost": 23, "baseFailurePercent": 50 },
           { "abilityId": "demo.ability.armageddon-hellstorm", "minimumLevel": 28, "resourceCost": 25, "baseFailurePercent": 50 },
-          { "abilityId": "demo.ability.armageddon-rocket", "minimumLevel": 31, "resourceCost": 33, "baseFailurePercent": 50 }
+          { "abilityId": "demo.ability.armageddon-rocket", "minimumLevel": 31, "resourceCost": 33, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.armageddon-ice-bolt", "minimumLevel": 16, "resourceCost": 14, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.armageddon-water-ball", "minimumLevel": 18, "resourceCost": 17, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.armageddon-breathe-lightning", "minimumLevel": 21, "resourceCost": 20, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.armageddon-breathe-frost", "minimumLevel": 22, "resourceCost": 21, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.armageddon-breathe-fire", "minimumLevel": 24, "resourceCost": 22, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.armageddon-breathe-acid", "minimumLevel": 26, "resourceCost": 23, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.armageddon-breathe-plasma", "minimumLevel": 28, "resourceCost": 28, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.armageddon-breathe-gravity", "minimumLevel": 36, "resourceCost": 30, "baseFailurePercent": 60 }
         ]
       }
     ]

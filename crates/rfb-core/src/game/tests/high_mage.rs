@@ -83,6 +83,14 @@ fn armageddon_high_mage_game(seed: u64, level: u16) -> Game {
             "demo.ability.armageddon-windblast",
             "demo.ability.armageddon-hellstorm",
             "demo.ability.armageddon-rocket",
+            "demo.ability.armageddon-ice-bolt",
+            "demo.ability.armageddon-water-ball",
+            "demo.ability.armageddon-breathe-lightning",
+            "demo.ability.armageddon-breathe-frost",
+            "demo.ability.armageddon-breathe-fire",
+            "demo.ability.armageddon-breathe-acid",
+            "demo.ability.armageddon-breathe-plasma",
+            "demo.ability.armageddon-breathe-gravity",
         ]
         .into_iter()
         .map(str::to_owned),
@@ -91,6 +99,11 @@ fn armageddon_high_mage_game(seed: u64, level: u16) -> Game {
         &mut game,
         "test.earth-wind-and-fire",
         "demo.item.earth-wind-and-fire",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.path-of-destruction",
+        "demo.item.path-of-destruction",
     );
     game.refresh_player_resource_maxima();
     game.resources
@@ -186,6 +199,7 @@ fn armageddon_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
     assert!(!carried.contains("demo.item.cantrips-for-beginners"));
     assert!(!carried.contains("demo.item.beginners-handbook"));
     assert!(!carried.contains("demo.item.earth-wind-and-fire"));
+    assert!(!carried.contains("demo.item.path-of-destruction"));
 
     let learned = game
         .snapshot()
@@ -194,7 +208,7 @@ fn armageddon_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 16);
+    assert_eq!(learned.len(), 24);
     assert!(
         learned
             .iter()
@@ -528,6 +542,256 @@ fn armageddon_special_projectiles_share_original_resistance_status_and_cell_rule
         item.id.as_str(),
         "test.meteor-scroll" | "test.meteor-potion"
     )));
+}
+
+#[test]
+fn armageddon_third_book_projects_original_formulas_and_breath_radius_boundary() {
+    for (level, radius, ice_dice, water_bonus, cone_bonuses) in [
+        (40, 2, 15, 122, [192, 192, 212, 212, 232, 172]),
+        (41, 3, 15, 124, [196, 196, 217, 217, 237, 176]),
+    ] {
+        let projected = armageddon_high_mage_game(0x5041_5448_4000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        assert!(matches!(
+            projected["demo.ability.armageddon-ice-bolt"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::Damage {
+                damage_dice: actual_dice,
+                damage_sides: 15,
+                damage_bonus: 13,
+                damage_type: DamageTypeDto::Ice,
+                ..
+            }] if *actual_dice == ice_dice
+        ));
+        assert!(matches!(
+            projected["demo.ability.armageddon-water-ball"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::AreaDamage {
+                damage_dice: 1,
+                damage_sides: 1,
+                damage_bonus: actual_bonus,
+                damage_type: DamageTypeDto::Water,
+                radius: 2,
+                ..
+            }] if *actual_bonus == water_bonus
+        ));
+        for (id, damage_type, damage_bonus) in [
+            (
+                "demo.ability.armageddon-breathe-lightning",
+                DamageTypeDto::Electricity,
+                cone_bonuses[0],
+            ),
+            (
+                "demo.ability.armageddon-breathe-frost",
+                DamageTypeDto::Cold,
+                cone_bonuses[1],
+            ),
+            (
+                "demo.ability.armageddon-breathe-fire",
+                DamageTypeDto::Fire,
+                cone_bonuses[2],
+            ),
+            (
+                "demo.ability.armageddon-breathe-acid",
+                DamageTypeDto::Acid,
+                cone_bonuses[3],
+            ),
+            (
+                "demo.ability.armageddon-breathe-plasma",
+                DamageTypeDto::Plasma,
+                cone_bonuses[4],
+            ),
+            (
+                "demo.ability.armageddon-breathe-gravity",
+                DamageTypeDto::Gravity,
+                cone_bonuses[5],
+            ),
+        ] {
+            assert!(matches!(
+                projected[id].effects.as_slice(),
+                [AbilityEffectSpecDto::ConeDamage {
+                    damage_dice: 1,
+                    damage_sides: 1,
+                    damage_bonus: actual_bonus,
+                    damage_type: actual_type,
+                    radius: actual_radius,
+                    ..
+                }] if *actual_bonus == damage_bonus
+                    && *actual_type == damage_type
+                    && *actual_radius == radius
+            ));
+        }
+    }
+}
+
+#[test]
+fn armageddon_breath_damage_matches_projection_and_affects_items_and_terrain() {
+    for (bonus, expected_damage) in [(7, 335), (-7, 101)] {
+        let seed = 0x4252_4541_5448_u64.wrapping_add_signed(i64::from(bonus));
+        let mut game = armageddon_high_mage_game(seed, 41);
+        grant_spell_power(&mut game, bonus);
+        clear_monsters(&mut game);
+        let origin = game.player.position;
+        for y in 0..game.height {
+            for x in 0..game.width {
+                replace_terrain(
+                    &mut game,
+                    Position {
+                        x: i32::from(x),
+                        y: i32::from(y),
+                    },
+                    "demo.terrain.floor",
+                );
+            }
+        }
+        let target = Position {
+            x: origin.x + 1,
+            y: origin.y,
+        };
+        game.entities.push(actor_from_runtime_spawn(
+            "test.breath-target",
+            "demo.actor.small-kobold",
+            target,
+            1_000,
+            100,
+            100,
+            true,
+        ));
+        let tree = Position {
+            x: origin.x + 7,
+            y: origin.y + 1,
+        };
+        replace_terrain(&mut game, tree, "demo.terrain.surface-tree");
+        give_inventory_item(&mut game, "test.breath-scroll", "demo.item.accuracy-scroll");
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.breath-scroll")
+            .expect("breath test scroll should exist")
+            .location = ItemLocation::Ground(tree);
+
+        let projected = game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == "demo.ability.armageddon-breathe-fire")
+            .expect("fire breath should project");
+        assert!(matches!(
+            projected.effects.as_slice(),
+            [AbilityEffectSpecDto::ConeDamage {
+                damage_dice: 1,
+                damage_sides: 1,
+                damage_bonus: 217,
+                final_damage_spell_power_bonus: Some(actual_bonus),
+                radius: 3,
+                ..
+            }] if *actual_bonus == bonus
+        ));
+
+        let draws = game.rng_draw_counter();
+        game.resolve_player_ability(
+            "demo.ability.armageddon-breathe-fire",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("fire breath should resolve");
+        assert_eq!(1_000 - game.entities[0].hp, expected_damage);
+        assert_eq!(game.rng_draw_counter(), draws + 2);
+        assert_eq!(
+            game.terrain[game.index(tree).expect("tree should remain in bounds")],
+            "demo.terrain.surface-grass"
+        );
+        assert!(
+            game.items
+                .iter()
+                .all(|item| item.id != "test.breath-scroll")
+        );
+    }
+}
+
+#[test]
+fn armageddon_ice_and_water_use_original_resistance_and_stun_rules() {
+    let mut game = armageddon_high_mage_game(0x4943_455f_5741_5445, 41);
+    clear_monsters(&mut game);
+    let origin = game.player.position;
+    let target = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.ice-water-target",
+        "demo.actor.small-kobold",
+        target,
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    game.entities[0]
+        .resistances
+        .set(DamageType::Ice, ResistanceLevel::Immune);
+    game.entities[0]
+        .resistances
+        .set(DamageType::Cold, ResistanceLevel::Resistant);
+    let trace = ProjectileTrace {
+        origin,
+        impact: target,
+        landing: target,
+        traversed: vec![target],
+    };
+    let ice = game
+        .resolve_ability_damage_to_entity(
+            0,
+            "test.ice",
+            DamageType::Ice,
+            100,
+            trace.clone(),
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("ice damage should resolve");
+    assert_eq!(ice.applied, 50);
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN && (1..=15).contains(&status.intensity))
+    );
+
+    game.entities[0].hp = 1_000;
+    game.entities[0].statuses.clear();
+    game.entities[0].resistances = ResistanceProfile::default();
+    let water = game
+        .resolve_ability_damage_to_entity(
+            0,
+            "test.water",
+            DamageType::Water,
+            100,
+            trace,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("water damage should resolve");
+    assert_eq!(water.applied, 100);
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN)
+    );
 }
 
 #[test]

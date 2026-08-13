@@ -1614,7 +1614,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 189,
+      "nextItemInstanceSerial": 185,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "retired",
@@ -1624,7 +1624,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "9580013b6c410656a6273b501cbf3d508a5bf269143d9a6d03740c82ab65197a"
+      "stateHash": "a4a8607accbbb79f541ea15ab03cbcb12ab7d4cc23558bb9d33e2193ee0310ce"
     },
     "events": [
       {
@@ -1639,9 +1639,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "9580013b6c410656a6273b501cbf3d508a5bf269143d9a6d03740c82ab65197a"
+        "stateHash": "a4a8607accbbb79f541ea15ab03cbcb12ab7d4cc23558bb9d33e2193ee0310ce"
       }
     ],
-    "saveRoundTripStateHash": "9580013b6c410656a6273b501cbf3d508a5bf269143d9a6d03740c82ab65197a"
+    "saveRoundTripStateHash": "a4a8607accbbb79f541ea15ab03cbcb12ab7d4cc23558bb9d33e2193ee0310ce"
   }
 }

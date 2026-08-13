@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.armageddon-ice-bolt",
+  "nameKey": "ability-demo-armageddon-ice-bolt-name",
+  "descriptionKey": "ability-demo-armageddon-ice-bolt-description",
+  "abilityProgramId": "demo.ability-program.armageddon-ice-bolt",
+  "target": { "modes": ["position", "entity", "direction"], "range": 8, "requiresLineOfEffect": true },
+  "affectsGroundItems": true,
+  "levelScaling": [
+    { "effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4 }
+  ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "final-damage" }
+  ],
+  "tags": ["armageddon", "bolt", "ice", "spell"]
+}

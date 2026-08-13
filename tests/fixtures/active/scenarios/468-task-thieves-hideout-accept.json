@@ -1611,7 +1611,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 189,
+      "nextItemInstanceSerial": 185,
       "nextGoldPileSerial": 1,
       "tasks": [
         {
@@ -1691,7 +1691,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "7ffe1a50ac5e7eaaeab2643d5acbb8c33e90d511004d40854427219ac86cb0fe"
+      "stateHash": "a10dd168c19537c11311c9d0dbd0f3bbd088c8071cb5a21f86b0d6a18203e9ce"
     },
     "events": [
       {

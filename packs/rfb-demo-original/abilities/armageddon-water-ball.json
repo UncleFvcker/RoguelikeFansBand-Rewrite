@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.armageddon-water-ball",
+  "nameKey": "ability-demo-armageddon-water-ball-name",
+  "descriptionKey": "ability-demo-armageddon-water-ball-description",
+  "abilityProgramId": "demo.ability-program.armageddon-water-ball",
+  "target": { "modes": ["position", "entity", "direction"], "range": 8, "requiresLineOfEffect": true },
+  "affectsGroundItems": true,
+  "levelScaling": [
+    { "effectIndex": 0, "field": "damage-bonus", "multiplier": 2, "divisor": 1 }
+  ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "final-damage" }
+  ],
+  "tags": ["area", "armageddon", "spell", "water"]
+}
