@@ -9852,6 +9852,14 @@ fn map_summon_spell_token(
             });
             return Some(id);
         }
+        if caster_tail == "gertrude" {
+            let suffix = "summon-gertrude-sisters-l40-1d1-1";
+            let id = format!("rfb-legacy.ability.{suffix}");
+            abilities.entry(id.clone()).or_insert_with(|| {
+                summon_category_ability(suffix, "witch-sister", 40, 1, 1, 1, Some(2))
+            });
+            return Some(id);
+        }
         let (
             suffix,
             category,
@@ -17091,6 +17099,22 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 { "actorKindId": "demo.actor.valkyrie", "weight": 1 },
             ])
         );
+        let gertrude_id =
+            map_spell_token("S_SPECIAL", 40, 3, "demo.actor.gertrude", &mut abilities)
+                .expect("Gertrude special should map");
+        assert_eq!(
+            gertrude_id,
+            "rfb-legacy.ability.summon-gertrude-sisters-l40-1d1-1"
+        );
+        let gertrude = &abilities[&gertrude_id]["effect"];
+        assert_eq!(gertrude["type"], "summon-category");
+        assert_eq!(gertrude["category"], "witch-sister");
+        assert_eq!(gertrude["maximumLevel"], 40);
+        assert_eq!(gertrude["countDice"], 1);
+        assert_eq!(gertrude["countSides"], 1);
+        assert_eq!(gertrude["countBonus"], 1);
+        assert_eq!(gertrude["maximumCount"], 2);
+        assert!(gertrude.get("batchCandidates").is_none());
         let caldarm_id = map_spell_token(
             "S_SPECIAL",
             79,

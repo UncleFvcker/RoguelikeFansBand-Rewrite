@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.summon-gertrude-sisters-l40-1d1-1",
+  "input": "self",
+  "steps": [
+    {
+      "category": "witch-sister",
+      "countBonus": 1,
+      "countDice": 1,
+      "countSides": 1,
+      "durationTurns": 10000,
+      "maximumCount": 2,
+      "maximumLevel": 40,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}

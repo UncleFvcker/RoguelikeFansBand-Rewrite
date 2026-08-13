@@ -5070,6 +5070,68 @@ fn p76_osiris_family_summon_creates_horus_and_isis_as_one_cast() {
 }
 
 #[test]
+fn p83_gertrude_summons_each_available_sister_once() {
+    fn summon(defeated_sister: Option<&str>) -> Vec<String> {
+        let mut game = Game::new(277);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 80, y: 20 };
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.gertrude",
+            "demo.actor.gertrude",
+            Position { x: 20, y: 20 },
+            2_420,
+            120,
+            100,
+            true,
+        ));
+        if let Some(kind_id) = defeated_sister {
+            game.defeated_limited_actor_counts
+                .insert(kind_id.to_owned(), 1);
+        }
+        let ability = game
+            .content
+            .ability("rfb-legacy.ability.summon-gertrude-sisters-l40-1d1-1")
+            .expect("Gertrude sister summon should compile")
+            .clone();
+        let plan = game
+            .monster_ability_target_plan(0, ability.clone(), 1)
+            .expect("at least one available sister should produce a summon plan");
+        let summon = game
+            .resolve_monster_ability_plan(
+                0,
+                "demo.actor.gertrude",
+                &plan,
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .summon
+            .expect("Gertrude sister summon should resolve");
+        assert_eq!(summon.duration_turns, 10_000);
+        assert!(matches!(
+            game.monster_ability_target_plan(0, ability, 1),
+            Err(MonsterAbilityPlanRejection {
+                reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                ..
+            })
+        ));
+        summon.summoned_kind_ids
+    }
+
+    let mut both = summon(None);
+    both.sort();
+    assert_eq!(
+        both,
+        ["demo.actor.aude".to_owned(), "demo.actor.helga".to_owned()]
+    );
+    assert_eq!(
+        summon(Some("demo.actor.aude")),
+        ["demo.actor.helga".to_owned()]
+    );
+}
+
+#[test]
 fn p76_air_breath_is_unresisted_and_levitation_reduces_damage_by_one_quarter() {
     fn cast(levitating: bool) -> (i32, i32, bool) {
         let mut game = Game::new(257);

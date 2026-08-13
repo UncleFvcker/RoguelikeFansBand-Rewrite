@@ -287,6 +287,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.air-spirit", 227, 2, 50),
             ("demo.actor.aquatic-golem", 910, 1, 70),
             ("demo.actor.asura", 1374, 5, 999),
+            ("demo.actor.aude", 1148, 1, 999),
             ("demo.actor.baby-black-dragon", 166, 2, 40),
             ("demo.actor.baby-blue-dragon", 163, 2, 40),
             ("demo.actor.baby-green-dragon", 165, 2, 40),
@@ -326,6 +327,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.brumby", 1334, 2, 35),
             ("demo.actor.bullroarer-the-hobbit", 914, 3, 999),
             ("demo.actor.bunyip", 1322, 2, 60),
+            ("demo.actor.burning-bush", 1307, 3, 999),
             ("demo.actor.bush-ranger", 1326, 2, 50),
             ("demo.actor.buzzy-beetle", 951, 4, 60),
             ("demo.actor.carnivorous-flying-monkey", 145, 2, 40),
@@ -357,6 +359,12 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.crypt-creep", 124, 2, 40),
             ("demo.actor.culverin", 867, 2, 50),
             ("demo.actor.daemonette-of-slaanesh", 319, 2, 999),
+            (
+                "demo.actor.dailai-dongzhu-captain-of-southerings",
+                1075,
+                2,
+                999,
+            ),
             ("demo.actor.dark-elf", 122, 2, 40),
             ("demo.actor.dark-elven-lord", 348, 2, 70),
             ("demo.actor.dark-elven-mage", 178, 1, 40),
@@ -367,6 +375,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.demonite", 1029, 2, 50),
             ("demo.actor.devilfish", 918, 4, 50),
             ("demo.actor.dimetrodon", 1223, 3, 90),
+            ("demo.actor.dingo", 1320, 1, 30),
             (
                 "demo.actor.disembodied-hand-that-strangled-people",
                 112,
@@ -407,8 +416,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.frosty-jelly", 84, 1, 40),
             ("demo.actor.fruit-bat", 37, 1, 10),
             ("demo.actor.frumious-bandersnatch", 232, 2, 50),
+            ("demo.actor.garkain", 1328, 2, 60),
             ("demo.actor.gazer", 218, 1, 50),
             ("demo.actor.gelatinous-cube", 286, 4, 50),
+            ("demo.actor.gertrude", 1150, 1, 999),
             ("demo.actor.ghast", 327, 1, 70),
             ("demo.actor.ghost-skier", 1339, 2, 70),
             ("demo.actor.giant-black-ant", 49, 1, 20),
@@ -444,6 +455,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.giant-white-mouse", 27, 1, 10),
             ("demo.actor.giant-white-rat", 86, 1, 40),
             ("demo.actor.giant-white-tick", 176, 2, 40),
+            ("demo.actor.giant-wombat", 1332, 3, 50),
             ("demo.actor.giant-yellow-toad", 1329, 6, 40),
             ("demo.actor.gibbering-mouther", 253, 4, 50),
             ("demo.actor.giganto-the-gargantuan", 650, 6, 999),
@@ -483,6 +495,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.hairy-mold", 190, 2, 40),
             ("demo.actor.half-orc", 264, 3, 50),
             ("demo.actor.hammerhead", 292, 3, 50),
+            ("demo.actor.helga", 1149, 1, 999),
             ("demo.actor.hellcat", 222, 1, 50),
             ("demo.actor.herringfolt-the-great-wild-boar", 1278, 1, 999),
             ("demo.actor.hibagon", 983, 10, 30),
@@ -531,6 +544,12 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.knight-archer", 219, 1, 50),
             ("demo.actor.kobold", 30, 1, 30),
             ("demo.actor.kutar", 1020, 4, 30),
+            (
+                "demo.actor.lady-zhurong-the-avatar-of-flame-spirit",
+                1074,
+                2,
+                999,
+            ),
             ("demo.actor.lagduf-the-snaga", 140, 2, 999),
             ("demo.actor.landmine", 333, 5, 999),
             ("demo.actor.large-brown-snake", 28, 1, 10),
@@ -573,6 +592,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.moon-beast", 223, 1, 50),
             ("demo.actor.mutant-manta-ray", 1333, 5, 90),
             ("demo.actor.nami-the-mate", 1021, 4, 999),
+            ("demo.actor.nandi-the-bull-of-shiva", 1381, 4, 999),
             ("demo.actor.nar-the-dwarf", 996, 2, 999),
             ("demo.actor.nekomata", 986, 3, 40),
             ("demo.actor.nether-worm-mass", 213, 4, 40),
@@ -642,6 +662,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.rotting-corpse", 125, 1, 40),
             ("demo.actor.rust-monster", 284, 2, 50),
             ("demo.actor.sabre-tooth-tiger", 339, 2, 70),
+            ("demo.actor.sadie-the-rainbow-serpent", 1331, 4, 999),
             ("demo.actor.salamander", 50, 1, 20),
             ("demo.actor.sand-dweller", 183, 1, 40),
             ("demo.actor.sasquatch", 343, 3, 70),
@@ -684,6 +705,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.stone-giant", 321, 3, 70),
             ("demo.actor.stone-golem", 323, 2, 70),
             ("demo.actor.stunwall", 326, 5, 50),
+            ("demo.actor.sugriva-lord-of-kishkindha", 1368, 4, 999),
             ("demo.actor.swamp-rabbit", 1387, 7, 42),
             ("demo.actor.swamp-thing", 302, 2, 70),
             ("demo.actor.swordfish", 88, 2, 40),
@@ -694,11 +716,18 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.the-borshin", 177, 2, 999),
             ("demo.actor.the-ghost-q", 1003, 3, 999),
             ("demo.actor.the-icky-queen", 909, 5, 999),
+            (
+                "demo.actor.the-wicked-witch-of-the-south-east",
+                1306,
+                3,
+                999
+            ),
             ("demo.actor.thorondor", 468, 1, 999),
             ("demo.actor.tiger", 230, 2, 50),
             ("demo.actor.tiger-snake", 1310, 1, 50),
             ("demo.actor.time-initiate", 1091, 3, 40),
             ("demo.actor.tin-golem", 1318, 2, 40),
+            ("demo.actor.trapdoor-spider", 1314, 2, 35),
             ("demo.actor.trench-wurm", 1070, 1, 50),
             ("demo.actor.ufthak-of-cirith-ungol", 260, 3, 999),
             ("demo.actor.ugluk-the-uruk", 350, 4, 999),
@@ -8307,7 +8336,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        773
+        784
     );
 }
 
@@ -9833,5 +9862,68 @@ fn p82b_fixed_unique_and_polar_cat_keep_random_allocation() {
             .expect("Groo allocation")
             .habitats
             .contains(&ActorHabitat::All)
+    );
+}
+
+#[test]
+fn p83_location_monsters_keep_their_legacy_dungeon_boundaries() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P83 should contain {id}"))
+    };
+
+    for (id, source_index, level, dungeon_index) in [
+        ("dailai-dongzhu-captain-of-southerings", 1075, 10, 31),
+        ("lady-zhurong-the-avatar-of-flame-spirit", 1074, 14, 31),
+        ("trapdoor-spider", 1314, 10, 35),
+        ("dingo", 1320, 10, 35),
+        ("burning-bush", 1307, 26, 35),
+        ("giant-wombat", 1332, 29, 35),
+        ("garkain", 1328, 30, 35),
+        ("the-wicked-witch-of-the-south-east", 1306, 40, 35),
+        ("sadie-the-rainbow-serpent", 1331, 40, 35),
+        ("aude", 1148, 38, 7),
+        ("helga", 1149, 39, 7),
+        ("gertrude", 1150, 40, 7),
+        ("sugriva-lord-of-kishkindha", 1368, 69, 43),
+        ("nandi-the-bull-of-shiva", 1381, 70, 43),
+    ] {
+        let actor = actor(id);
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("P83 location monster should retain allocation metadata");
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(allocation.legacy_index, source_index, "{id} source index");
+        assert_eq!(
+            allocation.legacy_dungeon_indices,
+            [dungeon_index],
+            "{id} dungeon index"
+        );
+        assert!(!allocation.wild_only, "{id} should remain dungeon-only");
+        assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"), "{id}");
+    }
+
+    for id in ["aude", "helga"] {
+        assert!(
+            actor(id).tags.iter().any(|tag| tag == "witch-sister"),
+            "{id} should be a Gertrude summon candidate"
+        );
+    }
+    let gertrude = actor("gertrude");
+    assert!(
+        gertrude
+            .monster_casting
+            .as_ref()
+            .expect("Gertrude should retain spellcasting")
+            .abilities
+            .iter()
+            .any(|candidate| candidate.ability_id
+                == "rfb-legacy.ability.summon-gertrude-sisters-l40-1d1-1")
     );
 }

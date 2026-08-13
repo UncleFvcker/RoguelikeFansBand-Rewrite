@@ -1,0 +1,190 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "wood"
+    ],
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1328,
+    "maxDepth": 60,
+    "rarity": 2
+  },
+  "attack": 7,
+  "damageDice": 1,
+  "damageSides": 9,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold"
+  },
+  "defense": 6,
+  "descriptionKey": "actor-demo-garkain-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "evolution": {
+    "nextActorKindId": "demo.actor.vampire-lord",
+    "requiredExperience": 5000
+  },
+  "experienceValue": 600,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "V",
+  "hitPointDice": {
+    "dice": 25,
+    "forceMaximum": true,
+    "sides": 12
+  },
+  "id": "demo.actor.garkain",
+  "level": 30,
+  "maxHp": 300,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 66,
+            "durationDice": 1,
+            "durationSides": 9,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 1,
+            "damageSides": 9,
+            "type": "poison"
+          },
+          {
+            "amountDice": 1,
+            "amountSides": 9,
+            "chancePercent": 66,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          },
+          {
+            "amountDice": 1,
+            "amountSides": 9,
+            "type": "unlife"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 1,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          },
+          {
+            "amountDice": 1,
+            "amountSides": 9,
+            "type": "unlife"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.paralyze",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-10d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.mind-blast-7d7",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.amnesia",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.darkness",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-garkain-name",
+  "regenerates": true,
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "light": "vulnerable",
+    "nether": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 115,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "evil",
+    "kin-glyph-86",
+    "legacy-import",
+    "plains-of-oz",
+    "undead"
+  ]
+}

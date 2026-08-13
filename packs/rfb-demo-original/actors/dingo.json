@@ -1,0 +1,77 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 5,
+      "sides": 1
+    },
+    "habitats": [
+      "waste",
+      "wood"
+    ],
+    "legacyDungeonIndices": [
+      35
+    ],
+    "legacyIndex": 1320,
+    "maxDepth": 30,
+    "randomMovementPercent": 25,
+    "rarity": 1
+  },
+  "attack": 2,
+  "damageDice": 1,
+  "damageSides": 6,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-dingo-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "evolution": {
+    "nextActorKindId": "demo.actor.white-wolf",
+    "requiredExperience": 100
+  },
+  "experienceValue": 20,
+  "formatVersion": 1,
+  "glyph": "C",
+  "hitPointDice": {
+    "dice": 5,
+    "sides": 6
+  },
+  "id": "demo.actor.dingo",
+  "level": 10,
+  "maxHp": 17,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 6,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-dingo-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "hound",
+    "kin-glyph-67",
+    "legacy-import",
+    "plains-of-oz"
+  ]
+}
