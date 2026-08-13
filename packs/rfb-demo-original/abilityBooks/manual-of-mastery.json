@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.manual-of-mastery",
+  "nameKey": "ability-book-demo-manual-of-mastery-name",
+  "descriptionKey": "ability-book-demo-manual-of-mastery-description",
+  "realmId": "arcane",
+  "rank": 4,
+  "abilityIds": [
+    "demo.ability.arcane-see-invisible",
+    "demo.ability.arcane-resist-poison",
+    "demo.ability.arcane-teleport-level",
+    "demo.ability.arcane-teleport-away",
+    "demo.ability.arcane-recharging",
+    "demo.ability.arcane-detection",
+    "demo.ability.arcane-word-of-recall",
+    "demo.ability.arcane-clairvoyance"
+  ],
+  "tags": ["arcane", "spellbook"]
+}

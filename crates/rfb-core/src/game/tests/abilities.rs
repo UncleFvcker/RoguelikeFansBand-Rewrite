@@ -1673,6 +1673,7 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
             damage_bonus: 3,
             damage_type,
             beam_chance_percent,
+            beam_chance_modifier: 0,
         };
         ability
     };
@@ -1823,6 +1824,7 @@ fn reflecting_monsters_redirect_only_single_target_bolts() {
         damage_bonus,
         damage_type,
         beam_chance_percent: 100,
+        beam_chance_modifier: 0,
     };
     let reflector_hp = beam.entities[0].hp;
     let mut events = Vec::new();

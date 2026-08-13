@@ -210,6 +210,13 @@
     "id": {
       "type": "string"
     },
+    "jamToTerrainId": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "monsterDestroyToTerrainId": {
       "default": null,
       "description": "Result of the original `FF_HURT_DISI` terrain transition.",

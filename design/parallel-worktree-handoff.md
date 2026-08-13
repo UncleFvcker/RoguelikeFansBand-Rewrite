@@ -475,3 +475,54 @@ git diff --stat
   `538cce0f525d1530dbb109f4cf75074c69130b09eebca10d672628ad770467e5`、Protocol `1.192`、
   State Hash Schema v96、save v1、active baseline `contract-v290`（26 条 exact fixture、
   零 waiver）。旧开发存档不兼容。
+
+## 27. items-next 奥秘前两册
+
+- `codex/items-next` 新增 `high-mage-arcane` 构筑、《初学者戏法》和《小阿卡纳》共十六个
+  法术；Arcane 出生仍只携带第一册，死亡构筑、High Mage 通用出生装备及白马旅店奖励
+  保持不变。
+- 第二册复用正式物品、商店与基础池路径；运行时只增加穿墙探测、已装备光源补充燃料和
+  按当前值比例削减状态三个窄表面。寒冷/火焰抗性继续使用既有独立状态和 spell power。
+- 分支协调点为 pack `1.299.0`、Protocol `1.190`、State Hash Schema v93、save v1、
+  active baseline `contract-v284`；书店固定库存变化已刷新并复验全部 26 条 active fixture。
+
+## 28. items-next 奥秘第三册
+
+- 新增《大阿卡纳》及抵抗闪电、抵抗酸液、治疗中伤、传送、鉴定、化石为泥、光之射线、
+  充饥八个正式法术；Arcane 出生仍只携带第一册，High Mage 通用出生装备、死亡构筑和
+  白马旅店奖励保持不变。
+- 运行时只增加化石为泥、治疗中伤流血余量与充饥三个窄表面；长距离传送复用既有随机
+  传送及 Astral Guide，鉴定和光之射线复用既有实现。
+- 分支协调点为 pack `1.300.0`、Protocol `1.191`、State Hash Schema v93、save v1、
+  active baseline `contract-v284`。
+
+## 29. items-next 奥秘第四册前置能力
+
+- 注册《大师手册》前七个法术：识破隐形、抵抗毒素、传送楼层、传送离开、充能、探测、
+  召回之语；在第八个法术完成前，该书未进入正式获取路径。
+- 识破隐形使用独立状态；传送离开按射线路径、power 与原版抵抗规则结算；玩家法力充能
+  在成功施法后再支付额外法力，过载失败清空目标充能但不销毁物品。取消目标、基础施法
+  失败与额外法力不足均保持原子性和既定 RNG 顺序。
+- 分支协调点为 pack `1.301.0`、Protocol `1.192`、State Hash Schema v93、save v1、
+  active baseline `contract-v284`；协议投影变更后已刷新并复验全部 26 条 active fixture。
+
+## 30. items-next 奥秘完整领域
+
+- 完成《大师手册》第八个法术“透视”：Knowledge 与 Enlightenment 各增加 1，永久绘制并
+  照亮当前层、揭示全部地面物品；仅在没有永久 ESP 时获得 `25 + 1d30` 临时 ESP。
+- 《大师手册》正式绑定八个法术并进入基础物品池及 Outpost、Anambar 两家书店；Arcane
+  四册严格各八个法术。Arcane 出生仍只携带第一册，死亡构筑、High Mage 通用出生装备和
+  白马旅店奖励保持不变。
+- 分支协调点为 pack `1.302.0`、Protocol `1.193`、State Hash Schema v93、save v1、
+  active baseline `contract-v284`；两家书店固定库存变化已刷新并复验全部 26 条 active fixture。
+
+## 31. main 当前交接（items Arcane 增量整合）
+
+- `codex/items-next` 的完整 Arcane 领域已与 main 的骑兵、坐骑羁绊和捕获球闭环合并；
+  `rodeo` 与 Arcane 的 terrain beam、充能、传送和透视能力共用同一协议投影与执行入口。
+- 合并后共有 8 本 ability book、308 个 item、820 个 ability、5 个 class 和 6 个 build；
+  Arcane 四册共 32 个法术，正式获取路径与 Cavalry 出生/职业路径同时保留。
+- 共享协调点：pack `1.304.0` / content hash
+  `900d8b206a6bc3e186ccc57559f955ab676840dacf0013ed5d2790fb408d49d9`、Protocol `1.194`、
+  State Hash Schema v96、save v1、active baseline `contract-v291`（26 条 exact fixture、
+  零 waiver）。`codex/items-next` 分支及工作树继续保留。

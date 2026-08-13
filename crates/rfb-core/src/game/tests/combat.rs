@@ -1412,6 +1412,7 @@ fn item_theft_splits_a_stack_into_monster_carried_loot_and_blinks() {
     game.items.clear();
     give_inventory_item(&mut game, "test.rations", "demo.item.ration-of-food");
     game.items[0].quantity = 2;
+    game.rng = RfbRng::seeded(7);
     game.player
         .statuses
         .push(monster_combat::melee_status(STATUS_PARALYSIS, 10, "test.setup").status);
@@ -1505,7 +1506,7 @@ fn food_and_light_eating_consume_one_food_and_leave_one_light_fuel() {
     );
 
     let mut light = monster_effect_game(
-        17,
+        18,
         MeleeBlowEffectDefinition::EatLight {
             chance_percent: None,
         },

@@ -108,6 +108,8 @@ pub enum AbilityLevelScalingField {
     DamageSides,
     DamageBonus,
     DeathRayPower,
+    TeleportAwayPower,
+    RechargePower,
     IdentifyPower,
     Radius,
     BeamChancePercent,
@@ -129,6 +131,7 @@ pub enum AbilitySpellPowerField {
     FinalDamage,
     DamageSides,
     DamageBonus,
+    HealingSides,
     Radius,
     StatusDurationTicks,
     StatusDurationSides,
@@ -136,6 +139,8 @@ pub enum AbilitySpellPowerField {
     ControlPower,
     GenocidePower,
     IdentifyPower,
+    TeleportAwayPower,
+    RechargePower,
     RandomChoiceRoll,
     MaledictionDeathRayPower,
     MaledictionFearPower,
@@ -229,6 +234,15 @@ pub enum AbilityStatusStackingDefinition {
     KeepStrongest,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityTerrainBeamOperationDefinition {
+    JamDoors,
+    DestroyTrapsAndDoors,
+    StoneToMud,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -299,6 +313,11 @@ pub enum AbilityEffectDefinition {
         damage_dice: u16,
         damage_sides: u16,
     },
+    LightArea {
+        damage_dice: u16,
+        damage_sides: u16,
+        radius: u8,
+    },
     BoltOrBeamDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -307,6 +326,8 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
         beam_chance_percent: u8,
+        #[serde(default)]
+        beam_chance_modifier: i8,
     },
     BoltOrAreaDamage {
         damage_dice: u16,
@@ -349,6 +370,16 @@ pub enum AbilityEffectDefinition {
     },
     TeleportAway {
         minimum_distance: u8,
+        #[serde(default)]
+        power: u16,
+    },
+    RechargeFromPlayer {
+        power: u16,
+    },
+    Clairvoyance {
+        telepathy_duration_ticks: u16,
+        telepathy_duration_dice: u8,
+        telepathy_duration_sides: u16,
     },
     BirdDrop,
     DrainResource {
@@ -480,11 +511,19 @@ pub enum AbilityEffectDefinition {
         radius: u8,
         #[serde(default)]
         persistent: bool,
+        #[serde(default)]
+        through_walls: bool,
+    },
+    RefuelEquippedLight {
+        maximum_fraction_divisor: u16,
     },
     TransformTerrain {
         source_terrain_ids: Vec<String>,
         target_terrain_id: String,
         radius: u8,
+    },
+    TerrainBeam {
+        operation: AbilityTerrainBeamOperationDefinition,
     },
     ApplyStatus {
         status_kind_id: String,
@@ -564,6 +603,19 @@ pub enum AbilityEffectDefinition {
     Heal {
         amount: u32,
     },
+    HealDice {
+        dice: u16,
+        sides: u16,
+    },
+    ReduceStatus {
+        status_kind_id: String,
+        amount: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        current_divisor: Option<u32>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        remaining_divisor: Option<u32>,
+    },
+    SatisfyHunger,
     VisibleDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -651,6 +703,7 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::JumpDamage { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::LightArea { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::ConeDamage { damage_sides, .. }
@@ -676,6 +729,14 @@ fn ability_level_scaling_base_and_limit(
             Some((u64::from(*power), 1_000_000))
         }
         (
+            AbilityEffectDefinition::TeleportAway { power, .. },
+            AbilityLevelScalingField::TeleportAwayPower,
+        )
+        | (
+            AbilityEffectDefinition::RechargeFromPlayer { power },
+            AbilityLevelScalingField::RechargePower,
+        ) => Some((u64::from(*power), 1_000)),
+        (
             AbilityEffectDefinition::IdentifyItem {
                 full_identify_power,
                 ..
@@ -684,6 +745,7 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*full_identify_power), 1_000)),
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::LightArea { radius, .. }
             | AbilityEffectDefinition::JumpDamage { radius, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
             | AbilityEffectDefinition::ConeDamage { radius, .. }
@@ -841,12 +903,16 @@ pub(crate) fn valid_ability_spell_power(
                         | AbilityEffectDefinition::Malediction { .. }
                         | AbilityEffectDefinition::AreaDamage { .. }
                         | AbilityEffectDefinition::BeamDamage { .. }
+                        | AbilityEffectDefinition::LightArea { .. }
                         | AbilityEffectDefinition::BoltOrBeamDamage { .. }
                         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                         | AbilityEffectDefinition::ConeDamage { .. }
                         | AbilityEffectDefinition::VisibleDamage { .. }
                         | AbilityEffectDefinition::DrainLife { .. }
                 ),
+                AbilitySpellPowerField::HealingSides => {
+                    matches!(effect, AbilityEffectDefinition::HealDice { .. })
+                }
                 AbilitySpellPowerField::DamageBonus => matches!(
                     effect,
                     AbilityEffectDefinition::Damage { .. }
@@ -887,6 +953,12 @@ pub(crate) fn valid_ability_spell_power(
                 AbilitySpellPowerField::IdentifyPower => {
                     matches!(effect, AbilityEffectDefinition::IdentifyItem { .. })
                 }
+                AbilitySpellPowerField::TeleportAwayPower => {
+                    matches!(effect, AbilityEffectDefinition::TeleportAway { .. })
+                }
+                AbilitySpellPowerField::RechargePower => {
+                    matches!(effect, AbilityEffectDefinition::RechargeFromPlayer { .. })
+                }
                 AbilitySpellPowerField::RandomChoiceRoll => {
                     matches!(effect, AbilityEffectDefinition::RandomChoice { .. })
                 }
@@ -907,6 +979,8 @@ pub struct PlayerAbilityDefinition {
     pub resource_id: String,
     pub resource_cost: u32,
     pub base_failure_percent: u8,
+    #[serde(default)]
+    pub first_success_experience: u32,
     #[serde(default)]
     pub proficiency: AbilityProficiencyDefinition,
     #[serde(default)]

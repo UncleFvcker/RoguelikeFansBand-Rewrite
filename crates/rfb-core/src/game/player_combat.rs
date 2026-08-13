@@ -228,6 +228,31 @@ impl Game {
     }
 
     #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_stone_to_mud_damage_to_entity(
+        &mut self,
+        index: usize,
+        ability_id: &str,
+        raw_damage: i32,
+        trace: ProjectileTrace,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<DamageOutcome, CoreError> {
+        self.resolve_ability_damage_to_entity_with_resistance(
+            index,
+            ability_id,
+            DamageType::Disintegrate,
+            raw_damage,
+            trace,
+            Some(ResistanceLevel::Normal),
+            true,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
     fn resolve_ability_damage_to_entity_with_resistance(
         &mut self,
         index: usize,

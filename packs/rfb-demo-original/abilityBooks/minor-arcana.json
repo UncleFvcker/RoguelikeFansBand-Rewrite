@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.minor-arcana",
+  "nameKey": "ability-book-demo-minor-arcana-name",
+  "descriptionKey": "ability-book-demo-minor-arcana-description",
+  "realmId": "arcane",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.arcane-detect-doors-traps",
+    "demo.ability.arcane-phlogiston",
+    "demo.ability.arcane-detect-treasure",
+    "demo.ability.arcane-detect-enchantment",
+    "demo.ability.arcane-detect-objects",
+    "demo.ability.arcane-cure-poison",
+    "demo.ability.arcane-resist-cold",
+    "demo.ability.arcane-resist-fire"
+  ],
+  "tags": ["arcane", "spellbook"]
+}

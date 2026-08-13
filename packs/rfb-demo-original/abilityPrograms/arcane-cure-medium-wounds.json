@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.arcane-cure-medium-wounds",
+  "input": "self",
+  "steps": [
+    { "type": "heal-dice", "dice": 4, "sides": 8 },
+    { "type": "reduce-status", "statusKindId": "rfb.status.bleeding", "amount": 50, "remainingDivisor": 2 }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.arcane-resist-acid",
+  "nameKey": "ability-demo-arcane-resist-acid-name",
+  "descriptionKey": "ability-demo-arcane-resist-acid-description",
+  "abilityProgramId": "demo.ability-program.arcane-resist-acid",
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "status-duration-ticks" },
+    { "effectIndex": 0, "field": "status-duration-sides" }
+  ],
+  "tags": ["acid", "arcane", "resistance", "spell"]
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.manual-of-mastery",
+  "nameKey": "item-demo-manual-of-mastery-name",
+  "descriptionKey": "item-demo-manual-of-mastery-description",
+  "glyph": "?",
+  "weightTenthsPound": 30,
+  "baseValue": 2500,
+  "generationLevel": 25,
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "elementalDestructionVulnerabilities": ["fire"],
+  "abilityBookId": "demo.ability-book.manual-of-mastery",
+  "tags": ["arcane", "book", "spellbook"]
+}

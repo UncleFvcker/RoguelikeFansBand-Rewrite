@@ -670,12 +670,9 @@ impl Game {
             })
             .count();
         equipment_sources
-            + usize::from(
-                self.player
-                    .statuses
-                    .iter()
-                    .any(|status| status.kind_id == STATUS_SIGHT),
-            )
+            + usize::from(self.player.statuses.iter().any(|status| {
+                status.kind_id == STATUS_SIGHT || status.kind_id == STATUS_SEE_INVISIBLE
+            }))
     }
 
     pub(super) fn player_infravision_range(&self) -> i32 {
@@ -711,10 +708,13 @@ impl Game {
     }
 
     pub(super) fn player_has_telepathy(&self) -> bool {
-        self.player_has_status_kind(STATUS_TELEPATHY)
-            || self.content.mutations().any(|mutation| {
-                mutation.telepathy && self.progress.active_mutation_ids.contains(&mutation.id)
-            })
+        self.player_has_status_kind(STATUS_TELEPATHY) || self.player_has_permanent_telepathy()
+    }
+
+    pub(super) fn player_has_permanent_telepathy(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.telepathy && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
     }
 
     pub(super) fn player_regeneration_rate_percent(&self) -> u64 {

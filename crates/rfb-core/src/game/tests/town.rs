@@ -1088,13 +1088,17 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
         std::collections::BTreeMap::from([
             ("demo.item.black-prayers", 100),
             ("demo.item.black-mass", 1_000),
+            ("demo.item.cantrips-for-beginners", 100),
+            ("demo.item.minor-arcana", 250),
+            ("demo.item.major-arcana", 1_000),
+            ("demo.item.manual-of-mastery", 2_500),
         ])
     );
     let book = shop
         .stock
         .iter()
         .find(|item| item.kind_id == "demo.item.black-prayers")
-        .expect("Bookstore should stock Stench of Death")
+        .expect("Bookstore should stock Black Prayers")
         .clone();
 
     let purchase = dispatch_next(
@@ -1321,6 +1325,14 @@ fn quantity_purchase_is_atomic_zero_time_and_identified() {
     let mut game = store_game(43);
     game.gold = 100;
     let item_id = stock_item_id(&game, "demo.item.ration-of-food");
+    game.shop_states
+        .get_mut(GENERAL_STORE_ID)
+        .expect("general store should exist")
+        .inventory
+        .iter_mut()
+        .find(|item| item.id == item_id)
+        .expect("selected ration stock should remain available")
+        .quantity = 2;
     let ration_before = game
         .items
         .iter()

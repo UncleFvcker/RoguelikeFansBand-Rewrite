@@ -27,6 +27,8 @@ pub struct PlayerAbilityBindingDefinition {
     pub resource_cost: u32,
     pub base_failure_percent: u8,
     #[serde(default)]
+    pub first_success_experience: u32,
+    #[serde(default)]
     pub proficiency: AbilityProficiencyDefinition,
     #[serde(default)]
     pub cooldown: Option<AbilityCooldownDefinition>,
@@ -59,6 +61,7 @@ pub(super) fn compile_player_ability_binding_catalog(
             resource_id: definition.resource_id,
             resource_cost: definition.resource_cost,
             base_failure_percent: definition.base_failure_percent,
+            first_success_experience: definition.first_success_experience,
             proficiency: definition.proficiency,
             cooldown: definition.cooldown,
         };
@@ -92,6 +95,7 @@ fn valid_player_ability_binding(definition: &PlayerAbilityBindingDefinition) -> 
     (1..=100).contains(&definition.minimum_level)
         && (1..=1_000_000).contains(&definition.resource_cost)
         && definition.base_failure_percent <= 95
+        && definition.first_success_experience <= 1_000_000
         && definition.proficiency.initial <= definition.proficiency.cap
         && definition.proficiency.cap <= 1600
         && definition
@@ -124,6 +128,7 @@ mod tests {
             resource_id: "demo.resource.mana".to_owned(),
             resource_cost: 5,
             base_failure_percent: 20,
+            first_success_experience: 0,
             proficiency: AbilityProficiencyDefinition::default(),
             cooldown: None,
         }

@@ -317,7 +317,7 @@ impl Game {
             }
         };
 
-        if interaction.opens {
+        if interaction.opens && terrain.open_to_terrain_id.is_some() {
             if power == 0 {
                 self.terrain[terrain_index] = terrain.open_to_terrain_id?;
                 changed.insert(position);
@@ -338,12 +338,11 @@ impl Game {
 
         if interaction.bashes {
             if original_roll(self) > u64::from(power) {
-                let broken = self.rng.bounded(100) < 50;
-                self.terrain[terrain_index] = if broken {
-                    terrain.bash_to_terrain_id?
-                } else {
-                    terrain.open_to_terrain_id?
+                let target = match terrain.open_to_terrain_id {
+                    Some(open) if self.rng.bounded(100) >= 50 => open,
+                    _ => terrain.bash_to_terrain_id?,
                 };
+                self.terrain[terrain_index] = target;
                 changed.insert(position);
                 events.push(DomainEvent::DoorBashedOpen { position });
                 return Some(true);

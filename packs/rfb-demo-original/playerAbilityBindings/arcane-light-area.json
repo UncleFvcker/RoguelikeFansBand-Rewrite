@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.arcane-light-area",
+  "minimumLevel": 3,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 2,
+  "baseFailurePercent": 33,
+  "firstSuccessExperience": 18
+}

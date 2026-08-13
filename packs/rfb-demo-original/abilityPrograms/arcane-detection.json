@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.arcane-detection",
+  "input": "self",
+  "steps": [
+    { "type": "detect", "subject": "terrain", "category": "trap", "radius": 30, "persistent": true, "throughWalls": true },
+    { "type": "detect", "subject": "terrain", "category": "door", "radius": 30, "persistent": true, "throughWalls": true },
+    { "type": "detect", "subject": "terrain", "category": "stairs-down", "radius": 30, "persistent": true, "throughWalls": true },
+    { "type": "detect", "subject": "terrain", "category": "stairs-up", "radius": 30, "persistent": true, "throughWalls": true },
+    { "type": "detect", "subject": "gold", "category": "gold", "radius": 30, "persistent": false, "throughWalls": true },
+    { "type": "detect", "subject": "item", "category": "item", "radius": 30, "persistent": false, "throughWalls": true },
+    { "type": "detect", "subject": "actor", "category": "invisible", "radius": 30, "persistent": false },
+    { "type": "detect", "subject": "actor", "category": "normal-monster", "radius": 30, "persistent": false }
+  ]
+}

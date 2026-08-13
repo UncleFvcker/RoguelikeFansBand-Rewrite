@@ -35,6 +35,8 @@ pub struct TerrainDefinition {
     #[serde(default)]
     pub bash_check_difficulty: Option<i32>,
     #[serde(default)]
+    pub jam_to_terrain_id: Option<String>,
+    #[serde(default)]
     pub monster_door_power: Option<u16>,
     #[serde(default)]
     pub monster_unlock_to_terrain_id: Option<String>,

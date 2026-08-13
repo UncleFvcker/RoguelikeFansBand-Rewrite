@@ -218,17 +218,30 @@ pub(super) fn validate_abilities(
                     damage_dice,
                     damage_sides,
                 } => (1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides),
+                AbilityEffectDefinition::LightArea {
+                    damage_dice,
+                    damage_sides,
+                    radius,
+                } => {
+                    (1..=100).contains(damage_dice)
+                        && ((*damage_sides == 0
+                            && has_level_scaling(AbilityLevelScalingField::DamageSides))
+                            || (1..=10_000).contains(damage_sides))
+                        && (1..=16).contains(radius)
+                }
                 AbilityEffectDefinition::BoltOrBeamDamage {
                     damage_dice,
                     damage_sides,
                     damage_bonus,
                     beam_chance_percent,
+                    beam_chance_modifier,
                     ..
                 } => {
                     (1..=100).contains(damage_dice)
                         && (1..=10_000).contains(damage_sides)
                         && *damage_bonus <= 10_000
                         && *beam_chance_percent <= 100
+                        && (-100..=100).contains(beam_chance_modifier)
                 }
                 AbilityEffectDefinition::BoltOrAreaDamage {
                     damage_dice,
@@ -288,8 +301,23 @@ pub(super) fn validate_abilities(
                         || (*power == 0
                             && has_level_scaling(AbilityLevelScalingField::DeathRayPower))
                 }
-                AbilityEffectDefinition::TeleportAway { minimum_distance } => {
-                    (1..=64).contains(minimum_distance)
+                AbilityEffectDefinition::TeleportAway {
+                    minimum_distance,
+                    power,
+                } => (1..=64).contains(minimum_distance) && *power <= 1_000,
+                AbilityEffectDefinition::RechargeFromPlayer { power } => {
+                    (1..=1_000).contains(power)
+                        || (*power == 0
+                            && has_level_scaling(AbilityLevelScalingField::RechargePower))
+                }
+                AbilityEffectDefinition::Clairvoyance {
+                    telepathy_duration_ticks,
+                    telepathy_duration_dice,
+                    telepathy_duration_sides,
+                } => {
+                    *telepathy_duration_ticks <= 10_000
+                        && (1..=100).contains(telepathy_duration_dice)
+                        && (1..=10_000).contains(telepathy_duration_sides)
                 }
                 AbilityEffectDefinition::BirdDrop => true,
                 AbilityEffectDefinition::DrainResource { amount } => {
@@ -521,6 +549,7 @@ pub(super) fn validate_abilities(
                     category,
                     radius,
                     persistent,
+                    ..
                 } => {
                     !category.is_empty()
                         && category.len() <= 64
@@ -538,11 +567,14 @@ pub(super) fn validate_abilities(
                             AbilityDetectSubjectDefinition::Actor => {
                                 !persistent
                                     && (category == "any-monster"
+                                        || category == "normal-monster"
                                         || actor_tag_values.contains(category))
                             }
                             AbilityDetectSubjectDefinition::Item => {
                                 !persistent
-                                    && (category == "item" || item_tag_values.contains(category))
+                                    && (category == "item"
+                                        || category == "magic-item"
+                                        || item_tag_values.contains(category))
                             }
                             AbilityDetectSubjectDefinition::Gold => {
                                 !persistent && category == "gold"
@@ -552,6 +584,9 @@ pub(super) fn validate_abilities(
                             }
                         }
                 }
+                AbilityEffectDefinition::RefuelEquippedLight {
+                    maximum_fraction_divisor,
+                } => (1..=100).contains(maximum_fraction_divisor),
                 AbilityEffectDefinition::TransformTerrain {
                     source_terrain_ids,
                     target_terrain_id,
@@ -566,6 +601,7 @@ pub(super) fn validate_abilities(
                             .iter()
                             .all(|source_id| source_id != target_terrain_id)
                 }
+                AbilityEffectDefinition::TerrainBeam { .. } => true,
                 AbilityEffectDefinition::ApplyStatus {
                     status_kind_id,
                     intensity,
@@ -665,10 +701,11 @@ pub(super) fn validate_abilities(
                     full_identify_power,
                     full_identify_roll_sides,
                 } => {
-                    ((1..=1_000).contains(full_identify_power)
-                        || (*full_identify_power == 0
-                            && has_level_scaling(AbilityLevelScalingField::IdentifyPower)))
-                        && (1..=1_000).contains(full_identify_roll_sides)
+                    (*full_identify_power == 0 && *full_identify_roll_sides == 0)
+                        || (((1..=1_000).contains(full_identify_power)
+                            || (*full_identify_power == 0
+                                && has_level_scaling(AbilityLevelScalingField::IdentifyPower)))
+                            && (1..=1_000).contains(full_identify_roll_sides))
                 }
                 AbilityEffectDefinition::RestoreVitality { life_force } => {
                     (1..=1_000).contains(life_force)
@@ -687,6 +724,24 @@ pub(super) fn validate_abilities(
                         && *failure_chance_percent <= 100
                 }
                 AbilityEffectDefinition::Heal { amount } => (1..=1_000_000).contains(amount),
+                AbilityEffectDefinition::HealDice { dice, sides } => {
+                    (1..=100).contains(dice) && (1..=10_000).contains(sides)
+                }
+                AbilityEffectDefinition::ReduceStatus {
+                    status_kind_id,
+                    amount,
+                    current_divisor,
+                    remaining_divisor,
+                } => {
+                    validate_id(status_kind_id).is_ok()
+                        && (1..=1_000_000).contains(amount)
+                        && current_divisor.is_none_or(|divisor| (1..=1_000_000).contains(&divisor))
+                        && remaining_divisor
+                            .is_none_or(|divisor| (1..=1_000_000).contains(&divisor))
+                        && !(current_divisor.is_some() && remaining_divisor.is_some())
+                        && (remaining_divisor.is_none() || status_kind_id == "rfb.status.bleeding")
+                }
+                AbilityEffectDefinition::SatisfyHunger => true,
                 AbilityEffectDefinition::VisibleDamage {
                     damage_dice,
                     damage_sides,
@@ -829,6 +884,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::ConeDamage { .. }
                 | AbilityEffectDefinition::BreathDamage { .. }
                 | AbilityEffectDefinition::Rodeo
+                | AbilityEffectDefinition::TerrainBeam { .. }
         ) || matches!(
             &ability.effect,
             AbilityEffectDefinition::CreateAmmunition {
@@ -859,6 +915,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::Malediction { .. }
             | AbilityEffectDefinition::BeamDamage { .. }
             | AbilityEffectDefinition::LightLine { .. }
+            | AbilityEffectDefinition::TerrainBeam { .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { .. }
             | AbilityEffectDefinition::ConeDamage { .. }
@@ -867,11 +924,11 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::BirdDrop
             | AbilityEffectDefinition::DrainResource { .. }
             | AbilityEffectDefinition::Amnesia
-            | AbilityEffectDefinition::TeleportLevel
             | AbilityEffectDefinition::PolymorphTarget
             | AbilityEffectDefinition::DrainLife { .. }
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
+            AbilityEffectDefinition::TeleportLevel => self_target_rule || projectile_target_rule,
             AbilityEffectDefinition::FetchItem { .. }
             | AbilityEffectDefinition::ConsumeTerrain { .. }
             | AbilityEffectDefinition::MeleeThenTeleport { .. }
@@ -895,7 +952,8 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::IdentifyItem { .. }
             | AbilityEffectDefinition::BrandWeapon { .. }
             | AbilityEffectDefinition::TransmuteItemToGold { .. }
-            | AbilityEffectDefinition::DrainItemMagic { .. } => item_target_rule,
+            | AbilityEffectDefinition::DrainItemMagic { .. }
+            | AbilityEffectDefinition::RechargeFromPlayer { .. } => item_target_rule,
             AbilityEffectDefinition::AreaDamage { .. } => {
                 self_target_rule || projectile_target_rule
             }
@@ -917,6 +975,12 @@ pub(super) fn validate_abilities(
                     && !ability.target.requires_line_of_effect
             }
             AbilityEffectDefinition::Heal { .. }
+            | AbilityEffectDefinition::HealDice { .. }
+            | AbilityEffectDefinition::ReduceStatus { .. }
+            | AbilityEffectDefinition::SatisfyHunger
+            | AbilityEffectDefinition::Clairvoyance { .. }
+            | AbilityEffectDefinition::RefuelEquippedLight { .. }
+            | AbilityEffectDefinition::LightArea { .. }
             | AbilityEffectDefinition::AggravateMonsters
             | AbilityEffectDefinition::Recall { .. }
             | AbilityEffectDefinition::ResistElements { .. }
@@ -953,6 +1017,8 @@ pub(super) fn validate_abilities(
                         matches!(
                             effect,
                             AbilityEffectDefinition::Heal { .. }
+                                | AbilityEffectDefinition::HealDice { .. }
+                                | AbilityEffectDefinition::ReduceStatus { .. }
                                 | AbilityEffectDefinition::ApplyStatus { .. }
                                 | AbilityEffectDefinition::RemoveStatus { .. }
                                 | AbilityEffectDefinition::AnimateDead { .. }
@@ -981,6 +1047,7 @@ pub(super) fn validate_abilities(
             (1..=100).contains(&player.minimum_level)
                 && (1..=1_000_000).contains(&player.resource_cost)
                 && player.base_failure_percent <= 95
+                && player.first_success_experience <= 1_000_000
                 && player.proficiency.initial <= player.proficiency.cap
                 && player.proficiency.cap <= 1600
                 && player

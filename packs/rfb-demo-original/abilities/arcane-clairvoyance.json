@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.arcane-clairvoyance",
+  "nameKey": "ability-demo-arcane-clairvoyance-name",
+  "descriptionKey": "ability-demo-arcane-clairvoyance-description",
+  "abilityProgramId": "demo.ability-program.arcane-clairvoyance",
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": ["arcane", "detection", "spell", "telepathy"]
+}

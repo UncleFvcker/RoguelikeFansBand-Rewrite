@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.303.0");
+    assert_eq!(catalog.pack_version(), "1.304.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -39,6 +39,25 @@ fn compiled_catalog_indexes_current_rfb_content() {
         25
     );
     assert!(catalog.build("demo.build.high-mage-death").is_some());
+    assert!(catalog.build("demo.build.high-mage-arcane").is_some());
+    assert_eq!(
+        catalog
+            .item("demo.item.cantrips-for-beginners")
+            .and_then(|item| item.ability_book_id.as_deref()),
+        Some("demo.ability-book.cantrips-for-beginners")
+    );
+    assert_eq!(
+        catalog
+            .item("demo.item.minor-arcana")
+            .and_then(|item| item.ability_book_id.as_deref()),
+        Some("demo.ability-book.minor-arcana")
+    );
+    assert_eq!(
+        catalog
+            .item("demo.item.manual-of-mastery")
+            .and_then(|item| item.ability_book_id.as_deref()),
+        Some("demo.ability-book.manual-of-mastery")
+    );
     assert_eq!(
         catalog
             .class("demo.class.archer")

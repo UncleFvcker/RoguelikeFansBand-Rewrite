@@ -116,6 +116,8 @@
         "damage-sides",
         "damage-bonus",
         "death-ray-power",
+        "teleport-away-power",
+        "recharge-power",
         "identify-power",
         "radius",
         "beam-chance-percent",

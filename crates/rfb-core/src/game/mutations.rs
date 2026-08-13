@@ -10,6 +10,7 @@ const GOOD_LUCK_MUTATION_ID: &str = "rfb.mutation.good-luck";
 const BAD_LUCK_MUTATION_ID: &str = "rfb.mutation.bad-luck";
 const EASY_TIRING_MUTATION_ID: &str = "rfb.mutation.easy-tiring";
 const IMPOTENCE_MUTATION_ID: &str = "rfb.mutation.impotence";
+const ASTRAL_GUIDE_MUTATION_ID: &str = "rfb.mutation.astral-guide";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum LuckBias {
@@ -53,6 +54,12 @@ enum RandomMutationOperation {
 }
 
 impl Game {
+    pub(super) fn player_has_astral_guide(&self) -> bool {
+        self.progress
+            .active_mutation_ids
+            .contains(ASTRAL_GUIDE_MUTATION_ID)
+    }
+
     pub(super) fn process_periodic_mutations(
         &mut self,
         local_floor_active: bool,

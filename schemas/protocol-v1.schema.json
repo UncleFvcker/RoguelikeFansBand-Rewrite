@@ -284,6 +284,10 @@
         "subject": {
           "$ref": "#/$defs/AbilityDetectSubjectDto",
           "default": "terrain"
+        },
+        "throughWalls": {
+          "type": "boolean",
+          "default": false
         }
       },
       "required": [
@@ -310,6 +314,10 @@
         "subject": {
           "$ref": "#/$defs/AbilityDetectSubjectDto",
           "default": "terrain"
+        },
+        "throughWalls": {
+          "type": "boolean",
+          "default": false
         }
       },
       "required": [
@@ -1375,6 +1383,63 @@
         {
           "type": "object",
           "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "from": {
+              "$ref": "#/$defs/Position"
+            },
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "resistanceRoll": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "resisted": {
+              "type": "boolean"
+            },
+            "targetEntityId": {
+              "type": "string"
+            },
+            "to": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Position"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "teleport-away"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "targetEntityId",
+            "power",
+            "resisted",
+            "from"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "appliedDurationTicks": {
               "type": "integer",
               "format": "uint32",
@@ -1530,6 +1595,113 @@
             "effectIndex",
             "statusKindId",
             "removed"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "after": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "before": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "reduce-status"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "statusKindId",
+            "before",
+            "after"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "nutritionAfter": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "nutritionBefore": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "satisfy-hunger"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "nutritionBefore",
+            "nutritionAfter"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "after": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "before": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "itemId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "refuel-equipped-light"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "before",
+            "after"
           ]
         },
         {
@@ -2237,6 +2409,39 @@
         {
           "type": "object",
           "properties": {
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "light-area"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "beamChancePercent": {
               "type": "integer",
               "format": "uint8",
@@ -2499,6 +2704,13 @@
               "maximum": 255,
               "minimum": 0
             },
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "default": 0,
+              "maximum": 65535,
+              "minimum": 0
+            },
             "type": {
               "type": "string",
               "const": "teleport-away"
@@ -2507,6 +2719,58 @@
           "required": [
             "type",
             "minimumDistance"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "recharge-from-player"
+            }
+          },
+          "required": [
+            "type",
+            "power"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "telepathyDurationDice": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "telepathyDurationSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "telepathyDurationTicks": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "clairvoyance"
+            }
+          },
+          "required": [
+            "type",
+            "telepathyDurationTicks",
+            "telepathyDurationDice",
+            "telepathyDurationSides"
           ]
         },
         {
@@ -3159,6 +3423,10 @@
               "$ref": "#/$defs/AbilityDetectSubjectDto",
               "default": "terrain"
             },
+            "throughWalls": {
+              "type": "boolean",
+              "default": false
+            },
             "type": {
               "type": "string",
               "const": "detect"
@@ -3169,6 +3437,25 @@
             "category",
             "radius",
             "persistent"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "maximumFractionDivisor": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "refuel-equipped-light"
+            }
+          },
+          "required": [
+            "type",
+            "maximumFractionDivisor"
           ]
         },
         {
@@ -3199,6 +3486,22 @@
             "sourceTerrainIds",
             "targetTerrainId",
             "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "$ref": "#/$defs/AbilityTerrainBeamOperationDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "terrain-beam"
+            }
+          },
+          "required": [
+            "type",
+            "operation"
           ]
         },
         {
@@ -3662,6 +3965,82 @@
           "required": [
             "type",
             "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "dice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "sides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "heal-dice"
+            }
+          },
+          "required": [
+            "type",
+            "dice",
+            "sides"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "currentDivisor": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0
+            },
+            "remainingDivisor": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "reduce-status"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId",
+            "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "satisfy-hunger"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
@@ -4151,6 +4530,14 @@
       "required": [
         "from",
         "to"
+      ]
+    },
+    "AbilityTerrainBeamOperationDto": {
+      "type": "string",
+      "enum": [
+        "jam-doors",
+        "destroy-traps-and-doors",
+        "stone-to-mud"
       ]
     },
     "AbilityTerrainTransformResolutionDto": {

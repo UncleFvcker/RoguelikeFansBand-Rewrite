@@ -1402,6 +1402,7 @@ impl Game {
             category,
             radius,
             persistent,
+            through_walls,
             detected_positions,
             detected_entity_ids,
         };

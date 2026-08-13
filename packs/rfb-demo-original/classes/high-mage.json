@@ -100,6 +100,50 @@
           { "abilityId": "demo.ability.death-hellfire", "minimumLevel": 40, "resourceCost": 53, "baseFailurePercent": 70 },
           { "abilityId": "demo.ability.death-wraithform", "minimumLevel": 45, "resourceCost": 75, "baseFailurePercent": 80 }
         ]
+      },
+      {
+        "realmId": "arcane",
+        "abilityBookIds": [
+          "demo.ability-book.cantrips-for-beginners",
+          "demo.ability-book.minor-arcana",
+          "demo.ability-book.major-arcana",
+          "demo.ability-book.manual-of-mastery"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.arcane-zap", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.arcane-wizard-lock", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 23 },
+          { "abilityId": "demo.ability.arcane-detect-invisibility", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 23 },
+          { "abilityId": "demo.ability.arcane-detect-monsters", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 23 },
+          { "abilityId": "demo.ability.arcane-blink", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 23 },
+          { "abilityId": "demo.ability.arcane-light-area", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 33 },
+          { "abilityId": "demo.ability.arcane-trap-door-destruction", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 23 },
+          { "abilityId": "demo.ability.arcane-cure-light-wounds", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 33 },
+          { "abilityId": "demo.ability.arcane-detect-doors-traps", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.arcane-phlogiston", "minimumLevel": 7, "resourceCost": 7, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.arcane-detect-treasure", "minimumLevel": 8, "resourceCost": 7, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-detect-enchantment", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-detect-objects", "minimumLevel": 9, "resourceCost": 8, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-cure-poison", "minimumLevel": 10, "resourceCost": 9, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-resist-cold", "minimumLevel": 10, "resourceCost": 10, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-resist-fire", "minimumLevel": 11, "resourceCost": 10, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-resist-lightning", "minimumLevel": 12, "resourceCost": 10, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-resist-acid", "minimumLevel": 13, "resourceCost": 10, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-cure-medium-wounds", "minimumLevel": 14, "resourceCost": 11, "baseFailurePercent": 22 },
+          { "abilityId": "demo.ability.arcane-teleport", "minimumLevel": 15, "resourceCost": 12, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-identify", "minimumLevel": 17, "resourceCost": 17, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.arcane-stone-to-mud", "minimumLevel": 19, "resourceCost": 15, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.arcane-ray-of-light", "minimumLevel": 20, "resourceCost": 16, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.arcane-satisfy-hunger", "minimumLevel": 22, "resourceCost": 18, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.arcane-see-invisible", "minimumLevel": 24, "resourceCost": 22, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.arcane-resist-poison", "minimumLevel": 26, "resourceCost": 26, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.arcane-teleport-level", "minimumLevel": 30, "resourceCost": 30, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.arcane-teleport-away", "minimumLevel": 35, "resourceCost": 28, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.arcane-recharging", "minimumLevel": 40, "resourceCost": 28, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.arcane-detection", "minimumLevel": 41, "resourceCost": 28, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.arcane-word-of-recall", "minimumLevel": 43, "resourceCost": 40, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.arcane-clairvoyance", "minimumLevel": 46, "resourceCost": 80, "baseFailurePercent": 70 }
+        ]
       }
     ]
   },

@@ -12,7 +12,16 @@ fn monster_level_teleport_uses_resistance_save_and_floor_transition() {
         x: base.player.position.x.saturating_add(3),
         y: base.player.position.y,
     };
-    replace_terrain(&mut base, caster_position, "demo.terrain.floor");
+    for x in base.player.position.x..=caster_position.x {
+        replace_terrain(
+            &mut base,
+            Position {
+                x,
+                y: caster_position.y,
+            },
+            "demo.terrain.floor",
+        );
+    }
     base.push_generated_actor(
         "test.monster.quasit.1".to_owned(),
         "demo.actor.quasit",

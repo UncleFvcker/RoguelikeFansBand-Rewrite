@@ -84,6 +84,12 @@
       ],
       "default": null
     },
+    "firstSuccessExperience": {
+      "default": 0,
+      "format": "uint32",
+      "minimum": 0,
+      "type": "integer"
+    },
     "formatVersion": {
       "format": "uint16",
       "maximum": 65535,

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.192";
+pub const PROTOCOL_VERSION: &str = "1.194";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -861,6 +861,15 @@ pub struct AbilitySummonCandidateSpecDto {
     pub weight: u16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityTerrainBeamOperationDto {
+    JamDoors,
+    DestroyTrapsAndDoors,
+    StoneToMud,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
@@ -902,6 +911,11 @@ pub enum AbilityEffectSpecDto {
     LightLine {
         damage_dice: u16,
         damage_sides: u16,
+    },
+    LightArea {
+        damage_dice: u16,
+        damage_sides: u16,
+        radius: u8,
     },
     BoltOrBeamDamage {
         damage_dice: u16,
@@ -954,6 +968,16 @@ pub enum AbilityEffectSpecDto {
     },
     TeleportAway {
         minimum_distance: u8,
+        #[serde(default)]
+        power: u16,
+    },
+    RechargeFromPlayer {
+        power: u16,
+    },
+    Clairvoyance {
+        telepathy_duration_ticks: u16,
+        telepathy_duration_dice: u8,
+        telepathy_duration_sides: u16,
     },
     DrainResource {
         amount: u32,
@@ -1066,11 +1090,19 @@ pub enum AbilityEffectSpecDto {
         category: String,
         radius: u8,
         persistent: bool,
+        #[serde(default)]
+        through_walls: bool,
+    },
+    RefuelEquippedLight {
+        maximum_fraction_divisor: u16,
     },
     TransformTerrain {
         source_terrain_ids: Vec<String>,
         target_terrain_id: String,
         radius: u8,
+    },
+    TerrainBeam {
+        operation: AbilityTerrainBeamOperationDto,
     },
     ApplyStatus {
         status_kind_id: String,
@@ -1161,6 +1193,19 @@ pub enum AbilityEffectSpecDto {
     Heal {
         amount: u32,
     },
+    HealDice {
+        dice: u16,
+        sides: u16,
+    },
+    ReduceStatus {
+        status_kind_id: String,
+        amount: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        current_divisor: Option<u32>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        remaining_divisor: Option<u32>,
+    },
+    SatisfyHunger,
     VisibleDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -1315,6 +1360,8 @@ pub struct AbilityDetectSpecDto {
     pub radius: u8,
     #[serde(default)]
     pub persistent: bool,
+    #[serde(default)]
+    pub through_walls: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1972,6 +2019,8 @@ pub struct AbilityDetectResolutionDto {
     #[serde(default)]
     pub persistent: bool,
     #[serde(default)]
+    pub through_walls: bool,
+    #[serde(default)]
     pub detected_positions: Vec<Position>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub detected_entity_ids: Vec<String>,
@@ -2182,6 +2231,17 @@ pub enum AbilityEffectResolutionDto {
         from_floor_id: String,
         to_floor_id: String,
     },
+    TeleportAway {
+        effect_index: u8,
+        target_entity_id: String,
+        power: u16,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        resistance_roll: Option<u8>,
+        resisted: bool,
+        from: Position,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        to: Option<Position>,
+    },
     ApplyStatus {
         effect_index: u8,
         status_kind_id: String,
@@ -2217,6 +2277,24 @@ pub enum AbilityEffectResolutionDto {
         effect_index: u8,
         status_kind_id: String,
         removed: bool,
+    },
+    ReduceStatus {
+        effect_index: u8,
+        status_kind_id: String,
+        before: u32,
+        after: u32,
+    },
+    SatisfyHunger {
+        effect_index: u8,
+        nutrition_before: u16,
+        nutrition_after: u16,
+    },
+    RefuelEquippedLight {
+        effect_index: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        item_id: Option<String>,
+        before: u16,
+        after: u16,
     },
     Skipped {
         effect_index: u8,
@@ -3535,6 +3613,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityRandomTargetDto);
     push_declaration!(AbilityRandomBranchSpecDto);
     push_declaration!(AbilitySummonCandidateSpecDto);
+    push_declaration!(AbilityTerrainBeamOperationDto);
     push_declaration!(AbilityEffectSpecDto);
     push_declaration!(AbilitySummonSpecDto);
     push_declaration!(AbilityDetectSpecDto);

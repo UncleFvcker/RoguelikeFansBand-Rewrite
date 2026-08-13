@@ -214,10 +214,15 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Summon { .. }
                     | AbilityEffectDefinition::SummonCategory { .. }
                     | AbilityEffectDefinition::Detect { .. }
+                    | AbilityEffectDefinition::RefuelEquippedLight { .. }
+                    | AbilityEffectDefinition::LightArea { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
                     | AbilityEffectDefinition::RemoveStatus { .. }
                     | AbilityEffectDefinition::AnimateDead { .. }
                     | AbilityEffectDefinition::Heal { .. }
+                    | AbilityEffectDefinition::HealDice { .. }
+                    | AbilityEffectDefinition::ReduceStatus { .. }
+                    | AbilityEffectDefinition::SatisfyHunger
                     | AbilityEffectDefinition::RestoreVitality { .. }
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
@@ -228,6 +233,8 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::AreaDestruction { .. }
                     | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
                     | AbilityEffectDefinition::PolymorphSelf
+                    | AbilityEffectDefinition::TeleportLevel
+                    | AbilityEffectDefinition::Clairvoyance { .. }
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(
                 effect,
@@ -262,6 +269,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::MeleeThenTeleport { .. }
                     | AbilityEffectDefinition::SwapPosition
                     | AbilityEffectDefinition::TransformTerrain { .. }
+                    | AbilityEffectDefinition::TerrainBeam { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
                     | AbilityEffectDefinition::RemoveStatus { .. }
                     | AbilityEffectDefinition::Control { .. }
@@ -294,6 +302,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::BrandWeapon { .. }
                     | AbilityEffectDefinition::TransmuteItemToGold { .. }
                     | AbilityEffectDefinition::DrainItemMagic { .. }
+                    | AbilityEffectDefinition::RechargeFromPlayer { .. }
             ) || matches!(
                 effect,
                 AbilityEffectDefinition::CreateAmmunition {
@@ -313,6 +322,8 @@ fn ability_program_step_is_composable(
         AbilityProgramInputDefinition::SelfTarget => matches!(
             effect,
             AbilityEffectDefinition::Heal { .. }
+                | AbilityEffectDefinition::HealDice { .. }
+                | AbilityEffectDefinition::ReduceStatus { .. }
                 | AbilityEffectDefinition::ApplyStatus { .. }
                 | AbilityEffectDefinition::RemoveStatus { .. }
                 | AbilityEffectDefinition::AnimateDead { .. }
@@ -640,6 +651,7 @@ mod tests {
                 resource_id: "demo.resource.mana".to_owned(),
                 resource_cost: 1,
                 base_failure_percent: 0,
+                first_success_experience: 0,
                 proficiency: AbilityProficiencyDefinition::default(),
                 cooldown: None,
             },

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.cantrips-for-beginners",
+  "nameKey": "item-demo-cantrips-for-beginners-name",
+  "descriptionKey": "item-demo-cantrips-for-beginners-description",
+  "glyph": "?",
+  "weightTenthsPound": 30,
+  "baseValue": 100,
+  "generationLevel": 10,
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "elementalDestructionVulnerabilities": ["fire"],
+  "abilityBookId": "demo.ability-book.cantrips-for-beginners",
+  "tags": ["arcane", "book", "spellbook"]
+}

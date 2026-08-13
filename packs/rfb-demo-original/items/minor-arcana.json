@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.minor-arcana",
+  "nameKey": "item-demo-minor-arcana-name",
+  "descriptionKey": "item-demo-minor-arcana-description",
+  "glyph": "?",
+  "weightTenthsPound": 30,
+  "baseValue": 250,
+  "generationLevel": 15,
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "elementalDestructionVulnerabilities": ["fire"],
+  "abilityBookId": "demo.ability-book.minor-arcana",
+  "tags": ["arcane", "book", "spellbook"]
+}

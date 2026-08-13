@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json","formatVersion":1,"abilityId":"demo.ability.arcane-stone-to-mud","minimumLevel":19,"resourceId":"demo.resource.mana","resourceCost":15,"baseFailurePercent":50,"firstSuccessExperience":171}

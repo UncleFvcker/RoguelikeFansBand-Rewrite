@@ -622,3 +622,30 @@ v1，不兼容缺少字段的旧开发存档。
 空球复用既有 `UseItem` 的 entity 目标，满球复用 direction 目标；当前坐骑与玩家同格时仍
 可作为 entity 目标。四种物品 save DTO 均增加必填可空 `capturedActor`，进入 State Hash
 Schema v96；save 容器保持 v1，不兼容缺少字段的旧开发存档。
+
+协议 1.189 / Arcane 第一册为 `AbilityEffectSpecDto` 增加窄化的 `light-area`、
+`terrain-beam`、`heal-dice` 与 `reduce-status` 投影，并为状态削减增加结构化结算结果。
+这些表面只承载区域照明、门闩/门陷阱射线与骰式治疗；没有新增待处理输入或存档字段，
+State Hash Schema 保持 v93，save 容器保持 v1。
+
+协议 1.190 / Arcane 第二册为探测规格与结算增加 `throughWalls`，为
+`reduce-status` 增加可选 `currentDivisor`，并增加窄化的 `refuel-equipped-light` 规格与
+结构化结算结果。它们分别承载原版穿墙探测、`max(100, current / 5)` 解毒和已装备火把/
+提灯补充一半最大燃料；没有新增待处理输入或存档字段，State Hash Schema 保持 v93，
+save 容器保持 v1。
+
+协议 1.191 / Arcane 第三册为 `terrain-beam` 增加 `stone-to-mud` 操作，为
+`reduce-status` 增加仅允许流血使用的可选 `remainingDivisor`，并增加窄化的
+`satisfy-hunger` 规格与结构化结算结果。它们分别承载原版 `1d30+20` 化石为泥、
+`current / 2 - 50` 治疗中伤和 `PY_FOOD_MAX - 1` 充饥；基础鉴定允许以 0/0 表示不掷
+完整鉴定判定。没有新增待处理输入或存档字段，State Hash Schema 保持 v93，save 容器保持 v1。
+
+协议 1.192 / Arcane 第四册前置为 `teleport-away` 增加玩家射线所需的 power，
+并增加窄化的 `recharge-from-player` 能力规格及 Teleport Away 结算结果。充能继续使用
+既有物品目标和装置充能事件，额外消耗能力资源；没有新增持久状态，State Hash Schema
+保持 v93，save 容器保持 v1。
+
+协议 1.193 / Arcane 完整领域增加窄化的 `clairvoyance` 能力规格，投影临时 ESP 的
+固定时长与骰式时长。结算复用既有探测、状态和 virtue 事件：永久绘制并照亮当前层、
+揭示全部地面物品，并仅在玩家没有永久 ESP 时掷 `25 + 1d30` 临时 ESP。没有新增命令、
+待处理输入或持久状态，State Hash Schema 保持 v93，save 容器保持 v1。
