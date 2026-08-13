@@ -104,6 +104,9 @@ pub struct RaceDefinition {
     /// Intrinsic infravision range in map cells.
     #[serde(default)]
     pub infravision: i32,
+    /// Whether this race contributes one intrinsic see-invisible source.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub see_invisible: bool,
     pub skill_set_id: String,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
@@ -158,6 +161,10 @@ pub enum RaceMutationSelectionDefinition {
 
 const fn default_shop_adjust_percent() -> u16 {
     110
+}
+
+const fn is_false(value: &bool) -> bool {
+    !*value
 }
 
 const fn default_pet_upkeep_divisor() -> u16 {

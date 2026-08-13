@@ -314,3 +314,14 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 非正式 legacy race 与未知 race 仍从角色创建入口拒绝；Web 聚焦测试验证所选
   `raceId` 原样进入 `NewSessionRequest`。本批不改内容、协议、save 或 State Hash 版本，
   不刷新也不运行全量 fixture。
+
+## main 当前批次：高等精灵 Commit 1 种族天生看破隐形
+
+- `RaceDefinition.seeInvisible` 是默认关闭、内容派生的单一看破隐形来源；它与装备和临时
+  状态逐份叠加，并通过现有有效种族解析自动跟随变形获得或失去，不增加存档状态。
+- legacy race importer 只提取 `calc_bonuses` 顶层无条件的 `p_ptr->see_inv++;`；条件式来源
+  继续由原 hook gap 记录。已经落入 JSON 的 `infravision` 不再重复登记为 gap。
+- 本批不新增内容 ID，也不正式开放高等精灵；下一批在现有
+  `rfb-legacy.race.high-elf` 上补齐静态内容并设置 `seeInvisible: true`，不得创建重复 race。
+- 协调版本保持 pack `1.331.0`、Protocol `1.201`、State Hash Schema v100、save v1、
+  baseline `contract-v303`；默认 `false` 省略序列化，现有内容锁与 fixture 均不变。

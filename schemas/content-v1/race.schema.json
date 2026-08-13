@@ -423,6 +423,10 @@
       },
       "type": "object"
     },
+    "seeInvisible": {
+      "description": "Whether this race contributes one intrinsic see-invisible source.",
+      "type": "boolean"
+    },
     "shopAdjustPercent": {
       "default": 110,
       "description": "Percentage applied by shopkeepers before charisma and greed. RFB's\nneutral human factor is 100; unspecified races use the 110 default.",

@@ -905,3 +905,16 @@ git diff --stat
 - 本批不新增任何内容 ID，不变更 pack `1.331.0`、Protocol `1.201`、State Hash Schema
   v100、save v1 或 active baseline `contract-v303`。按用户要求不运行、不刷新全量 fixture；
   合并验收时再统一执行。
+
+## 47. main 当前交接（高等精灵 Commit 1：种族天生看破隐形）
+
+- 本批不新增或占用 race、item、ability、material 或 affix ID。高等精灵后续正式内容必须
+  复用现有 `rfb-legacy.race.high-elf` 与 `rfb-legacy.skill-set.race-high-elf`。
+- `RaceDefinition.seeInvisible` 默认 `false`，为当前有效种族贡献一份看破隐形来源；装备与
+  状态来源继续逐份叠加。变形通过既有 `character_definitions()` 自动切换该来源，无新增
+  权威状态、协议投影或存档字段。
+- legacy importer 现从 race `calc_bonuses` 提取顶层无条件 `p_ptr->see_inv++;`，条件式语句
+  不导入并继续保留在 hook gap。`infravision` 已完整落入内容，不再重复登记为 gap。
+- 本批不修改现有 race JSON；`seeInvisible` 的默认值在序列化时省略，因此协调点仍为 pack
+  `1.331.0`、Protocol `1.201`、State Hash Schema v100、save v1、active baseline
+  `contract-v303`，content lock 与既有 fixture 不变。按用户要求只运行新增和直接相关测试。

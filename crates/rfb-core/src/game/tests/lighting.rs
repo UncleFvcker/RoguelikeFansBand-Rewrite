@@ -11,6 +11,49 @@ const TORCH_KIND_ID: &str = "demo.item.wooden-torch";
 const LANTERN_KIND_ID: &str = "demo.item.brass-lantern";
 const OIL_KIND_ID: &str = "demo.item.flask-of-oil";
 
+fn intrinsic_see_invisible_game(seed: u64) -> Game {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    for race_id in ["demo.race.rfb-human", "rfb-legacy.race.high-elf"] {
+        artifact
+            .content
+            .races
+            .iter_mut()
+            .find(|race| race.id == race_id)
+            .unwrap_or_else(|| panic!("test race {race_id} should exist"))
+            .see_invisible = true;
+    }
+    let artifact = rfb_content::encode_content(artifact.content)
+        .expect("intrinsic see-invisible content should encode");
+    let content = Arc::new(
+        rfb_content::ContentCatalog::from_bytes(&artifact.bytes)
+            .expect("intrinsic see-invisible content should decode"),
+    );
+    Game::from_content_with_build(seed, content, DEFAULT_WORLD_ID, RFB_WARRIOR_BUILD_ID)
+        .expect("intrinsic see-invisible game should create")
+}
+
+fn race_form_status(race_id: &str) -> StatusInstance {
+    StatusInstance {
+        kind_id: STATUS_PLAYER_POLYMORPH.to_owned(),
+        intensity: 1,
+        remaining_ticks: 100,
+        source_id: Some("test.race-form".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: Some(race_id.to_owned()),
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    }
+}
+
 fn set_inventory_light_equipped(game: &mut Game, item_id: &str) {
     game.items
         .iter_mut()
@@ -427,6 +470,90 @@ fn invisible_actors_are_hidden_until_detected_and_detection_round_trips() {
             .iter()
             .any(|actor| actor.id == "test.invisible")
     );
+}
+
+#[test]
+fn intrinsic_race_see_invisible_stacks_and_follows_the_current_form() {
+    let mut game = intrinsic_see_invisible_game(47);
+    assert_eq!(game.player_see_invisible_sources(), 1);
+
+    for item in &mut game.items {
+        if matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "weapon") {
+            item.location = ItemLocation::Inventory;
+        }
+    }
+    give_inventory_item(&mut game, "test.crisdurian", "demo.item.crisdurian");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.crisdurian")
+        .expect("test artifact should exist")
+        .location = ItemLocation::Equipped {
+        slot_id: "weapon".to_owned(),
+    };
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_SEE_INVISIBLE.to_owned(),
+        granted_race_id: None,
+        ..race_form_status("rfb-legacy.race.high-elf")
+    });
+    assert_eq!(game.player_see_invisible_sources(), 3);
+
+    game.player
+        .statuses
+        .push(race_form_status("rfb-legacy.race.half-orc"));
+    assert_eq!(game.player_see_invisible_sources(), 2);
+    game.player
+        .statuses
+        .last_mut()
+        .expect("race form should exist")
+        .granted_race_id = Some("rfb-legacy.race.high-elf".to_owned());
+    assert_eq!(game.player_see_invisible_sources(), 3);
+}
+
+#[test]
+fn intrinsic_race_see_invisible_uses_the_original_detection_roll() {
+    let mut game = intrinsic_see_invisible_game(48);
+    clear_monsters(&mut game);
+    game.glow.fill(true);
+    let player_position = Position { x: 3, y: 3 };
+    game.player.position = player_position;
+    let target = Position { x: 4, y: 3 };
+    replace_terrain(&mut game, player_position, "demo.terrain.floor");
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    game.push_generated_actor(
+        "test.intrinsic-invisible".to_owned(),
+        "demo.actor.clear-icky-thing",
+        target,
+    );
+
+    let search_skill = game.player_derived_stats().search_skill.value.max(0) as u64;
+    let actor_level = game
+        .content
+        .actor("demo.actor.clear-icky-thing")
+        .expect("test actor should exist")
+        .level;
+    let difficulty = u64::from(50_u32.saturating_add(actor_level / 2));
+    let success_seed = (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(difficulty) < search_skill
+        })
+        .expect("a bounded seed should pass the invisible-detection check");
+    game.rng = RfbRng::seeded(success_seed);
+    let mut expected_rng = game.rng.clone();
+    assert!(expected_rng.bounded(difficulty) < search_skill);
+    game.refresh_invisible_visibility(true, &BTreeMap::new());
+    assert!(game.entities[0].visible_invisible);
+    assert_eq!(game.rng, expected_rng);
+
+    game.entities[0].visible_invisible = false;
+    game.player
+        .statuses
+        .push(race_form_status("rfb-legacy.race.half-orc"));
+    game.rng = RfbRng::seeded(9);
+    let rng_before = game.rng.clone();
+    game.refresh_invisible_visibility(true, &BTreeMap::new());
+    assert!(!game.entities[0].visible_invisible);
+    assert_eq!(game.rng, rng_before);
 }
 
 #[test]

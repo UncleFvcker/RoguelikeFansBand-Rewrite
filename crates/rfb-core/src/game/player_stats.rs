@@ -676,7 +676,11 @@ impl Game {
                         .contains(&EquipmentPassive::SeeInvisible)
             })
             .count();
+        let race_source = self
+            .character_definitions()
+            .is_some_and(|(_, race, _, _)| race.see_invisible);
         equipment_sources
+            + usize::from(race_source)
             + usize::from(self.player.statuses.iter().any(|status| {
                 status.kind_id == STATUS_SIGHT || status.kind_id == STATUS_SEE_INVISIBLE
             }))

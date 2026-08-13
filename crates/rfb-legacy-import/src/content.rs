@@ -787,6 +787,7 @@ pub struct LegacyCharacterEntry {
     /// statements in the calc_bonuses hook.
     pub resistances: Vec<(String, String)>,
     pub free_act: bool,
+    pub see_invisible: bool,
     pub speed: i32,
 }
 
@@ -810,6 +811,7 @@ impl Default for LegacyCharacterEntry {
             calc_bonuses_fn: None,
             resistances: Vec::new(),
             free_act: false,
+            see_invisible: false,
             speed: 0,
         }
     }
@@ -4883,20 +4885,24 @@ fn find_function_body<'a>(text: &'a str, name: &str) -> Option<&'a str> {
 }
 
 /// Extracts the statically expressible defensive surface from a race's
-/// calc_bonuses hook: top-level `res_add` family calls, `free_act++` and
-/// literal `pspeed` adjustments. Conditional (level-gated) and computed
-/// statements are ignored and remain accounted as hook gaps.
-pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> (Vec<(String, String)>, bool, i32) {
+/// calc_bonuses hook: top-level `res_add` family calls, `free_act++`,
+/// `see_inv++` and literal `pspeed` adjustments. Conditional (level-gated)
+/// and computed statements are ignored and remain accounted as hook gaps.
+pub fn parse_calc_bonuses_defenses(
+    text: &str,
+    hook: &str,
+) -> (Vec<(String, String)>, bool, bool, i32) {
     fn resistance_token(rest: &str) -> Option<&'static str> {
         let token = rest[..rest.find(')')?].trim();
         defensive_resistance_type(token.strip_prefix("RES_")?)
     }
     let Some(body) = find_function_body(text, hook) else {
-        return (Vec::new(), false, 0);
+        return (Vec::new(), false, false, 0);
     };
     let mut adds: BTreeMap<&'static str, i32> = BTreeMap::new();
     let mut immune: BTreeSet<&'static str> = BTreeSet::new();
     let mut free_act = false;
+    let mut see_invisible = false;
     let mut speed = 0_i32;
     let mut depth = 0_i32;
     let mut suppressed = false;
@@ -4946,6 +4952,8 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> (Vec<(String, Stri
             }
         } else if line == "p_ptr->free_act++;" {
             free_act = true;
+        } else if line == "p_ptr->see_inv++;" {
+            see_invisible = true;
         } else if let Some(rest) = line.strip_prefix("p_ptr->pspeed") {
             let rest = rest.trim_start();
             let (sign, tail) = if let Some(tail) = rest.strip_prefix("+=") {
@@ -4981,7 +4989,7 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> (Vec<(String, Stri
         };
         resistances.push((damage_type.to_owned(), level.to_owned()));
     }
-    (resistances, free_act, speed)
+    (resistances, free_act, see_invisible, speed)
 }
 
 /// Finds `personality_ptr _get_X_personality(...)` definitions.
@@ -5881,9 +5889,6 @@ fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentIm
     for hook in &entry.hooks {
         *report.race_hook_gaps.entry(hook.clone()).or_default() += 1;
     }
-    if entry.infra != 0 {
-        *report.race_hook_gaps.entry("infra".to_owned()).or_default() += 1;
-    }
 }
 
 fn legacy_race_kin_glyph(id: &str) -> char {
@@ -5959,6 +5964,9 @@ fn race_json(
     }
     if entry.free_act {
         value["statusImmunities"] = serde_json::json!(["rfb.status.paralysis"]);
+    }
+    if entry.see_invisible {
+        value["seeInvisible"] = serde_json::json!(true);
     }
     character_gap_accounting(entry, report);
     value
@@ -11859,9 +11867,11 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         for (name, body) in extract_race_blocks(text) {
             let mut entry = parse_character_block(&name, &body);
             if let Some(hook) = entry.calc_bonuses_fn.clone() {
-                let (resistances, free_act, speed) = parse_calc_bonuses_defenses(text, &hook);
+                let (resistances, free_act, see_invisible, speed) =
+                    parse_calc_bonuses_defenses(text, &hook);
                 entry.resistances = resistances;
                 entry.free_act = free_act;
+                entry.see_invisible = see_invisible;
                 entry.speed = speed;
             }
             if seen_character_ids.insert(format!("race:{}", entry.id)) {
@@ -12629,9 +12639,11 @@ fn legacy_races_by_id(
         for (name, body) in extract_race_blocks(text) {
             let mut entry = parse_character_block(&name, &body);
             if let Some(hook) = entry.calc_bonuses_fn.clone() {
-                let (resistances, free_act, speed) = parse_calc_bonuses_defenses(text, &hook);
+                let (resistances, free_act, see_invisible, speed) =
+                    parse_calc_bonuses_defenses(text, &hook);
                 entry.resistances = resistances;
                 entry.free_act = free_act;
+                entry.see_invisible = see_invisible;
                 entry.speed = speed;
             }
             races.entry(entry.id.clone()).or_insert(entry);
@@ -18715,9 +18727,11 @@ static void _test_calc_bonuses(void)
     res_add_immune(RES_ACID);
     /*res_add_vuln(RES_ELEC); disabled for parity checks*/
     p_ptr->free_act++;
+    p_ptr->see_inv++;
     p_ptr->pspeed += 3;
     p_ptr->pspeed += p_ptr->lev / 10;
     if (p_ptr->lev >= 45) res_add(RES_COLD);
+    if (p_ptr->lev >= 40) p_ptr->see_inv++;
     if (p_ptr->lev >= 10)
         res_add(RES_POIS);
     if (p_ptr->lev >= 30)
@@ -18726,6 +18740,11 @@ static void _test_calc_bonuses(void)
         p_ptr->pspeed += 2;
     }
     p_ptr->hold_life++;
+}
+
+static void _conditional_calc_bonuses(void)
+{
+    if (p_ptr->lev >= 40) p_ptr->see_inv++;
 }
 
 race_t *test_folk_get_race(void)
@@ -18787,7 +18806,7 @@ race_t *test_beast_get_race(void)
         // The hook body yields only its top-level static statements: doubled
         // res_add stacks to strong, comments and level-gated branches are
         // ignored, and only the literal speed adjustment counts.
-        let (resistances, free_act, speed) =
+        let (resistances, free_act, see_invisible, speed) =
             parse_calc_bonuses_defenses(SYNTHETIC_SOURCE, "_test_calc_bonuses");
         assert_eq!(
             resistances,
@@ -18798,10 +18817,15 @@ race_t *test_beast_get_race(void)
             ]
         );
         assert!(free_act);
+        assert!(see_invisible);
         assert_eq!(speed, 3);
+        let (_, _, conditional_see_invisible, _) =
+            parse_calc_bonuses_defenses(SYNTHETIC_SOURCE, "_conditional_calc_bonuses");
+        assert!(!conditional_see_invisible);
         let mut folk = folk;
         folk.resistances = resistances;
         folk.free_act = free_act;
+        folk.see_invisible = see_invisible;
         folk.speed = speed;
 
         let beast = parse_character_block(&blocks[1].0, &blocks[1].1);
@@ -18819,7 +18843,7 @@ race_t *test_beast_get_race(void)
         assert_eq!(outcome.report.skip_reasons["race-code-dynamic"], 1);
         assert_eq!(outcome.report.unmapped_race_flags["RACE_IS_NONLIVING"], 1);
         assert_eq!(outcome.report.race_hook_gaps["calc_bonuses"], 1);
-        assert_eq!(outcome.report.race_hook_gaps["infra"], 1);
+        assert!(!outcome.report.race_hook_gaps.contains_key("infra"));
 
         let (race_name, race) = &outcome.race_files[0];
         assert_eq!(race_name, "test-folk.json");
@@ -18827,6 +18851,7 @@ race_t *test_beast_get_race(void)
         assert_eq!(race["resistances"]["acid"], "immune");
         assert_eq!(race["resistances"]["light"], "vulnerable");
         assert_eq!(race["statusImmunities"][0], "rfb.status.paralysis");
+        assert_eq!(race["seeInvisible"], true);
         assert_eq!(race["modifiers"]["speed"], 3);
         assert_eq!(race["kinCategory"], "kin-glyph-112");
     }
