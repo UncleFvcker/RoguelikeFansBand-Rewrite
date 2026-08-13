@@ -384,6 +384,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.eagle", 172, 2, 40),
             ("demo.actor.earth-hound", 337, 2, 90),
             ("demo.actor.earth-spirit", 305, 2, 80),
+            ("demo.actor.einheri-berserker", 1344, 10, 999),
             ("demo.actor.electric-eel", 346, 2, 70),
             ("demo.actor.energy-hound", 309, 2, 70),
             ("demo.actor.ewok", 92, 2, 40),
@@ -746,7 +747,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 832);
+    assert_eq!(orc_cave.len(), 835);
 
     for id in [
         "demo.actor.bunyip",
@@ -813,7 +814,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 13, 18, 25, 17, 19, 19, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 2, 6, 4, 18, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 2, 4, 5, 4, 13, 15, 4, 7, 6, 16, 4, 8, 4, 5, 1,
+            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 2, 4, 5, 4, 13, 16, 4, 7, 6, 18, 4, 8, 4, 5, 1,
             3, 3, 2, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 2,
         ]
@@ -5753,6 +5754,7 @@ fn p69_pantheon_monsters_keep_source_identity_and_norse_summoning() {
             "demo.actor.loki-the-trickster",
             "demo.actor.magni-son-of-thor",
             "demo.actor.njord-lord-of-the-vanir",
+            "demo.actor.odin-the-all-father",
             "demo.actor.skadi-the-huntress",
             "demo.actor.thor-the-thunderer",
             "demo.actor.tyr-the-one-armed-god",
@@ -8294,7 +8296,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        764
+        768
     );
 }
 

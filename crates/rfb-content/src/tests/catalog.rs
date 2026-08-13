@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.319.0");
+    assert_eq!(catalog.pack_version(), "1.320.0");
     assert_eq!(catalog.races().count(), 46);
     assert_eq!(
         catalog
@@ -479,6 +479,97 @@ fn p78_direct_monsters_compile_with_original_levels_and_existing_mechanics() {
     assert!(serpent.contact_auras.iter().any(|aura| {
         aura.damage_type == ActorDamageType::Disenchant && aura.chance_percent == Some(20)
     }));
+}
+
+#[test]
+fn p79_norse_and_olympian_summoners_compile_with_original_retinues() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    for (id, level, legacy_index) in [
+        ("einheri-berserker", 65, 1344),
+        ("hermes-the-messenger-god", 86, 1101),
+        ("zeus-king-of-the-olympians", 90, 1096),
+        ("odin-the-all-father", 90, 1343),
+    ] {
+        let actor = catalog
+            .actor(&format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P79 actor {id} should compile"));
+        assert_eq!(actor.level, level);
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index)
+        );
+    }
+
+    let einheri = catalog
+        .actor("demo.actor.einheri-berserker")
+        .expect("Einheri berserker");
+    assert_eq!(
+        einheri
+            .allocation
+            .as_ref()
+            .expect("Asgard allocation")
+            .legacy_dungeon_indices,
+        [39]
+    );
+    assert!(einheri.tags.iter().any(|tag| tag == "asgard"));
+
+    for (ability_id, target_id, count_sides) in [
+        (
+            "rfb-legacy.ability.summon-magic-mushroom-patch-l15-1d16",
+            "demo.actor.magic-mushroom-patch",
+            16,
+        ),
+        (
+            "rfb-legacy.ability.summon-shambler-l67-1d4",
+            "demo.actor.shambler",
+            4,
+        ),
+    ] {
+        let ability = catalog.ability(ability_id).expect("P79 fixed retinue");
+        assert!(matches!(
+            &ability.effect,
+            AbilityEffectDefinition::SummonCategory {
+                count_dice: 1,
+                count_sides: sides,
+                count_bonus: 0,
+                maximum_count: None,
+                batch_candidates,
+                ..
+            } if *sides == count_sides
+                && batch_candidates.as_slice() == [AbilitySummonCandidateDefinition {
+                    actor_kind_id: target_id.to_owned(),
+                    weight: 1,
+                }]
+        ));
+    }
+
+    let odin = catalog
+        .ability("rfb-legacy.ability.summon-odin-retinue-1d4-max1")
+        .expect("Odin retinue");
+    assert!(matches!(
+        &odin.effect,
+        AbilityEffectDefinition::SummonCategory {
+            count_dice: 1,
+            count_sides: 4,
+            count_bonus: 0,
+            maximum_count: Some(1),
+            batch_candidates,
+            ..
+        } if batch_candidates.as_slice() == [
+            AbilitySummonCandidateDefinition {
+                actor_kind_id: "demo.actor.einheri-berserker".to_owned(),
+                weight: 1,
+            },
+            AbilitySummonCandidateDefinition {
+                actor_kind_id: "demo.actor.valkyrie".to_owned(),
+                weight: 1,
+            },
+        ]
+    ));
 }
 
 #[test]

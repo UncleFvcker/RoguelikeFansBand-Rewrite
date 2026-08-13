@@ -9818,6 +9818,26 @@ fn map_summon_spell_token(
             });
             return Some(id);
         }
+        if caster_kind_id.rsplit('.').next()? == "odin-the-all-father" {
+            let suffix = "summon-odin-retinue-1d4-max1";
+            let id = format!("rfb-legacy.ability.{suffix}");
+            abilities.entry(id.clone()).or_insert_with(|| {
+                let mut ability =
+                    summon_category_ability(suffix, "kin-glyph-112", 65, 1, 4, 0, Some(1));
+                ability["effect"]["batchCandidates"] = serde_json::json!([
+                    {
+                        "actorKindId": "demo.actor.einheri-berserker",
+                        "weight": 1,
+                    },
+                    {
+                        "actorKindId": "demo.actor.valkyrie",
+                        "weight": 1,
+                    },
+                ]);
+                ability
+            });
+            return Some(id);
+        }
         let (
             suffix,
             category,
@@ -9915,6 +9935,28 @@ fn map_summon_spell_token(
                 0,
                 None,
                 None,
+                false,
+            ),
+            "zeus-king-of-the-olympians" => (
+                "summon-shambler-l67-1d4",
+                "kin-glyph-69",
+                67,
+                1,
+                4,
+                0,
+                None,
+                Some("demo.actor.shambler"),
+                false,
+            ),
+            "hermes-the-messenger-god" => (
+                "summon-magic-mushroom-patch-l15-1d16",
+                "kin-glyph-44",
+                15,
+                1,
+                16,
+                0,
+                None,
+                Some("demo.actor.magic-mushroom-patch"),
                 false,
             ),
             "varuna-lord-of-water" => (
@@ -16977,6 +17019,51 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         assert_eq!(nightmare["countDice"], 1);
         assert_eq!(nightmare["countSides"], 3);
         assert_eq!(nightmare["countBonus"], 2);
+        for (caster, expected_id, target, sides) in [
+            (
+                "demo.actor.zeus-king-of-the-olympians",
+                "rfb-legacy.ability.summon-shambler-l67-1d4",
+                "demo.actor.shambler",
+                4,
+            ),
+            (
+                "demo.actor.hermes-the-messenger-god",
+                "rfb-legacy.ability.summon-magic-mushroom-patch-l15-1d16",
+                "demo.actor.magic-mushroom-patch",
+                16,
+            ),
+        ] {
+            let id = map_spell_token("S_SPECIAL", 90, 2, caster, &mut abilities)
+                .unwrap_or_else(|| panic!("{caster} special should map"));
+            assert_eq!(id, expected_id);
+            let effect = &abilities[&id]["effect"];
+            assert_eq!(effect["countDice"], 1);
+            assert_eq!(effect["countSides"], sides);
+            assert_eq!(
+                effect["batchCandidates"],
+                serde_json::json!([{ "actorKindId": target, "weight": 1 }])
+            );
+        }
+        let odin_id = map_spell_token(
+            "S_SPECIAL",
+            90,
+            2,
+            "demo.actor.odin-the-all-father",
+            &mut abilities,
+        )
+        .expect("Odin special should map");
+        assert_eq!(odin_id, "rfb-legacy.ability.summon-odin-retinue-1d4-max1");
+        let odin = &abilities[&odin_id]["effect"];
+        assert_eq!(odin["countDice"], 1);
+        assert_eq!(odin["countSides"], 4);
+        assert_eq!(odin["maximumCount"], 1);
+        assert_eq!(
+            odin["batchCandidates"],
+            serde_json::json!([
+                { "actorKindId": "demo.actor.einheri-berserker", "weight": 1 },
+                { "actorKindId": "demo.actor.valkyrie", "weight": 1 },
+            ])
+        );
         let caldarm_id = map_spell_token(
             "S_SPECIAL",
             79,
@@ -17875,6 +17962,24 @@ A:1/1
         let entry = &selection.items[0];
         assert_eq!(entry.expected_source_id(), "set-of-leather-gloves");
         assert_eq!(entry.id, "leather-gloves");
+    }
+
+    #[test]
+    fn demo_monster_selection_can_keep_a_stable_id_distinct_from_the_source_name() {
+        let selection: DemoMonsterSelection = serde_json::from_value(serde_json::json!({
+            "schemaVersion": 1,
+            "monsters": [{
+                "sourceIndex": 135,
+                "sourceId": "mughash-the-kobold-lord",
+                "id": "warrens-keeper",
+                "tags": ["warrens"]
+            }]
+        }))
+        .expect("selection alias should parse");
+
+        let entry = &selection.monsters[0];
+        assert_eq!(entry.expected_source_id(), "mughash-the-kobold-lord");
+        assert_eq!(entry.id, "warrens-keeper");
     }
 
     #[test]

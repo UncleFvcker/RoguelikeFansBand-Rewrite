@@ -653,3 +653,20 @@ git diff --stat
   `74ea1074f2225f0e4798564df735747c49a4b0954c297ad0ac9fc0ef3a93d6cd`；Protocol `1.195`、
   State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
   零 waiver）均不变，不刷新 replay fixture。
+
+## 40. monsters-next 当前交接（P79 北欧与奥林匹斯召唤者）
+
+- P79 导入英灵狂战士、信使神赫尔墨斯、奥林匹斯之王宙斯和众神之父奥丁。英灵狂战士
+  保留 `legacyDungeonIndices: [39]` 与 `asgard` 标签，不进入 Orc Cave 全局分配；其余三只
+  保留原版神系标签和分配。
+- `S_SPECIAL` 延续既有参数化分类召唤：宙斯召唤 `1d4` 蹒跚怪，赫尔墨斯召唤 `1d16`
+  魔法蘑菇丛；奥丁先掷 `1d4` 并封顶为一只，再等权选择英灵狂战士或女武神。为表达赫尔墨斯
+  的原版数量，分类召唤内容校验上限从 8 放宽到 16；DTO、协议与执行结构不变。
+- 同步补齐 P78 的稳定身份声明：source 135 的原版 ID 是 `mughash-the-kobold-lord`，内容 ID
+  继续为既有 `warrens-keeper`，由 selection 的 `sourceId` 明确关联，不复制 actor。
+- L1–127 联合审计为 1216 selected、32 direct、2 blocked、113 excluded。赫尔墨斯、宙斯和奥丁
+  均为 selected；英灵狂战士因 Asgard 地点限制保持预期的 excluded，但已由 selection 管理。
+- 本批新增 4 个 actor、10 个参数化 ability/program。共享协调点：pack `1.320.0` / content
+  hash `a04b31e159f7c73a8f0a607e85cdeac4f44fd5795c087b548f2ea1359521bc01`；Protocol
+  `1.195`、State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact
+  fixture、零 waiver）均不变，不刷新 replay fixture。

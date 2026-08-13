@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.summon-odin-retinue-1d4-max1",
+  "input": "self",
+  "steps": [
+    {
+      "batchCandidates": [
+        {
+          "actorKindId": "demo.actor.einheri-berserker",
+          "weight": 1
+        },
+        {
+          "actorKindId": "demo.actor.valkyrie",
+          "weight": 1
+        }
+      ],
+      "category": "kin-glyph-112",
+      "countDice": 1,
+      "countSides": 4,
+      "durationTurns": 10000,
+      "maximumCount": 1,
+      "maximumLevel": 65,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}

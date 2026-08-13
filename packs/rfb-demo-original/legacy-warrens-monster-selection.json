@@ -7660,6 +7660,7 @@
     },
     {
       "sourceIndex": 135,
+      "sourceId": "mughash-the-kobold-lord",
       "id": "warrens-keeper",
       "tags": ["orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "MALE"]
@@ -7765,6 +7766,30 @@
       "id": "zombified-serpent-of-chaos",
       "tags": ["orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CHR", "POS_SUST_CON", "POS_SUST_DEX", "POS_SUST_INT", "POS_SUST_STR", "POS_SUST_WIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1344,
+      "id": "einheri-berserker",
+      "tags": ["asgard"],
+      "omittedFlags": ["NORSE2", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1101,
+      "id": "hermes-the-messenger-god",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1096,
+      "id": "zeus-king-of-the-olympians",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1343,
+      "id": "odin-the-all-father",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY"]
     }
   ]
 }

@@ -4311,6 +4311,83 @@ fn p70_aegir_rolls_count_then_floods_then_selects_one_retinue_kind() {
 }
 
 #[test]
+fn p79_special_summons_keep_hermes_count_and_odin_retinue_choice() {
+    fn summon(seed: u64, caster_kind_id: &str, ability_id: &str) -> Vec<String> {
+        let mut game = Game::new(0);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 80, y: 20 };
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.p79-caster",
+            caster_kind_id,
+            Position { x: 20, y: 20 },
+            10_000,
+            140,
+            100,
+            true,
+        ));
+        let ability = game
+            .content
+            .ability(ability_id)
+            .expect("P79 special summon should compile")
+            .clone();
+        game.rng = RfbRng::seeded(seed);
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("P79 summon should have candidates and space");
+        game.resolve_monster_ability_plan(
+            0,
+            caster_kind_id,
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .summon
+        .expect("P79 special should summon")
+        .summoned_kind_ids
+    }
+
+    let hermes_seed = (0..256)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(16) == 15
+        })
+        .expect("bounded seeds should cover a sixteen summon roll");
+    assert_eq!(
+        summon(
+            hermes_seed,
+            "demo.actor.hermes-the-messenger-god",
+            "rfb-legacy.ability.summon-magic-mushroom-patch-l15-1d16",
+        ),
+        vec!["demo.actor.magic-mushroom-patch".to_owned(); 16]
+    );
+
+    let expected_odin = |seed| {
+        let mut rng = RfbRng::seeded(seed);
+        let _discarded_count = rng.bounded(4);
+        if rng.bounded(2) == 0 {
+            "demo.actor.einheri-berserker"
+        } else {
+            "demo.actor.valkyrie"
+        }
+    };
+    for target in ["demo.actor.einheri-berserker", "demo.actor.valkyrie"] {
+        let seed = (0..128)
+            .find(|seed| expected_odin(*seed) == target)
+            .expect("bounded seeds should cover both Odin retinue choices");
+        assert_eq!(
+            summon(
+                seed,
+                "demo.actor.odin-the-all-father",
+                "rfb-legacy.ability.summon-odin-retinue-1d4-max1",
+            ),
+            [target.to_owned()]
+        );
+    }
+}
+
+#[test]
 fn p71_banor_rupart_split_and_merge_preserve_hp_without_recording_deaths() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);

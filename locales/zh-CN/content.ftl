@@ -6993,3 +6993,34 @@ ability-legacy-summon-unique-l88-1d2-name = 召唤独特怪物
 ability-legacy-summon-unique-l88-1d2-description = 使用原版 RFB 的“召唤独特怪物”怪物法术。
 ability-legacy-summon-unique-l94-1d2-name = 召唤独特怪物
 ability-legacy-summon-unique-l94-1d2-description = 使用原版 RFB 的“召唤独特怪物”怪物法术。
+
+# P79 北欧与奥林匹斯召唤者
+actor-demo-einheri-berserker-name = 英灵狂战士
+actor-demo-einheri-berserker-description = 原版怪物：英灵狂战士。
+actor-demo-hermes-the-messenger-god-name = 信使神赫尔墨斯
+actor-demo-hermes-the-messenger-god-description = 原版怪物：信使神赫尔墨斯。
+actor-demo-zeus-king-of-the-olympians-name = 奥林匹斯之王宙斯
+actor-demo-zeus-king-of-the-olympians-description = 原版怪物：奥林匹斯之王宙斯。
+actor-demo-odin-the-all-father-name = 众神之父奥丁
+actor-demo-odin-the-all-father-description = 原版怪物：众神之父奥丁。
+
+ability-legacy-ball-dark-10d10-394-name = 黑暗风暴
+ability-legacy-ball-dark-10d10-394-description = 使用 RFB 原版怪物法术“黑暗风暴”。
+ability-legacy-ball-dark-10d10-410-name = 黑暗风暴
+ability-legacy-ball-dark-10d10-410-description = 使用 RFB 原版怪物法术“黑暗风暴”。
+ability-legacy-ball-electricity-1d270-16-name = 闪电球
+ability-legacy-ball-electricity-1d270-16-description = 使用 RFB 原版怪物法术“闪电球”。
+ability-legacy-ball-mana-10d10-360-name = 法力风暴
+ability-legacy-ball-mana-10d10-360-description = 使用 RFB 原版怪物法术“法力风暴”。
+ability-legacy-ball-shards-1d1-549-name = 碎片球
+ability-legacy-ball-shards-1d1-549-description = 使用 RFB 原版怪物法术“碎片球”。
+ability-legacy-summon-magic-mushroom-patch-l15-1d16-name = 召唤魔法蘑菇丛
+ability-legacy-summon-magic-mushroom-patch-l15-1d16-description = 召唤 1d16 个魔法蘑菇丛。
+ability-legacy-summon-norse-l90-1d2-name = 召唤北欧诸神
+ability-legacy-summon-norse-l90-1d2-description = 召唤一至两个不高于 90 级的北欧神明。
+ability-legacy-summon-odin-retinue-1d4-max1-name = 召唤瓦尔哈拉随从
+ability-legacy-summon-odin-retinue-1d4-max1-description = 召唤一个英灵狂战士或女武神。
+ability-legacy-summon-olympian-l90-1d2-name = 召唤奥林匹斯诸神
+ability-legacy-summon-olympian-l90-1d2-description = 召唤一至两个不高于 90 级的奥林匹斯神明。
+ability-legacy-summon-shambler-l67-1d4-name = 召唤蹒跚怪
+ability-legacy-summon-shambler-l67-1d4-description = 召唤 1d4 个蹒跚怪。

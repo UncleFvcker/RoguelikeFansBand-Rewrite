@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.summon-magic-mushroom-patch-l15-1d16",
+  "input": "self",
+  "steps": [
+    {
+      "batchCandidates": [
+        {
+          "actorKindId": "demo.actor.magic-mushroom-patch",
+          "weight": 1
+        }
+      ],
+      "category": "kin-glyph-44",
+      "countDice": 1,
+      "countSides": 16,
+      "durationTurns": 10000,
+      "maximumLevel": 15,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}

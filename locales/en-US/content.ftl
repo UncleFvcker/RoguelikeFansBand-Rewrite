@@ -6991,3 +6991,34 @@ ability-legacy-summon-unique-l88-1d2-name = Summon unique monsters
 ability-legacy-summon-unique-l88-1d2-description = Uses the summon unique monsters monster spell from RFB.
 ability-legacy-summon-unique-l94-1d2-name = Summon unique monsters
 ability-legacy-summon-unique-l94-1d2-description = Uses the summon unique monsters monster spell from RFB.
+
+# P79 Norse and Olympian summoners
+actor-demo-einheri-berserker-name = Einheri berserker
+actor-demo-einheri-berserker-description = Einheri berserker as recorded in the original RFB bestiary.
+actor-demo-hermes-the-messenger-god-name = Hermes, the Messenger God
+actor-demo-hermes-the-messenger-god-description = Hermes, the Messenger God as recorded in the original RFB bestiary.
+actor-demo-zeus-king-of-the-olympians-name = Zeus, King of the Olympians
+actor-demo-zeus-king-of-the-olympians-description = Zeus, King of the Olympians as recorded in the original RFB bestiary.
+actor-demo-odin-the-all-father-name = Odin, the All-Father
+actor-demo-odin-the-all-father-description = Odin, the All-Father as recorded in the original RFB bestiary.
+
+ability-legacy-ball-dark-10d10-394-name = Darkness storm
+ability-legacy-ball-dark-10d10-394-description = Uses the darkness storm monster spell from RFB.
+ability-legacy-ball-dark-10d10-410-name = Darkness storm
+ability-legacy-ball-dark-10d10-410-description = Uses the darkness storm monster spell from RFB.
+ability-legacy-ball-electricity-1d270-16-name = Lightning ball
+ability-legacy-ball-electricity-1d270-16-description = Uses the lightning ball monster spell from RFB.
+ability-legacy-ball-mana-10d10-360-name = Mana storm
+ability-legacy-ball-mana-10d10-360-description = Uses the mana storm monster spell from RFB.
+ability-legacy-ball-shards-1d1-549-name = Shards ball
+ability-legacy-ball-shards-1d1-549-description = Uses the shards ball monster spell from RFB.
+ability-legacy-summon-magic-mushroom-patch-l15-1d16-name = Summon magic mushroom patches
+ability-legacy-summon-magic-mushroom-patch-l15-1d16-description = Summons 1d16 magic mushroom patches.
+ability-legacy-summon-norse-l90-1d2-name = Summon Norse gods
+ability-legacy-summon-norse-l90-1d2-description = Summons one or two Norse gods of level 90 or lower.
+ability-legacy-summon-odin-retinue-1d4-max1-name = Summon Valhalla retinue
+ability-legacy-summon-odin-retinue-1d4-max1-description = Summons one Einheri berserker or Valkyrie.
+ability-legacy-summon-olympian-l90-1d2-name = Summon Olympians
+ability-legacy-summon-olympian-l90-1d2-description = Summons one or two Olympians of level 90 or lower.
+ability-legacy-summon-shambler-l67-1d4-name = Summon shamblers
+ability-legacy-summon-shambler-l67-1d4-description = Summons 1d4 shamblers.
