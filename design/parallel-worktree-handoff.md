@@ -496,3 +496,16 @@ git diff --stat
 - 共享协调点：pack `1.308.0` / content hash
   `255d99b948f7200e2ec03ad78881a7d86d72ae6507eb616614e2b5a71ba210c3`；Protocol `1.189`、
   State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
+
+## 32. monsters-next 当前交接（P70 埃吉尔召唤链）
+
+- 导入海巨人与海巨人神王埃吉尔；海巨人保持 `WILD_OCEAN` 对应的真正 ocean-only 分配，
+  埃吉尔保留 `norse`、`unique` 与 Orc Cave 分配。
+- 埃吉尔的 `S_SPECIAL` 复用现有 `SummonCategory` 与整批候选：先掷 `1d4` 数量，再以施法者为
+  中心产生权威源码的强度 3、半径 8 水流，随后一次 50/50 掷骰选定整批海巨人或低等克拉肯；
+  永久地形和楼层连接不被覆盖。该怪物专属副作用由 ability tag 标记，不新增协议 DTO。
+- L71–80 审计现为 73 selected、0 direct、3 blocked、7 excluded；剩余 blocker 仅为 Banor 三体
+  的 `SPECIAL`。
+- 共享协调点：pack `1.309.0` / content hash
+  `7d2f9799ac6fcd8ab71b6de2be52b4f77bcda70594a1bb1f266ff6e4e345a09c`；Protocol `1.189`、
+  State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。

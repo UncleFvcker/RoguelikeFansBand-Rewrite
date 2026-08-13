@@ -9545,6 +9545,31 @@ fn map_summon_spell_token(
         return Some(id);
     }
     if base == "S_SPECIAL" {
+        if caster_kind_id.rsplit('.').next()? == "aegir-god-king-of-the-sea-giants" {
+            let suffix = "summon-aegir-retinue-1d4";
+            let id = format!("rfb-legacy.ability.{suffix}");
+            abilities.entry(id.clone()).or_insert_with(|| {
+                let mut ability = summon_category_ability(suffix, "ocean", 77, 1, 4, 0, None);
+                ability["effect"]["batchCandidates"] = serde_json::json!([
+                    {
+                        "actorKindId": "demo.actor.sea-giant",
+                        "weight": 1,
+                    },
+                    {
+                        "actorKindId": "demo.actor.lesser-kraken",
+                        "weight": 1,
+                    },
+                ]);
+                ability["tags"] = serde_json::json!([
+                    "legacy-import",
+                    "summon",
+                    "monster-only",
+                    "monster-water-flow",
+                ]);
+                ability
+            });
+            return Some(id);
+        }
         if caster_kind_id.rsplit('.').next()? == "gragomani-the-leprechaun-prophet" {
             let suffix = "summon-gragomani-followers-1d4-4";
             let id = format!("rfb-legacy.ability.{suffix}");
@@ -16324,6 +16349,37 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 &mut abilities,
             )
             .is_none()
+        );
+    }
+
+    #[test]
+    fn aegir_special_summon_keeps_the_water_flow_and_single_batch_choice() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token(
+            "S_SPECIAL",
+            77,
+            3,
+            "demo.actor.aegir-god-king-of-the-sea-giants",
+            &mut abilities,
+        )
+        .expect("Aegir special should map");
+        assert_eq!(id, "rfb-legacy.ability.summon-aegir-retinue-1d4");
+        let ability = &abilities[&id];
+        assert_eq!(ability["effect"]["type"], "summon-category");
+        assert_eq!(ability["effect"]["category"], "ocean");
+        assert_eq!(ability["effect"]["countDice"], 1);
+        assert_eq!(ability["effect"]["countSides"], 4);
+        assert_eq!(
+            ability["effect"]["batchCandidates"],
+            serde_json::json!([
+                { "actorKindId": "demo.actor.sea-giant", "weight": 1 },
+                { "actorKindId": "demo.actor.lesser-kraken", "weight": 1 },
+            ])
+        );
+        assert!(
+            ability["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "monster-water-flow"))
         );
     }
 

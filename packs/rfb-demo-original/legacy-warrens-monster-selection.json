@@ -6895,6 +6895,18 @@
       "id": "heimdall-guardian-of-bifrost",
       "tags": ["orc-cave"],
       "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1276,
+      "id": "sea-giant",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1277,
+      "id": "aegir-god-king-of-the-sea-giants",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NORSE2"]
     }
   ]
 }

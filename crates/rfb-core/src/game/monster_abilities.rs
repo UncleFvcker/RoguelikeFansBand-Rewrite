@@ -3,6 +3,10 @@
 use super::ground_item_effects::ground_item_damage_type_for_ability_effect;
 use super::*;
 
+const MONSTER_WATER_FLOW_TAG: &str = "monster-water-flow";
+const MONSTER_WATER_FLOW_TERRAIN_ID: &str = "demo.terrain.surface-water-deep";
+const MONSTER_WATER_FLOW_RADIUS: u8 = 8;
+
 fn prepare_curse_damage(
     rolled: i32,
     current_hp: i32,
@@ -25,6 +29,29 @@ fn prepare_curse_damage(
 }
 
 impl Game {
+    fn monster_water_flow_positions(&self, center: Position) -> Vec<Position> {
+        let connections = self
+            .floor_connections
+            .iter()
+            .map(|connection| connection.position)
+            .collect::<BTreeSet<_>>();
+        self.area_damage_cells(center, MONSTER_WATER_FLOW_RADIUS)
+            .into_iter()
+            .map(|(_, position)| position)
+            .filter(|position| !connections.contains(position))
+            .filter(|position| {
+                let index = self
+                    .index(*position)
+                    .expect("water-flow footprint positions must remain in bounds");
+                self.terrain[index] != MONSTER_WATER_FLOW_TERRAIN_ID
+                    && self
+                        .content
+                        .terrain(&self.terrain[index])
+                        .is_some_and(|terrain| !terrain.tags.iter().any(|tag| tag == "permanent"))
+            })
+            .collect()
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn resolve_monster_bird_drop_plan(
         &mut self,
@@ -1065,6 +1092,45 @@ impl Game {
                     .unwrap_or(1)
                     .min(maximum_count.map_or(usize::MAX, usize::from))
                     .min(positions.len());
+                let mut affected_positions = Vec::new();
+                if plan
+                    .ability
+                    .tags
+                    .iter()
+                    .any(|tag| tag == MONSTER_WATER_FLOW_TAG)
+                {
+                    let center = self.entities[source_index].position;
+                    let transformed_positions = self.monster_water_flow_positions(center);
+                    let source_terrain_ids = transformed_positions
+                        .iter()
+                        .filter_map(|position| {
+                            self.index(*position)
+                                .map(|index| self.terrain[index].clone())
+                        })
+                        .collect::<BTreeSet<_>>()
+                        .into_iter()
+                        .collect::<Vec<_>>();
+                    for position in &transformed_positions {
+                        self.replace_terrain_from_source(
+                            *position,
+                            MONSTER_WATER_FLOW_TERRAIN_ID,
+                            super::terrain::TerrainChangeSource::Monster,
+                            events,
+                            changed,
+                        );
+                    }
+                    events.push(DomainEvent::AbilityTerrainTransformed {
+                        ability_id: plan.ability.id.clone(),
+                        resolution: AbilityTerrainTransformResolutionDto {
+                            center,
+                            radius: MONSTER_WATER_FLOW_RADIUS,
+                            source_terrain_ids,
+                            target_terrain_id: MONSTER_WATER_FLOW_TERRAIN_ID.to_owned(),
+                            transformed_positions: transformed_positions.clone(),
+                        },
+                    });
+                    affected_positions = transformed_positions;
+                }
                 let owner_id = self.entities[source_index].id.clone();
                 let mut entity_ids = Vec::with_capacity(count);
                 let mut summoned_kind_ids = Vec::with_capacity(count);
@@ -1166,10 +1232,13 @@ impl Game {
                     group: false,
                     summoned_kind_ids,
                 };
+                affected_positions.extend(used_positions.iter().copied());
+                affected_positions.sort_unstable_by_key(|position| (position.y, position.x));
+                affected_positions.dedup();
                 MonsterAbilityPlanResolution {
                     target_entity_id: owner_id,
                     target_kind_id: self.entities[source_index].kind_id.clone(),
-                    affected_positions: used_positions,
+                    affected_positions,
                     summon: Some(summon),
                     effects: Vec::new(),
                     targets: Vec::new(),
@@ -2097,7 +2166,37 @@ impl Game {
                     + usize::from(*count_bonus))
                 .min(maximum_count.map_or(usize::MAX, usize::from));
                 let positions = self
-                    .open_positions_around_for_actor_kinds(origin, *radius, &candidate_kind_ids)
+                    .open_positions_around_matching(origin, *radius, |position| {
+                        if !ability.tags.iter().any(|tag| tag == MONSTER_WATER_FLOW_TAG) {
+                            return candidate_kind_ids.iter().any(|kind_id| {
+                                self.actor_kind_can_enter_position(kind_id, position)
+                            });
+                        }
+                        let will_be_water = self
+                            .index(position)
+                            .and_then(|terrain_index| {
+                                self.content.terrain(&self.terrain[terrain_index])
+                            })
+                            .is_some_and(|terrain| {
+                                !self
+                                    .floor_connections
+                                    .iter()
+                                    .any(|connection| connection.position == position)
+                                    && (terrain.id == MONSTER_WATER_FLOW_TERRAIN_ID
+                                        || !terrain.tags.iter().any(|tag| tag == "permanent"))
+                            });
+                        will_be_water
+                            && self
+                                .content
+                                .terrain(MONSTER_WATER_FLOW_TERRAIN_ID)
+                                .is_some_and(|water| {
+                                    candidate_kind_ids.iter().any(|kind_id| {
+                                        self.content.actor(kind_id).is_some_and(|actor| {
+                                            super::movement::actor_can_cross_terrain(actor, water)
+                                        })
+                                    })
+                                })
+                    })
                     .into_iter()
                     .take(maximum_count)
                     .collect::<Vec<_>>();

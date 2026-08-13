@@ -4197,6 +4197,99 @@ fn p60_gragomani_rolls_count_then_one_weighted_kind_for_the_whole_batch() {
 }
 
 #[test]
+fn p70_aegir_rolls_count_then_floods_then_selects_one_retinue_kind() {
+    fn expected(seed: u64) -> (usize, &'static str) {
+        let mut rng = RfbRng::seeded(seed);
+        let count = usize::try_from(rng.bounded(4) + 1).expect("1d4 fits usize");
+        let kind_id = if rng.bounded(2) == 0 {
+            "demo.actor.sea-giant"
+        } else {
+            "demo.actor.lesser-kraken"
+        };
+        (count, kind_id)
+    }
+
+    let seed_for = |kind_id| {
+        (0..128)
+            .find(|seed| expected(*seed).1 == kind_id)
+            .expect("bounded seeds should cover both Aegir candidates")
+    };
+    for seed in [
+        seed_for("demo.actor.sea-giant"),
+        seed_for("demo.actor.lesser-kraken"),
+    ] {
+        let mut game = Game::new(0);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 80, y: 20 };
+        let origin = Position { x: 20, y: 20 };
+        let permanent = Position { x: 21, y: 20 };
+        replace_terrain(&mut game, permanent, "demo.terrain.permanent-wall");
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.aegir",
+            "demo.actor.aegir-god-king-of-the-sea-giants",
+            origin,
+            9_196,
+            129,
+            100,
+            true,
+        ));
+        let ability = game
+            .content
+            .ability("rfb-legacy.ability.summon-aegir-retinue-1d4")
+            .expect("P70 Aegir summon should compile")
+            .clone();
+        game.rng = RfbRng::seeded(seed);
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("water flow should make aquatic summon positions viable");
+        let mut events = Vec::new();
+        let mut changed = BTreeSet::new();
+        let resolution = game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.aegir-god-king-of-the-sea-giants",
+            &plan,
+            &mut events,
+            &mut changed,
+            &mut Vec::new(),
+        );
+
+        let (count, kind_id) = expected(seed);
+        let summon = resolution.summon.expect("Aegir special should summon");
+        assert_eq!(summon.summoned_kind_ids, vec![kind_id.to_owned(); count]);
+        assert_eq!(game.rng.draw_counter, 2);
+        assert_eq!(
+            game.terrain[game.index(origin).expect("origin should remain in bounds")],
+            "demo.terrain.surface-water-deep"
+        );
+        assert_eq!(
+            game.terrain[game
+                .index(Position { x: 20, y: 12 })
+                .expect("radius-eight cell should remain in bounds")],
+            "demo.terrain.surface-water-deep"
+        );
+        assert_eq!(
+            game.terrain[game
+                .index(Position { x: 20, y: 11 })
+                .expect("radius-nine cell should remain in bounds")],
+            "demo.terrain.floor"
+        );
+        assert_eq!(
+            game.terrain[game.index(permanent).expect("wall should remain in bounds")],
+            "demo.terrain.permanent-wall"
+        );
+        assert!(events.iter().any(|event| matches!(
+            event,
+            DomainEvent::AbilityTerrainTransformed { ability_id, resolution }
+                if ability_id == "rfb-legacy.ability.summon-aegir-retinue-1d4"
+                    && resolution.center == origin
+                    && resolution.radius == 8
+                    && resolution.target_terrain_id == "demo.terrain.surface-water-deep"
+        )));
+    }
+}
+
+#[test]
 fn monster_polymorph_reuses_mutation_and_actor_form_transactions() {
     let ability = Game::new(0)
         .content

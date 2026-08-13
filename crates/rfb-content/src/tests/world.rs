@@ -626,6 +626,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.sand-dweller", 183, 1, 40),
             ("demo.actor.sasquatch", 343, 3, 70),
             ("demo.actor.scruffy-looking-hobbit", 74, 1, 30),
+            ("demo.actor.sea-giant", 1276, 3, 999),
             ("demo.actor.servant-of-glaaki", 181, 1, 40),
             ("demo.actor.shadow-creature-of-fiona", 201, 2, 40),
             ("demo.actor.shadow-hound", 272, 2, 60),
@@ -733,7 +734,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 702);
+    assert_eq!(orc_cave.len(), 703);
 
     for id in [
         "demo.actor.bunyip",
@@ -782,7 +783,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 7, 7, 5, 4, 6, 7, 6, 9, 7, 13,
+            6, 9, 7, 7, 5, 4, 6, 7, 7, 9, 7, 13,
         ]
     );
 
@@ -5346,6 +5347,7 @@ fn p69_pantheon_monsters_keep_source_identity_and_norse_summoning() {
     assert_eq!(
         norse_ids,
         [
+            "demo.actor.aegir-god-king-of-the-sea-giants",
             "demo.actor.heimdall-guardian-of-bifrost",
             "demo.actor.magni-son-of-thor",
             "demo.actor.skadi-the-huntress",
@@ -5371,6 +5373,76 @@ fn p69_pantheon_monsters_keep_source_identity_and_norse_summoning() {
             ..
         } if category == "norse"
     ));
+}
+
+#[test]
+fn p70_aegir_and_sea_giant_keep_ocean_and_special_summon_semantics() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("P70 should contain {id}"))
+    };
+
+    let sea_giant = actor("demo.actor.sea-giant");
+    let sea_allocation = sea_giant
+        .allocation
+        .as_ref()
+        .expect("Sea giant should retain ocean allocation");
+    assert_eq!(sea_giant.level, 45);
+    assert_eq!(sea_allocation.legacy_index, 1276);
+    assert!(sea_allocation.wild_only);
+    assert_eq!(sea_allocation.habitats, vec![ActorHabitat::Ocean]);
+    assert!(sea_giant.tags.iter().any(|tag| tag == "ocean"));
+    assert!(!sea_giant.tags.iter().any(|tag| tag == "orc-cave"));
+
+    let aegir = actor("demo.actor.aegir-god-king-of-the-sea-giants");
+    assert_eq!(aegir.level, 77);
+    assert_eq!(
+        aegir
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(1277)
+    );
+    for tag in ["norse", "orc-cave", "unique"] {
+        assert!(aegir.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let summon = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.summon-aegir-retinue-1d4")
+        .expect("Aegir special summon should be imported");
+    assert!(summon.tags.iter().any(|tag| tag == "monster-water-flow"));
+    let AbilityEffectDefinition::SummonCategory {
+        category,
+        maximum_level,
+        count_dice,
+        count_sides,
+        count_bonus,
+        batch_candidates,
+        ..
+    } = &summon.effect
+    else {
+        panic!("Aegir special should remain a category summon");
+    };
+    assert_eq!(category, "ocean");
+    assert_eq!(
+        (*maximum_level, *count_dice, *count_sides, *count_bonus),
+        (77, 1, 4, 0)
+    );
+    assert_eq!(
+        batch_candidates
+            .iter()
+            .map(|candidate| (candidate.actor_kind_id.as_str(), candidate.weight))
+            .collect::<Vec<_>>(),
+        vec![("demo.actor.sea-giant", 1), ("demo.actor.lesser-kraken", 1),]
+    );
 }
 
 #[test]
@@ -7671,7 +7743,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        633
+        635
     );
 }
 
