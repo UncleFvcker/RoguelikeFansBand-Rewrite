@@ -222,6 +222,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Heal { .. }
                     | AbilityEffectDefinition::HealDice { .. }
                     | AbilityEffectDefinition::ReduceStatus { .. }
+                    | AbilityEffectDefinition::SatisfyHunger
                     | AbilityEffectDefinition::RestoreVitality { .. }
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }

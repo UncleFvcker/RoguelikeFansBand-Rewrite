@@ -1578,6 +1578,39 @@
         {
           "type": "object",
           "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "nutritionAfter": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "nutritionBefore": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "satisfy-hunger"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "nutritionBefore",
+            "nutritionAfter"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "after": {
               "type": "integer",
               "format": "uint16",
@@ -3848,6 +3881,14 @@
               "format": "uint32",
               "minimum": 0
             },
+            "remainingDivisor": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint32",
+              "minimum": 0
+            },
             "statusKindId": {
               "type": "string"
             },
@@ -3860,6 +3901,18 @@
             "type",
             "statusKindId",
             "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "satisfy-hunger"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
@@ -4355,7 +4408,8 @@
       "type": "string",
       "enum": [
         "jam-doors",
-        "destroy-traps-and-doors"
+        "destroy-traps-and-doors",
+        "stone-to-mud"
       ]
     },
     "AbilityTerrainTransformResolutionDto": {

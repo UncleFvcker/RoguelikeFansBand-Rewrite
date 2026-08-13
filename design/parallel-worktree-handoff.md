@@ -371,3 +371,13 @@ git diff --stat
   `content.lock.json`）、Protocol `1.190`；
   State Hash Schema v93、save v1、active baseline 仍为 `contract-v284`。书店新增固定库存改变
   新局商店实例序号与后续 RNG，因此按 policy 刷新并复验全部 26 条 active fixture，零 waiver。
+
+## 22. items-next 奥秘第三册
+
+- `codex/items-next` 新增《大阿卡纳》及抵抗闪电、抵抗酸液、治疗中伤、传送、鉴定、
+  化石为泥、光之射线、充饥八个正式法术；Arcane 出生仍只携带第一册，High Mage 通用
+  出生装备、死亡构筑和白马旅店奖励保持不变。
+- 运行时只增加化石为泥、治疗中伤流血余量与充饥三个窄表面；长距离传送复用既有随机
+  传送及 Astral Guide，鉴定和光之射线复用既有实现。
+- 共享协调点推进至 pack `1.300.0` / content hash（见当前 `content.lock.json`）、
+  Protocol `1.191`；State Hash Schema v93、save v1、active baseline 仍为 `contract-v284`。

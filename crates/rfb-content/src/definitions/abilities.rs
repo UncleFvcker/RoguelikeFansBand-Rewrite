@@ -236,6 +236,7 @@ pub enum AbilityStatusStackingDefinition {
 pub enum AbilityTerrainBeamOperationDefinition {
     JamDoors,
     DestroyTrapsAndDoors,
+    StoneToMud,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -597,7 +598,10 @@ pub enum AbilityEffectDefinition {
         amount: u32,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         current_divisor: Option<u32>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        remaining_divisor: Option<u32>,
     },
+    SatisfyHunger,
     VisibleDamage {
         damage_dice: u16,
         damage_sides: u16,

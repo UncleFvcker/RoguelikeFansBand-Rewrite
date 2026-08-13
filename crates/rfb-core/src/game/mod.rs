@@ -72,8 +72,8 @@ use rfb_content::{
     ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
     ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
     StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
-    TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
-    affix_is_compatible_with_item,
+    TerrainDiggingResolution, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition,
+    WeaponBrand, affix_is_compatible_with_item,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -7116,6 +7116,9 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
                 AbilityTerrainBeamOperationDefinition::DestroyTrapsAndDoors => {
                     AbilityTerrainBeamOperationDto::DestroyTrapsAndDoors
                 }
+                AbilityTerrainBeamOperationDefinition::StoneToMud => {
+                    AbilityTerrainBeamOperationDto::StoneToMud
+                }
             },
         },
         AbilityEffectDefinition::ApplyStatus {
@@ -7236,11 +7239,14 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             status_kind_id,
             amount,
             current_divisor,
+            remaining_divisor,
         } => AbilityEffectSpecDto::ReduceStatus {
             status_kind_id: status_kind_id.clone(),
             amount: *amount,
             current_divisor: *current_divisor,
+            remaining_divisor: *remaining_divisor,
         },
+        AbilityEffectDefinition::SatisfyHunger => AbilityEffectSpecDto::SatisfyHunger,
         AbilityEffectDefinition::VisibleDamage {
             damage_dice,
             damage_sides,

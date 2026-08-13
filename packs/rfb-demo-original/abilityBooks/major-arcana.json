@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.major-arcana",
+  "nameKey": "ability-book-demo-major-arcana-name",
+  "descriptionKey": "ability-book-demo-major-arcana-description",
+  "realmId": "arcane",
+  "rank": 3,
+  "abilityIds": [
+    "demo.ability.arcane-resist-lightning",
+    "demo.ability.arcane-resist-acid",
+    "demo.ability.arcane-cure-medium-wounds",
+    "demo.ability.arcane-teleport",
+    "demo.ability.arcane-identify",
+    "demo.ability.arcane-stone-to-mud",
+    "demo.ability.arcane-ray-of-light",
+    "demo.ability.arcane-satisfy-hunger"
+  ],
+  "tags": ["arcane", "spellbook"]
+}

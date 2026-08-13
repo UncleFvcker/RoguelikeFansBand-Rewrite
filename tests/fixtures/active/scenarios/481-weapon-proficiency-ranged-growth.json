@@ -45,7 +45,7 @@
       "turn": 1,
       "worldTick": 9,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 167,
+      "rngDrawCounter": 168,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1167,7 +1167,7 @@
           "energyNeed": 19
         }
       ],
-      "groundItemCount": 2,
+      "groundItemCount": 3,
       "inventoryStackCount": 5,
       "equipmentCount": 3,
       "inventory": [
@@ -1456,6 +1456,10 @@
           "discovered": true
         },
         {
+          "itemId": "generated.item.173",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.2",
           "discovered": true
         },
@@ -1490,7 +1494,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 171,
+      "nextItemInstanceSerial": 174,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1498,7 +1502,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "18b0a169134af7e8e84ded8f1ba869d88f1702c9d33d8d3efc721a9de6c1023a"
+      "stateHash": "16c138a24a0b16ff93bfd9db4cf7f1f4eb2d43e1af6de87a2a580fe847d687d1"
     },
     "events": [
       {
@@ -1533,8 +1537,8 @@
         }
       },
       {
-        "kind": "combat.projectile-ammo-broken",
-        "messageKey": "projectile-ammo-broken",
+        "kind": "combat.projectile-ammo-recovered",
+        "messageKey": "projectile-ammo-recovered",
         "args": {
           "target": "demo.item.arrow"
         }

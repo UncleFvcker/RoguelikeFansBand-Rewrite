@@ -1949,6 +1949,14 @@
                 "null"
               ]
             },
+            "remainingDivisor": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
             "statusKindId": {
               "type": "string"
             },
@@ -1961,6 +1969,19 @@
             "type",
             "statusKindId",
             "amount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "satisfy-hunger",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
           ],
           "type": "object"
         },
@@ -2358,7 +2379,8 @@
     "AbilityTerrainBeamOperationDefinition": {
       "enum": [
         "jam-doors",
-        "destroy-traps-and-doors"
+        "destroy-traps-and-doors",
+        "stone-to-mud"
       ],
       "type": "string"
     },

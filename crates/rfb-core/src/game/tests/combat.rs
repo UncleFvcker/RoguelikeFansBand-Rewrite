@@ -1505,7 +1505,7 @@ fn food_and_light_eating_consume_one_food_and_leave_one_light_fuel() {
     );
 
     let mut light = monster_effect_game(
-        17,
+        18,
         MeleeBlowEffectDefinition::EatLight {
             chance_percent: None,
         },

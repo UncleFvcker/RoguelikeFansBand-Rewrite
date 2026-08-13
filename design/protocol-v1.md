@@ -612,3 +612,9 @@ State Hash Schema 保持 v93，save 容器保持 v1。
 结构化结算结果。它们分别承载原版穿墙探测、`max(100, current / 5)` 解毒和已装备火把/
 提灯补充一半最大燃料；没有新增待处理输入或存档字段，State Hash Schema 保持 v93，
 save 容器保持 v1。
+
+协议 1.191 / Arcane 第三册为 `terrain-beam` 增加 `stone-to-mud` 操作，为
+`reduce-status` 增加仅允许流血使用的可选 `remainingDivisor`，并增加窄化的
+`satisfy-hunger` 规格与结构化结算结果。它们分别承载原版 `1d30+20` 化石为泥、
+`current / 2 - 50` 治疗中伤和 `PY_FOOD_MAX - 1` 充饥；基础鉴定允许以 0/0 表示不掷
+完整鉴定判定。没有新增待处理输入或存档字段，State Hash Schema 保持 v93，save 容器保持 v1。

@@ -545,7 +545,13 @@ impl Game {
             (
                 AbilityEffectDefinition::TerrainBeam { .. },
                 AbilityTargetPlan::Projectile { path, .. },
-            ) => self.resolve_player_terrain_beam_effect(&ability, path, events, changed),
+            ) => self.resolve_player_terrain_beam_effect(
+                &ability,
+                path,
+                events,
+                changed,
+                removed_entities,
+            )?,
             (AbilityEffectDefinition::FetchItem { .. }, AbilityTargetPlan::FetchItem { path }) => {
                 self.resolve_player_fetch_item_effect(&ability, path, events, changed)
             }
@@ -830,6 +836,9 @@ impl Game {
             }
             (AbilityEffectDefinition::ReduceStatus { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_status_reduction_effect(&ability, events);
+            }
+            (AbilityEffectDefinition::SatisfyHunger, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_satisfy_hunger_effect(&ability, events);
             }
             (AbilityEffectDefinition::IdentifyItem { .. }, AbilityTargetPlan::Item { item_id }) => {
                 self.resolve_player_identify_item_effect(&ability, &item_id, events);
@@ -1594,10 +1603,15 @@ impl Game {
         path: Vec<Position>,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
-    ) {
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         let AbilityEffectDefinition::TerrainBeam { operation } = ability.effect else {
             unreachable!("terrain-beam executor requires a terrain-beam effect");
         };
+        let stone_to_mud_power = (operation == AbilityTerrainBeamOperationDefinition::StoneToMud)
+            .then(|| {
+                u16::try_from(21 + self.rng.bounded(30)).expect("stone-to-mud power must fit u16")
+            });
         if operation == AbilityTerrainBeamOperationDefinition::JamDoors {
             let _ = self.rng.bounded(30);
         }
@@ -1630,6 +1644,11 @@ impl Game {
                             .then_some(terrain.bash_to_terrain_id.as_ref())
                             .flatten()
                     }),
+                AbilityTerrainBeamOperationDefinition::StoneToMud => terrain
+                    .digging
+                    .as_ref()
+                    .filter(|digging| digging.resolution != TerrainDiggingResolution::Permanent)
+                    .and_then(|digging| digging.result_terrain_id.as_ref()),
             };
             if let Some(target_id) = target_id
                 && target_id != &terrain.id
@@ -1664,6 +1683,48 @@ impl Game {
                 },
             });
         }
+        if let Some(power) = stone_to_mud_power {
+            let targets = self
+                .beam_damage_targets(&trace.traversed)
+                .into_iter()
+                .filter(|entity_id| {
+                    self.entities.iter().any(|entity| {
+                        entity.id == *entity_id
+                            && entity.resistances.level(DamageType::Disintegrate)
+                                == ResistanceLevel::Vulnerable
+                    })
+                })
+                .collect::<Vec<_>>();
+            events.push(DomainEvent::AbilityBeamDamage {
+                ability_id: ability.id.clone(),
+                resolution: AbilityBeamDamageResolutionDto {
+                    base_raw_damage: i32::from(power),
+                    damage_type: DamageType::Disintegrate.into(),
+                    affected_positions: trace.traversed.clone(),
+                    target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
+                },
+                trace: trace.clone(),
+            });
+            for entity_id in targets {
+                let Some(index) = self
+                    .entities
+                    .iter()
+                    .position(|entity| entity.id == entity_id && entity.hp > 0)
+                else {
+                    continue;
+                };
+                self.resolve_stone_to_mud_damage_to_entity(
+                    index,
+                    &ability.id,
+                    i32::from(power),
+                    trace.clone(),
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+        }
+        Ok(())
     }
 
     pub(super) fn resolve_player_bolt_or_beam_damage_effect(
@@ -2817,11 +2878,13 @@ impl Game {
                             status_kind_id,
                             amount,
                             current_divisor,
+                            remaining_divisor,
                         } => {
                             let (before, after) = self.reduce_player_status(
                                 status_kind_id,
                                 *amount,
                                 *current_divisor,
+                                *remaining_divisor,
                             );
                             AbilityEffectResolutionDto::ReduceStatus {
                                 effect_index,
@@ -3189,11 +3252,13 @@ impl Game {
             ref status_kind_id,
             amount,
             current_divisor,
+            remaining_divisor,
         } = ability.effect
         else {
             unreachable!("status reduction executor requires a reduce-status effect");
         };
-        let (before, after) = self.reduce_player_status(status_kind_id, amount, current_divisor);
+        let (before, after) =
+            self.reduce_player_status(status_kind_id, amount, current_divisor, remaining_divisor);
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {
@@ -3215,6 +3280,7 @@ impl Game {
         status_kind_id: &str,
         minimum_amount: u32,
         current_divisor: Option<u32>,
+        remaining_divisor: Option<u32>,
     ) -> (u32, u32) {
         self.player
             .statuses
@@ -3222,10 +3288,15 @@ impl Game {
             .position(|status| status.kind_id == status_kind_id)
             .map_or((0, 0), |index| {
                 let before = self.player.statuses[index].remaining_ticks;
-                let amount = current_divisor.map_or(minimum_amount, |divisor| {
-                    minimum_amount.max(before / divisor)
-                });
-                let after = before.saturating_sub(amount);
+                let after = remaining_divisor.map_or_else(
+                    || {
+                        let amount = current_divisor.map_or(minimum_amount, |divisor| {
+                            minimum_amount.max(before / divisor)
+                        });
+                        before.saturating_sub(amount)
+                    },
+                    |divisor| (before / divisor).saturating_sub(minimum_amount),
+                );
                 if after == 0 {
                     self.player.statuses.remove(index);
                 } else {
@@ -3233,6 +3304,37 @@ impl Game {
                 }
                 (before, after)
             })
+    }
+
+    fn resolve_player_satisfy_hunger_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let before_state = self.nutrition_state();
+        let nutrition_before = self.nutrition;
+        self.nutrition = rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1;
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::SatisfyHunger {
+                    effect_index: 0,
+                    nutrition_before,
+                    nutrition_after: self.nutrition,
+                }],
+            },
+            trace: None,
+        });
+        let after_state = self.nutrition_state();
+        if after_state != before_state {
+            events.push(DomainEvent::NutritionStateChanged {
+                from: before_state,
+                to: after_state,
+                nutrition: self.nutrition,
+            });
+        }
     }
 
     fn resolve_player_refuel_equipped_light_effect(
@@ -3297,9 +3399,13 @@ impl Game {
         else {
             unreachable!("item identification executor requires an identify item effect");
         };
-        let roll = u16::try_from(self.rng.bounded(u64::from(full_identify_roll_sides)) + 1)
-            .expect("validated identify roll must fit u16");
-        let full = roll <= full_identify_power;
+        let roll = if full_identify_roll_sides == 0 {
+            0
+        } else {
+            u16::try_from(self.rng.bounded(u64::from(full_identify_roll_sides)) + 1)
+                .expect("validated identify roll must fit u16")
+        };
+        let full = full_identify_roll_sides > 0 && roll <= full_identify_power;
         let identification =
             self.identify_item_instance(item_id, ItemIdentificationRequest::new(full));
         events.push(DomainEvent::AbilityEffectsResolved {
@@ -5951,6 +6057,7 @@ impl Game {
             AbilityEffectDefinition::Heal { .. }
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
+            | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::LightArea { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability

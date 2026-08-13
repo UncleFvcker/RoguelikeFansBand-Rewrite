@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.arcane-stone-to-mud",
+  "nameKey": "ability-demo-arcane-stone-to-mud-name",
+  "descriptionKey": "ability-demo-arcane-stone-to-mud-description",
+  "abilityProgramId": "demo.ability-program.arcane-stone-to-mud",
+  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "tags": ["arcane", "spell", "terrain"]
+}

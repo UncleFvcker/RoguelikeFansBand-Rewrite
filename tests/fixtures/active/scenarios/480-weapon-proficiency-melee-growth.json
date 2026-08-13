@@ -1526,7 +1526,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 179,
+      "nextItemInstanceSerial": 180,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1534,7 +1534,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a74424a62bbad2824f82e201068cbd0ec5c340afe8cb69260e6cd93f8c7b49fe"
+      "stateHash": "a0e4a9193888f4e8951ced92f51bf149bec368db8813d7f516e6dcf203fcf06f"
     },
     "events": [
       {

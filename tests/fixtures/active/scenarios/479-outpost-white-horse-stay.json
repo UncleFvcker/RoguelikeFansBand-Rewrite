@@ -29,7 +29,7 @@
       "turn": 1,
       "worldTick": 50000,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 167,
+      "rngDrawCounter": 168,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -282,7 +282,7 @@
               "id": "generated.item.170",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 3,
+              "quantity": 5,
               "maximumQuantity": 0,
               "unitPrice": 3,
               "weightTenthsPound": 10,
@@ -292,7 +292,7 @@
               "id": "generated.item.171",
               "kindId": "demo.item.hard-biscuit",
               "displayNameKey": "item-demo-hard-biscuit-name",
-              "quantity": 5,
+              "quantity": 3,
               "maximumQuantity": 0,
               "unitPrice": 1,
               "weightTenthsPound": 2,
@@ -302,7 +302,7 @@
               "id": "generated.item.172",
               "kindId": "demo.item.strip-of-venison",
               "displayNameKey": "item-demo-strip-of-venison-name",
-              "quantity": 3,
+              "quantity": 4,
               "maximumQuantity": 0,
               "unitPrice": 2,
               "weightTenthsPound": 2,
@@ -312,7 +312,7 @@
               "id": "generated.item.173",
               "kindId": "demo.item.water-potion",
               "displayNameKey": "item-demo-water-potion-name",
-              "quantity": 4,
+              "quantity": 2,
               "maximumQuantity": 0,
               "unitPrice": 1,
               "weightTenthsPound": 4,
@@ -322,7 +322,7 @@
               "id": "generated.item.174",
               "kindId": "demo.item.apple-juice",
               "displayNameKey": "item-demo-apple-juice-name",
-              "quantity": 2,
+              "quantity": 4,
               "maximumQuantity": 0,
               "unitPrice": 1,
               "weightTenthsPound": 4,
@@ -1647,7 +1647,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c074a523e1cc4c8b0574580e55c065b83da794f16ed89b93841893291da44d3b"
+      "stateHash": "01be907cc6c4e45569b2df9bbfb6cf6b57baf473875c81af0cae36abf1a45801"
     },
     "events": [
       {

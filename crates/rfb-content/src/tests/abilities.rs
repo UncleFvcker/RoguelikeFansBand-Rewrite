@@ -307,6 +307,7 @@ fn arcane_second_book_keeps_the_original_spell_table_and_narrow_effects() {
             status_kind_id,
             amount: 100,
             current_divisor: Some(5),
+            remaining_divisor: None,
         } if status_kind_id == "rfb.status.poison"
     ));
 
@@ -352,4 +353,158 @@ fn arcane_second_book_keeps_the_original_spell_table_and_narrow_effects() {
             ])
         );
     }
+}
+
+#[test]
+fn arcane_third_book_keeps_the_original_spell_table_and_narrow_effects() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.major-arcana")
+        .expect("Arcane third book should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("arcane"));
+    assert_eq!(book.rank, Some(3));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.major-arcana")
+        .expect("Major Arcana item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (20, 30, 1_000, Some("demo.ability-book.major-arcana"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == "demo.item.major-arcana")
+        })
+        .expect("Major Arcana should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (20, 90, 100)
+    );
+
+    let expected = [
+        ("demo.ability.arcane-resist-lightning", 12, 10, 40, 60),
+        ("demo.ability.arcane-resist-acid", 13, 10, 40, 65),
+        ("demo.ability.arcane-cure-medium-wounds", 14, 11, 22, 84),
+        ("demo.ability.arcane-teleport", 15, 12, 40, 120),
+        ("demo.ability.arcane-identify", 17, 17, 50, 425),
+        ("demo.ability.arcane-stone-to-mud", 19, 15, 50, 171),
+        ("demo.ability.arcane-ray-of-light", 20, 16, 50, 180),
+        ("demo.ability.arcane-satisfy-hunger", 22, 18, 60, 264),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    let cure = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-cure-medium-wounds")
+        .expect("Cure Medium Wounds should compile");
+    assert!(matches!(
+        &cure.effect,
+        AbilityEffectDefinition::Sequence { effects }
+            if matches!(effects.as_slice(), [
+                AbilityEffectDefinition::HealDice { dice: 4, sides: 8 },
+                AbilityEffectDefinition::ReduceStatus {
+                    status_kind_id,
+                    amount: 50,
+                    current_divisor: None,
+                    remaining_divisor: Some(2),
+                }
+            ] if status_kind_id == "rfb.status.bleeding")
+    ));
+    assert_eq!(
+        cure.spell_power_fields
+            .iter()
+            .map(|field| (field.effect_index, field.field))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([(0, AbilitySpellPowerField::HealingSides)])
+    );
+
+    let teleport = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-teleport")
+        .expect("Teleport should compile");
+    assert!(matches!(
+        teleport.effect,
+        AbilityEffectDefinition::BlinkSelf { radius: 5 }
+    ));
+    assert_eq!(teleport.level_scaling.len(), 1);
+    let identify = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-identify")
+        .expect("Identify should compile");
+    assert!(matches!(
+        identify.effect,
+        AbilityEffectDefinition::IdentifyItem {
+            full_identify_power: 0,
+            full_identify_roll_sides: 0,
+        }
+    ));
+    let stone_to_mud = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-stone-to-mud")
+        .expect("Stone to Mud should compile");
+    assert!(matches!(
+        stone_to_mud.effect,
+        AbilityEffectDefinition::TerrainBeam {
+            operation: AbilityTerrainBeamOperationDefinition::StoneToMud,
+        }
+    ));
+    let ray = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-ray-of-light")
+        .expect("Ray of Light should compile");
+    assert!(matches!(
+        ray.effect,
+        AbilityEffectDefinition::LightLine {
+            damage_dice: 6,
+            damage_sides: 8,
+        }
+    ));
+    let hunger = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-satisfy-hunger")
+        .expect("Satisfy Hunger should compile");
+    assert_eq!(hunger.effect, AbilityEffectDefinition::SatisfyHunger);
 }

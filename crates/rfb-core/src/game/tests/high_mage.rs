@@ -18,6 +18,7 @@ fn arcane_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
     game.learned_abilities
         .extend(ability_ids.iter().map(|id| (*id).to_owned()));
     give_inventory_item(&mut game, "test.minor-arcana", "demo.item.minor-arcana");
+    give_inventory_item(&mut game, "test.major-arcana", "demo.item.major-arcana");
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
@@ -44,6 +45,7 @@ fn arcane_high_mage_birth_keeps_only_the_first_book_and_is_isolated_from_death()
         .collect::<BTreeSet<_>>();
     assert!(carried.contains("demo.item.cantrips-for-beginners"));
     assert!(!carried.contains("demo.item.minor-arcana"));
+    assert!(!carried.contains("demo.item.major-arcana"));
     assert!(!carried.contains("demo.item.black-prayers"));
 
     let learned = game
@@ -53,7 +55,7 @@ fn arcane_high_mage_birth_keeps_only_the_first_book_and_is_isolated_from_death()
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 16);
+    assert_eq!(learned.len(), 24);
     assert!(
         learned
             .iter()
@@ -401,6 +403,186 @@ fn astral_guide_reduces_successful_arcane_blink_energy_to_one_third() {
         &mut guided,
         GameCommand::CastAbility {
             ability_id: "demo.ability.arcane-blink".to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+
+    assert_eq!(ordinary.world_tick - ordinary_tick, 10);
+    assert_eq!(guided.world_tick - guided_tick, 4);
+}
+
+#[test]
+fn arcane_cure_medium_wounds_uses_spell_powered_healing_and_original_bleeding_formula() {
+    let mut game = arcane_high_mage_game(
+        0x4355_5245_4d45_4449,
+        22,
+        &["demo.ability.arcane-cure-medium-wounds"],
+    );
+    game.player.hp = 1;
+    game.player.statuses.push(StatusInstance {
+        kind_id: "rfb.status.bleeding".to_owned(),
+        intensity: 1,
+        remaining_ticks: 300,
+        source_id: Some("test.medium-wound".to_owned()),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+
+    game.resolve_player_ability(
+        "demo.ability.arcane-cure-medium-wounds",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Medium Wounds should resolve");
+
+    assert!((5..=32).contains(&game.player.hp));
+    assert_eq!(game.player.statuses[0].remaining_ticks, 100);
+}
+
+#[test]
+fn arcane_satisfy_hunger_sets_nutrition_to_original_maximum_minus_one() {
+    let mut game = arcane_high_mage_game(
+        0x5341_5449_5346_5932,
+        22,
+        &["demo.ability.arcane-satisfy-hunger"],
+    );
+    game.nutrition = 1;
+    game.resolve_player_ability(
+        "demo.ability.arcane-satisfy-hunger",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Satisfy Hunger should resolve");
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+}
+
+#[test]
+fn arcane_identify_performs_basic_identification_without_an_extra_rng_roll() {
+    let mut game =
+        arcane_high_mage_game(0x4944_454e_5449_4659, 22, &["demo.ability.arcane-identify"]);
+    give_inventory_item(&mut game, "test.identify-target", "demo.item.dagger");
+    let draws_before = game.rng_draw_counter();
+    game.resolve_player_ability(
+        "demo.ability.arcane-identify",
+        TargetSelection::Item {
+            item_id: "test.identify-target".to_owned(),
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Identify should resolve");
+
+    let target = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.identify-target")
+        .expect("identify target should remain");
+    assert_eq!(
+        game.item_identification(target),
+        ItemIdentificationDto::Appraised
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+}
+
+#[test]
+fn arcane_stone_to_mud_uses_the_rock_power_roll_and_preserves_permanent_walls() {
+    let mut game = arcane_high_mage_game(
+        0x5354_4f4e_454d_5544,
+        22,
+        &["demo.ability.arcane-stone-to-mud"],
+    );
+    let actor_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    let target = Position {
+        x: game.player.position.x + 2,
+        y: game.player.position.y,
+    };
+    let actor_index = game
+        .index(actor_position)
+        .expect("adjacent terrain should exist");
+    game.terrain[actor_index] = "demo.terrain.floor".to_owned();
+    let mut rock_actor = actor_from_runtime_spawn(
+        "test.adobe-golem",
+        "demo.actor.adobe-golem",
+        actor_position,
+        100,
+        100,
+        100,
+        true,
+    );
+    rock_actor
+        .resistances
+        .set(DamageType::Disintegrate, ResistanceLevel::Vulnerable);
+    game.entities.push(rock_actor);
+    let target_index = game.index(target).expect("adjacent terrain should exist");
+    game.terrain[target_index] = "demo.terrain.quartz-vein".to_owned();
+    game.resolve_player_ability(
+        "demo.ability.arcane-stone-to-mud",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Stone to Mud should resolve against ordinary rock");
+    assert_eq!(game.terrain[target_index], "demo.terrain.floor");
+    assert!((50..=79).contains(&game.entities[0].hp));
+
+    game.terrain[target_index] = "demo.terrain.permanent-wall".to_owned();
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Arcane High-Mage should retain mana")
+        .current = 100;
+    game.resolve_player_ability(
+        "demo.ability.arcane-stone-to-mud",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Stone to Mud should resolve against permanent rock");
+    assert_eq!(game.terrain[target_index], "demo.terrain.permanent-wall");
+}
+
+#[test]
+fn astral_guide_reduces_successful_arcane_long_teleport_energy_to_one_third() {
+    let mut ordinary =
+        arcane_high_mage_game(0x4153_5452_414c_3230, 22, &["demo.ability.arcane-teleport"]);
+    let mut guided = ordinary.clone();
+    guided
+        .progress
+        .active_mutation_ids
+        .insert("rfb.mutation.astral-guide".to_owned());
+    let ordinary_tick = ordinary.world_tick;
+    let guided_tick = guided.world_tick;
+
+    dispatch_next(
+        &mut ordinary,
+        GameCommand::CastAbility {
+            ability_id: "demo.ability.arcane-teleport".to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+    dispatch_next(
+        &mut guided,
+        GameCommand::CastAbility {
+            ability_id: "demo.ability.arcane-teleport".to_owned(),
             target: TargetSelection::SelfTarget,
         },
     );

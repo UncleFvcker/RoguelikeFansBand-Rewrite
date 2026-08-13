@@ -1081,6 +1081,8 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             ("demo.item.black-prayers", 100),
             ("demo.item.black-mass", 1_000),
             ("demo.item.cantrips-for-beginners", 100),
+            ("demo.item.minor-arcana", 250),
+            ("demo.item.major-arcana", 1_000),
         ])
     );
     let book = shop

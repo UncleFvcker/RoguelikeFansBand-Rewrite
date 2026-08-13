@@ -104,7 +104,8 @@
         "realmId": "arcane",
         "abilityBookIds": [
           "demo.ability-book.cantrips-for-beginners",
-          "demo.ability-book.minor-arcana"
+          "demo.ability-book.minor-arcana",
+          "demo.ability-book.major-arcana"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -123,7 +124,15 @@
           { "abilityId": "demo.ability.arcane-detect-objects", "minimumLevel": 9, "resourceCost": 8, "baseFailurePercent": 40 },
           { "abilityId": "demo.ability.arcane-cure-poison", "minimumLevel": 10, "resourceCost": 9, "baseFailurePercent": 40 },
           { "abilityId": "demo.ability.arcane-resist-cold", "minimumLevel": 10, "resourceCost": 10, "baseFailurePercent": 40 },
-          { "abilityId": "demo.ability.arcane-resist-fire", "minimumLevel": 11, "resourceCost": 10, "baseFailurePercent": 40 }
+          { "abilityId": "demo.ability.arcane-resist-fire", "minimumLevel": 11, "resourceCost": 10, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-resist-lightning", "minimumLevel": 12, "resourceCost": 10, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-resist-acid", "minimumLevel": 13, "resourceCost": 10, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-cure-medium-wounds", "minimumLevel": 14, "resourceCost": 11, "baseFailurePercent": 22 },
+          { "abilityId": "demo.ability.arcane-teleport", "minimumLevel": 15, "resourceCost": 12, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.arcane-identify", "minimumLevel": 17, "resourceCost": 17, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.arcane-stone-to-mud", "minimumLevel": 19, "resourceCost": 15, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.arcane-ray-of-light", "minimumLevel": 20, "resourceCost": 16, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.arcane-satisfy-hunger", "minimumLevel": 22, "resourceCost": 18, "baseFailurePercent": 60 }
         ]
       }
     ]

@@ -686,10 +686,11 @@ pub(super) fn validate_abilities(
                     full_identify_power,
                     full_identify_roll_sides,
                 } => {
-                    ((1..=1_000).contains(full_identify_power)
-                        || (*full_identify_power == 0
-                            && has_level_scaling(AbilityLevelScalingField::IdentifyPower)))
-                        && (1..=1_000).contains(full_identify_roll_sides)
+                    (*full_identify_power == 0 && *full_identify_roll_sides == 0)
+                        || (((1..=1_000).contains(full_identify_power)
+                            || (*full_identify_power == 0
+                                && has_level_scaling(AbilityLevelScalingField::IdentifyPower)))
+                            && (1..=1_000).contains(full_identify_roll_sides))
                 }
                 AbilityEffectDefinition::RestoreVitality { life_force } => {
                     (1..=1_000).contains(life_force)
@@ -715,11 +716,17 @@ pub(super) fn validate_abilities(
                     status_kind_id,
                     amount,
                     current_divisor,
+                    remaining_divisor,
                 } => {
                     validate_id(status_kind_id).is_ok()
                         && (1..=1_000_000).contains(amount)
                         && current_divisor.is_none_or(|divisor| (1..=1_000_000).contains(&divisor))
+                        && remaining_divisor
+                            .is_none_or(|divisor| (1..=1_000_000).contains(&divisor))
+                        && !(current_divisor.is_some() && remaining_divisor.is_some())
+                        && (remaining_divisor.is_none() || status_kind_id == "rfb.status.bleeding")
                 }
+                AbilityEffectDefinition::SatisfyHunger => true,
                 AbilityEffectDefinition::VisibleDamage {
                     damage_dice,
                     damage_sides,
@@ -951,6 +958,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::Heal { .. }
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
+            | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::RefuelEquippedLight { .. }
             | AbilityEffectDefinition::LightArea { .. }
             | AbilityEffectDefinition::AggravateMonsters
