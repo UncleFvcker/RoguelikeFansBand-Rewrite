@@ -325,3 +325,16 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `rfb-legacy.race.high-elf` 上补齐静态内容并设置 `seeInvisible: true`，不得创建重复 race。
 - 协调版本保持 pack `1.331.0`、Protocol `1.201`、State Hash Schema v100、save v1、
   baseline `contract-v303`；默认 `false` 省略序列化，现有内容锁与 fixture 均不变。
+
+## main 当前批次：高等精灵 Commit 2 雪地与种族美德
+
+- 成功进入带 `snow` 标签地形的移动恢复 RFB 耗时：普通角色增加 33%，超重追加量采用
+  `min(200, totalWeight * 100 / weightLimit) - 100`，骑乘固定 40%；附加基数为
+  `min(120, actionCost)`。本地移动和世界地图移动共用同一结算，受阻、攻击等未移动结果不加费。
+- 飞行、穿墙、具备 Snow habitat 的坐骑及带 `snow-adapted` 标签的有效种族豁免。现有
+  `rfb-legacy.race.high-elf` 获得该标签，importer 同步保留；本批仍不把高等精灵加入正式选择。
+- 初始美德表补齐高等精灵“活力”与已正式半兽人“勇猛”，不新增美德状态或协议字段。
+- 协调版本：pack `1.332.0` / hash
+  `de97fefcb8c224d5dc5b989c7d531808d5a26b9acc9bf190a3b114b76ca2fc2d`、Protocol
+  `1.201`、State Hash Schema v100、save v1、baseline `contract-v303`。按用户要求未刷新或
+  运行全量 fixture，只执行新增和直接相关测试。

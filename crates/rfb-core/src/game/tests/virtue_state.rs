@@ -72,6 +72,48 @@ fn rfb_virtue_initialization_keeps_class_race_and_realm_order_then_fills_unique_
 }
 
 #[test]
+fn half_orc_and_high_elf_receive_their_original_race_virtues() {
+    let half_orc = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.half-orc",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Half-Orc Archer should create");
+    assert_eq!(
+        &virtue_kinds(&half_orc)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Valour,
+        ]
+    );
+
+    let mut high_elf_identity = half_orc
+        .build
+        .clone()
+        .expect("Archer should retain build identity");
+    high_elf_identity.race_id = "rfb-legacy.race.high-elf".to_owned();
+    let mut rng = RfbRng::seeded(43);
+    let high_elf = super::super::virtues::initial_virtues(
+        &half_orc.content,
+        Some(&high_elf_identity),
+        &mut rng,
+    );
+    assert_eq!(
+        high_elf[..3]
+            .iter()
+            .map(|virtue| virtue.kind)
+            .collect::<Vec<_>>(),
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Vitality,
+        ]
+    );
+}
+
+#[test]
 fn virtue_changes_use_the_three_rfb_soft_caps_and_hard_bounds() {
     let mut game = Game::new(0);
     for (current, amount, coin_rolls, expected) in [

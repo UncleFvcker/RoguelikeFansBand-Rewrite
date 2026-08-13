@@ -5925,6 +5925,14 @@ fn legacy_race_kin_glyph(id: &str) -> char {
     }
 }
 
+fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    let mut tags = vec!["legacy-import"];
+    if entry.id == "high-elf" {
+        tags.push("snow-adapted");
+    }
+    tags
+}
+
 fn race_json(
     entry: &LegacyCharacterEntry,
     body_slots: &[(String, String)],
@@ -5947,7 +5955,7 @@ fn race_json(
             .iter()
             .map(|(id, slot_type)| serde_json::json!({"id": id, "slotType": slot_type}))
             .collect::<Vec<_>>(),
-        "tags": ["legacy-import"],
+        "tags": legacy_race_tags(entry),
     });
     let modifiers = character_modifiers(entry);
     if !modifiers.is_empty() {
@@ -12762,7 +12770,7 @@ pub fn sync_demo_polymorph_races(
         };
         let mut race = race_json(entry, &body_slots, &mut report);
         race["legacyIndex"] = serde_json::json!(legacy_index);
-        let mut tags = vec!["legacy-import"];
+        let mut tags = legacy_race_tags(entry);
         if *random_candidate {
             tags.push("polymorph-candidate");
         }
@@ -18854,6 +18862,14 @@ race_t *test_beast_get_race(void)
         assert_eq!(race["seeInvisible"], true);
         assert_eq!(race["modifiers"]["speed"], 3);
         assert_eq!(race["kinCategory"], "kin-glyph-112");
+        let high_elf = LegacyCharacterEntry {
+            id: "high-elf".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&high_elf),
+            ["legacy-import", "snow-adapted"]
+        );
     }
 
     #[test]

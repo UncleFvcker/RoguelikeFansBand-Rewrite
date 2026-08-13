@@ -918,3 +918,18 @@ git diff --stat
 - 本批不修改现有 race JSON；`seeInvisible` 的默认值在序列化时省略，因此协调点仍为 pack
   `1.331.0`、Protocol `1.201`、State Hash Schema v100、save v1、active baseline
   `contract-v303`，content lock 与既有 fixture 不变。按用户要求只运行新增和直接相关测试。
+
+## 48. main 当前交接（高等精灵 Commit 2：雪地与种族美德）
+
+- 本批不新增或占用 race、item、ability、material 或 affix ID。高等精灵继续复用
+  `rfb-legacy.race.high-elf`，并增加通用 `snow-adapted` 标签；legacy polymorph race 同步会
+  保留该标签，其他方向不得以 race ID 硬编码雪地豁免。
+- 成功移动进入 `snow` 地形时，普通角色以 33% 为基础，超重按 RFB 携重比例追加，骑乘
+  固定 40%；附加量只对 `min(120, actionCost)` 计算。飞行、穿墙、Snow habitat 坐骑和
+  `snow-adapted` 种族豁免。本地与世界地图共用同一路径，受阻或转为攻击时不加费。
+- 初始美德表现包含高等精灵 `Vitality` 与半兽人 `Valour`；这是内容身份派生的初始选择，
+  不增加权威状态、协议或 save 字段。
+- 协调点为 pack `1.332.0` / content hash
+  `de97fefcb8c224d5dc5b989c7d531808d5a26b9acc9bf190a3b114b76ca2fc2d`、Protocol
+  `1.201`、State Hash Schema v100、save v1、active baseline `contract-v303`。依用户要求
+  不运行、不刷新全量 fixture；合并验收时再统一处理受雪地移动与半兽人初始化影响的用例。

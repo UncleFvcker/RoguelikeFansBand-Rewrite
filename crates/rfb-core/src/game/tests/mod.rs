@@ -38,6 +38,7 @@ mod riding;
 mod riding_bond;
 mod snapshots;
 mod sniper;
+mod snow;
 pub(crate) mod support;
 mod tasks;
 mod town;

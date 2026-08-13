@@ -1607,6 +1607,7 @@ impl Game {
         let recover_after_wait = matches!(&action, GameAction::Wait);
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
         let mut turn_advance = 1_u32;
+        let mut player_moved = false;
         if advances_world {
             self.decrement_ability_cooldowns(1);
         }
@@ -1976,6 +1977,7 @@ impl Game {
                     if !self.move_on_world_map(direction, &mut changed) {
                         events.push(DomainEvent::MoveBlocked);
                     } else {
+                        player_moved = true;
                         if self.wilderness_position == Some(destination) {
                             self.world_travel_destination = None;
                         }
@@ -2184,6 +2186,7 @@ impl Game {
                     if !self.move_on_world_map(direction, &mut changed) {
                         events.push(DomainEvent::MoveBlocked);
                     } else {
+                        player_moved = true;
                         if !self.player_is_dead() && self.roll_wilderness_ambush() {
                             self.activate_wilderness_ambush()?;
                             action_cost = STANDARD_ACTION_COST;
@@ -2262,6 +2265,7 @@ impl Game {
                                     events.push(DomainEvent::WildernessInterestingDiscovery);
                                 }
                                 events.extend(self.relocate_player(target, &mut changed));
+                                player_moved = true;
                                 if let Some(translation) = translation {
                                     self.populate_scrolled_wilderness(translation);
                                 }
@@ -2411,6 +2415,10 @@ impl Game {
                     None => events.push(DomainEvent::TerrainDigUnavailable),
                 }
             }
+        }
+
+        if player_moved {
+            action_cost = self.player_snow_movement_action_cost(action_cost);
         }
 
         self.process_chaos_patron_level_rewards(

@@ -2,7 +2,7 @@
 
 use super::*;
 use rfb_content::{
-    ActorMovementMode, WILDERNESS_WORLD_CELL_HEIGHT, WILDERNESS_WORLD_CELL_WIDTH,
+    ActorHabitat, ActorMovementMode, WILDERNESS_WORLD_CELL_HEIGHT, WILDERNESS_WORLD_CELL_WIDTH,
     WildernessDefinition, WildernessLegendEntry, WildernessLocationDefinition, WildernessTerrain,
 };
 
@@ -196,6 +196,29 @@ fn wilderness_initial_monster_rolls(configured_rolls: u16, road: bool) -> u16 {
     } else {
         WILDERNESS_OFF_ROAD_MONSTER_ROLLS
     })
+}
+
+pub(super) fn snow_movement_action_cost(
+    action_cost: i32,
+    carried_weight: u32,
+    carry_capacity: u32,
+    mounted: bool,
+) -> i32 {
+    let percent = if mounted {
+        40
+    } else {
+        let load_percent = u64::from(carried_weight)
+            .saturating_mul(100)
+            .saturating_div(u64::from(carry_capacity.max(1)))
+            .min(200);
+        33 + i32::try_from(load_percent.saturating_sub(100)).unwrap_or(100)
+    };
+    action_cost.saturating_add(
+        action_cost
+            .clamp(0, 120)
+            .saturating_mul(percent)
+            .saturating_div(100),
+    )
 }
 
 fn terrain_id_for_wilderness(terrain: WildernessTerrain) -> &'static str {
@@ -670,7 +693,7 @@ impl Game {
             .min(60)
     }
 
-    fn world_cell_terrain_id(&self, position: Position) -> Option<&'static str> {
+    pub(super) fn world_cell_terrain_id(&self, position: Position) -> Option<&'static str> {
         let wilderness = self.wilderness();
         let legend = wilderness_legend_at(wilderness, position)?;
         if legend.terrain == WildernessTerrain::Edge {
@@ -705,6 +728,45 @@ impl Game {
             .movement
             .modes
             .contains(&mode)
+    }
+
+    pub(super) fn player_snow_movement_action_cost(&self, action_cost: i32) -> i32 {
+        let terrain_id = if self.map_scale == MapScaleDto::World {
+            self.wilderness_position
+                .and_then(|position| self.world_cell_terrain_id(position))
+        } else {
+            self.index(self.player.position)
+                .and_then(|index| self.terrain.get(index))
+                .map(String::as_str)
+        };
+        let on_snow = terrain_id
+            .and_then(|terrain_id| self.content.terrain(terrain_id))
+            .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "snow"));
+        let snow_adapted_race = self
+            .character_definitions()
+            .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "snow-adapted"));
+        let snow_adapted_mount = self
+            .riding_actor_id
+            .as_deref()
+            .and_then(|mount_id| self.entities.iter().find(|actor| actor.id == mount_id))
+            .and_then(|mount| self.content.actor(&mount.kind_id))
+            .and_then(|mount| mount.allocation.as_ref())
+            .is_some_and(|allocation| allocation.habitats.contains(&ActorHabitat::Snow));
+        if !on_snow
+            || snow_adapted_race
+            || snow_adapted_mount
+            || self.player_can_pass_walls()
+            || self.active_traveler_has_mode(ActorMovementMode::Fly)
+            || self.active_traveler_has_mode(ActorMovementMode::PassWall)
+        {
+            return action_cost;
+        }
+        snow_movement_action_cost(
+            action_cost,
+            self.carried_weight_tenths_pound(),
+            self.player_carry_capacity_tenths_pound(),
+            self.riding_actor_id.is_some(),
+        )
     }
 
     pub(super) fn player_can_cross_surface_terrain(
