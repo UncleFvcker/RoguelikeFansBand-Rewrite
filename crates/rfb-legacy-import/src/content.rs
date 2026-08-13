@@ -2352,6 +2352,7 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
         (ARCANE_BOOK_TVAL, ARCANE_SECOND_BOOK_SVAL) => Some(ARCANE_SECOND_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_THIRD_BOOK_SVAL) => Some(ARCANE_THIRD_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_FOURTH_BOOK_SVAL) => Some(ARCANE_FOURTH_BOOK_ID),
+        (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_FIRST_BOOK_SVAL) => Some(ARMAGEDDON_FIRST_BOOK_ID),
         _ => None,
     }
 }
@@ -9144,6 +9145,9 @@ const ARCANE_THIRD_BOOK_SVAL: u16 = 2;
 const ARCANE_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-major-arcana";
 const ARCANE_FOURTH_BOOK_SVAL: u16 = 3;
 const ARCANE_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-manual-of-mastery";
+const ARMAGEDDON_BOOK_TVAL: u16 = 101;
+const ARMAGEDDON_FIRST_BOOK_SVAL: u16 = 0;
+const ARMAGEDDON_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.armageddon-book-of-elements";
 const LEGACY_VAMPIRE_LORD_RACE_ID: &str = "rfb-legacy.race.vampire-lord-form";
 const LEGACY_VAMPIRE_LORD_SKILL_SET_ID: &str = "rfb-legacy.skill-set.race-vampire-lord-form";
 const LEGACY_SLAYING_WEAPON_AFFIX_ID: &str = "rfb-legacy.affix.slaying";
@@ -18233,6 +18237,16 @@ F:BRAND_VAMP | HOLD_LIFE
                 Some(expected_book_id)
             );
         }
+
+        let armageddon_book = LegacyItemEntry {
+            tval: ARMAGEDDON_BOOK_TVAL,
+            sval: ARMAGEDDON_FIRST_BOOK_SVAL,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(
+            player_ability_book_for_item(&armageddon_book),
+            Some(ARMAGEDDON_FIRST_BOOK_ID)
+        );
     }
 
     #[test]

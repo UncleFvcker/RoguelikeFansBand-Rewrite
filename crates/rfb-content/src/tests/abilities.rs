@@ -188,6 +188,151 @@ fn arcane_first_book_keeps_the_original_spell_table_and_narrow_effects() {
 }
 
 #[test]
+fn armageddon_first_book_keeps_the_original_spell_table_and_elemental_scaling() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.book-of-elements")
+        .expect("Armageddon first book should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("armageddon"));
+    assert_eq!(book.rank, Some(1));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.book-of-elements")
+        .expect("Book of Elements item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (10, 30, 100, Some("demo.ability-book.book-of-elements"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Book of Elements should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (10, 30, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.armageddon-lightning-bolt", 1, 2, 25, 4),
+        ("demo.ability.armageddon-frost-bolt", 2, 2, 25, 4),
+        ("demo.ability.armageddon-fire-bolt", 3, 3, 30, 1),
+        ("demo.ability.armageddon-acid-bolt", 5, 4, 35, 2),
+        ("demo.ability.armageddon-lightning-ball", 6, 5, 35, 4),
+        ("demo.ability.armageddon-frost-ball", 9, 6, 40, 2),
+        ("demo.ability.armageddon-fire-ball", 11, 8, 40, 6),
+        ("demo.ability.armageddon-acid-ball", 12, 9, 40, 4),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        let player = ability
+            .player
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+        assert!(ability.affects_ground_items);
+        assert_eq!(ability.spell_power_fields.len(), 1);
+        assert_eq!(ability.level_scaling.len(), 1);
+    }
+
+    for id in [
+        "demo.ability.armageddon-lightning-bolt",
+        "demo.ability.armageddon-frost-bolt",
+        "demo.ability.armageddon-fire-bolt",
+        "demo.ability.armageddon-acid-bolt",
+    ] {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .expect("elemental bolt should compile");
+        let AbilityEffectDefinition::BoltOrBeamDamage {
+            damage_sides,
+            beam_chance_modifier,
+            ..
+        } = &ability.effect
+        else {
+            panic!("{id} should use bolt-or-beam damage");
+        };
+        assert_eq!((*damage_sides, *beam_chance_modifier), (8, 10), "{id}");
+        assert_eq!(
+            ability.level_scaling[0].field,
+            AbilityLevelScalingField::DamageDice
+        );
+    }
+    for (id, base_bonus) in [
+        "demo.ability.armageddon-lightning-ball",
+        "demo.ability.armageddon-frost-ball",
+        "demo.ability.armageddon-fire-ball",
+        "demo.ability.armageddon-acid-ball",
+    ]
+    .into_iter()
+    .zip([19_u16, 24, 29, 34])
+    {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .expect("elemental ball should compile");
+        assert!(matches!(
+            ability.effect,
+            AbilityEffectDefinition::AreaDamage {
+                damage_dice: 1,
+                damage_sides: 1,
+                damage_bonus,
+                radius: 2,
+                ..
+            } if damage_bonus == base_bonus
+        ));
+        assert_eq!(
+            ability.level_scaling[0].field,
+            AbilityLevelScalingField::DamageBonus
+        );
+    }
+}
+
+#[test]
 fn sorcery_first_two_books_keep_the_original_spell_table() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = artifact.content;

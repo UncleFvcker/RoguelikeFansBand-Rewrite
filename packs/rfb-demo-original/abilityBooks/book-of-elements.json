@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.book-of-elements",
+  "nameKey": "ability-book-demo-book-of-elements-name",
+  "descriptionKey": "ability-book-demo-book-of-elements-description",
+  "realmId": "armageddon",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.armageddon-lightning-bolt",
+    "demo.ability.armageddon-frost-bolt",
+    "demo.ability.armageddon-fire-bolt",
+    "demo.ability.armageddon-acid-bolt",
+    "demo.ability.armageddon-lightning-ball",
+    "demo.ability.armageddon-frost-ball",
+    "demo.ability.armageddon-fire-ball",
+    "demo.ability.armageddon-acid-ball"
+  ],
+  "tags": ["armageddon", "spellbook"]
+}

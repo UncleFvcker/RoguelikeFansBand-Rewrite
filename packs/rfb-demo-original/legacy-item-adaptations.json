@@ -174,6 +174,7 @@
     { "sourceIndex": 525, "sourceName": "[Minor Arcana]", "sourceId": "minor-arcana", "itemId": "demo.item.minor-arcana", "status": "active", "contract": "class-high-mage-arcane-second-book" },
     { "sourceIndex": 526, "sourceName": "[Major Arcana]", "sourceId": "major-arcana", "itemId": "demo.item.major-arcana", "status": "active", "contract": "class-high-mage-arcane-third-book" },
     { "sourceIndex": 527, "sourceName": "[Manual of Mastery]", "sourceId": "manual-of-mastery", "itemId": "demo.item.manual-of-mastery", "status": "active", "contract": "class-high-mage-arcane-fourth-book" },
+    { "sourceIndex": 544, "sourceName": "[Book of Elements]", "sourceId": "book-of-elements", "itemId": "demo.item.book-of-elements", "status": "active", "contract": "class-high-mage-armageddon-first-book" },
     { "sourceIndex": 600, "sourceName": "Wooden Torch", "sourceId": "wooden-torch", "itemId": "demo.item.wooden-torch", "status": "active", "contract": "contract-v159-fuel-light" },
     { "sourceIndex": 601, "sourceName": "Brass Lantern", "sourceId": "brass-lantern", "itemId": "demo.item.brass-lantern", "status": "active", "contract": "contract-v159-fuel-light" },
     { "sourceIndex": 602, "sourceName": "Flask of oil", "sourceId": "flask-of-oil", "itemId": "demo.item.flask-of-oil", "status": "active", "contract": "contract-v159-fuel-light" },

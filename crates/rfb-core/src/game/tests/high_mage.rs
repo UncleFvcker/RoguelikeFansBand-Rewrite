@@ -8,6 +8,7 @@ use super::*;
 const HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-death";
 const ARCANE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-arcane";
 const SORCERY_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-sorcery";
+const ARMAGEDDON_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-armageddon";
 
 fn high_mage_game(seed: u64) -> Game {
     Game::new_with_build(seed, HIGH_MAGE_BUILD_ID).expect("Death High-Mage build should create")
@@ -67,6 +68,20 @@ fn sorcery_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
     game
 }
 
+fn armageddon_high_mage_game(seed: u64, level: u16) -> Game {
+    let mut game = Game::new_with_build(seed, ARMAGEDDON_HIGH_MAGE_BUILD_ID)
+        .expect("Armageddon High-Mage build should create");
+    game.progress.level = level;
+    game.progress.max_level = level;
+    game.refresh_player_resource_maxima();
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Armageddon High-Mage should have mana")
+        .current = 1_000;
+    game.debug_ability_casts_succeed = true;
+    game
+}
+
 fn grant_spell_power(game: &mut Game, bonus: i32) {
     game.player.statuses.push(StatusInstance {
         kind_id: "test.status.spell-power".to_owned(),
@@ -122,6 +137,126 @@ fn sorcery_high_mage_birth_keeps_only_the_first_book_and_realm() {
             .iter()
             .all(|ability| ability.id.starts_with("demo.ability.sorcery-"))
     );
+}
+
+#[test]
+fn armageddon_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
+    let game = Game::new_with_build(0x4152_4d41_4745_4444, ARMAGEDDON_HIGH_MAGE_BUILD_ID)
+        .expect("Armageddon High-Mage build should create");
+    let carried = game
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        })
+        .map(|item| item.kind_id.as_str())
+        .collect::<BTreeSet<_>>();
+    for expected in [
+        "demo.item.book-of-elements",
+        "demo.item.dagger",
+        "demo.item.robe",
+        "demo.item.clarity-draught",
+        "demo.item.magic-missile-wand",
+    ] {
+        assert!(carried.contains(expected));
+    }
+    assert!(!carried.contains("demo.item.black-prayers"));
+    assert!(!carried.contains("demo.item.cantrips-for-beginners"));
+    assert!(!carried.contains("demo.item.beginners-handbook"));
+
+    let learned = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .filter(|ability| ability.source == AbilitySourceDto::Learned)
+        .collect::<Vec<_>>();
+    assert_eq!(learned.len(), 8);
+    assert!(
+        learned
+            .iter()
+            .all(|ability| ability.id.starts_with("demo.ability.armageddon-"))
+    );
+}
+
+#[test]
+fn armageddon_first_book_projects_original_level_beam_and_damage_formulas() {
+    let ability_ids = [
+        "demo.ability.armageddon-lightning-bolt",
+        "demo.ability.armageddon-frost-bolt",
+        "demo.ability.armageddon-fire-bolt",
+        "demo.ability.armageddon-acid-bolt",
+        "demo.ability.armageddon-lightning-ball",
+        "demo.ability.armageddon-frost-ball",
+        "demo.ability.armageddon-fire-ball",
+        "demo.ability.armageddon-acid-ball",
+    ];
+    for (level, bolt_dice, spell_damage_bonus, beam_chance, ball_bonuses) in [
+        (1, [3, 4, 5, 5], 5, 11, [25, 30, 35, 40]),
+        (25, [9, 10, 11, 11], 10, 35, [66, 71, 76, 81]),
+        (50, [15, 16, 17, 17], 15, 60, [109, 114, 119, 124]),
+    ] {
+        let projected = armageddon_high_mage_game(0x454c_454d_454e_5453, level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        for (id, damage_dice) in ability_ids[..4].iter().zip(bolt_dice) {
+            assert!(matches!(
+                projected[*id].effects.as_slice(),
+                [AbilityEffectSpecDto::BoltOrBeamDamage {
+                    damage_dice: actual_dice,
+                    damage_sides: 8,
+                    damage_bonus,
+                    beam_chance_percent: actual_beam_chance,
+                    final_damage_spell_power_bonus: None,
+                    ..
+                }] if *actual_dice == damage_dice
+                    && *damage_bonus == spell_damage_bonus
+                    && *actual_beam_chance == beam_chance
+            ));
+        }
+        for (id, damage_bonus) in ability_ids[4..].iter().zip(ball_bonuses) {
+            assert!(matches!(
+                projected[*id].effects.as_slice(),
+                [AbilityEffectSpecDto::AreaDamage {
+                    damage_dice: 1,
+                    damage_sides: 1,
+                    damage_bonus: actual_bonus,
+                    radius: 2,
+                    final_damage_spell_power_bonus: None,
+                    ..
+                }] if *actual_bonus == damage_bonus
+            ));
+        }
+    }
+
+    for bonus in [7, -20] {
+        let mut game = armageddon_high_mage_game(0x5350_454c_4c50_4f57, 50);
+        grant_spell_power(&mut game, bonus);
+        let projected = game.snapshot().player.abilities;
+        for id in ability_ids {
+            let ability = projected
+                .iter()
+                .find(|ability| ability.id == id)
+                .unwrap_or_else(|| panic!("{id} should be projected"));
+            assert!(matches!(
+                ability.effects.as_slice(),
+                [AbilityEffectSpecDto::BoltOrBeamDamage {
+                    final_damage_spell_power_bonus: Some(actual),
+                    ..
+                } | AbilityEffectSpecDto::AreaDamage {
+                    final_damage_spell_power_bonus: Some(actual),
+                    ..
+                }] if *actual == bonus
+            ));
+        }
+    }
 }
 
 #[test]

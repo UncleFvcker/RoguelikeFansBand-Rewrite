@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.armageddon-lightning-ball",
+  "nameKey": "ability-demo-armageddon-lightning-ball-name",
+  "descriptionKey": "ability-demo-armageddon-lightning-ball-description",
+  "abilityProgramId": "demo.ability-program.armageddon-lightning-ball",
+  "target": { "modes": ["position", "entity", "direction"], "range": 8, "requiresLineOfEffect": true },
+  "affectsGroundItems": true,
+  "levelScaling": [
+    { "effectIndex": 0, "field": "damage-bonus", "multiplier": 3, "divisor": 2 }
+  ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "final-damage" }
+  ],
+  "tags": ["area", "armageddon", "electricity", "spell"]
+}

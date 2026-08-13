@@ -188,6 +188,23 @@
           { "abilityId": "demo.ability.sorcery-banish", "minimumLevel": 41, "resourceCost": 43, "baseFailurePercent": 50 },
           { "abilityId": "demo.ability.sorcery-invulnerability", "minimumLevel": 42, "resourceCost": 65, "baseFailurePercent": 75 }
         ]
+      },
+      {
+        "realmId": "armageddon",
+        "abilityBookIds": [
+          "demo.ability-book.book-of-elements"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.armageddon-lightning-bolt", "minimumLevel": 1, "resourceCost": 2, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.armageddon-frost-bolt", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.armageddon-fire-bolt", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.armageddon-acid-bolt", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.armageddon-lightning-ball", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.armageddon-frost-ball", "minimumLevel": 9, "resourceCost": 6, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.armageddon-fire-ball", "minimumLevel": 11, "resourceCost": 8, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.armageddon-acid-ball", "minimumLevel": 12, "resourceCost": 9, "baseFailurePercent": 40 }
+        ]
       }
     ]
   },

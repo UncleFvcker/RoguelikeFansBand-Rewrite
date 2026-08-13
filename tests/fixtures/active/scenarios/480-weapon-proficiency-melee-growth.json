@@ -1177,7 +1177,7 @@
             "x": 45,
             "y": 16
           },
-          "hp": 77,
+          "hp": 84,
           "speed": 109,
           "energyNeed": 10
         }
@@ -1565,7 +1565,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 182,
+      "nextItemInstanceSerial": 185,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1573,26 +1573,14 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a9175a5579080a1cc3aa7cba6b371e94171e2c32b1b37df8c6b6c78a33bd9ec1"
+      "stateHash": "8777652145e1ecdffaf8b87c6ed3920ea16fd222e042cd3bd2c4afbf88ab8426"
     },
     "events": [
       {
-        "kind": "combat.hit",
-        "messageKey": "combat-player-hit",
+        "kind": "combat.miss",
+        "messageKey": "combat-player-miss",
         "args": {
-          "damage": "7",
           "target": "demo.actor.adobe-golem"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 7,
-            "armorReduction": 0,
-            "resistanceAdjustment": 0,
-            "finalDamage": 7,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
         }
       }
     ]

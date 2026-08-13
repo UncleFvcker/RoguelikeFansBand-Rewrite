@@ -1746,6 +1746,13 @@
       "minDepth": 25
     },
     {
+      "itemKindId": "demo.item.book-of-elements",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
       "itemKindId": "demo.item.stone-ring-scroll",
       "weight": 16,
       "quantity": 1,

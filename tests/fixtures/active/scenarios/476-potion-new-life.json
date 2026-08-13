@@ -36,7 +36,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 300,
+      "rngDrawCounter": 302,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -339,42 +339,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 118,
+            "potential": 128,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 108,
+            "potential": 98,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 128,
+            "potential": 138,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 98,
+            "potential": 118,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 138,
+            "potential": 98,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 118,
+            "potential": 128,
             "effective": 14,
             "index": 11
           }
@@ -1666,7 +1666,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 181,
+      "nextItemInstanceSerial": 182,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1674,7 +1674,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8fc835edc58c135e5224ba3661ddd14d11e5059cf9f8d6ef2ce5270814231f1f"
+      "stateHash": "9d6b712e3c6ce3f2e84b91d7270ea9d3380d1b419aba5142a39f75c04488cfaf"
     },
     "events": [
       {
@@ -1686,6 +1686,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "8fc835edc58c135e5224ba3661ddd14d11e5059cf9f8d6ef2ce5270814231f1f"
+    "saveRoundTripStateHash": "9d6b712e3c6ce3f2e84b91d7270ea9d3380d1b419aba5142a39f75c04488cfaf"
   }
 }
