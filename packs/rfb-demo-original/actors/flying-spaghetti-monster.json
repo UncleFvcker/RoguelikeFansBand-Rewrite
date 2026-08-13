@@ -126,7 +126,8 @@
   "speed": 125,
   "statusImmunities": [
     "rfb.status.confusion",
-    "rfb.status.sleep"
+    "rfb.status.sleep",
+    "rfb.status.stun"
   ],
   "tags": [
     "good",

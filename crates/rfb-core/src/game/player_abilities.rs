@@ -270,6 +270,17 @@ impl Game {
                 .spell_damage_bonus_per_level
                 .saturating_mul(level / u16::from(profile.spell_damage_bonus_level_divisor)),
         );
+        let bonus = bonus.saturating_mul(
+            if ability
+                .tags
+                .iter()
+                .any(|tag| tag == "double-spell-damage-bonus")
+            {
+                2
+            } else {
+                1
+            },
+        );
         if bonus == 0 {
             return;
         }

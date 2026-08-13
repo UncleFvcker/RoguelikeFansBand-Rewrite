@@ -1206,6 +1206,9 @@ const fn damage_type_dto(value: ActorDamageType) -> DamageTypeDto {
         ActorDamageType::Water => DamageTypeDto::Water,
         ActorDamageType::Psi => DamageTypeDto::Psi,
         ActorDamageType::Curse => DamageTypeDto::Curse,
+        ActorDamageType::Meteor => DamageTypeDto::Meteor,
+        ActorDamageType::Rocket => DamageTypeDto::Rocket,
+        ActorDamageType::Telekinesis => DamageTypeDto::Telekinesis,
     }
 }
 
@@ -1243,6 +1246,9 @@ const fn actor_damage_type(value: DamageTypeDto) -> Option<ActorDamageType> {
         DamageTypeDto::Water => ActorDamageType::Water,
         DamageTypeDto::Psi => ActorDamageType::Psi,
         DamageTypeDto::Curse => ActorDamageType::Curse,
+        DamageTypeDto::Meteor => ActorDamageType::Meteor,
+        DamageTypeDto::Rocket => ActorDamageType::Rocket,
+        DamageTypeDto::Telekinesis => ActorDamageType::Telekinesis,
     })
 }
 

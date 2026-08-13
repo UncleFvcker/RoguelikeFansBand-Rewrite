@@ -159,7 +159,8 @@
   "speed": 130,
   "statusImmunities": [
     "rfb.status.confusion",
-    "rfb.status.fear"
+    "rfb.status.fear",
+    "rfb.status.stun"
   ],
   "tags": [
     "aura-revenge",

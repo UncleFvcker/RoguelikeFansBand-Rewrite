@@ -46,7 +46,7 @@
       "turn": 1,
       "worldTick": 9,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 175,
+      "rngDrawCounter": 180,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1177,7 +1177,7 @@
             "x": 46,
             "y": 16
           },
-          "hp": 84,
+          "hp": 68,
           "speed": 109,
           "energyNeed": 19
         }
@@ -1492,7 +1492,7 @@
           "discovered": true
         },
         {
-          "itemId": "generated.item.180",
+          "itemId": "generated.item.179",
           "discovered": true
         },
         {
@@ -1530,7 +1530,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 181,
+      "nextItemInstanceSerial": 180,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1538,14 +1538,26 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "62704e0f5d161f602f1e7e99d8c20ba0f5eeee81aa5ff2c4aa9a1a165b11870f"
+      "stateHash": "8393c20868eb2fe475b8fc8485443fff6f68fc9fcb3c945063473fe382bdb415"
     },
     "events": [
       {
-        "kind": "combat.projectile-miss",
-        "messageKey": "projectile-miss",
+        "kind": "combat.projectile-hit",
+        "messageKey": "projectile-hit",
         "args": {
+          "damage": "16",
           "target": "demo.actor.adobe-golem"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 20,
+            "armorReduction": 4,
+            "resistanceAdjustment": 0,
+            "finalDamage": 16,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         },
         "trace": {
           "origin": {

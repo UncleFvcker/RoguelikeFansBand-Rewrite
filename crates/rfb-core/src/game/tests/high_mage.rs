@@ -73,6 +73,25 @@ fn armageddon_high_mage_game(seed: u64, level: u16) -> Game {
         .expect("Armageddon High-Mage build should create");
     game.progress.level = level;
     game.progress.max_level = level;
+    game.learned_abilities.extend(
+        [
+            "demo.ability.armageddon-shard-bolt",
+            "demo.ability.armageddon-gravity-bolt",
+            "demo.ability.armageddon-plasma-bolt",
+            "demo.ability.armageddon-meteor",
+            "demo.ability.armageddon-thunderclap",
+            "demo.ability.armageddon-windblast",
+            "demo.ability.armageddon-hellstorm",
+            "demo.ability.armageddon-rocket",
+        ]
+        .into_iter()
+        .map(str::to_owned),
+    );
+    give_inventory_item(
+        &mut game,
+        "test.earth-wind-and-fire",
+        "demo.item.earth-wind-and-fire",
+    );
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
@@ -166,6 +185,7 @@ fn armageddon_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
     assert!(!carried.contains("demo.item.black-prayers"));
     assert!(!carried.contains("demo.item.cantrips-for-beginners"));
     assert!(!carried.contains("demo.item.beginners-handbook"));
+    assert!(!carried.contains("demo.item.earth-wind-and-fire"));
 
     let learned = game
         .snapshot()
@@ -174,7 +194,7 @@ fn armageddon_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 8);
+    assert_eq!(learned.len(), 16);
     assert!(
         learned
             .iter()
@@ -257,6 +277,257 @@ fn armageddon_first_book_projects_original_level_beam_and_damage_formulas() {
             ));
         }
     }
+}
+
+#[test]
+fn armageddon_second_book_projects_original_level_beam_and_damage_formulas() {
+    for (level, beam_chance, bolt_dice, area_bonuses, thunder_radius) in [
+        (15, 25, [10, 8, 14], [82, 125, 62, 195, 127], 3),
+        (25, 35, [13, 11, 17], [94, 149, 74, 319, 169], 4),
+        (50, 60, [19, 17, 23], [124, 209, 104, 629, 274], 7),
+    ] {
+        let projected = armageddon_high_mage_game(0x4541_5254_4857_0000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        for (id, damage_dice) in [
+            "demo.ability.armageddon-shard-bolt",
+            "demo.ability.armageddon-gravity-bolt",
+            "demo.ability.armageddon-plasma-bolt",
+        ]
+        .into_iter()
+        .zip(bolt_dice)
+        {
+            assert!(matches!(
+                projected[id].effects.as_slice(),
+                [AbilityEffectSpecDto::BoltOrBeamDamage {
+                    damage_dice: actual_dice,
+                    damage_sides: 8,
+                    beam_chance_percent: actual_beam_chance,
+                    ..
+                }] if *actual_dice == damage_dice && *actual_beam_chance == beam_chance
+            ));
+        }
+        for (id, damage_bonus) in [
+            "demo.ability.armageddon-meteor",
+            "demo.ability.armageddon-thunderclap",
+            "demo.ability.armageddon-windblast",
+            "demo.ability.armageddon-hellstorm",
+            "demo.ability.armageddon-rocket",
+        ]
+        .into_iter()
+        .zip(area_bonuses)
+        {
+            assert!(matches!(
+                projected[id].effects.as_slice(),
+                [AbilityEffectSpecDto::AreaDamage {
+                    damage_dice: 1,
+                    damage_sides: 1,
+                    damage_bonus: actual_bonus,
+                    radius,
+                    ..
+                }] if *actual_bonus == damage_bonus
+                    && (*radius == thunder_radius
+                        || id != "demo.ability.armageddon-thunderclap")
+            ));
+        }
+    }
+}
+
+#[test]
+fn armageddon_special_projectiles_share_original_resistance_status_and_cell_rules() {
+    let mut game = armageddon_high_mage_game(0x5350_4543_4941_4c53, 50);
+    clear_monsters(&mut game);
+    let origin = game.player.position;
+    let target_position = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    for y in 0..game.height {
+        for x in 0..game.width {
+            replace_terrain(
+                &mut game,
+                Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                },
+                "demo.terrain.floor",
+            );
+        }
+    }
+    game.entities.push(actor_from_runtime_spawn(
+        "test.armageddon-special",
+        "demo.actor.small-kobold",
+        target_position,
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    let trace = ProjectileTrace {
+        origin,
+        impact: target_position,
+        landing: target_position,
+        traversed: vec![target_position],
+    };
+
+    game.entities[0]
+        .resistances
+        .set(DamageType::Shards, ResistanceLevel::Resistant);
+    let rocket = game
+        .resolve_ability_damage_to_entity(
+            0,
+            "test.rocket",
+            DamageType::Rocket,
+            100,
+            trace.clone(),
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("rocket damage should resolve");
+    assert_eq!(rocket.applied, 50);
+
+    game.entities[0].resistances = ResistanceProfile::default();
+    game.resolve_ability_damage_to_entity(
+        0,
+        "test.gravity",
+        DamageType::Gravity,
+        100,
+        trace,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("gravity damage should resolve");
+    assert_ne!(game.entities[0].position, target_position);
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_SLOW)
+    );
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN)
+    );
+
+    game.entities[0].kind_id = "demo.actor.quartz-vein".to_owned();
+    game.entities[0].position = target_position;
+    game.entities[0].statuses.clear();
+    game.resolve_ability_damage_to_entity(
+        0,
+        "test.plasma",
+        DamageType::Plasma,
+        100,
+        ProjectileTrace {
+            origin,
+            impact: target_position,
+            landing: target_position,
+            traversed: vec![target_position],
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("plasma damage should resolve");
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != STATUS_STUN)
+    );
+
+    game.entities[0].kind_id = "demo.actor.small-kobold".to_owned();
+    game.entities[0].statuses.clear();
+    game.resolve_ability_damage_to_entity(
+        0,
+        "test.plasma",
+        DamageType::Plasma,
+        100,
+        ProjectileTrace {
+            origin,
+            impact: target_position,
+            landing: target_position,
+            traversed: vec![target_position],
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("ordinary plasma target should resolve");
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN)
+    );
+
+    game.entities[0].hp = 1_000;
+    game.entities[0].position = target_position;
+    game.entities[0].statuses.clear();
+    game.resolve_ability_damage_to_entity(
+        0,
+        "test.telekinesis",
+        DamageType::Telekinesis,
+        100,
+        ProjectileTrace {
+            origin,
+            impact: target_position,
+            landing: target_position,
+            traversed: vec![target_position],
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("telekinesis damage should resolve");
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN)
+    );
+
+    let tree = Position {
+        x: origin.x + 2,
+        y: origin.y,
+    };
+    replace_terrain(&mut game, tree, "demo.terrain.surface-tree");
+    game.resolve_projectile_terrain_effects(&[tree], DamageType::Shards, &mut BTreeSet::new());
+    assert_eq!(
+        game.terrain[game.index(tree).expect("tree should remain in bounds")],
+        "demo.terrain.surface-grass"
+    );
+
+    give_inventory_item(&mut game, "test.meteor-scroll", "demo.item.accuracy-scroll");
+    give_inventory_item(&mut game, "test.meteor-potion", "demo.item.antidote-potion");
+    for item in game.items.iter_mut().filter(|item| {
+        matches!(
+            item.id.as_str(),
+            "test.meteor-scroll" | "test.meteor-potion"
+        )
+    }) {
+        item.location = ItemLocation::Ground(origin);
+    }
+    game.resolve_ground_item_projectile_effects(
+        "test.meteor",
+        &[origin],
+        DamageType::Meteor,
+        true,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    assert!(game.items.iter().all(|item| !matches!(
+        item.id.as_str(),
+        "test.meteor-scroll" | "test.meteor-potion"
+    )));
 }
 
 #[test]

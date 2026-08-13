@@ -41,7 +41,10 @@
         "ice",
         "water",
         "psi",
-        "curse"
+        "curse",
+        "meteor",
+        "rocket",
+        "telekinesis"
       ],
       "type": "string"
     },
@@ -1026,6 +1029,9 @@
         "mana": {
           "$ref": "#/$defs/ActorResistanceLevel"
         },
+        "meteor": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
         "nether": {
           "$ref": "#/$defs/ActorResistanceLevel"
         },
@@ -1047,6 +1053,9 @@
         "psi": {
           "$ref": "#/$defs/ActorResistanceLevel"
         },
+        "rocket": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
         "shards": {
           "$ref": "#/$defs/ActorResistanceLevel"
         },
@@ -1054,6 +1063,9 @@
           "$ref": "#/$defs/ActorResistanceLevel"
         },
         "storm": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "telekinesis": {
           "$ref": "#/$defs/ActorResistanceLevel"
         },
         "time": {

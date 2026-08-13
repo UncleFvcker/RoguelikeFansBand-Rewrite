@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json",
+  "formatVersion": 1,
+  "abilityId": "demo.ability.armageddon-thunderclap",
+  "minimumLevel": 23,
+  "resourceId": "demo.resource.mana",
+  "resourceCost": 19,
+  "baseFailurePercent": 50,
+  "firstSuccessExperience": 7
+}

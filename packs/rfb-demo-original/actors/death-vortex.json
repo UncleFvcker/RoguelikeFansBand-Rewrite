@@ -62,7 +62,8 @@
   "speed": 140,
   "statusImmunities": [
     "rfb.status.fear",
-    "rfb.status.sleep"
+    "rfb.status.sleep",
+    "rfb.status.stun"
   ],
   "tags": [
     "empty-mind",

@@ -1046,6 +1046,11 @@ impl Game {
             unreachable!("player projectile damage executor requires a damage effect");
         };
         let (trace, target_index) = self.trace_projectile_path(path);
+        self.resolve_projectile_terrain_effects(
+            &[trace.impact],
+            DamageType::from(*damage_type),
+            changed,
+        );
         if ability.affects_ground_items {
             self.resolve_ground_item_projectile_effects(
                 &ability.id,
@@ -1128,6 +1133,7 @@ impl Game {
         ))
         .expect("spell-powered Malediction damage must fit i32");
         let (trace, target_index) = self.trace_projectile_path(path.clone());
+        self.resolve_projectile_terrain_effects(&[trace.impact], DamageType::HellFire, changed);
         if ability.affects_ground_items {
             self.resolve_ground_item_projectile_effects(
                 &ability.id,
@@ -1425,6 +1431,7 @@ impl Game {
         let center = trace.landing;
         let (affected_positions, targets) =
             self.area_damage_targets(center, radius, target_category);
+        self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
         if affects_ground_items {
             self.resolve_ground_item_projectile_effects(
                 source_id,
@@ -1526,6 +1533,8 @@ impl Game {
     ) -> Result<(), CoreError> {
         let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
         let affected_positions = trace.traversed.clone();
+        self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
+        self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
         if affects_ground_items {
             self.resolve_ground_item_projectile_effects(
                 source_id,
@@ -1877,6 +1886,8 @@ impl Game {
         if beam {
             let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
             let affected_positions = trace.traversed.clone();
+            self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
+            self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
             if ability.affects_ground_items {
                 self.resolve_ground_item_projectile_effects(
                     &ability.id,
@@ -1921,6 +1932,7 @@ impl Game {
             }
         } else {
             let (trace, target_index) = self.trace_projectile_path_with_actor_policy(path, true);
+            self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
             if ability.affects_ground_items {
                 self.resolve_ground_item_projectile_effects(
                     &ability.id,
@@ -2098,6 +2110,7 @@ impl Game {
             landing,
             traversed,
         };
+        self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
         if affects_ground_items {
             self.resolve_ground_item_projectile_effects(
                 source_kind_id,

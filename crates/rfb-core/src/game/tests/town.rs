@@ -1094,6 +1094,8 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             ("demo.item.manual-of-mastery", 2_500),
             ("demo.item.beginners-handbook", 100),
             ("demo.item.master-sorcerers-handbook", 1_000),
+            ("demo.item.book-of-elements", 100),
+            ("demo.item.earth-wind-and-fire", 1_000),
         ])
     );
     let book = shop

@@ -137,6 +137,9 @@
   },
   "role": "monster",
   "speed": 134,
+  "statusImmunities": [
+    "rfb.status.stun"
+  ],
   "tags": [
     "clear-head",
     "evil",

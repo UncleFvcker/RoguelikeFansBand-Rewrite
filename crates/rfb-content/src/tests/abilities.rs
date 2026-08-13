@@ -333,6 +333,105 @@ fn armageddon_first_book_keeps_the_original_spell_table_and_elemental_scaling() 
 }
 
 #[test]
+fn armageddon_second_book_keeps_the_original_spell_table_and_allocation() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.earth-wind-and-fire")
+        .expect("Armageddon second book should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("armageddon"));
+    assert_eq!(book.rank, Some(2));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.earth-wind-and-fire")
+        .expect("Earth, Wind and Fire item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (20, 30, 1_000, Some("demo.ability-book.earth-wind-and-fire"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Earth, Wind and Fire should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (20, 50, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.armageddon-shard-bolt", 15, 10, 40, 10),
+        ("demo.ability.armageddon-gravity-bolt", 17, 12, 50, 4),
+        ("demo.ability.armageddon-plasma-bolt", 19, 15, 50, 10),
+        ("demo.ability.armageddon-meteor", 21, 17, 50, 5),
+        ("demo.ability.armageddon-thunderclap", 23, 19, 50, 7),
+        ("demo.ability.armageddon-windblast", 26, 23, 50, 10),
+        ("demo.ability.armageddon-hellstorm", 28, 25, 50, 15),
+        ("demo.ability.armageddon-rocket", 31, 33, 50, 20),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        let player = ability
+            .player
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+        assert!(ability.affects_ground_items);
+        assert_eq!(ability.spell_power_fields.len(), 1);
+    }
+    assert!(
+        content
+            .actors
+            .iter()
+            .find(|actor| actor.id == "demo.actor.quartz-vein")
+            .expect("quartz vein should compile")
+            .status_immunities
+            .iter()
+            .any(|status| status == "rfb.status.stun")
+    );
+}
+
+#[test]
 fn sorcery_first_two_books_keep_the_original_spell_table() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = artifact.content;

@@ -216,7 +216,6 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "KNIGHT"
             | "MALE"
             | "NASTY_GLYPH"
-            | "NO_STUN"
             | "POS_GAIN_AC"
             | "POS_HOLD_LIFE"
             | "POS_BACKSTAB"
@@ -2353,6 +2352,7 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
         (ARCANE_BOOK_TVAL, ARCANE_THIRD_BOOK_SVAL) => Some(ARCANE_THIRD_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_FOURTH_BOOK_SVAL) => Some(ARCANE_FOURTH_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_FIRST_BOOK_SVAL) => Some(ARMAGEDDON_FIRST_BOOK_ID),
+        (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_SECOND_BOOK_SVAL) => Some(ARMAGEDDON_SECOND_BOOK_ID),
         _ => None,
     }
 }
@@ -7960,7 +7960,7 @@ const RESISTANCE_FLAG_TYPES: [(&str, &str); 19] = [
     ("DISI", "disintegrate"),
 ];
 
-const RESISTANCE_ALL_TYPES: [&str; 27] = [
+const RESISTANCE_ALL_TYPES: [&str; 30] = [
     "acid",
     "electricity",
     "fire",
@@ -7988,6 +7988,9 @@ const RESISTANCE_ALL_TYPES: [&str; 27] = [
     "hell-fire",
     "ice",
     "water",
+    "meteor",
+    "rocket",
+    "telekinesis",
 ];
 
 const MONSTER_CONTACT_AURA_FLAGS: [(&str, &str); 3] = [
@@ -8002,6 +8005,7 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
         "RES_ALL"
             | "RES_TELE"
             | "NO_CONF"
+            | "NO_STUN"
             | "NEVER_MOVE"
             | "NEVER_BLOW"
             | "KILL_WALL"
@@ -8313,8 +8317,21 @@ fn monster_json(
     if !resistances.is_empty() {
         value["resistances"] = serde_json::json!(resistances);
     }
-    if entry.flags.iter().any(|flag| flag == "NO_CONF") {
-        value["statusImmunities"] = serde_json::json!(["rfb.status.confusion"]);
+    let status_immunities = [
+        ("NO_CONF", "rfb.status.confusion"),
+        ("NO_STUN", "rfb.status.stun"),
+    ]
+    .into_iter()
+    .filter_map(|(flag, status)| {
+        entry
+            .flags
+            .iter()
+            .any(|value| value == flag)
+            .then_some(status)
+    })
+    .collect::<Vec<_>>();
+    if !status_immunities.is_empty() {
+        value["statusImmunities"] = serde_json::json!(status_immunities);
     }
     let movement_modes = [
         ("AQUATIC", "aquatic"),
@@ -8981,6 +8998,7 @@ fn demo_monster_json(
         ("NO_CONF", "rfb.status.confusion"),
         ("NO_FEAR", "rfb.status.fear"),
         ("NO_SLEEP", "rfb.status.sleep"),
+        ("NO_STUN", "rfb.status.stun"),
     ]
     .into_iter()
     .filter_map(|(flag, status)| {
@@ -9148,6 +9166,8 @@ const ARCANE_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-manual-of-ma
 const ARMAGEDDON_BOOK_TVAL: u16 = 101;
 const ARMAGEDDON_FIRST_BOOK_SVAL: u16 = 0;
 const ARMAGEDDON_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.armageddon-book-of-elements";
+const ARMAGEDDON_SECOND_BOOK_SVAL: u16 = 1;
+const ARMAGEDDON_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.armageddon-earth-wind-and-fire";
 const LEGACY_VAMPIRE_LORD_RACE_ID: &str = "rfb-legacy.race.vampire-lord-form";
 const LEGACY_VAMPIRE_LORD_SKILL_SET_ID: &str = "rfb-legacy.skill-set.race-vampire-lord-form";
 const LEGACY_SLAYING_WEAPON_AFFIX_ID: &str = "rfb-legacy.affix.slaying";
@@ -16225,7 +16245,7 @@ G:L:w\n\
 I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
-F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF\n\
+F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF | NO_STUN\n\
 S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LOUSE | S_CYBER\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
@@ -16267,13 +16287,19 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         );
         assert_eq!(
             caller["statusImmunities"],
-            serde_json::json!(["rfb.status.confusion"])
+            serde_json::json!(["rfb.status.confusion", "rfb.status.stun"])
         );
         assert!(
             !outcome
                 .report
                 .unmapped_monster_flags
                 .contains_key("NO_CONF")
+        );
+        assert!(
+            !outcome
+                .report
+                .unmapped_monster_flags
+                .contains_key("NO_STUN")
         );
         let ability_ids: Vec<&str> = caller["monsterCasting"]["abilities"]
             .as_array()
@@ -18238,15 +18264,20 @@ F:BRAND_VAMP | HOLD_LIFE
             );
         }
 
-        let armageddon_book = LegacyItemEntry {
-            tval: ARMAGEDDON_BOOK_TVAL,
-            sval: ARMAGEDDON_FIRST_BOOK_SVAL,
-            ..LegacyItemEntry::default()
-        };
-        assert_eq!(
-            player_ability_book_for_item(&armageddon_book),
-            Some(ARMAGEDDON_FIRST_BOOK_ID)
-        );
+        for (sval, expected_book_id) in [
+            (ARMAGEDDON_FIRST_BOOK_SVAL, ARMAGEDDON_FIRST_BOOK_ID),
+            (ARMAGEDDON_SECOND_BOOK_SVAL, ARMAGEDDON_SECOND_BOOK_ID),
+        ] {
+            let armageddon_book = LegacyItemEntry {
+                tval: ARMAGEDDON_BOOK_TVAL,
+                sval,
+                ..LegacyItemEntry::default()
+            };
+            assert_eq!(
+                player_ability_book_for_item(&armageddon_book),
+                Some(expected_book_id)
+            );
+        }
     }
 
     #[test]

@@ -1753,6 +1753,13 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.earth-wind-and-fire",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 50
+    },
+    {
       "itemKindId": "demo.item.stone-ring-scroll",
       "weight": 16,
       "quantity": 1,

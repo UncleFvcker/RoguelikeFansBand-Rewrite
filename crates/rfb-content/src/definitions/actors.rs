@@ -105,6 +105,9 @@ pub enum ActorDamageType {
     Water,
     Psi,
     Curse,
+    Meteor,
+    Rocket,
+    Telekinesis,
 }
 
 /// Content-declared resistance tier; `normal` is expressed by omission.

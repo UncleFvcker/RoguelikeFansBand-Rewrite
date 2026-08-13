@@ -1549,6 +1549,9 @@ export function createPresentationFormatter(
       water: "damage-type-water-name",
       psi: "damage-type-psi-name",
       curse: "damage-type-curse-name",
+      meteor: "damage-type-meteor-name",
+      rocket: "damage-type-rocket-name",
+      telekinesis: "damage-type-telekinesis-name",
     };
     return localization.format(keys[damageType]);
   }
