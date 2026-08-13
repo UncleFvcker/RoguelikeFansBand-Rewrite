@@ -471,3 +471,16 @@ git diff --stat
 - 共享协调点：pack `1.306.0` / content hash
   `a9628dbec24ccc3ec4363bbc6a7a6ae13ac1706984925cc71872d13c9b999514`；Protocol `1.189`、
   State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
+
+## 30. monsters-next 当前交接（P68 低风险映射）
+
+- 导入黄泉之神伊邪那美、火之天使乌列尔、黑夜主宰奈芙蒂斯、地狱蜘蛛、三世卡尔达姆，
+  以及 source index 871/1110 两条独立的散失金属史莱姆记录。
+- `BA_POIS`、`BA_NEXUS`、`JMP_HELL_FIRE` 与 plasma/hell-fire 接触光环复用现有伤害
+  DTO/运行时；Caldarm 的 `S_SPECIAL` 通过 `clone-of-locke` 精确分类召唤 1d3 个 65 级以下
+  超人洛克克隆体。`KILL_EXP` 按当前仅击杀结算经验的既有规则省略，不新增运行时分支。
+- L71–80 审计现为 67 selected、0 direct、9 blocked、7 excluded；剩余 blocker 是 Banor 三体、
+  Skadi、Aegir、Heimdall、Magni、Ganesha、Agni，留给后续 pantheon/SPECIAL 批次。
+- 共享协调点：pack `1.307.0` / content hash
+  `7d1d1a197247782f4c3466e4ff0465e0afdf10ff964ac564e95d7f206a0d23f3`；Protocol `1.189`、
+  State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。

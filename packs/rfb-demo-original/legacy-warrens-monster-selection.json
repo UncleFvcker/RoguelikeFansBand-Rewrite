@@ -6238,7 +6238,7 @@
     {
       "sourceIndex": 930,
       "id": "clone-of-locke-the-superman",
-      "tags": ["orc-cave"],
+      "tags": ["clone-of-locke", "orc-cave"],
       "omittedFlags": ["MALE"]
     },
     {
@@ -6822,6 +6822,49 @@
       "id": "shesha-the-infinite",
       "tags": ["orc-cave"],
       "omittedFlags": ["HINDU2", "MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1138,
+      "id": "izanami-spirit-of-yomi",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE"]
+    },
+    {
+      "sourceIndex": 764,
+      "id": "uriel-angel-of-fire",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1264,
+      "id": "nephthys-lady-of-the-night",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["EGYPTIAN", "FEMALE", "NO_STUN", "POS_SEE_INVIS", "POS_TELEPATHY", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1177,
+      "id": "hell-spider",
+      "tags": ["orc-cave", "spider"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 931,
+      "id": "caldarm-the-third",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 871,
+      "id": "metal-babble",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["KILL_EXP", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CHR", "POS_SUST_CON", "POS_SUST_DEX", "POS_SUST_INT", "POS_SUST_STR", "POS_SUST_WIS"]
+    },
+    {
+      "sourceIndex": 1110,
+      "sourceId": "metal-babble",
+      "id": "metal-babble-unique",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["KILL_EXP", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CHR", "POS_SUST_CON", "POS_SUST_DEX", "POS_SUST_INT", "POS_SUST_STR", "POS_SUST_WIS"]
     }
   ]
 }

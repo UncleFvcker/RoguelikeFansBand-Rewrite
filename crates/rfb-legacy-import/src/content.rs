@@ -222,6 +222,8 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "POS_BACKSTAB"
             | "POS_SEE_INVIS"
             | "POS_SUST_CON"
+            | "POS_SUST_CHR"
+            | "POS_SUST_DEX"
             | "POS_SUST_INT"
             | "POS_SUST_STR"
             | "POS_SUST_WIS"
@@ -233,6 +235,7 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "OLYMPIAN2"
             | "RES_WALL"
             | "STUPID"
+            | "KILL_EXP"
     )
 }
 
@@ -7691,6 +7694,7 @@ fn map_jump_spell_token(
         "JMP_NETHER" => "nether",
         "JMP_NEXUS" => "nexus",
         "JMP_DISINTEGRATE" => "disintegrate",
+        "JMP_HELL_FIRE" => "hell-fire",
         _ => return None,
     };
     let (damage_dice, damage_sides, damage_bonus) = match explicit {
@@ -8338,6 +8342,8 @@ fn monster_json(
                 "LIGHT" | "LITE" => "light",
                 "DARK" => "dark",
                 "NETHER" => "nether",
+                "PLASMA" => "plasma",
+                "HELL_FIRE" => "hell-fire",
                 "DISINTEGRATE" => "disintegrate",
                 "HOLY_FIRE" => "holy-fire",
                 "CAUSE_2" | "CAUSE_3" => "curse",
@@ -8691,6 +8697,8 @@ fn demo_monster_json(
                     | "LITE"
                     | "DARK"
                     | "NETHER"
+                    | "PLASMA"
+                    | "HELL_FIRE"
                     | "DISINTEGRATE"
                     | "HOLY_FIRE"
                     | "CAUSE_2"
@@ -9440,13 +9448,14 @@ fn damage_spell_defaults(
         "BA_ELEC" => (Ball, "electricity", (1, 3 * level / 2, 8)),
         "BA_FIRE" => (Ball, "fire", (1, 7 * level / 2, 10)),
         "BA_COLD" => (Ball, "cold", (1, 3 * level / 2, 10)),
-        "BA_POISON" => (Ball, "poison", (12, 2, 0)),
+        "BA_POIS" | "BA_POISON" => (Ball, "poison", (12, 2, 0)),
         "BA_NUKE" => (Ball, "nuke", (10, 6, level)),
         "BA_WATER" => (Ball, "water", (1, level, 50)),
         // Rockets are shard bursts in the legacy resistance table.
         "ROCKET" => (Ball, "shards", (1, 1, (6 * level).saturating_sub(1))),
         "PULVERISE" => (Ball, "physical", (8, 8, 0)),
         "BA_NETHER" => (Ball, "nether", (10, 10, 50 + level)),
+        "BA_NEXUS" => (Ball, "nexus", (10, 10, level)),
         "BA_CHAOS" => (BigBall, "chaos", (10, 10, level)),
         "BA_DARK" => (BigBall, "dark", (10, 10, 50 + 4 * level)),
         "BA_LITE" => (BigBall, "light", (10, 10, 50 + 4 * level)),
@@ -9593,6 +9602,15 @@ fn map_summon_spell_token(
                     1,
                     3,
                     2,
+                    None,
+                ),
+                "caldarm-the-third" => (
+                    "summon-clone-of-locke-l65-1d3",
+                    "clone-of-locke",
+                    65,
+                    1,
+                    3,
+                    0,
                     None,
                 ),
                 _ => return None,
@@ -13662,7 +13680,10 @@ mod tests {
         );
         assert!(demo_monster_audit_omission_is_safe("POS_GAIN_AC"));
         assert!(demo_monster_audit_omission_is_safe("POS_BACKSTAB"));
+        assert!(demo_monster_audit_omission_is_safe("POS_SUST_CHR"));
+        assert!(demo_monster_audit_omission_is_safe("POS_SUST_DEX"));
         assert!(demo_monster_audit_omission_is_safe("POS_SUST_INT"));
+        assert!(demo_monster_audit_omission_is_safe("KILL_EXP"));
         assert!(demo_monster_audit_omission_is_safe("EGYPTIAN"));
         assert!(demo_monster_audit_omission_is_safe("EGYPTIAN2"));
         assert!(demo_monster_audit_omission_is_safe("HINDU2"));
@@ -14659,6 +14680,8 @@ mod tests {
             (7, "HOLY_FIRE", "holy-fire"),
             (8, "DARK", "dark"),
             (9, "DISINTEGRATE", "disintegrate"),
+            (10, "PLASMA", "plasma"),
+            (11, "HELL_FIRE", "hell-fire"),
         ] {
             let source = format!(
                 "N:{index}:test P59A aura\nG:p:o\nI:120:6d6:100:30:0:25\nW:63:1:999:50:0:0\nB:HIT:HURT(1d8)\nA:{token}(3d3)\nF:NEVER_MOVE\n"
@@ -15538,6 +15561,34 @@ S:1_IN_2 | BO_FIRE | BA_ACID | BO_FIRE(18d8+26) | THROW | BO_MANA\n";
     }
 
     #[test]
+    fn p68_poison_and_nexus_ball_tokens_reuse_existing_damage_effects() {
+        let mut abilities = BTreeMap::new();
+        let poison = map_spell_token(
+            "BA_POIS",
+            71,
+            2,
+            "demo.actor.izanami-spirit-of-yomi",
+            &mut abilities,
+        )
+        .expect("BA_POIS should map");
+        assert_eq!(poison, "rfb-legacy.ability.ball-poison-12d2");
+        assert_eq!(abilities[&poison]["effect"]["damageType"], "poison");
+        assert_eq!(abilities[&poison]["effect"]["radius"], 2);
+
+        let nexus = map_spell_token(
+            "BA_NEXUS(10d10+158)",
+            77,
+            2,
+            "demo.actor.nephthys-lady-of-the-night",
+            &mut abilities,
+        )
+        .expect("BA_NEXUS should map");
+        assert_eq!(nexus, "rfb-legacy.ability.ball-nexus-10d10-158");
+        assert_eq!(abilities[&nexus]["effect"]["damageType"], "nexus");
+        assert_eq!(abilities[&nexus]["effect"]["radius"], 2);
+    }
+
+    #[test]
     fn breath_freq_and_possessor_tokens_follow_legacy_semantics() {
         const DRAGON_R_INFO: &str = "\
 N:4:test ashen dragon\n\
@@ -15628,6 +15679,15 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
                 0,
                 0,
                 70,
+            ),
+            (
+                "JMP_HELL_FIRE(66)",
+                80,
+                "jump-hell-fire-1d1-65",
+                "hell-fire",
+                1,
+                1,
+                65,
             ),
             ("JMP_POISON", 32, "jump-poison-l32", "poison", 0, 0, 32),
             (
@@ -16217,6 +16277,24 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         assert_eq!(nightmare["countDice"], 1);
         assert_eq!(nightmare["countSides"], 3);
         assert_eq!(nightmare["countBonus"], 2);
+        let caldarm_id = map_spell_token(
+            "S_SPECIAL",
+            79,
+            2,
+            "demo.actor.caldarm-the-third",
+            &mut abilities,
+        )
+        .expect("Caldarm special should map");
+        assert_eq!(
+            caldarm_id,
+            "rfb-legacy.ability.summon-clone-of-locke-l65-1d3"
+        );
+        let caldarm = &abilities[&caldarm_id]["effect"];
+        assert_eq!(caldarm["category"], "clone-of-locke");
+        assert_eq!(caldarm["maximumLevel"], 65);
+        assert_eq!(caldarm["countDice"], 1);
+        assert_eq!(caldarm["countSides"], 3);
+        assert!(caldarm.get("countBonus").is_none());
         assert!(
             map_spell_token(
                 "S_SPECIAL",

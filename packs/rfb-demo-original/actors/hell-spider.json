@@ -1,0 +1,94 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 1177,
+    "maxDepth": 999,
+    "rarity": 6
+  },
+  "attack": 20,
+  "contactAuras": [
+    {
+      "damageDice": 2,
+      "damageSides": 6,
+      "damageType": "hell-fire"
+    }
+  ],
+  "damageDice": 6,
+  "damageSides": 6,
+  "damageType": "hell-fire",
+  "defense": 5,
+  "descriptionKey": "actor-demo-hell-spider-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1500,
+  "formatVersion": 1,
+  "glyph": "S",
+  "hitPointDice": {
+    "dice": 60,
+    "sides": 20
+  },
+  "id": "demo.actor.hell-spider",
+  "level": 80,
+  "maxHp": 630,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 6,
+            "damageType": "hell-fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 6,
+            "damageType": "hell-fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.jump-hell-fire-1d1-65",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "nameKey": "actor-demo-hell-spider-name",
+  "resistances": {
+    "fire": "resistant"
+  },
+  "role": "monster",
+  "speed": 125,
+  "tags": [
+    "animal",
+    "demon",
+    "evil",
+    "kin-glyph-83",
+    "legacy-import",
+    "orc-cave",
+    "spider",
+    "weird-mind"
+  ]
+}

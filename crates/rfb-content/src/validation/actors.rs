@@ -314,6 +314,8 @@ pub(super) fn validate_actors(
                         | ActorDamageType::Light
                         | ActorDamageType::Nether
                         | ActorDamageType::HolyFire
+                        | ActorDamageType::HellFire
+                        | ActorDamageType::Plasma
                         | ActorDamageType::Electricity
                         | ActorDamageType::Dark
                         | ActorDamageType::Disintegrate

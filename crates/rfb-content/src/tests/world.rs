@@ -733,7 +733,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 690);
+    assert_eq!(orc_cave.len(), 697);
 
     for id in [
         "demo.actor.bunyip",
@@ -782,7 +782,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 6, 6, 4, 4, 6, 7, 4, 7, 5, 10,
+            6, 9, 7, 6, 5, 4, 6, 7, 5, 7, 6, 13,
         ]
     );
 
@@ -5190,6 +5190,120 @@ fn p67_level_77_80_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p68_low_risk_mappings_keep_source_semantics() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, legacy_index, level) in [
+        ("izanami-spirit-of-yomi", 1138, 71),
+        ("uriel-angel-of-fire", 764, 73),
+        ("nephthys-lady-of-the-night", 1264, 77),
+        ("caldarm-the-third", 931, 79),
+        ("hell-spider", 1177, 80),
+        ("metal-babble", 871, 80),
+        ("metal-babble-unique", 1110, 80),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+    }
+
+    assert!(matches!(
+        ability("ball-poison-12d2").effect,
+        AbilityEffectDefinition::AreaDamage {
+            damage_dice: 12,
+            damage_sides: 2,
+            damage_bonus: 0,
+            damage_type: ActorDamageType::Poison,
+            radius: 2,
+            ..
+        }
+    ));
+    assert!(matches!(
+        ability("ball-nexus-10d10-158").effect,
+        AbilityEffectDefinition::AreaDamage {
+            damage_dice: 10,
+            damage_sides: 10,
+            damage_bonus: 158,
+            damage_type: ActorDamageType::Nexus,
+            radius: 2,
+            ..
+        }
+    ));
+
+    let uriel_aura = &actor("uriel-angel-of-fire").contact_auras[0];
+    assert_eq!(uriel_aura.damage_type, ActorDamageType::Plasma);
+    assert_eq!((uriel_aura.damage_dice, uriel_aura.damage_sides), (4, 5));
+
+    let hell_spider_aura = &actor("hell-spider").contact_auras[0];
+    assert_eq!(hell_spider_aura.damage_type, ActorDamageType::HellFire);
+    assert_eq!(
+        (hell_spider_aura.damage_dice, hell_spider_aura.damage_sides),
+        (2, 6)
+    );
+    assert!(matches!(
+        ability("jump-hell-fire-1d1-65").effect,
+        AbilityEffectDefinition::JumpDamage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 65,
+            damage_multiplier_numerator: 5,
+            damage_multiplier_denominator: 4,
+            damage_type: ActorDamageType::HellFire,
+            radius: 5,
+            blink_radius: 10,
+        }
+    ));
+
+    assert!(
+        actor("clone-of-locke-the-superman")
+            .tags
+            .iter()
+            .any(|tag| tag == "clone-of-locke")
+    );
+    assert!(matches!(
+        ability("summon-clone-of-locke-l65-1d3").effect,
+        AbilityEffectDefinition::SummonCategory {
+            ref category,
+            maximum_level: 65,
+            count_dice: 1,
+            count_sides: 3,
+            count_bonus: 0,
+            ..
+        } if category == "clone-of-locke"
+    ));
+
+    let normal_babble = actor("metal-babble");
+    let unique_babble = actor("metal-babble-unique");
+    assert_eq!(normal_babble.experience_value, 400_000);
+    assert_eq!(unique_babble.experience_value, 400_000);
+    assert!(!normal_babble.tags.iter().any(|tag| tag == "unique"));
+    assert!(unique_babble.tags.iter().any(|tag| tag == "unique"));
+}
+
+#[test]
 fn p64b_low_risk_mappings_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -5676,6 +5790,7 @@ fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
             "demo.actor.planetar",
             "demo.actor.seraph",
             "demo.actor.solar",
+            "demo.actor.uriel-angel-of-fire",
         ]
         .into_iter()
         .collect()
@@ -7486,7 +7601,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        622
+        628
     );
 }
 
