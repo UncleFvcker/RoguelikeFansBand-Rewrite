@@ -1,0 +1,197 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1350,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 20,
+  "capturePolicy": "pet-only",
+  "damageDice": 9,
+  "damageSides": 18,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items-and-gold",
+    "minimumQuality": "exceptional",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.warrior"
+  },
+  "defense": 19,
+  "descriptionKey": "actor-demo-tyr-the-one-armed-god-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 65000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 128,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.tyr-the-one-armed-god",
+  "level": 83,
+  "maxHp": 12800,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 9,
+            "durationSides": 9,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 9,
+            "durationSides": 9,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 9,
+            "durationSides": 9,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 9,
+            "damageSides": 9,
+            "type": "confusion"
+          },
+          {
+            "type": "slow"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-sound-17-450-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-shards-1d1-414",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.confuse",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blind",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-fire-1d581-20",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink-other",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-tyr-the-one-armed-god-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "shards": "resistant",
+    "sound": "resistant"
+  },
+  "role": "monster",
+  "speed": 135,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "good",
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "norse",
+    "orc-cave",
+    "unique"
+  ]
+}

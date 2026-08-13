@@ -1,0 +1,346 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 847,
+    "maxDepth": 999,
+    "rarity": 7
+  },
+  "attack": 22,
+  "contactAuras": [
+    {
+      "damageDice": 3,
+      "damageSides": 3,
+      "damageType": "light"
+    },
+    {
+      "damageDice": 3,
+      "damageSides": 3,
+      "damageType": "dark"
+    },
+    {
+      "damageDice": 3,
+      "damageSides": 3,
+      "damageType": "shards"
+    }
+  ],
+  "damageDice": 5,
+  "damageSides": 12,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 11,
+  "descriptionKey": "actor-demo-great-wyrm-of-power-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 90000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "D",
+  "hitPointDice": {
+    "dice": 111,
+    "forceMaximum": true,
+    "sides": 111
+  },
+  "id": "demo.actor.great-wyrm-of-power",
+  "level": 90,
+  "light": {
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 12321,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 80,
+            "damageDice": 3,
+            "damageSides": 12,
+            "damageType": "plasma",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 20,
+            "damageDice": 3,
+            "damageSides": 12,
+            "damageType": "gravity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 90,
+            "damageDice": 3,
+            "damageSides": 12,
+            "damageType": "chaos",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 10,
+            "damageDice": 3,
+            "damageSides": 12,
+            "damageType": "nexus",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 50,
+            "damageDice": 3,
+            "damageSides": 12,
+            "damageType": "disenchant",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 50,
+            "damageDice": 3,
+            "damageSides": 12,
+            "damageType": "dark",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 18,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 50,
+            "damageDice": 3,
+            "damageSides": 18,
+            "damageType": "sound",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 50,
+            "damageDice": 3,
+            "damageSides": 18,
+            "damageType": "shards",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.summon-dragon-l90-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-dragon-l90-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.kin-great-wyrm-of-power",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nuke-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-acid-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-cold-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-poison-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nether-14-550-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-light-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-confusion-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-sound-17-450-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disenchant-17-500-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-nexus-33-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-time-33-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-inertia-17-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-gravity-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-shards-17-500-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-plasma-17-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-force-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-mana-33-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-great-wyrm-of-power-name",
+  "reflectsBolts": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "disintegrate": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "gravity": "resistant",
+    "inertia": "resistant",
+    "light": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant",
+    "shards": "resistant",
+    "sound": "resistant",
+    "time": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "aura-fear",
+    "dragon",
+    "good",
+    "kin-glyph-68",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport"
+  ]
+}

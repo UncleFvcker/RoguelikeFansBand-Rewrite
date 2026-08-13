@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.psy-spear-1d164-150",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 150,
+      "damageDice": 1,
+      "damageSides": 164,
+      "damageType": "psi",
+      "type": "beam-damage"
+    }
+  ]
+}

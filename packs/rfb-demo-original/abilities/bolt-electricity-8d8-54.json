@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.bolt-electricity-8d8-54",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-legacy-bolt-electricity-8d8-54-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.bolt-electricity-8d8-54",
+  "nameKey": "ability-legacy-bolt-electricity-8d8-54-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

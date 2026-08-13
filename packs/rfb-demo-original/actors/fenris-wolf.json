@@ -1,0 +1,153 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 846,
+    "maxDepth": 999,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 18,
+  "damageSides": 9,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 10,
+  "descriptionKey": "actor-demo-fenris-wolf-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 38720,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "C",
+  "hitPointDice": {
+    "dice": 72,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.fenris-wolf",
+  "killsWeakerBodies": true,
+  "level": 90,
+  "maxHp": 7200,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 18,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 9,
+            "durationSides": 9,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 18,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-poison-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-cold-20-900-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 10
+  },
+  "nameKey": "actor-demo-fenris-wolf-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 140,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "animal",
+    "evil",
+    "hound",
+    "kin-glyph-67",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

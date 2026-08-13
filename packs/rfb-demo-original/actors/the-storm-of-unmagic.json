@@ -1,0 +1,147 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1193,
+    "maxDepth": 999,
+    "randomMovementPercent": 75,
+    "rarity": 4
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 4,
+      "damageSides": 6,
+      "damageType": "cold"
+    }
+  ],
+  "damageDice": 7,
+  "damageSides": 7,
+  "damageType": "chaos",
+  "defense": 12,
+  "descriptionKey": "actor-demo-the-storm-of-unmagic-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 40000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "v",
+  "hitPointDice": {
+    "dice": 65,
+    "forceMaximum": true,
+    "sides": 97
+  },
+  "id": "demo.actor.the-storm-of-unmagic",
+  "level": 90,
+  "maxHp": 6305,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "chaos",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "disenchant",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "disenchant",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "time",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disenchant-17-500-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-time-33-150-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-the-storm-of-unmagic-name",
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune",
+    "time": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "kin-glyph-118",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

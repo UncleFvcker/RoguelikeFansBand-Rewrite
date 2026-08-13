@@ -1,0 +1,177 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1165,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 5,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 18,
+  "descriptionKey": "actor-demo-king-ghidora-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 75000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "D",
+  "hitPointDice": {
+    "dice": 85,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.king-ghidora",
+  "level": 85,
+  "maxHp": 8500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 15,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 15,
+            "damageType": "chaos",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 10,
+            "durationDice": 8,
+            "durationSides": 15,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 12,
+            "damageType": "disenchant",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.crush",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-disenchant-17-500-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-plasma-17-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-chaos-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 40
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-king-ghidora-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "cold": "resistant",
+    "disenchant": "resistant",
+    "fire": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "dragon",
+    "evil",
+    "kin-glyph-68",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}

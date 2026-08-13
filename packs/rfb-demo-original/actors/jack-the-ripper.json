@@ -1,0 +1,195 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1204,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 15,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      },
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 12,
+  "descriptionKey": "actor-demo-jack-the-ripper-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 50000,
+  "formatVersion": 1,
+  "glyph": "p",
+  "hitPointDice": {
+    "dice": 80,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.jack-the-ripper",
+  "level": 90,
+  "maxHp": 8000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 15,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": true,
+            "chancePercent": 20,
+            "damageDice": 15,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 15,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 15,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength",
+              "dexterity",
+              "constitution",
+              "intelligence",
+              "wisdom",
+              "charisma"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 15,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength",
+              "dexterity",
+              "constitution",
+              "intelligence",
+              "wisdom",
+              "charisma"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-270",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.darkness",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.traps",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16,
+    "smart": true
+  },
+  "nameKey": "actor-demo-jack-the-ripper-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "role": "monster",
+  "speed": 150,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "human",
+    "kin-glyph-112",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

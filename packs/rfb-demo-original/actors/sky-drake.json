@@ -45,6 +45,10 @@
   "doorInteraction": {
     "bashes": true
   },
+  "evolution": {
+    "nextActorKindId": "demo.actor.great-wyrm-of-power",
+    "requiredExperience": 600000
+  },
   "experienceValue": 40000,
   "forceSleep": true,
   "formatVersion": 1,

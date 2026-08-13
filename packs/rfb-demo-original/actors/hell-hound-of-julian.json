@@ -1,0 +1,136 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 3,
+      "sides": 3
+    },
+    "legacyIndex": 829,
+    "maxDepth": 999,
+    "randomMovementPercent": 25,
+    "rarity": 4
+  },
+  "attack": 20,
+  "contactAuras": [
+    {
+      "damageDice": 4,
+      "damageSides": 5,
+      "damageType": "fire"
+    }
+  ],
+  "damageDice": 4,
+  "damageSides": 12,
+  "damageType": "physical",
+  "defense": 8,
+  "descriptionKey": "actor-demo-hell-hound-of-julian-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 1500,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "C",
+  "hitPointDice": {
+    "dice": 48,
+    "forceMaximum": true,
+    "sides": 10
+  },
+  "id": "demo.actor.hell-hound-of-julian",
+  "level": 83,
+  "maxHp": 480,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 9,
+            "damageType": "hell-fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 9,
+            "damageType": "hell-fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 3,
+            "damageSides": 9,
+            "damageType": "hell-fire",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-hell-fire-17-250-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-hell-hound-of-julian-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "fire": "immune"
+  },
+  "role": "monster",
+  "speed": 120,
+  "tags": [
+    "animal",
+    "evil",
+    "hound",
+    "kin-glyph-67",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

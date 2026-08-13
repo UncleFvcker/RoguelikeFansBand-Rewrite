@@ -1,0 +1,156 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "escort": true,
+    "legacyIndex": 840,
+    "maxDepth": 999,
+    "randomMovementPercent": 25,
+    "rarity": 2
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 10,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 9,
+  "descriptionKey": "actor-demo-draugluin-sire-of-all-werewolves-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 30000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "C",
+  "hitPointDice": {
+    "dice": 70,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.draugluin-sire-of-all-werewolves",
+  "level": 87,
+  "maxHp": 7000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.claw",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 4,
+            "damageSides": 12,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 4,
+            "damageSides": 12,
+            "type": "poison"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l87-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-hound-l87-1d2-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-draugluin-sire-of-all-werewolves-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "animal",
+    "evil",
+    "hound",
+    "kin-glyph-67",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

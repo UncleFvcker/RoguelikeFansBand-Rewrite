@@ -1,0 +1,176 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "snow"
+    ],
+    "legacyIndex": 1358,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 20,
+  "capturePolicy": "pet-only",
+  "damageDice": 9,
+  "damageSides": 9,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine",
+    "themeChancePercent": 50,
+    "themeTableId": "demo.loot-table.archer"
+  },
+  "defense": 15,
+  "descriptionKey": "actor-demo-ullur-the-archer-god-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 60000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 80,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.ullur-the-archer-god",
+  "level": 82,
+  "maxHp": 8000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "cold",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-ice-6d8-82",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-ullur-the-archer-god-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "poison": "resistant",
+    "shards": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "kin-glyph-80",
+    "legacy-import",
+    "norse",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

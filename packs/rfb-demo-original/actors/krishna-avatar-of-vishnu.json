@@ -1,0 +1,157 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1371,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 8,
+  "damageSides": 12,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 17,
+  "descriptionKey": "actor-demo-krishna-avatar-of-vishnu-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 71380,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "p",
+  "hitPointDice": {
+    "dice": 128,
+    "forceMaximum": true,
+    "sides": 110
+  },
+  "id": "demo.actor.krishna-avatar-of-vishnu",
+  "level": 86,
+  "maxHp": 14080,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 4,
+            "durationSides": 6,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "time",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.heal-550",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l86-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-time-2d86-28",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 40,
+    "smart": true
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-krishna-avatar-of-vishnu-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "disintegrate": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 135,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "good",
+    "hindu",
+    "human",
+    "kin-glyph-112",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

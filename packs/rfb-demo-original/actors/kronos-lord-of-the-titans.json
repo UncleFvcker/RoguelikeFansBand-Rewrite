@@ -1,0 +1,200 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "escort": true,
+    "legacyIndex": 1051,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 13,
+  "damageSides": 13,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 15,
+  "descriptionKey": "actor-demo-kronos-lord-of-the-titans-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 50000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 110,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.kronos-lord-of-the-titans",
+  "level": 87,
+  "light": {
+    "intrinsic": false,
+    "radius": 2
+  },
+  "maxHp": 11000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-fire-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-cold-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-shards-17-500-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-sound-17-450-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-1d1-260",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l87-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.kin-kronos-lord-of-the-titans",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-261",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20,
+    "smart": true
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-kronos-lord-of-the-titans-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant",
+    "shards": "resistant",
+    "sound": "resistant",
+    "time": "resistant"
+  },
+  "role": "monster",
+  "speed": 125,
+  "tags": [
+    "evil",
+    "giant",
+    "kin-glyph-80",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

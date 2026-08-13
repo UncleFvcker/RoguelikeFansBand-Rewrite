@@ -1,0 +1,173 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1166,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 8,
+  "damageSides": 13,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 17,
+  "descriptionKey": "actor-demo-thanatos-god-of-death-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 66000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 132,
+    "forceMaximum": true,
+    "sides": 84
+  },
+  "id": "demo.actor.thanatos-god-of-death",
+  "level": 88,
+  "maxHp": 11088,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "constitution"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 9,
+            "damageSides": 9,
+            "type": "disease"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d308-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-nether-5d5-118",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-264",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.anti-magic",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-thanatos-god-of-death-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "light": "vulnerable",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 145,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "kin-glyph-80",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ]
+}

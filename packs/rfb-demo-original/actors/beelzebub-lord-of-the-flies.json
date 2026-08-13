@@ -1,0 +1,155 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1194,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 15,
+  "damageSides": 15,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 17,
+  "descriptionKey": "actor-demo-beelzebub-lord-of-the-flies-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 41100,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "I",
+  "hitPointDice": {
+    "dice": 113,
+    "forceMaximum": true,
+    "sides": 87
+  },
+  "id": "demo.actor.beelzebub-lord-of-the-flies",
+  "level": 90,
+  "maxHp": 9831,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 15,
+            "damageSides": 15,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 15,
+            "damageSides": 15,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 37,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "disease"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-confusion-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-inertia-17-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l90-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-beelzebub-lord-of-the-flies-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "electricity": "resistant",
+    "light": "vulnerable",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "demon",
+    "evil",
+    "kin-glyph-73",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ]
+}

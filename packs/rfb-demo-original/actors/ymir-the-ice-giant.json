@@ -1,0 +1,219 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "snow"
+    ],
+    "legacyIndex": 834,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "chancePercent": 25,
+      "damageDice": 3,
+      "damageSides": 4,
+      "damageType": "ice"
+    },
+    {
+      "damageDice": 4,
+      "damageSides": 6,
+      "damageType": "cold"
+    }
+  ],
+  "damageDice": 5,
+  "damageSides": 10,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 16,
+  "descriptionKey": "actor-demo-ymir-the-ice-giant-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 40000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 86,
+    "forceMaximum": true,
+    "sides": 99
+  },
+  "id": "demo.actor.ymir-the-ice-giant",
+  "level": 85,
+  "maxHp": 8514,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 10,
+            "damageType": "ice",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 10,
+            "damageType": "ice",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 10,
+            "damageType": "ice",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 10,
+            "damageType": "ice",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-cold-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-ice-6d8-127",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.darkness",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-255",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.kin-ymir-the-ice-giant",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l85-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-1d1-254",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-ymir-the-ice-giant-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "cold": "immune",
+    "disenchant": "resistant",
+    "fire": "vulnerable",
+    "nether": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "evil",
+    "giant",
+    "kin-glyph-80",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

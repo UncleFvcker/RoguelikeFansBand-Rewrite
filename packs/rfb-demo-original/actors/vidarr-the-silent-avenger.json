@@ -1,0 +1,187 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1351,
+    "maxDepth": 999,
+    "rarity": 8
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "damageDice": 9,
+  "damageSides": 18,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 20,
+  "descriptionKey": "actor-demo-vidarr-the-silent-avenger-description",
+  "experienceValue": 87846,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 110,
+    "forceMaximum": true,
+    "sides": 110
+  },
+  "id": "demo.actor.vidarr-the-silent-avenger",
+  "level": 87,
+  "maxHp": 12100,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 9,
+            "durationSides": 9,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "slow"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 9,
+            "damageSides": 18,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 6,
+            "durationSides": 9,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.kick",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-force-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-dark-10d10-398",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-gravity-33-200-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.psy-spear-1d174-150",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d304-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink-other",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-electricity-15d15-200",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-vidarr-the-silent-avenger-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disintegrate": "resistant",
+    "electricity": "resistant",
+    "fire": "immune",
+    "gravity": "resistant",
+    "nether": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 133,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "norse",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

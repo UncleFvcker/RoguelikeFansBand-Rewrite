@@ -1,0 +1,176 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "swamp",
+      "waste"
+    ],
+    "legacyIndex": 866,
+    "maxDepth": 999,
+    "rarity": 8
+  },
+  "attack": 22,
+  "contactAuras": [
+    {
+      "damageDice": 4,
+      "damageSides": 6,
+      "damageType": "cold"
+    }
+  ],
+  "damageDice": 13,
+  "damageSides": 13,
+  "damageType": "physical",
+  "defense": 17,
+  "descriptionKey": "actor-demo-caaws-description",
+  "experienceValue": 35000,
+  "formatVersion": 1,
+  "glyph": "E",
+  "hitPointDice": {
+    "dice": 15,
+    "forceMaximum": true,
+    "sides": 231
+  },
+  "id": "demo.actor.caaws",
+  "killsWeakerBodies": true,
+  "level": 90,
+  "maxHp": 3465,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "drain-charges"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "disenchant"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 13,
+            "damageSides": 13,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "attributes": [
+              "strength",
+              "dexterity",
+              "constitution",
+              "intelligence",
+              "wisdom",
+              "charisma"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 13,
+            "amountSides": 13,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.heal-270",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.invulnerability-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.anti-magic",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-caaws-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "gravity": "resistant",
+    "inertia": "resistant",
+    "light": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant",
+    "shards": "resistant",
+    "sound": "resistant",
+    "time": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "demon",
+    "empty-mind",
+    "evil",
+    "kin-glyph-69",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport"
+  ]
+}

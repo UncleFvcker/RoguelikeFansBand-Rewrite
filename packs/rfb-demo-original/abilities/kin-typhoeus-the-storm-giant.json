@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-typhoeus-the-storm-giant",
+  "descriptionKey": "ability-legacy-kin-typhoeus-the-storm-giant-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-typhoeus-the-storm-giant",
+  "nameKey": "ability-legacy-kin-typhoeus-the-storm-giant-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

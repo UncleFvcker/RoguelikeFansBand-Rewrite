@@ -6967,6 +6967,264 @@
       "id": "jambavan-king-of-the-beasts",
       "tags": ["mount-meru"],
       "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 880,
+      "id": "richard-wong-master-of-time",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 827,
+      "id": "pazuzu-lord-of-air",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 828,
+      "id": "ithaqua-the-windwalker",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1358,
+      "id": "ullur-the-archer-god",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SUST_STR", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 829,
+      "id": "hell-hound-of-julian",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1350,
+      "id": "tyr-the-one-armed-god",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 830,
+      "id": "cantoras-the-skeletal-lord",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 838,
+      "id": "the-tarrasque",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1353,
+      "id": "njord-lord-of-the-vanir",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 833,
+      "id": "abhoth-source-of-uncleanness",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "NO_STUN", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 834,
+      "id": "ymir-the-ice-giant",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 839,
+      "id": "lungorthin-the-balrog-of-white-fire",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1031,
+      "id": "wahha-man-the-golden",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1127,
+      "id": "typhoeus-the-storm-giant",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1160,
+      "id": "nebiros-the-marquis",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1165,
+      "id": "king-ghidora",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1305,
+      "id": "pryftidustulyx-the-communist-dragon",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1342,
+      "id": "freyr-lord-of-plenty",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1364,
+      "id": "hanuman-the-monkey-god",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 836,
+      "id": "star-spawn-of-cthulhu",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1000,
+      "id": "bahamut-celestial-dragon-of-good",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1349,
+      "id": "thor-the-thunderer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_GAIN_AC", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1370,
+      "id": "rama-the-exiled-prince",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1371,
+      "id": "krishna-avatar-of-vishnu",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 840,
+      "id": "draugluin-sire-of-all-werewolves",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1051,
+      "id": "kronos-lord-of-the-titans",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1351,
+      "id": "vidarr-the-silent-avenger",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1366,
+      "id": "karthikeya-the-six-headed-warrior",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1166,
+      "id": "thanatos-god-of-death",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "OLYMPIAN2"]
+    },
+    {
+      "sourceIndex": 1242,
+      "id": "anubis-keeper-of-the-balance",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["EGYPTIAN", "MALE", "NO_STUN"]
+    },
+    {
+      "sourceIndex": 1263,
+      "id": "isis-the-great-goddess",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "EGYPTIAN", "FEMALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1379,
+      "id": "yama-lord-of-the-dead",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 842,
+      "id": "tulzscha-the-green-flame",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1169,
+      "id": "chitauli",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "NO_STUN"]
+    },
+    {
+      "sourceIndex": 1245,
+      "id": "apophis-the-primordial-chaos",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "EGYPTIAN2", "NO_STUN"]
+    },
+    {
+      "sourceIndex": 846,
+      "id": "fenris-wolf",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 847,
+      "id": "great-wyrm-of-power",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 866,
+      "id": "caaws",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["KILL_EXP", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "RES_WALL", "STUPID"]
+    },
+    {
+      "sourceIndex": 1178,
+      "id": "star-blade",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1193,
+      "id": "the-storm-of-unmagic",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1194,
+      "id": "beelzebub-lord-of-the-flies",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1204,
+      "id": "jack-the-ripper",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1384,
+      "id": "kali-mother-of-rage",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SUST_STR", "POS_TELEPATHY"]
     }
   ]
 }

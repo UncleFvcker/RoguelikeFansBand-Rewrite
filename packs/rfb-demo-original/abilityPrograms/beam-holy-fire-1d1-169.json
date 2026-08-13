@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.beam-holy-fire-1d1-169",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 169,
+      "damageDice": 1,
+      "damageSides": 1,
+      "damageType": "holy-fire",
+      "type": "beam-damage"
+    }
+  ]
+}

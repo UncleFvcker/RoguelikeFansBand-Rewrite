@@ -1,0 +1,136 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1169,
+    "maxDepth": 999,
+    "rarity": 12
+  },
+  "attack": 22,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 12,
+  "descriptionKey": "actor-demo-chitauli-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 33000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "R",
+  "hitPointDice": {
+    "dice": 133,
+    "forceMaximum": true,
+    "sides": 65
+  },
+  "id": "demo.actor.chitauli",
+  "level": 89,
+  "maxHp": 8645,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 2,
+            "damageSides": 5,
+            "damageType": "disenchant",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-poison-17-600-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-acid-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-dark-17-400-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.mind-blast-7d7",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-legacy-import-l89-1d3-1",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-chitauli-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "acid": "immune",
+    "cold": "resistant",
+    "dark": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "kin-glyph-82",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

@@ -1087,14 +1087,6 @@ fn kebab(raw: &str) -> String {
     id
 }
 
-fn actor_file_stem(raw: &str) -> String {
-    kebab(
-        &raw.chars()
-            .filter(|ch| !matches!(ch, '\'' | '’'))
-            .collect::<String>(),
-    )
-}
-
 fn resolve_legacy_content_commit(source: &Path) -> Result<String, LegacyImportError> {
     let resolved = Command::new("git")
         .arg("-C")
@@ -12411,23 +12403,20 @@ pub fn sync_demo_monsters(
         .iter()
         .map(|monster| monster.source_index)
         .collect::<BTreeSet<_>>();
-    let mut actor_ids_by_source_name = BTreeMap::new();
+    let mut actor_ids_by_source_index = BTreeMap::new();
     for monster in &selection.monsters {
-        let source = by_index.get(&monster.source_index).ok_or_else(|| {
+        by_index.get(&monster.source_index).ok_or_else(|| {
             LegacyImportError::InvalidDemoMonsterSelection(format!(
                 "unknown legacy source index {}",
                 monster.source_index
             ))
         })?;
-        if actor_ids_by_source_name
-            .insert(
-                actor_file_stem(&source.name),
-                format!("demo.actor.{}", monster.id),
-            )
+        if actor_ids_by_source_index
+            .insert(monster.source_index, format!("demo.actor.{}", monster.id))
             .is_some()
         {
             return Err(LegacyImportError::InvalidDemoMonsterSelection(
-                "selected monster source names must be unique".to_owned(),
+                "selected monster source indexes must be unique".to_owned(),
             ));
         }
     }
@@ -12450,9 +12439,15 @@ pub fn sync_demo_monsters(
             let Some(actor_id) = actor["id"].as_str() else {
                 continue;
             };
+            let Some(source_index) = actor["allocation"]["legacyIndex"].as_u64() else {
+                continue;
+            };
+            let Ok(source_index) = u32::try_from(source_index) else {
+                continue;
+            };
             if actor_id == format!("demo.actor.{stem}") {
-                actor_ids_by_source_name
-                    .entry(stem.to_owned())
+                actor_ids_by_source_index
+                    .entry(source_index)
                     .or_insert_with(|| actor_id.to_owned());
             }
         }
@@ -12545,8 +12540,7 @@ pub fn sync_demo_monsters(
         )?;
     }
     for entry in &entries {
-        let source_name = actor_file_stem(&entry.name);
-        let Some(actor_id) = actor_ids_by_source_name.get(&source_name) else {
+        let Some(actor_id) = actor_ids_by_source_index.get(&entry.index) else {
             continue;
         };
         let actor_path = output.join(format!(
@@ -12566,14 +12560,12 @@ pub fn sync_demo_monsters(
             && required_experience > 0
             && target_index > 0
         {
-            let target = by_index.get(&target_index).ok_or_else(|| {
+            by_index.get(&target_index).ok_or_else(|| {
                 LegacyImportError::InvalidDemoMonsterSelection(format!(
                     "{actor_id} references unknown evolution target {target_index}"
                 ))
             })?;
-            if let Some(next_actor_kind_id) =
-                actor_ids_by_source_name.get(&actor_file_stem(&target.name))
-            {
+            if let Some(next_actor_kind_id) = actor_ids_by_source_index.get(&target_index) {
                 actor["evolution"] = serde_json::json!({
                     "requiredExperience": required_experience,
                     "nextActorKindId": next_actor_kind_id,

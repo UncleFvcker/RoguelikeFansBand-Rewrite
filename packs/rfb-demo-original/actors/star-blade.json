@@ -1,0 +1,165 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1178,
+    "maxDepth": 999,
+    "rarity": 10
+  },
+  "attack": 22,
+  "damageDice": 7,
+  "damageSides": 4,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [
+      {
+        "guaranteedForUnique": true,
+        "percent": 90
+      }
+    ],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 15,
+  "descriptionKey": "actor-demo-star-blade-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 42000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "A",
+  "hitPointDice": {
+    "dice": 90,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.star-blade",
+  "level": 90,
+  "light": {
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 9000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 50,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 10,
+            "durationSides": 5,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 50,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 10,
+            "durationSides": 5,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-mana-33-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disenchant-17-500-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-angel-l90-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-star-blade-name",
+  "reflectsBolts": true,
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "angel",
+    "aura-fear",
+    "good",
+    "kin-glyph-65",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport"
+  ],
+  "terrainInteraction": {
+    "destroysItems": true,
+    "destroysWalls": true
+  }
+}

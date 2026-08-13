@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.breath-hell-fire-17-250-r3",
+  "descriptionKey": "ability-legacy-breath-hell-fire-17-250-r3-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.breath-hell-fire-17-250-r3",
+  "nameKey": "ability-legacy-breath-hell-fire-17-250-r3-name",
+  "tags": [
+    "breath",
+    "damage",
+    "legacy-import"
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

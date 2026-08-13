@@ -546,3 +546,16 @@ git diff --stat
   active baseline `contract-v292`（26 条 exact fixture、零 waiver），content hash
   `f66b18b842e434ef84787e664a4fe94107a27b2f47bbf0a6ddffb087c0c0284b`。
   `codex/monsters-next` 分支及工作树继续保留。
+
+## 33. monsters-next 当前交接（P73 L81–90 直接导入）
+
+- P73A 导入 L81–85 的 19 个普通分配 actor，P73B 导入 L86–90 的 24 个普通分配 actor；
+  全部保留 RFB master 的 source index、层级、权威中文名和 Orc Cave 分配。
+- 本批新增 97 个由现有运行时表达的参数化 ability/program，并补齐 Sky Drake 到 Great Wyrm
+  of Power 的权威进化链；没有新增 DTO、协议、存档或 state-hash 字段，不刷新 replay fixture。
+- 怪物同步器的进化关联改为使用权威 source index，允许普通版和唯一版 Metal Babble 这类
+  同名记录共存，且不会把进化目标错误绑定到同名 actor。
+- 共享协调点：pack `1.313.0` / content hash
+  `d8486a55c802382012ad85738f199162cd0bed95bb824b335c89c9fdb42911ea`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变。

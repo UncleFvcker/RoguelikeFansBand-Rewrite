@@ -1,0 +1,214 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1127,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 4,
+      "damageSides": 6,
+      "damageType": "electricity"
+    }
+  ],
+  "damageDice": 6,
+  "damageSides": 12,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      },
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 17,
+  "descriptionKey": "actor-demo-typhoeus-the-storm-giant-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 50000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 93,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.typhoeus-the-storm-giant",
+  "level": 85,
+  "light": {
+    "intrinsic": true,
+    "radius": 2
+  },
+  "maxHp": 9300,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 12,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-electricity-20-900-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-1d1-254",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.banish",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-255",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.kin-typhoeus-the-storm-giant",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l85-1d3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25,
+    "smart": true
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-typhoeus-the-storm-giant-name",
+  "regenerates": true,
+  "resistances": {
+    "electricity": "immune",
+    "nether": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "giant",
+    "kin-glyph-80",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

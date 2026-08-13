@@ -739,7 +739,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 706);
+    assert_eq!(orc_cave.len(), 749);
 
     for id in [
         "demo.actor.bunyip",
@@ -772,10 +772,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
-    let mut level_counts = [0_usize; 60];
+    let mut level_counts = [0_usize; 70];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
-        assert!((21..=80).contains(&actor.level));
+        assert!((21..=90).contains(&actor.level));
         let allocation = actor
             .allocation
             .as_ref()
@@ -788,7 +788,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13,
+            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 1, 3, 2, 3, 10, 5, 4, 4, 3, 8,
         ]
     );
 
@@ -5196,6 +5196,90 @@ fn p67_level_77_80_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p73_level_81_90_direct_monsters_keep_source_identity() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("richard-wong-master-of-time", 880, 81),
+        ("pazuzu-lord-of-air", 827, 82),
+        ("ithaqua-the-windwalker", 828, 82),
+        ("ullur-the-archer-god", 1358, 82),
+        ("hell-hound-of-julian", 829, 83),
+        ("tyr-the-one-armed-god", 1350, 83),
+        ("cantoras-the-skeletal-lord", 830, 84),
+        ("the-tarrasque", 838, 84),
+        ("njord-lord-of-the-vanir", 1353, 84),
+        ("abhoth-source-of-uncleanness", 833, 85),
+        ("ymir-the-ice-giant", 834, 85),
+        ("lungorthin-the-balrog-of-white-fire", 839, 85),
+        ("wahha-man-the-golden", 1031, 85),
+        ("typhoeus-the-storm-giant", 1127, 85),
+        ("nebiros-the-marquis", 1160, 85),
+        ("king-ghidora", 1165, 85),
+        ("pryftidustulyx-the-communist-dragon", 1305, 85),
+        ("freyr-lord-of-plenty", 1342, 85),
+        ("hanuman-the-monkey-god", 1364, 85),
+        ("star-spawn-of-cthulhu", 836, 86),
+        ("bahamut-celestial-dragon-of-good", 1000, 86),
+        ("thor-the-thunderer", 1349, 86),
+        ("rama-the-exiled-prince", 1370, 86),
+        ("krishna-avatar-of-vishnu", 1371, 86),
+        ("draugluin-sire-of-all-werewolves", 840, 87),
+        ("kronos-lord-of-the-titans", 1051, 87),
+        ("vidarr-the-silent-avenger", 1351, 87),
+        ("karthikeya-the-six-headed-warrior", 1366, 87),
+        ("thanatos-god-of-death", 1166, 88),
+        ("anubis-keeper-of-the-balance", 1242, 88),
+        ("isis-the-great-goddess", 1263, 88),
+        ("yama-lord-of-the-dead", 1379, 88),
+        ("tulzscha-the-green-flame", 842, 89),
+        ("chitauli", 1169, 89),
+        ("apophis-the-primordial-chaos", 1245, 89),
+        ("fenris-wolf", 846, 90),
+        ("great-wyrm-of-power", 847, 90),
+        ("caaws", 866, 90),
+        ("star-blade", 1178, 90),
+        ("the-storm-of-unmagic", 1193, 90),
+        ("beelzebub-lord-of-the-flies", 1194, 90),
+        ("jack-the-ripper", 1204, 90),
+        ("kali-mother-of-rage", 1384, 90),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+
+    let sky_drake = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.sky-drake")
+        .expect("Sky Drake should remain imported");
+    let evolution = sky_drake
+        .evolution
+        .as_ref()
+        .expect("P73 should complete Sky Drake's evolution target");
+    assert_eq!(evolution.required_experience, 600_000);
+    assert_eq!(
+        evolution.next_actor_kind_id,
+        "demo.actor.great-wyrm-of-power"
+    );
+}
+
+#[test]
 fn p68_low_risk_mappings_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -5353,9 +5437,15 @@ fn p69_pantheon_monsters_keep_source_identity_and_norse_summoning() {
         norse_ids,
         [
             "demo.actor.aegir-god-king-of-the-sea-giants",
+            "demo.actor.freyr-lord-of-plenty",
             "demo.actor.heimdall-guardian-of-bifrost",
             "demo.actor.magni-son-of-thor",
+            "demo.actor.njord-lord-of-the-vanir",
             "demo.actor.skadi-the-huntress",
+            "demo.actor.thor-the-thunderer",
+            "demo.actor.tyr-the-one-armed-god",
+            "demo.actor.ullur-the-archer-god",
+            "demo.actor.vidarr-the-silent-avenger",
         ]
         .into_iter()
         .collect()
@@ -6076,6 +6166,7 @@ fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
             "demo.actor.planetar",
             "demo.actor.seraph",
             "demo.actor.solar",
+            "demo.actor.star-blade",
             "demo.actor.uriel-angel-of-fire",
         ]
         .into_iter()
@@ -7887,7 +7978,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        643
+        682
     );
 }
 
@@ -7984,7 +8075,7 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
                 .filter(|drop| drop.theme_table_id.as_deref() == Some("demo.loot-table.warrior"))
         })
         .collect::<Vec<_>>();
-    assert_eq!(warrior_drops.len(), 94);
+    assert_eq!(warrior_drops.len(), 98);
     assert!(
         warrior_drops
             .iter()
