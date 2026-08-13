@@ -1158,6 +1158,46 @@ fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic(
         Game::new_with_build(17, "demo.build.missing"),
         Err(CoreError::UnknownCharacterBuild(_))
     ));
+    assert!(matches!(
+        Game::new_with_build_race_and_name(
+            17,
+            "demo.build.warrior",
+            "rfb-legacy.race.half-orc",
+            "Adventurer",
+        ),
+        Err(CoreError::CharacterRaceUnavailable(_))
+    ));
+    assert!(matches!(
+        Game::new_with_build_race_and_name(
+            17,
+            "demo.build.warrior",
+            "demo.race.missing",
+            "Adventurer",
+        ),
+        Err(CoreError::UnknownCharacterRace(_))
+    ));
+}
+
+#[test]
+fn selected_formal_race_overrides_the_build_default_and_round_trips() {
+    let content = race_reward_catalog();
+    let game = Game::from_content_internal(
+        47,
+        content.clone(),
+        DEFAULT_WORLD_ID,
+        Some(TEST_RACE_REWARD_BUILD_ID),
+        Some("demo.race.rfb-human"),
+        "Adventurer",
+    )
+    .expect("formal race override should create");
+    let identity = game.build.as_ref().expect("build identity should exist");
+    assert_eq!(identity.build_id, TEST_RACE_REWARD_BUILD_ID);
+    assert_eq!(identity.race_id, "demo.race.rfb-human");
+
+    let restored = Game::from_save_with_content(game.to_save(), content)
+        .expect("selected race should reload independently of the build default");
+    assert_eq!(restored.build, game.build);
+    assert_eq!(restored.snapshot(), game.snapshot());
 }
 
 #[test]

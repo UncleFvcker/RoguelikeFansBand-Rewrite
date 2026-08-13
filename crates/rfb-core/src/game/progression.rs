@@ -229,6 +229,7 @@ pub(super) fn apply_learning_capacity_increase(
 pub(super) fn resolve_character_build(
     content: &ContentCatalog,
     build_id: Option<&str>,
+    race_id: Option<&str>,
 ) -> Result<Option<CharacterBuildIdentity>, CoreError> {
     let Some(build_id) = build_id else {
         return Ok(None);
@@ -236,9 +237,16 @@ pub(super) fn resolve_character_build(
     let build = content
         .build(build_id)
         .ok_or_else(|| CoreError::UnknownCharacterBuild(build_id.to_owned()))?;
+    let race_id = race_id.unwrap_or(&build.race_id);
+    let race = content
+        .race(race_id)
+        .ok_or_else(|| CoreError::UnknownCharacterRace(race_id.to_owned()))?;
+    if !race.tags.iter().any(|tag| tag == "rfb-compatibility") {
+        return Err(CoreError::CharacterRaceUnavailable(race_id.to_owned()));
+    }
     Ok(Some(CharacterBuildIdentity {
         build_id: build.id.clone(),
-        race_id: build.race_id.clone(),
+        race_id: race.id.clone(),
         class_id: build.class_id.clone(),
         personality_id: build.personality_id.clone(),
     }))

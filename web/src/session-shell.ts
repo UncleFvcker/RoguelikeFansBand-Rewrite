@@ -23,6 +23,8 @@ export const PLAYTEST_BUILD_IDS = [
 ] as const;
 
 export type PlaytestBuildId = (typeof PLAYTEST_BUILD_IDS)[number];
+export const PLAYTEST_RACE_IDS = ["demo.race.rfb-human"] as const;
+export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
 
 const MAX_SESSION_SEED = (1n << 64n) - 1n;
@@ -49,6 +51,7 @@ interface SessionShellDom {
   readonly paladinDeathBuild: HTMLInputElement;
   readonly cavalryBuild: HTMLInputElement;
   readonly sniperBuild: HTMLInputElement;
+  readonly raceSelect: HTMLSelectElement;
   readonly characterNameInput: HTMLInputElement;
   readonly seedInput: HTMLInputElement;
   readonly randomizeSeedButton: HTMLButtonElement;
@@ -248,13 +251,19 @@ export class SessionShell {
       this.#dom.error.textContent = this.#localization.format("session-build-invalid");
       return;
     }
+    const raceId = this.#selectedRace();
+    if (!raceId) {
+      this.#dom.error.textContent = this.#localization.format("session-race-invalid");
+      this.#dom.raceSelect.focus();
+      return;
+    }
     const playerName = canonicalCharacterName(this.#dom.characterNameInput.value);
     if (!playerName) {
       this.#dom.error.textContent = this.#localization.format("session-character-name-invalid");
       this.#dom.characterNameInput.focus();
       return;
     }
-    void this.#start({ seed, buildId, playerName });
+    void this.#start({ seed, buildId, raceId, playerName });
   };
 
   readonly #randomizeSeed = (): void => {
@@ -365,6 +374,13 @@ export class SessionShell {
       this.#dom.sniperBuild,
     ]
       .find((input) => input.checked)?.value as PlaytestBuildId | undefined;
+  }
+
+  #selectedRace(): PlaytestRaceId | undefined {
+    const raceId = this.#dom.raceSelect.value;
+    return PLAYTEST_RACE_IDS.includes(raceId as PlaytestRaceId)
+      ? (raceId as PlaytestRaceId)
+      : undefined;
   }
 
   #showView(view: SessionView): void {
@@ -552,6 +568,7 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     paladinDeathBuild: element<HTMLInputElement>(document, "session-build-paladin-death"),
     cavalryBuild: element<HTMLInputElement>(document, "session-build-cavalry"),
     sniperBuild: element<HTMLInputElement>(document, "session-build-sniper"),
+    raceSelect: element<HTMLSelectElement>(document, "session-race"),
     characterNameInput: element<HTMLInputElement>(document, "session-character-name"),
     seedInput: element<HTMLInputElement>(document, "session-seed"),
     randomizeSeedButton: element<HTMLButtonElement>(document, "session-randomize-seed"),

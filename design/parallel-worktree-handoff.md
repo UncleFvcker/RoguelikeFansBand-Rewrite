@@ -862,3 +862,17 @@ git diff --stat
   `f41fcdc2089191ecc635320b4c0b1dd554e1667e39941bc496a9437db7d6665e`。26 条 active fixture
   在本次合并验收中统一重新生成并复验。
 - `codex/monsters-next` 与 `codex/items-next` 分支及工作树继续保留。
+
+## 44. main 当前交接（正式种族 Commit 1：独立种族选择底座）
+
+- 本批不新增或占用 race、class、build、item、ability、material 或 affix ID；新游戏仍只
+  开放现有 `demo.race.rfb-human`，下一批正式化半兽人时复用
+  `rfb-legacy.race.half-orc`，不得另建重复种族身份。
+- 新游戏 IPC 请求新增必填 `raceId`；构筑继续提供 class、personality 与领域，所选正式
+  race 独立写入既有 `CharacterBuildIdentity.raceId`。现有 build JSON 的 Human 继续作为
+  未显式选择时的默认值，不生成 build × race 组合内容。
+- 角色创建与读档只接受带 `rfb-compatibility` 标签的种族。存档已包含 `raceId`，读档现按
+  保存的种族恢复，同时仍要求 class/personality 与 build 定义一致。
+- 共享协调点保持 pack `1.330.0`、Protocol `1.201`、State Hash Schema v100、save v1、
+  active baseline `contract-v303`。本批没有内容、权威状态或 State Hash 输入变化，不刷新
+  既有 fixture；只执行新增种族覆盖/存档测试、桌面初始化测试与 Web 定向测试。

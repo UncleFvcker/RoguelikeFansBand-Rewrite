@@ -280,3 +280,14 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `b27d385635fe09ef107ca2dd4e7fe6475d58e7e3320893e899246920779f5cb2`、Protocol `1.200`、
   State Hash Schema v99、save v1、baseline `contract-v301`。全量 fixture 刷新和 replay 按
   用户要求留到合并验收；本批只验证新增测试与直接受影响的生成/内容校验。
+
+## main 当前批次：正式种族 Commit 1 独立选择底座
+
+- 新游戏请求和桌面初始化增加必填 `raceId`，核心以所选正式种族覆盖 build 默认种族；
+  build 仍默认 Human，且不复制职业与种族的组合 JSON。
+- 角色创建只接受带 `rfb-compatibility` 标签的 race。读档使用既有保存 `raceId`，并继续
+  校验 class/personality 与 build 定义；save 和 State Hash 没有新增字段。
+- 本批不新增内容 ID。正式选择列表目前只有 `demo.race.rfb-human`；下一批半兽人复用
+  `rfb-legacy.race.half-orc`，不得创建第二个 ID。
+- 协调版本保持 pack `1.330.0`、Protocol `1.201`、State Hash Schema v100、save v1、
+  baseline `contract-v303`；按用户要求只运行新增和直接相关测试。

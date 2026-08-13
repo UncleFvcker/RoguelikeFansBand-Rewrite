@@ -973,6 +973,23 @@ impl Game {
             load_built_in_content().expect("built-in content should decode"),
             DEFAULT_WORLD_ID,
             Some(build_id),
+            None,
+            player_name,
+        )
+    }
+
+    pub fn new_with_build_race_and_name(
+        seed: u64,
+        build_id: &str,
+        race_id: &str,
+        player_name: &str,
+    ) -> Result<Self, CoreError> {
+        Self::from_content_internal(
+            seed,
+            load_built_in_content().expect("built-in content should decode"),
+            DEFAULT_WORLD_ID,
+            Some(build_id),
+            Some(race_id),
             player_name,
         )
     }
@@ -982,7 +999,14 @@ impl Game {
         content: Arc<ContentCatalog>,
         world_id: &str,
     ) -> Result<Self, CoreError> {
-        Self::from_content_internal(seed, content, world_id, None, Self::DEFAULT_PLAYER_NAME)
+        Self::from_content_internal(
+            seed,
+            content,
+            world_id,
+            None,
+            None,
+            Self::DEFAULT_PLAYER_NAME,
+        )
     }
 
     pub fn from_content_with_build(
@@ -996,6 +1020,7 @@ impl Game {
             content,
             world_id,
             Some(build_id),
+            None,
             Self::DEFAULT_PLAYER_NAME,
         )
     }
@@ -1005,14 +1030,18 @@ impl Game {
         content: Arc<ContentCatalog>,
         world_id: &str,
         build_id: Option<&str>,
+        race_id: Option<&str>,
         player_name: &str,
     ) -> Result<Self, CoreError> {
         let player_name = normalize_player_name(player_name).ok_or(CoreError::InvalidPlayerName)?;
         let world = content
             .world(world_id)
             .ok_or_else(|| CoreError::UnknownWorld(world_id.to_owned()))?;
-        let build =
-            resolve_character_build(&content, build_id.or(world.player_build_id.as_deref()))?;
+        let build = resolve_character_build(
+            &content,
+            build_id.or(world.player_build_id.as_deref()),
+            race_id,
+        )?;
         let width = world.width;
         let height = world.height;
         let mut terrain =

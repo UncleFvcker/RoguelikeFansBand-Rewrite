@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   PLAYTEST_BUILD_IDS,
+  PLAYTEST_RACE_IDS,
   canonicalCharacterName,
   canonicalSessionSeed,
   randomSessionSeed,
@@ -28,6 +29,11 @@ test("new character creation exposes all formal class slices", () => {
     "demo.build.sniper",
   ]);
   assert.equal(PLAYTEST_BUILD_IDS.some((id) => id.startsWith("rfb-legacy.")), false);
+});
+
+test("new character creation exposes only formal race slices", () => {
+  assert.deepEqual(PLAYTEST_RACE_IDS, ["demo.race.rfb-human"]);
+  assert.equal(PLAYTEST_RACE_IDS.some((id) => id.startsWith("rfb-legacy.")), false);
 });
 
 test("session seeds canonicalize the complete unsigned 64-bit range", () => {

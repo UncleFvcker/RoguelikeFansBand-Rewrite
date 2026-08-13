@@ -203,6 +203,7 @@ button:disabled,
 }
 
 .session-seed input,
+.session-seed select,
 .session-settings-grid select {
   min-width: 0;
   flex: 1;

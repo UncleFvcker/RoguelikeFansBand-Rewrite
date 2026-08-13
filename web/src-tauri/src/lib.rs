@@ -43,13 +43,14 @@ impl AppState {
         &self,
         seed: &str,
         build_id: &str,
+        race_id: &str,
         player_name: &str,
         created_at: String,
     ) -> Result<GameSnapshot, String> {
         let seed = seed
             .parse::<u64>()
             .map_err(|error| format!("invalid seed: {error}"))?;
-        let recorder = ReplayRecorder::new(initial_game(seed, build_id, player_name)?);
+        let recorder = ReplayRecorder::new(initial_game(seed, build_id, race_id, player_name)?);
         let snapshot = recorder.game().snapshot();
         self.replace_session(GameSession {
             recorder,
@@ -159,8 +160,14 @@ impl AppState {
     }
 }
 
-fn initial_game(seed: u64, build_id: &str, player_name: &str) -> Result<Game, String> {
-    Game::new_with_build_and_name(seed, build_id, player_name).map_err(|error| error.to_string())
+fn initial_game(
+    seed: u64,
+    build_id: &str,
+    race_id: &str,
+    player_name: &str,
+) -> Result<Game, String> {
+    Game::new_with_build_race_and_name(seed, build_id, race_id, player_name)
+        .map_err(|error| error.to_string())
 }
 
 #[derive(Serialize)]
@@ -213,10 +220,11 @@ fn initialize_game(
     state: tauri::State<'_, AppState>,
     seed: String,
     build_id: String,
+    race_id: String,
     player_name: String,
     created_at: String,
 ) -> Result<GameSnapshot, String> {
-    state.initialize(&seed, &build_id, &player_name, created_at)
+    state.initialize(&seed, &build_id, &race_id, &player_name, created_at)
 }
 
 #[tauri::command(rename_all = "camelCase")]
@@ -460,6 +468,7 @@ mod tests {
             .initialize(
                 "42",
                 "demo.build.warrior",
+                "demo.race.rfb-human",
                 "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
             )
@@ -481,8 +490,13 @@ mod tests {
             .expect("replay should decode");
         let verification = verify_replay(
             &replay,
-            initial_game(42, "demo.build.warrior", "Adventurer")
-                .expect("initial game should create"),
+            initial_game(
+                42,
+                "demo.build.warrior",
+                "demo.race.rfb-human",
+                "Adventurer",
+            )
+            .expect("initial game should create"),
         )
         .expect("exported replay should verify");
         let restored = AppState::default()
@@ -505,6 +519,7 @@ mod tests {
             .initialize(
                 "42",
                 "demo.build.warrior",
+                "demo.race.rfb-human",
                 "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
             )
@@ -527,6 +542,7 @@ mod tests {
             .initialize(
                 "42",
                 "demo.build.warrior",
+                "demo.race.rfb-human",
                 "Adventurer",
                 "2026-07-15T00:00:00Z".to_owned(),
             )
@@ -572,6 +588,7 @@ mod tests {
             .initialize(
                 "73",
                 "demo.build.warrior",
+                "demo.race.rfb-human",
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
             )
@@ -585,6 +602,14 @@ mod tests {
                 .map(|build| build.build_id.as_str()),
             Some("demo.build.warrior")
         );
+        assert_eq!(
+            snapshot
+                .player
+                .build
+                .as_ref()
+                .map(|build| build.race_id.as_str()),
+            Some("demo.race.rfb-human")
+        );
     }
 
     #[test]
@@ -594,6 +619,7 @@ mod tests {
             .initialize(
                 "73",
                 "demo.build.warrior",
+                "demo.race.rfb-human",
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
             )
@@ -606,6 +632,7 @@ mod tests {
             .initialize(
                 "73",
                 "demo.build.warrior",
+                "demo.race.rfb-human",
                 "Adventurer",
                 "2026-08-01T00:05:00Z".to_owned(),
             )
@@ -628,6 +655,7 @@ mod tests {
             .initialize(
                 "not-a-seed",
                 "demo.build.warrior",
+                "demo.race.rfb-human",
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
             )
@@ -636,6 +664,7 @@ mod tests {
             .initialize(
                 "73",
                 "rfb-legacy.class.not-present",
+                "demo.race.rfb-human",
                 "Adventurer",
                 "2026-08-01T00:00:00Z".to_owned(),
             )

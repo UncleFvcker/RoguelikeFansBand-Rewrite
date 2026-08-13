@@ -41,6 +41,10 @@ pub enum CoreError {
     UnknownItem(String),
     #[error("content set does not define character build {0}")]
     UnknownCharacterBuild(String),
+    #[error("content set does not define race {0}")]
+    UnknownCharacterRace(String),
+    #[error("race {0} is not available for character creation")]
+    CharacterRaceUnavailable(String),
     #[error("player name must contain 1 to 32 printable characters")]
     InvalidPlayerName,
     #[error("generated item instance ID space is exhausted")]

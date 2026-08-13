@@ -908,10 +908,14 @@ impl Game {
                 .as_ref()
                 .map(|build| build.build_id.as_str())
                 .or(world.player_build_id.as_deref()),
+            payload
+                .player
+                .build
+                .as_ref()
+                .map(|build| build.race_id.as_str()),
         )?;
         if let (Some(saved), Some(identity)) = (payload.player.build.as_ref(), build.as_ref())
-            && (saved.race_id != identity.race_id
-                || saved.class_id != identity.class_id
+            && (saved.class_id != identity.class_id
                 || saved.personality_id != identity.personality_id)
         {
             return Err(CoreError::InvalidSave("player build identity is invalid"));
