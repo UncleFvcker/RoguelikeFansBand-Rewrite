@@ -1287,6 +1287,9 @@ impl Game {
             .layout
             .as_ref()
             .and_then(|layout| layout.river.as_ref())
+            && river
+                .chance_one_in
+                .is_none_or(|chance| self.rng.bounded(u64::from(chance)) == 0)
         {
             self.generate_river(
                 definition,

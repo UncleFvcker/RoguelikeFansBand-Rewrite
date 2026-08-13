@@ -1453,7 +1453,11 @@ pub(super) fn validate_world(
                                     .max(procedural.height.saturating_sub(2 + center_y))
                                 + 1,
                         );
-                        if !(maximum_centerline_tiles..=interior_area).contains(&area_tiles) {
+                        if !(maximum_centerline_tiles..=interior_area).contains(&area_tiles)
+                            || river
+                                .chance_one_in
+                                .is_some_and(|chance| !(1..=10_000).contains(&chance))
+                        {
                             return Err(ContentError::InvalidProceduralFloor(
                                 procedural.id.clone(),
                             ));
@@ -1724,7 +1728,7 @@ pub(super) fn validate_world(
                 let table = terrain_feature_tables
                     .get(table_id)
                     .expect("validated terrain feature table must remain available");
-                if !(1..=8).contains(&placements)
+                if !(1..=256).contains(&placements)
                     || placements > table.rolls
                     || eligible_terrain_feature_entries.is_empty()
                 {

@@ -889,6 +889,63 @@ fn warrens_surface_reentry_starts_a_fresh_expedition_with_new_monsters() {
 }
 
 #[test]
+fn p87c_tidal_cave_room_water_and_optional_river_use_existing_terrain() {
+    let mut saw_dry_floor = false;
+    let mut saw_river = false;
+
+    for seed in 0..64 {
+        let mut game = Game::new_with_build(seed, "demo.build.warrior")
+            .expect("Tidal Cave generation proof should create");
+        let definition = game
+            .content
+            .world(&game.world_id)
+            .expect("Middle-earth should remain available")
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.tidal-cave-depth-15")
+            .expect("Tidal Cave depth 15 should remain available")
+            .clone();
+        game.rng = RfbRng::seeded(seed);
+        let generated = game
+            .generate_procedural_floor(&definition, None)
+            .expect("Tidal Cave floor should generate");
+        let deep_water = generated
+            .terrain
+            .iter()
+            .filter(|terrain_id| terrain_id.as_str() == "demo.terrain.surface-water-deep")
+            .count();
+        let shallow_water = generated
+            .terrain
+            .iter()
+            .filter(|terrain_id| terrain_id.as_str() == "demo.terrain.surface-water-shallow")
+            .count();
+
+        assert!(
+            !generated
+                .entities
+                .iter()
+                .any(|actor| actor.kind_id == "demo.actor.grendel")
+        );
+        if deep_water == 0 {
+            assert_eq!(shallow_water, 96);
+            saw_dry_floor = true;
+        } else {
+            assert!(shallow_water > 96);
+            saw_river = true;
+        }
+        if saw_dry_floor && saw_river {
+            break;
+        }
+    }
+
+    assert!(
+        saw_dry_floor,
+        "chanceOneIn 7 should permit a floor without a river"
+    );
+    assert!(saw_river, "chanceOneIn 7 should permit a generated river");
+}
+
+#[test]
 fn warrens_maps_are_seeded_connected_varied_and_persistent() {
     let mut generated_maps = BTreeSet::new();
     let mut walkable_masks = Vec::<Vec<bool>>::new();

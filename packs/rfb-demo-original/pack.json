@@ -2,9 +2,9 @@
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/pack.schema.json",
   "formatVersion": 1,
   "id": "rfb.demo.original-v1",
-  "version": "1.333.0",
+  "version": "1.334.0",
   "titleKey": "pack-demo-original-title",
   "dependencies": [],
   "loadAfter": [],
-  "contentRoots": ["abilities", "abilityBooks", "abilityPrograms", "actors", "affixes", "builds", "classes", "effectPrograms", "encounterTables", "items", "lootTables", "mutations", "personalities", "playerAbilityBindings", "races", "resources", "skills", "skillSets", "shops", "terrain", "townFacilities", "towns", "worlds"]
+  "contentRoots": ["abilities", "abilityBooks", "abilityPrograms", "actors", "affixes", "builds", "classes", "effectPrograms", "encounterTables", "items", "lootTables", "mutations", "personalities", "playerAbilityBindings", "races", "resources", "skills", "skillSets", "shops", "terrain", "terrainFeatureTables", "townFacilities", "towns", "worlds"]
 }

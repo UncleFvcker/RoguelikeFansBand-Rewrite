@@ -1537,6 +1537,15 @@
     "ProceduralRiverDefinition": {
       "additionalProperties": false,
       "properties": {
+        "chanceOneIn": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "deepTerrainId": {
           "type": "string"
         },

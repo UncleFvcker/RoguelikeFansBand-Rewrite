@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain-feature-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain-feature-table.tidal-cave",
+  "rolls": 96,
+  "entries": [
+    {
+      "terrainId": "demo.terrain.surface-water-shallow",
+      "placement": "room",
+      "weight": 1,
+      "minDepth": 15,
+      "maxDepth": 27
+    }
+  ]
+}

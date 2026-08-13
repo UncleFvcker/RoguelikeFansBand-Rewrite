@@ -3653,6 +3653,113 @@ fn p87b_tidal_cave_policy_preserves_the_three_way_legacy_ecology_preference() {
 }
 
 #[test]
+fn p87c_tidal_cave_binds_depths_water_features_river_and_guardian() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.tidal-cave")
+        .expect("Tidal Cave should be active");
+    assert_eq!(dungeon.legacy_index, Some(33));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.tidal-cave-depth-15");
+    assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.grendel");
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.tidal-cave"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 13);
+    assert_eq!(floors.first().map(|floor| floor.depth), Some(15));
+    assert_eq!(floors.last().map(|floor| floor.depth), Some(27));
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.tidal-cave-entrance")
+    );
+
+    for floor in &floors {
+        assert_eq!(
+            floor.encounter_table_id.as_deref(),
+            Some("demo.encounter-table.tidal-cave")
+        );
+        assert_eq!(
+            floor.terrain_feature_table_id.as_deref(),
+            Some("demo.terrain-feature-table.tidal-cave")
+        );
+        let budget = floor.generation_budget.as_ref().expect("generation budget");
+        assert_eq!(budget.feature_placements, Some(96));
+        assert_eq!(budget.river_area_tiles, Some(160));
+        let layout = floor.layout.as_ref().expect("Tidal Cave layout");
+        assert!(layout.lake.is_none());
+        assert!(layout.cavern.is_none());
+        assert_eq!(
+            layout
+                .rooms
+                .as_ref()
+                .expect("room geometry")
+                .shapes
+                .iter()
+                .map(|shape| (shape.shape, shape.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([
+                (ProceduralRoomShape::Rectangle, 1),
+                (ProceduralRoomShape::Cavern, 9),
+            ])
+        );
+        let river = layout.river.as_ref().expect("water river");
+        assert_eq!(river.deep_terrain_id, "demo.terrain.surface-water-deep");
+        assert_eq!(
+            river.shallow_terrain_id,
+            "demo.terrain.surface-water-shallow"
+        );
+        assert_eq!(river.chance_one_in, Some(7));
+        assert_eq!(
+            layout
+                .streamers
+                .iter()
+                .map(|streamer| (streamer.terrain_id.as_str(), streamer.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([
+                ("demo.terrain.magma-vein", 2),
+                ("demo.terrain.quartz-vein", 3),
+            ])
+        );
+    }
+
+    let final_floor = floors.last().expect("depth 27 should exist");
+    assert!(final_floor.final_floor);
+    let guardian = final_floor.guardian.as_ref().expect("Grendel guardian");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.grendel");
+
+    let feature_table = content
+        .terrain_feature_tables
+        .iter()
+        .find(|table| table.id == "demo.terrain-feature-table.tidal-cave")
+        .expect("Tidal Cave terrain feature table");
+    assert_eq!(feature_table.rolls, 96);
+    assert_eq!(feature_table.entries.len(), 1);
+    assert_eq!(
+        feature_table.entries[0].terrain_id,
+        "demo.terrain.surface-water-shallow"
+    );
+    assert_eq!(
+        feature_table.entries[0].placement,
+        TerrainFeaturePlacement::Room
+    );
+}
+
+#[test]
 fn p86c_camelot_binds_depths_ecology_layout_and_mirror_shield_reward() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = &artifact.content;

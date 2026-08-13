@@ -848,6 +848,8 @@ pub struct ProceduralLakeDefinition {
 pub struct ProceduralRiverDefinition {
     pub deep_terrain_id: String,
     pub shallow_terrain_id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub chance_one_in: Option<u16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
