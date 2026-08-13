@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-qlzqqlzuup-the-lord-of-flesh",
+  "descriptionKey": "ability-legacy-kin-qlzqqlzuup-the-lord-of-flesh-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-qlzqqlzuup-the-lord-of-flesh",
+  "nameKey": "ability-legacy-kin-qlzqqlzuup-the-lord-of-flesh-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

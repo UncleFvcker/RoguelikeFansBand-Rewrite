@@ -147,6 +147,10 @@
         },
         "damageType": {
           "$ref": "#/$defs/ActorDamageType"
+        },
+        "ravagesTime": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "required": [
@@ -1486,6 +1490,12 @@
     "contactAuras": {
       "items": {
         "$ref": "#/$defs/ActorContactAuraDefinition"
+      },
+      "type": "array"
+    },
+    "contactEffects": {
+      "items": {
+        "$ref": "#/$defs/MeleeBlowEffectDefinition"
       },
       "type": "array"
     },

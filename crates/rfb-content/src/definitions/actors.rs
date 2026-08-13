@@ -282,6 +282,8 @@ pub struct ActorContactAuraDefinition {
     pub damage_sides: u16,
     #[serde(default)]
     pub chance_percent: Option<u8>,
+    #[serde(default)]
+    pub ravages_time: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -442,6 +444,8 @@ pub struct ActorDefinition {
     pub melee_routine: Option<MeleeRoutineDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub contact_auras: Vec<ActorContactAuraDefinition>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub contact_effects: Vec<MeleeBlowEffectDefinition>,
     #[serde(default)]
     pub terrain_interaction: ActorTerrainInteractionDefinition,
     #[serde(default)]

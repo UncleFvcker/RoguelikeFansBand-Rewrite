@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.summon-family-artemis-the-moon-goddess",
+  "descriptionKey": "ability-legacy-summon-family-artemis-the-moon-goddess-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.summon-family-artemis-the-moon-goddess",
+  "nameKey": "ability-legacy-summon-family-artemis-the-moon-goddess-name",
+  "tags": [
+    "legacy-import",
+    "summon",
+    "monster-only",
+    "monster-family-summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

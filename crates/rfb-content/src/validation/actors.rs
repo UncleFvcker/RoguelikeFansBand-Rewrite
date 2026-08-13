@@ -335,11 +335,24 @@ pub(super) fn validate_actors(
                         | ActorDamageType::Disintegrate
                         | ActorDamageType::Curse
                         | ActorDamageType::Shards
-                ) || !(1..=100).contains(&aura.damage_dice)
+                        | ActorDamageType::Time
+                ) || (aura.ravages_time != (aura.damage_type == ActorDamageType::Time))
+                    || !(1..=100).contains(&aura.damage_dice)
                     || !(1..=10_000).contains(&aura.damage_sides)
                     || aura
                         .chance_percent
                         .is_some_and(|chance| !(1..=100).contains(&chance))
+            })
+        {
+            return Err(ContentError::InvalidActorStats(actor.id.clone()));
+        }
+        if actor.contact_effects.len() > 8
+            || actor.contact_effects.iter().any(|effect| {
+                !matches!(
+                    effect,
+                    MeleeBlowEffectDefinition::Unlife { .. }
+                        | MeleeBlowEffectDefinition::Stun { .. }
+                ) || !valid_melee_effect(effect)
             })
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));

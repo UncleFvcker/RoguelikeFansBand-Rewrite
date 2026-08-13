@@ -2,10 +2,10 @@
 
 use crate::{
     effect::{
-        DamageOutcome, DamagePacket, STATUS_BLEEDING, STATUS_POISON, STATUS_SLEEP,
+        DamageOutcome, DamagePacket, STATUS_BLEEDING, STATUS_NO_AIR, STATUS_POISON, STATUS_SLEEP,
         advance_status_ticks, resolve_damage,
     },
-    resistance::DamageType,
+    resistance::{DamageType, ResistanceLevel},
     state::Actor,
 };
 use rfb_protocol::Position;
@@ -77,26 +77,32 @@ pub(super) fn process_actor_status_tick(
         .statuses
         .iter()
         .filter_map(|status| {
-            let damage_type = match status.kind_id.as_str() {
-                STATUS_BLEEDING => DamageType::Physical,
-                STATUS_POISON => DamageType::Poison,
+            let (amount, damage_type, unresisted) = match status.kind_id.as_str() {
+                STATUS_BLEEDING => (i32::from(status.intensity), DamageType::Physical, false),
+                STATUS_POISON => (i32::from(status.intensity), DamageType::Poison, false),
+                STATUS_NO_AIR => (
+                    i32::try_from(40_u32.saturating_sub(status.remaining_ticks) / 2)
+                        .unwrap_or(i32::MAX),
+                    DamageType::Physical,
+                    true,
+                ),
                 _ => return None,
             };
-            Some((
-                status.kind_id.clone(),
-                i32::from(status.intensity),
-                damage_type,
-            ))
+            (amount > 0).then(|| (status.kind_id.clone(), amount, damage_type, unresisted))
         })
         .collect::<Vec<_>>();
     let mut damage = Vec::new();
     let mut fatal_damage = None;
     let mut awakened = false;
-    for (status_kind_id, amount, damage_type) in periodic {
+    for (status_kind_id, amount, damage_type, unresisted) in periodic {
         let outcome = scale_damage_outcome(
             resolve_damage(
                 DamagePacket::new(amount, damage_type),
-                actor.resistances.level(damage_type),
+                if unresisted {
+                    ResistanceLevel::Normal
+                } else {
+                    actor.resistances.level(damage_type)
+                },
             ),
             incoming_damage_percent,
         );
@@ -150,10 +156,13 @@ pub(super) fn scale_damage_outcome(mut damage: DamageOutcome, percent: u8) -> Da
 
 #[cfg(test)]
 mod tests {
+    use std::collections::{BTreeMap, BTreeSet};
+
     use crate::{
-        effect::{DamageOutcome, DamagePacket, resolve_damage},
+        effect::{DamageOutcome, DamagePacket, StatusInstance, resolve_damage},
         resistance::{DamageType, ResistanceLevel},
     };
+    use rfb_protocol::{EquipmentBonusesDto, StatModifiersDto};
 
     use super::*;
 
@@ -206,5 +215,36 @@ mod tests {
             plan_damage_application(&target, physical_damage(1), FatalityPolicy::AtOrBelowZero);
         assert!(!zero.wakes_sleeping_target);
         assert!(surviving.wakes_sleeping_target);
+    }
+
+    #[test]
+    fn no_air_damage_ramps_with_elapsed_ticks_and_bypasses_physical_resistance() {
+        let mut target = target_with_hp(100);
+        target
+            .resistances
+            .set(DamageType::Physical, ResistanceLevel::Immune);
+        target.statuses.push(StatusInstance {
+            kind_id: STATUS_NO_AIR.to_owned(),
+            intensity: 1,
+            remaining_ticks: 38,
+            source_id: Some("rfb-legacy.ability.no-air-40".to_owned()),
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        });
+
+        let tick = process_actor_status_tick(&mut target, false, 100);
+
+        assert_eq!(target.hp, 99);
+        assert_eq!(target.statuses[0].remaining_ticks, 37);
+        assert_eq!(tick.damage.len(), 1);
+        assert_eq!(tick.damage[0].status_kind_id, STATUS_NO_AIR);
+        assert_eq!(tick.damage[0].outcome.applied, 1);
+        assert_eq!(tick.damage[0].outcome.resistance, ResistanceLevel::Normal);
     }
 }

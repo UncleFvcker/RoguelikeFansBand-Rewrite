@@ -739,7 +739,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 791);
+    assert_eq!(orc_cave.len(), 815);
 
     for id in [
         "demo.actor.bunyip",
@@ -788,9 +788,9 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 2, 4, 3, 4, 12, 8, 4, 5, 5, 12, 3, 5, 4, 2, 1, 3,
-            3, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 1,
+            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 2, 4, 5, 4, 12, 15, 4, 6, 6, 16, 4, 8, 4, 4, 1,
+            3, 3, 2, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 1,
         ]
     );
 
@@ -970,6 +970,7 @@ fn special_mechanics_batch_keeps_each_imported_contract_narrow() {
             damage_dice: 1,
             damage_sides: 2,
             chance_percent: None,
+            ravages_time: false,
         }]
     );
     assert!(
@@ -8267,7 +8268,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        720
+        744
     );
 }
 
@@ -8364,7 +8365,7 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
                 .filter(|drop| drop.theme_table_id.as_deref() == Some("demo.loot-table.warrior"))
         })
         .collect::<Vec<_>>();
-    assert_eq!(warrior_drops.len(), 99);
+    assert_eq!(warrior_drops.len(), 100);
     assert!(
         warrior_drops
             .iter()

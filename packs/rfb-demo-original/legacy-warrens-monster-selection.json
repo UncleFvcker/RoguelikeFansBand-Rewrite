@@ -7477,6 +7477,150 @@
       "id": "brahma-the-creating-spirit",
       "tags": ["orc-cave"],
       "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 822,
+      "id": "qlzqqlzuup-the-lord-of-flesh",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_MULTI", "CAN_SPEAK", "POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
+    },
+    {
+      "sourceIndex": 844,
+      "id": "kaschei-the-immortal",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 848,
+      "id": "shub-niggurath-black-goat-of-the-woods",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "CAN_SPEAK", "FEMALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 849,
+      "id": "nodens-lord-of-the-great-abyss",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 859,
+      "id": "the-unicorn-of-order",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS", "POS_TELEPATHY", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 861,
+      "id": "morgoth-lord-of-darkness",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CHR", "POS_SUST_CON", "POS_SUST_DEX", "POS_SUST_INT", "POS_SUST_STR", "POS_SUST_WIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1098,
+      "id": "hades-ruler-of-the-underworld",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1099,
+      "id": "athena-the-goddess-of-wisdom",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE"]
+    },
+    {
+      "sourceIndex": 1100,
+      "id": "ares-the-god-of-war",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1102,
+      "id": "apollo-the-sun-god",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1103,
+      "id": "artemis-the-moon-goddess",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE"]
+    },
+    {
+      "sourceIndex": 1104,
+      "id": "hephaestus-the-smith-god",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1105,
+      "id": "hera-queen-of-the-gods",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE"]
+    },
+    {
+      "sourceIndex": 1107,
+      "id": "aphrodite-the-goddess-of-love",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE"]
+    },
+    {
+      "sourceIndex": 1161,
+      "id": "atropos-the-sister-of-fate",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE", "OLYMPIAN2"]
+    },
+    {
+      "sourceIndex": 1180,
+      "id": "tik-srvzllat",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "NO_STUN", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1259,
+      "id": "osiris-the-reborn",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1265,
+      "id": "ptah-the-divine-craftsman",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_GAIN_AC", "POS_SUST_DEX", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1281,
+      "id": "aijem-the-walrus",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SUST_INT"]
+    },
+    {
+      "sourceIndex": 1365,
+      "id": "vayu-the-embodied-wind",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1372,
+      "id": "vishnu-the-preserver",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1373,
+      "id": "lakshmi-the-goddess-of-prosperity",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1380,
+      "id": "shiva-the-destroyer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1382,
+      "id": "parvati-the-goddess-of-hidden-power",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     }
   ]
 }

@@ -8429,6 +8429,7 @@ fn monster_json(
                 "HOLY_FIRE" => "holy-fire",
                 "CAUSE_2" | "CAUSE_3" => "curse",
                 "SHARDS" => "shards",
+                "TIME" => "time",
                 _ => return None,
             };
             let (damage_dice, damage_sides) = aura.dice?;
@@ -8439,6 +8440,9 @@ fn monster_json(
             });
             if let Some(chance_percent) = aura.chance_percent {
                 value["chancePercent"] = serde_json::json!(chance_percent);
+            }
+            if aura.token == "TIME" {
+                value["ravagesTime"] = serde_json::json!(true);
             }
             Some(value)
         })
@@ -8458,6 +8462,15 @@ fn monster_json(
     );
     if !contact_auras.is_empty() {
         value["contactAuras"] = serde_json::json!(contact_auras);
+    }
+    let contact_effects = entry
+        .auras
+        .iter()
+        .filter(|aura| matches!(aura.token.as_str(), "UNLIFE" | "STUN"))
+        .filter_map(|aura| melee_effect_json(aura, entry.level))
+        .collect::<Vec<_>>();
+    if !contact_effects.is_empty() {
+        value["contactEffects"] = serde_json::json!(contact_effects);
     }
     if let Some(casting) = monster_casting {
         value["monsterCasting"] = casting;
@@ -8785,6 +8798,9 @@ fn demo_monster_json(
                     | "CAUSE_2"
                     | "CAUSE_3"
                     | "SHARDS"
+                    | "UNLIFE"
+                    | "STUN"
+                    | "TIME"
             ) || aura.dice.is_none()
         })
     {
@@ -8795,6 +8811,7 @@ fn demo_monster_json(
     }
     let primary_blow = entry.blows.first();
     if primary_blow.is_none()
+        && selection.id != "artemis-the-moon-goddess"
         && !entry
             .flags
             .iter()
@@ -9263,6 +9280,28 @@ fn map_spell_token(
     caster_kind_id: &str,
     abilities: &mut BTreeMap<String, serde_json::Value>,
 ) -> Option<String> {
+    if token == "NO_AIR" {
+        let id = "rfb-legacy.ability.no-air-40".to_owned();
+        abilities.entry(id.clone()).or_insert_with(|| {
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                "formatVersion": 1,
+                "id": id,
+                "nameKey": "ability-legacy-no-air-40-name",
+                "descriptionKey": "ability-legacy-no-air-40-description",
+                "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+                "effect": {
+                    "type": "apply-status",
+                    "statusKindId": "rfb.status.no-air",
+                    "intensity": 1,
+                    "durationTicks": 40,
+                    "stacking": "keep-strongest"
+                },
+                "tags": ["legacy-import", "monster-only", "monster-no-air"],
+            })
+        });
+        return Some(id);
+    }
     if token == "WORLD" {
         let id = "rfb-legacy.ability.world".to_owned();
         abilities.entry(id.clone()).or_insert_with(|| {
@@ -9632,10 +9671,12 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_LOUSE" => ("louse", (1, 3, 1)),
         "S_NIGHTMARE" => ("night-mare", (1, 3, 1)),
         "S_AMBERITE" => ("amberite", (1, 2, 0)),
+        "S_SERPENT" => ("kin-glyph-74", (1, 3, 1)),
         "S_NAGA" => ("kin-glyph-110", (1, 3, 1)),
         "S_VANARA" => ("vanara", (1, 3, 1)),
         "S_CYBER" => ("cyber", (1, 3, 0)),
         "S_CAT" => ("cat", (1, 3, 1)),
+        "S_UNIQUE" => ("unique", (1, 2, 0)),
         _ => return None,
     };
     Some(entry)
@@ -9662,7 +9703,9 @@ fn map_summon_spell_token(
             | "freyja-lady-of-the-slain"
             | "odin-the-all-father" => "norse",
             "indra-the-heavenly-king-of-meru" => "hindu",
-            "hermes-the-messenger-god" | "zeus-king-of-the-olympians" => "olympian",
+            "aphrodite-the-goddess-of-love"
+            | "hermes-the-messenger-god"
+            | "zeus-king-of-the-olympians" => "olympian",
             "amun-the-mysterious" | "hathor-the-heavenly-cow" => "egyptian",
             _ => return None,
         };
@@ -9674,6 +9717,42 @@ fn map_summon_spell_token(
         return Some(id);
     }
     if base == "S_SPECIAL" {
+        let caster_tail = caster_kind_id.rsplit('.').next()?;
+        if matches!(
+            caster_tail,
+            "athena-the-goddess-of-wisdom"
+                | "ares-the-god-of-war"
+                | "apollo-the-sun-god"
+                | "artemis-the-moon-goddess"
+                | "hephaestus-the-smith-god"
+                | "hades-ruler-of-the-underworld"
+                | "hera-queen-of-the-gods"
+                | "osiris-the-reborn"
+                | "lakshmi-the-goddess-of-prosperity"
+                | "vishnu-the-preserver"
+                | "shiva-the-destroyer"
+                | "parvati-the-goddess-of-hidden-power"
+        ) {
+            let suffix = format!("summon-family-{caster_tail}");
+            let id = format!("rfb-legacy.ability.{suffix}");
+            abilities.entry(id.clone()).or_insert_with(|| {
+                serde_json::json!({
+                    "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                    "formatVersion": 1,
+                    "id": id,
+                    "nameKey": format!("ability-legacy-{suffix}-name"),
+                    "descriptionKey": format!("ability-legacy-{suffix}-description"),
+                    "minimumLevel": 1,
+                    "resourceId": LEGACY_RESOURCE_ID,
+                    "resourceCost": 1,
+                    "baseFailurePercent": 20,
+                    "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+                    "effect": { "type": "no-op", "reason": "monster-family-summon" },
+                    "tags": ["legacy-import", "summon", "monster-only", "monster-family-summon"],
+                })
+            });
+            return Some(id);
+        }
         if caster_kind_id.rsplit('.').next()? == "aegir-god-king-of-the-sea-giants" {
             let suffix = "summon-aegir-retinue-1d4";
             let id = format!("rfb-legacy.ability.{suffix}");
@@ -10074,6 +10153,60 @@ fn map_damage_spell_token(
         Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
         None => (token, None),
     };
+    if base == "BR_AIR" {
+        let hp_percent = match explicit {
+            Some(spec) => spec.strip_suffix('%')?.parse::<u32>().ok()?.clamp(1, 100),
+            None => 17,
+        };
+        let suffix = format!("breath-air-{hp_percent}-250-r{breath_radius}");
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities.entry(id.clone()).or_insert_with(|| {
+            let mut ability =
+                breath_spell_ability(&suffix, "force", hp_percent, 250, breath_radius);
+            ability["tags"] =
+                serde_json::json!(["breath", "damage", "legacy-import", "monster-air-breath",]);
+            ability
+        });
+        return Some(id);
+    }
+    if base == "CHICKEN" {
+        let (dice, sides, bonus) = explicit.and_then(parse_explicit_damage_dice).unwrap_or((
+            1,
+            1,
+            (5 * u32::from(level) / 2).saturating_sub(1),
+        ));
+        let dice = dice.clamp(1, 100);
+        let sides = sides.clamp(1, 10_000);
+        let bonus = bonus.min(10_000);
+        let mut suffix = format!("chicken-{dice}d{sides}");
+        if bonus > 0 {
+            suffix.push_str(&format!("-{bonus}"));
+        }
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities.entry(id.clone()).or_insert_with(|| {
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                "formatVersion": 1,
+                "id": id,
+                "nameKey": format!("ability-legacy-{suffix}-name"),
+                "descriptionKey": format!("ability-legacy-{suffix}-description"),
+                "minimumLevel": 1,
+                "resourceId": LEGACY_RESOURCE_ID,
+                "resourceCost": 1,
+                "baseFailurePercent": 20,
+                "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+                "effect": {
+                    "type": "damage",
+                    "damageDice": dice,
+                    "damageSides": sides,
+                    "damageBonus": bonus,
+                    "damageType": "physical"
+                },
+                "tags": ["legacy-import", "damage", "monster-chicken"],
+            })
+        });
+        return Some(id);
+    }
     if let Some((damage_type, (default_percent, max_damage))) = breath_spell_defaults(base) {
         // Explicit overrides use the legacy `BR_X(N%)` form and only replace
         // the percentage; the elemental cap stays.
@@ -17025,6 +17158,157 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 &mut abilities,
             )
             .is_none()
+        );
+    }
+
+    #[test]
+    fn p76_spell_mappings_keep_unique_family_air_chicken_and_no_air_semantics() {
+        let mut abilities = BTreeMap::new();
+
+        let unique = map_spell_token(
+            "S_UNIQUE",
+            83,
+            3,
+            "demo.actor.ptah-the-divine-craftsman",
+            &mut abilities,
+        )
+        .expect("S_UNIQUE should map");
+        assert_eq!(abilities[&unique]["effect"]["category"], "unique");
+        assert_eq!(abilities[&unique]["effect"]["maximumLevel"], 83);
+        assert_eq!(abilities[&unique]["effect"]["countDice"], 1);
+        assert_eq!(abilities[&unique]["effect"]["countSides"], 2);
+
+        let family = map_spell_token(
+            "S_SPECIAL",
+            86,
+            3,
+            "demo.actor.athena-the-goddess-of-wisdom",
+            &mut abilities,
+        )
+        .expect("Athena family summon should map");
+        assert_eq!(abilities[&family]["effect"]["type"], "no-op");
+        assert!(
+            abilities[&family]["tags"]
+                .as_array()
+                .is_some_and(|tags| { tags.iter().any(|tag| tag == "monster-family-summon") })
+        );
+
+        let air = map_spell_token(
+            "BR_AIR",
+            86,
+            3,
+            "demo.actor.vayu-the-embodied-wind",
+            &mut abilities,
+        )
+        .expect("BR_AIR should map");
+        assert_eq!(abilities[&air]["effect"]["type"], "breath-damage");
+        assert_eq!(abilities[&air]["effect"]["damageType"], "force");
+        assert_eq!(abilities[&air]["effect"]["hpPercent"], 17);
+        assert_eq!(abilities[&air]["effect"]["maxDamage"], 250);
+
+        let chicken = map_spell_token(
+            "CHICKEN(200)",
+            83,
+            3,
+            "demo.actor.aijem-the-walrus",
+            &mut abilities,
+        )
+        .expect("CHICKEN should map");
+        assert_eq!(abilities[&chicken]["effect"]["type"], "damage");
+        assert_eq!(abilities[&chicken]["effect"]["damageDice"], 1);
+        assert_eq!(abilities[&chicken]["effect"]["damageSides"], 1);
+        assert_eq!(abilities[&chicken]["effect"]["damageBonus"], 199);
+
+        let no_air = map_spell_token(
+            "NO_AIR",
+            86,
+            3,
+            "demo.actor.vayu-the-embodied-wind",
+            &mut abilities,
+        )
+        .expect("NO_AIR should map");
+        assert_eq!(
+            abilities[&no_air]["effect"]["statusKindId"],
+            "rfb.status.no-air"
+        );
+        assert_eq!(abilities[&no_air]["effect"]["durationTicks"], 40);
+
+        let pantheon = map_spell_token(
+            "S_PANTHEON",
+            86,
+            3,
+            "demo.actor.aphrodite-the-goddess-of-love",
+            &mut abilities,
+        )
+        .expect("Aphrodite pantheon summon should map");
+        assert_eq!(abilities[&pantheon]["effect"]["category"], "olympian");
+
+        let serpent = map_spell_token(
+            "S_SERPENT",
+            94,
+            3,
+            "demo.actor.shiva-the-destroyer",
+            &mut abilities,
+        )
+        .expect("S_SERPENT should map");
+        assert_eq!(abilities[&serpent]["effect"]["category"], "kin-glyph-74");
+    }
+
+    #[test]
+    fn p76_contact_effects_preserve_stun_time_and_unlife_without_fake_damage() {
+        let mut monsters = parse_r_info(
+            "N:1:test P76 auras\nG:P:r\nI:130:70d100:30:120:0:100\nW:90:3:999:30000:0:0\nB:HIT:HURT(1d1)\nA:HOLY_FIRE(4d4):STUN(1d3, 50%):TIME(1d3, 20%):UNLIFE(2d6, 50%)\n",
+        )
+        .expect("synthetic P76 aura monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1,
+                source_id: None,
+                id: "test-p76-auras".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("P76 contact effects should import");
+
+        assert_eq!(actor["contactAuras"][0]["damageType"], "holy-fire");
+        assert_eq!(actor["contactAuras"][1]["damageType"], "time");
+        assert_eq!(actor["contactAuras"][1]["ravagesTime"], true);
+        assert_eq!(
+            actor["contactEffects"],
+            serde_json::json!([
+                {"type": "stun", "durationDice": 1, "durationSides": 3, "chancePercent": 50},
+                {"type": "unlife", "amountDice": 2, "amountSides": 6, "chancePercent": 50}
+            ])
+        );
+    }
+
+    #[test]
+    fn p76_artemis_is_the_narrow_no_melee_family_summoner_exception() {
+        let mut monsters = parse_r_info(
+            "N:1103:Artemis, the Moon Goddess\nG:P:s\nI:130:70d100:30:120:0:100\nW:86:3:999:30000:0:0\nS:1_IN_3 | S_SPECIAL\n",
+        )
+        .expect("synthetic Artemis should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 1103,
+                source_id: None,
+                id: "artemis-the-moon-goddess".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("Artemis should import without invented blows");
+        assert_eq!(
+            actor["meleeRoutine"]["blows"],
+            serde_json::json!([]),
+            "Artemis keeps an explicitly empty routine instead of invented blows"
         );
     }
 

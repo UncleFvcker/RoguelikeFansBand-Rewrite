@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.ball-mana-1d1-399",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 399,
+      "damageDice": 1,
+      "damageSides": 1,
+      "damageType": "mana",
+      "radius": 4,
+      "type": "area-damage"
+    }
+  ]
+}

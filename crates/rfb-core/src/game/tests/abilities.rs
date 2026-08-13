@@ -4861,6 +4861,253 @@ fn vampiric_transformation_overlays_race_but_preserves_body_slots() {
     assert_eq!(restored.body_slots, body_slots);
 }
 
+#[test]
+fn p76_unique_summons_use_the_caster_level_window_and_exclude_unique2() {
+    let mut game = Game::new(241);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 80, y: 20 };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.ptah",
+        "demo.actor.ptah-the-divine-craftsman",
+        Position { x: 20, y: 20 },
+        1_000,
+        135,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.summon-unique-l83-1d2")
+        .expect("P76 S_UNIQUE ability should compile")
+        .clone();
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("P76 S_UNIQUE should have eligible candidates");
+    let MonsterAbilityTargetPlan::SummonCategory {
+        candidate_kind_ids, ..
+    } = plan.target
+    else {
+        panic!("S_UNIQUE should remain a category summon");
+    };
+    assert!(!candidate_kind_ids.is_empty());
+    for kind_id in candidate_kind_ids {
+        let candidate = game
+            .content
+            .actor(&kind_id)
+            .expect("planned unique candidate should exist");
+        assert!((43..=83).contains(&candidate.level));
+        assert!(candidate.tags.iter().any(|tag| tag == "unique"));
+        assert!(!candidate.tags.iter().any(|tag| tag == "unique2"));
+    }
+}
+
+#[test]
+fn p76_osiris_family_summon_creates_horus_and_isis_as_one_cast() {
+    let mut game = Game::new(251);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 80, y: 20 };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.osiris",
+        "demo.actor.osiris-the-reborn",
+        Position { x: 20, y: 20 },
+        1_000,
+        135,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.summon-family-osiris-the-reborn")
+        .expect("P76 Osiris family summon should compile")
+        .clone();
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("Osiris should have family candidates and space");
+    let resolution = game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.osiris-the-reborn",
+        &plan,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    let summon = resolution.summon.expect("Osiris should summon family");
+    assert_eq!(
+        summon.summoned_kind_ids,
+        [
+            "demo.actor.horus-the-ancient".to_owned(),
+            "demo.actor.isis-the-great-goddess".to_owned(),
+        ]
+    );
+    assert_eq!(summon.duration_turns, 10_000);
+}
+
+#[test]
+fn p76_air_breath_is_unresisted_and_levitation_reduces_damage_by_one_quarter() {
+    fn cast(levitating: bool) -> (i32, i32, bool) {
+        let mut game = Game::new(257);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 20, y: 20 };
+        game.player.hp = 1_000;
+        if levitating {
+            game.progress
+                .active_mutation_ids
+                .insert("rfb.mutation.wings".to_owned());
+        }
+        game.entities.push(actor_from_runtime_spawn(
+            "generated.actor.vayu",
+            "demo.actor.vayu-the-embodied-wind",
+            Position { x: 21, y: 20 },
+            1_000,
+            135,
+            100,
+            true,
+        ));
+        let ability = game
+            .content
+            .ability("rfb-legacy.ability.breath-air-17-250-r3")
+            .expect("P76 BR_AIR should compile")
+            .clone();
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("adjacent player should be a valid air-breath target");
+        let resolution = game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.vayu-the-embodied-wind",
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        );
+        let AbilityEffectResolutionDto::Damage { resolution, .. } =
+            &resolution.targets[0].effects[0]
+        else {
+            panic!("BR_AIR should damage the player");
+        };
+        (
+            resolution.raw_damage,
+            resolution.final_damage,
+            game.player_has_status_kind(STATUS_STUN),
+        )
+    }
+
+    let ordinary = cast(false);
+    let levitating = cast(true);
+    assert_eq!(ordinary.0, 170);
+    assert_eq!(ordinary.1, 170);
+    assert_eq!(levitating.0, 170);
+    assert_eq!(levitating.1, 128);
+    assert!(ordinary.2 && levitating.2);
+}
+
+#[test]
+fn p76_chicken_deals_flat_damage_and_applies_sound_stun_and_fear() {
+    let mut game = Game::new(263);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 20, y: 20 };
+    game.player.hp = 1_000;
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.aijem",
+        "demo.actor.aijem-the-walrus",
+        Position { x: 21, y: 20 },
+        1_000,
+        135,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.chicken-1d1-199")
+        .expect("P76 CHICKEN should compile")
+        .clone();
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("adjacent player should be a valid chicken target");
+    let resolution = game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.aijem-the-walrus",
+        &plan,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    let AbilityEffectResolutionDto::Damage { resolution, .. } = &resolution.effects[0] else {
+        panic!("CHICKEN should damage the player");
+    };
+    assert_eq!(resolution.raw_damage, 200);
+    assert_eq!(resolution.final_damage, 200);
+    assert!(game.player_has_status_kind(STATUS_STUN));
+    assert!(game.player_has_status_kind(STATUS_FEAR));
+}
+
+#[test]
+fn p76_no_air_applies_once_for_forty_ticks() {
+    let mut game = Game::new(269);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 20, y: 20 };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.vayu",
+        "demo.actor.vayu-the-embodied-wind",
+        Position { x: 21, y: 20 },
+        1_000,
+        135,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.no-air-40")
+        .expect("P76 NO_AIR should compile")
+        .clone();
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("adjacent living player should be a valid no-air target");
+    game.resolve_monster_ability_plan(
+        0,
+        "demo.actor.vayu-the-embodied-wind",
+        &plan,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    let status = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_NO_AIR)
+        .expect("NO_AIR should apply its status");
+    assert_eq!(status.remaining_ticks, 40);
+
+    let resolutions = game.resolve_monster_player_effects(
+        "generated.actor.vayu",
+        "demo.actor.vayu-the-embodied-wind",
+        &plan.ability,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    );
+    assert!(matches!(
+        resolutions.as_slice(),
+        [AbilityEffectResolutionDto::Skipped {
+            reason: AbilityEffectSkipReasonDto::Ineligible,
+            ..
+        }]
+    ));
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_NO_AIR)
+            .expect("recast should keep the original no-air status")
+            .remaining_ticks,
+        40
+    );
+}
+
 fn place_test_ground_item(game: &mut Game, id: &str, kind_id: &str, position: Position) {
     give_inventory_item(game, id, kind_id);
     game.items

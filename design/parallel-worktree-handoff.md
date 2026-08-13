@@ -604,3 +604,19 @@ git diff --stat
   `19bdab0f1a5b6b61246636ee8716198734ffe8b18924cea403acac64a97b1c27`；Protocol `1.195`、
   State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
   零 waiver）均不变。
+
+## 37. monsters-next 当前交接（P76 复杂召唤与战斗机制）
+
+- P76 导入 24 个 L83–100 actor：`S_UNIQUE` 使用施术者等级向下 40 级的唯一怪物窗口；
+  奥林匹斯与印度神系的 12 条 `S_SPECIAL` 保留原版家庭成员、分支概率、唯一额度及 Hades
+  熔岩流语义。家庭召唤只在候选仍可生成且附近有合法位置时施放。
+- Vayu 的 `BR_AIR` 保留无视抗性、飞行减伤和声音抗性眩晕，Aijem 的 `CHICKEN` 保留固定
+  伤害、眩晕与恐惧；同步补齐其后续暴露的 `NO_AIR` 窒息状态。Kaschei 的 `UNLIFE`、
+  Unicorn of Order 的 TIME/STUN 接触效果和 Ares 的 STUN 使用显式接触效果，不伪造生命伤害。
+- 本批新增 24 个 actor、91 个参数化 ability/program；L81–127 联合审计为 109 selected、
+  3 direct、4 blocked、6 excluded。剩余 direct/blocked 不属于 P76：Loki、Shuma-Gorath、
+  Pandemonium，以及 Hermes、Zeus、Odin、Zombified Serpent of Chaos。
+- 共享协调点：pack `1.317.0` / content hash
+  `b40fc1696472d37277ec6630dfd26135b0e92244261989366cf670d9fbe7c1c8`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变，不刷新 replay fixture。

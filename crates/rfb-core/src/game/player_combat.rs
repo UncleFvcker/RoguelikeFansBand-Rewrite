@@ -591,8 +591,8 @@ impl Game {
                     retaliation_blow_index = retaliation_blow_index.saturating_add(1);
                     revenge_stop = stop;
                 }
-                let contact_aura_fatal =
-                    !revenge_stop && self.resolve_monster_contact_auras(&definition, events);
+                let contact_aura_fatal = !revenge_stop
+                    && self.resolve_monster_contact_auras(index, &definition, events, changed);
                 if contact_aura_fatal || revenge_stop {
                     if application.fatal {
                         self.resolve_actor_death(
@@ -777,8 +777,10 @@ impl Game {
 
     pub(super) fn resolve_monster_contact_auras(
         &mut self,
+        source_index: usize,
         definition: &rfb_content::ActorDefinition,
         events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
     ) -> bool {
         for aura in &definition.contact_auras {
             if aura
@@ -788,6 +790,9 @@ impl Game {
                 continue;
             }
             let raw = self.roll_damage(aura.damage_dice, aura.damage_sides);
+            if aura.ravages_time {
+                self.resolve_time_melee(&definition.id, events);
+            }
             if aura.damage_type == rfb_content::ActorDamageType::Curse
                 && self.monster_curse_save(&definition.id, events)
             {
@@ -834,6 +839,44 @@ impl Game {
                 status_kind_id: STATUS_POISON.to_owned(),
                 duration,
             });
+        }
+        for effect in &definition.contact_effects {
+            if monster_combat::melee_effect_chance(effect)
+                .is_some_and(|chance| self.rng.bounded(100) >= u64::from(chance))
+            {
+                continue;
+            }
+            match effect {
+                MeleeBlowEffectDefinition::Unlife {
+                    amount_dice,
+                    amount_sides,
+                    ..
+                } => {
+                    let amount =
+                        u16::try_from(self.roll_damage(*amount_dice, *amount_sides).max(0))
+                            .unwrap_or(u16::MAX);
+                    self.resolve_monster_unlife_against_player(
+                        source_index,
+                        amount,
+                        events,
+                        changed,
+                    );
+                }
+                MeleeBlowEffectDefinition::Stun {
+                    duration_dice,
+                    duration_sides,
+                    ..
+                } => {
+                    let duration = self.roll_damage(*duration_dice, *duration_sides);
+                    self.apply_player_melee_status(STATUS_STUN, duration, &definition.id);
+                    events.push(DomainEvent::MonsterContactAuraApplied {
+                        source_kind_id: definition.id.clone(),
+                        status_kind_id: STATUS_STUN.to_owned(),
+                        duration: u32::try_from(duration.max(0)).unwrap_or(u32::MAX),
+                    });
+                }
+                _ => unreachable!("validated contact effects stay narrow"),
+            }
         }
         false
     }

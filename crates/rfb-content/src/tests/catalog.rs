@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.316.0");
+    assert_eq!(catalog.pack_version(), "1.317.0");
     assert_eq!(catalog.races().count(), 46);
     assert_eq!(
         catalog
@@ -221,6 +221,104 @@ fn compiled_catalog_indexes_current_rfb_content() {
     assert!(catalog.loot_table("demo.loot-table.base-items").is_some());
     assert!(catalog.item("demo.item.magic-missile-wand").is_some());
     assert!(catalog.affix("demo.affix.regeneration").is_some());
+}
+
+#[test]
+fn p76_complex_monsters_and_their_shared_mechanisms_compile_into_the_pack() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let actors = [
+        (822, "qlzqqlzuup-the-lord-of-flesh"),
+        (844, "kaschei-the-immortal"),
+        (848, "shub-niggurath-black-goat-of-the-woods"),
+        (849, "nodens-lord-of-the-great-abyss"),
+        (859, "the-unicorn-of-order"),
+        (861, "morgoth-lord-of-darkness"),
+        (1098, "hades-ruler-of-the-underworld"),
+        (1099, "athena-the-goddess-of-wisdom"),
+        (1100, "ares-the-god-of-war"),
+        (1102, "apollo-the-sun-god"),
+        (1103, "artemis-the-moon-goddess"),
+        (1104, "hephaestus-the-smith-god"),
+        (1105, "hera-queen-of-the-gods"),
+        (1107, "aphrodite-the-goddess-of-love"),
+        (1161, "atropos-the-sister-of-fate"),
+        (1180, "tik-srvzllat"),
+        (1259, "osiris-the-reborn"),
+        (1265, "ptah-the-divine-craftsman"),
+        (1281, "aijem-the-walrus"),
+        (1365, "vayu-the-embodied-wind"),
+        (1372, "vishnu-the-preserver"),
+        (1373, "lakshmi-the-goddess-of-prosperity"),
+        (1380, "shiva-the-destroyer"),
+        (1382, "parvati-the-goddess-of-hidden-power"),
+    ];
+    for (legacy_index, id) in actors {
+        let actor = catalog
+            .actor(&format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P76 actor {id} should compile"));
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} should retain its authoritative source index"
+        );
+    }
+
+    let has_ability = |actor_id: &str, ability_id: &str| {
+        catalog
+            .actor(actor_id)
+            .and_then(|actor| actor.monster_casting.as_ref())
+            .is_some_and(|casting| {
+                casting
+                    .abilities
+                    .iter()
+                    .any(|candidate| candidate.ability_id == ability_id)
+            })
+    };
+    assert!(has_ability(
+        "demo.actor.morgoth-lord-of-darkness",
+        "rfb-legacy.ability.summon-unique-l100-1d2"
+    ));
+    assert!(has_ability(
+        "demo.actor.osiris-the-reborn",
+        "rfb-legacy.ability.summon-family-osiris-the-reborn"
+    ));
+    assert!(has_ability(
+        "demo.actor.vayu-the-embodied-wind",
+        "rfb-legacy.ability.breath-air-17-250-r3"
+    ));
+    assert!(has_ability(
+        "demo.actor.vayu-the-embodied-wind",
+        "rfb-legacy.ability.no-air-40"
+    ));
+    assert!(has_ability(
+        "demo.actor.aijem-the-walrus",
+        "rfb-legacy.ability.chicken-1d1-199"
+    ));
+
+    let kaschei = catalog
+        .actor("demo.actor.kaschei-the-immortal")
+        .expect("Kaschei should compile");
+    assert!(matches!(
+        kaschei.contact_effects.as_slice(),
+        [MeleeBlowEffectDefinition::Unlife {
+            amount_dice: 2,
+            amount_sides: 6,
+            chance_percent: Some(50)
+        }]
+    ));
+    let unicorn = catalog
+        .actor("demo.actor.the-unicorn-of-order")
+        .expect("Unicorn of Order should compile");
+    assert!(
+        unicorn
+            .contact_auras
+            .iter()
+            .any(|aura| { aura.damage_type == ActorDamageType::Time && aura.ravages_time })
+    );
 }
 
 #[test]

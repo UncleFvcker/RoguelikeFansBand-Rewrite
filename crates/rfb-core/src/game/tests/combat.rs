@@ -507,30 +507,35 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
                 damage_dice: 1,
                 damage_sides: 1,
                 chance_percent: None,
+                ravages_time: false,
             },
             rfb_content::ActorContactAuraDefinition {
                 damage_type: rfb_content::ActorDamageType::Electricity,
                 damage_dice: 1,
                 damage_sides: 1,
                 chance_percent: None,
+                ravages_time: false,
             },
             rfb_content::ActorContactAuraDefinition {
                 damage_type: rfb_content::ActorDamageType::Ice,
                 damage_dice: 1,
                 damage_sides: 1,
                 chance_percent: None,
+                ravages_time: false,
             },
             rfb_content::ActorContactAuraDefinition {
                 damage_type: rfb_content::ActorDamageType::Light,
                 damage_dice: 1,
                 damage_sides: 1,
                 chance_percent: None,
+                ravages_time: false,
             },
             rfb_content::ActorContactAuraDefinition {
                 damage_type: rfb_content::ActorDamageType::Curse,
                 damage_dice: 1,
                 damage_sides: 1,
                 chance_percent: None,
+                ravages_time: false,
             },
         ];
     });
@@ -546,7 +551,7 @@ fn monster_contact_auras_apply_elemental_damage_and_curse_saves() {
                 .expect("test monster should exist")
                 .clone();
             let mut events = Vec::new();
-            game.resolve_monster_contact_auras(&definition, &mut events);
+            game.resolve_monster_contact_auras(0, &definition, &mut events, &mut BTreeSet::new());
             events
                 .iter()
                 .any(|event| {

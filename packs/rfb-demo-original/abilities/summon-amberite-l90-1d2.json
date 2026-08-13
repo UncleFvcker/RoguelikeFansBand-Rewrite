@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.summon-amberite-l90-1d2",
+  "descriptionKey": "ability-legacy-summon-amberite-l90-1d2-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.summon-amberite-l90-1d2",
+  "nameKey": "ability-legacy-summon-amberite-l90-1d2-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.ball-water-1d94-50",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-legacy-ball-water-1d94-50-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.ball-water-1d94-50",
+  "nameKey": "ability-legacy-ball-water-1d94-50-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}
