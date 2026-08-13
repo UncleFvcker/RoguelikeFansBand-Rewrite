@@ -615,6 +615,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.plague-rat", 1298, 2, 40),
             ("demo.actor.plaguebearer-of-nurgle", 268, 2, 50),
             ("demo.actor.polar-bear", 1340, 3, 60),
+            ("demo.actor.polar-cat", 1392, 5, 999),
             ("demo.actor.poltergeist", 65, 1, 30),
             ("demo.actor.portuguese-man-o-war", 160, 2, 40),
             ("demo.actor.potion-mimic", 310, 3, 80),
@@ -756,7 +757,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 836);
+    assert_eq!(orc_cave.len(), 838);
 
     for id in [
         "demo.actor.bunyip",
@@ -822,7 +823,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         level_counts,
         [
-            16, 14, 13, 18, 25, 17, 19, 19, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
+            16, 14, 13, 18, 25, 17, 19, 19, 19, 21, 7, 12, 30, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 2, 6, 4, 18, 5, 4, 5, 2, 12, 3, 9, 4,
             6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 2, 4, 5, 4, 13, 16, 4, 7, 6, 18, 4, 8, 4, 5, 1,
             3, 3, 2, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -8306,7 +8307,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        772
+        773
     );
 }
 
@@ -9766,4 +9767,71 @@ fn p82a_ocean_monsters_keep_macro_habitat_boundaries() {
     assert!(actor("giant-squid").rideable);
     assert!(actor("giganto-the-gargantuan").rideable);
     assert!(actor("jaws").terrain_interaction.picks_up_items);
+}
+
+#[test]
+fn p82b_fixed_unique_and_polar_cat_keep_random_allocation() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P82B should contain {id}"))
+    };
+
+    let polar_cat = actor("polar-cat");
+    let polar_allocation = polar_cat
+        .allocation
+        .as_ref()
+        .expect("Polar cat should retain snow allocation");
+    assert_eq!(polar_cat.level, 40);
+    assert_eq!(polar_allocation.legacy_index, 1392);
+    assert!(polar_allocation.wild_only);
+    assert_eq!(polar_allocation.habitats, vec![ActorHabitat::Snow]);
+    assert!(polar_allocation.legacy_dungeon_indices.is_empty());
+    assert!(polar_cat.tags.iter().any(|tag| tag == "snow"));
+    assert!(!polar_cat.tags.iter().any(|tag| tag == "orc-cave"));
+    assert!(polar_cat.contact_auras.iter().any(|aura| {
+        aura.damage_type == ActorDamageType::Cold && aura.damage_dice == 2 && aura.damage_sides == 3
+    }));
+    assert!(
+        polar_cat
+            .monster_casting
+            .as_ref()
+            .expect("Polar cat should retain blinking")
+            .abilities
+            .iter()
+            .any(|candidate| candidate.ability_id == "rfb-legacy.ability.blink")
+    );
+
+    for (id, source_index, level) in [
+        ("barney-the-dinosaur", 1061, 29),
+        ("groo-the-wanderer", 1062, 33),
+    ] {
+        let actor = actor(id);
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("FIXED_UNIQUE should not remove random allocation");
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(allocation.legacy_index, source_index, "{id} source index");
+        assert_eq!(allocation.rarity, 255, "{id} rarity");
+        assert!(actor.tags.iter().any(|tag| tag == "unique"), "{id}");
+        assert!(actor.tags.iter().any(|tag| tag == "fixed-unique"), "{id}");
+        assert!(
+            !actor.tags.iter().any(|tag| tag == "fixed-placement"),
+            "{id}"
+        );
+    }
+
+    assert!(
+        actor("groo-the-wanderer")
+            .allocation
+            .as_ref()
+            .expect("Groo allocation")
+            .habitats
+            .contains(&ActorHabitat::All)
+    );
 }

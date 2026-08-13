@@ -7060,3 +7060,11 @@ ability-legacy-bolt-physical-11d11-name = Shoot
 ability-legacy-bolt-physical-11d11-description = Uses the shoot monster spell from RFB.
 ability-legacy-bolt-water-10d10-59-name = Water bolt
 ability-legacy-bolt-water-10d10-59-description = Uses the water bolt monster spell from RFB.
+
+# P82B wilderness and fixed-unique monsters
+actor-demo-polar-cat-name = Polar cat
+actor-demo-polar-cat-description = A Polar cat recorded in the original RFB bestiary.
+actor-demo-barney-the-dinosaur-name = Barney the Dinosaur
+actor-demo-barney-the-dinosaur-description = Barney the Dinosaur as recorded in the original RFB bestiary.
+actor-demo-groo-the-wanderer-name = Groo the Wanderer
+actor-demo-groo-the-wanderer-description = Groo the Wanderer as recorded in the original RFB bestiary.

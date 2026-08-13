@@ -7062,3 +7062,11 @@ ability-legacy-bolt-physical-11d11-name = 射击
 ability-legacy-bolt-physical-11d11-description = 使用 RFB 原版怪物法术“射击”。
 ability-legacy-bolt-water-10d10-59-name = 水箭
 ability-legacy-bolt-water-10d10-59-description = 使用 RFB 原版怪物法术“水箭”。
+
+# P82B 荒野与固定独特怪物
+actor-demo-polar-cat-name = 极地猫
+actor-demo-polar-cat-description = 一个可爱的白色毛球，充满了冰冷的恶意。
+actor-demo-barney-the-dinosaur-name = 恐龙巴尼
+actor-demo-barney-the-dinosaur-description = 这只可爱的紫色爬行动物在这里客串登场。
+actor-demo-groo-the-wanderer-name = 流浪者格鲁
+actor-demo-groo-the-wanderer-description = 嘲笑格鲁（Groo）脑子的人会发现根本没有什么可笑的……呃，应该说没人能在嘲笑格鲁之后还活下来。

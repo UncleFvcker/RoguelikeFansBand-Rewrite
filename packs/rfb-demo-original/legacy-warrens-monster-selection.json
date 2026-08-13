@@ -7856,6 +7856,24 @@
       "id": "mutant-manta-ray",
       "tags": ["ocean"],
       "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1392,
+      "id": "polar-cat",
+      "tags": ["snow"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1061,
+      "id": "barney-the-dinosaur",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1062,
+      "id": "groo-the-wanderer",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     }
   ]
 }

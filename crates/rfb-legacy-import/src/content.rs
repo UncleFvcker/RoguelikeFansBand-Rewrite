@@ -173,7 +173,6 @@ fn demo_monster_location_restrictions(entry: &LegacyMonsterEntry) -> Vec<String>
     for (flag, reason) in [
         ("WILD_ONLY", "wilderness-only"),
         ("WILD_OCEAN", "ocean-only"),
-        ("FIXED_UNIQUE", "fixed-unique"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             restrictions.push(reason.to_owned());
@@ -14275,7 +14274,7 @@ mod tests {
             vec!["camelot-only"]
         );
 
-        let wilderness_unique = LegacyMonsterEntry {
+        let wilderness_fixed_unique = LegacyMonsterEntry {
             flags: vec![
                 "WILD_ONLY".to_owned(),
                 "WILD_OCEAN".to_owned(),
@@ -14284,9 +14283,14 @@ mod tests {
             ..LegacyMonsterEntry::default()
         };
         assert_eq!(
-            demo_monster_location_restrictions(&wilderness_unique),
-            vec!["wilderness-only", "ocean-only", "fixed-unique"]
+            demo_monster_location_restrictions(&wilderness_fixed_unique),
+            vec!["wilderness-only", "ocean-only"]
         );
+        let fixed_unique = LegacyMonsterEntry {
+            flags: vec!["FIXED_UNIQUE".to_owned()],
+            ..LegacyMonsterEntry::default()
+        };
+        assert!(demo_monster_location_restrictions(&fixed_unique).is_empty());
 
         assert_eq!(
             demo_monster_audit_status(true, 1, false, true),
