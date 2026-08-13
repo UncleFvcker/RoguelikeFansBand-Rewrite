@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.bolt-nether-5d5-101",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 101,
+      "damageDice": 5,
+      "damageSides": 5,
+      "damageType": "nether",
+      "type": "damage"
+    }
+  ]
+}

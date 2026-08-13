@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.ball-light-10d10-346",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 346,
+      "damageDice": 10,
+      "damageSides": 10,
+      "damageType": "light",
+      "radius": 4,
+      "type": "area-damage"
+    }
+  ]
+}

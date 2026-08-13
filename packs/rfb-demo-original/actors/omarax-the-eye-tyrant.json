@@ -1,0 +1,234 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 805,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 18,
+  "damageDice": 7,
+  "damageSides": 6,
+  "damageType": "psi",
+  "defense": 8,
+  "descriptionKey": "actor-demo-omarax-the-eye-tyrant-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 29282,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "e",
+  "hitPointDice": {
+    "dice": 65,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.omarax-the-eye-tyrant",
+  "level": 73,
+  "maxHp": 6500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 6,
+            "damageType": "psi",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "type": "paralysis"
+          },
+          {
+            "type": "slow"
+          },
+          {
+            "amountDice": 9,
+            "amountSides": 9,
+            "type": "drain-resource"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "amountDice": 40,
+            "amountSides": 6,
+            "type": "drain-experience"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 6,
+            "damageType": "psi",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "type": "paralysis"
+          },
+          {
+            "type": "slow"
+          },
+          {
+            "type": "terrify"
+          },
+          {
+            "type": "paralysis"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 6,
+            "damageType": "psi",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "type": "paralysis"
+          },
+          {
+            "type": "slow"
+          },
+          {
+            "type": "drain-charges"
+          },
+          {
+            "chancePercent": 25,
+            "type": "amnesia"
+          },
+          {
+            "attributes": [
+              "intelligence"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 6,
+            "damageSides": 9,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "disenchant"
+          },
+          {
+            "durationDice": 2,
+            "durationSides": 3,
+            "type": "stun"
+          },
+          {
+            "attributes": [
+              "wisdom"
+            ],
+            "chancePercent": 50,
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.gaze",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-1d1-149",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.kin-omarax-the-eye-tyrant",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d255-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-dark-10d10-342",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 40,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-omarax-the-eye-tyrant-name",
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "kin-glyph-101",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ]
+}
