@@ -234,6 +234,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
                     | AbilityEffectDefinition::PolymorphSelf
                     | AbilityEffectDefinition::TeleportLevel
+                    | AbilityEffectDefinition::Clairvoyance { .. }
                     | AbilityEffectDefinition::NoOp { .. }
             ) || matches!(
                 effect,

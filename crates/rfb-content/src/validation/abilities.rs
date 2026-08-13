@@ -310,6 +310,15 @@ pub(super) fn validate_abilities(
                         || (*power == 0
                             && has_level_scaling(AbilityLevelScalingField::RechargePower))
                 }
+                AbilityEffectDefinition::Clairvoyance {
+                    telepathy_duration_ticks,
+                    telepathy_duration_dice,
+                    telepathy_duration_sides,
+                } => {
+                    *telepathy_duration_ticks <= 10_000
+                        && (1..=100).contains(telepathy_duration_dice)
+                        && (1..=10_000).contains(telepathy_duration_sides)
+                }
                 AbilityEffectDefinition::BirdDrop => true,
                 AbilityEffectDefinition::DrainResource { amount } => {
                     (1..=1_000_000).contains(amount)
@@ -966,6 +975,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
+            | AbilityEffectDefinition::Clairvoyance { .. }
             | AbilityEffectDefinition::RefuelEquippedLight { .. }
             | AbilityEffectDefinition::LightArea { .. }
             | AbilityEffectDefinition::AggravateMonsters

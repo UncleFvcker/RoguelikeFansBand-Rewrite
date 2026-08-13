@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 168,
+      "rngDrawCounter": 169,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -206,7 +206,7 @@
           },
           "stock": [
             {
-              "id": "generated.item.116",
+              "id": "generated.item.117",
               "kindId": "demo.item.cure-poison-mushroom",
               "displayNameKey": "item-demo-cure-poison-mushroom-name",
               "quantity": 1,
@@ -216,41 +216,41 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.117",
+              "id": "generated.item.118",
               "kindId": "demo.item.cure-blindness-mushroom",
               "displayNameKey": "item-demo-cure-blindness-mushroom-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
-              "unitPrice": 30,
-              "weightTenthsPound": 1,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.118",
-              "kindId": "demo.item.cure-paranoia-mushroom",
-              "displayNameKey": "item-demo-cure-paranoia-mushroom-name",
               "quantity": 3,
               "maximumQuantity": 3,
-              "unitPrice": 25,
+              "unitPrice": 30,
               "weightTenthsPound": 1,
               "quality": "ordinary"
             },
             {
               "id": "generated.item.119",
-              "kindId": "demo.item.cure-confusion-mushroom",
-              "displayNameKey": "item-demo-cure-confusion-mushroom-name",
+              "kindId": "demo.item.cure-paranoia-mushroom",
+              "displayNameKey": "item-demo-cure-paranoia-mushroom-name",
               "quantity": 1,
               "maximumQuantity": 1,
-              "unitPrice": 30,
+              "unitPrice": 25,
               "weightTenthsPound": 1,
               "quality": "ordinary"
             },
             {
               "id": "generated.item.120",
-              "kindId": "demo.item.fast-recovery-mushroom",
-              "displayNameKey": "item-demo-fast-recovery-mushroom-name",
+              "kindId": "demo.item.cure-confusion-mushroom",
+              "displayNameKey": "item-demo-cure-confusion-mushroom-name",
               "quantity": 3,
               "maximumQuantity": 3,
+              "unitPrice": 30,
+              "weightTenthsPound": 1,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.121",
+              "kindId": "demo.item.fast-recovery-mushroom",
+              "displayNameKey": "item-demo-fast-recovery-mushroom-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 30,
               "weightTenthsPound": 2,
               "quality": "ordinary"
@@ -264,7 +264,7 @@
               "maximumQuantity": 7
             },
             {
-              "itemId": "generated.item.175",
+              "itemId": "generated.item.177",
               "kindId": "demo.item.cure-poison-mushroom",
               "unitPrice": 114,
               "maximumQuantity": 1
@@ -1245,7 +1245,7 @@
           "identification": "unexamined"
         },
         {
-          "id": "generated.item.175",
+          "id": "generated.item.177",
           "kindId": "demo.item.cure-poison-mushroom",
           "displayNameKey": "item-demo-cure-poison-mushroom-name",
           "knowledge": "aware",
@@ -1645,7 +1645,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.175",
+          "itemId": "generated.item.177",
           "discovered": true,
           "appraised": true,
           "identified": true
@@ -1685,7 +1685,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 176,
+      "nextItemInstanceSerial": 178,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1693,7 +1693,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "98faf2c1c6c5e7408b6454a4c9636adbad4bf60d94a6ebd511edd68c5e06c50d"
+      "stateHash": "c1075f12be1730a8070c25bdf18690cf81f96e839f24a9406571703b854c3f29"
     },
     "events": [
       {
@@ -1701,7 +1701,7 @@
         "messageKey": "shop-purchase-success",
         "args": {
           "balance": "999880",
-          "item": "generated.item.175",
+          "item": "generated.item.177",
           "quantity": "1",
           "shop": "demo.shop.outpost-shroomery",
           "target": "demo.item.cure-poison-mushroom",

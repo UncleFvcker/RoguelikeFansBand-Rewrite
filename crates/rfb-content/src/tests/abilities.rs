@@ -510,7 +510,7 @@ fn arcane_third_book_keeps_the_original_spell_table_and_narrow_effects() {
 }
 
 #[test]
-fn arcane_fourth_book_prelude_keeps_original_spells_without_an_acquisition_path() {
+fn arcane_fourth_book_completes_the_original_realm_and_acquisition() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = artifact.content;
     let book = content
@@ -520,8 +520,8 @@ fn arcane_fourth_book_prelude_keeps_original_spells_without_an_acquisition_path(
         .expect("Arcane fourth book should compile");
     assert_eq!(book.realm_id.as_deref(), Some("arcane"));
     assert_eq!(book.rank, Some(4));
-    assert_eq!(book.ability_ids.len(), 7);
-    assert!(book.tags.iter().any(|tag| tag == "incomplete"));
+    assert_eq!(book.ability_ids.len(), 8);
+    assert!(!book.tags.iter().any(|tag| tag == "incomplete"));
 
     let item = content
         .items
@@ -537,17 +537,32 @@ fn arcane_fourth_book_prelude_keeps_original_spells_without_an_acquisition_path(
         ),
         (25, 30, 2_500, Some("demo.ability-book.manual-of-mastery"))
     );
-    assert!(content.loot_tables.iter().all(|table| {
-        table
-            .entries
-            .iter()
-            .all(|entry| entry.item_kind_id != item.id)
-    }));
-    assert!(
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Manual of Mastery should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (25, u16::MAX, 100)
+    );
+    assert_eq!(
         content
             .shops
             .iter()
-            .all(|shop| shop.stock.iter().all(|entry| entry.item_kind_id != item.id))
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
     );
 
     let expected = [
@@ -558,6 +573,7 @@ fn arcane_fourth_book_prelude_keeps_original_spells_without_an_acquisition_path(
         ("demo.ability.arcane-recharging", 40, 28, 55, 1_200),
         ("demo.ability.arcane-detection", 41, 28, 70, 1_640),
         ("demo.ability.arcane-word-of-recall", 43, 40, 60, 2_150),
+        ("demo.ability.arcane-clairvoyance", 46, 80, 70, 9_200),
     ];
     for (id, level, mana, failure, experience) in expected {
         let player = content
@@ -576,4 +592,42 @@ fn arcane_fourth_book_prelude_keeps_original_spells_without_an_acquisition_path(
             (level, mana, failure, experience)
         );
     }
+
+    let arcane_books = content
+        .ability_books
+        .iter()
+        .filter(|book| book.realm_id.as_deref() == Some("arcane"))
+        .collect::<Vec<_>>();
+    assert_eq!(arcane_books.len(), 4);
+    assert!(arcane_books.iter().all(|book| book.ability_ids.len() == 8));
+    let arcane_ability_ids = arcane_books
+        .iter()
+        .flat_map(|book| book.ability_ids.iter())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(arcane_ability_ids.len(), 32);
+    assert!(
+        content
+            .abilities
+            .iter()
+            .filter(|ability| { arcane_ability_ids.contains(&ability.id) })
+            .all(|ability| ability
+                .effect
+                .ordered_effects()
+                .iter()
+                .all(|effect| { !matches!(effect, AbilityEffectDefinition::NoOp { .. }) }))
+    );
+
+    let clairvoyance = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-clairvoyance")
+        .expect("Clairvoyance should compile");
+    assert!(matches!(
+        clairvoyance.effect,
+        AbilityEffectDefinition::Clairvoyance {
+            telepathy_duration_ticks: 25,
+            telepathy_duration_dice: 1,
+            telepathy_duration_sides: 30,
+        }
+    ));
 }

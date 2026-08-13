@@ -623,3 +623,8 @@ save 容器保持 v1。
 并增加窄化的 `recharge-from-player` 能力规格及 Teleport Away 结算结果。充能继续使用
 既有物品目标和装置充能事件，额外消耗能力资源；没有新增持久状态，State Hash Schema
 保持 v93，save 容器保持 v1。
+
+协议 1.193 / Arcane 完整领域增加窄化的 `clairvoyance` 能力规格，投影临时 ESP 的
+固定时长与骰式时长。结算复用既有探测、状态和 virtue 事件：永久绘制并照亮当前层、
+揭示全部地面物品，并仅在玩家没有永久 ESP 时掷 `25 + 1d30` 临时 ESP。没有新增命令、
+待处理输入或持久状态，State Hash Schema 保持 v93，save 容器保持 v1。

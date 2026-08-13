@@ -599,6 +599,40 @@
         {
           "additionalProperties": false,
           "properties": {
+            "telepathyDurationDice": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "telepathyDurationSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "telepathyDurationTicks": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "clairvoyance",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "telepathyDurationTicks",
+            "telepathyDurationDice",
+            "telepathyDurationSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "type": {
               "const": "bird-drop",
               "type": "string"

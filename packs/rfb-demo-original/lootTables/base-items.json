@@ -1701,6 +1701,12 @@
       "maxDepth": 90
     },
     {
+      "itemKindId": "demo.item.manual-of-mastery",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 25
+    },
+    {
       "itemKindId": "demo.item.stone-ring-scroll",
       "weight": 16,
       "quantity": 1,

@@ -63,7 +63,7 @@ fn arcane_high_mage_birth_keeps_only_the_first_book_and_is_isolated_from_death()
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 31);
+    assert_eq!(learned.len(), 32);
     assert!(
         learned
             .iter()
@@ -75,6 +75,13 @@ fn arcane_high_mage_birth_keeps_only_the_first_book_and_is_isolated_from_death()
         .expect("Zap should be projected");
     assert_eq!(zap.minimum_level, 1);
     assert_eq!(zap.base_resource_cost, 1);
+    let clairvoyance = learned
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-clairvoyance")
+        .expect("Clairvoyance should complete the fourth book");
+    assert_eq!(clairvoyance.book_rank, Some(4));
+    assert_eq!(clairvoyance.minimum_level, 46);
+    assert_eq!(clairvoyance.base_resource_cost, 80);
 }
 
 #[test]
@@ -1000,6 +1007,151 @@ fn arcane_detection_recall_and_level_teleport_reuse_existing_transactions() {
         .expect("Teleport Level should resolve");
         assert_ne!(game.current_floor_id, from_floor);
     }
+}
+
+#[test]
+fn arcane_clairvoyance_maps_lights_reveals_and_grants_conditional_telepathy() {
+    let mut game = arcane_high_mage_game(
+        0x434c_4149_5256_4f59,
+        46,
+        &["demo.ability.arcane-clairvoyance"],
+    );
+    descend_one_floor(&mut game);
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Arcane High-Mage should retain mana");
+    mana.current = 1_000;
+    mana.maximum = 1_000;
+    game.ability_progress
+        .get_mut("demo.ability.arcane-clairvoyance")
+        .expect("Clairvoyance progress should exist")
+        .proficiency = SPELL_EXP_MASTER;
+    for virtue in &mut game.virtues {
+        if matches!(
+            virtue.kind,
+            VirtueKindDto::Knowledge | VirtueKindDto::Enlightenment
+        ) {
+            virtue.value = 0;
+        }
+    }
+    game.explored.fill(false);
+    game.glow.fill(false);
+    give_inventory_item(&mut game, "test.clairvoyance-item", "demo.item.dagger");
+    let item_position = Position { x: 0, y: 0 };
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.clairvoyance-item")
+        .expect("Clairvoyance test item should exist")
+        .location = ItemLocation::Ground(item_position);
+    let knowledge_before = game.virtue_current(VirtueKindDto::Knowledge);
+    let enlightenment_before = game.virtue_current(VirtueKindDto::Enlightenment);
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+
+    game.resolve_player_ability(
+        "demo.ability.arcane-clairvoyance",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .expect("Clairvoyance should resolve");
+
+    assert!(
+        game.explored.iter().all(|explored| *explored),
+        "floor {}x{} has {} terrain cells, {} explored cells and {} unexplored cells; events: {events:#?}",
+        game.width,
+        game.height,
+        game.terrain.len(),
+        game.explored.len(),
+        game.explored.iter().filter(|explored| !**explored).count(),
+    );
+    assert!(game.glow.iter().all(|glow| *glow));
+    assert!(game.item_is_discovered("test.clairvoyance-item"));
+    assert!(changed.contains(&item_position));
+    assert_eq!(
+        game.virtue_current(VirtueKindDto::Knowledge),
+        knowledge_before + 1
+    );
+    assert_eq!(
+        game.virtue_current(VirtueKindDto::Enlightenment),
+        enlightenment_before + 1
+    );
+    let telepathy = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_TELEPATHY)
+        .expect("Clairvoyance should grant temporary telepathy");
+    assert!((26..=55).contains(&telepathy.remaining_ticks));
+    assert_eq!(game.rng_draw_counter(), draws_before + 2);
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::AbilityDetected { .. }))
+            .count(),
+        2
+    );
+
+    let mut permanent = arcane_high_mage_game(
+        0x5045_524d_4145_5350,
+        46,
+        &["demo.ability.arcane-clairvoyance"],
+    );
+    let mana = permanent
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Arcane High-Mage should retain mana");
+    mana.current = 1_000;
+    mana.maximum = 1_000;
+    permanent
+        .ability_progress
+        .get_mut("demo.ability.arcane-clairvoyance")
+        .expect("Clairvoyance progress should exist")
+        .proficiency = SPELL_EXP_MASTER;
+    for virtue in &mut permanent.virtues {
+        if matches!(
+            virtue.kind,
+            VirtueKindDto::Knowledge | VirtueKindDto::Enlightenment
+        ) {
+            virtue.value = 0;
+        }
+    }
+    permanent
+        .progress
+        .active_mutation_ids
+        .insert("rfb.mutation.esp".to_owned());
+    let permanent_draws = permanent.rng_draw_counter();
+    permanent
+        .resolve_player_ability(
+            "demo.ability.arcane-clairvoyance",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("permanent ESP Clairvoyance should resolve");
+    assert!(permanent.player_has_permanent_telepathy());
+    assert!(!permanent.player_has_status_kind(STATUS_TELEPATHY));
+    assert_eq!(permanent.rng_draw_counter(), permanent_draws + 1);
+}
+
+#[test]
+fn death_high_mage_cannot_study_the_arcane_fourth_book() {
+    let mut game = high_mage_game(0x4445_4154_4841_5243);
+    game.progress.level = 100;
+    game.progress.max_level = 100;
+    give_inventory_item(
+        &mut game,
+        "test.foreign-manual",
+        "demo.item.manual-of-mastery",
+    );
+    assert_eq!(
+        game.study_player_ability("test.foreign-manual", "demo.ability.arcane-clairvoyance"),
+        Err("ability-not-supported")
+    );
 }
 
 #[test]

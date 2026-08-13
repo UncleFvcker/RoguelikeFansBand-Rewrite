@@ -13,7 +13,8 @@
     "demo.ability.arcane-teleport-away",
     "demo.ability.arcane-recharging",
     "demo.ability.arcane-detection",
-    "demo.ability.arcane-word-of-recall"
+    "demo.ability.arcane-word-of-recall",
+    "demo.ability.arcane-clairvoyance"
   ],
-  "tags": ["arcane", "incomplete", "spellbook"]
+  "tags": ["arcane", "spellbook"]
 }

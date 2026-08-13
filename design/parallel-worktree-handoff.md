@@ -394,3 +394,17 @@ git diff --stat
   `e18bce609c64e3f4f1875ac434f96956c51dc1052c6df34fdb30dddd6d5e9d9e`、
   Protocol `1.192`；State Hash Schema v93、save v1、active baseline 仍为 `contract-v284`。
   协议投影变更后已刷新并复验全部 26 条 active fixture，零 waiver。
+
+## 24. items-next 奥秘完整领域
+
+- `codex/items-next` 完成《大师手册》第八个法术“透视”：Knowledge 与 Enlightenment
+  各增加 1，永久绘制并照亮当前层、揭示全部地面物品；仅在没有永久 ESP 时获得
+  `25 + 1d30` 临时 ESP。实现使用一个窄复合事务，没有增加通用条件分支 DSL。
+- 《大师手册》现正式绑定八个法术并进入基础物品池及 Outpost、Anambar 两家书店；
+  Arcane 四册严格各八个法术。Arcane 出生仍只携带第一册，死亡构筑、High Mage 通用
+  出生装备和白马旅店奖励保持不变。
+- 共享协调点推进至 pack `1.302.0` / content hash
+  `d5030a65124dbd0850607da543481e079bfc33af6f628151ed898e3f5a84e718`、
+  Protocol `1.193`；State Hash Schema v93、save v1、active baseline 仍为 `contract-v284`。
+  两家书店的固定库存会统一改变新局物品实例序号，因此全部 26 条 active fixture 均属
+  实际受影响范围；已按 policy 刷新并复验，零 waiver。

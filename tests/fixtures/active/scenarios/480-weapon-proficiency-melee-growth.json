@@ -45,7 +45,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 170,
+      "rngDrawCounter": 172,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1534,7 +1534,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "a0e4a9193888f4e8951ced92f51bf149bec368db8813d7f516e6dcf203fcf06f"
+      "stateHash": "ed9b39fd21e02f3ce50ed39340e2d42f30914ee465ff926a04473116ce22d6b8"
     },
     "events": [
       {

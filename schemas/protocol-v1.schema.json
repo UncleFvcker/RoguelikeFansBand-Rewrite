@@ -2743,6 +2743,39 @@
         {
           "type": "object",
           "properties": {
+            "telepathyDurationDice": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "telepathyDurationSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "telepathyDurationTicks": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "clairvoyance"
+            }
+          },
+          "required": [
+            "type",
+            "telepathyDurationTicks",
+            "telepathyDurationDice",
+            "telepathyDurationSides"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "amount": {
               "type": "integer",
               "format": "uint32",

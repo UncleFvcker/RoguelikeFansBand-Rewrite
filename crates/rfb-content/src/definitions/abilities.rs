@@ -376,6 +376,11 @@ pub enum AbilityEffectDefinition {
     RechargeFromPlayer {
         power: u16,
     },
+    Clairvoyance {
+        telepathy_duration_ticks: u16,
+        telepathy_duration_dice: u8,
+        telepathy_duration_sides: u16,
+    },
     BirdDrop,
     DrainResource {
         amount: u32,

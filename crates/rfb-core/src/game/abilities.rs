@@ -683,6 +683,9 @@ impl Game {
                 AbilityEffectDefinition::RechargeFromPlayer { .. },
                 AbilityTargetPlan::Item { item_id },
             ) => self.resolve_player_recharge_effect(&ability, &item_id, events),
+            (AbilityEffectDefinition::Clairvoyance { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_clairvoyance_effect(&ability, events, changed)
+            }
             (AbilityEffectDefinition::ResistElements { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_resist_elements_effect(&ability, events)
             }
@@ -5247,6 +5250,131 @@ impl Game {
         ));
     }
 
+    fn resolve_player_clairvoyance_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::Clairvoyance {
+            telepathy_duration_ticks,
+            telepathy_duration_dice,
+            telepathy_duration_sides,
+        } = ability.effect
+        else {
+            unreachable!("clairvoyance executor requires a clairvoyance effect");
+        };
+
+        self.add_virtue(VirtueKindDto::Knowledge, 1);
+        self.add_virtue(VirtueKindDto::Enlightenment, 1);
+
+        let mut mapped_positions = Vec::with_capacity(self.terrain.len());
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let position = Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                };
+                let index = self.index(position).expect("floor position must be valid");
+                if !self.explored[index] || !self.glow[index] {
+                    changed.insert(position);
+                }
+                self.explored[index] = true;
+                self.glow[index] = true;
+                mapped_positions.push(position);
+            }
+        }
+        events.push(DomainEvent::AbilityDetected {
+            ability_id: ability.id.clone(),
+            resolution: AbilityDetectResolutionDto {
+                subject: AbilityDetectSubjectDto::Terrain,
+                category: "map".to_owned(),
+                radius: u8::MAX,
+                persistent: true,
+                through_walls: true,
+                detected_positions: mapped_positions,
+                detected_entity_ids: Vec::new(),
+            },
+        });
+
+        let mut ground_items = self
+            .items
+            .iter()
+            .filter_map(|item| match item.location {
+                ItemLocation::Ground(position) => {
+                    Some((position.y, position.x, item.id.clone(), position))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        ground_items.sort_by(|left, right| {
+            (left.0, left.1, left.2.as_str()).cmp(&(right.0, right.1, right.2.as_str()))
+        });
+        let item_ids = ground_items
+            .iter()
+            .map(|(_, _, item_id, _)| item_id.clone())
+            .collect::<Vec<_>>();
+        let item_positions = ground_items
+            .into_iter()
+            .map(|(_, _, _, position)| position)
+            .collect::<Vec<_>>();
+        self.mark_item_instances_discovered(&item_ids);
+        changed.extend(item_positions.iter().copied());
+        events.push(DomainEvent::AbilityDetected {
+            ability_id: ability.id.clone(),
+            resolution: AbilityDetectResolutionDto {
+                subject: AbilityDetectSubjectDto::Item,
+                category: "item".to_owned(),
+                radius: u8::MAX,
+                persistent: false,
+                through_walls: true,
+                detected_positions: item_positions,
+                detected_entity_ids: item_ids,
+            },
+        });
+
+        let telepathy_resolution = if self.player_has_permanent_telepathy() {
+            AbilityEffectResolutionDto::Skipped {
+                effect_index: 0,
+                reason: AbilityEffectSkipReasonDto::Ineligible,
+            }
+        } else {
+            apply_ability_status_effect(
+                &mut self.player,
+                &ability.id,
+                0,
+                STATUS_TELEPATHY,
+                1,
+                u32::from(telepathy_duration_ticks),
+                u16::from(telepathy_duration_dice),
+                u32::from(telepathy_duration_sides),
+                AbilityStatusStackingDefinition::KeepStrongest,
+                None,
+                None,
+                &BTreeMap::new(),
+                &BTreeSet::new(),
+                &StatModifiers::default(),
+                &EquipmentBonuses::default(),
+                &BTreeSet::new(),
+                None,
+                false,
+                100,
+                None,
+                None,
+                &mut self.rng,
+            )
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![telepathy_resolution],
+            },
+            trace: None,
+        });
+    }
+
     fn resolve_player_resist_elements_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -6331,6 +6459,7 @@ impl Game {
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
+            | AbilityEffectDefinition::Clairvoyance { .. }
             | AbilityEffectDefinition::LightArea { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability

@@ -140,7 +140,8 @@
           { "abilityId": "demo.ability.arcane-teleport-away", "minimumLevel": 35, "resourceCost": 28, "baseFailurePercent": 60 },
           { "abilityId": "demo.ability.arcane-recharging", "minimumLevel": 40, "resourceCost": 28, "baseFailurePercent": 55 },
           { "abilityId": "demo.ability.arcane-detection", "minimumLevel": 41, "resourceCost": 28, "baseFailurePercent": 70 },
-          { "abilityId": "demo.ability.arcane-word-of-recall", "minimumLevel": 43, "resourceCost": 40, "baseFailurePercent": 60 }
+          { "abilityId": "demo.ability.arcane-word-of-recall", "minimumLevel": 43, "resourceCost": 40, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.arcane-clairvoyance", "minimumLevel": 46, "resourceCost": 80, "baseFailurePercent": 70 }
         ]
       }
     ]

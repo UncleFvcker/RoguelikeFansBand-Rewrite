@@ -12,5 +12,5 @@
   "mogaminatorRare": false,
   "elementalDestructionVulnerabilities": ["fire"],
   "abilityBookId": "demo.ability-book.manual-of-mastery",
-  "tags": ["arcane", "book", "incomplete", "spellbook"]
+  "tags": ["arcane", "book", "spellbook"]
 }

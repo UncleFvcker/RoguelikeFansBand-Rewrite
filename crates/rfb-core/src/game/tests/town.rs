@@ -1083,13 +1083,14 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             ("demo.item.cantrips-for-beginners", 100),
             ("demo.item.minor-arcana", 250),
             ("demo.item.major-arcana", 1_000),
+            ("demo.item.manual-of-mastery", 2_500),
         ])
     );
     let book = shop
         .stock
         .iter()
         .find(|item| item.kind_id == "demo.item.black-prayers")
-        .expect("Bookstore should stock Stench of Death")
+        .expect("Bookstore should stock Black Prayers")
         .clone();
 
     let purchase = dispatch_next(

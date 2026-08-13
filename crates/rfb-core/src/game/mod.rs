@@ -6944,6 +6944,15 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::RechargeFromPlayer { power } => {
             AbilityEffectSpecDto::RechargeFromPlayer { power: *power }
         }
+        AbilityEffectDefinition::Clairvoyance {
+            telepathy_duration_ticks,
+            telepathy_duration_dice,
+            telepathy_duration_sides,
+        } => AbilityEffectSpecDto::Clairvoyance {
+            telepathy_duration_ticks: *telepathy_duration_ticks,
+            telepathy_duration_dice: *telepathy_duration_dice,
+            telepathy_duration_sides: *telepathy_duration_sides,
+        },
         AbilityEffectDefinition::DrainResource { amount } => {
             AbilityEffectSpecDto::DrainResource { amount: *amount }
         }
