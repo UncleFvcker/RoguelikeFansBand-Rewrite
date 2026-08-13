@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.jump-disintegrate-l70",
+  "descriptionKey": "ability-legacy-jump-disintegrate-l70-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.jump-disintegrate-l70",
+  "nameKey": "ability-legacy-jump-disintegrate-l70-name",
+  "tags": [
+    "legacy-import",
+    "innate",
+    "offense"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

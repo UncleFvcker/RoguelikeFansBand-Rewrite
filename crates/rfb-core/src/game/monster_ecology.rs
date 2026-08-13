@@ -24,6 +24,11 @@ const ELDRITCH_HIGH_RESISTANCE_ROLL: u64 = 33;
 const MORONIC_MUTATION_ID: &str = "rfb.mutation.moronic";
 const COWARDICE_MUTATION_ID: &str = "rfb.mutation.cowardice";
 const HALLUCINATION_MUTATION_ID: &str = "rfb.mutation.hallucination";
+pub(super) const BANOR_RUPART_COMBINED_KIND_ID: &str = "demo.actor.banor-rupart";
+pub(super) const BANOR_KIND_ID: &str = "demo.actor.banor-the-prince-regent";
+pub(super) const RUPART_KIND_ID: &str = "demo.actor.rupart-the-general";
+const BANOR_RUPART_KIND_IDS: [&str; 3] =
+    [BANOR_RUPART_COMBINED_KIND_ID, BANOR_KIND_ID, RUPART_KIND_ID];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum OriginalGroupRole {
@@ -58,6 +63,67 @@ pub(super) fn actor_allocation_matches_task(
 }
 
 impl Game {
+    pub(super) fn banor_rupart_group_is_defeated(&self) -> bool {
+        self.defeated_limited_actor_counts
+            .get(BANOR_RUPART_COMBINED_KIND_ID)
+            .is_some_and(|count| *count > 0)
+    }
+
+    pub(super) fn banor_rupart_living_count(&self) -> usize {
+        self.entities
+            .iter()
+            .chain(
+                self.stored_floors
+                    .values()
+                    .flat_map(|floor| floor.entities.iter()),
+            )
+            .filter(|actor| actor.hp > 0 && BANOR_RUPART_KIND_IDS.contains(&actor.kind_id.as_str()))
+            .count()
+    }
+
+    pub(super) fn record_banor_rupart_group_defeat(&mut self, kind_id: &str) {
+        if BANOR_RUPART_KIND_IDS.contains(&kind_id) {
+            let defeated = self
+                .defeated_limited_actor_counts
+                .entry(BANOR_RUPART_COMBINED_KIND_ID.to_owned())
+                .or_default();
+            *defeated = (*defeated).max(1);
+        }
+    }
+
+    pub(super) fn banor_rupart_lifetime_state_is_valid(&self) -> bool {
+        let mut combined = 0;
+        let mut split = 0;
+        for actor in self
+            .entities
+            .iter()
+            .chain(
+                self.stored_floors
+                    .values()
+                    .flat_map(|floor| floor.entities.iter()),
+            )
+            .filter(|actor| actor.hp > 0)
+        {
+            match actor.kind_id.as_str() {
+                BANOR_RUPART_COMBINED_KIND_ID => combined += 1,
+                BANOR_KIND_ID | RUPART_KIND_ID => split += 1,
+                _ => {}
+            }
+        }
+        let group_defeated = self.banor_rupart_group_is_defeated();
+        let split_defeated = [BANOR_KIND_ID, RUPART_KIND_ID].iter().any(|kind_id| {
+            self.defeated_limited_actor_counts
+                .get(*kind_id)
+                .is_some_and(|count| *count > 0)
+        });
+        combined <= 1
+            && split <= 2
+            && !(combined > 0 && split > 0)
+            && (!group_defeated || combined == 0 && split <= 1)
+            && (group_defeated || !split_defeated)
+            && (group_defeated || split != 1)
+    }
+
     pub(super) fn actor_runtime_definition<'a>(
         &'a self,
         actor: &Actor,
@@ -1042,10 +1108,11 @@ impl Game {
                     && definition.level <= u32::from(level)
                     && (allocation.max_depth == 0 || allocation.max_depth >= level)
                     && (!actor_is_unique(definition)
-                        || (self.unique_actor_kind_is_available(&definition.id)
-                            && !target_floor_kind_ids
-                                .iter()
-                                .any(|kind_id| kind_id == &definition.id)))
+                        || target_floor_kind_ids
+                            .iter()
+                            .filter(|kind_id| *kind_id == &definition.id)
+                            .count()
+                            < self.actor_kind_available_instance_count(&definition.id))
                     && actor_matches_surface_habitat(definition, terrain, wilderness_terrain)
                     && actor_matches_wilderness_daytime(definition, daytime)
                     && actor_can_cross_terrain(definition, terrain)
@@ -1263,16 +1330,29 @@ impl Game {
         }
     }
 
-    pub(super) fn unique_actor_kind_is_available(&self, kind_id: &str) -> bool {
-        if self.defeated_unique_actor_kind_ids.contains(kind_id)
-            || self
-                .entities
-                .iter()
-                .any(|actor| actor.kind_id == kind_id && actor.hp > 0)
-        {
-            return false;
+    pub(super) fn actor_kind_available_instance_count(&self, kind_id: &str) -> usize {
+        let Some(definition) = self.content.actor(kind_id) else {
+            return 0;
+        };
+        if matches!(kind_id, BANOR_KIND_ID | RUPART_KIND_ID) {
+            return 0;
         }
-        let captured_here = self
+        if kind_id == BANOR_RUPART_COMBINED_KIND_ID
+            && (self.banor_rupart_group_is_defeated() || self.banor_rupart_living_count() > 0)
+        {
+            return 0;
+        }
+        let living = self
+            .entities
+            .iter()
+            .chain(
+                self.stored_floors
+                    .values()
+                    .flat_map(|floor| floor.entities.iter()),
+            )
+            .filter(|actor| actor.kind_id == kind_id && actor.hp > 0)
+            .count();
+        let captured = self
             .items
             .iter()
             .chain(
@@ -1290,20 +1370,30 @@ impl Game {
                     .values()
                     .flat_map(|home| home.inventory.iter()),
             )
-            .any(|item| {
+            .filter(|item| {
                 item.captured_actor
                     .as_ref()
                     .is_some_and(|captured| captured.kind_id == kind_id)
-            });
-        if captured_here {
-            return false;
+            })
+            .count();
+        let occupied = living.saturating_add(captured);
+        if let Some(limit) = definition.finite_lifetime_instance_limit() {
+            let defeated = usize::from(
+                self.defeated_limited_actor_counts
+                    .get(kind_id)
+                    .copied()
+                    .unwrap_or(0),
+            );
+            return usize::from(limit).saturating_sub(defeated.saturating_add(occupied));
         }
-        !self.stored_floors.values().any(|floor| {
-            floor
-                .entities
-                .iter()
-                .any(|actor| actor.kind_id == kind_id && actor.hp > 0)
-        })
+        if definition.tags.iter().any(|tag| tag == "unique2") {
+            return usize::from(occupied == 0);
+        }
+        usize::MAX
+    }
+
+    pub(super) fn unique_actor_kind_is_available(&self, kind_id: &str) -> bool {
+        self.actor_kind_available_instance_count(kind_id) > 0
     }
 
     pub(super) fn original_allocation_level(&mut self, base_level: u16) -> u16 {
@@ -1411,10 +1501,11 @@ impl Game {
                     )
                     || (actor_is_unique(definition)
                         && (!allow_uniques
-                            || !self.unique_actor_kind_is_available(&definition.id)
                             || target_floor_kind_ids
                                 .iter()
-                                .any(|kind_id| kind_id == &definition.id)))
+                                .filter(|kind_id| *kind_id == &definition.id)
+                                .count()
+                                >= self.actor_kind_available_instance_count(&definition.id)))
                 {
                     return false;
                 }

@@ -237,6 +237,10 @@ pub enum MeleeBlowEffectDefinition {
         #[serde(default)]
         chance_percent: Option<u8>,
     },
+    PolymorphPlayer {
+        #[serde(default)]
+        chance_percent: Option<u8>,
+    },
     Stun {
         #[serde(default)]
         chance_percent: Option<u8>,
@@ -490,9 +494,21 @@ pub struct ActorDefinition {
     /// Whether the original monster is materially silver.
     #[serde(default)]
     pub made_of_silver: bool,
+    /// Maximum number of instances that may ever exist across one campaign.
+    /// Ordinary `unique` actors implicitly use one when this is absent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub lifetime_instance_limit: Option<u16>,
     #[serde(default)]
     pub door_interaction: ActorDoorInteractionDefinition,
     pub tags: Vec<String>,
+}
+
+impl ActorDefinition {
+    #[must_use]
+    pub fn finite_lifetime_instance_limit(&self) -> Option<u16> {
+        self.lifetime_instance_limit
+            .or_else(|| self.tags.iter().any(|tag| tag == "unique").then_some(1))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

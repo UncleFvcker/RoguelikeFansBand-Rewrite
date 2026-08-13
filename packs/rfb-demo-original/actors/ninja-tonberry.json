@@ -1,0 +1,67 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1088,
+    "maxDepth": 999,
+    "rarity": 7
+  },
+  "attack": 20,
+  "damageDice": 35,
+  "damageSides": 20,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 7,
+  "descriptionKey": "actor-demo-ninja-tonberry-description",
+  "experienceValue": 5000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "h",
+  "hitPointDice": {
+    "dice": 20,
+    "sides": 100
+  },
+  "id": "demo.actor.ninja-tonberry",
+  "level": 80,
+  "maxHp": 1010,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 35,
+            "damageSides": 20,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-item"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-ninja-tonberry-name",
+  "role": "monster",
+  "speed": 125,
+  "tags": [
+    "aura-revenge",
+    "kin-glyph-104",
+    "legacy-import",
+    "orc-cave",
+    "thief"
+  ]
+}

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 26,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-tonberry-description",
+  "experiencePercent": 175,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.tonberry",
+  "kinCategory": "kin-glyph-104",
+  "legacyIndex": 1,
+  "lifePercent": 108,
+  "modifiers": {
+    "constitution": 5,
+    "dexterity": -4,
+    "speed": -1,
+    "strength": 4,
+    "wisdom": -2
+  },
+  "nameKey": "race-legacy-tonberry-name",
+  "shopAdjustPercent": 115,
+  "skillSetId": "rfb-legacy.skill-set.race-tonberry",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

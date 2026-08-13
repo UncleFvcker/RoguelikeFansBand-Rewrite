@@ -1,0 +1,89 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 20,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-half-orc-description",
+  "experiencePercent": 110,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.half-orc",
+  "kinCategory": "kin-glyph-111",
+  "legacyIndex": 63,
+  "lifePercent": 103,
+  "modifiers": {
+    "charisma": -1,
+    "constitution": 1,
+    "intelligence": -1,
+    "strength": 2
+  },
+  "nameKey": "race-legacy-half-orc-name",
+  "resistances": {
+    "dark": "resistant"
+  },
+  "shopAdjustPercent": 120,
+  "skillSetId": "rfb-legacy.skill-set.race-half-orc",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

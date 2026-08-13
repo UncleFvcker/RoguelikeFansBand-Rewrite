@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.bolt-water-10d10-70",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-legacy-bolt-water-10d10-70-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.bolt-water-10d10-70",
+  "nameKey": "ability-legacy-bolt-water-10d10-70-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

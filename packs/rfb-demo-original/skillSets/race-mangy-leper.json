@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json",
+  "entries": [
+    {
+      "base": 10,
+      "skillId": "demo.skill.perception"
+    }
+  ],
+  "formatVersion": 1,
+  "id": "rfb-legacy.skill-set.race-mangy-leper"
+}

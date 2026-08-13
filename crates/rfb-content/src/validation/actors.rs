@@ -87,6 +87,12 @@ pub(super) fn validate_actors(
             || (actor.role != ActorRole::Monster && actor.reflects_bolts)
             || (actor.role != ActorRole::Monster
                 && actor.capture_policy != ActorCapturePolicyDefinition::Normal)
+            || actor.lifetime_instance_limit.is_some_and(|limit| {
+                limit < 2
+                    || actor.role != ActorRole::Monster
+                    || !actor.tags.iter().any(|tag| tag == "unique")
+                    || actor.tags.iter().any(|tag| tag == "unique2")
+            })
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }
@@ -322,7 +328,11 @@ pub(super) fn validate_actors(
                         | ActorDamageType::Light
                         | ActorDamageType::Nether
                         | ActorDamageType::HolyFire
+                        | ActorDamageType::HellFire
+                        | ActorDamageType::Plasma
                         | ActorDamageType::Electricity
+                        | ActorDamageType::Dark
+                        | ActorDamageType::Disintegrate
                         | ActorDamageType::Curse
                         | ActorDamageType::Shards
                 ) || !(1..=100).contains(&aura.damage_dice)
@@ -454,6 +464,7 @@ fn valid_melee_effect(effect: &MeleeBlowEffectDefinition) -> bool {
         | MeleeBlowEffectDefinition::Time { chance_percent }
         | MeleeBlowEffectDefinition::Slow { chance_percent }
         | MeleeBlowEffectDefinition::Inertia { chance_percent }
+        | MeleeBlowEffectDefinition::PolymorphPlayer { chance_percent }
         | MeleeBlowEffectDefinition::Terrify { chance_percent }
         | MeleeBlowEffectDefinition::Disenchant { chance_percent }
         | MeleeBlowEffectDefinition::EatGold { chance_percent }

@@ -1,0 +1,172 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1233,
+    "maxDepth": 999,
+    "randomMovementPercent": 25,
+    "rarity": 3
+  },
+  "attack": 17,
+  "contactAuras": [
+    {
+      "damageDice": 6,
+      "damageSides": 8,
+      "damageType": "shards"
+    }
+  ],
+  "damageDice": 4,
+  "damageSides": 14,
+  "damageType": "physical",
+  "defense": 12,
+  "descriptionKey": "actor-demo-muru-siloch-the-spinning-abomination-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 38720,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "v",
+  "hitPointDice": {
+    "dice": 39,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.muru-siloch-the-spinning-abomination",
+  "level": 71,
+  "maxHp": 4719,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 75,
+            "durationDice": 4,
+            "durationSides": 12,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 15,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 75,
+            "durationDice": 4,
+            "durationSides": 13,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 16,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 75,
+            "durationDice": 4,
+            "durationSides": 14,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 17,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 4,
+            "durationSides": 15,
+            "type": "bleeding"
+          },
+          {
+            "amountDice": 3,
+            "amountSides": 7,
+            "chancePercent": 25,
+            "type": "unlife"
+          }
+        ],
+        "methodId": "rfb.blow.engulf",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.breath-shards-17-500-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movement": {
+    "modes": [
+      "fly",
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-muru-siloch-the-spinning-abomination-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune",
+    "shards": "resistant"
+  },
+  "role": "monster",
+  "speed": 132,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "empty-mind",
+    "kin-glyph-118",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "destroysWalls": true
+  }
+}

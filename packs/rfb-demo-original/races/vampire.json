@@ -1,0 +1,95 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 22,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-vampire-description",
+  "experiencePercent": 200,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.vampire",
+  "kinCategory": "kin-glyph-86",
+  "legacyIndex": 26,
+  "lifePercent": 102,
+  "modifiers": {
+    "charisma": 2,
+    "constitution": 1,
+    "dexterity": -1,
+    "intelligence": 3,
+    "strength": 3,
+    "wisdom": -1
+  },
+  "nameKey": "race-legacy-vampire-name",
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "light": "vulnerable",
+    "nether": "resistant",
+    "poison": "resistant"
+  },
+  "shopAdjustPercent": 130,
+  "skillSetId": "rfb-legacy.skill-set.race-vampire",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

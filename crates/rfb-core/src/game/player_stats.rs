@@ -233,6 +233,7 @@ fn projected_blow_damage(effects: &[MeleeBlowEffectDefinition]) -> DamageDiceDto
             | MeleeBlowEffectDefinition::Time { .. }
             | MeleeBlowEffectDefinition::Slow { .. }
             | MeleeBlowEffectDefinition::Inertia { .. }
+            | MeleeBlowEffectDefinition::PolymorphPlayer { .. }
             | MeleeBlowEffectDefinition::Stun { .. }
             | MeleeBlowEffectDefinition::Terrify { .. }
             | MeleeBlowEffectDefinition::Disenchant { .. }

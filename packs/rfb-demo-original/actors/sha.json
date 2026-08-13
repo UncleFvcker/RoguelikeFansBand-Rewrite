@@ -1,0 +1,165 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1270,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 16,
+  "damageDice": 5,
+  "damageSides": 12,
+  "damageType": "physical",
+  "defense": 12,
+  "descriptionKey": "actor-demo-sha-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 18150,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "H",
+  "hitPointDice": {
+    "dice": 22,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.sha",
+  "level": 65,
+  "maxHp": 2662,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 7,
+            "type": "bleeding"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 40,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "chaos",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 12,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 5,
+            "durationSides": 7,
+            "type": "bleeding"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 4,
+            "damageSides": 6,
+            "damageType": "electricity",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 8,
+            "damageSides": 14,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 6,
+            "durationSides": 6,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 3,
+            "durationSides": 3,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.butt",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.drain-mana-33",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-force-33-200-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 12
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-sha-name",
+  "reflectsBolts": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "dark": "resistant",
+    "electricity": "immune",
+    "fire": "resistant",
+    "nether": "resistant",
+    "poison": "resistant"
+  },
+  "rideable": true,
+  "role": "monster",
+  "speed": 144,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "animal",
+    "evil",
+    "kin-glyph-72",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

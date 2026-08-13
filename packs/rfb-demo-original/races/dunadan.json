@@ -1,0 +1,87 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 20,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-dunadan-description",
+  "experiencePercent": 160,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.dunadan",
+  "kinCategory": "kin-glyph-112",
+  "legacyIndex": 33,
+  "lifePercent": 100,
+  "modifiers": {
+    "constitution": 3,
+    "dexterity": 2,
+    "intelligence": 2,
+    "strength": 1,
+    "wisdom": 2
+  },
+  "nameKey": "race-legacy-dunadan-name",
+  "shopAdjustPercent": 100,
+  "skillSetId": "rfb-legacy.skill-set.race-dunadan",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

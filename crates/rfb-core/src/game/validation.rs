@@ -396,26 +396,26 @@ impl Game {
         {
             return Err(CoreError::InvalidSave("local wilderness state is invalid"));
         }
-        if self.defeated_unique_actor_kind_ids.iter().any(|kind_id| {
-            !self.content.actor(kind_id).is_some_and(|definition| {
-                definition.tags.iter().any(|tag| tag == "unique")
-                    && !definition.tags.iter().any(|tag| tag == "guardian")
-            }) || self
-                .entities
-                .iter()
-                .chain(
-                    self.stored_floors
-                        .values()
-                        .flat_map(|floor| floor.entities.iter()),
-                )
-                .any(|actor| actor.hp > 0 && actor.kind_id == *kind_id)
-        }) {
+        if self
+            .defeated_limited_actor_counts
+            .iter()
+            .any(|(kind_id, count)| {
+                *count == 0
+                    || !self.content.actor(kind_id).is_some_and(|definition| {
+                        definition
+                            .finite_lifetime_instance_limit()
+                            .is_some_and(|limit| *count <= limit)
+                            && !definition.tags.iter().any(|tag| tag == "guardian")
+                    })
+            })
+        {
             return Err(CoreError::InvalidSave(
-                "defeated unique actor state is invalid",
+                "defeated limited actor state is invalid",
             ));
         }
-        let mut living_unique_actor_kind_ids = BTreeSet::new();
-        if self
+        let mut living_limited_actor_counts = BTreeMap::<&str, usize>::new();
+        let mut living_unique2_actor_kind_ids = BTreeSet::new();
+        for actor in self
             .entities
             .iter()
             .chain(
@@ -424,21 +424,50 @@ impl Game {
                     .flat_map(|floor| floor.entities.iter()),
             )
             .filter(|actor| actor.hp > 0)
-            .filter(|actor| {
-                self.content
-                    .actor(&actor.kind_id)
-                    .is_some_and(|definition| {
-                        definition
-                            .tags
-                            .iter()
-                            .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
-                            && !definition.tags.iter().any(|tag| tag == "guardian")
-                    })
-            })
-            .any(|actor| !living_unique_actor_kind_ids.insert(actor.kind_id.as_str()))
         {
+            let Some(definition) = self.content.actor(&actor.kind_id) else {
+                continue;
+            };
+            if definition.tags.iter().any(|tag| tag == "guardian") {
+                continue;
+            }
+            if definition.finite_lifetime_instance_limit().is_some() {
+                *living_limited_actor_counts
+                    .entry(actor.kind_id.as_str())
+                    .or_default() += 1;
+            } else if definition.tags.iter().any(|tag| tag == "unique2")
+                && !living_unique2_actor_kind_ids.insert(actor.kind_id.as_str())
+            {
+                return Err(CoreError::InvalidSave(
+                    "living unique actor state is duplicated",
+                ));
+            }
+        }
+        if living_limited_actor_counts.iter().any(|(kind_id, living)| {
+            let definition = self
+                .content
+                .actor(kind_id)
+                .expect("living actor definition must remain available");
+            let limit = usize::from(
+                definition
+                    .finite_lifetime_instance_limit()
+                    .expect("limited actor must retain a lifetime limit"),
+            );
+            let defeated = usize::from(
+                self.defeated_limited_actor_counts
+                    .get(*kind_id)
+                    .copied()
+                    .unwrap_or(0),
+            );
+            defeated.saturating_add(*living) > limit
+        }) {
             return Err(CoreError::InvalidSave(
-                "living unique actor state is duplicated",
+                "living limited actor state exceeds its lifetime limit",
+            ));
+        }
+        if !self.banor_rupart_lifetime_state_is_valid() {
+            return Err(CoreError::InvalidSave(
+                "Banor and Rupart lifetime state is invalid",
             ));
         }
         let formal_town_ids = world
@@ -690,6 +719,21 @@ impl Game {
             return Err(CoreError::InvalidSave("character progress is invalid"));
         }
         self.validate_actor(&self.player, ActorRole::Player)?;
+        let expected_body_slots = self
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_PLAYER_POLYMORPH)
+            .and_then(|status| status.granted_race_id.as_deref())
+            .and_then(|race_id| self.content.race(race_id))
+            .map(body_slots_for_race)
+            .map(Ok)
+            .unwrap_or_else(|| resolve_body_slots(&self.content, self.build.as_ref()))?;
+        if self.body_slots != expected_body_slots {
+            return Err(CoreError::InvalidSave(
+                "player body slots do not match the active race",
+            ));
+        }
         if self.index(self.player.position).is_none() {
             return Err(CoreError::InvalidSave("player position is invalid"));
         }
@@ -1423,7 +1467,14 @@ impl Game {
         }) && actor
             .statuses
             .windows(2)
-            .all(|window| window[0].kind_id < window[1].kind_id);
+            .all(|window| window[0].kind_id < window[1].kind_id)
+            && (expected_role != ActorRole::Player
+                || actor
+                    .statuses
+                    .iter()
+                    .filter(|status| status.granted_race_id.is_some())
+                    .count()
+                    <= 1);
         let resistance_memory_is_valid = if actor.observed_player_resistances.is_empty() {
             true
         } else {

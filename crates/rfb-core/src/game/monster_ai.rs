@@ -14,6 +14,7 @@ impl Game {
             events,
             &mut BTreeSet::new(),
             &mut Vec::new(),
+            false,
         )
         .expect("monster ability test resolution should preserve invariants")
     }
@@ -24,6 +25,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
+        world_stopped: bool,
     ) -> Result<bool, CoreError> {
         // RFB's FORCE_SLEEP flag creates a one-player-action "nice" window,
         // not the ordinary sleep status. Nice monsters may still move and
@@ -59,6 +61,21 @@ impl Game {
                 .ability(&candidate.ability_id)
                 .expect("validated monster ability must remain available")
                 .clone();
+            if world_stopped && ability.tags.iter().any(|tag| tag == "monster-world") {
+                candidates.push(MonsterAbilityCandidateResolutionDto {
+                    ability_id: candidate.ability_id.clone(),
+                    base_weight: candidate.weight,
+                    effective_weight: 0,
+                    target_entity_id: None,
+                    target_kind_id: None,
+                    target_position: None,
+                    affected_positions: Vec::new(),
+                    enemy_target_count: 0,
+                    friendly_risk_count: 0,
+                    rejection_reason: Some(MonsterAbilityRejectionReasonDto::NoUtility),
+                });
+                continue;
+            }
             match self.monster_ability_plan(index, ability, candidate.weight) {
                 Ok(plan) => {
                     candidates.push(self.monster_ability_candidate_dto(index, &plan, None));
@@ -122,6 +139,7 @@ impl Game {
             return Ok(false);
         };
         let plan = viable[selected_index].clone();
+        let stops_world = plan.ability.tags.iter().any(|tag| tag == "monster-world");
         self.entities[index].casting_cooldown_remaining =
             monster_casting_cooldown(casting.frequency_percent);
         let player_hp_before = self.player.hp;
@@ -189,7 +207,54 @@ impl Game {
                 removed_entities,
             )?;
         }
+        if stops_world {
+            self.resolve_monster_world_actions(
+                &source_entity_id,
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
         Ok(true)
+    }
+
+    fn resolve_monster_world_actions(
+        &mut self,
+        source_entity_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let extra_actions = self.rng.bounded(2) + 3;
+        let floor_id = self.current_floor_id.clone();
+        let mut surround_reservations = BTreeSet::new();
+        for _ in 0..extra_actions {
+            if self.player_is_dead() || self.current_floor_id != floor_id {
+                break;
+            }
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == source_entity_id && entity.hp > 0)
+            else {
+                break;
+            };
+            let visible_monster_auras_before_action = self.visible_monster_aura_entity_ids();
+            self.resolve_monster_action_during_world(
+                index,
+                events,
+                changed,
+                removed_entities,
+                &mut surround_reservations,
+                true,
+            )?;
+            self.resolve_newly_visible_monster_auras(
+                &visible_monster_auras_before_action,
+                events,
+                changed,
+            );
+        }
+        Ok(())
     }
 
     pub(super) fn monster_ability_plan(
@@ -302,6 +367,9 @@ impl Game {
         ability: &AbilityDefinition,
         target: &MonsterAbilityTargetPlan,
     ) -> Option<u32> {
+        if ability.tags.iter().any(|tag| tag == "monster-world") {
+            return Some(1);
+        }
         if matches!(
             target,
             MonsterAbilityTargetPlan::Area { .. }
@@ -311,6 +379,8 @@ impl Game {
                 | MonsterAbilityTargetPlan::TerrainTransform { .. }
                 | MonsterAbilityTargetPlan::Summon { .. }
                 | MonsterAbilityTargetPlan::SummonCategory { .. }
+                | MonsterAbilityTargetPlan::BanorRupartSplit { .. }
+                | MonsterAbilityTargetPlan::BanorRupartMerge { .. }
         ) {
             return Some(1);
         }
@@ -453,6 +523,18 @@ impl Game {
                     Some(source.kind_id.clone()),
                     Some(source.position),
                     positions.clone(),
+                ),
+                MonsterAbilityTargetPlan::BanorRupartSplit { positions } => (
+                    Some(source.id.clone()),
+                    Some(source.kind_id.clone()),
+                    Some(source.position),
+                    positions.clone(),
+                ),
+                MonsterAbilityTargetPlan::BanorRupartMerge { destination, .. } => (
+                    Some(source.id.clone()),
+                    Some(source.kind_id.clone()),
+                    Some(source.position),
+                    vec![source.position, *destination],
                 ),
                 MonsterAbilityTargetPlan::Projectile { target, .. } => (
                     Some(target.entity_id().to_owned()),

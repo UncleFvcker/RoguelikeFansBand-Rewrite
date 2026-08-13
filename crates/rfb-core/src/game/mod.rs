@@ -20,12 +20,12 @@ use crate::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_ANTI_MAGIC,
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
         STATUS_CONFUSION, STATUS_FEAR, STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE,
-        STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY, STATUS_PARALYSIS, STATUS_POISON,
-        STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT,
-        STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE,
-        STATUS_TSUYOSHI, STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
-        StatusApplication, StatusChange, StatusInstance, StatusStacking, apply_effect,
-        apply_status, resolve_damage,
+        STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY, STATUS_PARALYSIS,
+        STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION,
+        STATUS_SEE_INVISIBLE, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
+        STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TSUYOSHI, STATUS_UNDERSTANDING,
+        STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM, StatusApplication, StatusChange,
+        StatusInstance, StatusStacking, apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
     event::{
@@ -71,10 +71,10 @@ use rfb_content::{
     MutationActivationDefinition, MutationPeriodicEffectDefinition, PlayerAbilityDefinition,
     ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
     ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, RidingWeaponKindDefinition, SkillKind, SlayLevel,
-    SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
-    TerrainDiggingResolution, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition,
-    WeaponBrand, affix_is_compatible_with_item,
+    ProceduralStreamerCandidateDefinition, RaceDefinition, RidingWeaponKindDefinition, SkillKind,
+    SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
+    TechniqueAttribute, TerrainDiggingResolution, TerrainFeatureEntryDefinition,
+    ThemeVaultCandidateDefinition, WeaponBrand, affix_is_compatible_with_item,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
@@ -206,7 +206,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 96;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 97;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -405,6 +405,13 @@ enum MonsterAbilityTargetPlan {
         candidate_kind_ids: Vec<String>,
         positions: Vec<Position>,
     },
+    BanorRupartSplit {
+        positions: Vec<Position>,
+    },
+    BanorRupartMerge {
+        counterpart_entity_id: String,
+        destination: Position,
+    },
     BlinkSelf {
         destinations: Vec<Position>,
     },
@@ -449,6 +456,8 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
         | MonsterAbilityTargetPlan::JumpDamage { .. }
         | MonsterAbilityTargetPlan::Summon { .. }
         | MonsterAbilityTargetPlan::SummonCategory { .. }
+        | MonsterAbilityTargetPlan::BanorRupartSplit { .. }
+        | MonsterAbilityTargetPlan::BanorRupartMerge { .. }
         | MonsterAbilityTargetPlan::BlinkSelf { .. }
         | MonsterAbilityTargetPlan::EscapeSelf { .. } => None,
     }
@@ -579,6 +588,19 @@ fn standard_body_slots() -> Vec<BodySlot> {
         .collect()
 }
 
+fn body_slots_for_race(race: &RaceDefinition) -> Vec<BodySlot> {
+    if race.body_slots.is_empty() {
+        return standard_body_slots();
+    }
+    race.body_slots
+        .iter()
+        .map(|slot| BodySlot {
+            id: slot.id.clone(),
+            slot_type: slot.slot_type.clone(),
+        })
+        .collect()
+}
+
 /// Body slots come from the build's race when it declares any, otherwise
 /// the standard template applies. Games without a build use the standard
 /// template as well.
@@ -590,17 +612,7 @@ fn resolve_body_slots(
         return Ok(standard_body_slots());
     };
     let (_, race, _, _) = build_definitions(content, identity)?;
-    if race.body_slots.is_empty() {
-        return Ok(standard_body_slots());
-    }
-    Ok(race
-        .body_slots
-        .iter()
-        .map(|slot| BodySlot {
-            id: slot.id.clone(),
-            slot_type: slot.slot_type.clone(),
-        })
-        .collect())
+    Ok(body_slots_for_race(race))
 }
 
 fn body_slot_instance_for_type<'a>(
@@ -881,7 +893,7 @@ pub struct Game {
     task_states: BTreeMap<String, TaskState>,
     command_actor_deaths: Vec<ActorDeathRecord>,
     dungeon_states: BTreeMap<String, DungeonState>,
-    defeated_unique_actor_kind_ids: BTreeSet<String>,
+    defeated_limited_actor_counts: BTreeMap<String, u16>,
     generated_artifact_ids: BTreeSet<String>,
     town_states: BTreeMap<String, TownState>,
     shop_states: BTreeMap<String, ShopState>,
@@ -1225,7 +1237,7 @@ impl Game {
             task_states,
             command_actor_deaths: Vec::new(),
             dungeon_states,
-            defeated_unique_actor_kind_ids: BTreeSet::new(),
+            defeated_limited_actor_counts: BTreeMap::new(),
             generated_artifact_ids,
             town_states,
             shop_states,
@@ -2995,8 +3007,9 @@ impl Game {
                 .iter()
                 .enumerate()
                 .filter_map(|(index, kind_id)| {
-                    self.actor_kind_can_enter_position(kind_id, position)
-                        .then_some(index)
+                    (self.actor_kind_available_instance_count(kind_id) > 0
+                        && self.actor_kind_can_enter_position(kind_id, position))
+                    .then_some(index)
                 })
                 .collect::<Vec<_>>();
             if eligible_choices.is_empty() {
@@ -3013,13 +3026,6 @@ impl Game {
                 .actor(&kind_id)
                 .expect("planned summon candidate must remain available")
                 .clone();
-            if definition
-                .tags
-                .iter()
-                .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
-            {
-                candidates.remove(choice);
-            }
             let id = self.summon_entity_id(spec.source_id, entity_ids.len());
             let mut entity = spawn_actor_from_definition(
                 &mut self.rng,
@@ -3043,9 +3049,12 @@ impl Game {
             }
             changed.insert(position);
             entity_ids.push(id);
-            summoned_kind_ids.push(kind_id);
+            summoned_kind_ids.push(kind_id.clone());
             used_positions.push(position);
             self.entities.push(entity);
+            if self.actor_kind_available_instance_count(&kind_id) == 0 {
+                candidates.remove(choice);
+            }
         }
         AbilitySummonResolutionDto {
             owner_id: spec.owner_id.to_owned(),
@@ -4102,6 +4111,25 @@ impl Game {
         removed_entities: &mut Vec<String>,
         surround_reservations: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
+        self.resolve_monster_action_during_world(
+            index,
+            events,
+            changed,
+            removed_entities,
+            surround_reservations,
+            false,
+        )
+    }
+
+    fn resolve_monster_action_during_world(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+        surround_reservations: &mut BTreeSet<Position>,
+        world_stopped: bool,
+    ) -> Result<(), CoreError> {
         self.maybe_change_chameleon_form(index, events, changed);
         self.reroll_shapechanger_appearance(index);
         let never_moves = self
@@ -4124,7 +4152,13 @@ impl Game {
         if !self.entities[index].alerted && !self.resolve_monster_detection(index, events) {
             return Ok(());
         }
-        if self.resolve_monster_ability_with_changes(index, events, changed, removed_entities)? {
+        if self.resolve_monster_ability_with_changes(
+            index,
+            events,
+            changed,
+            removed_entities,
+            world_stopped,
+        )? {
             return Ok(());
         }
         if !never_moves

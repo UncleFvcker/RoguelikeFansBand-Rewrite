@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 16,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-wood-elf-description",
+  "experiencePercent": 125,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.wood-elf",
+  "kinCategory": "kin-glyph-104",
+  "legacyIndex": 60,
+  "lifePercent": 97,
+  "modifiers": {
+    "charisma": 1,
+    "constitution": -1,
+    "dexterity": 1,
+    "intelligence": 1,
+    "strength": -1,
+    "wisdom": 2
+  },
+  "nameKey": "race-legacy-wood-elf-name",
+  "shopAdjustPercent": 95,
+  "skillSetId": "rfb-legacy.skill-set.race-wood-elf",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

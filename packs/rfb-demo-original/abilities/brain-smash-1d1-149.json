@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.brain-smash-1d1-149",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-legacy-brain-smash-1d1-149-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.brain-smash-1d1-149",
+  "nameKey": "ability-legacy-brain-smash-1d1-149-name",
+  "tags": [
+    "legacy-import",
+    "psi"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

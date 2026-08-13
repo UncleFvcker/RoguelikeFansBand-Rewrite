@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-the-witch-king-of-angmar",
+  "descriptionKey": "ability-legacy-kin-the-witch-king-of-angmar-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-the-witch-king-of-angmar",
+  "nameKey": "ability-legacy-kin-the-witch-king-of-angmar-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

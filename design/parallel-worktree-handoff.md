@@ -526,3 +526,23 @@ git diff --stat
   `900d8b206a6bc3e186ccc57559f955ab676840dacf0013ed5d2790fb408d49d9`、Protocol `1.194`、
   State Hash Schema v96、save v1、active baseline `contract-v291`（26 条 exact fixture、
   零 waiver）。`codex/items-next` 分支及工作树继续保留。
+
+## 32. main 当前交接（monsters P61–P72 增量整合）
+
+- 有限生命周期怪物统一使用 `defeatedLimitedActorCounts`：普通 Unique 上限 1，`unique2`
+  只限制同时存活，戒灵使用显式总额度 5。当前楼层、stored floors 与捕获球中的怪物共同
+  占用额度；非死亡移除不写入死亡表。旧开发存档不兼容缺少该字段的 payload。
+- 玩家临时变形复用 `grantedRaceId` 状态及 44 个只供变形使用的 race profile；身体槽随
+  形态调整，不合槽装备移入背包或落地。Lord of Change 的近战效果、原版免疫/豁免和
+  RNG 顺序均保留，变形 profile 不开放为出生 build。
+- P63–P72 完成 L64–80 的直接批次、低风险共享映射、Dio 的 WORLD 额外行动、神系标签与
+  召唤、Aegir 水流召唤链、Banor/Rupart 分合生命周期以及 ocean/dungeon/fixed-placement
+  地点边界。L71–80 审计为 83 imported、76 selected、0 direct、0 blocked、7 excluded；
+  excluded 表示地点限制而非内容缺口。
+- 与 main 的骑术/捕获球及 items 的 Arcane 领域组合后，捕获球中的有限生命周期怪物会
+  正确占用生成额度；坐骑受怪物能力伤害及变形时仍复用共享落马事务；Arcane 与 monster
+  ability 的协议表面同时保留。
+- 共享协调点：pack `1.312.0`、Protocol `1.195`、State Hash Schema v97、save v1、
+  active baseline `contract-v292`（26 条 exact fixture、零 waiver），content hash
+  `f66b18b842e434ef84787e664a4fe94107a27b2f47bbf0a6ddffb087c0c0284b`。
+  `codex/monsters-next` 分支及工作树继续保留。

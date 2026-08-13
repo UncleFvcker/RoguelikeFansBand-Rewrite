@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 16,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-gnome-description",
+  "experiencePercent": 115,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.gnome",
+  "kinCategory": "kin-glyph-104",
+  "legacyIndex": 4,
+  "lifePercent": 95,
+  "modifiers": {
+    "charisma": -1,
+    "constitution": 1,
+    "dexterity": 2,
+    "intelligence": 2,
+    "strength": -1,
+    "wisdom": -1
+  },
+  "nameKey": "race-legacy-gnome-name",
+  "shopAdjustPercent": 115,
+  "skillSetId": "rfb-legacy.skill-set.race-gnome",
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

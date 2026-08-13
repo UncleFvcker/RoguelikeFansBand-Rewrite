@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-omarax-the-eye-tyrant",
+  "descriptionKey": "ability-legacy-kin-omarax-the-eye-tyrant-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-omarax-the-eye-tyrant",
+  "nameKey": "ability-legacy-kin-omarax-the-eye-tyrant-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

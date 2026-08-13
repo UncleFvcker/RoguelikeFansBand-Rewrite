@@ -32,6 +32,325 @@ fn monster_effect_game_with_method(
     game
 }
 
+fn resolve_p62_polymorph(game: &mut Game) -> Vec<DomainEvent> {
+    let mut events = Vec::new();
+    game.resolve_player_polymorph("demo.actor.lord-of-change", 61, &mut events);
+    events
+}
+
+fn p62_polymorph_legacy_index(game: &Game) -> Option<u16> {
+    game.player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_PLAYER_POLYMORPH)
+        .and_then(|status| status.granted_race_id.as_deref())
+        .and_then(|race_id| game.content.race(race_id))
+        .and_then(|race| race.legacy_index)
+}
+
+fn p62_seed_for_legacy_index(legacy_index: u16) -> u64 {
+    let base = Game::new_with_build(0, "demo.build.warrior").expect("P62 test build should create");
+    (0..100_000)
+        .find(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(*seed);
+            resolve_p62_polymorph(&mut game);
+            p62_polymorph_legacy_index(&game) == Some(legacy_index)
+        })
+        .unwrap_or_else(|| panic!("a bounded seed should select legacy race {legacy_index}"))
+}
+
+#[test]
+fn p62_polymorph_immunity_and_successful_save_do_not_draw_a_form_or_duration() {
+    let mut immune =
+        Game::new_with_build(0, "demo.build.warrior").expect("P62 test build should create");
+    let mut android = monster_combat::melee_status("test.status.android", 10, "test.setup").status;
+    android.granted_race_id = Some("rfb-legacy.race.android".to_owned());
+    immune.player.statuses.push(android);
+    immune.rng = RfbRng::seeded(7);
+    let rng_before = immune.rng.clone();
+    let events = resolve_p62_polymorph(&mut immune);
+    assert_eq!(immune.rng, rng_before);
+    assert!(events.is_empty());
+    assert_eq!(
+        immune
+            .character_definitions()
+            .expect("test build should retain character definitions")
+            .1
+            .legacy_index,
+        Some(36)
+    );
+
+    let (seed, expected_rng) = (0..10_000)
+        .find_map(|seed| {
+            let mut probe = Game::new_with_build(0, "demo.build.warrior").ok()?;
+            probe.rng = RfbRng::seeded(seed);
+            let saved =
+                probe.monster_saving_throw("demo.actor.lord-of-change", 61, &mut Vec::new());
+            saved.then_some((seed, probe.rng))
+        })
+        .expect("a bounded seed should pass the polymorph saving throw");
+    let mut saved =
+        Game::new_with_build(0, "demo.build.warrior").expect("P62 test build should create");
+    saved.rng = RfbRng::seeded(seed);
+    let events = resolve_p62_polymorph(&mut saved);
+    assert_eq!(saved.rng, expected_rng);
+    assert_eq!(p62_polymorph_legacy_index(&saved), None);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::SavingThrowChecked {
+            succeeded: true,
+            ..
+        }
+    )));
+}
+
+#[test]
+fn p62_polymorph_preserves_legacy_branches_rejection_rng_and_temporary_state() {
+    for legacy_index in [6, 15, 1_007, 1_008] {
+        let seed = p62_seed_for_legacy_index(legacy_index);
+        let mut game =
+            Game::new_with_build(0, "demo.build.warrior").expect("P62 test build should create");
+        game.rng = RfbRng::seeded(seed);
+        resolve_p62_polymorph(&mut game);
+        let status = game
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_PLAYER_POLYMORPH)
+            .expect("selected fixed branch should apply a temporary form");
+        assert!((51..=100).contains(&status.remaining_ticks));
+        assert_eq!(p62_polymorph_legacy_index(&game), Some(legacy_index));
+    }
+
+    let mut snotling_base =
+        Game::new_with_build(0, "demo.build.warrior").expect("P62 test build should create");
+    snotling_base
+        .build
+        .as_mut()
+        .expect("test build identity should exist")
+        .race_id = "rfb-legacy.race.snotling".to_owned();
+    let fallback_seed = (0..100_000)
+        .find(|seed| {
+            let mut game = snotling_base.clone();
+            game.rng = RfbRng::seeded(*seed);
+            resolve_p62_polymorph(&mut game);
+            p62_polymorph_legacy_index(&game) == Some(15)
+        })
+        .expect("a Snotling branch-one seed should fall through to Yeek");
+    let mut fallback = snotling_base;
+    fallback.rng = RfbRng::seeded(fallback_seed);
+    resolve_p62_polymorph(&mut fallback);
+    assert_eq!(p62_polymorph_legacy_index(&fallback), Some(15));
+
+    let rejection_base =
+        Game::new_with_build(0, "demo.build.warrior").expect("P62 test build should create");
+    let (rejection_seed, expected_save_draws) = (0..100_000)
+        .find_map(|seed| {
+            let mut probe = rejection_base.clone();
+            probe.rng = RfbRng::seeded(seed);
+            if probe.monster_saving_throw("demo.actor.lord-of-change", 61, &mut Vec::new()) {
+                return None;
+            }
+            let save_draws = probe.rng.draw_counter;
+            let mut game = rejection_base.clone();
+            game.rng = RfbRng::seeded(seed);
+            resolve_p62_polymorph(&mut game);
+            let selected = p62_polymorph_legacy_index(&game)?;
+            let fixed = [6, 15, 1_007, 1_008].contains(&selected);
+            (!fixed && game.rng.draw_counter.saturating_sub(save_draws) > 3)
+                .then_some((seed, save_draws))
+        })
+        .expect("a bounded seed should reject at least one random legacy race index");
+    let mut rejected =
+        Game::new_with_build(0, "demo.build.warrior").expect("P62 test build should create");
+    rejected.rng = RfbRng::seeded(rejection_seed);
+    resolve_p62_polymorph(&mut rejected);
+    assert!(
+        rejected
+            .rng
+            .draw_counter
+            .saturating_sub(expected_save_draws)
+            > 3
+    );
+
+    let permanent_build = rejected.build.clone();
+    let permanent_skills = rejected.progress.skills.clone();
+    let first_race = rejected
+        .character_definitions()
+        .expect("temporary form should retain character definitions")
+        .1
+        .id
+        .clone();
+    let mut stale = monster_combat::melee_status("test.status.stale-form", 10, "test.setup").status;
+    stale.granted_race_id = Some("rfb-legacy.race.small-kobold".to_owned());
+    rejected.player.statuses.push(stale);
+    rejected
+        .player
+        .statuses
+        .sort_by(|left, right| left.kind_id.cmp(&right.kind_id));
+    rejected.rng = RfbRng::seeded(p62_seed_for_legacy_index(15));
+    resolve_p62_polymorph(&mut rejected);
+    assert_eq!(
+        rejected
+            .player
+            .statuses
+            .iter()
+            .filter(|status| status.granted_race_id.is_some())
+            .count(),
+        1
+    );
+    assert_ne!(
+        rejected
+            .character_definitions()
+            .expect("replacement form should retain definitions")
+            .1
+            .id,
+        first_race
+    );
+    assert_eq!(rejected.build, permanent_build);
+    assert_eq!(rejected.progress.skills, permanent_skills);
+
+    let restored = Game::from_save_with_content(rejected.to_save(), rejected.content.clone())
+        .expect("temporary polymorph state should restore");
+    assert_eq!(restored.build, permanent_build);
+    assert_eq!(restored.state_hash(), rejected.state_hash());
+    assert_eq!(p62_polymorph_legacy_index(&restored), Some(15));
+}
+
+#[test]
+fn p62_polymorph_melee_changes_the_player_without_polymorphing_the_attacker() {
+    let effect = MeleeBlowEffectDefinition::PolymorphPlayer {
+        chance_percent: None,
+    };
+    let base = monster_effect_game(0, effect);
+    let (seed, game) = (0..100_000)
+        .find_map(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+                .ok()?;
+            p62_polymorph_legacy_index(&game).map(|_| (seed, game))
+        })
+        .expect("a bounded melee seed should polymorph the player");
+    assert_ne!(
+        game.character_definitions()
+            .expect("polymorphed player should retain definitions")
+            .1
+            .legacy_index,
+        Some(0)
+    );
+    assert_eq!(game.entities[0].kind_id, "demo.actor.small-kobold");
+    assert_eq!(game.entities[0].appearance_kind_id, None);
+
+    let mut replay = base;
+    replay.rng = RfbRng::seeded(seed);
+    replay
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("polymorph melee replay should resolve");
+    assert_eq!(replay.state_hash(), game.state_hash());
+}
+
+#[test]
+fn p62_polymorph_reconciles_body_slots_and_expiry_does_not_reequip_items() {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    artifact
+        .content
+        .races
+        .iter_mut()
+        .find(|race| race.legacy_index == Some(1_007))
+        .expect("small-kobold form should exist")
+        .body_slots = vec![rfb_content::BodySlotDefinition {
+        id: "weapon".to_owned(),
+        slot_type: "weapon".to_owned(),
+    }];
+    let content = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("custom P62 race content should encode"),
+    ));
+    let mut game =
+        Game::from_content_with_build(0, content, DEFAULT_WORLD_ID, "demo.build.warrior")
+            .expect("custom P62 game should create");
+    let permanent_build = game.build.clone();
+    let permanent_attributes = game.effective_player_attributes();
+    let permanent_resistances = game.effective_player_resistances();
+    let permanent_skills = game.effective_player_skill_progress();
+    let unequipped_id = game
+        .items
+        .iter()
+        .find(|item| {
+            matches!(item.location, ItemLocation::Equipped { .. })
+                && game
+                    .content
+                    .item(&item.kind_id)
+                    .and_then(|definition| definition.equipment_slot.as_deref())
+                    != Some("weapon")
+        })
+        .expect("warrior should start with non-weapon equipment")
+        .id
+        .clone();
+    game.rng = RfbRng::seeded(p62_seed_for_legacy_index(1_007));
+    resolve_p62_polymorph(&mut game);
+    assert_eq!(p62_polymorph_legacy_index(&game), Some(1_007));
+    assert_eq!(game.body_slots.len(), 1);
+    assert_ne!(game.effective_player_attributes(), permanent_attributes);
+    assert_ne!(game.effective_player_resistances(), permanent_resistances);
+    assert_ne!(game.effective_player_skill_progress(), permanent_skills);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Resistant
+    );
+    assert!(!matches!(
+        game.items
+            .iter()
+            .find(|item| item.id == unequipped_id)
+            .expect("unequipped item should remain present")
+            .location,
+        ItemLocation::Equipped { .. }
+    ));
+
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("custom body form should restore");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    game.player
+        .statuses
+        .iter_mut()
+        .find(|status| status.kind_id == STATUS_PLAYER_POLYMORPH)
+        .expect("temporary form should remain active")
+        .remaining_ticks = 1;
+    game.process_status_tick(
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+        false,
+    )
+    .expect("polymorph expiry should process");
+    assert_eq!(p62_polymorph_legacy_index(&game), None);
+    assert_eq!(game.build, permanent_build);
+    assert_eq!(game.effective_player_attributes(), permanent_attributes);
+    assert_eq!(game.effective_player_resistances(), permanent_resistances);
+    assert_eq!(game.effective_player_skill_progress(), permanent_skills);
+    assert_eq!(
+        game.body_slots,
+        resolve_body_slots(&game.content, game.build.as_ref())
+            .expect("permanent body slots should resolve")
+    );
+    assert!(!matches!(
+        game.items
+            .iter()
+            .find(|item| item.id == unequipped_id)
+            .expect("expired-form item should remain present")
+            .location,
+        ItemLocation::Equipped { .. }
+    ));
+}
+
 #[test]
 fn p60_melee_curse_damage_uses_the_existing_monster_curse_save() {
     fn resolve(seed: u64) -> Option<(bool, i32)> {

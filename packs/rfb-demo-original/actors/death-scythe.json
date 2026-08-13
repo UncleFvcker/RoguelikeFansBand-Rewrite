@@ -1,0 +1,158 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1084,
+    "maxDepth": 999,
+    "rarity": 5
+  },
+  "attack": 17,
+  "damageDice": 10,
+  "damageSides": 10,
+  "damageType": "physical",
+  "defense": 15,
+  "descriptionKey": "actor-demo-death-scythe-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 10000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "/",
+  "hitPointDice": {
+    "dice": 50,
+    "forceMaximum": true,
+    "sides": 50
+  },
+  "id": "demo.actor.death-scythe",
+  "level": 70,
+  "maxHp": 2500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 20,
+            "amountSides": 6,
+            "type": "drain-experience"
+          },
+          {
+            "chancePercent": 50,
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 20,
+            "amountSides": 6,
+            "type": "drain-experience"
+          },
+          {
+            "chancePercent": 50,
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 20,
+            "amountSides": 6,
+            "type": "drain-experience"
+          },
+          {
+            "chancePercent": 50,
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 10,
+            "damageSides": 10,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 20,
+            "amountSides": 6,
+            "type": "drain-experience"
+          },
+          {
+            "chancePercent": 50,
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.slash",
+        "toHit": 20
+      }
+    ]
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-death-scythe-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 150,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "evil",
+    "kin-glyph-47",
+    "legacy-import",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport"
+  ]
+}

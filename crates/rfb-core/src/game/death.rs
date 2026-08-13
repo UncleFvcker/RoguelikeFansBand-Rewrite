@@ -236,6 +236,7 @@ impl Game {
                 | MeleeBlowEffectDefinition::Time { .. }
                 | MeleeBlowEffectDefinition::Slow { .. }
                 | MeleeBlowEffectDefinition::Inertia { .. }
+                | MeleeBlowEffectDefinition::PolymorphPlayer { .. }
                 | MeleeBlowEffectDefinition::Stun { .. }
                 | MeleeBlowEffectDefinition::Terrify { .. }
                 | MeleeBlowEffectDefinition::Disenchant { .. }
@@ -557,6 +558,7 @@ impl Game {
                 ))
             })?;
         self.entities.remove(index);
+        self.record_banor_rupart_group_defeat(&dying_actor.kind_id);
         removed_entities.push(dying_actor.id);
         self.items
             .retain(|item| !carried_item_ids.contains(item.id.as_str()));
@@ -636,14 +638,20 @@ impl Game {
             .content
             .actor(&removed.kind_id)
             .expect("removed actor definition must remain available");
-        if removed_definition.tags.iter().any(|tag| tag == "unique")
+        let removed_experience_value = removed_definition.experience_value;
+        if removed_definition
+            .finite_lifetime_instance_limit()
+            .is_some()
             && !removed_definition.tags.iter().any(|tag| tag == "guardian")
         {
-            self.defeated_unique_actor_kind_ids
-                .insert(removed.kind_id.clone());
+            let defeated = self
+                .defeated_limited_actor_counts
+                .entry(removed.kind_id.clone())
+                .or_default();
+            *defeated = defeated.saturating_add(1);
         }
-        let experience_value =
-            self.player_kill_experience_reward(removed_definition.experience_value);
+        self.record_banor_rupart_group_defeat(&removed.kind_id);
+        let experience_value = self.player_kill_experience_reward(removed_experience_value);
         if credit_player {
             self.apply_player_experience(experience_value, events);
             self.reward_player_kill_riding_bond(&removed, events);

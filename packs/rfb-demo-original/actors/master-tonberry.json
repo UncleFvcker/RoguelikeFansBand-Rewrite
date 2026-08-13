@@ -1,0 +1,91 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1089,
+    "maxDepth": 999,
+    "randomMovementPercent": 75,
+    "rarity": 10
+  },
+  "attack": 20,
+  "damageDice": 40,
+  "damageSides": 30,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 10,
+  "descriptionKey": "actor-demo-master-tonberry-description",
+  "experienceValue": 40000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "h",
+  "hitPointDice": {
+    "dice": 70,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.master-tonberry",
+  "level": 80,
+  "maxHp": 7000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 40,
+            "damageSides": 30,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.kin-master-tonberry",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-240",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.teleport-level",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 20
+  },
+  "nameKey": "actor-demo-master-tonberry-name",
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "aura-revenge",
+    "kin-glyph-104",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ]
+}

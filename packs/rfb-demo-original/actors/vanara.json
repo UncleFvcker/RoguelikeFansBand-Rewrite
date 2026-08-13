@@ -122,7 +122,8 @@
     "animal",
     "kin-glyph-89",
     "legacy-import",
-    "mount-meru"
+    "mount-meru",
+    "vanara"
   ],
   "terrainInteraction": {
     "picksUpItems": true

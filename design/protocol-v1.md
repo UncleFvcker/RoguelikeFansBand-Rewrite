@@ -649,3 +649,9 @@ save 容器保持 v1。
 固定时长与骰式时长。结算复用既有探测、状态和 virtue 事件：永久绘制并照亮当前层、
 揭示全部地面物品，并仅在玩家没有永久 ESP 时掷 `25 + 1d30` 临时 ESP。没有新增命令、
 待处理输入或持久状态，State Hash Schema 保持 v93，save 容器保持 v1。
+
+协议 1.189 / contract-v285 将 `SavePayloadV1.defeatedUniqueActorKindIds` 泛化为必填的
+`defeatedLimitedActorCounts`，按 actor ID 持久化有限生命周期怪物的死亡数量。普通
+`unique` 的隐式生命周期上限仍为 1，`unique2` 仍只限制同时存活一只；显式
+`lifetimeInstanceLimit` 可提供更高的跨楼层、跨死亡总额度。该权威表在组合后的协议
+1.195 中进入 State Hash Schema v97，save 容器保持 v1，不兼容缺少新字段的旧开发存档。

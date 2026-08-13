@@ -190,3 +190,77 @@ fn monster_shriek_excludes_the_caster_and_aggravates_other_monsters() {
     assert!(!changed.contains(&Position { x: 5, y: 3 }));
     assert!(changed.contains(&Position { x: 6, y: 3 }));
 }
+
+#[test]
+fn monster_world_grants_three_or_four_actions_without_recursive_casts() {
+    let mut base = game_with_actor_definition(0, "demo.actor.dio-brando", |actor| {
+        actor.force_sleep = false;
+        let casting = actor
+            .monster_casting
+            .as_mut()
+            .expect("Dio should retain monster casting");
+        casting.frequency_percent = 100;
+        casting
+            .abilities
+            .retain(|candidate| candidate.ability_id == "rfb-legacy.ability.world");
+    });
+    clear_monsters(&mut base);
+    for terrain in &mut base.terrain {
+        *terrain = "demo.terrain.wall".to_owned();
+    }
+    base.player.position = Position { x: 3, y: 3 };
+    let origin = Position { x: 10, y: 3 };
+    for x in base.player.position.x..=origin.x {
+        replace_terrain(&mut base, Position { x, y: 3 }, "demo.terrain.floor");
+    }
+    base.push_generated_actor(
+        "test.monster.dio".to_owned(),
+        "demo.actor.dio-brando",
+        origin,
+    );
+    base.entities[0].nice = false;
+    base.entities[0].alerted = true;
+
+    let mut observed_actions = BTreeSet::new();
+    for seed in 0..64 {
+        let mut game = base.clone();
+        game.rng = RfbRng::seeded(seed);
+        let energy_before = game.entities[0].energy_need;
+        let world_tick_before = game.world_tick;
+        let mut events = Vec::new();
+
+        assert!(game.resolve_monster_ability(0, &mut events));
+
+        let distance = game.entities[0].position.x.abs_diff(game.player.position.x);
+        let extra_actions = origin.x.abs_diff(base.player.position.x) - distance;
+        assert!((3..=4).contains(&extra_actions));
+        observed_actions.insert(extra_actions);
+        assert_eq!(game.entities[0].energy_need, energy_before);
+        assert_eq!(game.world_tick, world_tick_before);
+        assert_eq!(
+            events
+                .iter()
+                .filter(|event| matches!(
+                    event,
+                    DomainEvent::MonsterAbilityCast { resolution, .. }
+                        if resolution.ability_id == "rfb-legacy.ability.world"
+                ))
+                .count(),
+            1
+        );
+        assert!(events.iter().any(|event| matches!(
+            event,
+            DomainEvent::MonsterAbilityDecision { resolution }
+                if resolution.candidates.iter().any(|candidate| {
+                    candidate.ability_id == "rfb-legacy.ability.world"
+                        && candidate.effective_weight == 0
+                        && candidate.rejection_reason
+                            == Some(MonsterAbilityRejectionReasonDto::NoUtility)
+                })
+        )));
+        if observed_actions.len() == 2 {
+            break;
+        }
+    }
+    assert_eq!(observed_actions, BTreeSet::from([3, 4]));
+}

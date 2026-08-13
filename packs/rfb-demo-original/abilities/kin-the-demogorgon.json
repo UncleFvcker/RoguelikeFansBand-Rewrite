@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-the-demogorgon",
+  "descriptionKey": "ability-legacy-kin-the-demogorgon-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-the-demogorgon",
+  "nameKey": "ability-legacy-kin-the-demogorgon-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

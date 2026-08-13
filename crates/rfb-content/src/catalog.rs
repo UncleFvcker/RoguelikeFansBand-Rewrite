@@ -364,6 +364,17 @@ impl ContentCatalog {
         self.races.get(id)
     }
 
+    pub fn races(&self) -> impl Iterator<Item = &RaceDefinition> {
+        self.races.values()
+    }
+
+    #[must_use]
+    pub fn race_by_legacy_index(&self, legacy_index: u16) -> Option<&RaceDefinition> {
+        self.races
+            .values()
+            .find(|race| race.legacy_index == Some(legacy_index))
+    }
+
     #[must_use]
     pub fn class(&self, id: &str) -> Option<&ClassDefinition> {
         self.classes.get(id)

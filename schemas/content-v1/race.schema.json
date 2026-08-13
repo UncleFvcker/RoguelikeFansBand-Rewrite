@@ -166,6 +166,16 @@
         "null"
       ]
     },
+    "legacyIndex": {
+      "description": "Original RFB race or mimic index. Temporary-form mechanics use this\nstable source identity instead of depending on localized names.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "lifePercent": {
       "default": 100,
       "format": "uint16",

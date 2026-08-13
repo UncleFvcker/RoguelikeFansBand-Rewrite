@@ -1,0 +1,204 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "wood"
+    ],
+    "legacyDungeonIndices": [
+      43
+    ],
+    "legacyIndex": 1369,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 19,
+  "damageDice": 14,
+  "damageSides": 17,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 16,
+  "descriptionKey": "actor-demo-vali-king-of-the-vanaras-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 50820,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Y",
+  "hitPointDice": {
+    "dice": 72,
+    "forceMaximum": true,
+    "sides": 90
+  },
+  "id": "demo.actor.vali-king-of-the-vanaras",
+  "level": 76,
+  "maxHp": 6480,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 17,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 66,
+            "durationDice": 7,
+            "durationSides": 7,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 17,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "chancePercent": 66,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage",
+            "vampiric": true
+          },
+          {
+            "amountDice": 7,
+            "amountSides": 7,
+            "chancePercent": 66,
+            "type": "unlife"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 14,
+            "damageSides": 17,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "amountDice": 7,
+            "amountSides": 7,
+            "chancePercent": 66,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 7,
+            "damageSides": 8,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "durationDice": 6,
+            "durationSides": 7,
+            "type": "bleeding"
+          },
+          {
+            "attributes": [
+              "strength"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-physical-1d1-227",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-vanara-l76-1d3-1",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-vali-king-of-the-vanaras-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "dark": "resistant",
+    "electricity": "immune",
+    "fire": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "poison": "resistant",
+    "sound": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 138,
+  "statusImmunities": [
+    "rfb.status.confusion"
+  ],
+  "tags": [
+    "animal",
+    "kin-glyph-89",
+    "legacy-import",
+    "mount-meru",
+    "no-quest",
+    "resist-teleport",
+    "unique",
+    "vanara"
+  ]
+}

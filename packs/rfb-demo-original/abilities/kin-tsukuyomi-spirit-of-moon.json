@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-tsukuyomi-spirit-of-moon",
+  "descriptionKey": "ability-legacy-kin-tsukuyomi-spirit-of-moon-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-tsukuyomi-spirit-of-moon",
+  "nameKey": "ability-legacy-kin-tsukuyomi-spirit-of-moon-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

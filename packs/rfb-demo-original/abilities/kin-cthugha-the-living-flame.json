@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-cthugha-the-living-flame",
+  "descriptionKey": "ability-legacy-kin-cthugha-the-living-flame-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-cthugha-the-living-flame",
+  "nameKey": "ability-legacy-kin-cthugha-the-living-flame-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

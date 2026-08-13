@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-pit-fiend",
+  "descriptionKey": "ability-legacy-kin-pit-fiend-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-pit-fiend",
+  "nameKey": "ability-legacy-kin-pit-fiend-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

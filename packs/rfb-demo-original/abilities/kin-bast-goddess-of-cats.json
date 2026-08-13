@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-bast-goddess-of-cats",
+  "descriptionKey": "ability-legacy-kin-bast-goddess-of-cats-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-bast-goddess-of-cats",
+  "nameKey": "ability-legacy-kin-bast-goddess-of-cats-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

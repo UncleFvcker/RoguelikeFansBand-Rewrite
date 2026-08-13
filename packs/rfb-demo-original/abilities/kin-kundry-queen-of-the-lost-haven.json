@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-kundry-queen-of-the-lost-haven",
+  "descriptionKey": "ability-legacy-kin-kundry-queen-of-the-lost-haven-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-kundry-queen-of-the-lost-haven",
+  "nameKey": "ability-legacy-kin-kundry-queen-of-the-lost-haven-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

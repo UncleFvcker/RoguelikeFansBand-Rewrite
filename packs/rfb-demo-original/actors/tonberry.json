@@ -1,0 +1,65 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1087,
+    "maxDepth": 999,
+    "randomMovementPercent": 75,
+    "rarity": 4
+  },
+  "attack": 20,
+  "damageDice": 40,
+  "damageSides": 20,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 1,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "fine"
+  },
+  "defense": 5,
+  "descriptionKey": "actor-demo-tonberry-description",
+  "experienceValue": 10000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "h",
+  "hitPointDice": {
+    "dice": 30,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.tonberry",
+  "level": 80,
+  "maxHp": 3000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 40,
+            "damageSides": 20,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-tonberry-name",
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "aura-revenge",
+    "kin-glyph-104",
+    "legacy-import",
+    "orc-cave"
+  ]
+}

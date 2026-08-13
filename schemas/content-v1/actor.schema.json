@@ -1020,6 +1020,29 @@
                 "null"
               ]
             },
+            "type": {
+              "const": "polymorph-player",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "chancePercent": {
+              "default": null,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
             "durationDice": {
               "format": "uint16",
               "maximum": 65535,
@@ -1605,6 +1628,16 @@
       "format": "uint32",
       "minimum": 0,
       "type": "integer"
+    },
+    "lifetimeInstanceLimit": {
+      "description": "Maximum number of instances that may ever exist across one campaign.\nOrdinary `unique` actors implicitly use one when this is absent.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
     },
     "light": {
       "anyOf": [

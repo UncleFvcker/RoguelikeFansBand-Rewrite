@@ -1254,7 +1254,8 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::AggravateMonsters
                 | AbilityEffectDefinition::Summon { .. }
                 | AbilityEffectDefinition::SummonCategory { .. }
-                | AbilityEffectDefinition::JumpDamage { .. } => self_target,
+                | AbilityEffectDefinition::JumpDamage { .. }
+                | AbilityEffectDefinition::NoOp { .. } => self_target,
                 AbilityEffectDefinition::ApplyStatus { .. }
                 | AbilityEffectDefinition::RemoveStatus { .. } => self_target || projectile_target,
                 AbilityEffectDefinition::BlinkSelf { .. }

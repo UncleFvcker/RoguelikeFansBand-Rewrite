@@ -1,0 +1,88 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "baseHp": 14,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-hobbit-description",
+  "experiencePercent": 120,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.hobbit",
+  "kinCategory": "kin-glyph-104",
+  "legacyIndex": 3,
+  "lifePercent": 92,
+  "modifiers": {
+    "charisma": 1,
+    "constitution": 2,
+    "dexterity": 3,
+    "intelligence": 1,
+    "strength": -2,
+    "wisdom": 1
+  },
+  "nameKey": "race-legacy-hobbit-name",
+  "shopAdjustPercent": 100,
+  "skillSetId": "rfb-legacy.skill-set.race-hobbit",
+  "tags": [
+    "legacy-import",
+    "polymorph-candidate"
+  ]
+}

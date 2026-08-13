@@ -92,6 +92,57 @@ fn p11_actor_facts_remain_explicit_and_narrow() {
 }
 
 #[test]
+fn p61_nazgul_has_a_five_instance_lifetime_limit() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let nazgul = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.nazgul")
+        .expect("P61 should import the Nazgul");
+
+    assert_eq!(nazgul.lifetime_instance_limit, Some(5));
+    assert_eq!(nazgul.finite_lifetime_instance_limit(), Some(5));
+    assert!(nazgul.tags.iter().any(|tag| tag == "unique"));
+}
+
+#[test]
+fn p62_lord_of_change_has_two_percent_gated_player_polymorph_claws() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.lord-of-change")
+        .expect("P62 should import the Lord of Change");
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(745)
+    );
+    let routine = actor
+        .melee_routine
+        .as_ref()
+        .expect("Lord of Change should retain its melee routine");
+    assert_eq!(
+        routine
+            .blows
+            .iter()
+            .flat_map(|blow| &blow.effects)
+            .filter(|effect| matches!(
+                effect,
+                MeleeBlowEffectDefinition::PolymorphPlayer {
+                    chance_percent: Some(20)
+                }
+            ))
+            .count(),
+        2
+    );
+}
+
+#[test]
 fn p24_slime_mold_retains_move_body_regeneration_and_existing_spells() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = artifact

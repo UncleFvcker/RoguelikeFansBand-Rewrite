@@ -158,12 +158,19 @@ pub(super) fn validate_characters(
     }
 
     let mut race_ids = BTreeSet::new();
+    let mut legacy_race_indices = BTreeSet::new();
     for race in definitions.races.iter_mut() {
         require_schema(&race.schema, RACE_SCHEMA, &race.id)?;
         require_format_version(race.format_version, &race.id)?;
         validate_definition_id(&race.id, "race")?;
         validate_definition_text(&race.id, &race.name_key, &race.description_key)?;
         if !(50..=200).contains(&race.shop_adjust_percent) {
+            return Err(ContentError::InvalidCharacterSource(race.id.clone()));
+        }
+        if race
+            .legacy_index
+            .is_some_and(|index| !legacy_race_indices.insert(index))
+        {
             return Err(ContentError::InvalidCharacterSource(race.id.clone()));
         }
         validate_character_source(
