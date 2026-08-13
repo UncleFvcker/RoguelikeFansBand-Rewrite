@@ -379,6 +379,8 @@ impl Game {
                 | MonsterAbilityTargetPlan::TerrainTransform { .. }
                 | MonsterAbilityTargetPlan::Summon { .. }
                 | MonsterAbilityTargetPlan::SummonCategory { .. }
+                | MonsterAbilityTargetPlan::BanorRupartSplit { .. }
+                | MonsterAbilityTargetPlan::BanorRupartMerge { .. }
         ) {
             return Some(1);
         }
@@ -521,6 +523,18 @@ impl Game {
                     Some(source.kind_id.clone()),
                     Some(source.position),
                     positions.clone(),
+                ),
+                MonsterAbilityTargetPlan::BanorRupartSplit { positions } => (
+                    Some(source.id.clone()),
+                    Some(source.kind_id.clone()),
+                    Some(source.position),
+                    positions.clone(),
+                ),
+                MonsterAbilityTargetPlan::BanorRupartMerge { destination, .. } => (
+                    Some(source.id.clone()),
+                    Some(source.kind_id.clone()),
+                    Some(source.position),
+                    vec![source.position, *destination],
                 ),
                 MonsterAbilityTargetPlan::Projectile { target, .. } => (
                     Some(target.entity_id().to_owned()),

@@ -556,6 +556,7 @@ impl Game {
                 ))
             })?;
         self.entities.remove(index);
+        self.record_banor_rupart_group_defeat(&dying_actor.kind_id);
         removed_entities.push(dying_actor.id);
         self.items
             .retain(|item| !carried_item_ids.contains(item.id.as_str()));
@@ -634,6 +635,7 @@ impl Game {
             .content
             .actor(&removed.kind_id)
             .expect("removed actor definition must remain available");
+        let removed_experience_value = removed_definition.experience_value;
         if removed_definition
             .finite_lifetime_instance_limit()
             .is_some()
@@ -645,8 +647,8 @@ impl Game {
                 .or_default();
             *defeated = defeated.saturating_add(1);
         }
-        let experience_value =
-            self.player_kill_experience_reward(removed_definition.experience_value);
+        self.record_banor_rupart_group_defeat(&removed.kind_id);
+        let experience_value = self.player_kill_experience_reward(removed_experience_value);
         if credit_player {
             self.apply_player_experience(experience_value, events);
         }

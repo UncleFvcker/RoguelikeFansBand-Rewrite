@@ -9180,6 +9180,27 @@ fn map_spell_token(
         });
         return Some(id);
     }
+    if token == "SPECIAL"
+        && matches!(
+            caster_kind_id.rsplit('.').next(),
+            Some("banor-rupart" | "banor-the-prince-regent" | "rupart-the-general")
+        )
+    {
+        let id = "rfb-legacy.ability.banor-rupart-transform".to_owned();
+        abilities.entry(id.clone()).or_insert_with(|| {
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                "formatVersion": 1,
+                "id": id,
+                "nameKey": "ability-legacy-banor-rupart-transform-name",
+                "descriptionKey": "ability-legacy-banor-rupart-transform-description",
+                "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+                "effect": { "type": "no-op", "reason": "banor-rupart-transform" },
+                "tags": ["legacy-import", "monster-only", "monster-banor-rupart-transform"],
+            })
+        });
+        return Some(id);
+    }
     if token == "BIRD_DROP" {
         let id = "rfb-legacy.ability.bird-drop".to_owned();
         abilities.entry(id.clone()).or_insert_with(|| {
@@ -16213,6 +16234,27 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         assert_eq!(abilities[&kin_id]["effect"]["countDice"], 1);
         assert_eq!(abilities[&kin_id]["effect"]["countSides"], 1);
         assert_eq!(abilities[&kin_id]["effect"]["countBonus"], 1);
+    }
+
+    #[test]
+    fn p71_banor_rupart_special_maps_to_the_shared_transform_marker() {
+        let mut abilities = BTreeMap::new();
+        for caster in [
+            "demo.actor.banor-rupart",
+            "demo.actor.banor-the-prince-regent",
+            "demo.actor.rupart-the-general",
+        ] {
+            let id = map_spell_token("SPECIAL", 71, 2, caster, &mut abilities)
+                .expect("Banor/Rupart SPECIAL should map");
+            assert_eq!(id, "rfb-legacy.ability.banor-rupart-transform");
+        }
+        let ability = &abilities["rfb-legacy.ability.banor-rupart-transform"];
+        assert_eq!(ability["effect"]["type"], "no-op");
+        assert_eq!(ability["effect"]["reason"], "banor-rupart-transform");
+        assert!(ability["tags"].as_array().is_some_and(|tags| {
+            tags.iter()
+                .any(|tag| tag == "monster-banor-rupart-transform")
+        }));
     }
 
     #[test]

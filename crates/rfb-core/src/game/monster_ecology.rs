@@ -24,6 +24,11 @@ const ELDRITCH_HIGH_RESISTANCE_ROLL: u64 = 33;
 const MORONIC_MUTATION_ID: &str = "rfb.mutation.moronic";
 const COWARDICE_MUTATION_ID: &str = "rfb.mutation.cowardice";
 const HALLUCINATION_MUTATION_ID: &str = "rfb.mutation.hallucination";
+pub(super) const BANOR_RUPART_COMBINED_KIND_ID: &str = "demo.actor.banor-rupart";
+pub(super) const BANOR_KIND_ID: &str = "demo.actor.banor-the-prince-regent";
+pub(super) const RUPART_KIND_ID: &str = "demo.actor.rupart-the-general";
+const BANOR_RUPART_KIND_IDS: [&str; 3] =
+    [BANOR_RUPART_COMBINED_KIND_ID, BANOR_KIND_ID, RUPART_KIND_ID];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum OriginalGroupRole {
@@ -58,6 +63,67 @@ pub(super) fn actor_allocation_matches_task(
 }
 
 impl Game {
+    pub(super) fn banor_rupart_group_is_defeated(&self) -> bool {
+        self.defeated_limited_actor_counts
+            .get(BANOR_RUPART_COMBINED_KIND_ID)
+            .is_some_and(|count| *count > 0)
+    }
+
+    pub(super) fn banor_rupart_living_count(&self) -> usize {
+        self.entities
+            .iter()
+            .chain(
+                self.stored_floors
+                    .values()
+                    .flat_map(|floor| floor.entities.iter()),
+            )
+            .filter(|actor| actor.hp > 0 && BANOR_RUPART_KIND_IDS.contains(&actor.kind_id.as_str()))
+            .count()
+    }
+
+    pub(super) fn record_banor_rupart_group_defeat(&mut self, kind_id: &str) {
+        if BANOR_RUPART_KIND_IDS.contains(&kind_id) {
+            let defeated = self
+                .defeated_limited_actor_counts
+                .entry(BANOR_RUPART_COMBINED_KIND_ID.to_owned())
+                .or_default();
+            *defeated = (*defeated).max(1);
+        }
+    }
+
+    pub(super) fn banor_rupart_lifetime_state_is_valid(&self) -> bool {
+        let mut combined = 0;
+        let mut split = 0;
+        for actor in self
+            .entities
+            .iter()
+            .chain(
+                self.stored_floors
+                    .values()
+                    .flat_map(|floor| floor.entities.iter()),
+            )
+            .filter(|actor| actor.hp > 0)
+        {
+            match actor.kind_id.as_str() {
+                BANOR_RUPART_COMBINED_KIND_ID => combined += 1,
+                BANOR_KIND_ID | RUPART_KIND_ID => split += 1,
+                _ => {}
+            }
+        }
+        let group_defeated = self.banor_rupart_group_is_defeated();
+        let split_defeated = [BANOR_KIND_ID, RUPART_KIND_ID].iter().any(|kind_id| {
+            self.defeated_limited_actor_counts
+                .get(*kind_id)
+                .is_some_and(|count| *count > 0)
+        });
+        combined <= 1
+            && split <= 2
+            && !(combined > 0 && split > 0)
+            && (!group_defeated || combined == 0 && split <= 1)
+            && (group_defeated || !split_defeated)
+            && (group_defeated || split != 1)
+    }
+
     pub(super) fn actor_runtime_definition<'a>(
         &'a self,
         actor: &Actor,
@@ -1260,6 +1326,14 @@ impl Game {
         let Some(definition) = self.content.actor(kind_id) else {
             return 0;
         };
+        if matches!(kind_id, BANOR_KIND_ID | RUPART_KIND_ID) {
+            return 0;
+        }
+        if kind_id == BANOR_RUPART_COMBINED_KIND_ID
+            && (self.banor_rupart_group_is_defeated() || self.banor_rupart_living_count() > 0)
+        {
+            return 0;
+        }
         let living = self
             .entities
             .iter()

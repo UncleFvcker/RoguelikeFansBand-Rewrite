@@ -6907,6 +6907,24 @@
       "id": "aegir-god-king-of-the-sea-giants",
       "tags": ["orc-cave"],
       "omittedFlags": ["MALE", "NORSE2"]
+    },
+    {
+      "sourceIndex": 932,
+      "id": "banor-rupart",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 933,
+      "id": "banor-the-prince-regent",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 934,
+      "id": "rupart-the-general",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
     }
   ]
 }

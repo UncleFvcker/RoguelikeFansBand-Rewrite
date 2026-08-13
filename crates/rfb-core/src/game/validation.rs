@@ -465,6 +465,11 @@ impl Game {
                 "living limited actor state exceeds its lifetime limit",
             ));
         }
+        if !self.banor_rupart_lifetime_state_is_valid() {
+            return Err(CoreError::InvalidSave(
+                "Banor and Rupart lifetime state is invalid",
+            ));
+        }
         let formal_town_ids = world
             .wilderness
             .iter()

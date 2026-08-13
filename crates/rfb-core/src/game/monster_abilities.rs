@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::ground_item_effects::ground_item_damage_type_for_ability_effect;
+use super::monster_ecology::{BANOR_KIND_ID, BANOR_RUPART_COMBINED_KIND_ID, RUPART_KIND_ID};
 use super::*;
 
+const BANOR_RUPART_TRANSFORM_TAG: &str = "monster-banor-rupart-transform";
 const MONSTER_WATER_FLOW_TAG: &str = "monster-water-flow";
 const MONSTER_WATER_FLOW_TERRAIN_ID: &str = "demo.terrain.surface-water-deep";
 const MONSTER_WATER_FLOW_RADIUS: u8 = 8;
@@ -29,6 +31,164 @@ fn prepare_curse_damage(
 }
 
 impl Game {
+    fn remove_banor_rupart_form(
+        &mut self,
+        entity_id: &str,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Actor {
+        let index = self
+            .entities
+            .iter()
+            .position(|entity| entity.id == entity_id)
+            .expect("planned Banor/Rupart form must remain available");
+        let removed = self.entities.remove(index);
+        if self.riding_actor_id.as_deref() == Some(removed.id.as_str()) {
+            self.riding_actor_id = None;
+        }
+        if let Some(pack_id) = removed
+            .pack
+            .as_ref()
+            .and_then(|pack| (pack.role == MonsterPackRoleDto::Leader).then(|| pack.id.clone()))
+        {
+            for entity in &mut self.entities {
+                if entity.pack.as_ref().is_some_and(|pack| pack.id == pack_id) {
+                    entity.pack = None;
+                }
+            }
+        }
+        let carried_item_ids = self
+            .items
+            .iter()
+            .filter_map(|item| match &item.location {
+                ItemLocation::CarriedBy { actor_id } if actor_id == entity_id => {
+                    Some(item.id.clone())
+                }
+                _ => None,
+            })
+            .collect::<BTreeSet<_>>();
+        self.items
+            .retain(|item| !carried_item_ids.contains(item.id.as_str()));
+        for item_id in carried_item_ids {
+            self.item_property_knowledge.remove(&item_id);
+        }
+        changed.insert(removed.position);
+        removed_entities.push(removed.id.clone());
+        removed
+    }
+
+    fn push_banor_rupart_form(
+        &mut self,
+        id: &str,
+        kind_id: &str,
+        position: Position,
+        hp: i32,
+        max_hp: i32,
+    ) -> String {
+        let definition = self
+            .content
+            .actor(kind_id)
+            .expect("Banor/Rupart form definition must remain available")
+            .clone();
+        let mut actor = spawn_actor_from_definition(
+            &mut self.rng,
+            &definition,
+            id,
+            position,
+            INITIAL_MONSTER_ENERGY_NEED,
+            true,
+        );
+        actor.max_hp = max_hp.max(1);
+        actor.hp = hp.clamp(1, actor.max_hp);
+        self.entities.push(actor);
+        id.to_owned()
+    }
+
+    fn resolve_banor_rupart_transform_plan(
+        &mut self,
+        source_index: usize,
+        plan: &MonsterAbilityPlan,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> MonsterAbilityPlanResolution {
+        let source = self.entities[source_index].clone();
+        let (entity_ids, positions, summoned_kind_ids) = match &plan.target {
+            MonsterAbilityTargetPlan::BanorRupartSplit { positions } => {
+                let hp = source.hp.saturating_add(1) / 2;
+                let max_hp = source.max_hp / 2;
+                let ids = [
+                    self.summon_entity_id(&plan.ability.id, 0),
+                    self.summon_entity_id(&plan.ability.id, 1),
+                ];
+                self.remove_banor_rupart_form(&source.id, changed, removed_entities);
+                let kinds = [BANOR_KIND_ID, RUPART_KIND_ID];
+                let entity_ids = kinds
+                    .iter()
+                    .zip(positions)
+                    .zip(ids)
+                    .map(|((kind_id, position), id)| {
+                        let id = self.push_banor_rupart_form(&id, kind_id, *position, hp, max_hp);
+                        changed.insert(*position);
+                        id
+                    })
+                    .collect::<Vec<_>>();
+                (
+                    entity_ids,
+                    positions.clone(),
+                    kinds.into_iter().map(str::to_owned).collect(),
+                )
+            }
+            MonsterAbilityTargetPlan::BanorRupartMerge {
+                counterpart_entity_id,
+                destination,
+            } => {
+                let counterpart = self
+                    .entities
+                    .iter()
+                    .find(|entity| entity.id == *counterpart_entity_id)
+                    .expect("planned Banor/Rupart counterpart must remain available")
+                    .clone();
+                let hp = source.hp.saturating_add(counterpart.hp);
+                let max_hp = source.max_hp.saturating_add(counterpart.max_hp);
+                let id = self.summon_entity_id(&plan.ability.id, 0);
+                self.remove_banor_rupart_form(&source.id, changed, removed_entities);
+                self.remove_banor_rupart_form(&counterpart.id, changed, removed_entities);
+                let id = self.push_banor_rupart_form(
+                    &id,
+                    BANOR_RUPART_COMBINED_KIND_ID,
+                    *destination,
+                    hp,
+                    max_hp,
+                );
+                changed.insert(*destination);
+                (
+                    vec![id],
+                    vec![*destination],
+                    vec![BANOR_RUPART_COMBINED_KIND_ID.to_owned()],
+                )
+            }
+            _ => unreachable!("Banor/Rupart executor requires a transformation plan"),
+        };
+        MonsterAbilityPlanResolution {
+            target_entity_id: source.id.clone(),
+            target_kind_id: source.kind_id.clone(),
+            affected_positions: positions.clone(),
+            summon: Some(AbilitySummonResolutionDto {
+                owner_id: source.id.clone(),
+                actor_kind_id: BANOR_RUPART_COMBINED_KIND_ID.to_owned(),
+                entity_ids,
+                positions,
+                duration_turns: 0,
+                hostile: true,
+                group: false,
+                summoned_kind_ids,
+            }),
+            effects: Vec::new(),
+            targets: Vec::new(),
+            trace: None,
+        }
+    }
+
     fn monster_water_flow_positions(&self, center: Position) -> Vec<Position> {
         let connections = self
             .floor_connections
@@ -906,6 +1066,9 @@ impl Game {
     ) -> MonsterAbilityPlanResolution {
         let source_entity_id = self.entities[source_index].id.clone();
         match &plan.target {
+            MonsterAbilityTargetPlan::BanorRupartSplit { .. }
+            | MonsterAbilityTargetPlan::BanorRupartMerge { .. } => self
+                .resolve_banor_rupart_transform_plan(source_index, plan, changed, removed_entities),
             MonsterAbilityTargetPlan::SelfTarget => {
                 let target_entity_id = self.entities[source_index].id.clone();
                 let target_kind_id = self.entities[source_index].kind_id.clone();
@@ -2072,6 +2235,82 @@ impl Game {
         let (target, enemy_target_count, friendly_risk_count) = match &ability.effect {
             AbilityEffectDefinition::Heal { .. } | AbilityEffectDefinition::AggravateMonsters => {
                 (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
+            }
+            AbilityEffectDefinition::NoOp { .. }
+                if ability
+                    .tags
+                    .iter()
+                    .any(|tag| tag == BANOR_RUPART_TRANSFORM_TAG) =>
+            {
+                if self.banor_rupart_group_is_defeated() {
+                    return Err(MonsterAbilityPlanRejection {
+                        reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                        enemy_target_count: 0,
+                        friendly_risk_count: 0,
+                    });
+                }
+                let source_kind_id = self.entities[index].kind_id.as_str();
+                let target =
+                    match source_kind_id {
+                        BANOR_RUPART_COMBINED_KIND_ID => {
+                            if self.banor_rupart_living_count() != 1 {
+                                return Err(MonsterAbilityPlanRejection {
+                                    reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                                    enemy_target_count: 0,
+                                    friendly_risk_count: 0,
+                                });
+                            }
+                            let Some(adjacent) = self
+                                .open_positions_around_for_actor_kind(origin, 1, RUPART_KIND_ID)
+                                .into_iter()
+                                .next()
+                            else {
+                                return Err(MonsterAbilityPlanRejection {
+                                    reason: MonsterAbilityRejectionReasonDto::NoSpace,
+                                    enemy_target_count: 0,
+                                    friendly_risk_count: 0,
+                                });
+                            };
+                            MonsterAbilityTargetPlan::BanorRupartSplit {
+                                positions: vec![origin, adjacent],
+                            }
+                        }
+                        BANOR_KIND_ID | RUPART_KIND_ID => {
+                            let counterpart_kind_id = if source_kind_id == BANOR_KIND_ID {
+                                RUPART_KIND_ID
+                            } else {
+                                BANOR_KIND_ID
+                            };
+                            let Some(counterpart) = self.entities.iter().find(|entity| {
+                                entity.hp > 0 && entity.kind_id == counterpart_kind_id
+                            }) else {
+                                return Err(MonsterAbilityPlanRejection {
+                                    reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                                    enemy_target_count: 0,
+                                    friendly_risk_count: 0,
+                                });
+                            };
+                            if self.banor_rupart_living_count() != 2 {
+                                return Err(MonsterAbilityPlanRejection {
+                                    reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                                    enemy_target_count: 0,
+                                    friendly_risk_count: 0,
+                                });
+                            }
+                            MonsterAbilityTargetPlan::BanorRupartMerge {
+                                counterpart_entity_id: counterpart.id.clone(),
+                                destination: counterpart.position,
+                            }
+                        }
+                        _ => {
+                            return Err(MonsterAbilityPlanRejection {
+                                reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+                                enemy_target_count: 0,
+                                friendly_risk_count: 0,
+                            });
+                        }
+                    };
+                (target, 0, 0)
             }
             AbilityEffectDefinition::NoOp { .. }
                 if ability.tags.iter().any(|tag| tag == "monster-world") =>

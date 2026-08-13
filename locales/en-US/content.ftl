@@ -5731,3 +5731,23 @@ ability-legacy-heal-135-name = Heal self
 ability-legacy-heal-135-description = Uses the heal self monster spell from RFB.
 ability-legacy-summon-aegir-retinue-1d4-name = Summon sea retinue
 ability-legacy-summon-aegir-retinue-1d4-description = Floods an eight-cell radius, then summons 1d4 Sea giants or Lesser krakens as one batch.
+actor-demo-banor-rupart-name = Banor=Rupart
+actor-demo-banor-rupart-description = Banor=Rupart as recorded in the original RFB bestiary.
+actor-demo-banor-the-prince-regent-name = Banor the Prince Regent
+actor-demo-banor-the-prince-regent-description = Banor the Prince Regent as recorded in the original RFB bestiary.
+actor-demo-rupart-the-general-name = Rupart the General
+actor-demo-rupart-the-general-description = Rupart the General as recorded in the original RFB bestiary.
+ability-legacy-banor-rupart-transform-name = Split or merge
+ability-legacy-banor-rupart-transform-description = Splits Banor=Rupart into Banor and Rupart, or merges the two forms back together.
+ability-legacy-ball-chaos-10d10-142-name = Chaos ball
+ability-legacy-ball-chaos-10d10-142-description = Uses the chaos ball monster spell from RFB.
+ability-legacy-bolt-mana-1d248-50-name = Mana bolt
+ability-legacy-bolt-mana-1d248-50-description = Uses the mana bolt monster spell from RFB.
+ability-legacy-heal-213-name = Heal self
+ability-legacy-heal-213-description = Uses the heal self monster spell from RFB.
+ability-legacy-kin-banor-rupart-name = Summon kin
+ability-legacy-kin-banor-rupart-description = Summons kin of Banor=Rupart.
+ability-legacy-kin-banor-the-prince-regent-name = Summon kin
+ability-legacy-kin-banor-the-prince-regent-description = Summons kin of Banor the Prince Regent.
+ability-legacy-psy-spear-1d142-150-name = Psycho-spear
+ability-legacy-psy-spear-1d142-150-description = Uses the psycho-spear monster spell from RFB.

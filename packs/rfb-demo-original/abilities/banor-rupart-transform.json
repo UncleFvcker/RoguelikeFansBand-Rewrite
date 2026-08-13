@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.banor-rupart-transform",
+  "descriptionKey": "ability-legacy-banor-rupart-transform-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.banor-rupart-transform",
+  "nameKey": "ability-legacy-banor-rupart-transform-name",
+  "tags": [
+    "legacy-import",
+    "monster-only",
+    "monster-banor-rupart-transform"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

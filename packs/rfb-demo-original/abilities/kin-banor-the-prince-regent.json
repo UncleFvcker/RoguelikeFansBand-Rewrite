@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-banor-the-prince-regent",
+  "descriptionKey": "ability-legacy-kin-banor-the-prince-regent-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-banor-the-prince-regent",
+  "nameKey": "ability-legacy-kin-banor-the-prince-regent-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

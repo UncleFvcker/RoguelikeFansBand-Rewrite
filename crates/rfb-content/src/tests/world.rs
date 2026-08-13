@@ -734,7 +734,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 703);
+    assert_eq!(orc_cave.len(), 706);
 
     for id in [
         "demo.actor.bunyip",
@@ -783,7 +783,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 7, 7, 5, 4, 6, 7, 7, 9, 7, 13,
+            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13,
         ]
     );
 
@@ -5446,6 +5446,65 @@ fn p70_aegir_and_sea_giant_keep_ocean_and_special_summon_semantics() {
 }
 
 #[test]
+fn p71_banor_rupart_forms_keep_source_identity_and_shared_transform() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == id)
+            .unwrap_or_else(|| panic!("P71 should contain {id}"))
+    };
+    for (id, legacy_index, rarity, max_hp) in [
+        ("demo.actor.banor-rupart", 932, 2, 7_000),
+        ("demo.actor.banor-the-prince-regent", 933, 255, 3_500),
+        ("demo.actor.rupart-the-general", 934, 255, 3_500),
+    ] {
+        let definition = actor(id);
+        let allocation = definition
+            .allocation
+            .as_ref()
+            .expect("P71 forms should retain source allocation metadata");
+        assert_eq!(definition.level, 71);
+        assert_eq!(definition.max_hp, max_hp);
+        assert_eq!(
+            (allocation.legacy_index, allocation.rarity),
+            (legacy_index, rarity)
+        );
+        assert!(definition.tags.iter().any(|tag| tag == "unique"));
+        assert!(
+            definition
+                .monster_casting
+                .as_ref()
+                .expect("P71 forms should cast")
+                .abilities
+                .iter()
+                .any(|candidate| {
+                    candidate.ability_id == "rfb-legacy.ability.banor-rupart-transform"
+                })
+        );
+    }
+
+    let transform = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.banor-rupart-transform")
+        .expect("P71 transform ability should compile");
+    assert!(matches!(
+        &transform.effect,
+        AbilityEffectDefinition::NoOp { reason } if reason == "banor-rupart-transform"
+    ));
+    assert!(
+        transform
+            .tags
+            .iter()
+            .any(|tag| tag == "monster-banor-rupart-transform")
+    );
+}
+
+#[test]
 fn p64b_low_risk_mappings_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -7743,7 +7802,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        635
+        638
     );
 }
 

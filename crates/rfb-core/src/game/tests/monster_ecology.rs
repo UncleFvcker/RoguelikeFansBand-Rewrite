@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use crate::game::monster_ecology::{
-    OriginalGroupRole, actor_allocation_matches_legacy_dungeon, actor_allocation_matches_task,
+    BANOR_KIND_ID, BANOR_RUPART_COMBINED_KIND_ID, OriginalGroupRole, RUPART_KIND_ID,
+    actor_allocation_matches_legacy_dungeon, actor_allocation_matches_task,
     actor_matches_surface_habitat,
 };
 use crate::rng::RfbRng;
@@ -1020,6 +1021,77 @@ fn nazgul_is_immune_to_monster_target_polymorph() {
             ..
         }
     ));
+}
+
+#[test]
+fn p71_one_split_death_closes_the_shared_lifetime_and_round_trips() {
+    let mut game = Game::new(19);
+    game.entities.clear();
+    game.push_generated_actor(
+        "test.banor".to_owned(),
+        BANOR_KIND_ID,
+        Position { x: 20, y: 20 },
+    );
+    game.push_generated_actor(
+        "test.rupart".to_owned(),
+        RUPART_KIND_ID,
+        Position { x: 21, y: 20 },
+    );
+    game.resolve_actor_death(
+        0,
+        DomainEvent::EntityDiedFromStatus {
+            target_kind_id: BANOR_KIND_ID.to_owned(),
+            status_kind_id: STATUS_POISON.to_owned(),
+            damage: DamageOutcome {
+                raw: 1,
+                armor_reduction: 0,
+                requested: 1,
+                applied: 1,
+                resistance_delta: 0,
+                damage_type: DamageType::Poison,
+                resistance: ResistanceLevel::Normal,
+            },
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Banor death should resolve");
+
+    assert_eq!(
+        game.defeated_limited_actor_counts.get(BANOR_KIND_ID),
+        Some(&1)
+    );
+    assert_eq!(
+        game.defeated_limited_actor_counts
+            .get(BANOR_RUPART_COMBINED_KIND_ID),
+        Some(&1)
+    );
+    assert_eq!(game.entities.len(), 1);
+    assert_eq!(game.entities[0].kind_id, RUPART_KIND_ID);
+    assert_eq!(
+        game.actor_kind_available_instance_count(BANOR_RUPART_COMBINED_KIND_ID),
+        0
+    );
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.banor-rupart-transform")
+        .expect("P71 transform should compile")
+        .clone();
+    assert!(matches!(
+        game.monster_ability_target_plan(0, ability, 1),
+        Err(MonsterAbilityPlanRejection {
+            reason: MonsterAbilityRejectionReasonDto::NoCandidates,
+            ..
+        })
+    ));
+
+    let hash = game.state_hash();
+    let restored =
+        Game::from_save(game.to_save()).expect("one surviving split form should restore");
+    assert_eq!(restored.state_hash(), hash);
+    assert_eq!(restored.entities.len(), 1);
+    assert!(restored.banor_rupart_group_is_defeated());
 }
 
 #[test]

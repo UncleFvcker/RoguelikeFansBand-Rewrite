@@ -400,6 +400,13 @@ enum MonsterAbilityTargetPlan {
         candidate_kind_ids: Vec<String>,
         positions: Vec<Position>,
     },
+    BanorRupartSplit {
+        positions: Vec<Position>,
+    },
+    BanorRupartMerge {
+        counterpart_entity_id: String,
+        destination: Position,
+    },
     BlinkSelf {
         destinations: Vec<Position>,
     },
@@ -444,6 +451,8 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
         | MonsterAbilityTargetPlan::JumpDamage { .. }
         | MonsterAbilityTargetPlan::Summon { .. }
         | MonsterAbilityTargetPlan::SummonCategory { .. }
+        | MonsterAbilityTargetPlan::BanorRupartSplit { .. }
+        | MonsterAbilityTargetPlan::BanorRupartMerge { .. }
         | MonsterAbilityTargetPlan::BlinkSelf { .. }
         | MonsterAbilityTargetPlan::EscapeSelf { .. } => None,
     }

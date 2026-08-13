@@ -509,3 +509,15 @@ git diff --stat
 - 共享协调点：pack `1.309.0` / content hash
   `7d2f9799ac6fcd8ab71b6de2be52b4f77bcda70594a1bb1f266ff6e4e345a09c`；Protocol `1.189`、
   State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
+
+## 33. monsters-next 当前交接（P71 巴诺／鲁巴特三体）
+
+- 导入巴诺尔＝鲁巴特、摄政王巴诺尔和鲁巴特将军，并实现三体共用的 `SPECIAL` 转换。
+- 合体按权威源码拆成两个分体：当前生命各为 `(hp + 1) / 2`、最大生命各为 `maxHp / 2`；
+  两个分体同层存活时可在另一分体的位置合并，当前生命与最大生命分别相加。
+- 转换通过既有召唤结果投影并执行无死亡移除，不产生掉落、经验或唯一死亡计数；任一形态真实死亡会
+  关闭整个三体生命周期，单个幸存分体仍可保存恢复，但不能再合体或重新生成整合体。
+- L71–80 审计现为 76 selected、0 direct、0 blocked、7 excluded。
+- 共享协调点：pack `1.310.0` / content hash
+  `ea60ac6fbe1c44b29cdaf3b7db63c8bbef39ba56b9f08bf1159906741dd13d2c`；Protocol `1.189`、
+  State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
