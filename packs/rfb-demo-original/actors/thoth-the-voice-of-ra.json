@@ -1,0 +1,136 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1246,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 15,
+  "capturePolicy": "pet-only",
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 2,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 9,
+  "descriptionKey": "actor-demo-thoth-the-voice-of-ra-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 26620,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "Y",
+  "hitPointDice": {
+    "dice": 45,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.thoth-the-voice-of-ra",
+  "level": 60,
+  "maxHp": 4500,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "physical",
+            "type": "damage"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-electricity-1d222-20",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-cold-1d222-20",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-ice-6d8-96",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d86-128",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-unique-l60-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.banish",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 50,
+    "smart": true
+  },
+  "nameKey": "actor-demo-thoth-the-voice-of-ra-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "role": "monster",
+  "speed": 125,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "egyptian",
+    "kin-glyph-89",
+    "legacy-import",
+    "orc-cave",
+    "unique"
+  ]
+}

@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.318.0");
+    assert_eq!(catalog.pack_version(), "1.319.0");
     assert_eq!(catalog.races().count(), 46);
     assert_eq!(
         catalog
@@ -407,6 +407,78 @@ fn p77_location_bound_monsters_and_resurrection_mechanism_compile_into_the_pack(
             ..
         } if category == "unique"
     ));
+}
+
+#[test]
+fn p78_direct_monsters_compile_with_original_levels_and_existing_mechanics() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    for (id, level, legacy_index) in [
+        ("warrens-keeper", 7, 135),
+        ("swamp-rat", 10, 1297),
+        ("plague-monk", 14, 1293),
+        ("skaven-assassin", 14, 1294),
+        ("clay-golem", 15, 261),
+        ("magic-mushroom-patch", 15, 267),
+        ("rat-ogre", 15, 1295),
+        ("master-rogue", 23, 376),
+        ("mummified-human", 24, 390),
+        ("samurai", 25, 901),
+        ("black-knight", 28, 442),
+        ("trap-master", 28, 1036),
+        ("nekhbet-the-vulture-mother", 57, 1258),
+        ("thoth-the-voice-of-ra", 60, 1246),
+        ("loki-the-trickster", 85, 835),
+        ("shuma-gorath", 88, 841),
+        ("pandemonium", 94, 1200),
+        ("zombified-serpent-of-chaos", 127, 883),
+    ] {
+        let actor = catalog
+            .actor(&format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P78 actor {id} should compile"));
+        assert_eq!(actor.level, level, "P78 actor {id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "P78 actor {id} source index"
+        );
+        let allocation_tag = if id == "warrens-keeper" {
+            "warrens"
+        } else {
+            "orc-cave"
+        };
+        assert!(actor.tags.iter().any(|tag| tag == allocation_tag));
+    }
+
+    let mushroom = catalog
+        .actor("demo.actor.magic-mushroom-patch")
+        .expect("Magic mushroom patch");
+    assert!(
+        mushroom
+            .monster_casting
+            .as_ref()
+            .expect("original casting profile")
+            .abilities
+            .iter()
+            .any(|ability| ability.ability_id == "rfb-legacy.ability.polymorph-target")
+    );
+
+    let serpent = catalog
+        .actor("demo.actor.zombified-serpent-of-chaos")
+        .expect("Zombified Serpent of Chaos");
+    assert!(serpent.tags.iter().any(|tag| tag == "unique2"));
+    assert!(serpent.contact_auras.iter().any(|aura| {
+        aura.damage_type == ActorDamageType::Shards && aura.chance_percent.is_none()
+    }));
+    assert!(serpent.contact_auras.iter().any(|aura| {
+        aura.damage_type == ActorDamageType::Chaos && aura.chance_percent == Some(40)
+    }));
+    assert!(serpent.contact_auras.iter().any(|aura| {
+        aura.damage_type == ActorDamageType::Disenchant && aura.chance_percent == Some(20)
+    }));
 }
 
 #[test]

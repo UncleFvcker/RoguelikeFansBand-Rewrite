@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.summon-cyber-l88-1d3",
+  "input": "self",
+  "steps": [
+    {
+      "category": "cyber",
+      "countDice": 1,
+      "countSides": 3,
+      "durationTurns": 10000,
+      "maximumLevel": 88,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}

@@ -1,0 +1,244 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 835,
+    "maxDepth": 999,
+    "rarity": 2
+  },
+  "attack": 21,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 4,
+      "damageSides": 6,
+      "damageType": "fire"
+    }
+  ],
+  "damageDice": 11,
+  "damageSides": 11,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 4,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 16,
+  "descriptionKey": "actor-demo-loki-the-trickster-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 56870,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 85,
+    "forceMaximum": true,
+    "sides": 110
+  },
+  "id": "demo.actor.loki-the-trickster",
+  "level": 85,
+  "maxHp": 9350,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 11,
+            "damageSides": 11,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 11,
+            "damageSides": 11,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "disenchant"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 11,
+            "damageSides": 11,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "drain-charges"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "amountDice": 6,
+            "amountSides": 11,
+            "type": "drain-resource"
+          }
+        ],
+        "methodId": "rfb.blow.touch",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.shriek",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-255",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drain-mana-43",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.escape",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.banish",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.teleport-level",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.amnesia",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-cyber-l85-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-demon-l85-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.hand-of-doom",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-undead-l85-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-unique-l85-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-dragon-l85-1d3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-dark-10d10-390",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-mana-10d10-390",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-amberite-l85-1d2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.animate-dead",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.invulnerability-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.anti-magic",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.psy-spear-1d170-150",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-loki-the-trickster-name",
+  "regenerates": true,
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "fire": "resistant",
+    "nether": "resistant",
+    "plasma": "resistant",
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "giant",
+    "kin-glyph-80",
+    "legacy-import",
+    "norse",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

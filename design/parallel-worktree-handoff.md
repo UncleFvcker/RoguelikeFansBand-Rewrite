@@ -638,3 +638,18 @@ git diff --stat
   `600467a34cfc7157f16a490db22ba5db32befa077c5d40aa7a783956f1d3b254`；Protocol `1.195`、
   State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
   零 waiver）均不变，不刷新 replay fixture。
+
+## 39. monsters-next 当前交接（P78 直接怪物导入）
+
+- P78 将 18 条原版来源记录纳入 selection：低阶的沼泽鼠、瘟疫武僧、斯卡文刺客、黏土魔像、
+  魔法蘑菇丛、鼠巨魔、大师级盗贼、木乃伊人类、武士、黑骑士、陷阱大师，以及高阶的秃鹫之母
+  涅赫贝特、拉之声托特、欺诈者洛基、舒玛-哥拉斯、群魔殿和僵尸化混沌之蛇。
+- 狗头人领主穆加什已由 `demo.actor.warrens-keeper` 表达并占用原版 source index 135；本批把该
+  现有 actor 登记进 importer selection，不创建重复身份。其余 17 个 actor 为新增内容，并生成
+  42 个仅参数不同的既有 ability/program；未扩张运行时、协议、存档或状态哈希结构。
+- L1–127 联合审计为 1213 selected、32 direct、5 blocked、113 excluded；P78 的 18 条来源均为
+  selected。剩余项属于后续批次，不是本批回归。
+- 共享协调点：pack `1.319.0` / content hash
+  `74ea1074f2225f0e4798564df735747c49a4b0954c297ad0ac9fc0ef3a93d6cd`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变，不刷新 replay fixture。

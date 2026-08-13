@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 261,
+    "maxDepth": 50,
+    "rarity": 2
+  },
+  "attack": 3,
+  "damageDice": 4,
+  "damageSides": 4,
+  "damageType": "physical",
+  "defense": 3,
+  "descriptionKey": "actor-demo-clay-golem-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 50,
+  "formatVersion": 1,
+  "glyph": "g",
+  "hitPointDice": {
+    "dice": 14,
+    "sides": 8
+  },
+  "id": "demo.actor.clay-golem",
+  "level": 15,
+  "maxHp": 63,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 4,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 20,
+            "durationDice": 1,
+            "durationSides": 4,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-clay-golem-name",
+  "resistances": {
+    "cold": "resistant",
+    "disintegrate": "vulnerable",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "immune"
+  },
+  "role": "monster",
+  "speed": 110,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "cold-blooded",
+    "empty-mind",
+    "kin-glyph-103",
+    "legacy-import",
+    "nonliving",
+    "orc-cave"
+  ]
+}

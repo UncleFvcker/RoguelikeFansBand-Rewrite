@@ -1,0 +1,86 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 1,
+      "sides": 5
+    },
+    "legacyIndex": 267,
+    "maxDepth": 50,
+    "rarity": 2
+  },
+  "attack": 3,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-magic-mushroom-patch-description",
+  "experienceValue": 10,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": ",",
+  "hitPointDice": {
+    "dice": 1,
+    "sides": 1
+  },
+  "id": "demo.actor.magic-mushroom-patch",
+  "level": 15,
+  "light": {
+    "intrinsic": true,
+    "radius": 1
+  },
+  "maxHp": 1,
+  "meleeRoutine": {
+    "blows": []
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.blink",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.slow",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.scare",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.darkness",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.anti-magic",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.polymorph-target",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 100
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ],
+    "neverMoves": true
+  },
+  "nameKey": "actor-demo-magic-mushroom-patch-name",
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.fear",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "kin-glyph-44",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport"
+  ]
+}

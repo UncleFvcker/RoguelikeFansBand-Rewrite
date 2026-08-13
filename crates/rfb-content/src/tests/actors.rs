@@ -53,7 +53,7 @@ fn rfb_pet_evolution_relations_use_stable_actor_ids() {
         .iter()
         .filter(|actor| actor.evolution.is_some())
         .count();
-    assert_eq!(evolution_count, 316);
+    assert_eq!(evolution_count, 319);
     let horse = artifact
         .content
         .actors

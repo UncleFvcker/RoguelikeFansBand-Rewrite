@@ -746,7 +746,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 815);
+    assert_eq!(orc_cave.len(), 832);
 
     for id in [
         "demo.actor.bunyip",
@@ -779,6 +779,24 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
                     .any(|index| *index != 3)
         );
     }
+    let (orc_cave, low_level_orc_cave): (Vec<_>, Vec<_>) =
+        orc_cave.into_iter().partition(|actor| actor.level >= 21);
+    assert_eq!(
+        low_level_orc_cave
+            .iter()
+            .map(|actor| actor.id.as_str())
+            .collect::<BTreeSet<_>>(),
+        [
+            "demo.actor.clay-golem",
+            "demo.actor.magic-mushroom-patch",
+            "demo.actor.plague-monk",
+            "demo.actor.rat-ogre",
+            "demo.actor.skaven-assassin",
+            "demo.actor.swamp-rat",
+        ]
+        .into_iter()
+        .collect()
+    );
     let mut level_counts = [0_usize; 107];
     let mut source_indices = BTreeSet::new();
     for actor in orc_cave {
@@ -793,11 +811,11 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
     assert_eq!(
         level_counts,
         [
-            16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 2, 4, 5, 4, 12, 15, 4, 6, 6, 16, 4, 8, 4, 4, 1,
+            16, 14, 13, 18, 25, 17, 19, 19, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
+            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 2, 6, 4, 18, 5, 4, 5, 2, 12, 3, 9, 4,
+            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 2, 4, 5, 4, 13, 15, 4, 7, 6, 16, 4, 8, 4, 5, 1,
             3, 3, 2, 1, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 1,
+            0, 0, 2,
         ]
     );
 
@@ -5732,6 +5750,7 @@ fn p69_pantheon_monsters_keep_source_identity_and_norse_summoning() {
             "demo.actor.freyr-lord-of-plenty",
             "demo.actor.frigg-queen-of-asgard",
             "demo.actor.heimdall-guardian-of-bifrost",
+            "demo.actor.loki-the-trickster",
             "demo.actor.magni-son-of-thor",
             "demo.actor.njord-lord-of-the-vanir",
             "demo.actor.skadi-the-huntress",
@@ -8275,7 +8294,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        750
+        764
     );
 }
 
