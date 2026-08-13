@@ -29,7 +29,7 @@
       "turn": 1,
       "worldTick": 50000,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 170,
+      "rngDrawCounter": 172,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -279,7 +279,7 @@
           },
           "stock": [
             {
-              "id": "generated.item.173",
+              "id": "generated.item.177",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 4,
@@ -289,7 +289,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.174",
+              "id": "generated.item.178",
               "kindId": "demo.item.hard-biscuit",
               "displayNameKey": "item-demo-hard-biscuit-name",
               "quantity": 2,
@@ -299,27 +299,27 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.175",
+              "id": "generated.item.179",
               "kindId": "demo.item.strip-of-venison",
               "displayNameKey": "item-demo-strip-of-venison-name",
-              "quantity": 4,
+              "quantity": 1,
               "maximumQuantity": 0,
               "unitPrice": 2,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.176",
+              "id": "generated.item.180",
               "kindId": "demo.item.water-potion",
               "displayNameKey": "item-demo-water-potion-name",
-              "quantity": 2,
+              "quantity": 3,
               "maximumQuantity": 0,
               "unitPrice": 1,
               "weightTenthsPound": 4,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.177",
+              "id": "generated.item.181",
               "kindId": "demo.item.apple-juice",
               "displayNameKey": "item-demo-apple-juice-name",
               "quantity": 1,
@@ -1672,7 +1672,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 178,
+      "nextItemInstanceSerial": 182,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1680,7 +1680,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5e4f74d15ee83d623c6665519217ecab3ce60458dfb81e4a07409f41be237760"
+      "stateHash": "700b6689172eb6940bcc232afb4a536a7cd084cb3ce8839848eb508b590ffa6e"
     },
     "events": [
       {

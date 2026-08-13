@@ -655,3 +655,5 @@ save 容器保持 v1。
 `unique` 的隐式生命周期上限仍为 1，`unique2` 仍只限制同时存活一只；显式
 `lifetimeInstanceLimit` 可提供更高的跨楼层、跨死亡总额度。该权威表在组合后的协议
 1.195 中进入 State Hash Schema v97，save 容器保持 v1，不兼容缺少新字段的旧开发存档。
+
+1.196 为咒术领域 30 级后的批量鉴定增加 `mass-identify` 能力投影。该变化只扩展能力 DTO；不增加命令、存档字段或 state-hash 输入，State Hash Schema 保持 v97。

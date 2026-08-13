@@ -625,7 +625,11 @@ pub(super) fn validate_abilities(
                         && *duration_dice <= 100
                         && ((*duration_dice == 0 && *duration_sides == 0)
                             || (*duration_dice > 0 && (1..=1_000_000).contains(duration_sides)))
-                        && power.is_none_or(|power| (1..=1_000).contains(&power))
+                        && power.is_none_or(|power| {
+                            (1..=1_000).contains(&power)
+                                || (power == 0
+                                    && has_level_scaling(AbilityLevelScalingField::StatusPower))
+                        })
                         && granted_resistances.len() <= 29
                         && granted_brands.len() <= 5
                         && granted_modifiers.max_hp.abs() <= 1_000_000
@@ -707,6 +711,16 @@ pub(super) fn validate_abilities(
                                 && has_level_scaling(AbilityLevelScalingField::IdentifyPower)))
                             && (1..=1_000).contains(full_identify_roll_sides))
                 }
+                AbilityEffectDefinition::IdentifyOrMassIdentify {
+                    mass_at_level,
+                    upgraded_name_key,
+                    upgraded_description_key,
+                    ..
+                } => {
+                    (1..=100).contains(mass_at_level)
+                        && !upgraded_name_key.is_empty()
+                        && !upgraded_description_key.is_empty()
+                }
                 AbilityEffectDefinition::RestoreVitality { life_force } => {
                     (1..=1_000).contains(life_force)
                 }
@@ -771,6 +785,22 @@ pub(super) fn validate_abilities(
                         && target_category
                             .as_ref()
                             .is_none_or(|category| actor_tag_values.contains(category))
+                }
+                AbilityEffectDefinition::MassSleepOrStasis {
+                    stasis_at_level,
+                    sleep_power_multiplier,
+                    stasis_power_multiplier,
+                    power_divisor,
+                    upgraded_name_key,
+                    upgraded_description_key,
+                    ..
+                } => {
+                    (1..=100).contains(stasis_at_level)
+                        && (1..=1_000).contains(sleep_power_multiplier)
+                        && (1..=1_000).contains(stasis_power_multiplier)
+                        && (1..=1_000).contains(power_divisor)
+                        && !upgraded_name_key.is_empty()
+                        && !upgraded_description_key.is_empty()
                 }
                 AbilityEffectDefinition::BrandWeapon { affix_id, .. } => {
                     validate_id(affix_id).is_ok()
@@ -950,6 +980,7 @@ pub(super) fn validate_abilities(
                 }
             },
             AbilityEffectDefinition::IdentifyItem { .. }
+            | AbilityEffectDefinition::IdentifyOrMassIdentify { .. }
             | AbilityEffectDefinition::BrandWeapon { .. }
             | AbilityEffectDefinition::TransmuteItemToGold { .. }
             | AbilityEffectDefinition::DrainItemMagic { .. }
@@ -986,6 +1017,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::ResistElements { .. }
             | AbilityEffectDefinition::VisibleDamage { .. }
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
+            | AbilityEffectDefinition::MassSleepOrStasis { .. }
             | AbilityEffectDefinition::RestoreVitality { .. }
             | AbilityEffectDefinition::ReportMagic
             | AbilityEffectDefinition::Earthquake { .. }

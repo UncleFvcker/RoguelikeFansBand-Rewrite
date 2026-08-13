@@ -546,3 +546,16 @@ git diff --stat
   active baseline `contract-v292`（26 条 exact fixture、零 waiver），content hash
   `f66b18b842e434ef84787e664a4fe94107a27b2f47bbf0a6ddffb087c0c0284b`。
   `codex/monsters-next` 分支及工作树继续保留。
+
+## 33. codex/items-next 当前交接（咒术领域前两册）
+
+- 新增 `high-mage-sorcery` 构筑，出生只携带《初学者手册》；高阶法师通用出生装备、
+  Death 与 Arcane 构筑保持不变。
+- 咒术前两册共 16 个法术使用 RFB `master` 的等级、法力、失败率与首次成功经验。
+  30 级 Identify 窄切换为 Mass Identify，35 级 Mass Sleep 窄切换为 Mass Stasis；
+  未增加通用条件 DSL。
+- 两册按原版 allocation 进入基础物品池与两家书店；importer 仅显式接入 tval 91 的
+  前两个 sval，不预建其余领域。
+- 共享协调点：pack `1.313.0`、Protocol `1.196`、State Hash Schema v97、save v1、
+  active baseline `contract-v292`（26 条 exact fixture、零 waiver），content hash
+  `e25d28799149de140f2991a6762e68d39090b85b323c286fd23d88e13860bb30`。

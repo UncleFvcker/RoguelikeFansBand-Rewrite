@@ -7293,6 +7293,16 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             full_identify_power: *full_identify_power,
             full_identify_roll_sides: *full_identify_roll_sides,
         },
+        AbilityEffectDefinition::IdentifyOrMassIdentify { mass, .. } => {
+            if *mass {
+                AbilityEffectSpecDto::MassIdentify
+            } else {
+                AbilityEffectSpecDto::IdentifyItem {
+                    full_identify_power: 0,
+                    full_identify_roll_sides: 0,
+                }
+            }
+        }
         AbilityEffectDefinition::RestoreVitality { life_force } => {
             AbilityEffectSpecDto::RestoreVitality {
                 life_force: *life_force,
@@ -7358,6 +7368,25 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             power: *power,
             target_category: target_category.clone(),
         },
+        AbilityEffectDefinition::MassSleepOrStasis { stasis, power, .. } => {
+            AbilityEffectSpecDto::VisibleApplyStatus {
+                status_kind_id: if *stasis {
+                    STATUS_PARALYSIS.to_owned()
+                } else {
+                    STATUS_SLEEP.to_owned()
+                },
+                intensity: 1,
+                duration_ticks: if *stasis { 20 } else { 500 },
+                stacking: if *stasis {
+                    AbilityStatusStackingDto::Extend
+                } else {
+                    AbilityStatusStackingDto::KeepStrongest
+                },
+                resistance_type: None,
+                power: Some(*power),
+                target_category: None,
+            }
+        }
         AbilityEffectDefinition::BrandWeapon {
             affix_id,
             brand,

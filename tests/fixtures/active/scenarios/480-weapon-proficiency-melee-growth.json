@@ -46,7 +46,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 173,
+      "rngDrawCounter": 177,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1177,7 +1177,7 @@
             "x": 45,
             "y": 16
           },
-          "hp": 84,
+          "hp": 77,
           "speed": 109,
           "energyNeed": 10
         }
@@ -1556,7 +1556,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 180,
+      "nextItemInstanceSerial": 185,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1564,14 +1564,26 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "be144f6c0f36c306136b85ec1f28e2056edea7125248811b246add8a60b78ba3"
+      "stateHash": "34e8214458c6911dad8f90942e9a44900851f652d4c486d3b12674d36dd1a817"
     },
     "events": [
       {
-        "kind": "combat.miss",
-        "messageKey": "combat-player-miss",
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
         "args": {
+          "damage": "7",
           "target": "demo.actor.adobe-golem"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 7,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 7,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         }
       }
     ]

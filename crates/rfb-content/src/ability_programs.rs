@@ -226,6 +226,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::RestoreVitality { .. }
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                    | AbilityEffectDefinition::MassSleepOrStasis { .. }
                     | AbilityEffectDefinition::BlinkSelf { .. }
                     | AbilityEffectDefinition::TeleportSelf { .. }
                     | AbilityEffectDefinition::ReportMagic
@@ -299,6 +300,7 @@ fn ability_program_input_accepts_step(
             matches!(
                 effect,
                 AbilityEffectDefinition::IdentifyItem { .. }
+                    | AbilityEffectDefinition::IdentifyOrMassIdentify { .. }
                     | AbilityEffectDefinition::BrandWeapon { .. }
                     | AbilityEffectDefinition::TransmuteItemToGold { .. }
                     | AbilityEffectDefinition::DrainItemMagic { .. }

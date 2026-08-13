@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.195";
+pub const PROTOCOL_VERSION: &str = "1.196";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1181,6 +1181,7 @@ pub enum AbilityEffectSpecDto {
         full_identify_power: u16,
         full_identify_roll_sides: u16,
     },
+    MassIdentify,
     RestoreVitality {
         life_force: u16,
     },

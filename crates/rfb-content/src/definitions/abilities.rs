@@ -589,6 +589,14 @@ pub enum AbilityEffectDefinition {
         full_identify_power: u16,
         full_identify_roll_sides: u16,
     },
+    IdentifyOrMassIdentify {
+        mass_at_level: u16,
+        upgraded_name_key: String,
+        upgraded_description_key: String,
+        #[serde(skip)]
+        #[cfg_attr(feature = "schemas", schemars(skip))]
+        mass: bool,
+    },
     RestoreVitality {
         life_force: u16,
     },
@@ -637,6 +645,20 @@ pub enum AbilityEffectDefinition {
         power: Option<u16>,
         #[serde(default)]
         target_category: Option<String>,
+    },
+    MassSleepOrStasis {
+        stasis_at_level: u16,
+        sleep_power_multiplier: u16,
+        stasis_power_multiplier: u16,
+        power_divisor: u16,
+        upgraded_name_key: String,
+        upgraded_description_key: String,
+        #[serde(skip)]
+        #[cfg_attr(feature = "schemas", schemars(skip))]
+        stasis: bool,
+        #[serde(skip)]
+        #[cfg_attr(feature = "schemas", schemars(skip))]
+        power: u16,
     },
     BrandWeapon {
         affix_id: String,
@@ -943,6 +965,7 @@ pub(crate) fn valid_ability_spell_power(
                     effect,
                     AbilityEffectDefinition::ApplyStatus { power: Some(_), .. }
                         | AbilityEffectDefinition::VisibleApplyStatus { power: Some(_), .. }
+                        | AbilityEffectDefinition::MassSleepOrStasis { .. }
                 ),
                 AbilitySpellPowerField::ControlPower => {
                     matches!(effect, AbilityEffectDefinition::Control { .. })

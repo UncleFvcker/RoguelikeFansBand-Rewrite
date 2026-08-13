@@ -7,6 +7,7 @@ use super::*;
 
 const HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-death";
 const ARCANE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-arcane";
+const SORCERY_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-sorcery";
 
 fn high_mage_game(seed: u64) -> Game {
     Game::new_with_build(seed, HIGH_MAGE_BUILD_ID).expect("Death High-Mage build should create")
@@ -33,6 +34,236 @@ fn arcane_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
         .current = 100;
     game.debug_ability_casts_succeed = true;
     game
+}
+
+fn sorcery_high_mage_game(seed: u64, level: u16, ability_ids: &[&str]) -> Game {
+    let mut game = Game::new_with_build(seed, SORCERY_HIGH_MAGE_BUILD_ID)
+        .expect("Sorcery High-Mage build should create");
+    game.progress.level = level;
+    game.progress.max_level = level;
+    game.learned_abilities
+        .extend(ability_ids.iter().map(|id| (*id).to_owned()));
+    give_inventory_item(
+        &mut game,
+        "test.master-sorcerers-handbook",
+        "demo.item.master-sorcerers-handbook",
+    );
+    game.refresh_player_resource_maxima();
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Sorcery High-Mage should have mana")
+        .current = 100;
+    game.debug_ability_casts_succeed = true;
+    game
+}
+
+#[test]
+fn sorcery_high_mage_birth_keeps_only_the_first_book_and_realm() {
+    let game = Game::new_with_build(0x534f_5243_4552_5932, SORCERY_HIGH_MAGE_BUILD_ID)
+        .expect("Sorcery High-Mage build should create");
+    let carried = game
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        })
+        .map(|item| item.kind_id.as_str())
+        .collect::<BTreeSet<_>>();
+    assert!(carried.contains("demo.item.beginners-handbook"));
+    assert!(!carried.contains("demo.item.master-sorcerers-handbook"));
+    assert!(!carried.contains("demo.item.cantrips-for-beginners"));
+    assert!(!carried.contains("demo.item.black-prayers"));
+
+    let learned = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .filter(|ability| ability.source == AbilitySourceDto::Learned)
+        .collect::<Vec<_>>();
+    assert_eq!(learned.len(), 16);
+    assert!(
+        learned
+            .iter()
+            .all(|ability| ability.id.starts_with("demo.ability.sorcery-"))
+    );
+}
+
+#[test]
+fn sorcery_identify_and_mass_sleep_switch_at_the_original_levels() {
+    let projected = |level| {
+        sorcery_high_mage_game(
+            0x534f_5243_4552_5900 + u64::from(level),
+            level,
+            &[
+                "demo.ability.sorcery-identify",
+                "demo.ability.sorcery-mass-sleep",
+            ],
+        )
+        .snapshot()
+        .player
+        .abilities
+    };
+    let level_29 = projected(29);
+    let identify_29 = level_29
+        .iter()
+        .find(|ability| ability.id == "demo.ability.sorcery-identify")
+        .expect("Identify should be projected");
+    assert_eq!(identify_29.name_key, "ability-demo-sorcery-identify-name");
+    assert!(matches!(
+        identify_29.effects.as_slice(),
+        [AbilityEffectSpecDto::IdentifyItem { .. }]
+    ));
+    let sleep_29 = level_29
+        .iter()
+        .find(|ability| ability.id == "demo.ability.sorcery-mass-sleep")
+        .expect("Mass Sleep should be projected");
+    assert_eq!(sleep_29.name_key, "ability-demo-sorcery-mass-sleep-name");
+    assert!(matches!(
+        sleep_29.effects.as_slice(),
+        [AbilityEffectSpecDto::VisibleApplyStatus {
+            status_kind_id,
+            power: Some(96),
+            ..
+        }] if status_kind_id == STATUS_SLEEP
+    ));
+
+    let level_30 = projected(30);
+    let identify_30 = level_30
+        .iter()
+        .find(|ability| ability.id == "demo.ability.sorcery-identify")
+        .expect("Mass Identify should be projected");
+    assert_eq!(
+        identify_30.name_key,
+        "ability-demo-sorcery-mass-identify-name"
+    );
+    assert!(matches!(
+        identify_30.effects.as_slice(),
+        [AbilityEffectSpecDto::MassIdentify]
+    ));
+
+    let level_35 = projected(35);
+    let stasis_35 = level_35
+        .iter()
+        .find(|ability| ability.id == "demo.ability.sorcery-mass-sleep")
+        .expect("Mass Stasis should be projected");
+    assert_eq!(stasis_35.name_key, "ability-demo-sorcery-mass-stasis-name");
+    assert!(matches!(
+        stasis_35.effects.as_slice(),
+        [AbilityEffectSpecDto::VisibleApplyStatus {
+            status_kind_id,
+            duration_ticks: 20,
+            power: Some(81),
+            ..
+        }] if status_kind_id == STATUS_PARALYSIS
+    ));
+}
+
+#[test]
+fn sorcery_mass_identify_appraises_all_carried_items() {
+    let mut game = sorcery_high_mage_game(
+        0x4d41_5353_4944_454e,
+        30,
+        &["demo.ability.sorcery-identify"],
+    );
+    for (id, kind_id) in [
+        ("test.mass-identify.dagger", "demo.item.dagger"),
+        ("test.mass-identify.potion", "demo.item.antidote-potion"),
+    ] {
+        give_inventory_item(&mut game, id, kind_id);
+    }
+
+    game.resolve_player_ability(
+        "demo.ability.sorcery-identify",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Mass Identify should resolve without an item target");
+
+    for id in ["test.mass-identify.dagger", "test.mass-identify.potion"] {
+        let knowledge = &game.item_property_knowledge[id];
+        assert!(knowledge.discovered && knowledge.appraised);
+        assert!(!knowledge.identified);
+    }
+}
+
+#[test]
+fn sorcery_mass_stasis_suspends_visible_non_unique_monsters_only() {
+    let mut game = sorcery_high_mage_game(
+        0x5354_4153_4953_3335,
+        35,
+        &["demo.ability.sorcery-mass-sleep"],
+    );
+    clear_monsters(&mut game);
+    let origin = game.player.position;
+    let ordinary_position = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    let unique_position = Position {
+        x: origin.x + 2,
+        y: origin.y,
+    };
+    replace_terrain(&mut game, ordinary_position, "demo.terrain.floor");
+    replace_terrain(&mut game, unique_position, "demo.terrain.floor");
+    game.entities.push(actor_from_runtime_spawn(
+        "test.stasis.ordinary",
+        "demo.actor.small-kobold",
+        ordinary_position,
+        5,
+        100,
+        100,
+        true,
+    ));
+    game.entities.push(actor_from_runtime_spawn(
+        "test.stasis.unique",
+        "demo.actor.alberich-the-nibelung-king",
+        unique_position,
+        40,
+        100,
+        100,
+        true,
+    ));
+
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.sorcery-mass-sleep",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Mass Stasis should resolve");
+
+    let ordinary = game
+        .entities
+        .iter()
+        .find(|entity| entity.id == "test.stasis.ordinary")
+        .expect("ordinary target should remain");
+    assert!(ordinary.statuses.iter().any(|status| {
+        status.kind_id == STATUS_PARALYSIS && (20..=30).contains(&status.remaining_ticks)
+    }));
+    let unique = game
+        .entities
+        .iter()
+        .find(|entity| entity.id == "test.stasis.unique")
+        .expect("unique target should remain");
+    assert!(
+        unique
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != STATUS_PARALYSIS)
+    );
+    assert!(events.iter().all(|event| !matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if resolution.target_entity_id.as_deref() == Some("test.stasis.unique")
+    )));
 }
 
 #[test]

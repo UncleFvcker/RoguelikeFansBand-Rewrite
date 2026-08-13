@@ -1692,6 +1692,20 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.beginners-handbook",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.master-sorcerers-handbook",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 50
+    },
+    {
       "itemKindId": "demo.item.cantrips-for-beginners",
       "weight": 100,
       "quantity": 1,

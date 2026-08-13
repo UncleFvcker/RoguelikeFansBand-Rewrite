@@ -162,6 +162,8 @@
     { "sourceIndex": 463, "sourceName": "Clarity:Metallic", "sourceId": "clarity-metallic", "itemId": "demo.item.clarity-draught", "status": "active", "contract": "contract-v111-restorative-items" },
     { "sourceIndex": 464, "sourceName": "Great Clarity:Acrid", "sourceId": "great-clarity-acrid", "itemId": "demo.item.great-clarity-potion", "status": "active", "contract": "phase-19-p3-2-low-coupling-potions" },
     { "sourceIndex": 466, "sourceName": "Mead of Poetry:Bright Orange", "sourceId": "mead-of-poetry-bright-orange", "itemId": "demo.item.muse-tonic", "status": "active", "contract": "contract-v141-potion-poetic-inspiration" },
+    { "sourceIndex": 504, "sourceName": "[Beginner's Handbook]", "sourceId": "beginners-handbook", "itemId": "demo.item.beginners-handbook", "status": "active", "contract": "class-high-mage-sorcery-first-book" },
+    { "sourceIndex": 505, "sourceName": "[Master Sorcerer's Handbook]", "sourceId": "master-sorcerers-handbook", "itemId": "demo.item.master-sorcerers-handbook", "status": "active", "contract": "class-high-mage-sorcery-second-book" },
     { "sourceIndex": 516, "sourceName": "[Black Prayers]", "sourceId": "black-prayers", "itemId": "demo.item.black-prayers", "status": "active", "contract": "class-high-mage-death-first-book" },
     { "sourceIndex": 517, "sourceName": "[Black Mass]", "sourceId": "black-mass", "itemId": "demo.item.black-mass", "status": "active", "contract": "class-high-mage-death-second-book" },
     { "sourceIndex": 518, "sourceName": "[Black Channels]", "sourceId": "black-channels", "itemId": "demo.item.black-channels", "status": "active", "contract": "contract-v106-death-third-book" },

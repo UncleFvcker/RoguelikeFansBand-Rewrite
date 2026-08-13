@@ -1889,6 +1889,34 @@
         {
           "additionalProperties": false,
           "properties": {
+            "massAtLevel": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "identify-or-mass-identify",
+              "type": "string"
+            },
+            "upgradedDescriptionKey": {
+              "type": "string"
+            },
+            "upgradedNameKey": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "massAtLevel",
+            "upgradedNameKey",
+            "upgradedDescriptionKey"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "lifeForce": {
               "format": "uint16",
               "maximum": 65535,
@@ -2150,6 +2178,55 @@
             "intensity",
             "durationTicks",
             "stacking"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "powerDivisor": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "sleepPowerMultiplier": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "stasisAtLevel": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "stasisPowerMultiplier": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "mass-sleep-or-stasis",
+              "type": "string"
+            },
+            "upgradedDescriptionKey": {
+              "type": "string"
+            },
+            "upgradedNameKey": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "stasisAtLevel",
+            "sleepPowerMultiplier",
+            "stasisPowerMultiplier",
+            "powerDivisor",
+            "upgradedNameKey",
+            "upgradedDescriptionKey"
           ],
           "type": "object"
         },

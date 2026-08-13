@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.master-sorcerers-handbook",
+  "nameKey": "ability-book-demo-master-sorcerers-handbook-name",
+  "descriptionKey": "ability-book-demo-master-sorcerers-handbook-description",
+  "realmId": "sorcery",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.sorcery-magic-mapping",
+    "demo.ability.sorcery-identify",
+    "demo.ability.sorcery-slow-monster",
+    "demo.ability.sorcery-mass-sleep",
+    "demo.ability.sorcery-teleport-away",
+    "demo.ability.sorcery-haste-self",
+    "demo.ability.sorcery-true-detection",
+    "demo.ability.sorcery-true-identify"
+  ],
+  "tags": ["sorcery", "spellbook"]
+}

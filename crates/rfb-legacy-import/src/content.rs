@@ -2344,6 +2344,8 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
         (DEATH_BOOK_TVAL, DEATH_SECOND_BOOK_SVAL) => Some(DEATH_SECOND_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_THIRD_BOOK_SVAL) => Some(DEATH_THIRD_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_FOURTH_BOOK_SVAL) => Some(DEATH_FOURTH_BOOK_ID),
+        (SORCERY_BOOK_TVAL, SORCERY_FIRST_BOOK_SVAL) => Some(SORCERY_FIRST_BOOK_ID),
+        (SORCERY_BOOK_TVAL, SORCERY_SECOND_BOOK_SVAL) => Some(SORCERY_SECOND_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_FIRST_BOOK_SVAL) => Some(ARCANE_FIRST_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_SECOND_BOOK_SVAL) => Some(ARCANE_SECOND_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_THIRD_BOOK_SVAL) => Some(ARCANE_THIRD_BOOK_ID),
@@ -9122,6 +9124,11 @@ const DEATH_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-prayers";
 const DEATH_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-mass";
 const DEATH_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-channels";
 const DEATH_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.death-necronomicon";
+const SORCERY_BOOK_TVAL: u16 = 91;
+const SORCERY_FIRST_BOOK_SVAL: u16 = 0;
+const SORCERY_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.sorcery-beginners-handbook";
+const SORCERY_SECOND_BOOK_SVAL: u16 = 1;
+const SORCERY_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.sorcery-master-sorcerers-handbook";
 const ARCANE_BOOK_TVAL: u16 = 96;
 const ARCANE_FIRST_BOOK_SVAL: u16 = 0;
 const ARCANE_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-cantrips-for-beginners";
@@ -18203,6 +18210,21 @@ F:BRAND_VAMP | HOLD_LIFE
             player_ability_book_for_item(&fourth_arcane_book),
             Some(ARCANE_FOURTH_BOOK_ID)
         );
+
+        for (sval, expected_book_id) in [
+            (SORCERY_FIRST_BOOK_SVAL, SORCERY_FIRST_BOOK_ID),
+            (SORCERY_SECOND_BOOK_SVAL, SORCERY_SECOND_BOOK_ID),
+        ] {
+            let sorcery_book = LegacyItemEntry {
+                tval: SORCERY_BOOK_TVAL,
+                sval,
+                ..LegacyItemEntry::default()
+            };
+            assert_eq!(
+                player_ability_book_for_item(&sorcery_book),
+                Some(expected_book_id)
+            );
+        }
     }
 
     #[test]

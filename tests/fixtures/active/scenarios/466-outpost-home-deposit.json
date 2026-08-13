@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 170,
+      "rngDrawCounter": 172,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -295,7 +295,7 @@
           "playerAtEntrance": true,
           "storedItems": [
             {
-              "id": "generated.item.178",
+              "id": "generated.item.182",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 1,
@@ -1608,7 +1608,7 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.178",
+          "itemId": "generated.item.182",
           "discovered": true
         },
         {
@@ -1646,7 +1646,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 179,
+      "nextItemInstanceSerial": 183,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1654,7 +1654,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5b352b49409015a0f6f9a588363c1d5f9c3a2260f3455db02332e8239567262a"
+      "stateHash": "ceaadebca685be063b7ea3a9220233b8e0fe63489faee63fd855cbfc74bff194"
     },
     "events": [
       {
@@ -1662,7 +1662,7 @@
         "messageKey": "home-deposit-success",
         "args": {
           "facility": "demo.town-facility.outpost-home",
-          "item": "generated.item.178",
+          "item": "generated.item.182",
           "quantity": "1",
           "target": "demo.item.ration-of-food"
         }

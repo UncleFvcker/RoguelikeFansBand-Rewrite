@@ -899,6 +899,14 @@ impl Game {
             (AbilityEffectDefinition::IdentifyItem { .. }, AbilityTargetPlan::Item { item_id }) => {
                 self.resolve_player_identify_item_effect(&ability, &item_id, events);
             }
+            (
+                AbilityEffectDefinition::IdentifyOrMassIdentify { mass: false, .. },
+                AbilityTargetPlan::Item { item_id },
+            ) => self.resolve_player_identify_item_effect(&ability, &item_id, events),
+            (
+                AbilityEffectDefinition::IdentifyOrMassIdentify { mass: true, .. },
+                AbilityTargetPlan::SelfTarget,
+            ) => self.resolve_player_mass_identify_effect(&ability, events),
             (AbilityEffectDefinition::RestoreVitality { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_restore_vitality_effect(&ability, events);
             }
@@ -912,6 +920,9 @@ impl Game {
             }
             (AbilityEffectDefinition::VisibleApplyStatus { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_visible_status_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::MassSleepOrStasis { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_mass_sleep_or_stasis_effect(&ability, events, changed)
             }
             (AbilityEffectDefinition::AggravateMonsters, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_aggravate_monsters_effect(&ability, events, changed);
@@ -3259,6 +3270,124 @@ impl Game {
         }
     }
 
+    pub(super) fn resolve_player_mass_sleep_or_stasis_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::MassSleepOrStasis { stasis, power, .. } = ability.effect
+        else {
+            unreachable!("mass sleep executor requires a mass sleep effect");
+        };
+        let (status_kind_id, duration_ticks, stacking) = if stasis {
+            (
+                STATUS_PARALYSIS,
+                20,
+                AbilityStatusStackingDefinition::Extend,
+            )
+        } else {
+            (
+                STATUS_SLEEP,
+                500,
+                AbilityStatusStackingDefinition::KeepStrongest,
+            )
+        };
+        let target_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && self.entity_is_visible_to_player(entity)
+                    && (!stasis
+                        || self
+                            .content
+                            .actor(&entity.kind_id)
+                            .is_some_and(|definition| {
+                                !definition
+                                    .tags
+                                    .iter()
+                                    .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
+                            }))
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        let empty_resistances = BTreeMap::new();
+        let empty_brands = BTreeSet::new();
+        let empty_immunities = BTreeSet::new();
+        for entity_id in target_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let target_kind_id = self.entities[index].kind_id.clone();
+            let target_level = self
+                .content
+                .actor(&target_kind_id)
+                .map(|definition| definition.level);
+            let mut resolution = apply_ability_status_effect(
+                &mut self.entities[index],
+                &ability.id,
+                0,
+                status_kind_id,
+                1,
+                duration_ticks,
+                0,
+                0,
+                stacking,
+                None,
+                Some(power),
+                &empty_resistances,
+                &empty_brands,
+                &StatModifiers::default(),
+                &EquipmentBonuses::default(),
+                &empty_immunities,
+                None,
+                false,
+                100,
+                target_level,
+                None,
+                &mut self.rng,
+            );
+            if stasis
+                && let AbilityEffectResolutionDto::ApplyStatus {
+                    requested_duration_ticks,
+                    applied_duration_ticks,
+                    change,
+                    ..
+                } = &mut resolution
+                && !matches!(
+                    change,
+                    AbilityStatusChangeDto::Immune | AbilityStatusChangeDto::Resisted
+                )
+                && self.rng.bounded(15) == 0
+            {
+                *requested_duration_ticks += 10;
+                *applied_duration_ticks += 10;
+                if let Some(status) = self.entities[index]
+                    .statuses
+                    .iter_mut()
+                    .find(|status| status.kind_id == STATUS_PARALYSIS)
+                {
+                    status.remaining_ticks = status.remaining_ticks.saturating_add(10);
+                }
+            }
+            changed.insert(self.entities[index].position);
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: Some(entity_id),
+                    target_kind_id: Some(target_kind_id),
+                    effects: vec![resolution],
+                },
+                trace: None,
+            });
+        }
+    }
+
     pub(super) fn resolve_player_healing_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -3448,12 +3577,13 @@ impl Game {
         item_id: &str,
         events: &mut Vec<DomainEvent>,
     ) {
-        let AbilityEffectDefinition::IdentifyItem {
-            full_identify_power,
-            full_identify_roll_sides,
-        } = ability.effect
-        else {
-            unreachable!("item identification executor requires an identify item effect");
+        let (full_identify_power, full_identify_roll_sides) = match ability.effect {
+            AbilityEffectDefinition::IdentifyItem {
+                full_identify_power,
+                full_identify_roll_sides,
+            } => (full_identify_power, full_identify_roll_sides),
+            AbilityEffectDefinition::IdentifyOrMassIdentify { mass: false, .. } => (0, 0),
+            _ => unreachable!("item identification executor requires an identify item effect"),
         };
         let roll = if full_identify_roll_sides == 0 {
             0
@@ -3479,6 +3609,56 @@ impl Game {
                     full,
                     changed: identification.changed,
                 }],
+            },
+            trace: None,
+        });
+    }
+
+    pub(super) fn resolve_player_mass_identify_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::IdentifyOrMassIdentify { mass: true, .. } = ability.effect
+        else {
+            unreachable!("mass identification executor requires the upgraded identify effect");
+        };
+        let mut item_ids = self
+            .items
+            .iter()
+            .filter(|item| {
+                item.quantity > 0
+                    && matches!(
+                        item.location,
+                        ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                    )
+            })
+            .map(|item| item.id.clone())
+            .collect::<Vec<_>>();
+        item_ids.sort();
+        let effects = item_ids
+            .into_iter()
+            .map(|item_id| {
+                let identification =
+                    self.identify_item_instance(&item_id, ItemIdentificationRequest::new(false));
+                AbilityEffectResolutionDto::IdentifyItem {
+                    effect_index: 0,
+                    item_id: identification.item_id,
+                    item_kind_id: identification.item_kind_id,
+                    full_identify_power: 0,
+                    full_identify_roll_sides: 0,
+                    roll: 0,
+                    full: false,
+                    changed: identification.changed,
+                }
+            })
+            .collect();
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects,
             },
             trace: None,
         });
@@ -6453,6 +6633,39 @@ impl Game {
                     item_id: item_id.clone(),
                 })
             }
+            AbilityEffectDefinition::IdentifyOrMassIdentify { mass, .. } => {
+                if mass {
+                    (matches!(target, TargetSelection::SelfTarget)
+                        && ability
+                            .target
+                            .modes
+                            .contains(&AbilityTargetModeDefinition::SelfTarget))
+                    .then_some(AbilityTargetPlan::SelfTarget)
+                } else {
+                    let TargetSelection::Item { item_id } = target else {
+                        return None;
+                    };
+                    (ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::Item)
+                        && self.items.iter().any(|item| {
+                            item.id == *item_id
+                                && match &item.location {
+                                    ItemLocation::Inventory | ItemLocation::Equipped { .. } => true,
+                                    ItemLocation::Ground(position) => {
+                                        *position == self.player.position
+                                    }
+                                    ItemLocation::CarriedBy { .. }
+                                    | ItemLocation::Shop { .. }
+                                    | ItemLocation::Home { .. } => false,
+                                }
+                        }))
+                    .then(|| AbilityTargetPlan::Item {
+                        item_id: item_id.clone(),
+                    })
+                }
+            }
             AbilityEffectDefinition::BrandWeapon { .. } => {
                 let TargetSelection::Item { item_id } = target else {
                     return None;
@@ -6524,7 +6737,8 @@ impl Game {
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::Clairvoyance { .. }
-            | AbilityEffectDefinition::LightArea { .. } => {
+            | AbilityEffectDefinition::LightArea { .. }
+            | AbilityEffectDefinition::MassSleepOrStasis { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
                         .target

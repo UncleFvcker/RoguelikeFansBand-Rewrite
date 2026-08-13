@@ -188,6 +188,61 @@ fn arcane_first_book_keeps_the_original_spell_table_and_narrow_effects() {
 }
 
 #[test]
+fn sorcery_first_two_books_keep_the_original_spell_table() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    for (book_id, rank) in [
+        ("demo.ability-book.beginners-handbook", 1),
+        ("demo.ability-book.master-sorcerers-handbook", 2),
+    ] {
+        let book = content
+            .ability_books
+            .iter()
+            .find(|book| book.id == book_id)
+            .unwrap_or_else(|| panic!("{book_id} should compile"));
+        assert_eq!(book.realm_id.as_deref(), Some("sorcery"));
+        assert_eq!(book.rank, Some(rank));
+        assert_eq!(book.ability_ids.len(), 8);
+    }
+
+    let expected = [
+        ("demo.ability.sorcery-detect-monsters", 1, 1, 15, 4),
+        ("demo.ability.sorcery-phase-door", 1, 1, 15, 4),
+        ("demo.ability.sorcery-detect-doors-traps", 2, 2, 15, 2),
+        ("demo.ability.sorcery-light-area", 2, 2, 20, 2),
+        ("demo.ability.sorcery-confuse-monster", 3, 3, 20, 3),
+        ("demo.ability.sorcery-teleport", 4, 3, 25, 20),
+        ("demo.ability.sorcery-sleep-monster", 5, 4, 20, 20),
+        ("demo.ability.sorcery-recharging", 5, 5, 65, 45),
+        ("demo.ability.sorcery-magic-mapping", 7, 5, 65, 56),
+        ("demo.ability.sorcery-identify", 7, 5, 65, 56),
+        ("demo.ability.sorcery-slow-monster", 9, 5, 65, 63),
+        ("demo.ability.sorcery-mass-sleep", 9, 5, 40, 54),
+        ("demo.ability.sorcery-teleport-away", 13, 8, 50, 104),
+        ("demo.ability.sorcery-haste-self", 17, 10, 50, 136),
+        ("demo.ability.sorcery-true-detection", 24, 15, 60, 360),
+        ("demo.ability.sorcery-true-identify", 28, 20, 65, 560),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+}
+
+#[test]
 fn arcane_second_book_keeps_the_original_spell_table_and_narrow_effects() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = artifact.content;
