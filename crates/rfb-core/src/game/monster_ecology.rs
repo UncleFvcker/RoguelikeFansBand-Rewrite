@@ -993,6 +993,7 @@ pub(super) fn actor_matches_surface_habitat(
         return false;
     }
     if allocation.habitats.contains(&ActorHabitat::Ocean)
+        && !allocation.habitats.contains(&ActorHabitat::All)
         && wilderness_terrain != Some(WildernessTerrain::DeepWater)
     {
         return false;
@@ -1330,18 +1331,7 @@ impl Game {
         }
     }
 
-    pub(super) fn actor_kind_available_instance_count(&self, kind_id: &str) -> usize {
-        let Some(definition) = self.content.actor(kind_id) else {
-            return 0;
-        };
-        if matches!(kind_id, BANOR_KIND_ID | RUPART_KIND_ID) {
-            return 0;
-        }
-        if kind_id == BANOR_RUPART_COMBINED_KIND_ID
-            && (self.banor_rupart_group_is_defeated() || self.banor_rupart_living_count() > 0)
-        {
-            return 0;
-        }
+    pub(super) fn actor_kind_occupied_instance_count(&self, kind_id: &str) -> usize {
         let living = self
             .entities
             .iter()
@@ -1376,7 +1366,35 @@ impl Game {
                     .is_some_and(|captured| captured.kind_id == kind_id)
             })
             .count();
-        let occupied = living.saturating_add(captured);
+        living.saturating_add(captured)
+    }
+
+    pub(super) fn actor_is_dead_unique_resurrection(&self, actor: &Actor) -> bool {
+        actor
+            .summon
+            .as_ref()
+            .and_then(|summon| self.content.ability(&summon.source_ability_id))
+            .is_some_and(|ability| {
+                ability
+                    .tags
+                    .iter()
+                    .any(|tag| tag == super::monster_abilities::MONSTER_DEAD_UNIQUE_SUMMON_TAG)
+            })
+    }
+
+    pub(super) fn actor_kind_available_instance_count(&self, kind_id: &str) -> usize {
+        let Some(definition) = self.content.actor(kind_id) else {
+            return 0;
+        };
+        if matches!(kind_id, BANOR_KIND_ID | RUPART_KIND_ID) {
+            return 0;
+        }
+        if kind_id == BANOR_RUPART_COMBINED_KIND_ID
+            && (self.banor_rupart_group_is_defeated() || self.banor_rupart_living_count() > 0)
+        {
+            return 0;
+        }
+        let occupied = self.actor_kind_occupied_instance_count(kind_id);
         if let Some(limit) = definition.finite_lifetime_instance_limit() {
             let defeated = usize::from(
                 self.defeated_limited_actor_counts

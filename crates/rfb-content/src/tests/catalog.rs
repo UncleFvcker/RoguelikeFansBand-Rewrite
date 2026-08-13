@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.317.0");
+    assert_eq!(catalog.pack_version(), "1.318.0");
     assert_eq!(catalog.races().count(), 46);
     assert_eq!(
         catalog
@@ -319,6 +319,94 @@ fn p76_complex_monsters_and_their_shared_mechanisms_compile_into_the_pack() {
             .iter()
             .any(|aura| { aura.damage_type == ActorDamageType::Time && aura.ravages_time })
     );
+}
+
+#[test]
+fn p77_location_bound_monsters_and_resurrection_mechanism_compile_into_the_pack() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    for id in [
+        "godzilla",
+        "greater-cyber-wyrm-angel-daemon-lich",
+        "sauron-the-sorcerer",
+        "oberon-king-of-amber",
+        "the-serpent-of-chaos",
+        "the-resurrection-machine",
+    ] {
+        assert!(
+            catalog.actor(&format!("demo.actor.{id}")).is_some(),
+            "P77 actor {id} should compile"
+        );
+    }
+
+    let godzilla = catalog.actor("demo.actor.godzilla").expect("Godzilla");
+    let godzilla_allocation = godzilla.allocation.as_ref().expect("ocean allocation");
+    assert_eq!(godzilla_allocation.legacy_index, 832);
+    assert!(godzilla_allocation.wild_only);
+    assert_eq!(godzilla_allocation.habitats, [ActorHabitat::Ocean]);
+
+    let wyrm = catalog
+        .actor("demo.actor.greater-cyber-wyrm-angel-daemon-lich")
+        .expect("Greater Cyber Wyrm Angel Daemon Lich");
+    let wyrm_allocation = wyrm.allocation.as_ref().expect("wilderness allocation");
+    assert_eq!(wyrm_allocation.legacy_index, 1337);
+    assert!(wyrm_allocation.habitats.contains(&ActorHabitat::All));
+    assert!(wyrm_allocation.habitats.contains(&ActorHabitat::Ocean));
+    assert_eq!(
+        wyrm.monster_casting
+            .as_ref()
+            .expect("the full original casting profile")
+            .abilities
+            .len(),
+        94
+    );
+
+    for id in [
+        "sauron-the-sorcerer",
+        "oberon-king-of-amber",
+        "the-serpent-of-chaos",
+        "the-resurrection-machine",
+    ] {
+        assert!(
+            catalog
+                .actor(&format!("demo.actor.{id}"))
+                .expect("fixed identity actor")
+                .allocation
+                .is_none(),
+            "{id} should require explicit placement"
+        );
+    }
+
+    let serpent = catalog
+        .actor("demo.actor.the-serpent-of-chaos")
+        .expect("Serpent of Chaos");
+    assert!(serpent.tags.iter().any(|tag| tag == "guardian"));
+    assert!(serpent.contact_auras.iter().any(|aura| {
+        aura.damage_type == ActorDamageType::Chaos && aura.chance_percent == Some(20)
+    }));
+    assert!(serpent.contact_auras.iter().any(|aura| {
+        aura.damage_type == ActorDamageType::Disenchant && aura.chance_percent == Some(10)
+    }));
+
+    let resurrection = catalog
+        .ability("rfb-legacy.ability.summon-dead-unique-l100-1d2")
+        .expect("S_DEAD_UNIQ should compile");
+    assert!(
+        resurrection
+            .tags
+            .iter()
+            .any(|tag| tag == "monster-dead-unique-summon")
+    );
+    assert!(matches!(
+        &resurrection.effect,
+        AbilityEffectDefinition::SummonCategory {
+            category,
+            count_dice: 1,
+            count_sides: 2,
+            maximum_level: 100,
+            ..
+        } if category == "unique"
+    ));
 }
 
 #[test]

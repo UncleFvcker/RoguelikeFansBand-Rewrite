@@ -7,12 +7,15 @@ use super::*;
 const BANOR_RUPART_TRANSFORM_TAG: &str = "monster-banor-rupart-transform";
 const MONSTER_AIR_BREATH_TAG: &str = "monster-air-breath";
 const MONSTER_CHICKEN_TAG: &str = "monster-chicken";
+pub(super) const MONSTER_DEAD_UNIQUE_SUMMON_TAG: &str = "monster-dead-unique-summon";
 const MONSTER_FAMILY_SUMMON_TAG: &str = "monster-family-summon";
 const MONSTER_WATER_FLOW_TAG: &str = "monster-water-flow";
 const MONSTER_WATER_FLOW_TERRAIN_ID: &str = "demo.terrain.surface-water-deep";
 const MONSTER_WATER_FLOW_RADIUS: u8 = 8;
 const MONSTER_LAVA_FLOW_TERRAIN_ID: &str = "demo.terrain.surface-lava-deep";
 const MONSTER_FAMILY_SUMMON_DURATION_TURNS: u16 = 10_000;
+const MONSTER_DEAD_UNIQUE_DISINTEGRATION_RADIUS: u8 = 5;
+const STAR_BLADE_KIND_ID: &str = "demo.actor.star-blade";
 
 fn monster_family_summon_candidates(source_kind_id: &str) -> Option<&'static [&'static str]> {
     Some(match source_kind_id {
@@ -137,6 +140,275 @@ impl Game {
             i32::try_from(duration).unwrap_or(i32::MAX),
             source_kind_id,
         );
+    }
+
+    fn dead_unique_resurrection_candidates(&self, maximum_level: u16) -> Vec<(String, u32)> {
+        let in_task = self.current_floor_task_id().is_some();
+        let in_wilderness = self.is_wilderness_floor();
+        let mut candidates = self
+            .content
+            .actor_definitions()
+            .filter(|definition| {
+                let camelot = definition
+                    .allocation
+                    .as_ref()
+                    .is_some_and(|allocation| allocation.legacy_dungeon_indices.contains(&2));
+                definition.role == ActorRole::Monster
+                    && definition.finite_lifetime_instance_limit() == Some(1)
+                    && definition.level <= u32::from(maximum_level)
+                    && (definition.level >= 45 || camelot)
+                    && self
+                        .defeated_limited_actor_counts
+                        .get(&definition.id)
+                        .is_some_and(|count| *count > 0)
+                    && self.actor_kind_occupied_instance_count(&definition.id) == 0
+                    && !definition
+                        .movement
+                        .modes
+                        .contains(&ActorMovementMode::Aquatic)
+                    && actor_answers_summons(definition)
+                    && !(in_wilderness
+                        && definition.tags.iter().any(|tag| tag == "evil")
+                        && !definition.tags.iter().any(|tag| tag == "good"))
+                    && !(in_task && definition.tags.iter().any(|tag| tag == "no-quest"))
+            })
+            .map(|definition| {
+                let rarity_weight = definition
+                    .allocation
+                    .as_ref()
+                    .map_or(1, |allocation| (100 / allocation.rarity).max(1));
+                let level_delta = u32::from(maximum_level).saturating_sub(definition.level);
+                let weight = rarity_weight
+                    .checked_shr(level_delta / 8)
+                    .unwrap_or(0)
+                    .max(1);
+                (
+                    definition.id.clone(),
+                    definition.level,
+                    definition
+                        .allocation
+                        .as_ref()
+                        .map_or(u32::MAX, |allocation| allocation.legacy_index),
+                    weight,
+                )
+            })
+            .collect::<Vec<_>>();
+        candidates.sort_by_key(|(_, level, legacy_index, _)| (*level, *legacy_index));
+        candidates
+            .into_iter()
+            .map(|(id, _, _, weight)| (id, weight))
+            .collect()
+    }
+
+    fn resolve_dead_unique_disintegration(
+        &mut self,
+        ability_id: &str,
+        center: Position,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Vec<Position> {
+        let radius = i32::from(MONSTER_DEAD_UNIQUE_DISINTEGRATION_RADIUS);
+        let mut footprint = Vec::new();
+        for y in center.y - radius..=center.y + radius {
+            for x in center.x - radius..=center.x + radius {
+                let position = Position { x, y };
+                if self.index(position).is_some()
+                    && rfb_distance(center, position)
+                        <= u32::from(MONSTER_DEAD_UNIQUE_DISINTEGRATION_RADIUS)
+                {
+                    footprint.push(position);
+                }
+            }
+        }
+        self.resolve_ground_item_projectile_effects(
+            ability_id,
+            &footprint,
+            DamageType::Disintegrate,
+            false,
+            events,
+            changed,
+            removed_entities,
+        );
+
+        let connections = self
+            .floor_connections
+            .iter()
+            .map(|connection| connection.position)
+            .collect::<BTreeSet<_>>();
+        let mut replacements = Vec::new();
+        for position in footprint {
+            if connections.contains(&position) {
+                continue;
+            }
+            let Some(index) = self.index(position) else {
+                continue;
+            };
+            let Some(terrain) = self.content.terrain(&self.terrain[index]) else {
+                continue;
+            };
+            if terrain.tags.iter().any(|tag| tag == "permanent") {
+                continue;
+            }
+            let target_id = terrain
+                .monster_destroy_to_terrain_id
+                .as_ref()
+                .or_else(|| {
+                    terrain
+                        .digging
+                        .as_ref()
+                        .and_then(|digging| digging.result_terrain_id.as_ref())
+                })
+                .or(terrain.bash_to_terrain_id.as_ref());
+            if let Some(target_id) = target_id
+                && target_id != &terrain.id
+            {
+                replacements.push((position, terrain.id.clone(), target_id.clone()));
+            }
+        }
+
+        let mut groups = BTreeMap::<(String, String), Vec<Position>>::new();
+        for (position, source_id, target_id) in replacements {
+            self.replace_terrain_from_source(
+                position,
+                &target_id,
+                super::terrain::TerrainChangeSource::Monster,
+                events,
+                changed,
+            );
+            groups
+                .entry((source_id, target_id))
+                .or_default()
+                .push(position);
+        }
+        let mut transformed = Vec::new();
+        for ((source_id, target_id), positions) in groups {
+            transformed.extend(positions.iter().copied());
+            events.push(DomainEvent::AbilityTerrainTransformed {
+                ability_id: ability_id.to_owned(),
+                resolution: AbilityTerrainTransformResolutionDto {
+                    center,
+                    radius: MONSTER_DEAD_UNIQUE_DISINTEGRATION_RADIUS,
+                    source_terrain_ids: vec![source_id],
+                    target_terrain_id: target_id,
+                    transformed_positions: positions,
+                },
+            });
+        }
+        transformed
+    }
+
+    fn resolve_monster_dead_unique_summon_plan(
+        &mut self,
+        source_index: usize,
+        plan: &MonsterAbilityPlan,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> MonsterAbilityPlanResolution {
+        let AbilityEffectDefinition::SummonCategory {
+            maximum_level,
+            count_dice,
+            count_sides,
+            count_bonus,
+            maximum_count,
+            radius,
+            duration_turns,
+            ..
+        } = plan.ability.effect
+        else {
+            unreachable!("dead-unique summon must retain its category effect");
+        };
+        let owner_id = self.entities[source_index].id.clone();
+        let source_kind_id = self.entities[source_index].kind_id.clone();
+        let origin = self.entities[source_index].position;
+        let rolled = self
+            .roll_damage(u16::from(count_dice), u16::from(count_sides))
+            .saturating_add(i32::from(count_bonus))
+            .max(1);
+        let count = usize::try_from(rolled)
+            .unwrap_or(1)
+            .min(maximum_count.map_or(usize::MAX, usize::from));
+        let mut affected_positions = Vec::new();
+        let mut candidates = self.dead_unique_resurrection_candidates(maximum_level);
+        let mut entity_ids = Vec::with_capacity(count);
+        let mut summoned_kind_ids = Vec::with_capacity(count);
+        let mut positions = Vec::with_capacity(count);
+
+        for _ in 0..count {
+            affected_positions.extend(self.resolve_dead_unique_disintegration(
+                &plan.ability.id,
+                origin,
+                events,
+                changed,
+                removed_entities,
+            ));
+            let kind_id = if candidates.is_empty() || self.rng.bounded(13) == 0 {
+                STAR_BLADE_KIND_ID.to_owned()
+            } else {
+                let weights = candidates
+                    .iter()
+                    .map(|(_, weight)| *weight)
+                    .collect::<Vec<_>>();
+                candidates[self.roll_weighted_index(&weights)].0.clone()
+            };
+            let Some(position) = self
+                .open_positions_around_for_actor_kind(origin, radius, &kind_id)
+                .into_iter()
+                .next()
+            else {
+                continue;
+            };
+            let definition = self
+                .content
+                .actor(&kind_id)
+                .expect("dead-unique fallback actor must remain available")
+                .clone();
+            let id = self.summon_entity_id(&plan.ability.id, entity_ids.len());
+            let mut entity = spawn_actor_from_definition(
+                &mut self.rng,
+                &definition,
+                &id,
+                position,
+                INITIAL_MONSTER_ENERGY_NEED,
+                true,
+            );
+            self.maybe_initialize_chameleon_form(&mut entity);
+            entity.summon = Some(SummonIdentity {
+                owner_id: owner_id.clone(),
+                source_ability_id: plan.ability.id.clone(),
+                remaining_turns: duration_turns,
+            });
+            changed.insert(position);
+            affected_positions.push(position);
+            entity_ids.push(id);
+            summoned_kind_ids.push(kind_id.clone());
+            positions.push(position);
+            self.entities.push(entity);
+            if kind_id != STAR_BLADE_KIND_ID {
+                candidates.retain(|(candidate, _)| candidate != &kind_id);
+            }
+        }
+        affected_positions.sort_unstable_by_key(|position| (position.y, position.x));
+        affected_positions.dedup();
+        MonsterAbilityPlanResolution {
+            target_entity_id: owner_id.clone(),
+            target_kind_id: source_kind_id,
+            affected_positions,
+            summon: Some(AbilitySummonResolutionDto {
+                owner_id,
+                actor_kind_id: "dead-unique".to_owned(),
+                entity_ids,
+                positions,
+                duration_turns,
+                hostile: false,
+                group: false,
+                summoned_kind_ids,
+            }),
+            effects: Vec::new(),
+            targets: Vec::new(),
+            trace: None,
+        }
     }
 
     fn remove_banor_rupart_form(
@@ -1492,6 +1764,21 @@ impl Game {
                     .ability
                     .tags
                     .iter()
+                    .any(|tag| tag == MONSTER_DEAD_UNIQUE_SUMMON_TAG) =>
+            {
+                self.resolve_monster_dead_unique_summon_plan(
+                    source_index,
+                    plan,
+                    events,
+                    changed,
+                    removed_entities,
+                )
+            }
+            MonsterAbilityTargetPlan::SelfTarget
+                if plan
+                    .ability
+                    .tags
+                    .iter()
                     .any(|tag| tag == MONSTER_FAMILY_SUMMON_TAG) =>
             {
                 self.resolve_monster_family_summon_plan(source_index, plan, events, changed)
@@ -2802,6 +3089,14 @@ impl Game {
             {
                 (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
             }
+            AbilityEffectDefinition::SummonCategory { .. }
+                if ability
+                    .tags
+                    .iter()
+                    .any(|tag| tag == MONSTER_DEAD_UNIQUE_SUMMON_TAG) =>
+            {
+                (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
+            }
             AbilityEffectDefinition::NoOp { .. }
                 if ability
                     .tags
@@ -2896,7 +3191,8 @@ impl Game {
                             || definition.level >= u32::from(maximum_level.saturating_sub(40)))
                         && definition.level <= u32::from(*maximum_level)
                         && definition.tags.iter().any(|tag| tag == category)
-                        && !definition.tags.iter().any(|tag| tag == "guardian")
+                        && (category == "guardian"
+                            || !definition.tags.iter().any(|tag| tag == "guardian"))
                         && actor_answers_summons(definition)
                         && definition.allocation.as_ref().is_none_or(|allocation| {
                             monster_ecology::actor_allocation_matches_task(

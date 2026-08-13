@@ -132,7 +132,7 @@ pub(super) fn validate_actors(
                     .is_some_and(|distance| !(2..=16).contains(&distance))
                 || casting.flee_hp_percent > 99
                 || casting.abilities.is_empty()
-                || casting.abilities.len() > 64
+                || casting.abilities.len() > 128
                 || casting.abilities.iter().any(|candidate| {
                     validate_id(&candidate.ability_id).is_err()
                         || !(1..=1_000_000).contains(&candidate.weight)
@@ -336,6 +336,8 @@ pub(super) fn validate_actors(
                         | ActorDamageType::Curse
                         | ActorDamageType::Shards
                         | ActorDamageType::Time
+                        | ActorDamageType::Chaos
+                        | ActorDamageType::Disenchant
                 ) || (aura.ravages_time != (aura.damage_type == ActorDamageType::Time))
                     || !(1..=100).contains(&aura.damage_dice)
                     || !(1..=10_000).contains(&aura.damage_sides)

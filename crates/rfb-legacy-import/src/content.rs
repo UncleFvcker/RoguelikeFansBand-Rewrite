@@ -8430,6 +8430,8 @@ fn monster_json(
                 "CAUSE_2" | "CAUSE_3" => "curse",
                 "SHARDS" => "shards",
                 "TIME" => "time",
+                "CHAOS" => "chaos",
+                "DISENCHANT" => "disenchant",
                 _ => return None,
             };
             let (damage_dice, damage_sides) = aura.dice?;
@@ -8581,6 +8583,7 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "GIANT"
                 | "NONLIVING"
                 | "UNIQUE"
+                | "GUARDIAN"
                 | "THIEF"
                 | "AQUATIC"
                 | "CAN_FLY"
@@ -8801,6 +8804,8 @@ fn demo_monster_json(
                     | "UNLIFE"
                     | "STUN"
                     | "TIME"
+                    | "CHAOS"
+                    | "DISENCHANT"
             ) || aura.dice.is_none()
         })
     {
@@ -8955,6 +8960,7 @@ fn demo_monster_json(
         ("TROLL", "troll"),
         ("GIANT", "giant"),
         ("NONLIVING", "nonliving"),
+        ("GUARDIAN", "guardian"),
         ("COLD_BLOOD", "cold-blooded"),
         ("UNIQUE", "unique"),
         ("THIEF", "thief"),
@@ -9651,7 +9657,7 @@ fn parse_explicit_damage_dice(spec: &str) -> Option<(u32, u32, u32)> {
 /// Looks up a summon token base: candidate category tag plus the legacy
 /// default count dice `(dice, sides, bonus)`. Categories map through the
 /// type-flag tags stamped on imported actors; glyph-class and unique summon
-/// types stay unmapped.
+/// types stay unmapped until their candidate rule is explicitly supported.
 fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> {
     let entry = match base {
         "S_MONSTER" => ("legacy-import", (1, 3, 1)),
@@ -9677,6 +9683,7 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_CYBER" => ("cyber", (1, 3, 0)),
         "S_CAT" => ("cat", (1, 3, 1)),
         "S_UNIQUE" => ("unique", (1, 2, 0)),
+        "S_GUARDIAN" => ("guardian", (1, 2, 0)),
         _ => return None,
     };
     Some(entry)
@@ -9696,6 +9703,19 @@ fn map_summon_spell_token(
         Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
         None => (token, None),
     };
+    if base == "S_DEAD_UNIQ" {
+        let maximum_level = u32::from(level.max(1));
+        let suffix = format!("summon-dead-unique-l{maximum_level}-1d2");
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities.entry(id.clone()).or_insert_with(|| {
+            let mut ability =
+                summon_category_ability(&suffix, "unique", maximum_level, 1, 2, 0, None);
+            ability["tags"] =
+                serde_json::json!(["legacy-import", "summon", "monster-dead-unique-summon",]);
+            ability
+        });
+        return Some(id);
+    }
     if base == "S_PANTHEON" {
         let category = match caster_kind_id.rsplit('.').next()? {
             "heimdall-guardian-of-bifrost"
@@ -10033,7 +10053,11 @@ fn map_summon_spell_token(
     if dice * sides + bonus > 8 {
         return None;
     }
-    let maximum_level = u32::from(level.max(1));
+    let maximum_level = if base == "S_GUARDIAN" {
+        u32::from(level.min(99).max(1))
+    } else {
+        u32::from(level.max(1))
+    };
     let mut suffix = format!("summon-{category}-l{maximum_level}-{dice}d{sides}");
     if bonus > 0 {
         suffix.push_str(&format!("-{bonus}"));
@@ -17284,6 +17308,80 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 {"type": "unlife", "amountDice": 2, "amountSides": 6, "chancePercent": 50}
             ])
         );
+    }
+
+    #[test]
+    fn p77_guardian_and_dead_unique_summons_keep_their_narrow_semantics() {
+        let mut abilities = BTreeMap::new();
+        let guardian = map_spell_token(
+            "S_GUARDIAN",
+            100,
+            3,
+            "demo.actor.the-serpent-of-chaos",
+            &mut abilities,
+        )
+        .expect("S_GUARDIAN should map");
+        assert_eq!(abilities[&guardian]["effect"]["category"], "guardian");
+        assert_eq!(abilities[&guardian]["effect"]["countDice"], 1);
+        assert_eq!(abilities[&guardian]["effect"]["countSides"], 2);
+        assert_eq!(abilities[&guardian]["effect"]["maximumLevel"], 99);
+
+        let dead_unique = map_spell_token(
+            "S_DEAD_UNIQ",
+            100,
+            3,
+            "demo.actor.the-resurrection-machine",
+            &mut abilities,
+        )
+        .expect("S_DEAD_UNIQ should map");
+        assert_eq!(abilities[&dead_unique]["effect"]["category"], "unique");
+        assert_eq!(abilities[&dead_unique]["effect"]["countDice"], 1);
+        assert_eq!(abilities[&dead_unique]["effect"]["countSides"], 2);
+        assert!(
+            abilities[&dead_unique]["tags"]
+                .as_array()
+                .expect("ability tags")
+                .iter()
+                .any(|tag| tag == "monster-dead-unique-summon")
+        );
+    }
+
+    #[test]
+    fn p77_guardian_and_serpent_contact_auras_import_without_omission() {
+        let mut monsters = parse_r_info(
+            "N:862:The Serpent of Chaos\nG:J:v\nI:155:200d150:25:130:0:100\nW:100:1:999:300000:0:0\nB:CRUSH:SHATTER(19d10)\nA:SHARDS(4d6):CHAOS(6d6, 20%):DISENCHANT(3d3, 10%)\nF:GUARDIAN | FIXED_UNIQUE\nS:1_IN_3 | S_GUARDIAN\n",
+        )
+        .expect("synthetic Serpent should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 862,
+                source_id: None,
+                id: "the-serpent-of-chaos".to_owned(),
+                tags: vec!["fixed-placement".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("P77 Serpent mechanics should import");
+
+        assert!(
+            actor["tags"]
+                .as_array()
+                .expect("actor tags")
+                .iter()
+                .any(|tag| tag == "guardian")
+        );
+        assert_eq!(
+            actor["contactAuras"],
+            serde_json::json!([
+                {"damageDice": 4, "damageSides": 6, "damageType": "shards"},
+                {"chancePercent": 20, "damageDice": 6, "damageSides": 6, "damageType": "chaos"},
+                {"chancePercent": 10, "damageDice": 3, "damageSides": 3, "damageType": "disenchant"}
+            ])
+        );
+        assert!(actor.get("allocation").is_none());
     }
 
     #[test]

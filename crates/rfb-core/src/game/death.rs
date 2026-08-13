@@ -643,6 +643,7 @@ impl Game {
             .finite_lifetime_instance_limit()
             .is_some()
             && !removed_definition.tags.iter().any(|tag| tag == "guardian")
+            && !self.actor_is_dead_unique_resurrection(&removed)
         {
             let defeated = self
                 .defeated_limited_actor_counts

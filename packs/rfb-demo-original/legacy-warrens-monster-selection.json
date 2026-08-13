@@ -7621,6 +7621,42 @@
       "id": "parvati-the-goddess-of-hidden-power",
       "tags": ["orc-cave"],
       "omittedFlags": ["FEMALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 832,
+      "id": "godzilla",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1337,
+      "id": "greater-cyber-wyrm-angel-daemon-lich",
+      "tags": ["wilderness"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "CAN_SPEAK", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS", "RES_WALL", "STUPID"]
+    },
+    {
+      "sourceIndex": 858,
+      "id": "sauron-the-sorcerer",
+      "tags": ["fixed-placement"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 860,
+      "id": "oberon-king-of-amber",
+      "tags": ["fixed-placement"],
+      "omittedFlags": ["ATTR_MULTI", "CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 862,
+      "id": "the-serpent-of-chaos",
+      "tags": ["fixed-placement"],
+      "omittedFlags": ["ATTR_ANY", "ATTR_MULTI", "CAN_SPEAK", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CHR", "POS_SUST_CON", "POS_SUST_DEX", "POS_SUST_INT", "POS_SUST_STR", "POS_SUST_WIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1303,
+      "id": "the-resurrection-machine",
+      "tags": ["fixed-placement"],
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE", "STUPID"]
     }
   ]
 }

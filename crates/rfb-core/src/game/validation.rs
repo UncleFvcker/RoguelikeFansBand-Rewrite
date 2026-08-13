@@ -431,6 +431,9 @@ impl Game {
             if definition.tags.iter().any(|tag| tag == "guardian") {
                 continue;
             }
+            if self.actor_is_dead_unique_resurrection(actor) {
+                continue;
+            }
             if definition.finite_lifetime_instance_limit().is_some() {
                 *living_limited_actor_counts
                     .entry(actor.kind_id.as_str())
@@ -1574,24 +1577,43 @@ impl Game {
                     }
                     ability
                 })
-                .is_some_and(|ability| match &ability.effect {
-                    AbilityEffectDefinition::Summon { actor_kind_id, .. } => {
-                        actor_kind_id == &actor.kind_id
+                .is_some_and(|ability| {
+                    if ability
+                        .tags
+                        .iter()
+                        .any(|tag| tag == super::monster_abilities::MONSTER_DEAD_UNIQUE_SUMMON_TAG)
+                    {
+                        return actor.kind_id == "demo.actor.star-blade"
+                            || self
+                                .content
+                                .actor(&actor.kind_id)
+                                .is_some_and(|definition| {
+                                    definition.finite_lifetime_instance_limit() == Some(1)
+                                        && self
+                                            .defeated_limited_actor_counts
+                                            .get(&actor.kind_id)
+                                            .is_some_and(|count| *count > 0)
+                                });
                     }
-                    AbilityEffectDefinition::SummonCategory {
-                        category,
-                        upgraded_category,
-                        maximum_level,
-                        ..
-                    } => self.content.actor(&actor.kind_id).is_some_and(|kind| {
-                        kind.tags.iter().any(|tag| {
-                            tag == category
-                                || upgraded_category
-                                    .as_ref()
-                                    .is_some_and(|upgraded| tag == upgraded)
-                        }) && kind.level <= u32::from(*maximum_level)
-                    }),
-                    _ => false,
+                    match &ability.effect {
+                        AbilityEffectDefinition::Summon { actor_kind_id, .. } => {
+                            actor_kind_id == &actor.kind_id
+                        }
+                        AbilityEffectDefinition::SummonCategory {
+                            category,
+                            upgraded_category,
+                            maximum_level,
+                            ..
+                        } => self.content.actor(&actor.kind_id).is_some_and(|kind| {
+                            kind.tags.iter().any(|tag| {
+                                tag == category
+                                    || upgraded_category
+                                        .as_ref()
+                                        .is_some_and(|upgraded| tag == upgraded)
+                            }) && kind.level <= u32::from(*maximum_level)
+                        }),
+                        _ => false,
+                    }
                 })
     }
 }

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.summon-dead-unique-l100-1d2",
+  "descriptionKey": "ability-legacy-summon-dead-unique-l100-1d2-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.summon-dead-unique-l100-1d2",
+  "nameKey": "ability-legacy-summon-dead-unique-l100-1d2-name",
+  "tags": [
+    "legacy-import",
+    "summon",
+    "monster-dead-unique-summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

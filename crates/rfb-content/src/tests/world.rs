@@ -446,11 +446,18 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.glyptodont", 1222, 3, 90),
             ("demo.actor.gnome-mage", 281, 2, 60),
             ("demo.actor.goblin", 87, 1, 40),
+            ("demo.actor.godzilla", 832, 2, 999),
             ("demo.actor.golfimbul-the-hill-orc-chief", 215, 3, 999),
             ("demo.actor.goomba", 924, 1, 20),
             ("demo.actor.gorbag-the-orc-captain", 315, 3, 999),
             ("demo.actor.grape-jelly", 212, 3, 40),
             ("demo.actor.great-eagle", 335, 2, 70),
+            (
+                "demo.actor.greater-cyber-wyrm-angel-daemon-lich",
+                1337,
+                50,
+                999,
+            ),
             ("demo.actor.greater-hell-beast", 39, 6, 999),
             ("demo.actor.greater-kraken", 775, 2, 999),
             ("demo.actor.green-glutton-ghost", 100, 1, 40),
@@ -8268,7 +8275,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        744
+        750
     );
 }
 

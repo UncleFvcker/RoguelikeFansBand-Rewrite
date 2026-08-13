@@ -5108,6 +5108,120 @@ fn p76_no_air_applies_once_for_forty_ticks() {
     );
 }
 
+fn p77_resurrection_machine_game() -> (Game, rfb_content::AbilityDefinition) {
+    let mut game = Game::new(277);
+    clear_monsters(&mut game);
+    game.player.position = Position { x: 80, y: 20 };
+    game.entities.push(actor_from_runtime_spawn(
+        "generated.actor.resurrection-machine",
+        "demo.actor.the-resurrection-machine",
+        Position { x: 20, y: 20 },
+        15_488,
+        152,
+        100,
+        true,
+    ));
+    let ability = game
+        .content
+        .ability("rfb-legacy.ability.summon-dead-unique-l100-1d2")
+        .expect("P77 S_DEAD_UNIQ should compile")
+        .clone();
+    (game, ability)
+}
+
+#[test]
+fn p77_dead_unique_resurrection_preserves_the_spent_lifetime_slot() {
+    let (mut game, ability) = p77_resurrection_machine_game();
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.defeated_limited_actor_counts
+        .insert("demo.actor.fangorn".to_owned(), 1);
+    let seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            let _ = rng.bounded(2);
+            rng.bounded(13) != 0
+        })
+        .expect("bounded seed search should avoid the Star Blade fallback");
+    game.rng = RfbRng::seeded(seed);
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("the Resurrection Machine should always target itself");
+    let summon = game
+        .resolve_monster_ability_plan(
+            0,
+            "demo.actor.the-resurrection-machine",
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .summon
+        .expect("S_DEAD_UNIQ should summon");
+    assert_eq!(summon.summoned_kind_ids[0], "demo.actor.fangorn");
+
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("a resurrected dead unique should survive save and restore");
+    let resurrected_index = restored
+        .entities
+        .iter()
+        .position(|actor| actor.kind_id == "demo.actor.fangorn")
+        .expect("Fangorn should remain resurrected");
+    restored
+        .resolve_actor_death_without_rewards(
+            resurrected_index,
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("the resurrected unique should be removable");
+    assert_eq!(
+        restored
+            .defeated_limited_actor_counts
+            .get("demo.actor.fangorn"),
+        Some(&1),
+        "re-killing a resurrection must not spend a second lifetime slot"
+    );
+}
+
+#[test]
+fn p77_dead_unique_summon_disintegrates_radius_five_and_falls_back_to_star_blades() {
+    let (mut game, ability) = p77_resurrection_machine_game();
+    game.terrain.fill("demo.terrain.wall".to_owned());
+    game.rng = RfbRng::seeded(0);
+    let plan = game
+        .monster_ability_target_plan(0, ability, 1)
+        .expect("the Resurrection Machine should always target itself");
+    let summon = game
+        .resolve_monster_ability_plan(
+            0,
+            "demo.actor.the-resurrection-machine",
+            &plan,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .summon
+        .expect("S_DEAD_UNIQ should summon its fallback");
+
+    assert!(!summon.summoned_kind_ids.is_empty());
+    assert!(
+        summon
+            .summoned_kind_ids
+            .iter()
+            .all(|kind_id| kind_id == "demo.actor.star-blade")
+    );
+    for position in [
+        Position { x: 15, y: 20 },
+        Position { x: 20, y: 15 },
+        Position { x: 25, y: 20 },
+        Position { x: 20, y: 25 },
+    ] {
+        let index = game.index(position).expect("radius-five cell should exist");
+        assert_eq!(game.terrain[index], "demo.terrain.floor");
+    }
+}
+
 fn place_test_ground_item(game: &mut Game, id: &str, kind_id: &str, position: Position) {
     give_inventory_item(game, id, kind_id);
     game.items

@@ -620,3 +620,21 @@ git diff --stat
   `b40fc1696472d37277ec6630dfd26135b0e92244261989366cf670d9fbe7c1c8`；Protocol `1.195`、
   State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
   零 waiver）均不变，不刷新 replay fixture。
+
+## 38. monsters-next 当前交接（P77 地点与固定身份怪物）
+
+- P77 导入哥斯拉与高等赛博巨龙天使恶魔巫妖两个荒野怪物，以及巫师索伦、安珀之王
+  奥伯龙、混沌之蛇和复活机器四个只供地图显式放置的固定身份怪物。哥斯拉保持真正的
+  ocean-only 分配；高等赛博巨龙天使恶魔巫妖的 `WILD_ALL` 优先于附带的 `WILD_OCEAN`，
+  可在全部荒野地形生成，并完整保留原版 94 项施法表。
+- 混沌之蛇补齐 GUARDIAN 分类、混沌/劣化接触光环与 `S_GUARDIAN`；候选严格限制在
+  100 级以下的 guardian。复活机器的 `S_DEAD_UNIQ` 每次掷 `1d2`，每个实例先执行半径 5
+  的崩解清场，再从已死亡且当前不存在的普通 Unique 中按原版权重复活；无候选或 1/13
+  回退到星际之刃。复活实例保存其 summon 身份，再次死亡不会重复消耗唯一生命周期额度。
+- 本批新增 6 个 actor、50 个参数化 ability/program；L81–127 联合审计为 109 selected、
+  4 direct、3 blocked、6 excluded。六个 P77 actor 因地点限制均显示 excluded，但已经导入并
+  由 selection 管理；剩余 direct/blocked 为后续非 P77 内容。
+- 共享协调点：pack `1.318.0` / content hash
+  `600467a34cfc7157f16a490db22ba5db32befa077c5d40aa7a783956f1d3b254`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变，不刷新 replay fixture。
