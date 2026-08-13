@@ -2229,6 +2229,23 @@
         {
           "additionalProperties": false,
           "properties": {
+            "mode": {
+              "$ref": "#/$defs/SniperShotModeDefinition"
+            },
+            "type": {
+              "const": "sniper-shot",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "mode"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "type": {
               "const": "concentrate",
               "type": "string"
@@ -2595,6 +2612,19 @@
         }
       },
       "type": "object"
+    },
+    "SniperShotModeDefinition": {
+      "enum": [
+        "shining",
+        "retreat",
+        "disarm",
+        "burning",
+        "shatter",
+        "freezing",
+        "knockback",
+        "piercing"
+      ],
+      "type": "string"
     },
     "StatModifiers": {
       "additionalProperties": false,

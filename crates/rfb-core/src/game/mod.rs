@@ -72,8 +72,8 @@ use rfb_content::{
     ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
     ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
     ProceduralStreamerCandidateDefinition, RaceDefinition, RidingWeaponKindDefinition, SkillKind,
-    SlayLevel, SlayTarget, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
-    TechniqueAttribute, TerrainDiggingResolution, TerrainFeatureEntryDefinition,
+    SlayLevel, SlayTarget, SniperShotModeDefinition, StartingItemDefinition, StatModifiers,
+    TaskObjectiveKind, TechniqueAttribute, TerrainDiggingResolution, TerrainFeatureEntryDefinition,
     ThemeVaultCandidateDefinition, WeaponBrand, affix_is_compatible_with_item,
 };
 use rfb_protocol::{
@@ -98,10 +98,10 @@ use rfb_protocol::{
     MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
     MonsterPackRoleDto, PendingMutationDirectionDto, Position, ProjectileProfileDto,
     RecallStateDto, ResistanceDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto,
-    RestResolutionDto, RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto,
-    SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto, TargetModeDto,
-    TargetSelection, TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, VirtueDto, VirtueKindDto,
-    WeaponBrandDto,
+    RestResolutionDto, RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, SniperShotModeDto,
+    StatModifiersDto, SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto,
+    TargetModeDto, TargetSelection, TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, VirtueDto,
+    VirtueKindDto, WeaponBrandDto,
 };
 
 mod abilities;
@@ -1494,12 +1494,19 @@ impl Game {
         if advances_world && self.player_has_status_kind(STATUS_PARALYSIS) {
             action = GameAction::ParalyzedIdle;
         }
-        let mut action_cost = if map_scale_before_command == MapScaleDto::World && advances_world {
-            STANDARD_ACTION_COST.saturating_mul(wilderness::WORLD_MAP_ACTION_MULTIPLIER)
-        } else if matches!(
+        let projectile_action = matches!(
             &action,
             GameAction::Fire { .. } | GameAction::FireTarget { .. }
-        ) {
+        ) || matches!(
+            &action,
+            GameAction::CastAbility { ability_id, .. }
+                if self.content.ability(ability_id).is_some_and(|ability| {
+                    matches!(ability.effect, AbilityEffectDefinition::SniperShot { .. })
+                })
+        );
+        let mut action_cost = if map_scale_before_command == MapScaleDto::World && advances_world {
+            STANDARD_ACTION_COST.saturating_mul(wilderness::WORLD_MAP_ACTION_MULTIPLIER)
+        } else if projectile_action {
             self.player_projectile_profile()
                 .map_or_else(|| action.energy_cost(), |profile| profile.energy_cost)
         } else {
@@ -1849,12 +1856,14 @@ impl Game {
             }
             GameAction::Fire { direction } => self.resolve_player_projectile(
                 TargetSelection::Direction { direction },
+                player_combat::ProjectileMode::Normal,
                 &mut events,
                 &mut changed,
                 &mut removed_entities,
             )?,
             GameAction::FireTarget { target } => self.resolve_player_projectile(
                 target,
+                player_combat::ProjectileMode::Normal,
                 &mut events,
                 &mut changed,
                 &mut removed_entities,
@@ -7267,6 +7276,18 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::Control { category, power } => AbilityEffectSpecDto::Control {
             category: category.clone(),
             power: *power,
+        },
+        AbilityEffectDefinition::SniperShot { mode } => AbilityEffectSpecDto::SniperShot {
+            mode: match mode {
+                SniperShotModeDefinition::Shining => SniperShotModeDto::Shining,
+                SniperShotModeDefinition::Retreat => SniperShotModeDto::Retreat,
+                SniperShotModeDefinition::Disarm => SniperShotModeDto::Disarm,
+                SniperShotModeDefinition::Burning => SniperShotModeDto::Burning,
+                SniperShotModeDefinition::Shatter => SniperShotModeDto::Shatter,
+                SniperShotModeDefinition::Freezing => SniperShotModeDto::Freezing,
+                SniperShotModeDefinition::Knockback => SniperShotModeDto::Knockback,
+                SniperShotModeDefinition::Piercing => SniperShotModeDto::Piercing,
+            },
         },
         AbilityEffectDefinition::Concentrate => AbilityEffectSpecDto::Concentrate,
         AbilityEffectDefinition::Rodeo => AbilityEffectSpecDto::Rodeo,

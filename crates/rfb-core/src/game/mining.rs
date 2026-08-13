@@ -278,6 +278,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> bool {
+        if change_source == TerrainChangeSource::Projectile {
+            return false;
+        }
         let source_yield = source
             .digging
             .as_ref()

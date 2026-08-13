@@ -3815,6 +3815,22 @@
         {
           "type": "object",
           "properties": {
+            "mode": {
+              "$ref": "#/$defs/SniperShotModeDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "sniper-shot"
+            }
+          },
+          "required": [
+            "type",
+            "mode"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "type": {
               "type": "string",
               "const": "concentrate"
@@ -10234,6 +10250,19 @@
       "required": [
         "current",
         "maximum"
+      ]
+    },
+    "SniperShotModeDto": {
+      "type": "string",
+      "enum": [
+        "shining",
+        "retreat",
+        "disarm",
+        "burning",
+        "shatter",
+        "freezing",
+        "knockback",
+        "piercing"
       ]
     },
     "StatModifiersDto": {

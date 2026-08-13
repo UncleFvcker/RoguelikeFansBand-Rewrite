@@ -449,6 +449,17 @@ impl Game {
                         .and_then(|id| self.resources.get(id))
                         .is_some_and(|pool| pool.current >= resource_cost)
                 };
+                let projectile_available =
+                    !matches!(ability.effect, AbilityEffectDefinition::SniperShot { .. })
+                        || self
+                            .player_projectile_profile()
+                            .is_some_and(|profile| profile.ammo_item_id.is_some());
+                let mut target_spec = ability_target_spec_dto(ability);
+                if matches!(ability.effect, AbilityEffectDefinition::SniperShot { .. })
+                    && let Some(profile) = self.player_projectile_profile()
+                {
+                    target_spec.range = profile.range;
+                }
                 Some(AbilityDto {
                     id: ability.id.clone(),
                     name_key: ability.name_key.clone(),
@@ -543,7 +554,7 @@ impl Game {
                             )
                         })
                         .collect(),
-                    target_spec: ability_target_spec_dto(ability),
+                    target_spec,
                     learned,
                     book_item_id: book_item_id.clone(),
                     can_study: source == AbilitySourceDto::Learned
@@ -561,6 +572,7 @@ impl Game {
                                 && concentration_available
                                 && hit_points_available
                                 && resource_available
+                                && projectile_available
                                 && cooldown_remaining == 0
                         }
                         AbilitySourceDto::Learned => {
@@ -568,6 +580,7 @@ impl Game {
                                 && !self.player_has_status_kind(STATUS_ANTI_MAGIC)
                                 && level_available
                                 && resource_available
+                                && projectile_available
                                 && cooldown_remaining == 0
                                 && book_item_id.is_some()
                         }

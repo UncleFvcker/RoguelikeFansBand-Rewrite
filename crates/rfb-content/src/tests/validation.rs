@@ -90,12 +90,29 @@ fn sniping_profiles_and_concentration_requirements_are_strict() {
         concentration_bonus_percent_per_level: 10,
     };
     let mut valid = artifact.content.clone();
+    let mut shot = valid
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.archer-create-shots")
+        .expect("Archer power should exist")
+        .clone();
+    shot.id = "test.ability.sniper-shot".to_owned();
+    shot.target = AbilityTargetDefinition {
+        modes: vec![AbilityTargetModeDefinition::Direction],
+        range: 20,
+        requires_line_of_effect: true,
+    };
+    shot.effect = AbilityEffectDefinition::SniperShot {
+        mode: SniperShotModeDefinition::Shining,
+    };
+    valid.abilities.push(shot);
     let archer = valid
         .classes
         .iter_mut()
         .find(|class| class.id == "demo.class.archer")
         .expect("Archer class should exist");
     archer.sniping_profile = Some(profile);
+    archer.abilities[0].ability_id = "test.ability.sniper-shot".to_owned();
     archer.abilities[0].minimum_concentration = 1;
     archer.abilities[0].hit_point_cost = 1;
     assert!(validate_and_normalize(&mut valid).is_ok());

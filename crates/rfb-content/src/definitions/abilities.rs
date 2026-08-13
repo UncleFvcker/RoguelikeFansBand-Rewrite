@@ -243,6 +243,20 @@ pub enum AbilityTerrainBeamOperationDefinition {
     StoneToMud,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum SniperShotModeDefinition {
+    Shining,
+    Retreat,
+    Disarm,
+    Burning,
+    Shatter,
+    Freezing,
+    Knockback,
+    Piercing,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -650,6 +664,9 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         level_bonus_divisor: u16,
         branches: Vec<AbilityRandomBranchDefinition>,
+    },
+    SniperShot {
+        mode: SniperShotModeDefinition,
     },
     Concentrate,
     Rodeo,

@@ -100,6 +100,7 @@ pub(in crate::game) struct ResolvedProjectileProfile {
     pub(in crate::game) ammunition_weight_tenths_pound: u16,
     pub(in crate::game) ammunition_type: AmmunitionTypeDefinition,
     pub(in crate::game) ammo_break_chance_percent: u8,
+    pub(in crate::game) base_shot: i32,
     pub(in crate::game) energy_cost: i32,
     pub(in crate::game) source_item_id: String,
 }
@@ -1116,6 +1117,7 @@ impl Game {
                         ammunition_weight_tenths_pound: ammo_definition.weight_tenths_pound,
                         ammunition_type: profile.ammunition_type,
                         ammo_break_chance_percent,
+                        base_shot,
                         energy_cost,
                         source_item_id: item.id.clone(),
                     })

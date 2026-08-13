@@ -563,3 +563,20 @@ git diff --stat
   `f66b18b842e434ef84787e664a4fe94107a27b2f47bbf0a6ddffb087c0c0284b`、Protocol `1.196`、
   State Hash Schema v98、save v1、active baseline `contract-v293`（26 条 exact fixture、
   零 waiver）。
+
+## 34. main 当前交接（狙击手 Commit 2：统一特殊射击事务）
+
+- 本批不新增正式 item、ability、material、affix、class 或 build ID，也没有需要其他内容
+  分支预留的身份。正式狙击手及其 16 个职业能力仍由 class 方向后续导入。
+- `sniper-shot` 能力效果支持闪耀、撤退、除陷、燃烧、碎岩、冰冻、击退和穿透八种模式，
+  全部复用普通射击的发射器/弹药选择、能量、重弓、逐武器与骑术成长、词缀/品牌/杀戮、
+  暴击、死亡、掉落和破损事务。能力投影的射程与能量来自当前发射器。
+- 原版射击撤退距离是 `10 + 2 * concentration`，并非固定 10；穿透射击的 N 层专注最多
+  结算 N+1 个碰撞目标。`Projectile` 地形变更来源明确不触发挖矿成长、材料、金币或额外
+  物品。
+- Easy Tiring II 已接入普通与特殊射击；魔法等其他原版消费者仍属于共享 mutation 后续，
+  不在狙击手代码内预造。
+- 当前协调点：pack `1.312.0` / content hash
+  `f66b18b842e434ef84787e664a4fe94107a27b2f47bbf0a6ddffb087c0c0284b`、Protocol `1.197`、
+  State Hash Schema v98、save v1、active baseline `contract-v294`（26 条 exact fixture、
+  零 waiver）。

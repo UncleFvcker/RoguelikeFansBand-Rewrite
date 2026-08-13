@@ -9,6 +9,7 @@ use super::*;
 const GOOD_LUCK_MUTATION_ID: &str = "rfb.mutation.good-luck";
 const BAD_LUCK_MUTATION_ID: &str = "rfb.mutation.bad-luck";
 const EASY_TIRING_MUTATION_ID: &str = "rfb.mutation.easy-tiring";
+const EASY_TIRING_II_MUTATION_ID: &str = "rfb.mutation.easy-tiring2";
 const IMPOTENCE_MUTATION_ID: &str = "rfb.mutation.impotence";
 const ASTRAL_GUIDE_MUTATION_ID: &str = "rfb.mutation.astral-guide";
 
@@ -1484,13 +1485,19 @@ impl Game {
     }
 
     pub(super) fn apply_easy_tiring_fatigue(&mut self, energy: i32) {
-        if energy < 1
-            || !self
-                .progress
-                .active_mutation_ids
-                .contains(EASY_TIRING_MUTATION_ID)
-            || self.rng.bounded(u64::from(16 - self.minor_slow)) != 0
-        {
+        self.apply_mutation_fatigue(EASY_TIRING_MUTATION_ID, energy, false);
+    }
+
+    pub(super) fn apply_ranged_easy_tiring_fatigue(&mut self, energy: i32) {
+        self.apply_mutation_fatigue(EASY_TIRING_II_MUTATION_ID, energy, true);
+    }
+
+    fn apply_mutation_fatigue(&mut self, mutation_id: &str, energy: i32, extra_chance: bool) {
+        if energy < 1 || !self.progress.active_mutation_ids.contains(mutation_id) {
+            return;
+        }
+        let tired = self.rng.bounded(u64::from(16 - self.minor_slow)) == 0;
+        if !tired && (!extra_chance || self.rng.bounded(6) != 0) {
             return;
         }
         let energy = u16::try_from(energy).unwrap_or(u16::MAX);

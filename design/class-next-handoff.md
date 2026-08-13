@@ -203,3 +203,14 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - `sniperConcentration` 与预留给 Commit 3 的 `probedActorKindIds` 已进入 save/hash，旧开发
   存档不兼容。协调版本：pack `1.312.0`、Protocol `1.196`、State Hash Schema v98、
   active baseline `contract-v293`。
+
+## main 当前批次：狙击手 Commit 2 统一特殊射击事务
+
+- 未新增正式内容 ID。新增 `sniper-shot` 效果的闪耀、撤退、除陷、燃烧、碎岩、冰冻、
+  击退、穿透八种模式；正式能力定义、职业和出生内容继续留给下一批。
+- 八种模式和普通射击共用唯一 projectile resolver，完整复用发射器、弹药、行动能量、
+  重弓、逐武器/骑术成长、品牌/杀戮、暴击、死亡、掉落、破损与 Easy Tiring II。
+- 撤退距离按 RFB master 修正为 `10 + 2 * concentration`；碎岩使用不会触发挖矿收益的
+  `Projectile` 地形来源；穿透每继续越过一个碰撞目标才消耗一级专注。
+- 协调版本：pack `1.312.0`、Protocol `1.197`、State Hash Schema v98、save v1、
+  active baseline `contract-v294`。

@@ -2,12 +2,14 @@
 
 use std::sync::OnceLock;
 
-use super::support::{clear_monsters, dispatch_next, give_inventory_item};
+use super::support::{clear_monsters, dispatch_next, give_inventory_item, replace_terrain};
 use super::*;
+use crate::game::player_combat::ProjectileMode;
 
 const SNIPER_BUILD_ID: &str = "test.build.sniper";
 const CONCENTRATE_ABILITY_ID: &str = "test.ability.sniper-concentrate";
 const TECHNIQUE_ABILITY_ID: &str = "test.ability.sniper-technique";
+const SHINING_SHOT_ABILITY_ID: &str = "test.ability.sniper-shining-shot";
 
 fn sniper_game(seed: u64) -> Game {
     static CONTENT: OnceLock<Arc<ContentCatalog>> = OnceLock::new();
@@ -45,7 +47,26 @@ fn sniper_game(seed: u64) -> Game {
             technique.effect = AbilityEffectDefinition::NoOp {
                 reason: "sniper-test".to_owned(),
             };
-            artifact.content.abilities.extend([concentrate, technique]);
+            let mut shining_shot = concentrate.clone();
+            shining_shot.id = SHINING_SHOT_ABILITY_ID.to_owned();
+            shining_shot.name_key = "test-sniper-shining-shot-name".to_owned();
+            shining_shot.description_key = "test-sniper-shining-shot-description".to_owned();
+            shining_shot.target = rfb_content::AbilityTargetDefinition {
+                modes: vec![
+                    rfb_content::AbilityTargetModeDefinition::Direction,
+                    rfb_content::AbilityTargetModeDefinition::Position,
+                    rfb_content::AbilityTargetModeDefinition::Entity,
+                ],
+                range: 20,
+                requires_line_of_effect: true,
+            };
+            shining_shot.effect = AbilityEffectDefinition::SniperShot {
+                mode: SniperShotModeDefinition::Shining,
+            };
+            artifact
+                .content
+                .abilities
+                .extend([concentrate, technique, shining_shot]);
 
             let mut class = artifact
                 .content
@@ -95,6 +116,18 @@ fn sniper_game(seed: u64) -> Game {
                     base_failure_percent: 95,
                     minimum_failure_percent: 95,
                 },
+                ClassAbilityDefinition {
+                    ability_id: SHINING_SHOT_ABILITY_ID.to_owned(),
+                    minimum_level: 1,
+                    ui_group_name_key: None,
+                    governing_attribute: None,
+                    resource_id: None,
+                    resource_cost: 0,
+                    minimum_concentration: 1,
+                    hit_point_cost: 1,
+                    base_failure_percent: 0,
+                    minimum_failure_percent: 0,
+                },
             ];
             artifact.content.classes.push(class);
 
@@ -138,6 +171,37 @@ fn equip_light_crossbow(game: &mut Game) {
         slot_id: "shooting".to_owned(),
     };
     give_inventory_item(game, "test.sniper-bolt", "demo.item.bolt");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.sniper-bolt")
+        .expect("test bolt should exist")
+        .quantity = 20;
+}
+
+fn prepare_shooting_line(game: &mut Game) {
+    clear_monsters(game);
+    game.player.position = Position { x: 10, y: 10 };
+    for x in 10..=30 {
+        let position = Position { x, y: 10 };
+        replace_terrain(game, position, "demo.terrain.floor");
+        let index = game
+            .index(position)
+            .expect("shooting line should be in bounds");
+        game.glow[index] = false;
+    }
+    equip_light_crossbow(game);
+}
+
+fn push_durable_sheep(game: &mut Game, id: &str, position: Position) {
+    game.push_generated_actor(id.to_owned(), "demo.actor.sheep", position);
+    let actor = game
+        .entities
+        .iter_mut()
+        .find(|actor| actor.id == id)
+        .expect("test sheep should exist");
+    actor.hp = 1_000;
+    actor.max_hp = 1_000;
+    actor.alerted = false;
 }
 
 fn resolve_ability(game: &mut Game, ability_id: &str, target: TargetSelection) -> Vec<DomainEvent> {
@@ -150,6 +214,21 @@ fn resolve_ability(game: &mut Game, ability_id: &str, target: TargetSelection) -
         &mut Vec::new(),
     )
     .expect("test ability should resolve");
+    events
+}
+
+fn fire_mode(game: &mut Game, mode: SniperShotModeDefinition) -> Vec<DomainEvent> {
+    let mut events = Vec::new();
+    game.resolve_player_projectile(
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        ProjectileMode::Sniper(mode),
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("test sniper shot should resolve");
     events
 }
 
@@ -398,4 +477,188 @@ fn sniper_state_round_trips_and_rejects_invalid_build_or_bounds() {
         Game::from_save(non_sniper),
         Err(CoreError::InvalidSave("player sniper state is invalid"))
     ));
+}
+
+#[test]
+fn shining_disarming_and_shatter_shots_mutate_only_the_projectile_path() {
+    let mut shining = sniper_game(7);
+    prepare_shooting_line(&mut shining);
+    shining.sniper_concentration = 2;
+    fire_mode(&mut shining, SniperShotModeDefinition::Shining);
+    let lit = (11..=30)
+        .take_while(|x| {
+            shining
+                .index(Position { x: *x, y: 10 })
+                .is_some_and(|index| shining.glow[index])
+        })
+        .count();
+    assert!(lit > 1);
+    assert_eq!(shining.sniper_concentration, 0);
+
+    let mut disarm = sniper_game(8);
+    prepare_shooting_line(&mut disarm);
+    let trap = Position { x: 13, y: 10 };
+    replace_terrain(&mut disarm, trap, "demo.terrain.created-trap");
+    fire_mode(&mut disarm, SniperShotModeDefinition::Disarm);
+    assert_eq!(disarm.terrain_at(trap), "demo.terrain.floor");
+
+    let mut shatter = sniper_game(9);
+    prepare_shooting_line(&mut shatter);
+    let wall = Position { x: 13, y: 10 };
+    replace_terrain(&mut shatter, wall, "demo.terrain.quartz-treasure");
+    let mining_before = shatter.progress.mining_proficiency;
+    let materials_before = shatter.progress.materials.clone();
+    let gold_before = shatter.gold_piles.len();
+    let events = fire_mode(&mut shatter, SniperShotModeDefinition::Shatter);
+    assert_eq!(shatter.terrain_at(wall), "demo.terrain.floor");
+    assert_eq!(shatter.progress.mining_proficiency, mining_before);
+    assert_eq!(shatter.progress.materials, materials_before);
+    assert_eq!(shatter.gold_piles.len(), gold_before);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::ProjectileAmmoBroken { ammo_kind_id }
+            if ammo_kind_id == "demo.item.bolt"
+    )));
+}
+
+#[test]
+fn knockback_and_piercing_share_collision_training_and_focus_rules() {
+    let mut knockback = sniper_game(10);
+    prepare_shooting_line(&mut knockback);
+    let target = Position { x: 12, y: 10 };
+    push_durable_sheep(&mut knockback, "test.knockback", target);
+    knockback.sniper_concentration = 2;
+    let hit_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) >= 10
+        })
+        .expect("a normal projectile hit seed should exist");
+    knockback.rng = RfbRng::seeded(hit_seed);
+    fire_mode(&mut knockback, SniperShotModeDefinition::Knockback);
+    let pushed = knockback
+        .entities
+        .iter()
+        .find(|actor| actor.id == "test.knockback")
+        .expect("surviving target should remain")
+        .position;
+    assert!(pushed.x >= target.x + 4);
+    assert_eq!(pushed.y, target.y);
+
+    let mut piercing = sniper_game(11);
+    prepare_shooting_line(&mut piercing);
+    for (ordinal, x) in [12, 14, 16, 18, 20].into_iter().enumerate() {
+        push_durable_sheep(
+            &mut piercing,
+            &format!("test.piercing.{ordinal}"),
+            Position { x, y: 10 },
+        );
+    }
+    piercing.sniper_concentration = 3;
+    let events = fire_mode(&mut piercing, SniperShotModeDefinition::Piercing);
+    let collisions = events
+        .iter()
+        .filter(|event| {
+            matches!(
+                event,
+                DomainEvent::ProjectileHit { .. } | DomainEvent::ProjectileMissed { .. }
+            )
+        })
+        .count();
+    assert_eq!(collisions, 4);
+    assert!(piercing.entities[0..4].iter().all(|actor| actor.alerted));
+    assert!(!piercing.entities[4].alerted);
+    assert_eq!(piercing.sniper_concentration, 0);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::ProjectileAmmoBroken { .. }))
+    );
+}
+
+#[test]
+fn retreat_uses_focus_scaled_range_and_special_abilities_use_shot_energy() {
+    let mut retreat = sniper_game(12);
+    prepare_shooting_line(&mut retreat);
+    let origin = retreat.player.position;
+    retreat.sniper_concentration = 3;
+    fire_mode(&mut retreat, SniperShotModeDefinition::Retreat);
+    assert_ne!(retreat.player.position, origin);
+    assert!(chebyshev_distance(origin, retreat.player.position) <= 16);
+
+    let mut special = sniper_game(13);
+    prepare_shooting_line(&mut special);
+    special.sniper_concentration = 1;
+    special.debug_ability_casts_succeed = true;
+    let hp_before = special.player.hp;
+    let projected = special
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == SHINING_SHOT_ABILITY_ID)
+        .expect("test special shot should project");
+    assert_eq!(
+        projected.target_spec.range,
+        special
+            .player_projectile_profile()
+            .expect("projectile profile")
+            .range
+    );
+    assert!(matches!(
+        projected.effects.as_slice(),
+        [AbilityEffectSpecDto::SniperShot {
+            mode: SniperShotModeDto::Shining
+        }]
+    ));
+    assert!(projected.can_cast);
+    let expected_energy = special
+        .player_projectile_profile()
+        .expect("projectile profile")
+        .energy_cost;
+    let energy_gain = energy_gain(derived_speed(&special.player_derived_stats().speed));
+    let tick_before = special.world_tick;
+    dispatch_next(
+        &mut special,
+        GameCommand::CastAbility {
+            ability_id: SHINING_SHOT_ABILITY_ID.to_owned(),
+            target: TargetSelection::Direction {
+                direction: Direction::East,
+            },
+        },
+    );
+    assert_eq!(special.player.hp, hp_before - 1);
+    assert_eq!(special.sniper_concentration, 0);
+    assert_eq!(
+        special.world_tick - tick_before,
+        u32::try_from((expected_energy + energy_gain - 1) / energy_gain).unwrap()
+    );
+}
+
+#[test]
+fn ranged_easy_tiring_uses_the_original_extra_chance_after_a_real_shot() {
+    let mut game = sniper_game(14);
+    prepare_shooting_line(&mut game);
+    game.progress
+        .active_mutation_ids
+        .insert("rfb.mutation.easy-tiring2".to_owned());
+    let fatigue_seed = (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(16) != 0 && rng.bounded(6) == 0
+        })
+        .expect("an extra ranged-fatigue seed should exist");
+    game.rng = RfbRng::seeded(fatigue_seed);
+    let mut events = Vec::new();
+    game.resolve_player_projectile(
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        ProjectileMode::Normal,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("ordinary shot should resolve");
+    assert_eq!(game.minor_slow, 1);
 }

@@ -658,3 +658,8 @@ save 容器保持 v1。
 协议 1.196 / contract-v293 为 `AbilityEffectSpecDto` 增加 `concentrate`，为 `AbilityDto`
 增加专注门槛与生命成本，并以 `PlayerDto.sniperConcentration` 投影狙击手专注当前值和
 等级上限。命令继续复用 `CastAbility` 与普通射击，不增加新的待处理输入状态。
+
+协议 1.197 / contract-v294 为 `AbilityEffectSpecDto` 增加 `sniper-shot` 及八种射击模式。
+特殊射击继续复用 `CastAbility`、现有目标选择和普通 projectile 事务；射程与行动能量取自
+当前发射器，不增加新的命令、待处理输入或持久状态。State Hash Schema 保持 v98，save
+容器保持 v1。

@@ -154,6 +154,7 @@ fn projectile_collision_trains_but_an_empty_shot_does_not_touch_progress_or_rng(
     collision
         .resolve_player_projectile(
             TargetSelection::Direction { direction },
+            super::super::player_combat::ProjectileMode::Normal,
             &mut Vec::new(),
             &mut BTreeSet::new(),
             &mut Vec::new(),
@@ -179,6 +180,7 @@ fn projectile_collision_trains_but_an_empty_shot_does_not_touch_progress_or_rng(
     empty
         .resolve_player_projectile(
             TargetSelection::Direction { direction },
+            super::super::player_combat::ProjectileMode::Normal,
             &mut Vec::new(),
             &mut BTreeSet::new(),
             &mut Vec::new(),

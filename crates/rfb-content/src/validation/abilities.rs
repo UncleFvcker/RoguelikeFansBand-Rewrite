@@ -776,7 +776,9 @@ pub(super) fn validate_abilities(
                     validate_id(affix_id).is_ok()
                 }
                 AbilityEffectDefinition::RandomChoice { .. } => false,
-                AbilityEffectDefinition::Concentrate | AbilityEffectDefinition::Rodeo => true,
+                AbilityEffectDefinition::SniperShot { .. }
+                | AbilityEffectDefinition::Concentrate
+                | AbilityEffectDefinition::Rodeo => true,
                 AbilityEffectDefinition::NoOp { reason } => {
                     !reason.is_empty() && reason.len() <= 128 && reason.is_ascii()
                 }
@@ -927,6 +929,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::PolymorphTarget
             | AbilityEffectDefinition::DrainLife { .. }
             | AbilityEffectDefinition::DeathRay { .. }
+            | AbilityEffectDefinition::SniperShot { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
             AbilityEffectDefinition::TeleportLevel => self_target_rule || projectile_target_rule,
             AbilityEffectDefinition::FetchItem { .. }

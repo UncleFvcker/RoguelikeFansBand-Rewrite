@@ -60,6 +60,9 @@ pub(super) enum AbilityTargetPlan {
         path: Vec<Position>,
         stop_at_actor: bool,
     },
+    SniperShot {
+        target: TargetSelection,
+    },
     Cone {
         path: Vec<Position>,
         direction: Direction,
@@ -396,7 +399,10 @@ impl Game {
                 i32::try_from(hp_paid).expect("validated mutation cost must fit i32"),
             );
         }
-        if !matches!(ability.effect, AbilityEffectDefinition::Concentrate) {
+        if !matches!(
+            ability.effect,
+            AbilityEffectDefinition::Concentrate | AbilityEffectDefinition::SniperShot { .. }
+        ) {
             self.sniper_concentration = 0;
         }
         let resource_after = resource_before.saturating_sub(resource_paid);
@@ -650,6 +656,16 @@ impl Game {
             (AbilityEffectDefinition::Concentrate, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_concentrate_effect(&ability, events)
             }
+            (
+                AbilityEffectDefinition::SniperShot { mode },
+                AbilityTargetPlan::SniperShot { target },
+            ) => self.resolve_player_projectile(
+                target,
+                super::player_combat::ProjectileMode::Sniper(mode),
+                events,
+                changed,
+                removed_entities,
+            )?,
             (AbilityEffectDefinition::Earthquake { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_earthquake_effect(&ability, events, changed, removed_entities)?;
             }
@@ -6330,6 +6346,19 @@ impl Game {
                         path,
                         stop_at_actor: true,
                     })
+            }
+            AbilityEffectDefinition::SniperShot { mode } => {
+                self.ability_path(ability, target)?;
+                let profile = self.player_projectile_profile()?;
+                profile.ammo_item_id.as_ref()?;
+                self.player_projectile_path_for_mode(
+                    target,
+                    profile.range,
+                    super::player_combat::ProjectileMode::Sniper(mode),
+                )?;
+                Some(AbilityTargetPlan::SniperShot {
+                    target: target.clone(),
+                })
             }
             AbilityEffectDefinition::Recall { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)

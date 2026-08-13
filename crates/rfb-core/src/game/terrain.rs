@@ -25,6 +25,7 @@ pub(super) enum TerrainChangeSource {
     Dig,
     Magic,
     Monster,
+    Projectile,
 }
 
 pub(super) enum TerrainDigOutcome {

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.196";
+pub const PROTOCOL_VERSION: &str = "1.197";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -870,6 +870,20 @@ pub enum AbilityTerrainBeamOperationDto {
     StoneToMud,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum SniperShotModeDto {
+    Shining,
+    Retreat,
+    Disarm,
+    Burning,
+    Shatter,
+    Freezing,
+    Knockback,
+    Piercing,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
@@ -1151,6 +1165,9 @@ pub enum AbilityEffectSpecDto {
     Control {
         category: String,
         power: u16,
+    },
+    SniperShot {
+        mode: SniperShotModeDto,
     },
     Concentrate,
     Rodeo,
@@ -3635,6 +3652,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityRandomBranchSpecDto);
     push_declaration!(AbilitySummonCandidateSpecDto);
     push_declaration!(AbilityTerrainBeamOperationDto);
+    push_declaration!(SniperShotModeDto);
     push_declaration!(AbilityEffectSpecDto);
     push_declaration!(AbilitySummonSpecDto);
     push_declaration!(AbilityDetectSpecDto);
