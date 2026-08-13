@@ -1,0 +1,81 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "town"
+    ],
+    "legacyIndex": 1059,
+    "maxDepth": 999,
+    "rarity": 255,
+    "wildOnly": true
+  },
+  "attack": 1,
+  "capturePolicy": "pet-only",
+  "damageDice": 1,
+  "damageSides": 3,
+  "damageType": "physical",
+  "defense": 1,
+  "descriptionKey": "actor-demo-noborta-kesyta-the-yeek-president-description",
+  "doorInteraction": {
+    "bashes": true,
+    "opens": true
+  },
+  "experienceValue": 0,
+  "formatVersion": 1,
+  "glyph": "y",
+  "hitPointDice": {
+    "dice": 10,
+    "forceMaximum": true,
+    "sides": 20
+  },
+  "id": "demo.actor.noborta-kesyta-the-yeek-president",
+  "level": 0,
+  "maxHp": 200,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 1,
+            "damageSides": 3,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "type": "eat-gold"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.banish",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 25
+  },
+  "nameKey": "actor-demo-noborta-kesyta-the-yeek-president-name",
+  "resistances": {
+    "nether": "resistant"
+  },
+  "role": "monster",
+  "speed": 109,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "fixed-unique",
+    "kin-glyph-121",
+    "legacy-import",
+    "town",
+    "undead",
+    "unique"
+  ]
+}

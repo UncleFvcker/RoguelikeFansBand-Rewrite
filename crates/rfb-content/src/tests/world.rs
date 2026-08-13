@@ -10013,3 +10013,77 @@ fn p84b_camelot_roster_stays_bound_to_legacy_dungeon_two() {
         );
     }
 }
+
+#[test]
+fn p85_level_zero_roster_stays_in_its_wilderness_habitats() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P85 should contain {id}"))
+    };
+
+    for (id, source_index, habitats) in [
+        (
+            "scrawny-cat",
+            2,
+            vec![ActorHabitat::Grass, ActorHabitat::Town],
+        ),
+        ("sparrow", 3, vec![ActorHabitat::Town]),
+        (
+            "chaffinch",
+            4,
+            vec![ActorHabitat::Grass, ActorHabitat::Wood],
+        ),
+        (
+            "wild-rabbit",
+            5,
+            vec![ActorHabitat::Grass, ActorHabitat::Wood],
+        ),
+        ("woodsman", 6, vec![ActorHabitat::Wood]),
+        ("scruffy-little-dog", 7, vec![ActorHabitat::Town]),
+        ("farmer-maggot", 8, vec![ActorHabitat::Town]),
+        ("blubbering-idiot", 9, vec![ActorHabitat::Town]),
+        ("hobo", 10, vec![ActorHabitat::Town]),
+        ("raving-lunatic", 11, vec![ActorHabitat::Town]),
+        ("pitiful-looking-beggar", 12, vec![ActorHabitat::Town]),
+        ("mangy-looking-leper", 13, vec![ActorHabitat::Town]),
+        ("aimless-looking-merchant", 16, vec![ActorHabitat::Town]),
+        ("battle-scarred-veteran", 18, vec![ActorHabitat::Town]),
+        ("nick-the-butcher", 19, vec![ActorHabitat::Town]),
+        ("scrawny-horse", 955, vec![ActorHabitat::Town]),
+        (
+            "noborta-kesyta-the-yeek-president",
+            1059,
+            vec![ActorHabitat::Town],
+        ),
+        ("mori-troll", 1060, vec![ActorHabitat::Town]),
+    ] {
+        let actor = actor(id);
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("P85 actor should retain wilderness allocation");
+        assert_eq!(actor.level, 0, "{id} level");
+        assert_eq!(allocation.legacy_index, source_index, "{id} source index");
+        assert!(allocation.wild_only, "{id} should be wilderness-only");
+        assert_eq!(allocation.habitats, habitats, "{id} habitats");
+        assert!(allocation.legacy_dungeon_indices.is_empty(), "{id}");
+        assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"), "{id}");
+    }
+
+    for id in ["farmer-maggot", "nick-the-butcher"] {
+        let actor = actor(id);
+        assert!(actor.friendly, "{id} should retain FRIENDLY");
+        assert!(actor.tags.iter().any(|tag| tag == "unique"), "{id}");
+    }
+    for id in ["noborta-kesyta-the-yeek-president", "mori-troll"] {
+        let actor = actor(id);
+        assert!(actor.tags.iter().any(|tag| tag == "unique"), "{id}");
+        assert!(actor.tags.iter().any(|tag| tag == "fixed-unique"), "{id}");
+    }
+    assert!(actor("scrawny-horse").rideable);
+}

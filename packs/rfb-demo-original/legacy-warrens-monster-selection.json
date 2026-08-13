@@ -8018,6 +8018,114 @@
       "id": "the-questing-beast",
       "tags": ["camelot"],
       "omittedFlags": ["FEMALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 2,
+      "id": "scrawny-cat",
+      "tags": ["grass", "town"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 3,
+      "id": "sparrow",
+      "tags": ["town"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 4,
+      "id": "chaffinch",
+      "tags": ["grass", "wood"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 5,
+      "id": "wild-rabbit",
+      "tags": ["grass", "wood"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 6,
+      "id": "woodsman",
+      "tags": ["wood"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 7,
+      "id": "scruffy-little-dog",
+      "tags": ["town"],
+      "omittedFlags": []
+    },
+    {
+      "sourceIndex": 8,
+      "id": "farmer-maggot",
+      "tags": ["town"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 9,
+      "id": "blubbering-idiot",
+      "tags": ["town"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 10,
+      "id": "hobo",
+      "tags": ["town"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 11,
+      "id": "raving-lunatic",
+      "tags": ["town"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 12,
+      "id": "pitiful-looking-beggar",
+      "tags": ["town"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 13,
+      "id": "mangy-looking-leper",
+      "tags": ["town"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 16,
+      "id": "aimless-looking-merchant",
+      "tags": ["town"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 18,
+      "id": "battle-scarred-veteran",
+      "tags": ["town"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 19,
+      "id": "nick-the-butcher",
+      "tags": ["town"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN"]
+    },
+    {
+      "sourceIndex": 955,
+      "id": "scrawny-horse",
+      "tags": ["town"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1059,
+      "id": "noborta-kesyta-the-yeek-president",
+      "tags": ["town"],
+      "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 1060,
+      "id": "mori-troll",
+      "tags": ["town"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC"]
     }
   ]
 }

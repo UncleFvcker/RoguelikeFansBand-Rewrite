@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "habitats": [
+      "town"
+    ],
+    "legacyIndex": 12,
+    "maxDepth": 0,
+    "randomMovementPercent": 25,
+    "rarity": 1,
+    "wildOnly": true
+  },
+  "attack": 1,
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "defense": 0,
+  "descriptionKey": "actor-demo-pitiful-looking-beggar-description",
+  "doorInteraction": {
+    "opens": true
+  },
+  "evolution": {
+    "nextActorKindId": "demo.actor.agent-of-black-market",
+    "requiredExperience": 10
+  },
+  "experienceValue": 0,
+  "formatVersion": 1,
+  "glyph": "t",
+  "hitPointDice": {
+    "dice": 1,
+    "sides": 4
+  },
+  "id": "demo.actor.pitiful-looking-beggar",
+  "level": 0,
+  "maxHp": 2,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [],
+        "methodId": "rfb.blow.beg",
+        "toHit": 20
+      }
+    ]
+  },
+  "nameKey": "actor-demo-pitiful-looking-beggar-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 4,
+    "skeletonItemKindId": "demo.item.skeleton-remains",
+    "skeletonWeight": 1
+  },
+  "role": "monster",
+  "speed": 110,
+  "tags": [
+    "human",
+    "kin-glyph-116",
+    "legacy-import",
+    "town"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}
