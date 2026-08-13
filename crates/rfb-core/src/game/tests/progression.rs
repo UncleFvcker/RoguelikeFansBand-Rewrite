@@ -4,6 +4,228 @@ use super::*;
 use crate::stats::{AttributeSet, experience_required_for_level, modify_attribute_value};
 use rfb_protocol::{AttributeKindDto, MutationRatingDto};
 
+const TEST_RACE_REWARD_BUILD_ID: &str = "test.build.race-rewards";
+const TEST_RACE_REWARD_CASTER_BUILD_ID: &str = "test.build.caster";
+const TEST_RACE_CHOICE_REWARD_ID: &str = "test-talent";
+const TEST_RACE_CHOICE_MUTATION_ID: &str = "rfb.mutation.ambidextrous";
+const TEST_RACE_DEFAULT_MUTATION_ID: &str = "rfb.mutation.black-marketeer";
+const TEST_RACE_INT_MUTATION_ID: &str = "rfb.mutation.astral-guide";
+
+fn race_reward_catalog() -> Arc<rfb_content::ContentCatalog> {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    enable_test_caster(&mut artifact.content);
+
+    let mut race = artifact
+        .content
+        .races
+        .iter()
+        .find(|race| race.id == "demo.race.rfb-human")
+        .expect("Human race should exist")
+        .clone();
+    race.id = "test.race.level-mutation-rewards".to_owned();
+    race.legacy_index = None;
+    race.name_key = "test-race-level-mutation-rewards-name".to_owned();
+    race.description_key = "test-race-level-mutation-rewards-description".to_owned();
+    race.level_mutation_rewards = vec![
+        rfb_content::RaceLevelMutationRewardDefinition {
+            id: "test-weakness".to_owned(),
+            minimum_level: 3,
+            selection: rfb_content::RaceMutationSelectionDefinition::CastingAttribute {
+                default_mutation_id: TEST_RACE_DEFAULT_MUTATION_ID.to_owned(),
+                mutation_ids_by_attribute: BTreeMap::from([(
+                    rfb_content::CastingAttribute::Intelligence,
+                    TEST_RACE_INT_MUTATION_ID.to_owned(),
+                )]),
+            },
+        },
+        rfb_content::RaceLevelMutationRewardDefinition {
+            id: TEST_RACE_CHOICE_REWARD_ID.to_owned(),
+            minimum_level: 2,
+            selection: rfb_content::RaceMutationSelectionDefinition::Choice {
+                mutation_ids: vec![
+                    TEST_RACE_CHOICE_MUTATION_ID.to_owned(),
+                    "rfb.mutation.evasion".to_owned(),
+                ],
+            },
+        },
+    ];
+    artifact.content.races.push(race);
+
+    let mut build = artifact
+        .content
+        .builds
+        .iter()
+        .find(|build| build.id == "demo.build.warrior")
+        .expect("Warrior build should exist")
+        .clone();
+    build.id = TEST_RACE_REWARD_BUILD_ID.to_owned();
+    build.name_key = "test-build-race-rewards-name".to_owned();
+    build.description_key = "test-build-race-rewards-description".to_owned();
+    build.race_id = "test.race.level-mutation-rewards".to_owned();
+    artifact.content.builds.push(build);
+    artifact
+        .content
+        .builds
+        .iter_mut()
+        .find(|build| build.id == TEST_RACE_REWARD_CASTER_BUILD_ID)
+        .expect("test caster build should exist")
+        .race_id = "test.race.level-mutation-rewards".to_owned();
+
+    Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("test race reward content should remain valid"),
+    ))
+}
+
+fn race_reward_game(build_id: &str) -> Game {
+    Game::from_content_with_build(47, race_reward_catalog(), DEFAULT_WORLD_ID, build_id)
+        .expect("test race reward game should create")
+}
+
+#[test]
+fn race_level_mutation_rewards_are_derived_locked_and_zero_time() {
+    let mut game = race_reward_game(TEST_RACE_REWARD_BUILD_ID);
+    clear_monsters(&mut game);
+    let rng_before = game.rng.clone();
+    let mut level_events = Vec::new();
+    game.apply_unscaled_player_experience(experience_required_for_level(3), &mut level_events);
+
+    assert_eq!(game.rng, rng_before);
+    assert!(
+        game.progress
+            .active_mutation_ids
+            .contains(TEST_RACE_DEFAULT_MUTATION_ID)
+    );
+    assert!(
+        game.progress
+            .locked_mutation_ids
+            .contains(TEST_RACE_DEFAULT_MUTATION_ID)
+    );
+    let pending = game
+        .snapshot()
+        .player
+        .pending_race_mutation_choice
+        .expect("level two choice should be pending");
+    assert_eq!(pending.reward_id, TEST_RACE_CHOICE_REWARD_ID);
+    assert_eq!(
+        pending
+            .candidates
+            .iter()
+            .map(|candidate| candidate.id.as_str())
+            .collect::<Vec<_>>(),
+        [TEST_RACE_CHOICE_MUTATION_ID, "rfb.mutation.evasion"]
+    );
+    assert!(pending.candidates.iter().all(|candidate| !candidate.locked));
+
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("pending race choice should be derived after loading");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        restored
+            .snapshot()
+            .player
+            .pending_race_mutation_choice
+            .expect("loaded game should retain the derived choice")
+            .reward_id,
+        TEST_RACE_CHOICE_REWARD_ID
+    );
+
+    let before_rejection = game.clone();
+    assert!(matches!(
+        game.dispatch(command(1, 0, GameCommand::Wait)),
+        Err(CoreError::RaceMutationChoiceRequired)
+    ));
+    assert_eq!(game.state_hash(), before_rejection.state_hash());
+    assert_eq!(game.rng, before_rejection.rng);
+    assert!(matches!(
+        game.dispatch(command(
+            1,
+            0,
+            GameCommand::ChooseRaceMutation {
+                reward_id: TEST_RACE_CHOICE_REWARD_ID.to_owned(),
+                mutation_id: "rfb.mutation.evasion-missing".to_owned(),
+            },
+        )),
+        Err(CoreError::RaceMutationChoiceUnavailable)
+    ));
+    assert_eq!(game.last_visual_cells, before_rejection.last_visual_cells);
+
+    let world_tick_before = game.world_tick;
+    let energy_before = game.player.energy_need;
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::ChooseRaceMutation {
+            reward_id: TEST_RACE_CHOICE_REWARD_ID.to_owned(),
+            mutation_id: TEST_RACE_CHOICE_MUTATION_ID.to_owned(),
+        },
+    );
+    assert_eq!(update.world_tick, world_tick_before);
+    assert_eq!(game.player.energy_need, energy_before);
+    assert_eq!(game.rng, rng_before);
+    assert!(
+        game.progress
+            .active_mutation_ids
+            .contains(TEST_RACE_CHOICE_MUTATION_ID)
+    );
+    assert!(
+        game.progress
+            .locked_mutation_ids
+            .contains(TEST_RACE_CHOICE_MUTATION_ID)
+    );
+    assert!(
+        game.snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
+
+    game.apply_player_experience_drain(u64::MAX, "test", &mut Vec::new());
+    assert!(
+        game.progress
+            .locked_mutation_ids
+            .contains(TEST_RACE_CHOICE_MUTATION_ID)
+    );
+    let mut regained_events = Vec::new();
+    game.apply_unscaled_player_experience(experience_required_for_level(3), &mut regained_events);
+    assert!(
+        game.snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
+    assert!(!regained_events.iter().any(|event| {
+        matches!(
+            event,
+            DomainEvent::MutationGained { mutation_id, .. }
+                if mutation_id == TEST_RACE_CHOICE_MUTATION_ID
+                    || mutation_id == TEST_RACE_DEFAULT_MUTATION_ID
+        )
+    }));
+}
+
+#[test]
+fn casting_attribute_race_reward_uses_the_class_profile() {
+    let mut game = race_reward_game(TEST_RACE_REWARD_CASTER_BUILD_ID);
+    game.apply_unscaled_player_experience(experience_required_for_level(3), &mut Vec::new());
+
+    assert!(
+        game.progress
+            .locked_mutation_ids
+            .contains(TEST_RACE_INT_MUTATION_ID)
+    );
+    assert!(
+        !game
+            .progress
+            .active_mutation_ids
+            .contains(TEST_RACE_DEFAULT_MUTATION_ID)
+    );
+}
+
 #[test]
 fn attribute_potentials_project_save_hash_and_reject_invalid_values() {
     let game = Game::new(42);

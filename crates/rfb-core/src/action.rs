@@ -20,6 +20,10 @@ pub(crate) enum GameAction {
     IncreaseAttribute {
         attribute: AttributeKind,
     },
+    ChooseRaceMutation {
+        reward_id: String,
+        mutation_id: String,
+    },
     Appraise {
         item_id: String,
     },
@@ -200,6 +204,7 @@ impl GameAction {
             | Self::DepositAtHome { .. }
             | Self::DismissPets
             | Self::IncreaseAttribute { .. }
+            | Self::ChooseRaceMutation { .. }
             | Self::EnterWorldMap { .. }
             | Self::LeaveWorldMap
             | Self::Retire
@@ -245,6 +250,13 @@ impl From<GameCommand> for GameAction {
                     AttributeKindDto::Constitution => AttributeKind::Constitution,
                     AttributeKindDto::Charisma => AttributeKind::Charisma,
                 },
+            },
+            GameCommand::ChooseRaceMutation {
+                reward_id,
+                mutation_id,
+            } => Self::ChooseRaceMutation {
+                reward_id,
+                mutation_id,
             },
             GameCommand::Appraise { item_id } => Self::Appraise { item_id },
             GameCommand::BashDoor { direction } => Self::BashDoor { direction },

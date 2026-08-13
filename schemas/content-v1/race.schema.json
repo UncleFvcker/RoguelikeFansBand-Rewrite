@@ -27,6 +27,86 @@
       ],
       "type": "object"
     },
+    "RaceLevelMutationRewardDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "minimumLevel": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "selection": {
+          "$ref": "#/$defs/RaceMutationSelectionDefinition"
+        }
+      },
+      "required": [
+        "id",
+        "minimumLevel",
+        "selection"
+      ],
+      "type": "object"
+    },
+    "RaceMutationSelectionDefinition": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "mutationIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "type": {
+              "const": "choice",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "mutationIds"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "defaultMutationId": {
+              "type": "string"
+            },
+            "mutationIdsByAttribute": {
+              "additionalProperties": false,
+              "default": {},
+              "properties": {
+                "charisma": {
+                  "type": "string"
+                },
+                "intelligence": {
+                  "type": "string"
+                },
+                "wisdom": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "type": {
+              "const": "casting-attribute",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "defaultMutationId"
+          ],
+          "type": "object"
+        }
+      ]
+    },
     "StartingItemDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -175,6 +255,13 @@
         "integer",
         "null"
       ]
+    },
+    "levelMutationRewards": {
+      "description": "Level-gated race mutations. Completion is represented by the chosen\nmutation being present in the character's locked mutation set.",
+      "items": {
+        "$ref": "#/$defs/RaceLevelMutationRewardDefinition"
+      },
+      "type": "array"
     },
     "lifePercent": {
       "default": 100,

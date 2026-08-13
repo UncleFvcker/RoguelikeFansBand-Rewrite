@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v297`，机器可读政策固定在：
+当前逻辑基线是 `contract-v298`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -330,3 +330,8 @@ v98，并刷新公共状态投影；Commit 2/3 只增加能力效果、typed eve
 基础值 +10，六项属性无修正，生命、经验与商店倍率均为 100%。七个正式 build 均组合
 Human，因此公共初始化的生命与技能投影发生预期变化，全部 26 条 active fixture 统一
 刷新并复验，零 waiver。Protocol 1.198、State Hash Schema v98 与 save v1 均不变。
+
+`contract-v298` 增加通用的种族等级变异奖励配置、零时间选择命令和待选择投影。完成
+状态完全由既有锁定变异集合派生，不新增权威状态或存档字段；正式 Human 尚未配置奖励，
+所以 26 条 active fixture 经 `verify-all` 复验零漂移，不刷新 assertions、零 waiver。
+Protocol 升至 1.199，State Hash Schema v98、内容包 1.314.0 与 save v1 保持不变。

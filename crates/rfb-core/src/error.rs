@@ -17,6 +17,10 @@ pub enum CoreError {
     MutationDirectionRequired,
     #[error("no periodic mutation is waiting for a direction")]
     MutationDirectionUnavailable,
+    #[error("a race mutation reward is waiting for a choice")]
+    RaceMutationChoiceRequired,
+    #[error("the requested race mutation choice is unavailable")]
+    RaceMutationChoiceUnavailable,
     #[error("world map transition is unavailable from the current state")]
     WorldMapTransitionUnavailable,
     #[error("the command is unavailable while viewing the world map")]

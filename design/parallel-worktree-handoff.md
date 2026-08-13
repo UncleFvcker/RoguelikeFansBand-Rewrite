@@ -628,3 +628,21 @@ git diff --stat
   `8e2f9f3df586082903fbebf797fc86ae7096e1a6b3ba6141831cc827a29b415d`、Protocol
   `1.198`、State Hash Schema v98、save v1、active baseline `contract-v297`。共同初始化
   的 HP 与察觉变化要求全量刷新并复验 26 条 active fixture，零 waiver。
+
+## 38. main 当前交接（Human Commit 2：通用种族等级变异奖励）
+
+- 本批不新增正式 race、mutation、ability、item、material、affix、class 或 build ID；
+  `demo.race.rfb-human` 的 `levelMutationRewards` 仍为空。测试专用 race/build/reward 身份只在
+  Core 测试内构造，不属于内容 ID 所有权。
+- `RaceDefinition.levelMutationRewards` 只提供 `choice` 与 `casting-attribute` 两种选择；
+  内容校验要求奖励 ID 唯一、等级大于 0、候选存在且不重复，并要求所有奖励变异的
+  `randomWeight` 为 0。未来 Human 20/35 级内容必须复用这套模型并在导入前声明正式变异 ID。
+- 待选择状态由当前等级、种族配置和 `lockedMutationIds` 派生，不保存第二份完成标记。
+  自动奖励立即获得并锁定；手动选择不消耗行动、资源或 RNG，待选择期间其他命令由核心
+  拒绝。降级不移除奖励，重新升级不重复结算。
+- Web 变异面板顶部新增强制选择卡；候选复用现有变异名称、说明和评级。正式 Human
+  候选池及六种 35 级弱点行为继续留给后续提交，本批不会提前暴露空菜单或占位效果。
+- 共享协调点：pack `1.314.0` / content hash
+  `8e2f9f3df586082903fbebf797fc86ae7096e1a6b3ba6141831cc827a29b415d`、Protocol
+  `1.199`、State Hash Schema v98、save v1、active baseline `contract-v298`。正式内容未
+  使用新字段，26 条 active fixture 只复验、不刷新 assertions，零 waiver。

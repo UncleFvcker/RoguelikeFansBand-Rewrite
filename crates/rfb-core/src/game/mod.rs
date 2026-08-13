@@ -1314,8 +1314,12 @@ impl Game {
         }
 
         let mut action = GameAction::from(envelope.command);
+        let pending_race_mutation_choice = self.pending_race_mutation_choice();
+        let race_mutation_choice_pending = pending_race_mutation_choice.is_some();
         if self.pending_mutation_direction.is_some()
             && !matches!(action, GameAction::ResolveMutationDirection { .. })
+            && !(race_mutation_choice_pending
+                && matches!(action, GameAction::ChooseRaceMutation { .. }))
         {
             return Err(CoreError::MutationDirectionRequired);
         }
@@ -1323,6 +1327,27 @@ impl Game {
             && matches!(action, GameAction::ResolveMutationDirection { .. })
         {
             return Err(CoreError::MutationDirectionUnavailable);
+        }
+        if race_mutation_choice_pending && !matches!(action, GameAction::ChooseRaceMutation { .. })
+        {
+            return Err(CoreError::RaceMutationChoiceRequired);
+        }
+        if !race_mutation_choice_pending && matches!(action, GameAction::ChooseRaceMutation { .. })
+        {
+            return Err(CoreError::RaceMutationChoiceUnavailable);
+        }
+        if let GameAction::ChooseRaceMutation {
+            reward_id,
+            mutation_id,
+        } = &action
+            && pending_race_mutation_choice.as_ref().is_none_or(
+                |(pending_reward_id, candidates)| {
+                    pending_reward_id != reward_id
+                        || !candidates.iter().any(|candidate| candidate == mutation_id)
+                },
+            )
+        {
+            return Err(CoreError::RaceMutationChoiceUnavailable);
         }
         let reevaluate_all_mogaminator_items = matches!(
             &action,
@@ -1471,6 +1496,7 @@ impl Game {
                     | GameAction::EnterWorldMap { .. }
                     | GameAction::IdentifyAtFacility { .. }
                     | GameAction::IncreaseAttribute { .. }
+                    | GameAction::ChooseRaceMutation { .. }
                     | GameAction::LeaveWorldMap
                     | GameAction::RenameAtFacility { .. }
                     | GameAction::Rest { .. }
@@ -1605,6 +1631,16 @@ impl Game {
                 } else {
                     events.push(DomainEvent::PlayerAttributeIncreaseUnavailable { attribute });
                 }
+            }
+            GameAction::ChooseRaceMutation {
+                reward_id,
+                mutation_id,
+            } => {
+                let chosen = self.choose_race_mutation(&reward_id, &mutation_id, &mut events);
+                debug_assert!(
+                    chosen,
+                    "validated race mutation choice must remain available"
+                );
             }
             GameAction::BashDoor { direction } => match self.bash_door(direction) {
                 Some(DoorBashOutcome::Succeeded { position }) => {

@@ -752,6 +752,33 @@ h1 {
   background: rgb(103 137 168 / 8%);
 }
 
+.mutation-choice-card {
+  display: grid;
+  gap: 0.4rem;
+  border: 1px solid rgb(216 189 114 / 45%);
+  padding: 0.55rem;
+  background: rgb(216 189 114 / 8%);
+}
+
+.mutation-choice-card > p {
+  margin: 0;
+  color: #b8c8d8;
+  font-size: 0.72rem;
+}
+
+.mutation-choice-candidates {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.mutation-choice-candidate {
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  text-align: left;
+}
+
 .mutation-row[data-rating="awful"],
 .mutation-row[data-rating="bad"] {
   border-left-color: #a96565;

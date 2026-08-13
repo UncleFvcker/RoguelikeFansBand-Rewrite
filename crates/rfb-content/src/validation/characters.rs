@@ -5,9 +5,10 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::{
     AbilityBookDefinition, AbilityDefinition, ActorDefinition, ActorRole, BUILD_SCHEMA,
     CLASS_SCHEMA, CharacterBuildDefinition, ClassDefinition, ContentError, ItemDefinition,
-    PERSONALITY_SCHEMA, PersonalityDefinition, RACE_SCHEMA, RaceDefinition, SKILL_SCHEMA,
-    SKILL_SET_SCHEMA, SkillDefinition, SkillKind, SkillSetDefinition, StartingItemDefinition,
-    StatModifiers, TerrainDefinition, valid_ability_level_scaling,
+    MutationDefinition, PERSONALITY_SCHEMA, PersonalityDefinition, RACE_SCHEMA, RaceDefinition,
+    RaceMutationSelectionDefinition, SKILL_SCHEMA, SKILL_SET_SCHEMA, SkillDefinition, SkillKind,
+    SkillSetDefinition, StartingItemDefinition, StatModifiers, TerrainDefinition,
+    valid_ability_level_scaling,
 };
 
 use super::shared::{
@@ -36,6 +37,7 @@ pub(super) struct CharacterValidationRefs<'a> {
     pub(super) ability_books_by_id: &'a BTreeMap<String, AbilityBookDefinition>,
     pub(super) ability_resources: &'a BTreeMap<String, String>,
     pub(super) abilities: &'a [AbilityDefinition],
+    pub(super) mutations: &'a [MutationDefinition],
 }
 
 pub(super) fn validate_characters(
@@ -54,6 +56,7 @@ pub(super) fn validate_characters(
         ability_books_by_id,
         ability_resources,
         abilities,
+        mutations,
     } = refs;
     let item_starting_metadata = items
         .iter()
@@ -159,6 +162,10 @@ pub(super) fn validate_characters(
 
     let mut race_ids = BTreeSet::new();
     let mut legacy_race_indices = BTreeSet::new();
+    let mutation_random_weights = mutations
+        .iter()
+        .map(|mutation| (mutation.id.as_str(), mutation.random_weight))
+        .collect::<BTreeMap<_, _>>();
     for race in definitions.races.iter_mut() {
         require_schema(&race.schema, RACE_SCHEMA, &race.id)?;
         require_format_version(race.format_version, &race.id)?;
@@ -190,6 +197,7 @@ pub(super) fn validate_characters(
             return Err(ContentError::InvalidBodySlots(race.id.clone()));
         }
         validate_status_immunities(&race.id, &mut race.status_immunities)?;
+        validate_race_level_mutation_rewards(race, &mutation_random_weights)?;
         if let Some(category) = &race.kin_category
             && (category.is_empty()
                 || category.len() > 64
@@ -595,6 +603,53 @@ pub(super) fn validate_characters(
         build_ids.insert(build.id.clone());
     }
     Ok(build_ids)
+}
+
+fn validate_race_level_mutation_rewards(
+    race: &mut RaceDefinition,
+    mutation_random_weights: &BTreeMap<&str, u8>,
+) -> Result<(), ContentError> {
+    race.level_mutation_rewards.sort_by(|left, right| {
+        (left.minimum_level, &left.id).cmp(&(right.minimum_level, &right.id))
+    });
+    let mut reward_ids = BTreeSet::new();
+    let mut claimed_mutation_ids = BTreeSet::new();
+    for reward in &race.level_mutation_rewards {
+        let valid_reward_id = !reward.id.is_empty()
+            && reward.id.len() <= 64
+            && reward.id.bytes().all(|byte| {
+                byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'-' | b'_')
+            });
+        if reward.minimum_level == 0 || !valid_reward_id || !reward_ids.insert(reward.id.as_str()) {
+            return Err(ContentError::InvalidCharacterSource(race.id.clone()));
+        }
+        let mutation_ids = match &reward.selection {
+            RaceMutationSelectionDefinition::Choice { mutation_ids } => {
+                if mutation_ids.is_empty() {
+                    return Err(ContentError::InvalidCharacterSource(race.id.clone()));
+                }
+                mutation_ids.iter().map(String::as_str).collect::<Vec<_>>()
+            }
+            RaceMutationSelectionDefinition::CastingAttribute {
+                default_mutation_id,
+                mutation_ids_by_attribute,
+            } => std::iter::once(default_mutation_id.as_str())
+                .chain(mutation_ids_by_attribute.values().map(String::as_str))
+                .collect(),
+        };
+        for mutation_id in mutation_ids {
+            let Some(random_weight) = mutation_random_weights.get(mutation_id) else {
+                return Err(ContentError::DanglingReference {
+                    owner: race.id.clone(),
+                    target: mutation_id.to_owned(),
+                });
+            };
+            if *random_weight != 0 || !claimed_mutation_ids.insert(mutation_id) {
+                return Err(ContentError::InvalidCharacterSource(race.id.clone()));
+            }
+        }
+    }
+    Ok(())
 }
 
 struct CharacterSourceValidation<'a> {

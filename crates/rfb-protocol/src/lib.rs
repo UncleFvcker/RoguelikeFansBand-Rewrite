@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.198";
+pub const PROTOCOL_VERSION: &str = "1.199";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -104,6 +104,10 @@ pub enum GameCommand {
     },
     IncreaseAttribute {
         attribute: AttributeKindDto,
+    },
+    ChooseRaceMutation {
+        reward_id: String,
+        mutation_id: String,
     },
     Appraise {
         item_id: String,
@@ -1555,6 +1559,14 @@ pub struct PlayerMutationDto {
     pub locked: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PendingRaceMutationChoiceDto {
+    pub reward_id: String,
+    pub candidates: Vec<PlayerMutationDto>,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
@@ -2823,6 +2835,8 @@ pub struct PlayerDto {
     pub resources: Vec<ResourcePoolDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub mutations: Vec<PlayerMutationDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_race_mutation_choice: Option<PendingRaceMutationChoiceDto>,
     pub virtues: Vec<VirtueDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ability_learning: Option<AbilityLearningDto>,
@@ -3773,6 +3787,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(NutritionStateDto);
     push_declaration!(MutationRatingDto);
     push_declaration!(PlayerMutationDto);
+    push_declaration!(PendingRaceMutationChoiceDto);
     push_declaration!(VirtueKindDto);
     push_declaration!(VirtueDto);
     push_declaration!(PlayerDto);
@@ -4893,6 +4908,7 @@ mod tests {
                 build: None,
                 resources: Vec::new(),
                 mutations: Vec::new(),
+                pending_race_mutation_choice: None,
                 virtues: Vec::new(),
                 ability_learning: None,
                 abilities: Vec::new(),
@@ -5156,6 +5172,8 @@ mod tests {
         assert!(typescript.contains("alerted: boolean"));
         assert!(typescript.contains("equipment: Array<EquipmentItemDto>"));
         assert!(typescript.contains("mutations?: Array<PlayerMutationDto>"));
+        assert!(typescript.contains("pendingRaceMutationChoice?: PendingRaceMutationChoiceDto"));
+        assert!(typescript.contains("{ \"type\": \"choose-race-mutation\""));
         assert!(typescript.contains("virtues: Array<VirtueDto>"));
         assert!(typescript.contains("canReceiveRecharge: boolean"));
         assert!(typescript.contains("export type CapturedActorDto"));

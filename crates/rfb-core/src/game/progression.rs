@@ -4,7 +4,7 @@ use std::collections::BTreeMap;
 
 use rfb_content::{
     CharacterBuildDefinition, ClassDefinition, ContentCatalog, PersonalityDefinition,
-    RaceDefinition, SkillSetDefinition, StatModifiers,
+    RaceDefinition, RaceMutationSelectionDefinition, SkillSetDefinition, StatModifiers,
 };
 use rfb_protocol::StatModifiersDto;
 
@@ -730,6 +730,100 @@ impl Game {
                 reached_new_maximum: level > previous_max_level,
             });
         }
+        self.apply_race_level_mutation_rewards(events);
+    }
+
+    pub(super) fn pending_race_mutation_choice(&self) -> Option<(String, Vec<String>)> {
+        let (_, race, _, _) = self.character_definitions()?;
+        race.level_mutation_rewards
+            .iter()
+            .filter(|reward| reward.minimum_level <= self.progress.level)
+            .filter(|reward| !self.race_mutation_reward_completed(reward))
+            .find_map(|reward| match &reward.selection {
+                RaceMutationSelectionDefinition::Choice { mutation_ids } => {
+                    Some((reward.id.clone(), mutation_ids.clone()))
+                }
+                RaceMutationSelectionDefinition::CastingAttribute { .. } => None,
+            })
+    }
+
+    pub(super) fn choose_race_mutation(
+        &mut self,
+        reward_id: &str,
+        mutation_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let Some((pending_reward_id, candidates)) = self.pending_race_mutation_choice() else {
+            return false;
+        };
+        if pending_reward_id != reward_id
+            || !candidates.iter().any(|candidate| candidate == mutation_id)
+        {
+            return false;
+        }
+        self.gain_and_lock_race_mutation(mutation_id, events)
+    }
+
+    fn apply_race_level_mutation_rewards(&mut self, events: &mut Vec<DomainEvent>) {
+        let Some((_, race, class, _)) = self.character_definitions() else {
+            return;
+        };
+        let rewards = race.level_mutation_rewards.clone();
+        let casting_attribute = class
+            .casting_profile
+            .as_ref()
+            .map(|profile| profile.casting_attribute);
+        for reward in rewards {
+            if reward.minimum_level > self.progress.level
+                || self.race_mutation_reward_completed(&reward)
+            {
+                continue;
+            }
+            let RaceMutationSelectionDefinition::CastingAttribute {
+                default_mutation_id,
+                mutation_ids_by_attribute,
+            } = reward.selection
+            else {
+                continue;
+            };
+            let mutation_id = casting_attribute
+                .and_then(|attribute| mutation_ids_by_attribute.get(&attribute))
+                .unwrap_or(&default_mutation_id);
+            self.gain_and_lock_race_mutation(mutation_id, events);
+        }
+    }
+
+    fn race_mutation_reward_completed(
+        &self,
+        reward: &rfb_content::RaceLevelMutationRewardDefinition,
+    ) -> bool {
+        match &reward.selection {
+            RaceMutationSelectionDefinition::Choice { mutation_ids } => mutation_ids
+                .iter()
+                .any(|id| self.progress.locked_mutation_ids.contains(id)),
+            RaceMutationSelectionDefinition::CastingAttribute {
+                default_mutation_id,
+                mutation_ids_by_attribute,
+            } => std::iter::once(default_mutation_id)
+                .chain(mutation_ids_by_attribute.values())
+                .any(|id| self.progress.locked_mutation_ids.contains(id)),
+        }
+    }
+
+    fn gain_and_lock_race_mutation(
+        &mut self,
+        mutation_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        if !self.progress.active_mutation_ids.contains(mutation_id)
+            && !self.gain_mutation(mutation_id, events)
+        {
+            return false;
+        }
+        self.progress
+            .locked_mutation_ids
+            .insert(mutation_id.to_owned());
+        true
     }
 
     pub(super) fn apply_player_experience_drain(

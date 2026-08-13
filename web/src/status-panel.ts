@@ -15,6 +15,7 @@ import type {
   PlayerMutationDto,
   PetUpkeepDto,
   PetDto,
+  PendingRaceMutationChoiceDto,
   PlayerProgressDto,
   ProficiencyRankDto,
   ResourcePoolDto,
@@ -254,7 +255,10 @@ export class StatusPanel {
     this.#dom.progressionNameValue.textContent = state.player.name;
     this.#renderProgression(state.player.progress, state.player.build);
     this.#renderVirtues(state.player.virtues);
-    this.#renderMutations(state.player.mutations ?? []);
+    this.#renderMutations(
+      state.player.mutations ?? [],
+      state.player.pendingRaceMutationChoice,
+    );
     this.#renderAbilities(
       state.player.abilities ?? [],
       state.player.resources ?? [],
@@ -652,16 +656,65 @@ export class StatusPanel {
     );
   }
 
-  #renderMutations(mutations: PlayerMutationDto[]): void {
+  #renderMutations(
+    mutations: PlayerMutationDto[],
+    pendingChoice: PendingRaceMutationChoiceDto | null | undefined,
+  ): void {
     const document = this.#dom.mutationList.ownerDocument;
-    if (mutations.length === 0) {
+    const rows: HTMLLIElement[] = [];
+    if (pendingChoice) {
+      const card = document.createElement("li");
+      card.className = "mutation-choice-card";
+      const title = document.createElement("strong");
+      title.textContent = this.#localization.format("mutation-choice-required");
+      const prompt = document.createElement("p");
+      prompt.textContent = this.#localization.format("mutation-choice-prompt");
+      const candidates = document.createElement("div");
+      candidates.className = "mutation-choice-candidates";
+      for (const candidate of pendingChoice.candidates) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "mutation-choice-candidate";
+        button.disabled = this.#state.busy || this.#state.playerDead || this.#state.campaignEnded;
+        button.setAttribute(
+          "aria-label",
+          this.#localization.format("mutation-choice-action", { mutation: candidate.name }),
+        );
+        const heading = document.createElement("span");
+        heading.className = "mutation-heading";
+        const name = document.createElement("strong");
+        name.className = "mutation-name";
+        name.textContent = candidate.name;
+        const rating = document.createElement("span");
+        rating.className = "mutation-rating";
+        rating.textContent = this.#localization.format(
+          mutationRatingMessageKey(candidate.rating),
+        );
+        const description = document.createElement("span");
+        description.className = "mutation-description";
+        description.textContent = candidate.description;
+        heading.append(name, rating);
+        button.append(heading, description);
+        button.addEventListener("click", () =>
+          void this.#dispatch({
+            type: "choose-race-mutation",
+            rewardId: pendingChoice.rewardId,
+            mutationId: candidate.id,
+          }),
+        );
+        candidates.append(button);
+      }
+      card.append(title, prompt, candidates);
+      rows.push(card);
+    }
+    if (mutations.length === 0 && !pendingChoice) {
       const empty = document.createElement("li");
       empty.className = "mutation-empty";
       empty.textContent = this.#localization.format("mutation-empty");
       this.#dom.mutationList.replaceChildren(empty);
       return;
     }
-    this.#dom.mutationList.replaceChildren(
+    rows.push(
       ...mutations.map((mutation) => {
         const row = document.createElement("li");
         row.className = "mutation-row";
@@ -691,6 +744,7 @@ export class StatusPanel {
         return row;
       }),
     );
+    this.#dom.mutationList.replaceChildren(...rows);
   }
 
   #renderAbilities(

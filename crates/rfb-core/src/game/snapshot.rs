@@ -19,10 +19,10 @@ use rfb_protocol::{
     AttributeValueDto, BodySlotDto, CampaignStateDto, CapturedActorDto, CellDto, CellVisualDto,
     ContentVisualDto, DamageDiceDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot,
     InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto, MutationRatingDto,
-    PROTOCOL_VERSION, PetDto, PlayerBuildDto, PlayerDto, PlayerMutationDto, PlayerProgressDto,
-    Position, ResistanceDto, ResourcePoolDto, SkillProgressDto, SummonDto, TaskServiceDto,
-    TaskStatusDto, TerrainInteractionDto, TerrainInteractionKindDto, VisibilityState,
-    WildernessLocationDto, WildernessLocationKindDto,
+    PROTOCOL_VERSION, PendingRaceMutationChoiceDto, PetDto, PlayerBuildDto, PlayerDto,
+    PlayerMutationDto, PlayerProgressDto, Position, ResistanceDto, ResourcePoolDto,
+    SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto, TerrainInteractionDto,
+    TerrainInteractionKindDto, VisibilityState, WildernessLocationDto, WildernessLocationKindDto,
 };
 
 use super::tasks::projected_task_state;
@@ -144,6 +144,7 @@ impl Game {
             build: self.player_build_dto(),
             resources: self.player_resource_dtos(),
             mutations: self.player_mutation_dtos(),
+            pending_race_mutation_choice: self.pending_race_mutation_choice_dto(),
             virtues: self.virtues.to_vec(),
             ability_learning: self.player_ability_learning_dto(),
             abilities: self.player_ability_dtos(),
@@ -189,27 +190,40 @@ impl Game {
         self.progress
             .active_mutation_ids
             .iter()
-            .map(|id| {
-                let definition = self
-                    .content
-                    .mutation(id)
-                    .expect("active mutation definition must remain available");
-                let rating = match definition.rating {
-                    MutationRatingDefinition::Awful => MutationRatingDto::Awful,
-                    MutationRatingDefinition::Bad => MutationRatingDto::Bad,
-                    MutationRatingDefinition::Average => MutationRatingDto::Average,
-                    MutationRatingDefinition::Good => MutationRatingDto::Good,
-                    MutationRatingDefinition::Great => MutationRatingDto::Great,
-                };
-                PlayerMutationDto {
-                    id: id.clone(),
-                    name: definition.name.clone(),
-                    description: definition.description.clone(),
-                    rating,
-                    locked: self.progress.locked_mutation_ids.contains(id),
-                }
-            })
+            .map(|id| self.player_mutation_dto(id, self.progress.locked_mutation_ids.contains(id)))
             .collect()
+    }
+
+    fn pending_race_mutation_choice_dto(&self) -> Option<PendingRaceMutationChoiceDto> {
+        let (reward_id, mutation_ids) = self.pending_race_mutation_choice()?;
+        Some(PendingRaceMutationChoiceDto {
+            reward_id,
+            candidates: mutation_ids
+                .iter()
+                .map(|id| self.player_mutation_dto(id, false))
+                .collect(),
+        })
+    }
+
+    fn player_mutation_dto(&self, id: &str, locked: bool) -> PlayerMutationDto {
+        let definition = self
+            .content
+            .mutation(id)
+            .expect("projected mutation definition must remain available");
+        let rating = match definition.rating {
+            MutationRatingDefinition::Awful => MutationRatingDto::Awful,
+            MutationRatingDefinition::Bad => MutationRatingDto::Bad,
+            MutationRatingDefinition::Average => MutationRatingDto::Average,
+            MutationRatingDefinition::Good => MutationRatingDto::Good,
+            MutationRatingDefinition::Great => MutationRatingDto::Great,
+        };
+        PlayerMutationDto {
+            id: id.to_owned(),
+            name: definition.name.clone(),
+            description: definition.description.clone(),
+            rating,
+            locked,
+        }
     }
 
     pub(super) fn projected_player_dto(&self) -> PlayerDto {

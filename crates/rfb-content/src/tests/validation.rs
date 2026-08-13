@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use super::*;
 
 #[test]
@@ -161,4 +163,106 @@ fn sniping_profiles_and_concentration_requirements_are_strict() {
         validate_and_normalize(&mut invalid_divisor),
         Err(ContentError::InvalidCharacterSource(id)) if id == "demo.class.archer"
     ));
+}
+
+#[test]
+fn race_level_mutation_rewards_are_strict_and_canonical() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let choice = RaceLevelMutationRewardDefinition {
+        id: "talent".to_owned(),
+        minimum_level: 20,
+        selection: RaceMutationSelectionDefinition::Choice {
+            mutation_ids: vec![
+                "rfb.mutation.ambidextrous".to_owned(),
+                "rfb.mutation.evasion".to_owned(),
+            ],
+        },
+    };
+    let weakness = RaceLevelMutationRewardDefinition {
+        id: "weakness".to_owned(),
+        minimum_level: 35,
+        selection: RaceMutationSelectionDefinition::CastingAttribute {
+            default_mutation_id: "rfb.mutation.black-marketeer".to_owned(),
+            mutation_ids_by_attribute: BTreeMap::from([(
+                CastingAttribute::Intelligence,
+                "rfb.mutation.astral-guide".to_owned(),
+            )]),
+        },
+    };
+
+    let mut valid = artifact.content.clone();
+    human_level_mutation_rewards(&mut valid).extend([weakness.clone(), choice.clone()]);
+    validate_and_normalize(&mut valid).expect("valid rewards should normalize");
+    let rewards = &valid
+        .races
+        .iter()
+        .find(|race| race.id == "demo.race.rfb-human")
+        .expect("Human race should exist")
+        .level_mutation_rewards;
+    assert_eq!(rewards[0].id, "talent");
+    assert_eq!(rewards[1].id, "weakness");
+
+    let mut duplicate_reward = artifact.content.clone();
+    human_level_mutation_rewards(&mut duplicate_reward).extend([choice.clone(), choice.clone()]);
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_reward),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "demo.race.rfb-human"
+    ));
+
+    let mut zero_level = artifact.content.clone();
+    human_level_mutation_rewards(&mut zero_level).push(RaceLevelMutationRewardDefinition {
+        minimum_level: 0,
+        ..choice.clone()
+    });
+    assert!(matches!(
+        validate_and_normalize(&mut zero_level),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "demo.race.rfb-human"
+    ));
+
+    let mut empty_choice = artifact.content.clone();
+    human_level_mutation_rewards(&mut empty_choice).push(RaceLevelMutationRewardDefinition {
+        selection: RaceMutationSelectionDefinition::Choice {
+            mutation_ids: Vec::new(),
+        },
+        ..choice.clone()
+    });
+    assert!(matches!(
+        validate_and_normalize(&mut empty_choice),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "demo.race.rfb-human"
+    ));
+
+    let mut duplicate_mutation = artifact.content.clone();
+    let mut repeated = weakness.clone();
+    repeated.selection = RaceMutationSelectionDefinition::CastingAttribute {
+        default_mutation_id: "rfb.mutation.ambidextrous".to_owned(),
+        mutation_ids_by_attribute: BTreeMap::new(),
+    };
+    human_level_mutation_rewards(&mut duplicate_mutation).extend([choice.clone(), repeated]);
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_mutation),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "demo.race.rfb-human"
+    ));
+
+    let mut random_candidate = artifact.content;
+    human_level_mutation_rewards(&mut random_candidate).push(RaceLevelMutationRewardDefinition {
+        selection: RaceMutationSelectionDefinition::Choice {
+            mutation_ids: vec!["rfb.mutation.spit-acid".to_owned()],
+        },
+        ..choice
+    });
+    assert!(matches!(
+        validate_and_normalize(&mut random_candidate),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "demo.race.rfb-human"
+    ));
+}
+
+fn human_level_mutation_rewards(
+    content: &mut CompiledContentV1,
+) -> &mut Vec<RaceLevelMutationRewardDefinition> {
+    &mut content
+        .races
+        .iter_mut()
+        .find(|race| race.id == "demo.race.rfb-human")
+        .expect("Human race should exist")
+        .level_mutation_rewards
 }

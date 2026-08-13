@@ -669,3 +669,9 @@ save 容器保持 v1。
 投影稳定实体/种类 ID、位置、生命、速度、AC、阵营、抗性、状态免疫、近战与施法能力；
 已探测种类继续使用 contract-v293 已持久化的 `probedActorKindIds`。没有新增命令、待处理
 输入或权威状态结构，State Hash Schema 保持 v98，save 容器保持 v1。
+
+协议 1.199 / contract-v298 增加零时间的 `ChooseRaceMutation { rewardId, mutationId }`
+命令，以及可选的 `PlayerDto.pendingRaceMutationChoice`。候选复用 `PlayerMutationDto` 的名称、
+说明与评级投影；待选择状态由当前等级、种族奖励配置和既有锁定变异集合派生，不进入
+save 或 State Hash。待选择期间核心只接受该选择命令，State Hash Schema 保持 v98，save
+容器保持 v1。

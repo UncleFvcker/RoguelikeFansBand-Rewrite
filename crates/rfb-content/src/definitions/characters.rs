@@ -114,11 +114,43 @@ pub struct RaceDefinition {
     /// Status kind ids members of this race are innately immune to.
     #[serde(default)]
     pub status_immunities: Vec<String>,
+    /// Level-gated race mutations. Completion is represented by the chosen
+    /// mutation being present in the character's locked mutation set.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub level_mutation_rewards: Vec<RaceLevelMutationRewardDefinition>,
     /// Actor category used by player-kin summons. Omission makes that race
     /// produce an observed zero-result summon instead of guessing ancestry.
     #[serde(default)]
     pub kin_category: Option<String>,
     pub tags: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RaceLevelMutationRewardDefinition {
+    pub id: String,
+    pub minimum_level: u16,
+    pub selection: RaceMutationSelectionDefinition,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum RaceMutationSelectionDefinition {
+    Choice {
+        mutation_ids: Vec<String>,
+    },
+    CastingAttribute {
+        default_mutation_id: String,
+        #[serde(default)]
+        mutation_ids_by_attribute: BTreeMap<CastingAttribute, String>,
+    },
 }
 
 const fn default_shop_adjust_percent() -> u16 {
@@ -269,7 +301,7 @@ pub struct ClassLevelResistanceDefinition {
     pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum CastingAttribute {

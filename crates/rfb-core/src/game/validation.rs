@@ -23,6 +23,7 @@ impl Game {
                     | GameAction::LeaveWorldMap
                     | GameAction::TravelWorld { .. }
                     | GameAction::ConfigureMogaminator { .. }
+                    | GameAction::ChooseRaceMutation { .. }
                     | GameAction::InscribeItem { .. }
                     | GameAction::SetInterfaceLocale { .. }
             )

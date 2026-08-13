@@ -342,6 +342,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
             ability_books_by_id: &ability_books_by_id,
             ability_resources: &ability_resources,
             abilities: &content.abilities,
+            mutations: &content.mutations,
         },
         &mut all_ids,
     )?;
