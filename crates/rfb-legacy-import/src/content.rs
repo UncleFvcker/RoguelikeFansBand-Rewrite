@@ -230,6 +230,7 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "EGYPTIAN2"
             | "HINDU2"
             | "NORSE2"
+            | "OLYMPIAN2"
             | "RES_WALL"
             | "STUPID"
     )
@@ -7221,7 +7222,7 @@ fn melee_damage_type(token: &str) -> Option<&'static str> {
         "ICE" => Some("ice"),
         "WATER" => Some("water"),
         "POIS" => Some("poison"),
-        "MIND_BLAST" => Some("psi"),
+        "MIND_BLAST" | "BRAIN_SMASH" => Some("psi"),
         _ => None,
     }
 }
@@ -7395,6 +7396,18 @@ fn melee_effects_json(
                 "damageDice": 0,
                 "damageSides": 0,
             }),
+        ]);
+    }
+    if effect.token == "BRAIN_SMASH" {
+        if effect.chance_percent.is_some() {
+            return None;
+        }
+        return Some(vec![
+            melee_effect_json(effect, monster_level)?,
+            serde_json::json!({ "type": "blind" }),
+            serde_json::json!({ "type": "confusion", "damageDice": 0, "damageSides": 0 }),
+            serde_json::json!({ "type": "paralysis" }),
+            serde_json::json!({ "type": "slow" }),
         ]);
     }
     melee_effect_json(effect, monster_level).map(|effect| vec![effect])
@@ -7677,6 +7690,7 @@ fn map_jump_spell_token(
         "JMP_LIGHT" | "JMP_LITE" => "light",
         "JMP_NETHER" => "nether",
         "JMP_NEXUS" => "nexus",
+        "JMP_DISINTEGRATE" => "disintegrate",
         _ => return None,
     };
     let (damage_dice, damage_sides, damage_bonus) = match explicit {
@@ -8102,6 +8116,9 @@ fn monster_json(
     if entry.index == 286 {
         tags.push("gelatinous-cube".to_owned());
     }
+    if entry.index == 622 {
+        tags.push("night-mare".to_owned());
+    }
     for (flag, tag) in [
         ("ANIMAL", "animal"),
         ("EVIL", "evil"),
@@ -8319,7 +8336,9 @@ fn monster_json(
                 "FIRE" => "fire",
                 "ICE" => "ice",
                 "LIGHT" | "LITE" => "light",
+                "DARK" => "dark",
                 "NETHER" => "nether",
+                "DISINTEGRATE" => "disintegrate",
                 "HOLY_FIRE" => "holy-fire",
                 "CAUSE_2" | "CAUSE_3" => "curse",
                 "SHARDS" => "shards",
@@ -8670,7 +8689,9 @@ fn demo_monster_json(
                     | "ICE"
                     | "LIGHT"
                     | "LITE"
+                    | "DARK"
                     | "NETHER"
+                    | "DISINTEGRATE"
                     | "HOLY_FIRE"
                     | "CAUSE_2"
                     | "CAUSE_3"
@@ -8806,6 +8827,9 @@ fn demo_monster_json(
     }
     if entry.index == 286 {
         tags.insert("gelatinous-cube".to_owned());
+    }
+    if entry.index == 622 {
+        tags.insert("night-mare".to_owned());
     }
     if entry.flags.iter().any(|flag| flag == "KAGE") {
         tags.insert("shadower-appearance".to_owned());
@@ -9455,6 +9479,9 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_ANGEL" => ("angel", (1, 3, 1)),
         "S_EAGLE" => ("eagle", (1, 3, 1)),
         "S_LOUSE" => ("louse", (1, 3, 1)),
+        "S_NIGHTMARE" => ("night-mare", (1, 3, 1)),
+        "S_AMBERITE" => ("amberite", (1, 2, 0)),
+        "S_NAGA" => ("kin-glyph-110", (1, 3, 1)),
         _ => return None,
     };
     Some(entry)
@@ -9542,6 +9569,15 @@ fn map_summon_spell_token(
                     4,
                     0,
                     Some(3),
+                ),
+                "the-nightmare-dragon" => (
+                    "summon-night-mare-l39-1d3-2",
+                    "night-mare",
+                    39,
+                    1,
+                    3,
+                    2,
+                    None,
                 ),
                 _ => return None,
             };
@@ -13613,6 +13649,7 @@ mod tests {
         assert!(demo_monster_audit_omission_is_safe("EGYPTIAN2"));
         assert!(demo_monster_audit_omission_is_safe("HINDU2"));
         assert!(demo_monster_audit_omission_is_safe("NORSE2"));
+        assert!(demo_monster_audit_omission_is_safe("OLYMPIAN2"));
         assert!(demo_monster_flag_is_handled("AURA_REVENGE"));
         assert!(demo_monster_flag_is_handled("AURA_FEAR"));
         assert!(demo_monster_flag_is_handled("TANUKI"));
@@ -14599,8 +14636,12 @@ mod tests {
         assert_eq!(actor["contactAuras"][0]["damageDice"], 3);
         assert_eq!(actor["contactAuras"][0]["damageSides"], 3);
 
-        for (index, token, damage_type) in [(6, "NETHER", "nether"), (7, "HOLY_FIRE", "holy-fire")]
-        {
+        for (index, token, damage_type) in [
+            (6, "NETHER", "nether"),
+            (7, "HOLY_FIRE", "holy-fire"),
+            (8, "DARK", "dark"),
+            (9, "DISINTEGRATE", "disintegrate"),
+        ] {
             let source = format!(
                 "N:{index}:test P59A aura\nG:p:o\nI:120:6d6:100:30:0:25\nW:63:1:999:50:0:0\nB:HIT:HURT(1d8)\nA:{token}(3d3)\nF:NEVER_MOVE\n"
             );
@@ -15561,6 +15602,15 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
             ("JMP_FIRE", 31, "jump-fire-l31", "fire", 0, 0, 31),
             ("JMP_ICE", 50, "jump-ice-l50", "ice", 0, 0, 50),
             ("JMP_NETHER", 60, "jump-nether-l60", "nether", 0, 0, 60),
+            (
+                "JMP_DISINTEGRATE",
+                70,
+                "jump-disintegrate-l70",
+                "disintegrate",
+                0,
+                0,
+                70,
+            ),
             ("JMP_POISON", 32, "jump-poison-l32", "poison", 0, 0, 32),
             (
                 "JMP_CONFUSION",
@@ -15969,6 +16019,54 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
     }
 
     #[test]
+    fn p64b_summons_reuse_exact_existing_categories() {
+        let mut abilities = BTreeMap::new();
+        for (token, level, caster, expected_id, category, sides, bonus) in [
+            (
+                "S_NIGHTMARE",
+                65,
+                "demo.actor.grand-fearlord",
+                "rfb-legacy.ability.summon-night-mare-l65-1d3-1",
+                "night-mare",
+                3,
+                1,
+            ),
+            (
+                "S_AMBERITE",
+                68,
+                "demo.actor.tselakus-the-dreadlord",
+                "rfb-legacy.ability.summon-amberite-l68-1d2",
+                "amberite",
+                2,
+                0,
+            ),
+            (
+                "S_NAGA",
+                70,
+                "demo.actor.vasuki-the-serpent-king",
+                "rfb-legacy.ability.summon-kin-glyph-110-l70-1d3-1",
+                "kin-glyph-110",
+                3,
+                1,
+            ),
+        ] {
+            let id = map_spell_token(token, level, 2, caster, &mut abilities)
+                .unwrap_or_else(|| panic!("{token} should map"));
+            assert_eq!(id, expected_id);
+            let effect = &abilities[&id]["effect"];
+            assert_eq!(effect["type"], "summon-category");
+            assert_eq!(effect["category"], category);
+            assert_eq!(effect["maximumLevel"], level);
+            assert_eq!(effect["countDice"], 1);
+            assert_eq!(effect["countSides"], sides);
+            assert_eq!(
+                effect.get("countBonus").and_then(serde_json::Value::as_u64),
+                (bonus > 0).then_some(bonus)
+            );
+        }
+    }
+
+    #[test]
     fn special_summons_map_only_to_their_fixed_actor_categories() {
         let mut abilities = BTreeMap::new();
         let id = map_spell_token(
@@ -16057,6 +16155,24 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 { "actorKindId": "demo.actor.leprechaun-fanatic", "weight": 3 },
             ])
         );
+        let nightmare_id = map_spell_token(
+            "S_SPECIAL",
+            66,
+            3,
+            "demo.actor.the-nightmare-dragon",
+            &mut abilities,
+        )
+        .expect("Nightmare Dragon special should map");
+        assert_eq!(
+            nightmare_id,
+            "rfb-legacy.ability.summon-night-mare-l39-1d3-2"
+        );
+        let nightmare = &abilities[&nightmare_id]["effect"];
+        assert_eq!(nightmare["category"], "night-mare");
+        assert_eq!(nightmare["maximumLevel"], 39);
+        assert_eq!(nightmare["countDice"], 1);
+        assert_eq!(nightmare["countSides"], 3);
+        assert_eq!(nightmare["countBonus"], 2);
         assert!(
             map_spell_token(
                 "S_SPECIAL",
@@ -19319,5 +19435,41 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         assert_eq!(spear["effect"]["damageType"], "psi");
         assert_eq!(spear["effect"]["damageSides"], 45);
         assert_eq!(spear["effect"]["damageBonus"], 100);
+    }
+
+    #[test]
+    fn melee_brain_smash_reuses_psi_damage_and_status_riders() {
+        let mut monsters = parse_r_info(
+            "N:781:Ultimate beholder\nG:e:o\nI:120:40d100:30:80:10:100\nW:66:4:999:18000:0:0\nB:GAZE:BRAIN_SMASH(5d5)\nF:FORCE_MAXHP\n",
+        )
+        .expect("synthetic beholder should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 781,
+                source_id: None,
+                id: "ultimate-beholder".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("melee Brain Smash should import");
+        let effects = actor["meleeRoutine"]["blows"][0]["effects"]
+            .as_array()
+            .expect("Brain Smash should keep its effect sequence");
+        assert_eq!(effects.len(), 5);
+        assert_eq!(effects[0]["type"], "damage");
+        assert_eq!(effects[0]["damageType"], "psi");
+        assert_eq!(effects[0]["damageDice"], 5);
+        assert_eq!(effects[0]["damageSides"], 5);
+        assert_eq!(
+            effects[1..]
+                .iter()
+                .map(|effect| effect["type"].as_str().expect("effect type"))
+                .collect::<Vec<_>>(),
+            ["blind", "confusion", "paralysis", "slow"]
+        );
     }
 }

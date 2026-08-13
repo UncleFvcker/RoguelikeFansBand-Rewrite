@@ -1,0 +1,214 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 781,
+    "maxDepth": 999,
+    "rarity": 4
+  },
+  "attack": 16,
+  "damageDice": 5,
+  "damageSides": 5,
+  "damageType": "psi",
+  "defense": 8,
+  "descriptionKey": "actor-demo-ultimate-beholder-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 18000,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "e",
+  "hitPointDice": {
+    "dice": 40,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.ultimate-beholder",
+  "level": 66,
+  "maxHp": 4000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "psi",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "type": "paralysis"
+          },
+          {
+            "type": "slow"
+          },
+          {
+            "amountDice": 8,
+            "amountSides": 8,
+            "type": "drain-resource"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "amountDice": 40,
+            "amountSides": 6,
+            "type": "drain-experience"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "psi",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "type": "paralysis"
+          },
+          {
+            "type": "slow"
+          },
+          {
+            "type": "terrify"
+          },
+          {
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 5,
+            "damageSides": 5,
+            "damageType": "psi",
+            "type": "damage"
+          },
+          {
+            "type": "blind"
+          },
+          {
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          },
+          {
+            "type": "paralysis"
+          },
+          {
+            "type": "slow"
+          },
+          {
+            "type": "drain-charges"
+          },
+          {
+            "chancePercent": 25,
+            "type": "amnesia"
+          },
+          {
+            "attributes": [
+              "intelligence"
+            ],
+            "type": "drain-attributes"
+          }
+        ],
+        "methodId": "rfb.blow.gaze",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.gaze",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.mind-blast-7d7",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.darkness",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.kin-ultimate-beholder",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d231-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.dispel",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.anti-magic",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-dark-10d10-314",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 35,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "fly"
+    ]
+  },
+  "nameKey": "actor-demo-ultimate-beholder-name",
+  "remains": {
+    "chanceDenominator": 3,
+    "corpseItemKindId": "demo.item.corpse-remains",
+    "corpseWeight": 1,
+    "skeletonWeight": 0
+  },
+  "resistances": {
+    "poison": "resistant"
+  },
+  "role": "monster",
+  "speed": 120,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "evil",
+    "kin-glyph-101",
+    "legacy-import",
+    "orc-cave",
+    "resist-teleport"
+  ]
+}

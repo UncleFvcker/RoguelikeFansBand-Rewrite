@@ -315,6 +315,8 @@ pub(super) fn validate_actors(
                         | ActorDamageType::Nether
                         | ActorDamageType::HolyFire
                         | ActorDamageType::Electricity
+                        | ActorDamageType::Dark
+                        | ActorDamageType::Disintegrate
                         | ActorDamageType::Curse
                         | ActorDamageType::Shards
                 ) || !(1..=100).contains(&aura.damage_dice)

@@ -422,3 +422,17 @@ git diff --stat
 - 共享协调点：pack `1.302.0` / content hash
   `0540fb39f3943d390b72fc7815db4e365f68c19e86e3835f91ce4bb04d1c11a0`；Protocol `1.189`、
   State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
+
+## 26. monsters-next 当前交接（P64B 低风险共享映射）
+
+- 导入 7 个 actor：恐惧领主、睡神许普诺斯、终极眼魔、噩梦巨龙、恐惧领主特塞拉库斯、
+  解离蜘蛛、蛇王婆苏吉；全部保留 RFB master 的 source index、层级和 Orc Cave 分配。
+- `S_NIGHTMARE` 与噩梦巨龙的 `S_SPECIAL` 精确召唤梦魇，数量分别为 `1d3+1`、`1d3+2`；
+  `S_AMBERITE`、`S_NAGA` 复用现有分类召唤及唯一额度检查。许普诺斯的 `OLYMPIAN2`
+  作为尚未开放神系的来源元数据显式省略。
+- `BRAIN_SMASH` 复用 psi 伤害与致盲、混乱、麻痹、减速序列；`JMP_DISINTEGRATE` 复用
+  `JumpDamage`。特塞拉库斯和解离蜘蛛保留原版 `DARK`、`DISINTEGRATE` 接触光环；只放宽
+  内容验证对既有伤害类型的准入，没有新增 DTO、运行时、协议、存档或 state-hash 字段。
+- 共享协调点：pack `1.303.0` / content hash
+  `3ee672ec81f6a4c858ee72f01578c5cbf6383ffa990f9769312838ae7f1a0daa`；Protocol `1.189`、
+  State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。

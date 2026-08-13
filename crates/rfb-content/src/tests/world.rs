@@ -733,7 +733,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 623);
+    assert_eq!(orc_cave.len(), 630);
 
     for id in [
         "demo.actor.bunyip",
@@ -781,8 +781,8 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 11, 0, 8, 3,
-            6, 7,
+            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 2, 9, 4,
+            6, 9,
         ]
     );
 
@@ -5081,6 +5081,143 @@ fn p64a_level_69_70_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p64b_low_risk_mappings_keep_source_semantics() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+    let ability = |id: &str| {
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, legacy_index, level) in [
+        ("grand-fearlord", 1121, 65),
+        ("ultimate-beholder", 781, 66),
+        ("the-nightmare-dragon", 1215, 66),
+        ("hypnos-lord-of-sleep", 787, 67),
+        ("tselakus-the-dreadlord", 792, 68),
+        ("disintegrate-spider", 1175, 70),
+        ("vasuki-the-serpent-king", 1360, 70),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+    }
+
+    assert!(
+        actor("night-mare")
+            .tags
+            .iter()
+            .any(|tag| tag == "night-mare")
+    );
+    for (id, expected_category, maximum_level, count_sides, count_bonus) in [
+        ("summon-night-mare-l65-1d3-1", "night-mare", 65, 3, 1),
+        ("summon-night-mare-l67-1d3-1", "night-mare", 67, 3, 1),
+        ("summon-amberite-l68-1d2", "amberite", 68, 2, 0),
+        ("summon-kin-glyph-110-l70-1d3-1", "kin-glyph-110", 70, 3, 1),
+    ] {
+        assert!(
+            matches!(
+                ability(id).effect,
+                AbilityEffectDefinition::SummonCategory {
+                    ref category,
+                    maximum_level: actual_level,
+                    count_dice: 1,
+                    count_sides: actual_sides,
+                    count_bonus: actual_bonus,
+                    ..
+                } if category == expected_category
+                    && actual_level == maximum_level
+                    && actual_sides == count_sides
+                    && actual_bonus == count_bonus
+            ),
+            "{id}"
+        );
+    }
+    assert!(matches!(
+        ability("summon-night-mare-l39-1d3-2").effect,
+        AbilityEffectDefinition::SummonCategory {
+            ref category,
+            maximum_level: 39,
+            count_dice: 1,
+            count_sides: 3,
+            count_bonus: 2,
+            ..
+        } if category == "night-mare"
+    ));
+    assert!(matches!(
+        ability("jump-disintegrate-l70").effect,
+        AbilityEffectDefinition::JumpDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 70,
+            damage_multiplier_numerator: 5,
+            damage_multiplier_denominator: 4,
+            damage_type: ActorDamageType::Disintegrate,
+            radius: 5,
+            blink_radius: 10,
+        }
+    ));
+    for (id, damage_type, dice, sides) in [
+        ("tselakus-the-dreadlord", ActorDamageType::Dark, 3, 4),
+        ("disintegrate-spider", ActorDamageType::Disintegrate, 3, 3),
+    ] {
+        let aura = &actor(id).contact_auras[0];
+        assert_eq!(aura.damage_type, damage_type, "{id} aura type");
+        assert_eq!((aura.damage_dice, aura.damage_sides), (dice, sides));
+    }
+
+    let brain_smash = &actor("ultimate-beholder")
+        .melee_routine
+        .as_ref()
+        .expect("Ultimate beholder should retain melee")
+        .blows[0]
+        .effects;
+    assert!(matches!(
+        brain_smash[0],
+        MeleeBlowEffectDefinition::Damage {
+            damage_type: ActorDamageType::Psi,
+            damage_dice: 5,
+            damage_sides: 5,
+            ..
+        }
+    ));
+    assert!(matches!(
+        brain_smash[1],
+        MeleeBlowEffectDefinition::Blind { .. }
+    ));
+    assert!(matches!(
+        brain_smash[2],
+        MeleeBlowEffectDefinition::Confusion { .. }
+    ));
+    assert!(matches!(
+        brain_smash[3],
+        MeleeBlowEffectDefinition::Paralysis { .. }
+    ));
+    assert!(matches!(
+        brain_smash[4],
+        MeleeBlowEffectDefinition::Slow { .. }
+    ));
+}
+
+#[test]
 fn p59a_nether_jump_and_contact_auras_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -7186,7 +7323,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        567
+        572
     );
 }
 
