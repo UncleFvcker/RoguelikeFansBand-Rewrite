@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.day-of-ragnarok",
+  "nameKey": "item-demo-day-of-ragnarok-name",
+  "descriptionKey": "item-demo-day-of-ragnarok-description",
+  "glyph": "?",
+  "weightTenthsPound": 30,
+  "baseValue": 100000,
+  "generationLevel": 85,
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "elementalDestructionVulnerabilities": [
+    "fire"
+  ],
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "abilityBookId": "demo.ability-book.day-of-ragnarok",
+  "tags": [
+    "armageddon",
+    "book",
+    "spellbook"
+  ]
+}

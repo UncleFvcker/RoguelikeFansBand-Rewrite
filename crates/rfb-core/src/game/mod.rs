@@ -208,7 +208,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 98;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 99;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -3734,6 +3734,15 @@ impl Game {
         path: Vec<Position>,
         stop_at_actor: bool,
     ) -> (ProjectileTrace, Option<usize>) {
+        self.trace_projectile_path_with_damage_policy(path, stop_at_actor, None)
+    }
+
+    fn trace_projectile_path_with_damage_policy(
+        &self,
+        path: Vec<Position>,
+        stop_at_actor: bool,
+        damage_type: Option<DamageType>,
+    ) -> (ProjectileTrace, Option<usize>) {
         let origin = self.player.position;
         let mut impact = origin;
         let mut landing = origin;
@@ -3741,7 +3750,17 @@ impl Game {
         let mut target_index = None;
         for position in path {
             impact = position;
-            if self.index(position).is_none() || !self.is_walkable(position) {
+            let traversable = self.index(position).is_some_and(|index| {
+                if damage_type == Some(DamageType::Disintegrate) {
+                    !self
+                        .content
+                        .terrain(&self.terrain[index])
+                        .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "permanent"))
+                } else {
+                    self.is_walkable(position)
+                }
+            });
+            if !traversable {
                 break;
             }
             landing = position;
@@ -3836,8 +3855,15 @@ impl Game {
         centerline: &[Position],
         direction: Direction,
         radius: u8,
+        damage_type: DamageType,
     ) -> (Vec<Position>, Vec<(String, u32)>) {
-        let cells = self.cone_damage_cells(self.player.position, centerline, direction, radius);
+        let cells = self.cone_damage_cells(
+            self.player.position,
+            centerline,
+            direction,
+            radius,
+            damage_type,
+        );
         let affected_positions = cells.iter().map(|(_, _, position)| *position).collect();
         let targets = cells
             .iter()
@@ -3857,6 +3883,7 @@ impl Game {
         centerline: &[Position],
         direction: Direction,
         radius: u8,
+        damage_type: DamageType,
     ) -> Vec<(i32, u32, Position)> {
         let depth = i32::try_from(centerline.len()).unwrap_or(i32::MAX);
         if depth == 0 {
@@ -3894,7 +3921,11 @@ impl Game {
                         || forward <= 0
                         || lateral > forward
                         || self.index(position).is_none()
-                        || !has_line_of_effect(self, origin, position)
+                        || if damage_type == DamageType::Disintegrate {
+                            !has_disintegration_line_of_effect(self, origin, position)
+                        } else {
+                            !has_line_of_effect(self, origin, position)
+                        }
                     {
                         continue;
                     }
@@ -7976,6 +8007,43 @@ fn has_line_of_effect(game: &Game, from: Position, to: Position) -> bool {
         }
         if game.index(Position { x, y }).is_none() {
             return false;
+        }
+    }
+}
+
+fn has_disintegration_line_of_effect(game: &Game, from: Position, to: Position) -> bool {
+    let mut x = from.x;
+    let mut y = from.y;
+    let dx = (to.x - from.x).abs();
+    let dy = (to.y - from.y).abs();
+    let step_x = if from.x < to.x { 1 } else { -1 };
+    let step_y = if from.y < to.y { 1 } else { -1 };
+    let mut error = dx - dy;
+
+    loop {
+        let position = Position { x, y };
+        let Some(index) = game.index(position) else {
+            return false;
+        };
+        if position != from
+            && game
+                .content
+                .terrain(&game.terrain[index])
+                .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "permanent"))
+        {
+            return false;
+        }
+        if position == to {
+            return true;
+        }
+        let double_error = error * 2;
+        if double_error > -dy {
+            error -= dy;
+            x += step_x;
+        }
+        if double_error < dx {
+            error += dx;
+            y += step_y;
         }
     }
 }

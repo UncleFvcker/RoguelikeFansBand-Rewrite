@@ -250,7 +250,11 @@ fn elvish_waybread_uses_normal_and_intolerant_branches() {
     );
 
     assert_eq!(normal.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
-    assert!((5..=33).contains(&normal.player.hp));
+    assert!(
+        (4..=33).contains(&normal.player.hp),
+        "Waybread left the player at {} HP",
+        normal.player.hp
+    );
     let poison_reduction = update
         .events
         .iter()

@@ -2354,6 +2354,7 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_FIRST_BOOK_SVAL) => Some(ARMAGEDDON_FIRST_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_SECOND_BOOK_SVAL) => Some(ARMAGEDDON_SECOND_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_THIRD_BOOK_SVAL) => Some(ARMAGEDDON_THIRD_BOOK_ID),
+        (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_FOURTH_BOOK_SVAL) => Some(ARMAGEDDON_FOURTH_BOOK_ID),
         _ => None,
     }
 }
@@ -9171,6 +9172,8 @@ const ARMAGEDDON_SECOND_BOOK_SVAL: u16 = 1;
 const ARMAGEDDON_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.armageddon-earth-wind-and-fire";
 const ARMAGEDDON_THIRD_BOOK_SVAL: u16 = 2;
 const ARMAGEDDON_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.armageddon-path-of-destruction";
+const ARMAGEDDON_FOURTH_BOOK_SVAL: u16 = 3;
+const ARMAGEDDON_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.armageddon-day-of-ragnarok";
 const LEGACY_VAMPIRE_LORD_RACE_ID: &str = "rfb-legacy.race.vampire-lord-form";
 const LEGACY_VAMPIRE_LORD_SKILL_SET_ID: &str = "rfb-legacy.skill-set.race-vampire-lord-form";
 const LEGACY_SLAYING_WEAPON_AFFIX_ID: &str = "rfb-legacy.affix.slaying";
@@ -18271,6 +18274,7 @@ F:BRAND_VAMP | HOLD_LIFE
             (ARMAGEDDON_FIRST_BOOK_SVAL, ARMAGEDDON_FIRST_BOOK_ID),
             (ARMAGEDDON_SECOND_BOOK_SVAL, ARMAGEDDON_SECOND_BOOK_ID),
             (ARMAGEDDON_THIRD_BOOK_SVAL, ARMAGEDDON_THIRD_BOOK_ID),
+            (ARMAGEDDON_FOURTH_BOOK_SVAL, ARMAGEDDON_FOURTH_BOOK_ID),
         ] {
             let armageddon_book = LegacyItemEntry {
                 tval: ARMAGEDDON_BOOK_TVAL,

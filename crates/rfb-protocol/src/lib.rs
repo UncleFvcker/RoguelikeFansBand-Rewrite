@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.199";
+pub const PROTOCOL_VERSION: &str = "1.200";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -2938,6 +2938,7 @@ pub struct EntityDto {
     pub speed: u16,
     #[serde(default = "default_monster_energy_need")]
     pub energy_need: i32,
+    pub minor_slow: u8,
     #[serde(default = "default_actor_alerted")]
     pub alerted: bool,
     #[serde(default)]
@@ -4066,6 +4067,7 @@ pub struct ActorSaveDto {
     pub base_speed: u16,
     #[serde(default = "default_monster_energy_need")]
     pub energy_need: i32,
+    pub minor_slow: u8,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub alerted: Option<bool>,
     pub nice: bool,
@@ -4949,6 +4951,7 @@ mod tests {
                 max_hp: 3,
                 speed: 110,
                 energy_need: 100,
+                minor_slow: 0,
                 alerted: true,
                 casting_cooldown_remaining: 0,
                 observed_player_resistances: Vec::new(),

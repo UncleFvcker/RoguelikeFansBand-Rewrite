@@ -25,6 +25,7 @@ fn projectile_destroys_tree(damage_type: DamageType) -> bool {
             | DamageType::Ice
             | DamageType::Meteor
             | DamageType::Rocket
+            | DamageType::Disintegrate
     )
 }
 
@@ -36,7 +37,8 @@ pub(super) fn ground_item_damage_type_for_ability_effect(
         | AbilityEffectDefinition::AreaDamage { damage_type, .. }
         | AbilityEffectDefinition::BeamDamage { damage_type, .. }
         | AbilityEffectDefinition::BoltOrBeamDamage { damage_type, .. }
-        | AbilityEffectDefinition::BoltOrAreaDamage { damage_type, .. } => {
+        | AbilityEffectDefinition::BoltOrAreaDamage { damage_type, .. }
+        | AbilityEffectDefinition::ConeDamage { damage_type, .. } => {
             Some(DamageType::from(*damage_type))
         }
         AbilityEffectDefinition::Malediction { .. } => Some(DamageType::HellFire),
@@ -51,6 +53,24 @@ impl Game {
         damage_type: DamageType,
         changed: &mut BTreeSet<Position>,
     ) {
+        if damage_type == DamageType::Disintegrate {
+            for position in affected_positions.iter().copied().collect::<BTreeSet<_>>() {
+                let Some(index) = self.index(position) else {
+                    continue;
+                };
+                let Some(target_id) = self
+                    .content
+                    .terrain(&self.terrain[index])
+                    .and_then(|terrain| terrain.monster_destroy_to_terrain_id.clone())
+                else {
+                    continue;
+                };
+                if self.terrain[index] != target_id {
+                    self.terrain[index] = target_id;
+                    changed.insert(position);
+                }
+            }
+        }
         if !projectile_destroys_tree(damage_type)
             || self.content.terrain(SURFACE_GRASS_TERRAIN_ID).is_none()
         {

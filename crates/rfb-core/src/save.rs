@@ -84,6 +84,7 @@ pub(crate) fn actor_from_spawn(
         power_per_mille: BASE_ACTOR_POWER_PER_MILLE,
         speed,
         energy_need,
+        minor_slow: 0,
         alerted,
         nice: false,
         visible_invisible: false,
@@ -119,6 +120,7 @@ pub(crate) fn actor_from_runtime_spawn(
         power_per_mille: BASE_ACTOR_POWER_PER_MILLE,
         speed,
         energy_need,
+        minor_slow: 0,
         alerted,
         nice: false,
         visible_invisible: false,
@@ -167,6 +169,7 @@ pub(crate) fn actor_from_player(
         power_per_mille: BASE_ACTOR_POWER_PER_MILLE,
         speed: player.base_speed,
         energy_need: player.energy_need,
+        minor_slow: 0,
         alerted: true,
         nice: false,
         visible_invisible: false,
@@ -254,6 +257,9 @@ pub(crate) fn actor_from_entity(
     if entity.power_per_mille < 100 {
         return Err(CoreError::InvalidSave("entity power is invalid"));
     }
+    if entity.minor_slow > 10 {
+        return Err(CoreError::InvalidSave("entity minor slow is invalid"));
+    }
     if definition.evolution.as_ref().map_or_else(
         || entity.experience != 0,
         |evolution| entity.experience >= evolution.required_experience,
@@ -275,6 +281,7 @@ pub(crate) fn actor_from_entity(
         power_per_mille: entity.power_per_mille,
         speed: entity.base_speed,
         energy_need: entity.energy_need,
+        minor_slow: entity.minor_slow,
         alerted: entity.alerted.unwrap_or_else(|| {
             runtime_definition
                 .awareness
@@ -787,6 +794,7 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             power_per_mille: entity.power_per_mille,
             base_speed: entity.speed,
             energy_need: entity.energy_need,
+            minor_slow: entity.minor_slow,
             alerted: Some(entity.alerted),
             nice: entity.nice,
             visible_invisible: entity.visible_invisible,

@@ -3,6 +3,20 @@
 use super::*;
 
 impl Game {
+    pub(super) fn process_monster_minor_slow_recovery(&mut self, index: usize) {
+        let minor_slow = self.entities[index].minor_slow;
+        if minor_slow == 0 {
+            return;
+        }
+        let regenerates = self
+            .actor_runtime_definition(&self.entities[index])
+            .is_some_and(|definition| definition.regenerates);
+        let denominator = if regenerates { 50 } else { 100 };
+        if self.rng.bounded(denominator) < u64::from(minor_slow) {
+            self.entities[index].minor_slow -= 1;
+        }
+    }
+
     pub(super) fn try_clear_monster_confusion(
         &mut self,
         index: usize,
@@ -622,6 +636,7 @@ impl Game {
                 continue;
             }
             spend_energy(&mut self.entities[index].energy_need, STANDARD_ACTION_COST);
+            self.process_monster_minor_slow_recovery(index);
             if self.resolve_neglected_pet(
                 index,
                 pet_neglect_allowed,

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.armageddon-breathe-shards",
+  "nameKey": "ability-demo-armageddon-breathe-shards-name",
+  "descriptionKey": "ability-demo-armageddon-breathe-shards-description",
+  "abilityProgramId": "demo.ability-program.armageddon-breathe-shards",
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  },
+  "affectsGroundItems": true,
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "levelOffset": 1,
+      "multiplier": 10,
+      "divisor": 1
+    },
+    {
+      "effectIndex": 0,
+      "field": "radius",
+      "levelOffset": 1,
+      "multiplier": 1,
+      "divisor": 40
+    }
+  ],
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    }
+  ],
+  "tags": [
+    "armageddon",
+    "breath",
+    "cone",
+    "shards",
+    "spell"
+  ]
+}

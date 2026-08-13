@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 177,
+      "rngDrawCounter": 179,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -159,6 +159,16 @@
           "stock": [
             {
               "id": "generated.item.107",
+              "kindId": "demo.item.ration-of-food",
+              "displayNameKey": "item-demo-ration-of-food-name",
+              "quantity": 4,
+              "maximumQuantity": 4,
+              "unitPrice": 3,
+              "weightTenthsPound": 10,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.108",
               "kindId": "demo.item.piece-of-elvish-waybread",
               "displayNameKey": "item-demo-piece-of-elvish-waybread-name",
               "quantity": 1,
@@ -168,11 +178,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.108",
+              "id": "generated.item.109",
               "kindId": "demo.item.wooden-torch",
               "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 1,
               "weightTenthsPound": 30,
               "fuel": {
@@ -187,8 +197,8 @@
               "id": "generated.item.110",
               "kindId": "demo.item.brass-lantern",
               "displayNameKey": "item-demo-brass-lantern-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 30,
               "weightTenthsPound": 50,
               "fuel": {
@@ -200,11 +210,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.112",
+              "id": "generated.item.111",
               "kindId": "demo.item.flask-of-oil",
               "displayNameKey": "item-demo-flask-of-oil-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "fuel": {
@@ -216,47 +226,47 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.113",
+              "id": "generated.item.112",
               "kindId": "demo.item.fabric-bag",
               "displayNameKey": "item-demo-fabric-bag-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 3,
+              "maximumQuantity": 3,
               "unitPrice": 30,
               "weightTenthsPound": 10,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.114",
+              "id": "generated.item.115",
               "kindId": "demo.item.hard-biscuit",
               "displayNameKey": "item-demo-hard-biscuit-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
-              "unitPrice": 1,
-              "weightTenthsPound": 2,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.115",
-              "kindId": "demo.item.strip-of-venison",
-              "displayNameKey": "item-demo-strip-of-venison-name",
               "quantity": 4,
               "maximumQuantity": 4,
-              "unitPrice": 2,
+              "unitPrice": 1,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
               "id": "generated.item.116",
-              "kindId": "demo.item.water-potion",
-              "displayNameKey": "item-demo-water-potion-name",
+              "kindId": "demo.item.strip-of-venison",
+              "displayNameKey": "item-demo-strip-of-venison-name",
               "quantity": 1,
               "maximumQuantity": 1,
+              "unitPrice": 2,
+              "weightTenthsPound": 2,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.117",
+              "kindId": "demo.item.water-potion",
+              "displayNameKey": "item-demo-water-potion-name",
+              "quantity": 5,
+              "maximumQuantity": 5,
               "unitPrice": 1,
               "weightTenthsPound": 4,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.117",
+              "id": "generated.item.118",
               "kindId": "demo.item.apple-juice",
               "displayNameKey": "item-demo-apple-juice-name",
               "quantity": 5,
@@ -266,7 +276,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.118",
+              "id": "generated.item.119",
               "kindId": "demo.item.pint-of-fine-ale",
               "displayNameKey": "item-demo-pint-of-fine-ale-name",
               "quantity": 5,
@@ -276,13 +286,23 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.119",
+              "id": "generated.item.120",
               "kindId": "demo.item.pint-of-fine-wine",
               "displayNameKey": "item-demo-pint-of-fine-wine-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
+              "quantity": 4,
+              "maximumQuantity": 4,
               "unitPrice": 2,
               "weightTenthsPound": 10,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.121",
+              "kindId": "demo.item.capture-ball",
+              "displayNameKey": "item-demo-capture-ball-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 1000,
+              "weightTenthsPound": 120,
               "quality": "ordinary"
             }
           ],
@@ -1764,7 +1784,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 185,
+      "nextItemInstanceSerial": 188,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1772,7 +1792,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "eea875af522bb0af48e740de7dc96e200edc66c6df5b2d4508c6c3503b30205d"
+      "stateHash": "672c47aab9da083738768dc7873c349ee5f167449a01feea4cb1d742df19324b"
     },
     "events": [
       {

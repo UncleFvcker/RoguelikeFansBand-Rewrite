@@ -177,6 +177,7 @@
     { "sourceIndex": 544, "sourceName": "[Book of Elements]", "sourceId": "book-of-elements", "itemId": "demo.item.book-of-elements", "status": "active", "contract": "class-high-mage-armageddon-first-book" },
     { "sourceIndex": 545, "sourceName": "[Earth, Wind and Fire]", "sourceId": "earth-wind-and-fire", "itemId": "demo.item.earth-wind-and-fire", "status": "active", "contract": "class-high-mage-armageddon-second-book" },
     { "sourceIndex": 546, "sourceName": "[Path of Destruction]", "sourceId": "path-of-destruction", "itemId": "demo.item.path-of-destruction", "status": "active", "contract": "class-high-mage-armageddon-third-book" },
+    { "sourceIndex": 547, "sourceName": "[Day of Ragnarok]", "sourceId": "day-of-ragnarok", "itemId": "demo.item.day-of-ragnarok", "status": "active", "contract": "class-high-mage-armageddon-fourth-book" },
     { "sourceIndex": 600, "sourceName": "Wooden Torch", "sourceId": "wooden-torch", "itemId": "demo.item.wooden-torch", "status": "active", "contract": "contract-v159-fuel-light" },
     { "sourceIndex": 601, "sourceName": "Brass Lantern", "sourceId": "brass-lantern", "itemId": "demo.item.brass-lantern", "status": "active", "contract": "contract-v159-fuel-light" },
     { "sourceIndex": 602, "sourceName": "Flask of oil", "sourceId": "flask-of-oil", "itemId": "demo.item.flask-of-oil", "status": "active", "contract": "contract-v159-fuel-light" },

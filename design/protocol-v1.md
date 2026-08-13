@@ -667,3 +667,8 @@ state-hash 输入，State Hash Schema 保持 v97，save 容器保持 v1。
 `invulnerability` 的窄化能力规格及结构化结算结果。`StatModifiersDto` 增加装置强度修正，
 作为状态授予的权威数值进入存档和 state-hash 输入，因此 State Hash Schema 升至 v98；
 save 容器保持 v1，且不兼容缺少该字段的旧开发存档。
+
+1.200 为毁灭第四册的迟缓吐息增加怪物专用 `minorSlow`：`EntityDto` 与
+`ActorSaveDto` 均增加必填的 0..10 数值。它独立影响怪物速度，并在怪物行动后按普通
+怪物 1/100、再生怪物 1/50 的原版检定恢复。该权威状态进入 State Hash Schema v99；
+save 容器保持 v1，且不兼容缺少该字段的旧开发存档。

@@ -5794,6 +5794,12 @@
           "format": "int32",
           "default": 0
         },
+        "minorSlow": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
         "observedPlayerResistances": {
           "type": "array",
           "items": {
@@ -5834,7 +5840,8 @@
         "glyph",
         "position",
         "hp",
-        "maxHp"
+        "maxHp",
+        "minorSlow"
       ]
     },
     "EntityFactionDto": {

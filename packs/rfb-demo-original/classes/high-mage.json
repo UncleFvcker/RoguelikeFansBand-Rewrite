@@ -194,7 +194,8 @@
         "abilityBookIds": [
           "demo.ability-book.book-of-elements",
           "demo.ability-book.earth-wind-and-fire",
-          "demo.ability-book.path-of-destruction"
+          "demo.ability-book.path-of-destruction",
+          "demo.ability-book.day-of-ragnarok"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -221,7 +222,15 @@
           { "abilityId": "demo.ability.armageddon-breathe-fire", "minimumLevel": 24, "resourceCost": 22, "baseFailurePercent": 60 },
           { "abilityId": "demo.ability.armageddon-breathe-acid", "minimumLevel": 26, "resourceCost": 23, "baseFailurePercent": 60 },
           { "abilityId": "demo.ability.armageddon-breathe-plasma", "minimumLevel": 28, "resourceCost": 28, "baseFailurePercent": 60 },
-          { "abilityId": "demo.ability.armageddon-breathe-gravity", "minimumLevel": 36, "resourceCost": 30, "baseFailurePercent": 60 }
+          { "abilityId": "demo.ability.armageddon-breathe-gravity", "minimumLevel": 36, "resourceCost": 30, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.armageddon-mana-bolt", "minimumLevel": 19, "resourceCost": 12, "baseFailurePercent": 45 },
+          { "abilityId": "demo.ability.armageddon-plasma-ball", "minimumLevel": 22, "resourceCost": 17, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.armageddon-mana-ball", "minimumLevel": 30, "resourceCost": 22, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.armageddon-breathe-sound", "minimumLevel": 35, "resourceCost": 26, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.armageddon-breathe-inertia", "minimumLevel": 38, "resourceCost": 28, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.armageddon-breathe-disintegration", "minimumLevel": 40, "resourceCost": 40, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.armageddon-breathe-mana", "minimumLevel": 42, "resourceCost": 43, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.armageddon-breathe-shards", "minimumLevel": 44, "resourceCost": 49, "baseFailurePercent": 75 }
         ]
       }
     ]

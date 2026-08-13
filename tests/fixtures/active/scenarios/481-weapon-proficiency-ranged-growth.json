@@ -25,6 +25,7 @@
         "maxHp": 84,
         "baseSpeed": 109,
         "energyNeed": 100,
+        "minorSlow": 0,
         "alerted": false,
         "nice": false,
         "visibleInvisible": false,
@@ -46,7 +47,7 @@
       "turn": 1,
       "worldTick": 9,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 180,
+      "rngDrawCounter": 178,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1177,12 +1178,12 @@
             "x": 46,
             "y": 16
           },
-          "hp": 68,
+          "hp": 84,
           "speed": 109,
           "energyNeed": 19
         }
       ],
-      "groundItemCount": 3,
+      "groundItemCount": 2,
       "inventoryStackCount": 5,
       "equipmentCount": 3,
       "inventory": [
@@ -1492,10 +1493,6 @@
           "discovered": true
         },
         {
-          "itemId": "generated.item.179",
-          "discovered": true
-        },
-        {
           "itemId": "generated.item.2",
           "discovered": true
         },
@@ -1530,7 +1527,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 180,
+      "nextItemInstanceSerial": 182,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1538,26 +1535,14 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c5d27bb407d5ec69e05f98a9006d5144977d3a755ace9de1b96c6b69cbdb0aa1"
+      "stateHash": "2d6d2c83ea3bb704727f250827932718494a06e889dbe330ef2b9ff98078588e"
     },
     "events": [
       {
-        "kind": "combat.projectile-hit",
-        "messageKey": "projectile-hit",
+        "kind": "combat.projectile-miss",
+        "messageKey": "projectile-miss",
         "args": {
-          "damage": "16",
           "target": "demo.actor.adobe-golem"
-        },
-        "outcome": {
-          "type": "damage",
-          "resolution": {
-            "rawDamage": 20,
-            "armorReduction": 4,
-            "resistanceAdjustment": 0,
-            "finalDamage": 16,
-            "damageType": "physical",
-            "resistance": "normal"
-          }
         },
         "trace": {
           "origin": {
@@ -1585,8 +1570,8 @@
         }
       },
       {
-        "kind": "combat.projectile-ammo-recovered",
-        "messageKey": "projectile-ammo-recovered",
+        "kind": "combat.projectile-ammo-broken",
+        "messageKey": "projectile-ammo-broken",
         "args": {
           "target": "demo.item.arrow"
         }

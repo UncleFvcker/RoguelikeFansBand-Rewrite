@@ -30,7 +30,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 177,
+      "rngDrawCounter": 179,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1614,7 +1614,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 185,
+      "nextItemInstanceSerial": 187,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "retired",
@@ -1624,7 +1624,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "a4a8607accbbb79f541ea15ab03cbcb12ab7d4cc23558bb9d33e2193ee0310ce"
+      "stateHash": "cbe508c25d5e96810276babaecbe55fd9a078c34b3ce685b38ea45679ce0afa1"
     },
     "events": [
       {
@@ -1639,9 +1639,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "a4a8607accbbb79f541ea15ab03cbcb12ab7d4cc23558bb9d33e2193ee0310ce"
+        "stateHash": "cbe508c25d5e96810276babaecbe55fd9a078c34b3ce685b38ea45679ce0afa1"
       }
     ],
-    "saveRoundTripStateHash": "a4a8607accbbb79f541ea15ab03cbcb12ab7d4cc23558bb9d33e2193ee0310ce"
+    "saveRoundTripStateHash": "cbe508c25d5e96810276babaecbe55fd9a078c34b3ce685b38ea45679ce0afa1"
   }
 }

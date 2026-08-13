@@ -1516,6 +1516,25 @@ impl Game {
             base_source,
             i32::from(actor.speed),
         );
+        if actor.minor_slow > 0 {
+            let has_slow = actor
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_SLOW);
+            let penalty = if has_slow {
+                actor.minor_slow / 4
+            } else {
+                actor.minor_slow
+            };
+            if penalty > 0 {
+                pipeline.add(
+                    StatKind::Speed,
+                    StatLayer::Status,
+                    "rfb.status.monster-minor-slow",
+                    -i32::from(penalty),
+                );
+            }
+        }
         if include_equipment
             && let Some(mount_id) = self.riding_actor_id.as_deref()
             && let Some(mount) = self.entities.iter().find(|entity| entity.id == mount_id)

@@ -91,6 +91,14 @@ fn armageddon_high_mage_game(seed: u64, level: u16) -> Game {
             "demo.ability.armageddon-breathe-acid",
             "demo.ability.armageddon-breathe-plasma",
             "demo.ability.armageddon-breathe-gravity",
+            "demo.ability.armageddon-mana-bolt",
+            "demo.ability.armageddon-plasma-ball",
+            "demo.ability.armageddon-mana-ball",
+            "demo.ability.armageddon-breathe-sound",
+            "demo.ability.armageddon-breathe-inertia",
+            "demo.ability.armageddon-breathe-disintegration",
+            "demo.ability.armageddon-breathe-mana",
+            "demo.ability.armageddon-breathe-shards",
         ]
         .into_iter()
         .map(str::to_owned),
@@ -104,6 +112,11 @@ fn armageddon_high_mage_game(seed: u64, level: u16) -> Game {
         &mut game,
         "test.path-of-destruction",
         "demo.item.path-of-destruction",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.day-of-ragnarok",
+        "demo.item.day-of-ragnarok",
     );
     game.refresh_player_resource_maxima();
     game.resources
@@ -200,6 +213,7 @@ fn armageddon_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
     assert!(!carried.contains("demo.item.beginners-handbook"));
     assert!(!carried.contains("demo.item.earth-wind-and-fire"));
     assert!(!carried.contains("demo.item.path-of-destruction"));
+    assert!(!carried.contains("demo.item.day-of-ragnarok"));
 
     let learned = game
         .snapshot()
@@ -208,7 +222,7 @@ fn armageddon_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 24);
+    assert_eq!(learned.len(), 32);
     assert!(
         learned
             .iter()
@@ -791,6 +805,370 @@ fn armageddon_ice_and_water_use_original_resistance_and_stun_rules() {
             .statuses
             .iter()
             .any(|status| status.kind_id == STATUS_STUN)
+    );
+}
+
+#[test]
+fn armageddon_fourth_book_projects_original_formulas_and_breath_radius_boundary() {
+    for (level, radius, mana_sides, ball_bonuses, cone_bonuses) in [
+        (40, 2, 200, [182, 272], [252, 212, 292, 372, 412]),
+        (41, 3, 205, [184, 276], [258, 217, 299, 381, 422]),
+    ] {
+        let projected = armageddon_high_mage_game(0x5241_474e_4152_0000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        assert!(matches!(
+            projected["demo.ability.armageddon-mana-bolt"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::Damage {
+                damage_dice: 1,
+                damage_sides,
+                damage_bonus: 63,
+                damage_type: DamageTypeDto::Mana,
+                ..
+            }] if *damage_sides == mana_sides
+        ));
+        for (id, damage_type, damage_bonus) in [
+            (
+                "demo.ability.armageddon-plasma-ball",
+                DamageTypeDto::Plasma,
+                ball_bonuses[0],
+            ),
+            (
+                "demo.ability.armageddon-mana-ball",
+                DamageTypeDto::Mana,
+                ball_bonuses[1],
+            ),
+        ] {
+            assert!(matches!(
+                projected[id].effects.as_slice(),
+                [AbilityEffectSpecDto::AreaDamage {
+                    damage_dice: 1,
+                    damage_sides: 1,
+                    damage_bonus: actual_bonus,
+                    damage_type: actual_type,
+                    radius: 3,
+                    ..
+                }] if *actual_bonus == damage_bonus && *actual_type == damage_type
+            ));
+        }
+        for (id, damage_type, damage_bonus) in [
+            (
+                "demo.ability.armageddon-breathe-sound",
+                DamageTypeDto::Sound,
+                cone_bonuses[0],
+            ),
+            (
+                "demo.ability.armageddon-breathe-inertia",
+                DamageTypeDto::Inertia,
+                cone_bonuses[1],
+            ),
+            (
+                "demo.ability.armageddon-breathe-disintegration",
+                DamageTypeDto::Disintegrate,
+                cone_bonuses[2],
+            ),
+            (
+                "demo.ability.armageddon-breathe-mana",
+                DamageTypeDto::Mana,
+                cone_bonuses[3],
+            ),
+            (
+                "demo.ability.armageddon-breathe-shards",
+                DamageTypeDto::Shards,
+                cone_bonuses[4],
+            ),
+        ] {
+            assert!(matches!(
+                projected[id].effects.as_slice(),
+                [AbilityEffectSpecDto::ConeDamage {
+                    damage_dice: 1,
+                    damage_sides: 1,
+                    damage_bonus: actual_bonus,
+                    damage_type: actual_type,
+                    radius: actual_radius,
+                    ..
+                }] if *actual_bonus == damage_bonus
+                    && *actual_type == damage_type
+                    && *actual_radius == radius
+            ));
+        }
+    }
+
+    for bonus in [7, -7] {
+        let mut game = armageddon_high_mage_game(0x5350_504f_5745_5200, 50);
+        grant_spell_power(&mut game, bonus);
+        for ability in game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .filter(|ability| {
+                matches!(
+                    ability.id.as_str(),
+                    "demo.ability.armageddon-mana-bolt"
+                        | "demo.ability.armageddon-plasma-ball"
+                        | "demo.ability.armageddon-mana-ball"
+                        | "demo.ability.armageddon-breathe-sound"
+                        | "demo.ability.armageddon-breathe-inertia"
+                        | "demo.ability.armageddon-breathe-disintegration"
+                        | "demo.ability.armageddon-breathe-mana"
+                        | "demo.ability.armageddon-breathe-shards"
+                )
+            })
+        {
+            assert!(matches!(
+                ability.effects.as_slice(),
+                [AbilityEffectSpecDto::Damage {
+                    final_damage_spell_power_bonus: Some(actual),
+                    ..
+                } | AbilityEffectSpecDto::AreaDamage {
+                    final_damage_spell_power_bonus: Some(actual),
+                    ..
+                } | AbilityEffectSpecDto::ConeDamage {
+                    final_damage_spell_power_bonus: Some(actual),
+                    ..
+                }] if *actual == bonus
+            ));
+        }
+    }
+}
+
+#[test]
+fn armageddon_sound_and_inertia_use_distinct_original_monster_riders() {
+    let mut game = armageddon_high_mage_game(0x534f_554e_445f_494e, 50);
+    clear_monsters(&mut game);
+    let target = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.sound-inertia-target",
+        "demo.actor.small-kobold",
+        target,
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    let trace = ProjectileTrace {
+        origin: game.player.position,
+        impact: target,
+        landing: target,
+        traversed: vec![target],
+    };
+
+    game.resolve_ability_damage_to_entity(
+        0,
+        "test.sound",
+        DamageType::Sound,
+        100,
+        trace.clone(),
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("sound damage should resolve");
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN)
+    );
+
+    game.entities[0].hp = 1_000;
+    game.entities[0].statuses.clear();
+    game.resolve_ability_damage_to_entity(
+        0,
+        "test.inertia",
+        DamageType::Inertia,
+        100,
+        trace.clone(),
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("first inertia damage should resolve");
+    game.entities[0].hp = 1_000;
+    game.resolve_ability_damage_to_entity(
+        0,
+        "test.inertia",
+        DamageType::Inertia,
+        100,
+        trace,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("second inertia damage should resolve");
+    assert_eq!(game.entities[0].minor_slow, 10);
+    let projected = game
+        .snapshot()
+        .entities
+        .into_iter()
+        .find(|entity| entity.id == "test.sound-inertia-target")
+        .expect("minor-slow target should remain visible");
+    assert_eq!((projected.minor_slow, projected.speed), (10, 90));
+
+    let mut save_game = Game::new_with_build(0x4d49_4e4f_525f_534c, ARMAGEDDON_HIGH_MAGE_BUILD_ID)
+        .expect("Armageddon High-Mage build should create");
+    let definition = save_game
+        .content
+        .actor("demo.actor.small-kobold")
+        .cloned()
+        .expect("small kobold should exist");
+    let saved_actor = spawn_actor_from_definition(
+        &mut save_game.rng,
+        &definition,
+        "test.saved-minor-slow",
+        target,
+        INITIAL_MONSTER_ENERGY_NEED,
+        true,
+    );
+    save_game.entities.push(saved_actor);
+    let unslowed_hash = save_game.state_hash();
+    save_game.entities[0].minor_slow = 10;
+    assert_ne!(save_game.state_hash(), unslowed_hash);
+    let save = save_game.to_save();
+    let restored = Game::from_save_with_content(save.clone(), save_game.content.clone())
+        .expect("monster minor slow should round-trip");
+    assert_eq!(restored.entities[0].minor_slow, 10);
+    let mut invalid = save;
+    invalid.entities[0].minor_slow = 11;
+    assert!(matches!(
+        Game::from_save_with_content(invalid, save_game.content.clone()),
+        Err(CoreError::InvalidSave("entity minor slow is invalid"))
+    ));
+
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut ordinary = RfbRng::seeded(*seed);
+            let mut regenerating = RfbRng::seeded(*seed);
+            ordinary.bounded(100) >= 10 && regenerating.bounded(50) < 10
+        })
+        .expect("a recovery seed should exist");
+    let mut ordinary = game.clone();
+    ordinary.entities[0].minor_slow = 10;
+    ordinary.rng = RfbRng::seeded(seed);
+    ordinary.process_monster_minor_slow_recovery(0);
+    assert_eq!(ordinary.entities[0].minor_slow, 10);
+    let mut regenerating = game;
+    regenerating.entities[0].kind_id = "demo.actor.forest-troll".to_owned();
+    regenerating.entities[0].minor_slow = 10;
+    regenerating.rng = RfbRng::seeded(seed);
+    regenerating.process_monster_minor_slow_recovery(0);
+    assert_eq!(regenerating.entities[0].minor_slow, 9);
+}
+
+#[test]
+fn armageddon_disintegration_cone_crosses_destructible_terrain_but_stops_at_permanent_terrain() {
+    let mut game = armageddon_high_mage_game(0x4449_5349_4e54_4547, 50);
+    clear_monsters(&mut game);
+    let origin = game.player.position;
+    for y in 0..game.height {
+        for x in 0..game.width {
+            replace_terrain(
+                &mut game,
+                Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                },
+                "demo.terrain.floor",
+            );
+        }
+    }
+    let wall = Position {
+        x: origin.x + 2,
+        y: origin.y,
+    };
+    let before_permanent = Position {
+        x: origin.x + 4,
+        y: origin.y,
+    };
+    let permanent = Position {
+        x: origin.x + 5,
+        y: origin.y,
+    };
+    let after_permanent = Position {
+        x: origin.x + 6,
+        y: origin.y,
+    };
+    replace_terrain(&mut game, wall, "demo.terrain.wall");
+    replace_terrain(&mut game, permanent, "demo.terrain.permanent-wall");
+    let quartz = game
+        .content
+        .actor("demo.actor.quartz-vein")
+        .cloned()
+        .expect("quartz vein should exist");
+    let mut quartz = spawn_actor_from_definition(
+        &mut game.rng,
+        &quartz,
+        "test.disintegration-before",
+        before_permanent,
+        INITIAL_MONSTER_ENERGY_NEED,
+        true,
+    );
+    quartz.hp = 1_000;
+    quartz.max_hp = 1_000;
+    game.entities.push(quartz);
+    game.entities.push(actor_from_runtime_spawn(
+        "test.disintegration-after",
+        "demo.actor.small-kobold",
+        after_permanent,
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    for (id, kind_id) in [
+        ("test.disintegration-scroll", "demo.item.accuracy-scroll"),
+        ("test.disintegration-artifact", "demo.item.pain"),
+    ] {
+        give_inventory_item(&mut game, id, kind_id);
+        game.items
+            .iter_mut()
+            .find(|item| item.id == id)
+            .expect("disintegration test item should exist")
+            .location = ItemLocation::Ground(before_permanent);
+    }
+
+    game.resolve_player_ability(
+        "demo.ability.armageddon-breathe-disintegration",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("disintegration breath should resolve");
+
+    assert_eq!(
+        game.terrain[game.index(wall).expect("wall should remain in bounds")],
+        "demo.terrain.floor"
+    );
+    assert_eq!(
+        game.terrain[game
+            .index(permanent)
+            .expect("permanent wall should remain in bounds")],
+        "demo.terrain.permanent-wall"
+    );
+    assert_eq!(game.entities[0].hp, 453);
+    assert_eq!(game.entities[1].hp, 1_000);
+    assert!(
+        game.items
+            .iter()
+            .all(|item| item.id != "test.disintegration-scroll")
+    );
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == "test.disintegration-artifact")
     );
 }
 

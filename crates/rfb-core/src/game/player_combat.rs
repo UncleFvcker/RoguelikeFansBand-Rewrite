@@ -114,7 +114,7 @@ impl Game {
                     u16::try_from(self.rng.bounded(15) + 1).expect("ice stun roll must fit u16");
                 self.apply_actor_melee_status(index, STATUS_STUN, i32::from(intensity), ability_id);
             }
-            DamageType::Plasma | DamageType::Water
+            DamageType::Plasma | DamageType::Water | DamageType::Sound
                 if !stun_immune
                     && !matches!(
                         resistance,
@@ -128,6 +128,18 @@ impl Game {
                     < u64::try_from(raw_damage.max(0)).unwrap_or(u64::MAX)
                 {
                     self.apply_actor_melee_status(index, STATUS_STUN, stun_amount, ability_id);
+                }
+            }
+            DamageType::Inertia
+                if !matches!(
+                    resistance,
+                    ResistanceLevel::Resistant | ResistanceLevel::Strong | ResistanceLevel::Immune
+                ) && !has_tag("unique") =>
+            {
+                let save_sides = u64::try_from((raw_damage - 10).max(1)).unwrap_or(1);
+                if level <= self.rng.bounded(save_sides) + 11 {
+                    self.entities[index].minor_slow =
+                        self.entities[index].minor_slow.saturating_add(5).min(10);
                 }
             }
             DamageType::Gravity

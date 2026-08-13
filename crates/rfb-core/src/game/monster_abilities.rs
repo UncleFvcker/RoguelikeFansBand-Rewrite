@@ -585,7 +585,13 @@ impl Game {
         let direction = direction_toward(origin, target.position())
             .expect("validated monster cone retains a direction");
         let lateral_distances = self
-            .cone_damage_cells(origin, &trace.traversed, direction, *radius)
+            .cone_damage_cells(
+                origin,
+                &trace.traversed,
+                direction,
+                *radius,
+                DamageType::from(*damage_type),
+            )
             .into_iter()
             .map(|(_, lateral, position)| (position, lateral))
             .collect::<BTreeMap<_, _>>();
@@ -2770,8 +2776,16 @@ impl Game {
                     affected_positions,
                 )
             }
-            AbilityEffectDefinition::ConeDamage { radius, .. }
-            | AbilityEffectDefinition::BreathDamage { radius, .. } => {
+            AbilityEffectDefinition::ConeDamage {
+                radius,
+                damage_type,
+                ..
+            }
+            | AbilityEffectDefinition::BreathDamage {
+                radius,
+                damage_type,
+                ..
+            } => {
                 let direction = direction_toward(origin, target_position).ok_or(
                     MonsterAbilityPlanRejection {
                         reason: MonsterAbilityRejectionReasonDto::InvalidTarget,
@@ -2787,7 +2801,13 @@ impl Game {
                     })
                     .collect::<Vec<_>>();
                 let trace = self.trace_monster_path(origin, path);
-                let cells = self.cone_damage_cells(origin, &trace.traversed, direction, *radius);
+                let cells = self.cone_damage_cells(
+                    origin,
+                    &trace.traversed,
+                    direction,
+                    *radius,
+                    DamageType::from(*damage_type),
+                );
                 if !cells
                     .iter()
                     .any(|(_, _, position)| *position == target_position)

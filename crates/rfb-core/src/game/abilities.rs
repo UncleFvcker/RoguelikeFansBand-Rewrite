@@ -2237,10 +2237,11 @@ impl Game {
             unreachable!("player cone damage executor requires a cone target plan");
         };
         debug_assert_eq!(*radius, planned_radius);
-        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
-        let (affected_positions, targets) =
-            self.cone_damage_targets(&trace.traversed, direction, *radius);
         let damage_type = DamageType::from(*damage_type);
+        let (trace, _) =
+            self.trace_projectile_path_with_damage_policy(path, false, Some(damage_type));
+        let (affected_positions, targets) =
+            self.cone_damage_targets(&trace.traversed, direction, *radius, damage_type);
         self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
         if ability.affects_ground_items {
             self.resolve_ground_item_projectile_effects(
