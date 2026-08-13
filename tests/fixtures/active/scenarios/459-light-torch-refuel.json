@@ -325,8 +325,8 @@
         "x": 44,
         "y": 16
       },
-      "playerHp": 33,
-      "playerMaxHp": 33,
+      "playerHp": 56,
+      "playerMaxHp": 56,
       "playerAttack": 2,
       "playerDefense": 15,
       "playerSpeed": 110,
@@ -424,9 +424,9 @@
           {
             "id": "demo.skill.perception",
             "nameKey": "skill-demo-perception-name",
-            "current": 2,
+            "current": 12,
             "maximum": 1000,
-            "base": 2,
+            "base": 12,
             "growthPerTenLevels": 0
           },
           {
@@ -1671,7 +1671,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "868c895a3bb5135e9314d783f410e1ba73d7323ba90646a674eec48f027de5ca"
+      "stateHash": "c65be7ef5433a71acddd629bbabef7b2f480b04aa2149486aaacf8aa9c866d01"
     },
     "events": [
       {
@@ -1695,6 +1695,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "868c895a3bb5135e9314d783f410e1ba73d7323ba90646a674eec48f027de5ca"
+    "saveRoundTripStateHash": "c65be7ef5433a71acddd629bbabef7b2f480b04aa2149486aaacf8aa9c866d01"
   }
 }

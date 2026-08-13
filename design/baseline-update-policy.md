@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v295`，机器可读政策固定在：
+当前逻辑基线是 `contract-v297`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -325,3 +325,8 @@ v98，并刷新公共状态投影；Commit 2/3 只增加能力效果、typed eve
 `contract-v296` 将共享底座绑定为正式 Sniper class/build：新增 17 项职业能力、原版出生
 装备和 New Game/UI 内容，但没有改变协议、权威状态、公共初始化或既有构筑 RNG。现有
 26 条 fixture 不选择狙击手构筑，`verify-all` 零漂移，因此不刷新 assertions、零 waiver。
+
+`contract-v297` 将正式 Human 的静态资料对齐 `master:src/races_a.c`：基础 HP 20、察觉
+基础值 +10，六项属性无修正，生命、经验与商店倍率均为 100%。七个正式 build 均组合
+Human，因此公共初始化的生命与技能投影发生预期变化，全部 26 条 active fixture 统一
+刷新并复验，零 waiver。Protocol 1.198、State Hash Schema v98 与 save v1 均不变。

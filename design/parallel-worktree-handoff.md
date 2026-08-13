@@ -614,3 +614,17 @@ git diff --stat
   `8b89d37d689db0c180feb1dbe213a3aa30aef910bd72a12a6c3d1af8222296dc`、Protocol
   `1.198`、State Hash Schema v98、save v1、active baseline `contract-v296`。内容变化
   不改变既有构筑初始化或 state-hash 输入，26 条 active fixture 只复验、不刷新。
+
+## 37. main 当前交接（Human Commit 1：静态资料收口）
+
+- 本批不新增 item、ability、material、affix、race、class 或 build ID；正式 Human 继续
+  使用 `demo.race.rfb-human` 与 `demo.skill-set.human`，其他内容方向无需预留身份。
+- Human 对齐 `master:src/races_a.c` 的静态值：六项属性修正 0、生命/经验/商店倍率
+  100%、基础 HP 20、察觉基础值 +10。Standard 身体、个人主义美德和 Human kin 保持
+  既有通用实现；七个正式 build 均继续组合该 Human。
+- 双语说明记录 20 级特殊天赋与 35 级人类弱点，但这两个等级机制仍待后续批次实现；
+  本批不创建占位能力或持久状态。
+- 共享协调点：pack `1.314.0` / content hash
+  `8e2f9f3df586082903fbebf797fc86ae7096e1a6b3ba6141831cc827a29b415d`、Protocol
+  `1.198`、State Hash Schema v98、save v1、active baseline `contract-v297`。共同初始化
+  的 HP 与察觉变化要求全量刷新并复验 26 条 active fixture，零 waiver。

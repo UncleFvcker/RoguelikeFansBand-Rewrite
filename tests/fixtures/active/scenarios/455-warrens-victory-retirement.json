@@ -302,8 +302,8 @@
         "x": 44,
         "y": 16
       },
-      "playerHp": 33,
-      "playerMaxHp": 33,
+      "playerHp": 56,
+      "playerMaxHp": 56,
       "playerAttack": 2,
       "playerDefense": 15,
       "playerSpeed": 110,
@@ -401,9 +401,9 @@
           {
             "id": "demo.skill.perception",
             "nameKey": "skill-demo-perception-name",
-            "current": 2,
+            "current": 12,
             "maximum": 1000,
-            "base": 2,
+            "base": 12,
             "growthPerTenLevels": 0
           },
           {
@@ -1613,7 +1613,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "d7f1c20a5983b8ef1ab5e42fa61450f968c4f120c45948c0fb85e5247b982e0f"
+      "stateHash": "4da6e4d89b540ecebec37f5751308b63bfc16adaeca82da65c207efd86a62e14"
     },
     "events": [
       {
@@ -1628,9 +1628,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "d7f1c20a5983b8ef1ab5e42fa61450f968c4f120c45948c0fb85e5247b982e0f"
+        "stateHash": "4da6e4d89b540ecebec37f5751308b63bfc16adaeca82da65c207efd86a62e14"
       }
     ],
-    "saveRoundTripStateHash": "d7f1c20a5983b8ef1ab5e42fa61450f968c4f120c45948c0fb85e5247b982e0f"
+    "saveRoundTripStateHash": "4da6e4d89b540ecebec37f5751308b63bfc16adaeca82da65c207efd86a62e14"
   }
 }

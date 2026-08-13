@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.313.0");
+    assert_eq!(catalog.pack_version(), "1.314.0");
     assert_eq!(catalog.races().count(), 46);
     assert_eq!(
         catalog
@@ -240,6 +240,47 @@ fn compiled_catalog_indexes_current_rfb_content() {
     assert!(catalog.loot_table("demo.loot-table.base-items").is_some());
     assert!(catalog.item("demo.item.magic-missile-wand").is_some());
     assert!(catalog.affix("demo.affix.regeneration").is_some());
+}
+
+#[test]
+fn formal_human_matches_rfb_static_profile() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let human = catalog
+        .race("demo.race.rfb-human")
+        .expect("formal Human race");
+
+    assert_eq!(human.modifiers, StatModifiers::default());
+    assert_eq!(human.life_percent, 100);
+    assert_eq!(human.experience_percent, 100);
+    assert_eq!(human.shop_adjust_percent, 100);
+    assert_eq!(human.base_hp, 20);
+    assert!(human.tags.iter().any(|tag| tag == "standard-body"));
+    assert_eq!(human.kin_category.as_deref(), Some("kin-glyph-112"));
+
+    let human_skills = catalog
+        .skill_set(&human.skill_set_id)
+        .expect("formal Human skill set");
+    assert_eq!(human_skills.entries.len(), 1);
+    assert_eq!(human_skills.entries[0].skill_id, "demo.skill.perception");
+    assert_eq!(human_skills.entries[0].base, 10);
+    assert_eq!(human_skills.entries[0].growth_per_ten_levels, 0);
+
+    for build_id in [
+        "demo.build.warrior",
+        "demo.build.high-mage-death",
+        "demo.build.high-mage-arcane",
+        "demo.build.archer",
+        "demo.build.paladin-death",
+        "demo.build.cavalry",
+        "demo.build.sniper",
+    ] {
+        assert_eq!(
+            catalog.build(build_id).expect("formal build").race_id,
+            human.id,
+            "{build_id} must continue to use the formal Human race"
+        );
+    }
 }
 
 #[test]

@@ -5,7 +5,11 @@
   "legacyIndex": 0,
   "nameKey": "race-demo-rfb-human-name",
   "descriptionKey": "race-demo-rfb-human-description",
+  "modifiers": {},
+  "lifePercent": 100,
+  "experiencePercent": 100,
   "shopAdjustPercent": 100,
+  "baseHp": 20,
   "skillSetId": "demo.skill-set.human",
   "kinCategory": "kin-glyph-112",
   "bodySlots": [
