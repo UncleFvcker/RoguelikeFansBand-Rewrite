@@ -162,6 +162,7 @@ message-ability-monsters-probed = { $ability }探测到 { $count } 个可见怪�
 message-ability-terrain-transform = { $ability }把 { $count } 个地形格重塑为{ $terrain }。
 message-ability-effects = { $ability }依次结算了 { $count } 项效果。
 message-ability-create-ammunition = 你通过{ $ability }获得了{ $item } × { $quantity }。
+message-ability-create-item = { $ability }在你脚下制造了{ $item } × { $quantity }。
 message-monster-ability-decision-cast = { $source }选择了{ $ability }（施法检定 { $roll }/{ $frequency }）。
 message-monster-ability-decision-fallback = { $source }没有施法（施法检定 { $roll }/{ $frequency }）。
 message-monster-ability-cast = { $source }施放了{ $ability }，对 { $targetCount } 个目标依次结算 { $count } 项效果。

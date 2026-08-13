@@ -228,6 +228,16 @@
               "$ref": "#/$defs/ActorDamageType",
               "default": "physical"
             },
+            "maximumRange": {
+              "default": null,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
             "type": {
               "const": "beam-damage",
               "type": "string"
@@ -285,6 +295,20 @@
             "radius": {
               "format": "uint8",
               "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "sunlightBurnDamageDice": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "sunlightBurnDamageSides": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
               "minimum": 0,
               "type": "integer"
             },
@@ -903,6 +927,29 @@
             "itemKindIds",
             "quantityMinimum",
             "quantityMaximum"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "itemKindId": {
+              "type": "string"
+            },
+            "quantity": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "create-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "itemKindId",
+            "quantity"
           ],
           "type": "object"
         },
@@ -2699,7 +2746,8 @@
         "maximum-weight",
         "banish-distance",
         "device-mastery-duration-base",
-        "device-power-bonus"
+        "device-power-bonus",
+        "maximum-range"
       ],
       "type": "string"
     },

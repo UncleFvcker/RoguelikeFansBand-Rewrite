@@ -232,6 +232,23 @@
           { "abilityId": "demo.ability.armageddon-breathe-mana", "minimumLevel": 42, "resourceCost": 43, "baseFailurePercent": 75 },
           { "abilityId": "demo.ability.armageddon-breathe-shards", "minimumLevel": 44, "resourceCost": 49, "baseFailurePercent": 75 }
         ]
+      },
+      {
+        "realmId": "nature",
+        "abilityBookIds": [
+          "demo.ability-book.call-of-the-wild"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.nature-detect-creatures", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.nature-lightning", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.nature-detect-doors-and-traps", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.nature-produce-food", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.nature-daylight", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.nature-wind-walker", "minimumLevel": 4, "resourceCost": 3, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.nature-resist-environment", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.nature-cure-wounds-and-poison", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 25 }
+        ]
       }
     ]
   },

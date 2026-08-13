@@ -709,9 +709,10 @@ impl Game {
     }
 
     pub(super) fn player_levitates(&self) -> bool {
-        self.content.mutations().any(|mutation| {
-            mutation.levitation && self.progress.active_mutation_ids.contains(&mutation.id)
-        })
+        self.player_has_status_kind(STATUS_LEVITATION)
+            || self.content.mutations().any(|mutation| {
+                mutation.levitation && self.progress.active_mutation_ids.contains(&mutation.id)
+            })
     }
 
     pub(super) fn player_has_telepathy(&self) -> bool {

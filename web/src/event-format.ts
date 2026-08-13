@@ -185,6 +185,16 @@ export function createPresentationFormatter(
               quantity: ammunition.quantity,
             });
           }
+          const item = event.outcome.resolution.effects.find(
+            (effect) => effect.type === "create-item",
+          );
+          if (item?.type === "create-item") {
+            return localization.format("message-ability-create-item", {
+              ability: contentName(event.args.target),
+              item: contentName(item.itemKindId),
+              quantity: item.quantity,
+            });
+          }
         }
         return localization.format("message-ability-effects", {
           ability: contentName(event.args.target),

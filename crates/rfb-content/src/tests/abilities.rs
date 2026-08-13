@@ -188,6 +188,121 @@ fn arcane_first_book_keeps_the_original_spell_table_and_narrow_effects() {
 }
 
 #[test]
+fn nature_first_book_keeps_the_original_spell_table_and_allocation() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.call-of-the-wild")
+        .expect("Call of the Wild should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("nature"));
+    assert_eq!(book.rank, Some(1));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.call-of-the-wild")
+        .expect("Call of the Wild item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (10, 30, 100, Some("demo.ability-book.call-of-the-wild"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Call of the Wild should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (10, 30, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.nature-detect-creatures", 1, 1, 15, 4),
+        ("demo.ability.nature-lightning", 2, 1, 15, 3),
+        ("demo.ability.nature-detect-doors-and-traps", 2, 2, 15, 1),
+        ("demo.ability.nature-produce-food", 3, 2, 25, 4),
+        ("demo.ability.nature-daylight", 3, 3, 40, 5),
+        ("demo.ability.nature-wind-walker", 4, 3, 40, 5),
+        ("demo.ability.nature-resist-environment", 4, 4, 40, 5),
+        ("demo.ability.nature-cure-wounds-and-poison", 5, 4, 25, 4),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    let lightning = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.nature-lightning")
+        .expect("Lightning should compile");
+    assert!(matches!(
+        lightning.effect,
+        AbilityEffectDefinition::BeamDamage {
+            damage_dice: 3,
+            damage_sides: 4,
+            maximum_range: Some(2),
+            ..
+        }
+    ));
+    assert_eq!(lightning.level_scaling.len(), 2);
+    assert_eq!(lightning.spell_power_fields.len(), 2);
+
+    let produce_food = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.nature-produce-food")
+        .expect("Produce Food should compile");
+    assert!(matches!(
+        &produce_food.effect,
+        AbilityEffectDefinition::CreateItem {
+            item_kind_id,
+            quantity: 1,
+        } if item_kind_id == "demo.item.ration-of-food"
+    ));
+}
+
+#[test]
 fn armageddon_first_book_keeps_the_original_spell_table_and_elemental_scaling() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = artifact.content;

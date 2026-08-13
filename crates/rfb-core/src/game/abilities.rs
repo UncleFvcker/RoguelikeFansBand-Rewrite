@@ -617,6 +617,9 @@ impl Game {
             (AbilityEffectDefinition::CreateStair { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_create_stair_effect(&ability, events, changed);
             }
+            (AbilityEffectDefinition::CreateItem { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_create_item_effect(&ability, events, changed)?;
+            }
             (AbilityEffectDefinition::SelfKnowledge, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_self_knowledge_effect(&ability, events);
             }
@@ -1534,6 +1537,7 @@ impl Game {
             damage_sides,
             damage_bonus,
             damage_type,
+            ..
         } = &ability.effect
         else {
             unreachable!("player beam damage executor requires a beam damage effect");
@@ -1699,6 +1703,8 @@ impl Game {
             damage_dice,
             damage_sides,
             radius,
+            sunlight_burn_damage_dice,
+            sunlight_burn_damage_sides,
         } = ability.effect
         else {
             unreachable!("light-area executor requires a light-area effect");
@@ -1759,6 +1765,47 @@ impl Game {
                 changed,
                 removed_entities,
             )?;
+        }
+        let vampire = self
+            .character_definitions()
+            .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "vampire"));
+        if vampire && sunlight_burn_damage_dice > 0 {
+            let light_resistance = self
+                .effective_player_resistances()
+                .level(DamageType::Light)
+                .reduction_percent()
+                .max(0);
+            let saved = self.rng.bounded(33) < u64::try_from(light_resistance).unwrap_or(0);
+            if !saved {
+                let raw_damage = self
+                    .roll_damage(sunlight_burn_damage_dice, sunlight_burn_damage_sides)
+                    .max(0);
+                let damage = resolve_damage(
+                    DamagePacket::new(raw_damage, DamageType::Light),
+                    ResistanceLevel::Normal,
+                );
+                let application =
+                    plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
+                commit_damage_application(&mut self.player, &application);
+                events.push(DomainEvent::AbilityHit {
+                    ability_id: ability.id.clone(),
+                    target_kind_id: self.player.kind_id.clone(),
+                    damage,
+                    trace: ProjectileTrace {
+                        origin: center,
+                        impact: center,
+                        landing: center,
+                        traversed: vec![center],
+                    },
+                });
+                if application.fatal {
+                    events.push(DomainEvent::PlayerDied {
+                        source_kind_id: self.player.kind_id.clone(),
+                        method_id: Some(ability.id.clone()),
+                        damage,
+                    });
+                }
+            }
         }
         Ok(())
     }
@@ -4934,6 +4981,62 @@ impl Game {
         Ok(())
     }
 
+    fn resolve_player_create_item_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::CreateItem {
+            item_kind_id,
+            quantity,
+        } = &ability.effect
+        else {
+            unreachable!("item creation executor requires a create-item effect");
+        };
+        let item_id = self.allocate_item_instance_id()?;
+        let position = self.player.position;
+        self.items.push(ItemInstance {
+            id: item_id.clone(),
+            kind_id: item_kind_id.clone(),
+            quantity: *quantity,
+            inscription: None,
+            origin_actor_kind_id: None,
+            origin_kind: Some(ItemOriginKindDto::Acquire),
+            damage_dice_override: None,
+            discount_percent: 0,
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            enchantments: ItemEnchantmentsDto::default(),
+            curse: None,
+            activation: None,
+            charges: None,
+            fuel: None,
+            device_recovery_progress: 0,
+            captured_actor: None,
+            location: ItemLocation::Ground(position),
+        });
+        self.mark_item_aware(item_kind_id);
+        changed.insert(position);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::CreateItem {
+                    effect_index: 0,
+                    item_kind_id: item_kind_id.clone(),
+                    quantity: *quantity,
+                    item_id,
+                    position,
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
     fn resolve_player_transmute_item_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -7525,6 +7628,7 @@ impl Game {
             | AbilityEffectDefinition::Banish { .. }
             | AbilityEffectDefinition::Invulnerability { .. }
             | AbilityEffectDefinition::LightArea { .. }
+            | AbilityEffectDefinition::CreateItem { .. }
             | AbilityEffectDefinition::MassSleepOrStasis { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability

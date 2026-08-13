@@ -10,6 +10,7 @@ const HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-death";
 const ARCANE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-arcane";
 const SORCERY_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-sorcery";
 const ARMAGEDDON_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-armageddon";
+const NATURE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-nature";
 
 fn high_mage_game(seed: u64) -> Game {
     Game::new_with_build(seed, HIGH_MAGE_BUILD_ID).expect("Death High-Mage build should create")
@@ -128,6 +129,34 @@ fn armageddon_high_mage_game(seed: u64, level: u16) -> Game {
     game
 }
 
+fn nature_high_mage_game(seed: u64, level: u16) -> Game {
+    let mut game = Game::new_with_build(seed, NATURE_HIGH_MAGE_BUILD_ID)
+        .expect("Nature High-Mage build should create");
+    game.progress.level = level;
+    game.progress.max_level = level;
+    game.learned_abilities.extend(
+        [
+            "demo.ability.nature-detect-creatures",
+            "demo.ability.nature-lightning",
+            "demo.ability.nature-detect-doors-and-traps",
+            "demo.ability.nature-produce-food",
+            "demo.ability.nature-daylight",
+            "demo.ability.nature-wind-walker",
+            "demo.ability.nature-resist-environment",
+            "demo.ability.nature-cure-wounds-and-poison",
+        ]
+        .into_iter()
+        .map(str::to_owned),
+    );
+    game.refresh_player_resource_maxima();
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should have mana")
+        .current = 100;
+    game.debug_ability_casts_succeed = true;
+    game
+}
+
 fn grant_spell_power(game: &mut Game, bonus: i32) {
     game.player.statuses.push(StatusInstance {
         kind_id: "test.status.spell-power".to_owned(),
@@ -229,6 +258,232 @@ fn armageddon_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
             .iter()
             .all(|ability| ability.id.starts_with("demo.ability.armageddon-"))
     );
+}
+
+#[test]
+fn nature_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
+    let game = Game::new_with_build(0x4e41_5455_5245_3031, NATURE_HIGH_MAGE_BUILD_ID)
+        .expect("Nature High-Mage build should create");
+    let carried = game
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        })
+        .map(|item| item.kind_id.as_str())
+        .collect::<BTreeSet<_>>();
+    for expected in [
+        "demo.item.call-of-the-wild",
+        "demo.item.dagger",
+        "demo.item.robe",
+        "demo.item.clarity-draught",
+        "demo.item.magic-missile-wand",
+    ] {
+        assert!(carried.contains(expected));
+    }
+    for excluded in [
+        "demo.item.black-prayers",
+        "demo.item.cantrips-for-beginners",
+        "demo.item.beginners-handbook",
+        "demo.item.book-of-elements",
+    ] {
+        assert!(!carried.contains(excluded));
+    }
+
+    let learned = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .filter(|ability| ability.source == AbilitySourceDto::Learned)
+        .collect::<Vec<_>>();
+    assert_eq!(learned.len(), 8);
+    assert!(
+        learned
+            .iter()
+            .all(|ability| ability.id.starts_with("demo.ability.nature-"))
+    );
+}
+
+#[test]
+fn nature_first_book_projects_level_and_spell_power_formulas() {
+    for (level, dice, range, light_sides, light_radius) in
+        [(1, 3, 2, 0, 1), (25, 7, 6, 12, 3), (50, 12, 10, 25, 6)]
+    {
+        let projected = nature_high_mage_game(0x4e41_5455_5245_1000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        assert_eq!(
+            projected["demo.ability.nature-lightning"].target_spec.range,
+            range
+        );
+        assert!(matches!(
+            projected["demo.ability.nature-lightning"].effects.as_slice(),
+            [AbilityEffectSpecDto::BeamDamage {
+                damage_dice,
+                damage_sides: 4,
+                ..
+            }] if *damage_dice == dice
+        ));
+        assert!(matches!(
+            projected["demo.ability.nature-daylight"].effects.as_slice(),
+            [AbilityEffectSpecDto::LightArea {
+                damage_dice: 2,
+                damage_sides,
+                radius,
+            }] if *damage_sides == light_sides && *radius == light_radius
+        ));
+    }
+
+    let mut powered = nature_high_mage_game(0x4e41_5455_5245_5057, 50);
+    grant_spell_power(&mut powered, 7);
+    let lightning = powered
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "demo.ability.nature-lightning")
+        .expect("Lightning should be projected");
+    assert_eq!(lightning.target_spec.range, 15);
+    assert!(matches!(
+        lightning.effects.as_slice(),
+        [AbilityEffectSpecDto::BeamDamage {
+            final_damage_spell_power_bonus: Some(7),
+            ..
+        }]
+    ));
+}
+
+#[test]
+fn nature_first_book_applies_food_levitation_environment_and_curing() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_4546, 10);
+    let position = game.player.position;
+    game.resolve_player_ability(
+        "demo.ability.nature-produce-food",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Produce Food should resolve");
+    let ration = game
+        .items
+        .iter()
+        .find(|item| {
+            item.kind_id == "demo.item.ration-of-food"
+                && item.location == ItemLocation::Ground(position)
+        })
+        .expect("Produce Food should create a ration at the player's feet");
+    assert_eq!(
+        ration.origin_kind,
+        Some(rfb_protocol::ItemOriginKindDto::Acquire)
+    );
+
+    game.resolve_player_ability(
+        "demo.ability.nature-wind-walker",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Wind Walker should resolve");
+    assert!(game.player_levitates());
+
+    game.resolve_player_ability(
+        "demo.ability.nature-resist-environment",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Resist Environment should resolve");
+    for damage_type in [DamageType::Fire, DamageType::Cold, DamageType::Electricity] {
+        assert_eq!(
+            game.effective_player_resistances().level(damage_type),
+            ResistanceLevel::Resistant
+        );
+    }
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .filter(|status| status.kind_id == "rfb.status.resist-environment")
+            .count(),
+        1
+    );
+
+    let status = |kind_id: &str, remaining_ticks| StatusInstance {
+        kind_id: kind_id.to_owned(),
+        intensity: 1,
+        remaining_ticks,
+        source_id: Some("test.nature".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    game.player.statuses.push(status(STATUS_BLEEDING, 50));
+    game.player.statuses.push(status(STATUS_POISON, 600));
+    game.player.hp = game.player.hp.saturating_sub(20);
+    let hp_before = game.player.hp;
+    game.resolve_player_ability(
+        "demo.ability.nature-cure-wounds-and-poison",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Wounds & Poison should resolve");
+    assert!(game.player.hp > hp_before);
+    assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_POISON)
+            .map(|status| status.remaining_ticks),
+        Some(400)
+    );
+}
+
+#[test]
+fn nature_daylight_burns_an_unprotected_vampire_form() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_5355, 10);
+    game.player.statuses.push(StatusInstance {
+        kind_id: "test.status.vampire-form".to_owned(),
+        intensity: 1,
+        remaining_ticks: 100,
+        source_id: Some("test.nature".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: Some("demo.race.vampire-lord".to_owned()),
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    let hp_before = game.player.hp;
+    game.resolve_player_ability(
+        "demo.ability.nature-daylight",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Daylight should resolve");
+    assert!((2..=4).contains(&hp_before.saturating_sub(game.player.hp)));
 }
 
 #[test]

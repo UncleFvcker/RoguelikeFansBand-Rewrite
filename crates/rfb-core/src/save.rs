@@ -666,6 +666,7 @@ fn validate_item_creation_state(
         Some(ItemOriginKindDto::PlayerMade) => {
             discount_percent == 99 && (ammunition || definition.melee_profile.is_some())
         }
+        Some(ItemOriginKindDto::Acquire) => discount_percent == 0,
         Some(ItemOriginKindDto::Rubble) => discount_percent == 0,
     };
     let damage_override_is_valid =

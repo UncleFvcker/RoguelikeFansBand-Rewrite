@@ -40,6 +40,7 @@ pub const STATUS_UNWELL: &str = "rfb.status.unwell";
 pub const STATUS_TELEPATHY: &str = "rfb.status.telepathy";
 pub const STATUS_WRAITHFORM: &str = "rfb.status.wraithform";
 pub const STATUS_REGENERATION: &str = "rfb.status.regeneration";
+pub const STATUS_LEVITATION: &str = "rfb.status.levitation";
 pub const STATUS_NO_AIR: &str = "rfb.status.no-air";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

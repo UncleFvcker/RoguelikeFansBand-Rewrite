@@ -686,3 +686,8 @@ save 容器保持 v1，不提供旧开发存档默认值。
 投影及结构化结果。`StatModifiersDto` 增加装置强度修正，`EntityDto` 与 `ActorSaveDto`
 增加必填的 0..10 `minorSlow`；后两项权威状态与 contract-v301 的怒气、友好状态共同进入
 State Hash Schema v100。save 容器保持 v1，不为缺少这些字段的旧开发存档提供兼容默认值。
+
+协议 1.202 为自然领域第一册增加窄化的 `create-item` 能力投影与结构化结算，并为能力生成的
+地面物品增加 `acquire` 来源。Beam 现在可声明独立最大射程并参与等级、`spell_power` 缩放；
+这些都是既有能力内容的执行参数，不增加新的命令、待处理输入或 State Hash 字段。State
+Hash Schema 保持 v100，save 容器保持 v1。

@@ -201,8 +201,13 @@ impl Game {
             };
             apply_ability_level_scaling(effect, &scaling, level);
         }
-        if let AbilityEffectDefinition::DimensionDoor { range } = &ability.effect {
-            ability.target.range = *range;
+        match &ability.effect {
+            AbilityEffectDefinition::DimensionDoor { range } => ability.target.range = *range,
+            AbilityEffectDefinition::BeamDamage {
+                maximum_range: Some(maximum_range),
+                ..
+            } => ability.target.range = *maximum_range,
+            _ => {}
         }
     }
 
@@ -229,8 +234,13 @@ impl Game {
             };
             apply_ability_spell_power(effect, definition, bonus);
         }
-        if let AbilityEffectDefinition::DimensionDoor { range } = &ability.effect {
-            ability.target.range = *range;
+        match &ability.effect {
+            AbilityEffectDefinition::DimensionDoor { range } => ability.target.range = *range,
+            AbilityEffectDefinition::BeamDamage {
+                maximum_range: Some(maximum_range),
+                ..
+            } => ability.target.range = *maximum_range,
+            _ => {}
         }
     }
 

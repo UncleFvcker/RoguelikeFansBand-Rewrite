@@ -94,7 +94,8 @@
         "maximum-weight",
         "banish-distance",
         "device-mastery-duration-base",
-        "device-power-bonus"
+        "device-power-bonus",
+        "maximum-range"
       ],
       "type": "string"
     },
@@ -139,7 +140,8 @@
         "banish-distance",
         "device-mastery-duration-base",
         "invulnerability-duration",
-        "clairvoyance-duration-sides"
+        "clairvoyance-duration-sides",
+        "maximum-range"
       ],
       "type": "string"
     },

@@ -2342,6 +2342,7 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
         (ARCANE_BOOK_TVAL, ARCANE_SECOND_BOOK_SVAL) => Some(ARCANE_SECOND_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_THIRD_BOOK_SVAL) => Some(ARCANE_THIRD_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_FOURTH_BOOK_SVAL) => Some(ARCANE_FOURTH_BOOK_ID),
+        (NATURE_BOOK_TVAL, NATURE_FIRST_BOOK_SVAL) => Some(NATURE_FIRST_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_FIRST_BOOK_SVAL) => Some(ARMAGEDDON_FIRST_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_SECOND_BOOK_SVAL) => Some(ARMAGEDDON_SECOND_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_THIRD_BOOK_SVAL) => Some(ARMAGEDDON_THIRD_BOOK_ID),
@@ -9208,6 +9209,9 @@ const ARCANE_THIRD_BOOK_SVAL: u16 = 2;
 const ARCANE_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-major-arcana";
 const ARCANE_FOURTH_BOOK_SVAL: u16 = 3;
 const ARCANE_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-manual-of-mastery";
+const NATURE_BOOK_TVAL: u16 = 92;
+const NATURE_FIRST_BOOK_SVAL: u16 = 0;
+const NATURE_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.nature-call-of-the-wild";
 const ARMAGEDDON_BOOK_TVAL: u16 = 101;
 const ARMAGEDDON_FIRST_BOOK_SVAL: u16 = 0;
 const ARMAGEDDON_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.armageddon-book-of-elements";
@@ -19231,6 +19235,16 @@ F:BRAND_VAMP | HOLD_LIFE
                 Some(expected_book_id)
             );
         }
+
+        let nature_book = LegacyItemEntry {
+            tval: NATURE_BOOK_TVAL,
+            sval: NATURE_FIRST_BOOK_SVAL,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(
+            player_ability_book_for_item(&nature_book),
+            Some(NATURE_FIRST_BOOK_ID)
+        );
 
         for (sval, expected_book_id) in [
             (ARMAGEDDON_FIRST_BOOK_SVAL, ARMAGEDDON_FIRST_BOOK_ID),

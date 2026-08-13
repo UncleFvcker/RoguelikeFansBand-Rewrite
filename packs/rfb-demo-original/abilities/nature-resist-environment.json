@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.nature-resist-environment",
+  "nameKey": "ability-demo-nature-resist-environment-name",
+  "descriptionKey": "ability-demo-nature-resist-environment-description",
+  "abilityProgramId": "demo.ability-program.nature-resist-environment",
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "status-duration-ticks" },
+    { "effectIndex": 0, "field": "status-duration-sides" }
+  ],
+  "tags": ["nature", "resistance", "spell"]
+}

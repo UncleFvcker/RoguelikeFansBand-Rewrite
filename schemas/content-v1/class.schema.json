@@ -132,7 +132,8 @@
         "maximum-weight",
         "banish-distance",
         "device-mastery-duration-base",
-        "device-power-bonus"
+        "device-power-bonus",
+        "maximum-range"
       ],
       "type": "string"
     },

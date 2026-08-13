@@ -162,6 +162,7 @@ message-ability-monsters-probed = { $ability } probes { $count } visible monster
 message-ability-terrain-transform = { $ability } reshapes { $count } terrain cells into { $terrain }.
 message-ability-effects = { $ability } resolves an ordered sequence of { $count } effects.
 message-ability-create-ammunition = { $ability } creates { $item } × { $quantity }.
+message-ability-create-item = { $ability } creates { $item } × { $quantity } at your feet.
 message-monster-ability-decision-cast = { $source } chooses { $ability } (spell roll { $roll }/{ $frequency }).
 message-monster-ability-decision-fallback = { $source } does not cast (spell roll { $roll }/{ $frequency }).
 message-monster-ability-cast = { $source } casts { $ability }, resolving { $count } effects across { $targetCount } targets.

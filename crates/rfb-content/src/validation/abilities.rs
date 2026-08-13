@@ -44,6 +44,7 @@ pub(super) struct AbilityDefinitions<'a> {
 pub(super) struct AbilityValidationRefs<'a> {
     pub(super) actor_tag_values: &'a BTreeSet<String>,
     pub(super) item_tag_values: &'a BTreeSet<String>,
+    pub(super) item_ids: &'a BTreeSet<String>,
     pub(super) terrain_tags: &'a BTreeMap<String, BTreeSet<String>>,
     pub(super) actor_roles: &'a BTreeMap<String, ActorRole>,
     pub(super) affix_ids: &'a BTreeSet<String>,
@@ -70,6 +71,7 @@ pub(super) fn validate_abilities(
     let AbilityValidationRefs {
         actor_tag_values,
         item_tag_values,
+        item_ids,
         terrain_tags,
         actor_roles,
         affix_ids,
@@ -209,11 +211,13 @@ pub(super) fn validate_abilities(
                     damage_dice,
                     damage_sides,
                     damage_bonus,
+                    maximum_range,
                     ..
                 } => {
                     (1..=100).contains(damage_dice)
                         && (1..=10_000).contains(damage_sides)
                         && *damage_bonus <= 10_000
+                        && maximum_range.is_none_or(|range| (1..=64).contains(&range))
                 }
                 AbilityEffectDefinition::LightLine {
                     damage_dice,
@@ -223,12 +227,17 @@ pub(super) fn validate_abilities(
                     damage_dice,
                     damage_sides,
                     radius,
+                    sunlight_burn_damage_dice,
+                    sunlight_burn_damage_sides,
                 } => {
                     (1..=100).contains(damage_dice)
                         && ((*damage_sides == 0
                             && has_level_scaling(AbilityLevelScalingField::DamageSides))
                             || (1..=10_000).contains(damage_sides))
                         && (1..=16).contains(radius)
+                        && ((*sunlight_burn_damage_dice == 0 && *sunlight_burn_damage_sides == 0)
+                            || ((1..=100).contains(sunlight_burn_damage_dice)
+                                && (1..=10_000).contains(sunlight_burn_damage_sides)))
                 }
                 AbilityEffectDefinition::BoltOrBeamDamage {
                     damage_dice,
@@ -404,6 +413,10 @@ pub(super) fn validate_abilities(
                             .iter()
                             .all(|tag| terrain_tags.values().any(|terrain| terrain.contains(tag)))
                 }
+                AbilityEffectDefinition::CreateItem {
+                    item_kind_id,
+                    quantity,
+                } => validate_id(item_kind_id).is_ok() && *quantity == 1,
                 AbilityEffectDefinition::TransmuteItemToGold {
                     value_divisor,
                     unit_value_cap,
@@ -1068,6 +1081,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::Invulnerability { .. }
             | AbilityEffectDefinition::RefuelEquippedLight { .. }
             | AbilityEffectDefinition::LightArea { .. }
+            | AbilityEffectDefinition::CreateItem { .. }
             | AbilityEffectDefinition::AggravateMonsters
             | AbilityEffectDefinition::Recall { .. }
             | AbilityEffectDefinition::ResistElements { .. }
@@ -1254,6 +1268,9 @@ pub(super) fn validate_abilities(
                         .cloned()
                         .map(|item_id| (ability.id.clone(), item_id)),
                 );
+            }
+            if let AbilityEffectDefinition::CreateItem { item_kind_id, .. } = effect {
+                require_reference(item_ids, item_kind_id, &ability.id)?;
             }
         }
         if let AbilityEffectDefinition::TransformTerrain {

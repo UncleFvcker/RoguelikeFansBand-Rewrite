@@ -23,7 +23,7 @@ use crate::{
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
         STATUS_CONFUSION, STATUS_DEVICE_MASTERY, STATUS_FEAR, STATUS_GIANT_STRENGTH,
         STATUS_HALLUCINATION, STATUS_HASTE, STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY,
-        STATUS_NO_AIR, STATUS_PARALYSIS, STATUS_PLAYER_POLYMORPH, STATUS_POISON,
+        STATUS_LEVITATION, STATUS_NO_AIR, STATUS_PARALYSIS, STATUS_PLAYER_POLYMORPH, STATUS_POISON,
         STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT,
         STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE,
         STATUS_TSUYOSHI, STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
@@ -6892,6 +6892,20 @@ fn apply_ability_level_scaling(
             ))
             .expect("validated level-scaled status melee damage must fit i32");
         }
+        (
+            AbilityEffectDefinition::BeamDamage {
+                maximum_range: Some(maximum_range),
+                ..
+            },
+            AbilityLevelScalingField::MaximumRange,
+        ) => {
+            *maximum_range = u16::try_from(scaled_ability_level_value(
+                u64::from(*maximum_range),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled beam range must fit u16");
+        }
         _ => unreachable!("content validation must reject incompatible level scaling fields"),
     }
 }
@@ -6952,6 +6966,7 @@ fn apply_ability_spell_power(
         }
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::LightArea { radius, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
             | AbilityEffectDefinition::ConeDamage { radius, .. },
             AbilitySpellPowerField::Radius,
@@ -7049,6 +7064,16 @@ fn apply_ability_spell_power(
         ) => {
             *telepathy_duration_sides = u16::try_from(scaled(u64::from(*telepathy_duration_sides)))
                 .expect("spell-powered clairvoyance duration must fit u16");
+        }
+        (
+            AbilityEffectDefinition::BeamDamage {
+                maximum_range: Some(maximum_range),
+                ..
+            },
+            AbilitySpellPowerField::MaximumRange,
+        ) => {
+            *maximum_range = u16::try_from(scaled(u64::from(*maximum_range)))
+                .expect("spell-powered beam range must fit u16");
         }
         (
             _,
@@ -7160,6 +7185,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_sides,
             damage_bonus,
             damage_type,
+            ..
         } => AbilityEffectSpecDto::BeamDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
@@ -7178,6 +7204,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_dice,
             damage_sides,
             radius,
+            ..
         } => AbilityEffectSpecDto::LightArea {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
@@ -7327,6 +7354,13 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             quantity_maximum: *quantity_maximum,
             source_item_tags: source_item_tags.clone(),
             source_terrain_tags: source_terrain_tags.clone(),
+        },
+        AbilityEffectDefinition::CreateItem {
+            item_kind_id,
+            quantity,
+        } => AbilityEffectSpecDto::CreateItem {
+            item_kind_id: item_kind_id.clone(),
+            quantity: *quantity,
         },
         AbilityEffectDefinition::TransmuteItemToGold {
             value_divisor,

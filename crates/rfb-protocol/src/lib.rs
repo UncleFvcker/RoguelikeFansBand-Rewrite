@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.201";
+pub const PROTOCOL_VERSION: &str = "1.202";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1081,6 +1081,10 @@ pub enum AbilityEffectSpecDto {
         quantity_maximum: u32,
         source_item_tags: Vec<String>,
         source_terrain_tags: Vec<String>,
+    },
+    CreateItem {
+        item_kind_id: String,
+        quantity: u32,
     },
     TransmuteItemToGold {
         value_divisor: u8,
@@ -2320,6 +2324,13 @@ pub enum AbilityEffectResolutionDto {
         quantity: u32,
         destination_item_ids: Vec<String>,
     },
+    CreateItem {
+        effect_index: u8,
+        item_kind_id: String,
+        quantity: u32,
+        item_id: String,
+        position: Position,
+    },
     TransmuteItemToGold {
         effect_index: u8,
         item_id: String,
@@ -3201,6 +3212,7 @@ pub enum ItemQualityDto {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemOriginKindDto {
+    Acquire,
     PlayerMade,
     Rubble,
 }

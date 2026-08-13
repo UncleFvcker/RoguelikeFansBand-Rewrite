@@ -126,6 +126,7 @@ pub enum AbilityLevelScalingField {
     BanishDistance,
     DeviceMasteryDurationBase,
     DevicePowerBonus,
+    MaximumRange,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -153,6 +154,7 @@ pub enum AbilitySpellPowerField {
     DeviceMasteryDurationBase,
     InvulnerabilityDuration,
     ClairvoyanceDurationSides,
+    MaximumRange,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -338,6 +340,8 @@ pub enum AbilityEffectDefinition {
         damage_bonus: u16,
         #[serde(default)]
         damage_type: ActorDamageType,
+        #[serde(default)]
+        maximum_range: Option<u16>,
     },
     LightLine {
         damage_dice: u16,
@@ -347,6 +351,10 @@ pub enum AbilityEffectDefinition {
         damage_dice: u16,
         damage_sides: u16,
         radius: u8,
+        #[serde(default)]
+        sunlight_burn_damage_dice: u16,
+        #[serde(default)]
+        sunlight_burn_damage_sides: u16,
     },
     BoltOrBeamDamage {
         damage_dice: u16,
@@ -449,6 +457,10 @@ pub enum AbilityEffectDefinition {
         source_item_tags: Vec<String>,
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
         source_terrain_tags: Vec<String>,
+    },
+    CreateItem {
+        item_kind_id: String,
+        quantity: u32,
     },
     TransmuteItemToGold {
         value_divisor: u8,
@@ -914,6 +926,13 @@ fn ability_level_scaling_base_and_limit(
             },
             AbilityLevelScalingField::DevicePowerBonus,
         ) => Some((u64::try_from(*device_power_bonus).ok()?, 1_000)),
+        (
+            AbilityEffectDefinition::BeamDamage {
+                maximum_range: Some(maximum_range),
+                ..
+            },
+            AbilityLevelScalingField::MaximumRange,
+        ) => Some((u64::from(*maximum_range), 64)),
         _ => None,
     }
 }
@@ -1028,6 +1047,7 @@ pub(crate) fn valid_ability_spell_power(
                 AbilitySpellPowerField::Radius => matches!(
                     effect,
                     AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::LightArea { .. }
                         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                         | AbilityEffectDefinition::ConeDamage { .. }
                         | AbilityEffectDefinition::DimensionDoor { .. }
@@ -1083,6 +1103,13 @@ pub(crate) fn valid_ability_spell_power(
                 AbilitySpellPowerField::ClairvoyanceDurationSides => {
                     matches!(effect, AbilityEffectDefinition::Clairvoyance { .. })
                 }
+                AbilitySpellPowerField::MaximumRange => matches!(
+                    effect,
+                    AbilityEffectDefinition::BeamDamage {
+                        maximum_range: Some(_),
+                        ..
+                    }
+                ),
             };
             valid && unique.insert((definition.effect_index, definition.field))
         })

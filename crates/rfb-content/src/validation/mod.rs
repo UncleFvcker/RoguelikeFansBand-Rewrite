@@ -280,6 +280,11 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         .iter()
         .flat_map(|item| item.tags.iter().cloned())
         .collect::<BTreeSet<_>>();
+    let item_ids = content
+        .items
+        .iter()
+        .map(|item| item.id.clone())
+        .collect::<BTreeSet<_>>();
 
     let affix_ids = validate_affixes(&mut content.affixes, &mut all_ids)?.affix_ids;
 
@@ -301,6 +306,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         AbilityValidationRefs {
             actor_tag_values: &actor_tag_values,
             item_tag_values: &item_tag_values,
+            item_ids: &item_ids,
             terrain_tags: &terrain_tags,
             actor_roles: &actor_roles,
             affix_ids: &affix_ids,

@@ -217,6 +217,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Detect { .. }
                     | AbilityEffectDefinition::RefuelEquippedLight { .. }
                     | AbilityEffectDefinition::LightArea { .. }
+                    | AbilityEffectDefinition::CreateItem { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
                     | AbilityEffectDefinition::RemoveStatus { .. }
                     | AbilityEffectDefinition::AnimateDead { .. }

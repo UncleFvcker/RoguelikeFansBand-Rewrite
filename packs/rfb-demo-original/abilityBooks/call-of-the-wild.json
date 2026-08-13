@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.call-of-the-wild",
+  "nameKey": "ability-book-demo-call-of-the-wild-name",
+  "descriptionKey": "ability-book-demo-call-of-the-wild-description",
+  "realmId": "nature",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.nature-detect-creatures",
+    "demo.ability.nature-lightning",
+    "demo.ability.nature-detect-doors-and-traps",
+    "demo.ability.nature-produce-food",
+    "demo.ability.nature-daylight",
+    "demo.ability.nature-wind-walker",
+    "demo.ability.nature-resist-environment",
+    "demo.ability.nature-cure-wounds-and-poison"
+  ],
+  "tags": ["nature", "spellbook"]
+}

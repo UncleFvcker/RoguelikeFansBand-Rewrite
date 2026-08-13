@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.330.0");
+    assert_eq!(catalog.pack_version(), "1.331.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -101,6 +101,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     assert!(catalog.build("demo.build.high-mage-arcane").is_some());
     assert!(catalog.build("demo.build.high-mage-sorcery").is_some());
     assert!(catalog.build("demo.build.high-mage-armageddon").is_some());
+    assert!(catalog.build("demo.build.high-mage-nature").is_some());
     assert_eq!(
         catalog
             .item("demo.item.cantrips-for-beginners")
