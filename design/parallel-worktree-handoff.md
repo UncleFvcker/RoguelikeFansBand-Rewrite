@@ -588,3 +588,19 @@ git diff --stat
   `3eca5a0bf28bde9471cd9f4f58bcf4f066d592a920e4d3ab7a08852dab10b74c`；Protocol `1.195`、
   State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
   零 waiver）均不变。
+
+## 36. monsters-next 当前交接（P75B 固定召唤与低风险战斗映射）
+
+- 新增 `BR_HOLY_FIRE` 与 `JMP_SHARDS` 映射，分别复用现有吐息和 JumpDamage：信使拉斐尔
+  使用 17% 当前生命、上限 250、半径 3 的神圣之火吐息；战斗越前使用等级 85 的碎片跳跃。
+- 7 个 `S_SPECIAL` 均通过现有分类召唤 DTO 的单一 `batchCandidates` 精确绑定原版对象：
+  伐楼拿召唤 `1d2+2` 摩伽罗，德墨忒尔召唤 `1d4` 树人，贾斯特肖恩召唤 `1d4` 绵羊，
+  波塞冬召唤 `1d4` 高等克拉肯，塔洛斯召唤 `1d3` 法术扭曲自动机，梵天与辩才天女
+  互相召唤 1 个对方。伐楼拿与波塞冬复用 P70 的 `monster-water-flow` 前置地形效果。
+- 本批实际导入 9 个 actor，新增 32 个参数化 ability/program；L81–127 联合审计为
+  85 selected、0 direct、31 blocked、6 excluded。没有新增 DTO、协议、存档或 state-hash
+  字段，也不刷新 replay fixture。
+- 共享协调点：pack `1.316.0` / content hash
+  `19bdab0f1a5b6b61246636ee8716198734ffe8b18924cea403acac64a97b1c27`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变。

@@ -7423,6 +7423,60 @@
       "id": "a-plain-gold-ring",
       "tags": ["orc-cave"],
       "omittedFlags": ["KILL_EXP", "NO_STUN", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1376,
+      "id": "varuna-lord-of-water",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 873,
+      "id": "combat-echizen-because-it-s-time",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1106,
+      "id": "demeter-the-goddess-of-nature",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE"]
+    },
+    {
+      "sourceIndex": 1225,
+      "id": "justshorn-sorcerer-king-of-the-sheeple",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1097,
+      "id": "poseidon-lord-of-seas-and-storm",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 769,
+      "id": "raphael-the-messenger",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1086,
+      "id": "talos-masterwork-spellwarp-automaton",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+    },
+    {
+      "sourceIndex": 1390,
+      "id": "saraswati-goddess-of-knowledge",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1389,
+      "id": "brahma-the-creating-spirit",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_SEE_INVIS"]
     }
   ]
 }

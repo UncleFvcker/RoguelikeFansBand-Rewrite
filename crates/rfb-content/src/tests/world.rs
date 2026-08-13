@@ -739,7 +739,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 782);
+    assert_eq!(orc_cave.len(), 791);
 
     for id in [
         "demo.actor.bunyip",
@@ -788,7 +788,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 1, 4, 3, 4, 11, 6, 4, 4, 4, 10, 3, 4, 4, 2, 1, 3,
+            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 2, 4, 3, 4, 12, 8, 4, 5, 5, 12, 3, 5, 4, 2, 1, 3,
             3, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 1,
         ]
@@ -5408,6 +5408,161 @@ fn p75a_category_summoners_and_no_summon_actor_keep_source_semantics() {
 }
 
 #[test]
+fn p75b_fixed_summoners_and_combat_mappings_keep_source_semantics() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, legacy_index, level) in [
+        ("varuna-lord-of-water", 1376, 81),
+        ("combat-echizen-because-it-s-time", 873, 85),
+        ("demeter-the-goddess-of-nature", 1106, 86),
+        ("justshorn-sorcerer-king-of-the-sheeple", 1225, 86),
+        ("poseidon-lord-of-seas-and-storm", 1097, 88),
+        ("raphael-the-messenger", 769, 89),
+        ("talos-masterwork-spellwarp-automaton", 1086, 90),
+        ("saraswati-goddess-of-knowledge", 1390, 90),
+        ("brahma-the-creating-spirit", 1389, 92),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+    }
+
+    for (id, ability_id) in [
+        ("combat-echizen-because-it-s-time", "jump-shards-l85"),
+        ("raphael-the-messenger", "breath-holy-fire-17-250-r3"),
+    ] {
+        assert!(
+            actor(id)
+                .monster_casting
+                .as_ref()
+                .expect("P75B combat mapper should preserve casting")
+                .abilities
+                .iter()
+                .any(|candidate| candidate.ability_id
+                    == format!("rfb-legacy.ability.{ability_id}")),
+            "{id} should use {ability_id}"
+        );
+    }
+
+    for (ability_id, category, maximum_level, sides, bonus, target, water_flow) in [
+        (
+            "summon-makara-l50-1d2-2",
+            "mount-meru",
+            50,
+            2,
+            2,
+            "demo.actor.makara",
+            true,
+        ),
+        (
+            "summon-ent-l46-1d4",
+            "giant",
+            46,
+            4,
+            0,
+            "demo.actor.ent",
+            false,
+        ),
+        (
+            "summon-sheep-l3-1d4",
+            "sheep",
+            3,
+            4,
+            0,
+            "demo.actor.sheep",
+            false,
+        ),
+        (
+            "summon-greater-kraken-l63-1d4",
+            "ocean",
+            63,
+            4,
+            0,
+            "demo.actor.greater-kraken",
+            true,
+        ),
+        (
+            "summon-spellwarp-automaton-l80-1d3",
+            "nonliving",
+            80,
+            3,
+            0,
+            "demo.actor.spellwarp-automaton",
+            false,
+        ),
+        (
+            "summon-saraswati-l90-1d1",
+            "hindu",
+            90,
+            1,
+            0,
+            "demo.actor.saraswati-goddess-of-knowledge",
+            false,
+        ),
+        (
+            "summon-brahma-l92-1d1",
+            "hindu",
+            92,
+            1,
+            0,
+            "demo.actor.brahma-the-creating-spirit",
+            false,
+        ),
+    ] {
+        let ability = artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.{ability_id}"))
+            .unwrap_or_else(|| panic!("{ability_id} should be imported"));
+        let AbilityEffectDefinition::SummonCategory {
+            category: actual_category,
+            maximum_level: actual_maximum_level,
+            count_dice,
+            count_sides,
+            count_bonus,
+            batch_candidates,
+            ..
+        } = &ability.effect
+        else {
+            panic!("{ability_id} should remain a category summon");
+        };
+        assert_eq!(actual_category, category);
+        assert_eq!(
+            (
+                *actual_maximum_level,
+                *count_dice,
+                *count_sides,
+                *count_bonus
+            ),
+            (maximum_level, 1, sides, bonus)
+        );
+        assert_eq!(batch_candidates.len(), 1);
+        assert_eq!(batch_candidates[0].actor_kind_id, target);
+        assert_eq!(batch_candidates[0].weight, 1);
+        assert_eq!(
+            ability.tags.iter().any(|tag| tag == "monster-water-flow"),
+            water_flow
+        );
+    }
+}
+
+#[test]
 fn p68_low_risk_mappings_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -6297,6 +6452,7 @@ fn p53a_ice_jump_and_angel_summons_reuse_shared_effects() {
             "demo.actor.metatron-the-high-angel",
             "demo.actor.michael-the-guardian-overlord",
             "demo.actor.planetar",
+            "demo.actor.raphael-the-messenger",
             "demo.actor.seraph",
             "demo.actor.solar",
             "demo.actor.star-blade",
@@ -8111,7 +8267,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        712
+        720
     );
 }
 

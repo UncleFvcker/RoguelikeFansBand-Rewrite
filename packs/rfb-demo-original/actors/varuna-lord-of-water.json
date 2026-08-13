@@ -1,0 +1,234 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1376,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 20,
+  "capturePolicy": "pet-only",
+  "contactAuras": [
+    {
+      "damageDice": 3,
+      "damageSides": 3,
+      "damageType": "acid"
+    }
+  ],
+  "damageDice": 14,
+  "damageSides": 14,
+  "damageType": "acid",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 15,
+  "descriptionKey": "actor-demo-varuna-lord-of-water-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 55660,
+  "forceSleep": true,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 74,
+    "forceMaximum": true,
+    "sides": 121
+  },
+  "id": "demo.actor.varuna-lord-of-water",
+  "level": 81,
+  "light": {
+    "intrinsic": false,
+    "radius": 2
+  },
+  "maxHp": 8954,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 14,
+            "damageSides": 14,
+            "damageType": "acid",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "fire",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 77,
+            "type": "terrify"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 14,
+            "damageSides": 14,
+            "damageType": "acid",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "cold",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 77,
+            "damageDice": 0,
+            "damageSides": 0,
+            "type": "confusion"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "armorMitigated": false,
+            "damageDice": 14,
+            "damageSides": 14,
+            "damageType": "acid",
+            "type": "damage"
+          },
+          {
+            "armorMitigated": false,
+            "damageDice": 7,
+            "damageSides": 7,
+            "damageType": "electricity",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 77,
+            "durationDice": 5,
+            "durationSides": 5,
+            "type": "stun"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "type": "slow"
+          },
+          {
+            "type": "paralysis"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d162-81",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.drag",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.heal-243",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-makara-l50-1d2-2",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-electricity-15d15-243",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.ball-acid-1d484-77",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.bolt-mana-1d283-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.curse-15d15",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.brain-smash-12d12",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.haste-self",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-storm-13-250-r3",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-acid-20-900-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 40,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-varuna-lord-of-water-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "immune",
+    "cold": "immune",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "sound": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 130,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "hindu",
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "nonliving",
+    "orc-cave",
+    "resist-teleport",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}

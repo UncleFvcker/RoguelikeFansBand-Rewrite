@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.summon-ent-l46-1d4",
+  "input": "self",
+  "steps": [
+    {
+      "batchCandidates": [
+        {
+          "actorKindId": "demo.actor.ent",
+          "weight": 1
+        }
+      ],
+      "category": "giant",
+      "countDice": 1,
+      "countSides": 4,
+      "durationTurns": 10000,
+      "maximumLevel": 46,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}

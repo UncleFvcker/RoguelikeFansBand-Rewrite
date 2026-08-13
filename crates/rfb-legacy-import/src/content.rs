@@ -7741,6 +7741,7 @@ fn map_jump_spell_token(
         "JMP_LIGHT" | "JMP_LITE" => "light",
         "JMP_NETHER" => "nether",
         "JMP_NEXUS" => "nexus",
+        "JMP_SHARDS" => "shards",
         "JMP_DISINTEGRATE" => "disintegrate",
         "JMP_HELL_FIRE" => "hell-fire",
         _ => return None,
@@ -9718,77 +9719,187 @@ fn map_summon_spell_token(
             });
             return Some(id);
         }
-        let (suffix, category, maximum_level, dice, sides, bonus, maximum_count) =
-            match caster_kind_id.rsplit('.').next()? {
-                "zoopi-the-cube-king" => (
-                    "summon-gelatinous-cube-l16-1d3",
-                    "gelatinous-cube",
-                    16,
-                    1,
-                    3,
-                    0,
-                    None,
-                ),
-                "rolento" => (
-                    "summon-hand-grenade-l38-1d3-1",
-                    "hand-grenade",
-                    38,
-                    1,
-                    3,
-                    1,
-                    None,
-                ),
-                "santa-claus" => ("summon-reindeer-l52-1d4", "reindeer", 52, 1, 4, 0, None),
-                "jack-of-lanterns" => (
-                    "summon-death-pumpkin-l52-1d4",
-                    "death-pumpkin",
-                    52,
-                    1,
-                    4,
-                    0,
-                    None,
-                ),
-                "bull-gates" => (
-                    "summon-internet-exploder-l52-1d4",
-                    "internet-exploder",
-                    52,
-                    1,
-                    4,
-                    0,
-                    None,
-                ),
-                "the-gospel-of-mug" => (
-                    "summon-tracking-pixel-l56-1d4-max3",
-                    "tracking-pixel",
-                    56,
-                    1,
-                    4,
-                    0,
-                    Some(3),
-                ),
-                "the-nightmare-dragon" => (
-                    "summon-night-mare-l39-1d3-2",
-                    "night-mare",
-                    39,
-                    1,
-                    3,
-                    2,
-                    None,
-                ),
-                "caldarm-the-third" => (
-                    "summon-clone-of-locke-l65-1d3",
-                    "clone-of-locke",
-                    65,
-                    1,
-                    3,
-                    0,
-                    None,
-                ),
-                _ => return None,
-            };
+        let (
+            suffix,
+            category,
+            maximum_level,
+            dice,
+            sides,
+            bonus,
+            maximum_count,
+            batch_candidate,
+            water_flow,
+        ) = match caster_kind_id.rsplit('.').next()? {
+            "zoopi-the-cube-king" => (
+                "summon-gelatinous-cube-l16-1d3",
+                "gelatinous-cube",
+                16,
+                1,
+                3,
+                0,
+                None,
+                None,
+                false,
+            ),
+            "rolento" => (
+                "summon-hand-grenade-l38-1d3-1",
+                "hand-grenade",
+                38,
+                1,
+                3,
+                1,
+                None,
+                None,
+                false,
+            ),
+            "santa-claus" => (
+                "summon-reindeer-l52-1d4",
+                "reindeer",
+                52,
+                1,
+                4,
+                0,
+                None,
+                None,
+                false,
+            ),
+            "jack-of-lanterns" => (
+                "summon-death-pumpkin-l52-1d4",
+                "death-pumpkin",
+                52,
+                1,
+                4,
+                0,
+                None,
+                None,
+                false,
+            ),
+            "bull-gates" => (
+                "summon-internet-exploder-l52-1d4",
+                "internet-exploder",
+                52,
+                1,
+                4,
+                0,
+                None,
+                None,
+                false,
+            ),
+            "the-gospel-of-mug" => (
+                "summon-tracking-pixel-l56-1d4-max3",
+                "tracking-pixel",
+                56,
+                1,
+                4,
+                0,
+                Some(3),
+                None,
+                false,
+            ),
+            "the-nightmare-dragon" => (
+                "summon-night-mare-l39-1d3-2",
+                "night-mare",
+                39,
+                1,
+                3,
+                2,
+                None,
+                None,
+                false,
+            ),
+            "caldarm-the-third" => (
+                "summon-clone-of-locke-l65-1d3",
+                "clone-of-locke",
+                65,
+                1,
+                3,
+                0,
+                None,
+                None,
+                false,
+            ),
+            "varuna-lord-of-water" => (
+                "summon-makara-l50-1d2-2",
+                "mount-meru",
+                50,
+                1,
+                2,
+                2,
+                None,
+                Some("demo.actor.makara"),
+                true,
+            ),
+            "demeter-the-goddess-of-nature" => (
+                "summon-ent-l46-1d4",
+                "giant",
+                46,
+                1,
+                4,
+                0,
+                None,
+                Some("demo.actor.ent"),
+                false,
+            ),
+            "justshorn-sorcerer-king-of-the-sheeple" => (
+                "summon-sheep-l3-1d4",
+                "sheep",
+                3,
+                1,
+                4,
+                0,
+                None,
+                Some("demo.actor.sheep"),
+                false,
+            ),
+            "poseidon-lord-of-seas-and-storm" => (
+                "summon-greater-kraken-l63-1d4",
+                "ocean",
+                63,
+                1,
+                4,
+                0,
+                None,
+                Some("demo.actor.greater-kraken"),
+                true,
+            ),
+            "talos-masterwork-spellwarp-automaton" => (
+                "summon-spellwarp-automaton-l80-1d3",
+                "nonliving",
+                80,
+                1,
+                3,
+                0,
+                None,
+                Some("demo.actor.spellwarp-automaton"),
+                false,
+            ),
+            "brahma-the-creating-spirit" => (
+                "summon-saraswati-l90-1d1",
+                "hindu",
+                90,
+                1,
+                1,
+                0,
+                None,
+                Some("demo.actor.saraswati-goddess-of-knowledge"),
+                false,
+            ),
+            "saraswati-goddess-of-knowledge" => (
+                "summon-brahma-l92-1d1",
+                "hindu",
+                92,
+                1,
+                1,
+                0,
+                None,
+                Some("demo.actor.brahma-the-creating-spirit"),
+                false,
+            ),
+            _ => return None,
+        };
         let id = format!("rfb-legacy.ability.{suffix}");
         abilities.entry(id.clone()).or_insert_with(|| {
-            summon_category_ability(
+            let mut ability = summon_category_ability(
                 suffix,
                 category,
                 maximum_level,
@@ -9796,7 +9907,22 @@ fn map_summon_spell_token(
                 sides,
                 bonus,
                 maximum_count,
-            )
+            );
+            if let Some(actor_kind_id) = batch_candidate {
+                ability["effect"]["batchCandidates"] = serde_json::json!([{
+                    "actorKindId": actor_kind_id,
+                    "weight": 1,
+                }]);
+            }
+            if water_flow {
+                ability["tags"] = serde_json::json!([
+                    "legacy-import",
+                    "summon",
+                    "monster-only",
+                    "monster-water-flow",
+                ]);
+            }
+            ability
         });
         return Some(id);
     }
@@ -9927,6 +10053,7 @@ fn breath_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32))> {
         "BR_INERTIA" => ("inertia", (17, 250)),
         "BR_PLASMA" => ("plasma", (17, 250)),
         "BR_HELL_FIRE" => ("hell-fire", (17, 250)),
+        "BR_HOLY_FIRE" => ("holy-fire", (17, 250)),
         "BR_GRAVITY" => ("gravity", (33, 200)),
         "BR_FORCE" => ("force", (33, 200)),
         "BR_MANA" => ("mana", (33, 250)),
@@ -15979,6 +16106,20 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
         assert_eq!(outcome.report.not_applicable_spells["MAPPING"], 1);
         assert_eq!(outcome.report.unmapped_spells.len(), 0);
         assert_eq!(outcome.report.monsters_with_unmapped_spells, 0);
+
+        let mut abilities = BTreeMap::new();
+        let holy_fire = map_spell_token(
+            "BR_HOLY_FIRE",
+            89,
+            2,
+            "demo.actor.raphael-the-messenger",
+            &mut abilities,
+        )
+        .expect("BR_HOLY_FIRE should map");
+        assert_eq!(holy_fire, "rfb-legacy.ability.breath-holy-fire-17-250-r2");
+        assert_eq!(abilities[&holy_fire]["effect"]["damageType"], "holy-fire");
+        assert_eq!(abilities[&holy_fire]["effect"]["hpPercent"], 17);
+        assert_eq!(abilities[&holy_fire]["effect"]["maxDamage"], 250);
     }
 
     #[test]
@@ -16008,6 +16149,7 @@ S:FREQ_50 | BR_FIRE(40%) | BR_POISON | DETECT_MONSTERS | MAPPING\n";
             ("JMP_FIRE", 31, "jump-fire-l31", "fire", 0, 0, 31),
             ("JMP_ICE", 50, "jump-ice-l50", "ice", 0, 0, 50),
             ("JMP_NETHER", 60, "jump-nether-l60", "nether", 0, 0, 60),
+            ("JMP_SHARDS", 85, "jump-shards-l85", "shards", 0, 0, 85),
             (
                 "JMP_DISINTEGRATE",
                 70,
@@ -16696,6 +16838,114 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         assert_eq!(caldarm["countDice"], 1);
         assert_eq!(caldarm["countSides"], 3);
         assert!(caldarm.get("countBonus").is_none());
+        for (
+            caster,
+            expected_id,
+            category,
+            maximum_level,
+            sides,
+            bonus,
+            actor_kind_id,
+            water_flow,
+        ) in [
+            (
+                "demo.actor.varuna-lord-of-water",
+                "rfb-legacy.ability.summon-makara-l50-1d2-2",
+                "mount-meru",
+                50,
+                2,
+                2,
+                "demo.actor.makara",
+                true,
+            ),
+            (
+                "demo.actor.demeter-the-goddess-of-nature",
+                "rfb-legacy.ability.summon-ent-l46-1d4",
+                "giant",
+                46,
+                4,
+                0,
+                "demo.actor.ent",
+                false,
+            ),
+            (
+                "demo.actor.justshorn-sorcerer-king-of-the-sheeple",
+                "rfb-legacy.ability.summon-sheep-l3-1d4",
+                "sheep",
+                3,
+                4,
+                0,
+                "demo.actor.sheep",
+                false,
+            ),
+            (
+                "demo.actor.poseidon-lord-of-seas-and-storm",
+                "rfb-legacy.ability.summon-greater-kraken-l63-1d4",
+                "ocean",
+                63,
+                4,
+                0,
+                "demo.actor.greater-kraken",
+                true,
+            ),
+            (
+                "demo.actor.talos-masterwork-spellwarp-automaton",
+                "rfb-legacy.ability.summon-spellwarp-automaton-l80-1d3",
+                "nonliving",
+                80,
+                3,
+                0,
+                "demo.actor.spellwarp-automaton",
+                false,
+            ),
+            (
+                "demo.actor.brahma-the-creating-spirit",
+                "rfb-legacy.ability.summon-saraswati-l90-1d1",
+                "hindu",
+                90,
+                1,
+                0,
+                "demo.actor.saraswati-goddess-of-knowledge",
+                false,
+            ),
+            (
+                "demo.actor.saraswati-goddess-of-knowledge",
+                "rfb-legacy.ability.summon-brahma-l92-1d1",
+                "hindu",
+                92,
+                1,
+                0,
+                "demo.actor.brahma-the-creating-spirit",
+                false,
+            ),
+        ] {
+            let id = map_spell_token("S_SPECIAL", 90, 2, caster, &mut abilities)
+                .unwrap_or_else(|| panic!("{caster} special should map"));
+            assert_eq!(id, expected_id);
+            let ability = &abilities[&id];
+            let effect = &ability["effect"];
+            assert_eq!(effect["category"], category);
+            assert_eq!(effect["maximumLevel"], maximum_level);
+            assert_eq!(effect["countDice"], 1);
+            assert_eq!(effect["countSides"], sides);
+            assert_eq!(
+                effect
+                    .get("countBonus")
+                    .and_then(serde_json::Value::as_u64)
+                    .unwrap_or(0),
+                bonus
+            );
+            assert_eq!(
+                effect["batchCandidates"],
+                serde_json::json!([{ "actorKindId": actor_kind_id, "weight": 1 }])
+            );
+            assert_eq!(
+                ability["tags"]
+                    .as_array()
+                    .is_some_and(|tags| tags.iter().any(|tag| tag == "monster-water-flow")),
+                water_flow,
+            );
+        }
         assert!(
             map_spell_token(
                 "S_SPECIAL",

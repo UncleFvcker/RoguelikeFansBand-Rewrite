@@ -1,0 +1,147 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "legacyIndex": 1097,
+    "maxDepth": 999,
+    "rarity": 3
+  },
+  "attack": 22,
+  "capturePolicy": "pet-only",
+  "damageDice": 1,
+  "damageSides": 1,
+  "damageType": "physical",
+  "deathDrop": {
+    "chanceRolls": [],
+    "countDice": [
+      {
+        "dice": 3,
+        "sides": 2
+      }
+    ],
+    "itemTableId": "demo.loot-table.base-items",
+    "kind": "items",
+    "minimumQuality": "exceptional"
+  },
+  "defense": 17,
+  "descriptionKey": "actor-demo-poseidon-lord-of-seas-and-storm-description",
+  "doorInteraction": {
+    "bashes": true
+  },
+  "experienceValue": 55000,
+  "formatVersion": 1,
+  "glyph": "P",
+  "hitPointDice": {
+    "dice": 140,
+    "forceMaximum": true,
+    "sides": 100
+  },
+  "id": "demo.actor.poseidon-lord-of-seas-and-storm",
+  "killsWeakerBodies": true,
+  "level": 88,
+  "light": {
+    "intrinsic": false,
+    "radius": 2
+  },
+  "maxHp": 14000,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "damageDice": 10,
+            "damageSides": 10,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 10,
+            "damageSides": 10,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 10,
+            "damageSides": 10,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      },
+      {
+        "effects": [
+          {
+            "damageDice": 10,
+            "damageSides": 10,
+            "type": "shatter"
+          }
+        ],
+        "methodId": "rfb.blow.hit",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.ball-water-1d176-50",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.summon-greater-kraken-l63-1d4",
+        "weight": 1
+      },
+      {
+        "abilityId": "rfb-legacy.ability.breath-disintegrate-17-150-r3",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 33,
+    "smart": true
+  },
+  "movement": {
+    "modes": [
+      "swim"
+    ]
+  },
+  "movesWeakerBodies": true,
+  "nameKey": "actor-demo-poseidon-lord-of-seas-and-storm-name",
+  "regenerates": true,
+  "resistances": {
+    "acid": "immune",
+    "cold": "resistant",
+    "disintegrate": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant",
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 128,
+  "statusImmunities": [
+    "rfb.status.confusion",
+    "rfb.status.sleep"
+  ],
+  "tags": [
+    "aura-fear",
+    "kin-glyph-80",
+    "legacy-import",
+    "no-quest",
+    "olympian",
+    "orc-cave",
+    "unique"
+  ],
+  "terrainInteraction": {
+    "picksUpItems": true
+  }
+}
