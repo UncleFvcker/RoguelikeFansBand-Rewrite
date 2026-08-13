@@ -33,7 +33,11 @@ test("new character creation exposes all formal class slices", () => {
 });
 
 test("new character creation exposes only formal race slices", () => {
-  assert.deepEqual(PLAYTEST_RACE_IDS, ["demo.race.rfb-human", "rfb-legacy.race.half-orc"]);
+  assert.deepEqual(PLAYTEST_RACE_IDS, [
+    "demo.race.rfb-human",
+    "rfb-legacy.race.half-orc",
+    "rfb-legacy.race.high-elf",
+  ]);
 });
 
 test("new character requests preserve the selected formal race", () => {
@@ -50,6 +54,15 @@ test("new character requests preserve the selected formal race", () => {
       raceId: "rfb-legacy.race.half-orc",
       playerName: "Gorbag",
     },
+  );
+  assert.equal(
+    createNewSessionRequest(
+      "84",
+      "demo.build.warrior",
+      "rfb-legacy.race.high-elf",
+      "Finrod",
+    ).raceId,
+    "rfb-legacy.race.high-elf",
   );
 });
 

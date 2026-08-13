@@ -338,3 +338,17 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `de97fefcb8c224d5dc5b989c7d531808d5a26b9acc9bf190a3b114b76ca2fc2d`、Protocol
   `1.201`、State Hash Schema v100、save v1、baseline `contract-v303`。按用户要求未刷新或
   运行全量 fixture，只执行新增和直接相关测试。
+
+## main 当前批次：高等精灵 Commit 3 正式内容与 UI
+
+- 本批不新增内容 ID，直接正式化 `rfb-legacy.race.high-elf`。静态属性、生命 99%、基础 HP
+  19、经验 190%、商店 90%、八项技能、光明抗性均按 RFB master 核验；补齐 4 格红外视觉、
+  一份天生看破隐形来源及 `humanoid` / `standard-body` / `rfb-compatibility` 标签。
+- 高等精灵保留 `kin-glyph-104`、`snow-adapted` 和 polymorph 身份，不增加等级奖励、种族能力、
+  玩家 actor、物品、能力、材料或词缀 ID。legacy importer 重导入时会保留其正式运行标签。
+- New Game 正式种族列表加入“高等精灵”；中文名称和说明使用 RFB master 原文，英文恢复为
+  `High-Elf` 及原版说明。选种、save、看破隐形 RNG replay、光抗、红外视觉、雪地豁免和初始
+  “活力”美德均有直接测试。
+- 协调版本：pack `1.333.0` / hash
+  `6cf1fcef5b2162e3ecc653c91dcc2fb5beae7d95ca89091b660ff7b96e2336fd`、Protocol `1.201`、
+  State Hash Schema v100、save v1、baseline `contract-v303`。依用户要求不运行或刷新全量 fixture。

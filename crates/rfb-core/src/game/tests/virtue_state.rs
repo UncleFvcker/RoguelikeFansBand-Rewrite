@@ -89,22 +89,15 @@ fn half_orc_and_high_elf_receive_their_original_race_virtues() {
         ]
     );
 
-    let mut high_elf_identity = half_orc
-        .build
-        .clone()
-        .expect("Archer should retain build identity");
-    high_elf_identity.race_id = "rfb-legacy.race.high-elf".to_owned();
-    let mut rng = RfbRng::seeded(43);
-    let high_elf = super::super::virtues::initial_virtues(
-        &half_orc.content,
-        Some(&high_elf_identity),
-        &mut rng,
-    );
+    let high_elf = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.high-elf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("High-Elf Archer should create");
     assert_eq!(
-        high_elf[..3]
-            .iter()
-            .map(|virtue| virtue.kind)
-            .collect::<Vec<_>>(),
+        &virtue_kinds(&high_elf)[..3],
         [
             VirtueKindDto::Nature,
             VirtueKindDto::Temperance,

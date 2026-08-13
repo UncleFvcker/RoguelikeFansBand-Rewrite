@@ -1176,6 +1176,13 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
         Game::DEFAULT_PLAYER_NAME,
     )
     .expect("formal Half-Orc should create");
+    let high_elf = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        "rfb-legacy.race.high-elf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal High-Elf should create");
 
     let human_attributes = human.effective_player_attributes();
     let half_orc_attributes = half_orc.effective_player_attributes();
@@ -1226,6 +1233,10 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
     assert_eq!(human_experience.progress.experience, 100);
     assert_eq!(half_orc_experience.progress.experience, 110);
 
+    let mut high_elf_experience = high_elf.clone();
+    high_elf_experience.apply_player_experience(100, &mut Vec::new());
+    assert_eq!(high_elf_experience.progress.experience, 190);
+
     let default = Game::new_with_build(83, "demo.build.warrior")
         .expect("Warrior build should retain its Human default");
     assert_eq!(default.build, human.build);
@@ -1236,20 +1247,72 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
         Game::new_with_build_race_and_name(
             83,
             "demo.build.warrior",
-            "rfb-legacy.race.high-elf",
-            Game::DEFAULT_PLAYER_NAME,
-        ),
-        Err(CoreError::CharacterRaceUnavailable(_))
-    ));
-    assert!(matches!(
-        Game::new_with_build_race_and_name(
-            83,
-            "demo.build.warrior",
             "demo.race.missing",
             Game::DEFAULT_PLAYER_NAME,
         ),
         Err(CoreError::UnknownCharacterRace(_))
     ));
+}
+
+#[test]
+fn high_elf_intrinsics_and_identity_round_trip() {
+    let human = Game::new_with_build_race_and_name(
+        84,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        "Finrod",
+    )
+    .expect("formal Human should create");
+    let game = Game::new_with_build_race_and_name(
+        84,
+        "demo.build.warrior",
+        "rfb-legacy.race.high-elf",
+        "Finrod",
+    )
+    .expect("formal High-Elf should create");
+    let human_attributes = human.effective_player_attributes();
+    let attributes = game.effective_player_attributes();
+    assert_eq!(
+        attributes.index(AttributeKind::Strength),
+        human_attributes.index(AttributeKind::Strength) + 1
+    );
+    assert_eq!(
+        attributes.index(AttributeKind::Intelligence),
+        human_attributes.index(AttributeKind::Intelligence) + 3
+    );
+    assert_eq!(
+        attributes.index(AttributeKind::Wisdom) + 1,
+        human_attributes.index(AttributeKind::Wisdom)
+    );
+    assert_eq!(
+        attributes.index(AttributeKind::Dexterity),
+        human_attributes.index(AttributeKind::Dexterity) + 3
+    );
+    assert_eq!(
+        attributes.index(AttributeKind::Constitution),
+        human_attributes.index(AttributeKind::Constitution) + 1
+    );
+    assert_eq!(
+        attributes.index(AttributeKind::Charisma),
+        human_attributes.index(AttributeKind::Charisma) + 1
+    );
+    assert_eq!(game.player_infravision_range(), 4);
+    assert_eq!(game.player_see_invisible_sources(), 1);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Light),
+        ResistanceLevel::Resistant
+    );
+    assert!(
+        game.snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
+
+    let restored = Game::from_save(game.to_save()).expect("High-Elf save should restore");
+    assert_eq!(restored.build, game.build);
+    assert_eq!(restored.snapshot(), game.snapshot());
+    assert_eq!(restored.state_hash(), game.state_hash());
 }
 
 #[test]

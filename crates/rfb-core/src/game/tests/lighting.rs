@@ -12,29 +12,13 @@ const LANTERN_KIND_ID: &str = "demo.item.brass-lantern";
 const OIL_KIND_ID: &str = "demo.item.flask-of-oil";
 
 fn intrinsic_see_invisible_game(seed: u64) -> Game {
-    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(std::path::Path::parent)
-        .expect("core crate should be inside the workspace")
-        .join("packs/rfb-demo-original");
-    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
-    for race_id in ["demo.race.rfb-human", "rfb-legacy.race.high-elf"] {
-        artifact
-            .content
-            .races
-            .iter_mut()
-            .find(|race| race.id == race_id)
-            .unwrap_or_else(|| panic!("test race {race_id} should exist"))
-            .see_invisible = true;
-    }
-    let artifact = rfb_content::encode_content(artifact.content)
-        .expect("intrinsic see-invisible content should encode");
-    let content = Arc::new(
-        rfb_content::ContentCatalog::from_bytes(&artifact.bytes)
-            .expect("intrinsic see-invisible content should decode"),
-    );
-    Game::from_content_with_build(seed, content, DEFAULT_WORLD_ID, RFB_WARRIOR_BUILD_ID)
-        .expect("intrinsic see-invisible game should create")
+    Game::new_with_build_race_and_name(
+        seed,
+        RFB_WARRIOR_BUILD_ID,
+        "rfb-legacy.race.high-elf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal High-Elf game should create")
 }
 
 fn race_form_status(race_id: &str) -> StatusInstance {

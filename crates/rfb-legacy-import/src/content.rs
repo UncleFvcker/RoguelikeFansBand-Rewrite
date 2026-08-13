@@ -5926,11 +5926,16 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
-    let mut tags = vec!["legacy-import"];
     if entry.id == "high-elf" {
-        tags.push("snow-adapted");
+        return vec![
+            "humanoid",
+            "legacy-import",
+            "rfb-compatibility",
+            "snow-adapted",
+            "standard-body",
+        ];
     }
-    tags
+    vec!["legacy-import"]
 }
 
 fn race_json(
@@ -18868,7 +18873,13 @@ race_t *test_beast_get_race(void)
         };
         assert_eq!(
             legacy_race_tags(&high_elf),
-            ["legacy-import", "snow-adapted"]
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "snow-adapted",
+                "standard-body",
+            ]
         );
     }
 

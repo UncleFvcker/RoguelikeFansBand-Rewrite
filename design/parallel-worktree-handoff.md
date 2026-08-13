@@ -933,3 +933,16 @@ git diff --stat
   `de97fefcb8c224d5dc5b989c7d531808d5a26b9acc9bf190a3b114b76ca2fc2d`、Protocol
   `1.201`、State Hash Schema v100、save v1、active baseline `contract-v303`。依用户要求
   不运行、不刷新全量 fixture；合并验收时再统一处理受雪地移动与半兽人初始化影响的用例。
+
+## 49. main 当前交接（高等精灵 Commit 3：正式内容与 UI）
+
+- 本批不新增 race、item、ability、material 或 affix ID；正式种族继续使用
+  `rfb-legacy.race.high-elf`，其他方向不得创建重复 High-Elf 内容。
+- High-Elf 现具备 RFB master 的完整静态属性、技能、生命/经验/商店倍率、4 格红外视觉、光明
+  抗性、天生看破隐形、雪地适应、Standard 身体和既有精灵 kin；无等级奖励或主动种族能力。
+- New Game 列表与中英文案已正式开放。职业 build 仍默认 Human，用户选择的 High-Elf 通过既有
+  `raceId` 覆盖路径进入 save、replay 与 State Hash，不新增协议或持久化字段。
+- 共享协调点为 pack `1.333.0` / content hash
+  `6cf1fcef5b2162e3ecc653c91dcc2fb5beae7d95ca89091b660ff7b96e2336fd`、Protocol `1.201`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。按用户要求只执行新增和直接
+  相关测试，全量 fixture 留到合并验收。

@@ -23,13 +23,6 @@ fn expected_ticks(game: &Game, action_cost: i32) -> u32 {
         .expect("test action ticks should fit u32")
 }
 
-fn grant_race_form(game: &mut Game, race_id: &str) {
-    let mut status =
-        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.snow-race-form").status;
-    status.granted_race_id = Some(race_id.to_owned());
-    game.player.statuses.push(status);
-}
-
 fn mounted_snow_game(seed: u64, snow_adapted: bool) -> Game {
     let mut game = game_with_actor_definition(seed, "demo.actor.horse", |horse| {
         if snow_adapted {
@@ -118,8 +111,16 @@ fn flight_high_elf_and_snow_adapted_mounts_ignore_snow() {
     assert!(flying.gain_mutation("rfb.mutation.wings", &mut Vec::new()));
     assert_eq!(flying.player_snow_movement_action_cost(100), 100);
 
-    let mut high_elf = ordinary;
-    grant_race_form(&mut high_elf, "rfb-legacy.race.high-elf");
+    let mut high_elf = Game::new_with_build_race_and_name(
+        53,
+        "demo.build.warrior",
+        "rfb-legacy.race.high-elf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal High-Elf should create");
+    clear_monsters(&mut high_elf);
+    replace_terrain(&mut high_elf, target, SNOW_ID);
+    high_elf.player.position = target;
     assert_eq!(high_elf.player_snow_movement_action_cost(100), 100);
 
     assert_eq!(

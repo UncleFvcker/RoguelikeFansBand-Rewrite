@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use rfb_core::stats::experience_required_for_level;
-use rfb_protocol::{Direction, GameCommand, MapScaleDto, MonsterPackBehaviorDto, Position};
+use rfb_protocol::{
+    ActorSaveDto, Direction, GameCommand, MapScaleDto, MonsterPackBehaviorDto, Position,
+};
 
 use super::*;
 
@@ -139,6 +141,46 @@ fn half_orc_talent_choice_is_replayable() {
 }
 
 #[test]
+fn high_elf_invisible_detection_roll_is_replayable() {
+    let initial = invisible_replay_game(84, "rfb-legacy.race.high-elf");
+    assert_eq!(
+        initial
+            .snapshot()
+            .player
+            .build
+            .as_ref()
+            .expect("formal build identity")
+            .race_id,
+        "rfb-legacy.race.high-elf"
+    );
+    let draws_before = initial.rng_draw_counter();
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    recorder
+        .dispatch(GameCommand::Move {
+            direction: Direction::North,
+        })
+        .expect("movement should trigger a full visibility refresh");
+    let (final_game, replay) = recorder.finish();
+
+    let human = invisible_replay_game(84, "demo.race.rfb-human");
+    let human_draws_before = human.rng_draw_counter();
+    let mut human_recorder = ReplayRecorder::new(human);
+    human_recorder
+        .dispatch(GameCommand::Move {
+            direction: Direction::North,
+        })
+        .expect("Human control movement should execute");
+    let (human_final, _) = human_recorder.finish();
+    assert_eq!(
+        final_game.rng_draw_counter() - draws_before,
+        human_final.rng_draw_counter() - human_draws_before + 1
+    );
+    let verification = verify(&replay, initial).expect("High-Elf detection replay should verify");
+    assert_eq!(verification.commands_verified, 1);
+    assert_eq!(verification.final_state_hash, final_game.state_hash());
+}
+
+#[test]
 fn replay_tampering_is_rejected() {
     let initial = quiet_game(42);
     let mut recorder = ReplayRecorder::new(initial.clone());
@@ -227,6 +269,57 @@ fn level_thirty_half_orc(seed: u64) -> Game {
             .clamp(0, skill.maximum);
     }
     Game::from_save(payload).expect("level 30 Half-Orc replay precondition should restore")
+}
+
+fn invisible_replay_game(seed: u64, race_id: &str) -> Game {
+    let mut payload = Game::new_with_build_race_and_name(
+        seed,
+        "demo.build.warrior",
+        race_id,
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal replay race should create")
+    .to_save();
+    let start = Position { x: 3, y: 3 };
+    let destination = Position { x: 3, y: 2 };
+    let monster_position = Position { x: 4, y: 3 };
+    payload.player.position = start;
+    let width = usize::from(payload.terrain.width);
+    for position in [start, destination, monster_position] {
+        let index = usize::try_from(position.y).expect("positive test y") * width
+            + usize::try_from(position.x).expect("positive test x");
+        payload.terrain.terrain_ids[index] = "demo.terrain.floor".to_owned();
+        payload.terrain.glow[index] = true;
+    }
+
+    payload.entities = vec![ActorSaveDto {
+        id: "test.high-elf-invisible".to_owned(),
+        kind_id: "demo.actor.clear-icky-thing".to_owned(),
+        experience: 0,
+        appearance_kind_id: None,
+        position: monster_position,
+        hp: 9,
+        max_hp: 9,
+        power_per_mille: 1_000,
+        base_speed: 110,
+        energy_need: 100,
+        minor_slow: 0,
+        alerted: Some(false),
+        nice: true,
+        visible_invisible: false,
+        visible_weird_mind: false,
+        eldritch_horror_triggered: false,
+        anger: 0,
+        friendly: false,
+        casting_cooldown_remaining: 0,
+        observed_player_resistances: Vec::new(),
+        statuses: Vec::new(),
+        resistances: Vec::new(),
+        pack: None,
+        controller_id: None,
+        summon: None,
+    }];
+    Game::from_save(payload).expect("invisible replay precondition should restore")
 }
 
 fn path_to_monster_and_three_attacks() -> Vec<GameCommand> {

@@ -67,6 +67,7 @@
   "experiencePercent": 190,
   "formatVersion": 1,
   "id": "rfb-legacy.race.high-elf",
+  "infravision": 4,
   "kinCategory": "kin-glyph-104",
   "legacyIndex": 9,
   "lifePercent": 99,
@@ -82,11 +83,15 @@
   "resistances": {
     "light": "resistant"
   },
+  "seeInvisible": true,
   "shopAdjustPercent": 90,
   "skillSetId": "rfb-legacy.skill-set.race-high-elf",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate",
-    "snow-adapted"
+    "rfb-compatibility",
+    "snow-adapted",
+    "standard-body",
+    "polymorph-candidate"
   ]
 }

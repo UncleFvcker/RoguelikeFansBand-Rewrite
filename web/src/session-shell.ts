@@ -23,7 +23,11 @@ export const PLAYTEST_BUILD_IDS = [
 ] as const;
 
 export type PlaytestBuildId = (typeof PLAYTEST_BUILD_IDS)[number];
-export const PLAYTEST_RACE_IDS = ["demo.race.rfb-human", "rfb-legacy.race.half-orc"] as const;
+export const PLAYTEST_RACE_IDS = [
+  "demo.race.rfb-human",
+  "rfb-legacy.race.half-orc",
+  "rfb-legacy.race.high-elf",
+] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
 

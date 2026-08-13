@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.332.0");
+    assert_eq!(catalog.pack_version(), "1.333.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -417,16 +417,63 @@ fn formal_half_orc_matches_rfb_profile_and_talent_pool() {
 }
 
 #[test]
-fn legacy_high_elf_keeps_the_original_snow_adaptation() {
+fn formal_high_elf_matches_the_original_profile() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
-    assert!(
-        catalog
-            .race("rfb-legacy.race.high-elf")
-            .expect("legacy High-Elf race")
-            .tags
+    let high_elf = catalog
+        .race("rfb-legacy.race.high-elf")
+        .expect("formal High-Elf race");
+
+    assert_eq!(
+        [
+            high_elf.modifiers.strength,
+            high_elf.modifiers.intelligence,
+            high_elf.modifiers.wisdom,
+            high_elf.modifiers.dexterity,
+            high_elf.modifiers.constitution,
+            high_elf.modifiers.charisma,
+        ],
+        [1, 3, -1, 3, 1, 1]
+    );
+    assert_eq!(high_elf.life_percent, 99);
+    assert_eq!(high_elf.base_hp, 19);
+    assert_eq!(high_elf.experience_percent, 190);
+    assert_eq!(high_elf.shop_adjust_percent, 90);
+    assert_eq!(high_elf.infravision, 4);
+    assert!(high_elf.see_invisible);
+    assert_eq!(
+        high_elf.resistances.get(&ActorDamageType::Light),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(high_elf.level_mutation_rewards.is_empty());
+    for tag in [
+        "humanoid",
+        "rfb-compatibility",
+        "snow-adapted",
+        "standard-body",
+    ] {
+        assert!(high_elf.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&high_elf.skill_set_id)
+        .expect("formal High-Elf skill set");
+    assert_eq!(
+        skills
+            .entries
             .iter()
-            .any(|tag| tag == "snow-adapted")
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 9),
+            ("demo.skill.disarming", 4),
+            ("demo.skill.melee", 10),
+            ("demo.skill.perception", 14),
+            ("demo.skill.ranged", 15),
+            ("demo.skill.saving-throw", 12),
+            ("demo.skill.search", 3),
+            ("demo.skill.stealth", 4),
+        ]
     );
 }
 
