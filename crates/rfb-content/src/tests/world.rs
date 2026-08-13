@@ -8481,6 +8481,41 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
             "{excluded} should not be in the Hobbit theme"
         );
     }
+
+    let scruffy = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.scruffy-looking-hobbit")
+        .expect("Scruffy looking hobbit should exist");
+    let drop = scruffy
+        .death_drop
+        .as_ref()
+        .expect("Scruffy looking hobbit should drop items");
+    assert_eq!(drop.kind, MonsterDropKindDefinition::Items);
+    assert_eq!(
+        drop.item_table_id.as_deref(),
+        Some("demo.loot-table.base-items")
+    );
+    assert_eq!(
+        drop.theme_table_id.as_deref(),
+        Some("demo.loot-table.hobbit")
+    );
+    assert_eq!(drop.theme_chance_percent, 50);
+    assert_eq!(
+        drop.count_dice,
+        vec![MonsterDropDiceDefinition { dice: 1, sides: 2 }]
+    );
+    assert!(scruffy.terrain_interaction.picks_up_items);
+    assert!(
+        scruffy
+            .melee_routine
+            .as_ref()
+            .is_some_and(|routine| routine.blows.iter().any(|blow| blow
+                .effects
+                .iter()
+                .any(|effect| matches!(effect, MeleeBlowEffectDefinition::EatGold { .. }))))
+    );
 }
 
 #[test]

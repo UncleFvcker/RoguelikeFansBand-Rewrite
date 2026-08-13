@@ -132,6 +132,12 @@
       "omittedFlags": ["STUPID"]
     },
     {
+      "sourceIndex": 74,
+      "id": "scruffy-looking-hobbit",
+      "tags": ["hobbit", "thief", "warrens"],
+      "omittedFlags": ["MALE"]
+    },
+    {
       "sourceIndex": 75,
       "id": "giant-white-ant",
       "tags": ["ant", "warrens"],

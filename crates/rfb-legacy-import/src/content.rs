@@ -53,6 +53,7 @@ const DEMO_SAMURAI_DROP_TABLE_ID: &str = "demo.loot-table.samurai";
 const DEMO_ROGUE_DROP_TABLE_ID: &str = "demo.loot-table.rogue";
 const DEMO_DWARF_DROP_TABLE_ID: &str = "demo.loot-table.dwarf";
 const DEMO_NINJA_DROP_TABLE_ID: &str = "demo.loot-table.ninja";
+const DEMO_HOBBIT_DROP_TABLE_ID: &str = "demo.loot-table.hobbit";
 const DEMO_CORPSE_ITEM_ID: &str = "demo.item.corpse-remains";
 const DEMO_SKELETON_ITEM_ID: &str = "demo.item.skeleton-remains";
 
@@ -70,6 +71,7 @@ fn demo_drop_theme_table_id(theme: &str) -> Option<&'static str> {
         "DROP_ROGUE" => Some(DEMO_ROGUE_DROP_TABLE_ID),
         "DROP_DWARF" => Some(DEMO_DWARF_DROP_TABLE_ID),
         "DROP_NINJA" => Some(DEMO_NINJA_DROP_TABLE_ID),
+        "DROP_HOBBIT" => Some(DEMO_HOBBIT_DROP_TABLE_ID),
         _ => None,
     }
 }
@@ -14252,6 +14254,14 @@ mod tests {
             Err(LegacyImportError::InvalidDemoMonsterSelection(detail))
                 if detail == "audit minimum level 40 exceeds maximum level 33"
         ));
+    }
+
+    #[test]
+    fn demo_monster_import_maps_hobbit_drop_theme() {
+        assert_eq!(
+            demo_drop_theme_table_id("DROP_HOBBIT"),
+            Some("demo.loot-table.hobbit")
+        );
     }
 
     #[test]
