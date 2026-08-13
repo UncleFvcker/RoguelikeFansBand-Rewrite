@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.316.0");
+    assert_eq!(catalog.pack_version(), "1.317.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -544,7 +544,7 @@ fn mutation_definitions_match_the_frozen_legacy_ledger() {
             .iter()
             .filter(|mutation| mutation["status"] == "active")
             .count(),
-        132
+        138
     );
 }
 
@@ -1322,6 +1322,136 @@ fn sixth_passive_mutation_batch_completes_current_consumers() {
 }
 
 #[test]
+fn active_demigod_talents_preserve_original_hooks_and_activation_parameters() {
+    let pack = original_pack_path();
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&pack).expect("original pack should compile"),
+    );
+    assert!(
+        catalog
+            .mutation("rfb.mutation.subtle-casting")
+            .unwrap()
+            .suppresses_distant_spell_anger
+    );
+    assert!(
+        catalog
+            .mutation("rfb.mutation.peerless-sniper")
+            .unwrap()
+            .suppresses_distant_projectile_anger
+    );
+    assert!(
+        catalog
+            .mutation("rfb.mutation.evasion")
+            .unwrap()
+            .evades_innate_monster_attacks
+    );
+    assert!(
+        catalog
+            .mutation("rfb.mutation.cult-of-personality")
+            .unwrap()
+            .cult_of_personality
+    );
+    assert!(
+        catalog
+            .mutation("rfb.mutation.fantastic-frenzy")
+            .unwrap()
+            .preserves_melee_energy_on_kill
+    );
+    for (mutation_id, level, attribute, cost, failure, ability_id) in [
+        (
+            "rfb.mutation.peerless-tracker",
+            20,
+            TechniqueAttribute::Wisdom,
+            25,
+            40,
+            "rfb.ability.mutation.peerless-tracker",
+        ),
+        (
+            "rfb.mutation.fantastic-frenzy",
+            40,
+            TechniqueAttribute::Strength,
+            50,
+            80,
+            "rfb.ability.mutation.fantastic-frenzy",
+        ),
+    ] {
+        let activation = catalog
+            .mutation(mutation_id)
+            .and_then(|mutation| mutation.activation.as_ref())
+            .unwrap_or_else(|| panic!("{mutation_id}"));
+        assert_eq!(activation.minimum_level, level, "{mutation_id}");
+        assert_eq!(activation.governing_attribute, attribute, "{mutation_id}");
+        assert_eq!(activation.cost, cost, "{mutation_id}");
+        assert_eq!(activation.base_failure_percent, failure, "{mutation_id}");
+        assert_eq!(activation.ability_id, ability_id, "{mutation_id}");
+    }
+
+    let ledger: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
+    )
+    .expect("ledger should parse");
+    for id in [
+        "rfb.mutation.subtle-casting",
+        "rfb.mutation.peerless-sniper",
+        "rfb.mutation.evasion",
+        "rfb.mutation.peerless-tracker",
+        "rfb.mutation.cult-of-personality",
+        "rfb.mutation.fantastic-frenzy",
+    ] {
+        let entry = ledger["mutations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|entry| entry["id"] == id)
+            .unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(entry["status"], "active", "{id}");
+        assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+    }
+    let human = catalog.race("demo.race.rfb-human").unwrap();
+    let talent = human
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "human-talent")
+        .expect("Human should choose a demigod talent at level 20");
+    assert_eq!(talent.minimum_level, 20);
+    let RaceMutationSelectionDefinition::Choice { mutation_ids } = &talent.selection else {
+        panic!("Human talent should be a choice");
+    };
+    assert_eq!(
+        mutation_ids.iter().map(String::as_str).collect::<Vec<_>>(),
+        [
+            "rfb.mutation.fast-learner",
+            "rfb.mutation.weapon-skills",
+            "rfb.mutation.subtle-casting",
+            "rfb.mutation.peerless-sniper",
+            "rfb.mutation.unyielding",
+            "rfb.mutation.untouchable",
+            "rfb.mutation.loremaster",
+            "rfb.mutation.arcane-mastery",
+            "rfb.mutation.evasion",
+            "rfb.mutation.potion-chugger",
+            "rfb.mutation.one-with-magic",
+            "rfb.mutation.peerless-tracker",
+            "rfb.mutation.infernal-deal",
+            "rfb.mutation.fell-sorcery",
+            "rfb.mutation.sacred-vitality",
+            "rfb.mutation.cult-of-personality",
+            "rfb.mutation.fleet-of-foot",
+            "rfb.mutation.demonic-grasp",
+            "rfb.mutation.weird-mind",
+            "rfb.mutation.fantastic-frenzy",
+        ]
+    );
+    assert!(mutation_ids.iter().all(|id| {
+        ledger["mutations"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|entry| entry["id"] == id.as_str() && entry["status"] == "active")
+    }));
+}
+
+#[test]
 fn mutation_transaction_metadata_rejects_duplicate_order_and_invalid_removals() {
     let pack = original_pack_path();
     let artifact = compile_pack_dir(&pack).expect("original pack should compile");
@@ -1578,7 +1708,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
             .iter()
             .filter(|entry| entry["status"] == "active")
             .count(),
-        132
+        138
     );
     assert_eq!(
         entries

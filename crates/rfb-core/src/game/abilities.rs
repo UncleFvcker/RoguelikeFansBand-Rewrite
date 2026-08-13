@@ -656,6 +656,9 @@ impl Game {
             (AbilityEffectDefinition::Concentrate, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_concentrate_effect(&ability, events)
             }
+            (AbilityEffectDefinition::MeleeAdjacent, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_melee_adjacent_effect(events, changed, removed_entities)?;
+            }
             (
                 AbilityEffectDefinition::SniperShot { mode },
                 AbilityTargetPlan::SniperShot { target },
@@ -4547,6 +4550,17 @@ impl Game {
         let mut floor_positions = Vec::new();
         for position in &affected_positions {
             if self.player.position == *position && !self.player_is_dead() {
+                if self.player_evades_innate_monster_attacks() && self.rng.bounded(2) != 0 {
+                    self.replace_terrain_from_source(
+                        *position,
+                        floor_terrain_id,
+                        terrain_change_source,
+                        events,
+                        changed,
+                    );
+                    floor_positions.push(*position);
+                    continue;
+                }
                 let raw_damage = self.roll_damage(4, 8);
                 let damage = self.reduce_player_damage(resolve_damage(
                     DamagePacket::new(raw_damage, DamageType::Physical),
@@ -6441,7 +6455,8 @@ impl Game {
                 .flatten()
                 .map(|action| AbilityTargetPlan::Recall { action })
             }
-            AbilityEffectDefinition::ResistElements { .. }
+            AbilityEffectDefinition::MeleeAdjacent
+            | AbilityEffectDefinition::ResistElements { .. }
             | AbilityEffectDefinition::ReportMagic
             | AbilityEffectDefinition::AreaDestruction { .. }
             | AbilityEffectDefinition::SuppressMonsterReproduction { .. }
@@ -6778,5 +6793,41 @@ impl Game {
                     })
             }
         }
+    }
+
+    fn resolve_player_melee_adjacent_effect(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let target_ids = TERRAIN_INTERACTION_DIRECTIONS
+            .iter()
+            .filter_map(|direction| {
+                let position = self.position_in_direction(*direction);
+                self.entities
+                    .iter()
+                    .find(|entity| {
+                        entity.hp > 0
+                            && entity.position == position
+                            && !self.actor_is_player_side(entity)
+                    })
+                    .map(|entity| entity.id.clone())
+            })
+            .collect::<Vec<_>>();
+        for target_id in target_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            self.resolve_player_melee(index, false, events, changed, removed_entities)?;
+            if self.player_is_dead() {
+                break;
+            }
+        }
+        Ok(())
     }
 }

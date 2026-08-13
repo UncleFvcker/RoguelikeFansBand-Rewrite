@@ -31,6 +31,54 @@ fn prepare_curse_damage(
 }
 
 impl Game {
+    pub(super) fn apply_cult_of_personality_to_summon(
+        &mut self,
+        source_index: usize,
+        entity: &mut Actor,
+        definition: &rfb_content::ActorDefinition,
+    ) {
+        const CHARISMA_SAVE_ADJUSTMENT: [i32; 38] = [
+            -25, -15, -10, -7, -6, -5, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
+            9, 10, 12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
+        ];
+        if self.actor_is_player_side(&self.entities[source_index])
+            || !self.player_has_cult_of_personality()
+            || self.rng.bounded(2) != 0
+        {
+            return;
+        }
+        let charisma_index = usize::from(
+            self.effective_player_attributes()
+                .index(AttributeKind::Charisma),
+        )
+        .min(CHARISMA_SAVE_ADJUSTMENT.len() - 1);
+        let player_power = u64::try_from(
+            i32::from(self.progress.level)
+                .saturating_add(CHARISMA_SAVE_ADJUSTMENT[charisma_index])
+                .max(1),
+        )
+        .unwrap_or(1);
+        let unique_bonus = definition
+            .tags
+            .iter()
+            .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
+            .then(|| definition.level / 5)
+            .unwrap_or(0);
+        let monster_power = u64::from(definition.level.saturating_add(unique_bonus).max(1));
+        let mut monster_saves = || {
+            let player_roll = self.rng.bounded(player_power) + 1;
+            let monster_roll = self.rng.bounded(monster_power) + 1;
+            player_roll <= monster_roll
+        };
+        if monster_saves() {
+            return;
+        }
+        entity.friendly = true;
+        if !monster_saves() {
+            entity.controller_id = Some(self.player.id.clone());
+        }
+    }
+
     fn remove_banor_rupart_form(
         &mut self,
         entity_id: &str,
@@ -498,6 +546,7 @@ impl Game {
                 source_ability_id: plan.ability.id.clone(),
                 remaining_turns: duration_turns,
             });
+            self.apply_cult_of_personality_to_summon(source_index, &mut entity, &definition);
             changed.insert(position);
             entity_ids.push(id);
             self.entities.push(entity);
@@ -1389,6 +1438,11 @@ impl Game {
                         source_ability_id: plan.ability.id.clone(),
                         remaining_turns: duration_turns,
                     });
+                    self.apply_cult_of_personality_to_summon(
+                        source_index,
+                        &mut entity,
+                        &definition,
+                    );
                     changed.insert(position);
                     entity_ids.push(id);
                     summoned_kind_ids.push(kind_id.clone());

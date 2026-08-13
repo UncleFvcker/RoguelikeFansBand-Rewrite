@@ -784,3 +784,7 @@ ability-rfb-mutation-panic-hit-name = 惊恐打击
 ability-rfb-mutation-panic-hit-description = 你可以在打中目标后拼命逃跑。
 ability-rfb-mutation-polymorph-name = 变形术
 ability-rfb-mutation-polymorph-description = 你可以随意变形自己。
+ability-rfb-mutation-peerless-tracker-name = 无双追踪者
+ability-rfb-mutation-peerless-tracker-description = 映射附近区域，并探测怪物、陷阱、门和楼梯。
+ability-rfb-mutation-fantastic-frenzy-name = 大屠杀
+ability-rfb-mutation-fantastic-frenzy-description = 攻击所有相邻的怪物。

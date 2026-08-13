@@ -264,6 +264,21 @@ pub struct MutationDefinition {
     pub weapon_proficiency_maximum: Option<u16>,
     #[serde(default)]
     pub infernal_deal: bool,
+    /// Prevents distant player ability damage from increasing monster anger.
+    #[serde(default)]
+    pub suppresses_distant_spell_anger: bool,
+    /// Prevents distant launcher and thrown-item damage from increasing monster anger.
+    #[serde(default)]
+    pub suppresses_distant_projectile_anger: bool,
+    /// Reduces innate monster ranged damage and can evade earthquake damage.
+    #[serde(default)]
+    pub evades_innate_monster_attacks: bool,
+    /// Gives hostile summons two charisma-based chances to become friendly, then pets.
+    #[serde(default)]
+    pub cult_of_personality: bool,
+    /// Preserves unused melee attack energy when a normal melee action kills its target.
+    #[serde(default)]
+    pub preserves_melee_energy_on_kill: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub removes_on_gain: Vec<String>,
 }

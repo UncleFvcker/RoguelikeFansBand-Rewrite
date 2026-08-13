@@ -203,7 +203,86 @@ struct ProjectileCollisionOutcome {
     fatal: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(super) struct PlayerMeleeOutcome {
+    pub(super) attacks_used: u16,
+    pub(super) attacks_available: u16,
+    pub(super) killed: bool,
+}
+
 impl Game {
+    fn actor_can_be_angered_by_ranged_damage(&self, index: usize) -> bool {
+        let Some(casting) = self
+            .actor_runtime_definition(&self.entities[index])
+            .and_then(|definition| definition.monster_casting.as_ref())
+        else {
+            return false;
+        };
+        casting.abilities.iter().any(|candidate| {
+            self.content
+                .ability(&candidate.ability_id)
+                .is_some_and(|ability| {
+                    ability.effect.ordered_effects().iter().any(|effect| {
+                        matches!(
+                            effect,
+                            AbilityEffectDefinition::Damage { .. }
+                                | AbilityEffectDefinition::Malediction { .. }
+                                | AbilityEffectDefinition::AreaDamage { .. }
+                                | AbilityEffectDefinition::JumpDamage { .. }
+                                | AbilityEffectDefinition::BeamDamage { .. }
+                                | AbilityEffectDefinition::LightLine { .. }
+                                | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                                | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+                                | AbilityEffectDefinition::ConeDamage { .. }
+                                | AbilityEffectDefinition::BreathDamage { .. }
+                                | AbilityEffectDefinition::CurseDamage { .. }
+                                | AbilityEffectDefinition::DeathRay { .. }
+                                | AbilityEffectDefinition::Summon { .. }
+                                | AbilityEffectDefinition::SummonCategory { .. }
+                        )
+                    })
+                })
+        })
+    }
+
+    pub(super) fn anger_monster_from_spell_damage(&mut self, index: usize, damage: i32) {
+        if damage <= 0
+            || self.player_suppresses_distant_spell_anger()
+            || rfb_distance(self.player.position, self.entities[index].position) <= 1
+            || !self.actor_can_be_angered_by_ranged_damage(index)
+        {
+            return;
+        }
+        let current = u32::from(self.entities[index].anger);
+        let mut increase = 10_u32.saturating_add(current / 2);
+        if damage < 450 {
+            increase = increase
+                .saturating_mul(u32::try_from(damage.saturating_add(50)).unwrap_or(0))
+                / 500;
+        }
+        self.entities[index].anger = u8::try_from(current.saturating_add(increase).min(100))
+            .expect("bounded monster anger must fit u8");
+    }
+
+    pub(super) fn anger_monster_from_projectile_damage(&mut self, index: usize, damage: i32) {
+        if damage <= 0
+            || self.player_suppresses_distant_projectile_anger()
+            || rfb_distance(self.player.position, self.entities[index].position) <= 1
+            || !self.actor_can_be_angered_by_ranged_damage(index)
+        {
+            return;
+        }
+        let current = u32::from(self.entities[index].anger);
+        let mut increase = 5_u32.saturating_add(current / 4);
+        if damage < 125 {
+            increase = increase
+                .saturating_mul(u32::try_from(damage.saturating_add(25)).unwrap_or(0))
+                / 150;
+        }
+        self.entities[index].anger = u8::try_from(current.saturating_add(increase).min(100))
+            .expect("bounded monster anger must fit u8");
+    }
+
     pub(super) fn player_projectile_path_for_mode(
         &self,
         target: &TargetSelection,
@@ -677,6 +756,7 @@ impl Game {
         });
         self.wake_entity_after_damage(index, damage.applied, events);
         if !application.fatal {
+            self.anger_monster_from_projectile_damage(index, damage.applied);
             self.resolve_monster_fear_aura(index, "hurt", true, events);
         }
         if application.fatal {
@@ -774,6 +854,7 @@ impl Game {
                     removed_entities,
                 )?;
             } else {
+                self.anger_monster_from_projectile_damage(index, damage.applied);
                 self.resolve_monster_fear_aura(index, "hurt", true, events);
             }
         }
@@ -930,6 +1011,7 @@ impl Game {
         });
         self.wake_entity_after_damage(index, damage.applied, events);
         if !application.fatal {
+            self.anger_monster_from_spell_damage(index, damage.applied);
             self.resolve_monster_fear_aura(index, "hurt", true, events);
         }
         if application.fatal && award_player_kill {
@@ -1093,6 +1175,7 @@ impl Game {
                 });
                 self.wake_entity_after_damage(index, damage.applied, events);
                 if !application.fatal {
+                    self.anger_monster_from_projectile_damage(index, damage.applied);
                     self.resolve_monster_fear_aura(index, "hurt", true, events);
                 }
                 if application.fatal {
@@ -1132,7 +1215,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<PlayerMeleeOutcome, CoreError> {
         let definition = self
             .actor_runtime_definition(&self.entities[index])
             .expect("monster actor definition must remain available")
@@ -1157,6 +1240,14 @@ impl Game {
         profiles.extend(
             self.player_mutation_innate_attack_profiles(&attacker, equipped_weapon_id.as_deref()),
         );
+        let attacks_available = profiles
+            .iter()
+            .fold(0_u16, |total, profile| {
+                total.saturating_add(profile.attacks)
+            })
+            .max(1);
+        let mut attacks_used = 0_u16;
+        let mut killed = false;
         let mut vampiric_drain_remaining = 50_i32;
         let mut retaliation_blow_index = 0_usize;
         let mut touched_surviving_target = false;
@@ -1174,6 +1265,7 @@ impl Game {
             let damage_multiplier =
                 self.player_melee_damage_multiplier(&profile, &self.entities[index], &definition);
             for _ in 0..profile.attacks {
+                attacks_used = attacks_used.saturating_add(1);
                 self.apply_easy_tiring_fatigue(50);
                 if profile.melee_skill.value <= 0
                     || !self
@@ -1249,6 +1341,7 @@ impl Game {
                     !revenge_stop && self.resolve_monster_contact_auras(&definition, events);
                 if contact_aura_fatal || revenge_stop {
                     if application.fatal {
+                        killed = true;
                         self.resolve_actor_death(
                             index,
                             profile.slew_event(&target_kind, damage),
@@ -1286,6 +1379,7 @@ impl Game {
                     });
                 }
                 if application.fatal {
+                    killed = true;
                     self.resolve_actor_death(
                         index,
                         profile.slew_event(&target_kind, damage),
@@ -1308,7 +1402,11 @@ impl Game {
         {
             self.resolve_monster_fear_aura(index, "contact", false, events);
         }
-        Ok(())
+        Ok(PlayerMeleeOutcome {
+            attacks_used,
+            attacks_available,
+            killed,
+        })
     }
 
     pub(super) fn resolve_monster_revenge_aura(

@@ -7,5 +7,6 @@
   "rating": "good",
   "sourceIndex": 98,
   "randomWeight": 0,
+  "suppressesDistantSpellAnger": true,
   "removesOnGain": []
 }

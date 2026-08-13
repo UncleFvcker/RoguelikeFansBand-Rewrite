@@ -266,3 +266,17 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - Human 20 级完整候选池仍有九项未实现，`demo.race.rfb-human` 暂不配置残缺选择。
 - 协调版本：pack `1.316.0`、Protocol `1.199`、State Hash Schema v98、save v1、
   active baseline `contract-v300`。
+
+## main 当前批次：Human Commit 5 主动与跨系统半神天赋
+
+- 新增 ID 仅为无双追踪者与奇妙狂乱的两对 `rfb.ability.mutation.*` /
+  `rfb.ability-program.mutation.*`；不新增职业、物品、怪物、材料、词缀或变异 ID。
+- 隐秘施法/无双狙击手通过原版怪物怒气事务工作；闪避覆盖喷吐、火箭、投石和地震；个人
+  崇拜在敌方召唤落地前依次执行友好/宠物保存；无双追踪者和“大屠杀”复用现有能力、
+  探测与近战事务。奇妙狂乱的普通击杀按本次已用攻击数保存剩余行动能量。
+- Human 20 级选择当前开放 20 项忠实闭环候选。原版仍有七项未实现候选，继续隐藏，详见
+  `contract-v301-human-active-demigod-talents.md`，不得以相近现成功能替代。
+- 协调版本：pack `1.317.0` / hash
+  `b27d385635fe09ef107ca2dd4e7fe6475d58e7e3320893e899246920779f5cb2`、Protocol `1.200`、
+  State Hash Schema v99、save v1、baseline `contract-v301`。全量 fixture 刷新和 replay 按
+  用户要求留到合并验收；本批只验证新增测试与直接受影响的生成/内容校验。

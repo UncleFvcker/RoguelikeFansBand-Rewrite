@@ -716,3 +716,9 @@ State Hash Schema 升至 v96，active baseline 为 contract-v290。
 玩家治疗、法术强度、逐武器熟练度、actor 死亡与怪物装置吸取事务，不提供脚本解释器。
 content hash 为 `e0e6820f83989f8790a455d6af5656ec833341e03ef84b2005652c898c47e5b3`；Protocol 保持
 1.199，State Hash Schema 保持 v98。
+
+包 1.317.0 / contract-v301 为 `MutationDefinition` 增加五个默认关闭的窄行为标记，分别
+承载法术/投射物怒气抑制、先天远程闪避、召唤倒戈与近战击杀能量保留。能力程序增加
+`melee-adjacent` 步骤，供“大屠杀”复用普通近战 resolver。新增正式内容 ID 仅为无双追踪者
+和奇妙狂乱的两对 ability/program；content hash 为
+`b27d385635fe09ef107ca2dd4e7fe6475d58e7e3320893e899246920779f5cb2`。

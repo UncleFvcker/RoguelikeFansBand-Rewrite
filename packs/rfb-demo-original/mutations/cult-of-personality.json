@@ -7,5 +7,6 @@
   "rating": "good",
   "sourceIndex": 112,
   "randomWeight": 0,
+  "cultOfPersonality": true,
   "removesOnGain": []
 }

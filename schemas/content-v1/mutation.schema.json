@@ -820,6 +820,11 @@
       ],
       "default": null
     },
+    "cultOfPersonality": {
+      "default": false,
+      "description": "Gives hostile summons two charisma-based chances to become friendly, then pets.",
+      "type": "boolean"
+    },
     "description": {
       "type": "string"
     },
@@ -838,6 +843,11 @@
       "maximum": 255,
       "minimum": 0,
       "type": "integer"
+    },
+    "evadesInnateMonsterAttacks": {
+      "default": false,
+      "description": "Reduces innate monster ranged damage and can evade earthquake damage.",
+      "type": "boolean"
     },
     "formatVersion": {
       "format": "uint16",
@@ -967,6 +977,11 @@
         }
       ],
       "default": null
+    },
+    "preservesMeleeEnergyOnKill": {
+      "default": false,
+      "description": "Preserves unused melee attack energy when a normal melee action kills its target.",
+      "type": "boolean"
     },
     "randomSelectionEnabled": {
       "default": true,
@@ -1162,6 +1177,16 @@
       "default": 0,
       "format": "int32",
       "type": "integer"
+    },
+    "suppressesDistantProjectileAnger": {
+      "default": false,
+      "description": "Prevents distant launcher and thrown-item damage from increasing monster anger.",
+      "type": "boolean"
+    },
+    "suppressesDistantSpellAnger": {
+      "default": false,
+      "description": "Prevents distant player ability damage from increasing monster anger.",
+      "type": "boolean"
     },
     "telepathy": {
       "default": false,

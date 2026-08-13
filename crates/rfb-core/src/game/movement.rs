@@ -495,9 +495,11 @@ impl Game {
     }
 
     pub(super) fn actor_is_friendly(&self, actor: &Actor) -> bool {
-        self.content
-            .actor(&actor.kind_id)
-            .is_some_and(|definition| definition.friendly)
+        actor.friendly
+            || self
+                .content
+                .actor(&actor.kind_id)
+                .is_some_and(|definition| definition.friendly)
     }
 
     pub(super) fn actor_is_player_side(&self, actor: &Actor) -> bool {

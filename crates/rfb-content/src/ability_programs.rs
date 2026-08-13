@@ -235,6 +235,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::PolymorphSelf
                     | AbilityEffectDefinition::TeleportLevel
                     | AbilityEffectDefinition::Clairvoyance { .. }
+                    | AbilityEffectDefinition::MeleeAdjacent
                     | AbilityEffectDefinition::ProbeMonsters
                     | AbilityEffectDefinition::Concentrate
                     | AbilityEffectDefinition::NoOp { .. }

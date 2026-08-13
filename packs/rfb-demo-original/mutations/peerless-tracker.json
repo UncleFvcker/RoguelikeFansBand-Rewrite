@@ -6,6 +6,13 @@
   "description": "你是一名无双的追踪者。",
   "rating": "great",
   "sourceIndex": 108,
+  "activation": {
+    "minimumLevel": 20,
+    "governingAttribute": "wisdom",
+    "cost": 25,
+    "baseFailurePercent": 40,
+    "abilityId": "rfb.ability.mutation.peerless-tracker"
+  },
   "randomWeight": 0,
   "removesOnGain": []
 }

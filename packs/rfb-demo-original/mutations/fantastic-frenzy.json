@@ -6,6 +6,14 @@
   "description": "你拥有奇妙狂乱的力量。",
   "rating": "great",
   "sourceIndex": 117,
+  "activation": {
+    "minimumLevel": 40,
+    "governingAttribute": "strength",
+    "cost": 50,
+    "baseFailurePercent": 80,
+    "abilityId": "rfb.ability.mutation.fantastic-frenzy"
+  },
   "randomWeight": 0,
+  "preservesMeleeEnergyOnKill": true,
   "removesOnGain": []
 }

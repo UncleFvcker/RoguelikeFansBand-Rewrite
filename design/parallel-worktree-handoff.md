@@ -678,3 +678,22 @@ git diff --stat
   `e0e6820f83989f8790a455d6af5656ec833341e03ef84b2005652c898c47e5b3`、Protocol
   `1.199`、State Hash Schema v98、save v1、active baseline `contract-v300`。无新增权威
   状态；26 条 fixture 均未持有这些变异，只复验、不刷新 assertions，零 waiver。
+
+## 41. main 当前交接（Human Commit 5：主动与跨系统半神天赋）
+
+- 本批不新增 item、actor、mutation、material 或 affix ID；新增并由 main 拥有
+  `rfb.ability.mutation.peerless-tracker`、`rfb.ability-program.mutation.peerless-tracker`、
+  `rfb.ability.mutation.fantastic-frenzy` 与
+  `rfb.ability-program.mutation.fantastic-frenzy`。其他方向不得创建同义能力。
+- 隐秘施法、无双狙击手、闪避、个人崇拜、无双追踪者与奇妙狂乱已按 RFB master 闭合。
+  Human 20 级菜单只列出 `mut_demigod_pred` 中当前已闭合的 20 项；仍缺真实消费者的
+  ambidextrous、speed-reader、black-marketeer、tread-softly、inspired-smithing、
+  strong-mind 与 astral-guide 继续隐藏。
+- 怪物 actor 新增权威 `anger` 与 `friendly`；前者提高施法频率并在施法后清零，后者只表示
+  个人崇拜产生的运行时友好，宠物仍沿用 `controllerId`。save v1 不兼容缺字段的旧开发存档。
+- 共享协调点：pack `1.317.0` / content hash
+  `b27d385635fe09ef107ca2dd4e7fe6475d58e7e3320893e899246920779f5cb2`、Protocol
+  `1.200`、State Hash Schema v99、active baseline `contract-v301`。
+- 按用户要求，本批未运行全量测试或 fixture replay；只完成新增测试、生成/内容校验、变异
+  审计和 Web 类型检查。因 actor save/hash 结构变化，26 条 active fixture 必须在明确要求
+  合并验收时刷新并复验。

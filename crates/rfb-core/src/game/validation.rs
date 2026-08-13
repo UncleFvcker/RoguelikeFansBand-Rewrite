@@ -1538,6 +1538,15 @@ impl Game {
                 .is_some_and(|controller_id| controller_id != self.player.id)
             || (actor.controller_id.is_some() && actor.pack.is_some())
             || (actor.summon.is_some() && actor.pack.is_some())
+            || actor.anger > 100
+            || (actor.anger > 0
+                && (expected_role != ActorRole::Monster
+                    || runtime_definition.monster_casting.is_none()
+                    || self.actor_is_player_side(actor)))
+            || (actor.friendly
+                && (expected_role != ActorRole::Monster
+                    || actor.summon.is_none()
+                    || !self.player_has_cult_of_personality()))
             || runtime_definition.monster_casting.as_ref().map_or(
                 actor.casting_cooldown_remaining != 0,
                 |casting| {

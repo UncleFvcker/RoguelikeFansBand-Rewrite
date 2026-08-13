@@ -7,5 +7,6 @@
   "rating": "great",
   "sourceIndex": 105,
   "randomWeight": 0,
+  "evadesInnateMonsterAttacks": true,
   "removesOnGain": []
 }

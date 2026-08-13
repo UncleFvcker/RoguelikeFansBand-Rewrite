@@ -675,6 +675,7 @@ pub enum AbilityEffectDefinition {
     SniperShot {
         mode: SniperShotModeDefinition,
     },
+    MeleeAdjacent,
     ProbeMonsters,
     Concentrate,
     Rodeo,

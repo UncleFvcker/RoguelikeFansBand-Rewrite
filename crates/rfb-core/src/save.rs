@@ -89,6 +89,8 @@ pub(crate) fn actor_from_spawn(
         visible_invisible: false,
         visible_weird_mind: false,
         eldritch_horror_triggered: false,
+        anger: 0,
+        friendly: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
@@ -124,6 +126,8 @@ pub(crate) fn actor_from_runtime_spawn(
         visible_invisible: false,
         visible_weird_mind: false,
         eldritch_horror_triggered: false,
+        anger: 0,
+        friendly: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses: Vec::new(),
@@ -172,6 +176,8 @@ pub(crate) fn actor_from_player(
         visible_invisible: false,
         visible_weird_mind: false,
         eldritch_horror_triggered: false,
+        anger: 0,
+        friendly: false,
         casting_cooldown_remaining: 0,
         observed_player_resistances: BTreeMap::new(),
         statuses,
@@ -254,6 +260,9 @@ pub(crate) fn actor_from_entity(
     if entity.power_per_mille < 100 {
         return Err(CoreError::InvalidSave("entity power is invalid"));
     }
+    if entity.anger > 100 {
+        return Err(CoreError::InvalidSave("entity anger is invalid"));
+    }
     if definition.evolution.as_ref().map_or_else(
         || entity.experience != 0,
         |evolution| entity.experience >= evolution.required_experience,
@@ -285,6 +294,8 @@ pub(crate) fn actor_from_entity(
         visible_invisible: entity.visible_invisible,
         visible_weird_mind: entity.visible_weird_mind,
         eldritch_horror_triggered: entity.eldritch_horror_triggered,
+        anger: entity.anger,
+        friendly: entity.friendly,
         casting_cooldown_remaining: entity.casting_cooldown_remaining,
         observed_player_resistances,
         statuses,
@@ -793,6 +804,8 @@ pub(crate) fn actors_to_save(entities: &[Actor]) -> Vec<ActorSaveDto> {
             visible_invisible: entity.visible_invisible,
             visible_weird_mind: entity.visible_weird_mind,
             eldritch_horror_triggered: entity.eldritch_horror_triggered,
+            anger: entity.anger,
+            friendly: entity.friendly,
             casting_cooldown_remaining: entity.casting_cooldown_remaining,
             observed_player_resistances: entity
                 .observed_player_resistances

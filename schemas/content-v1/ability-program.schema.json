@@ -2247,6 +2247,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "melee-adjacent",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "probe-monsters",
               "type": "string"
             }

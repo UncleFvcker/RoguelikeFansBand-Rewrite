@@ -214,7 +214,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 98;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 99;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -2183,13 +2183,19 @@ impl Game {
                                 status_kind_id: STATUS_FEAR.to_owned(),
                             });
                         } else {
-                            self.resolve_player_melee(
+                            let melee = self.resolve_player_melee(
                                 index,
                                 true,
                                 &mut events,
                                 &mut changed,
                                 &mut removed_entities,
                             )?;
+                            if melee.killed && self.player_preserves_melee_energy_on_kill() {
+                                action_cost = action_cost
+                                    .saturating_mul(i32::from(melee.attacks_used))
+                                    .saturating_div(i32::from(melee.attacks_available))
+                                    .max(1);
+                            }
                         }
                     } else {
                         match self
@@ -2342,13 +2348,19 @@ impl Game {
                                 status_kind_id: STATUS_FEAR.to_owned(),
                             });
                         } else {
-                            self.resolve_player_melee(
+                            let melee = self.resolve_player_melee(
                                 index,
                                 true,
                                 &mut events,
                                 &mut changed,
                                 &mut removed_entities,
                             )?;
+                            if melee.killed && self.player_preserves_melee_energy_on_kill() {
+                                action_cost = action_cost
+                                    .saturating_mul(i32::from(melee.attacks_used))
+                                    .saturating_div(i32::from(melee.attacks_available))
+                                    .max(1);
+                            }
                         }
                     }
                     None => events.push(DomainEvent::TerrainDigUnavailable),
@@ -7354,6 +7366,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
                 SniperShotModeDefinition::Final => SniperShotModeDto::Final,
             },
         },
+        AbilityEffectDefinition::MeleeAdjacent => AbilityEffectSpecDto::MeleeAdjacent,
         AbilityEffectDefinition::ProbeMonsters => AbilityEffectSpecDto::ProbeMonsters,
         AbilityEffectDefinition::Concentrate => AbilityEffectSpecDto::Concentrate,
         AbilityEffectDefinition::Rodeo => AbilityEffectSpecDto::Rodeo,

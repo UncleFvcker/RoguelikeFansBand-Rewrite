@@ -453,3 +453,8 @@ contract-v293 为 `PlayerSaveDto` 增加必填 `sniperConcentration` 与
 `probedActorKindIds`。载入要求非零专注不超过当前职业/等级上限，侦察集合不得重复、必须
 引用存在的 actor kind，且两项非空状态都要求当前职业声明 `snipingProfile`。两项进入
 State Hash Schema v98；Protocol 升至 1.196，save 容器保持 v1，不提供旧开发存档默认值。
+
+contract-v301 为 `ActorSaveDto` 增加必填 `anger` 与 `friendly`。怒气范围为 0–100，只允许
+拥有远程施法档案的敌对怪物持有；运行时友好只允许由当前 Human“个人崇拜”影响的召唤
+怪物持有，宠物仍使用既有 `controllerId`。两项进入 State Hash Schema v99；Protocol 升至
+1.200，save 容器保持 v1，不兼容缺字段的旧开发存档。

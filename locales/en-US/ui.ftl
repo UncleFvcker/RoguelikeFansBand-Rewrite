@@ -788,3 +788,7 @@ ability-rfb-mutation-panic-hit-name = Panic Hit
 ability-rfb-mutation-panic-hit-description = Strike an adjacent foe and attempt to flee by teleportation.
 ability-rfb-mutation-polymorph-name = Polymorph Self
 ability-rfb-mutation-polymorph-description = Reshape your body, mutations, wounds, and attributes.
+ability-rfb-mutation-peerless-tracker-name = Peerless Tracker
+ability-rfb-mutation-peerless-tracker-description = Map the nearby area and detect monsters, traps, doors, and stairs.
+ability-rfb-mutation-fantastic-frenzy-name = Massacre
+ability-rfb-mutation-fantastic-frenzy-description = Attack every adjacent monster.

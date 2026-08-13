@@ -675,3 +675,8 @@ save 容器保持 v1。
 说明与评级投影；待选择状态由当前等级、种族奖励配置和既有锁定变异集合派生，不进入
 save 或 State Hash。待选择期间核心只接受该选择命令，State Hash Schema 保持 v98，save
 容器保持 v1。
+
+协议 1.200 / contract-v301 为能力效果增加无参数 `melee-adjacent`，供原版“大屠杀”复用
+普通近战事务；`ActorSaveDto` 增加必填 `anger` 与 `friendly`。前者保存远程伤害触发的
+0–100 怒气，后者保存“个人崇拜”产生的运行时友好阵营。两项进入 State Hash Schema v99；
+save 容器保持 v1，不提供旧开发存档默认值。

@@ -53,6 +53,10 @@ impl Game {
         // leave no legal spell.
         let frequency_roll = u8::try_from(self.rng.bounded(100) + 1)
             .expect("monster ability percentile must fit u8");
+        let effective_frequency_percent = casting
+            .frequency_percent
+            .saturating_add(self.entities[index].anger)
+            .min(100);
         let mut candidates = Vec::with_capacity(casting.abilities.len());
         let mut viable = Vec::new();
         for candidate in &casting.abilities {
@@ -106,7 +110,7 @@ impl Game {
         });
         let mut selection_roll = None;
         let mut selected_index = None;
-        if frequency_roll <= casting.frequency_percent && total_weight > 0 {
+        if frequency_roll <= effective_frequency_percent && total_weight > 0 {
             let roll = u32::try_from(self.rng.bounded(u64::from(total_weight)) + 1)
                 .expect("validated monster ability weight roll must fit u32");
             selection_roll = Some(roll);
@@ -125,7 +129,7 @@ impl Game {
             resolution: MonsterAbilityDecisionResolutionDto {
                 source_entity_id: source_entity_id.clone(),
                 source_kind_id: source_kind_id.clone(),
-                frequency_percent: casting.frequency_percent,
+                frequency_percent: effective_frequency_percent,
                 frequency_roll,
                 candidates,
                 viable_ability_ids,
@@ -142,6 +146,7 @@ impl Game {
         let stops_world = plan.ability.tags.iter().any(|tag| tag == "monster-world");
         self.entities[index].casting_cooldown_remaining =
             monster_casting_cooldown(casting.frequency_percent);
+        self.entities[index].anger = 0;
         let player_hp_before = self.player.hp;
         let gaze = plan.ability.tags.iter().any(|tag| tag == "gaze");
         let MonsterAbilityPlanResolution {

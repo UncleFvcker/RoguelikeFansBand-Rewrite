@@ -777,6 +777,7 @@ pub(super) fn validate_abilities(
                 }
                 AbilityEffectDefinition::RandomChoice { .. } => false,
                 AbilityEffectDefinition::SniperShot { .. }
+                | AbilityEffectDefinition::MeleeAdjacent
                 | AbilityEffectDefinition::ProbeMonsters
                 | AbilityEffectDefinition::Concentrate
                 | AbilityEffectDefinition::Rodeo => true,
@@ -964,9 +965,9 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::JumpDamage { .. } => self_target_rule,
             AbilityEffectDefinition::Control { .. } => projectile_target_rule,
             AbilityEffectDefinition::Rodeo => projectile_target_rule && ability.target.range == 1,
-            AbilityEffectDefinition::ProbeMonsters | AbilityEffectDefinition::Concentrate => {
-                self_target_rule
-            }
+            AbilityEffectDefinition::MeleeAdjacent
+            | AbilityEffectDefinition::ProbeMonsters
+            | AbilityEffectDefinition::Concentrate => self_target_rule,
             AbilityEffectDefinition::BreathDamage { .. } => projectile_target_rule,
             AbilityEffectDefinition::Teleport => {
                 !self_targeted

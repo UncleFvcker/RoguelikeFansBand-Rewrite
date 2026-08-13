@@ -348,3 +348,8 @@ Protocol 升至 1.199，State Hash Schema v98、内容包 1.314.0 与 save v1 �
 吸取免疫。没有新增权威状态、协议投影或公共 RNG；既有 26 条 active fixture 均未持有
 这些变异，经 `verify-all` 复验零漂移，不刷新 assertions、零 waiver。Protocol 1.199、
 State Hash Schema v98 与 save v1 均不变，内容包升至 1.316.0。
+
+`contract-v301` 完成六项主动或跨系统半神天赋，并为 actor 增加必填的怒气与运行时友好
+状态。Protocol 升至 1.200、State Hash Schema 升至 v99、内容包升至 1.317.0。按本批约定
+只完成新增聚焦测试；actor save/hash 投影使全部 26 条 active fixture 必须在合并验收时统一
+刷新并 replay，当前不得声明零漂移或零 waiver 验收完成。

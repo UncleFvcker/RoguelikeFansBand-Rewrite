@@ -550,6 +550,7 @@ impl Game {
             DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
             resistance,
         ));
+        let damage = self.apply_evasion_to_monster_ability_damage(ability_id, damage);
         let application = plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
         commit_damage_application(&mut self.player, &application);
         if application.fatal {
@@ -563,6 +564,42 @@ impl Game {
             effect_index,
             resolution: damage.into(),
         }
+    }
+
+    pub(super) fn apply_evasion_to_monster_ability_damage(
+        &mut self,
+        ability_id: &str,
+        damage: DamageOutcome,
+    ) -> DamageOutcome {
+        if !self.player_evades_innate_monster_attacks()
+            || !self.content.ability(ability_id).is_some_and(|ability| {
+                ability
+                    .effect
+                    .ordered_effects()
+                    .iter()
+                    .any(|effect| match effect {
+                        AbilityEffectDefinition::BreathDamage { .. } => true,
+                        AbilityEffectDefinition::AreaDamage {
+                            damage_dice,
+                            damage_sides,
+                            damage_type: ActorDamageType::Shards,
+                            ..
+                        }
+                        | AbilityEffectDefinition::Damage {
+                            damage_dice,
+                            damage_sides,
+                            damage_type: ActorDamageType::Physical,
+                            ..
+                        } => *damage_dice == 1 && *damage_sides == 1,
+                        _ => false,
+                    })
+            })
+        {
+            return damage;
+        }
+        let reduction = 11_u8
+            .saturating_add(u8::try_from(self.rng.bounded(10)).expect("evasion roll must fit u8"));
+        scale_damage_outcome(damage, 100_u8.saturating_sub(reduction))
     }
 
     pub(super) fn record_monster_player_resistance(

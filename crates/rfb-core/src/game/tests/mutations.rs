@@ -4,7 +4,7 @@ use rfb_content::{AbilityStatusStackingDefinition, MutationPeriodicEffectDefinit
 
 use super::support::{
     clear_monsters, dispatch_next, game_with_actor_definition, give_inventory_item,
-    test_caster_game,
+    replace_terrain, test_caster_game,
 };
 use super::*;
 use crate::game::hunger::NUTRITION_WEAK;
@@ -76,6 +76,29 @@ fn m6_game(mutation_id: &str, build_id: &str) -> Game {
     game
 }
 
+fn anger_game(seed: u64, frequency_percent: u8) -> Game {
+    let mut game = game_with_actor_definition(seed, "demo.actor.beholder", |actor| {
+        actor
+            .monster_casting
+            .as_mut()
+            .expect("Beholder should cast")
+            .frequency_percent = frequency_percent;
+    });
+    clear_monsters(&mut game);
+    game.player.position = Position { x: 8, y: 3 };
+    let monster_position = Position { x: 4, y: 3 };
+    for x in monster_position.x..=game.player.position.x {
+        replace_terrain(&mut game, Position { x, y: 3 }, "demo.terrain.floor");
+    }
+    game.push_generated_actor(
+        "test.anger-caster".to_owned(),
+        "demo.actor.beholder",
+        monster_position,
+    );
+    game.entities[0].nice = false;
+    game
+}
+
 fn polymorph_game(random_candidate_ids: &[&str], active_ids: &[&str], locked_ids: &[&str]) -> Game {
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -131,6 +154,358 @@ fn demigod_passives_apply_level_hp_spell_power_and_attribute_costs() {
         attributes.constitution,
         baseline_attributes.constitution - 1
     );
+}
+
+#[test]
+fn distant_damage_builds_original_monster_anger_and_talents_suppress_each_source() {
+    let mut game = anger_game(0, 1);
+    game.anger_monster_from_spell_damage(0, 50);
+    assert_eq!(game.entities[0].anger, 2);
+    game.anger_monster_from_projectile_damage(0, 50);
+    assert_eq!(game.entities[0].anger, 4);
+
+    game.progress
+        .active_mutation_ids
+        .insert("rfb.mutation.subtle-casting".to_owned());
+    game.anger_monster_from_spell_damage(0, 450);
+    assert_eq!(game.entities[0].anger, 4);
+    game.progress
+        .active_mutation_ids
+        .insert("rfb.mutation.peerless-sniper".to_owned());
+    game.anger_monster_from_projectile_damage(0, 125);
+    assert_eq!(game.entities[0].anger, 4);
+
+    game.progress.active_mutation_ids.clear();
+    game.entities[0].anger = 100;
+    game.anger_monster_from_spell_damage(0, 450);
+    assert_eq!(game.entities[0].anger, 100);
+}
+
+#[test]
+fn monster_anger_increases_cast_frequency_resets_on_cast_and_round_trips() {
+    let mut game = anger_game(0, 1);
+    game.entities[0].anger = 99;
+    let mut events = Vec::new();
+    assert!(game.resolve_monster_ability(0, &mut events));
+    assert_eq!(game.entities[0].anger, 0);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterAbilityDecision { resolution }
+            if resolution.frequency_percent == 100
+    )));
+
+    game.entities[0].anger = 37;
+    let saved = game.to_save();
+    let restored = Game::from_save_with_content(saved.clone(), game.content.clone())
+        .expect("monster anger should round trip");
+    assert_eq!(restored.entities[0].anger, 37);
+    let mut invalid = saved;
+    invalid.entities[0].anger = 101;
+    assert!(matches!(
+        Game::from_save_with_content(invalid, game.content.clone()),
+        Err(CoreError::InvalidSave("entity anger is invalid"))
+    ));
+}
+
+#[test]
+fn evasion_reduces_innate_damage_without_affecting_other_attacks() {
+    let base_damage = resolve_damage(
+        DamagePacket::new(100, DamageType::Physical),
+        ResistanceLevel::Normal,
+    );
+    let mut game = m6_game("rfb.mutation.evasion", "demo.build.warrior");
+    let draws = game.rng_draw_counter();
+    let reduced = game.apply_evasion_to_monster_ability_damage(
+        "rfb-legacy.ability.bolt-physical-1d1-104",
+        base_damage,
+    );
+    assert!((80..=89).contains(&reduced.applied));
+    assert_eq!(game.rng_draw_counter(), draws + 1);
+
+    let draws = game.rng_draw_counter();
+    let ordinary = game
+        .apply_evasion_to_monster_ability_damage("demo.ability.death-detect-unlife", base_damage);
+    assert_eq!(ordinary, base_damage);
+    assert_eq!(game.rng_draw_counter(), draws);
+}
+
+#[test]
+fn evasion_avoids_half_of_earthquake_crushes_after_the_grid_is_selected() {
+    let mut template = m6_game("rfb.mutation.evasion", "demo.build.warrior");
+    clear_monsters(&mut template);
+    template.items.clear();
+    template.gold_piles.clear();
+    template.player.hp = 1_000;
+    template.player.max_hp = 1_000;
+    let center = template.position_in_direction(Direction::North);
+    let player_position = template.player.position;
+
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut trial = template.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            let hp = trial.player.hp;
+            let mut events = Vec::new();
+            trial
+                .resolve_monster_shatter_earthquake(
+                    center,
+                    "demo.actor.sheep".to_owned(),
+                    &mut events,
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .expect("earthquake should resolve");
+            trial.player.hp == hp
+                && events.iter().any(|event| {
+                    matches!(
+                        event,
+                        DomainEvent::MonsterEarthquakeResolved { resolution, .. }
+                            if matches!(
+                                resolution.effects.as_slice(),
+                                [AbilityEffectResolutionDto::Earthquake { affected_positions, .. }]
+                                    if affected_positions.contains(&player_position)
+                            )
+                    )
+                })
+        })
+        .expect("a selected and evaded earthquake seed should exist");
+
+    let mut ordinary = template;
+    ordinary.progress.active_mutation_ids.clear();
+    ordinary.rng = RfbRng::seeded(seed);
+    let hp = ordinary.player.hp;
+    ordinary
+        .resolve_monster_shatter_earthquake(
+            center,
+            "demo.actor.sheep".to_owned(),
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("ordinary earthquake should resolve");
+    assert!(ordinary.player.hp < hp);
+}
+
+#[test]
+fn cult_of_personality_can_turn_a_hostile_summon_into_a_pet() {
+    let mut template = m6_game("rfb.mutation.cult-of-personality", "demo.build.warrior");
+    template.progress.level = 50;
+    template.progress.attributes.charisma = 238;
+    template.progress.maximum_attributes.charisma = 238;
+    clear_monsters(&mut template);
+    template.push_generated_actor(
+        "test.cult-caster".to_owned(),
+        "demo.actor.beholder",
+        Position { x: 2, y: 3 },
+    );
+    let definition = template
+        .content
+        .actor("demo.actor.sheep")
+        .expect("sheep should exist")
+        .clone();
+    let entity = template.generated_actor(
+        "test.cult-summon".to_owned(),
+        &definition.id,
+        Position { x: 4, y: 3 },
+    );
+    let mut pet_summoner = template.clone();
+    pet_summoner.entities[0].controller_id = Some(pet_summoner.player.id.clone());
+    let mut allied_summon = entity.clone();
+    let draws = pet_summoner.rng_draw_counter();
+    pet_summoner.apply_cult_of_personality_to_summon(0, &mut allied_summon, &definition);
+    assert!(!allied_summon.friendly);
+    assert_eq!(pet_summoner.rng_draw_counter(), draws);
+
+    let (game, mut converted) = (0..10_000)
+        .find_map(|seed| {
+            let mut trial = template.clone();
+            trial.rng = RfbRng::seeded(seed);
+            let mut summoned = entity.clone();
+            trial.apply_cult_of_personality_to_summon(0, &mut summoned, &definition);
+            (summoned.controller_id.is_some()).then_some((trial, summoned))
+        })
+        .expect("a deterministic cult conversion seed should exist");
+    assert!(converted.friendly);
+    assert_eq!(
+        converted.controller_id.as_deref(),
+        Some(game.player.id.as_str())
+    );
+    assert!(game.actor_is_player_side(&converted));
+    converted.summon = Some(SummonIdentity {
+        owner_id: "test.cult-owner".to_owned(),
+        source_ability_id: "rfb-legacy.ability.summon-animal-l37-1d3-1".to_owned(),
+        remaining_turns: 100,
+    });
+    let mut persisted = m6_game("rfb.mutation.cult-of-personality", "demo.build.warrior");
+    clear_monsters(&mut persisted);
+    persisted.entities.push(converted);
+    let restored = Game::from_save_with_content(persisted.to_save(), persisted.content.clone())
+        .expect("Cult friendliness should round trip");
+    assert!(restored.entities.last().unwrap().friendly);
+    assert_eq!(
+        restored.entities.last().unwrap().controller_id.as_deref(),
+        Some(restored.player.id.as_str())
+    );
+}
+
+#[test]
+fn peerless_tracker_and_fantastic_frenzy_use_shared_ability_transactions() {
+    let mut tracker = m6_game("rfb.mutation.peerless-tracker", "demo.build.warrior");
+    tracker.progress.level = 20;
+    tracker
+        .progress
+        .locked_mutation_ids
+        .insert("rfb.mutation.peerless-tracker".to_owned());
+    tracker.debug_ability_casts_succeed = true;
+    tracker.player.hp = 100;
+    tracker.explored.fill(false);
+    let mut tracker_events = Vec::new();
+    tracker
+        .resolve_player_ability(
+            "rfb.ability.mutation.peerless-tracker",
+            TargetSelection::SelfTarget,
+            &mut tracker_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Peerless Tracker should resolve");
+    assert_eq!(tracker.player.hp, 75);
+    assert_eq!(
+        tracker_events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::AbilityDetected { .. }))
+            .count(),
+        6
+    );
+    assert!(tracker.explored.iter().any(|explored| *explored));
+
+    let mut frenzy = m6_game("rfb.mutation.fantastic-frenzy", "demo.build.warrior");
+    frenzy.progress.level = 40;
+    frenzy
+        .progress
+        .locked_mutation_ids
+        .insert("rfb.mutation.fantastic-frenzy".to_owned());
+    frenzy.debug_ability_casts_succeed = true;
+    frenzy.player.hp = 500;
+    clear_monsters(&mut frenzy);
+    for (ordinal, direction) in [Direction::North, Direction::East, Direction::South]
+        .into_iter()
+        .enumerate()
+    {
+        let position = frenzy.position_in_direction(direction);
+        replace_terrain(&mut frenzy, position, "demo.terrain.floor");
+        frenzy.push_generated_actor(
+            format!("test.frenzy-target.{ordinal}"),
+            "demo.actor.sheep",
+            position,
+        );
+    }
+    let mut frenzy_events = Vec::new();
+    frenzy
+        .resolve_player_ability(
+            "rfb.ability.mutation.fantastic-frenzy",
+            TargetSelection::SelfTarget,
+            &mut frenzy_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Fantastic Frenzy should resolve");
+    assert_eq!(frenzy.player.hp, 450);
+    assert_eq!(
+        frenzy_events
+            .iter()
+            .filter(|event| matches!(
+                event,
+                DomainEvent::PlayerMeleeHit { .. } | DomainEvent::PlayerMeleeMissed { .. }
+            ))
+            .count(),
+        3
+    );
+}
+
+#[test]
+fn fantastic_frenzy_preserves_unused_normal_melee_energy_after_a_kill() {
+    let mut template = Game::new_with_build(0, "demo.build.warrior")
+        .expect("Warrior should create for frenzy energy testing");
+    template.progress.level = 40;
+    template.progress.active_mutation_ids =
+        BTreeSet::from(["rfb.mutation.fantastic-frenzy".to_owned()]);
+    template.progress.locked_mutation_ids = template.progress.active_mutation_ids.clone();
+    if let Some(melee) = template.progress.skills.get_mut("demo.skill.melee") {
+        melee.current = melee.maximum;
+    }
+    template.player.statuses.push(StatusInstance {
+        kind_id: "test.frenzy-extra-attacks".to_owned(),
+        intensity: 1,
+        remaining_ticks: 100,
+        source_id: Some("test.frenzy-extra-attacks".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto {
+            melee_attacks: 3,
+            ..EquipmentBonusesDto::default()
+        },
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    clear_monsters(&mut template);
+    let target = template.position_in_direction(Direction::North);
+    replace_terrain(&mut template, target, "demo.terrain.floor");
+    template.push_generated_actor(
+        "test.frenzy-energy-target".to_owned(),
+        "demo.actor.sheep",
+        target,
+    );
+    template.entities[0].hp = 1;
+
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut trial = template.clone();
+            trial.rng = RfbRng::seeded(*seed);
+            trial
+                .resolve_player_melee(
+                    0,
+                    false,
+                    &mut Vec::new(),
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .is_ok_and(|outcome| {
+                    outcome.killed && outcome.attacks_used < outcome.attacks_available
+                })
+        })
+        .expect("an early fatal melee seed should exist");
+
+    let mut frenzy = template.clone();
+    frenzy.rng = RfbRng::seeded(seed);
+    let frenzy_tick = frenzy.world_tick;
+    dispatch_next(
+        &mut frenzy,
+        GameCommand::Move {
+            direction: Direction::North,
+        },
+    );
+
+    let mut ordinary = template;
+    ordinary.progress.active_mutation_ids =
+        BTreeSet::from(["rfb.mutation.fast-learner".to_owned()]);
+    ordinary.progress.locked_mutation_ids = ordinary.progress.active_mutation_ids.clone();
+    ordinary.rng = RfbRng::seeded(seed);
+    let ordinary_tick = ordinary.world_tick;
+    dispatch_next(
+        &mut ordinary,
+        GameCommand::Move {
+            direction: Direction::North,
+        },
+    );
+
+    assert!(frenzy.entities.is_empty());
+    assert!(ordinary.entities.is_empty());
+    assert!(frenzy.world_tick - frenzy_tick < ordinary.world_tick - ordinary_tick);
+    assert_eq!(ordinary.world_tick - ordinary_tick, 10);
 }
 
 #[test]

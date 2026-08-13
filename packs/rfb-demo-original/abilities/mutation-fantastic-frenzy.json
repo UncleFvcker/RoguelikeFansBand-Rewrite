@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.mutation.fantastic-frenzy",
+  "nameKey": "ability-rfb-mutation-fantastic-frenzy-name",
+  "descriptionKey": "ability-rfb-mutation-fantastic-frenzy-description",
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "abilityProgramId": "rfb.ability-program.mutation.fantastic-frenzy",
+  "tags": ["melee", "mutation"]
+}

@@ -1687,6 +1687,40 @@ impl Game {
         })
     }
 
+    pub(super) fn player_suppresses_distant_spell_anger(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.suppresses_distant_spell_anger
+                && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
+    }
+
+    pub(super) fn player_suppresses_distant_projectile_anger(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.suppresses_distant_projectile_anger
+                && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
+    }
+
+    pub(super) fn player_evades_innate_monster_attacks(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.evades_innate_monster_attacks
+                && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
+    }
+
+    pub(super) fn player_has_cult_of_personality(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.cult_of_personality && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
+    }
+
+    pub(super) fn player_preserves_melee_energy_on_kill(&self) -> bool {
+        self.content.mutations().any(|mutation| {
+            mutation.preserves_melee_energy_on_kill
+                && self.progress.active_mutation_ids.contains(&mutation.id)
+        })
+    }
+
     pub(super) fn apply_infernal_deal(&mut self, actor: &Actor) {
         let active = self.content.mutations().any(|mutation| {
             mutation.infernal_deal && self.progress.active_mutation_ids.contains(&mutation.id)
