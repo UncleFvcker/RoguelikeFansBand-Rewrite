@@ -226,6 +226,7 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "POS_SUST_STR"
             | "POS_SUST_WIS"
             | "POS_TELEPATHY"
+            | "EGYPTIAN"
             | "EGYPTIAN2"
             | "HINDU2"
             | "NORSE2"
@@ -9565,6 +9566,8 @@ fn map_summon_spell_token(
         abilities.entry(id.clone()).or_insert_with(|| {
             if caster_tail == "othrod-lord-of-the-orcs" {
                 summon_category_ability(&suffix, "kin-glyph-111", u32::from(level), 1, 1, 1, None)
+            } else if caster_tail == "bast-goddess-of-cats" {
+                summon_category_ability(&suffix, "kin-glyph-102", u32::from(level), 1, 1, 1, None)
             } else {
                 summon_kin_ability(&suffix, caster_kind_id)
             }
@@ -13606,6 +13609,7 @@ mod tests {
         assert!(demo_monster_audit_omission_is_safe("POS_GAIN_AC"));
         assert!(demo_monster_audit_omission_is_safe("POS_BACKSTAB"));
         assert!(demo_monster_audit_omission_is_safe("POS_SUST_INT"));
+        assert!(demo_monster_audit_omission_is_safe("EGYPTIAN"));
         assert!(demo_monster_audit_omission_is_safe("EGYPTIAN2"));
         assert!(demo_monster_audit_omission_is_safe("HINDU2"));
         assert!(demo_monster_audit_omission_is_safe("NORSE2"));

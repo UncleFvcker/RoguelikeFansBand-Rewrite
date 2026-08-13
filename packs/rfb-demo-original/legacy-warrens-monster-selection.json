@@ -6104,6 +6104,12 @@
       "omittedFlags": ["POS_SEE_INVIS", "POS_TELEPATHY", "STUPID"]
     },
     {
+      "sourceIndex": 777,
+      "id": "bast-goddess-of-cats",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "EGYPTIAN", "EGYPTIAN2", "FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
       "sourceIndex": 936,
       "id": "kenshirou-the-fist-of-the-north-star",
       "tags": ["orc-cave"],

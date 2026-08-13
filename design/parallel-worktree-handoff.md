@@ -387,3 +387,14 @@ git diff --stat
   `3d83f462010420e8054c18476f7589d859c8e2e9a1c175a08bd3797e120d4c83`、Protocol `1.189`、
   State Hash Schema v94、save v1。没有新增存档或状态哈希字段，active replay baseline
   继续使用 `contract-v285`；行为契约记录为 `contract-v286-player-polymorph`。
+
+## 23. monsters-next 当前交接（猫之女神巴斯特）
+
+- 新增 actor `demo.actor.bast-goddess-of-cats`（source index 777，中文名“猫之女神巴斯特”）。
+  四次近战、拖拽、自疗均复用现有机制；`S_KIN` 复用分类召唤，按原版 glyph `f`
+  召唤两个等级不超过 62 的同族，避免唯一怪物固定召唤自身。
+- `EGYPTIAN` 与 `EGYPTIAN2` 当前只作为未开放神系/金字塔地牢的来源元数据显式省略，
+  没有新增神系运行时。神系选择进入范围时应统一恢复其抑制与分配语义。
+- 共享协调点：pack `1.300.0` / content hash
+  `87f34f4581da4c9065385295f76bd2cfe2a9ae2540cc474bba9777331f7f416a`；Protocol `1.189`、
+  State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。

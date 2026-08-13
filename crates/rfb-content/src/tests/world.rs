@@ -733,7 +733,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 586);
+    assert_eq!(orc_cave.len(), 587);
 
     for id in [
         "demo.actor.bunyip",
@@ -781,7 +781,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 3, 5, 1,
+            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 1,
         ]
     );
 
@@ -4248,6 +4248,24 @@ fn p47a_level_41_42_direct_monsters_keep_source_identity() {
             "{actor_id} source index"
         );
     }
+
+    let bast_kin = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.kin-bast-goddess-of-cats")
+        .expect("Bast should retain her summon-kin spell");
+    assert!(matches!(
+        bast_kin.effect,
+        AbilityEffectDefinition::SummonCategory {
+            ref category,
+            maximum_level: 62,
+            count_dice: 1,
+            count_sides: 1,
+            count_bonus: 1,
+            ..
+        } if category == "kin-glyph-102"
+    ));
 }
 
 #[test]
@@ -4923,6 +4941,7 @@ fn p58_level_61_63_direct_monsters_keep_source_identity() {
         ("keeper-of-secrets", 746, 61),
         ("lems-the-cyborg", 937, 61),
         ("angelic-quylthulg", 1287, 61),
+        ("bast-goddess-of-cats", 777, 62),
         ("kenshirou-the-fist-of-the-north-star", 936, 62),
         ("raou-the-conqueror", 1018, 62),
         ("iku-turso", 1288, 62),
@@ -7055,7 +7074,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        538
+        539
     );
 }
 

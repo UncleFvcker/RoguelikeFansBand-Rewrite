@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.kin-bast-goddess-of-cats",
+  "input": "self",
+  "steps": [
+    {
+      "category": "kin-glyph-102",
+      "countBonus": 1,
+      "countDice": 1,
+      "countSides": 1,
+      "durationTurns": 10000,
+      "maximumLevel": 62,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}
