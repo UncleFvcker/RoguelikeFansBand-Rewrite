@@ -1719,7 +1719,7 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
 }
 
 #[test]
-fn mirror_shield_reflects_monster_bolts_once_with_the_original_gate() {
+fn p86e_mirror_shield_reflects_monster_bolts_once_with_exact_three_of_four_gate() {
     let make_game = |seed| {
         let mut game = Game::new(seed);
         clear_monsters(&mut game);
@@ -1798,28 +1798,32 @@ fn mirror_shield_reflects_monster_bolts_once_with_the_original_gate() {
         .location = ItemLocation::Inventory;
     assert!(!equipment_check.player_reflects_bolts());
 
-    let mut saw_reflection = false;
-    let mut saw_failed_gate = false;
-    for seed in 0..128 {
-        let mut game = make_game(seed);
+    let mut reflected_rolls = 0;
+    for gate_roll in 0..4 {
+        let seed = (0..10_000)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                assert_eq!(rng.bounded(1), 0, "1d1 damage must consume one draw");
+                rng.bounded(4) == gate_roll
+            })
+            .expect("each reflection gate result should have a deterministic seed");
+        let mut game = make_game(0);
+        game.rng = RfbRng::seeded(seed);
         let events = cast_bolt(&mut game);
         let reflections = events
             .iter()
             .filter(|event| matches!(event, DomainEvent::BoltReflected { .. }))
             .count();
-        if reflections == 0 {
-            saw_failed_gate = true;
+        if gate_roll == 0 {
+            assert_eq!(reflections, 0);
             assert!(game.player.hp < 100);
         } else {
-            saw_reflection = true;
+            reflected_rolls += 1;
             assert_eq!(reflections, 1, "one projectile may reflect only once");
             assert_eq!(game.player.hp, 100);
         }
-        if saw_reflection && saw_failed_gate {
-            break;
-        }
     }
-    assert!(saw_reflection && saw_failed_gate);
+    assert_eq!(reflected_rolls, 3);
 }
 
 #[test]

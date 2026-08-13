@@ -420,6 +420,51 @@ fn legacy_dungeon_restrictions_match_only_the_declared_region() {
 }
 
 #[test]
+fn p86e_camelot_admits_only_its_dungeon_two_roster() {
+    let game = Game::new_with_build(1, "demo.build.warrior").expect("Middle-earth should create");
+    let mut camelot_actor_ids = BTreeSet::new();
+
+    for actor in game.content.actor_definitions() {
+        let Some(allocation) = actor.allocation.as_ref() else {
+            continue;
+        };
+        if allocation.legacy_dungeon_indices.contains(&2) {
+            assert!(actor_allocation_matches_legacy_dungeon(allocation, Some(2)));
+            assert!(!actor_allocation_matches_legacy_dungeon(
+                allocation,
+                Some(3)
+            ));
+            assert!(!actor_allocation_matches_legacy_dungeon(allocation, None));
+            camelot_actor_ids.insert(actor.id.as_str());
+        } else if !allocation.legacy_dungeon_indices.is_empty() {
+            assert!(
+                !actor_allocation_matches_legacy_dungeon(allocation, Some(2)),
+                "{} must remain excluded from Camelot",
+                actor.id
+            );
+        }
+    }
+
+    assert_eq!(
+        camelot_actor_ids,
+        [
+            "demo.actor.arthur-pendragon",
+            "demo.actor.camelot-knight",
+            "demo.actor.mordred",
+            "demo.actor.morgana-le-fay",
+            "demo.actor.sir-galahad",
+            "demo.actor.sir-gareth",
+            "demo.actor.sir-gawain",
+            "demo.actor.sir-kay",
+            "demo.actor.sir-lancelot",
+            "demo.actor.the-questing-beast",
+        ]
+        .into_iter()
+        .collect()
+    );
+}
+
+#[test]
 fn depth_nine_two_stage_out_of_depth_roll_reaches_level_fourteen() {
     let seed = first_seed_for(|rng| rng.bounded(40) == 0 && rng.bounded(40) == 0);
     let mut game = enter_warrens(1);

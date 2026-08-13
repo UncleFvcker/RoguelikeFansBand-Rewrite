@@ -1991,6 +1991,31 @@ fn p86d_camelot_entrance_recall_conquest_and_reward_round_trip() {
     let mut restored = Game::from_save(game.to_save()).expect("Camelot conquest should round-trip");
     assert_eq!(restored.state_hash(), conquered_hash);
     assert!(restored.dungeon_states["demo.dungeon.camelot"].guardian_defeated);
+    assert_eq!(
+        restored
+            .defeated_limited_actor_counts
+            .get("demo.actor.arthur-pendragon"),
+        Some(&1)
+    );
+    let final_floor = restored
+        .content
+        .world(&restored.world_id)
+        .expect("Middle-earth should remain available")
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.camelot-depth-35")
+        .expect("Camelot final floor should remain available")
+        .clone();
+    let dungeon_instance_id = restored.current_dungeon_instance_id.clone();
+    let regenerated = restored
+        .generate_procedural_floor(&final_floor, dungeon_instance_id)
+        .expect("conquered Camelot final floor should regenerate");
+    assert!(
+        regenerated
+            .entities
+            .iter()
+            .all(|entity| entity.kind_id != "demo.actor.arthur-pendragon")
+    );
 
     for expected_depth in (20..=34).rev() {
         place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
