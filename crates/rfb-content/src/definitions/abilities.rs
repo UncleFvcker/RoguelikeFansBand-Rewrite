@@ -136,6 +136,7 @@ pub enum AbilitySpellPowerField {
     FinalDamage,
     DamageSides,
     DamageBonus,
+    HealingAmount,
     HealingSides,
     Radius,
     StatusDurationTicks,
@@ -571,6 +572,14 @@ pub enum AbilityEffectDefinition {
         radius: u8,
         duration_turns: u16,
     },
+    NatureGate {
+        animal_category: String,
+        hound_category: String,
+        hydra_category: String,
+        ent_actor_kind_id: String,
+        radius: u8,
+        duration_turns: u16,
+    },
     Detect {
         #[serde(default)]
         subject: AbilityDetectSubjectDefinition,
@@ -712,6 +721,10 @@ pub enum AbilityEffectDefinition {
         power: Option<u16>,
         #[serde(default)]
         target_category: Option<String>,
+    },
+    Entangle {
+        power: u16,
+        duration_ticks: u32,
     },
     MassSleepOrStasis {
         stasis_at_level: u16,
@@ -881,7 +894,8 @@ fn ability_level_scaling_base_and_limit(
             }
             | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
-            },
+            }
+            | AbilityEffectDefinition::Entangle { power, .. },
             AbilityLevelScalingField::StatusPower,
         ) => Some((u64::from(*power), 1_000)),
         (
@@ -1032,6 +1046,9 @@ pub(crate) fn valid_ability_spell_power(
                 AbilitySpellPowerField::HealingSides => {
                     matches!(effect, AbilityEffectDefinition::HealDice { .. })
                 }
+                AbilitySpellPowerField::HealingAmount => {
+                    matches!(effect, AbilityEffectDefinition::Heal { .. })
+                }
                 AbilitySpellPowerField::DamageBonus => matches!(
                     effect,
                     AbilityEffectDefinition::Damage { .. }
@@ -1065,6 +1082,7 @@ pub(crate) fn valid_ability_spell_power(
                     AbilityEffectDefinition::ApplyStatus { power: Some(_), .. }
                         | AbilityEffectDefinition::VisibleApplyStatus { power: Some(_), .. }
                         | AbilityEffectDefinition::MassSleepOrStasis { .. }
+                        | AbilityEffectDefinition::Entangle { .. }
                 ),
                 AbilitySpellPowerField::ControlPower => {
                     matches!(effect, AbilityEffectDefinition::Control { .. })

@@ -236,7 +236,8 @@
       {
         "realmId": "nature",
         "abilityBookIds": [
-          "demo.ability-book.call-of-the-wild"
+          "demo.ability-book.call-of-the-wild",
+          "demo.ability-book.nature-mastery"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -247,7 +248,15 @@
           { "abilityId": "demo.ability.nature-daylight", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 40 },
           { "abilityId": "demo.ability.nature-wind-walker", "minimumLevel": 4, "resourceCost": 3, "baseFailurePercent": 40 },
           { "abilityId": "demo.ability.nature-resist-environment", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 40 },
-          { "abilityId": "demo.ability.nature-cure-wounds-and-poison", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 25 }
+          { "abilityId": "demo.ability.nature-cure-wounds-and-poison", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.nature-stone-to-mud", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.nature-frost-bolt", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.nature-awareness", "minimumLevel": 5, "resourceCost": 5, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.nature-fire-bolt", "minimumLevel": 5, "resourceCost": 5, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.nature-ray-of-sunlight", "minimumLevel": 7, "resourceCost": 5, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.nature-entangle", "minimumLevel": 14, "resourceCost": 10, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.nature-natures-gate", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.nature-herbal-healing", "minimumLevel": 35, "resourceCost": 50, "baseFailurePercent": 80 }
         ]
       }
     ]

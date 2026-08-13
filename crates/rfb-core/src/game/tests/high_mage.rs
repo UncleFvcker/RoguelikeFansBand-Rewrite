@@ -144,10 +144,19 @@ fn nature_high_mage_game(seed: u64, level: u16) -> Game {
             "demo.ability.nature-wind-walker",
             "demo.ability.nature-resist-environment",
             "demo.ability.nature-cure-wounds-and-poison",
+            "demo.ability.nature-stone-to-mud",
+            "demo.ability.nature-frost-bolt",
+            "demo.ability.nature-awareness",
+            "demo.ability.nature-fire-bolt",
+            "demo.ability.nature-ray-of-sunlight",
+            "demo.ability.nature-entangle",
+            "demo.ability.nature-natures-gate",
+            "demo.ability.nature-herbal-healing",
         ]
         .into_iter()
         .map(str::to_owned),
     );
+    give_inventory_item(&mut game, "test.nature-mastery", "demo.item.nature-mastery");
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
@@ -289,6 +298,7 @@ fn nature_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         "demo.item.cantrips-for-beginners",
         "demo.item.beginners-handbook",
         "demo.item.book-of-elements",
+        "demo.item.nature-mastery",
     ] {
         assert!(!carried.contains(excluded));
     }
@@ -300,7 +310,7 @@ fn nature_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 8);
+    assert_eq!(learned.len(), 16);
     assert!(
         learned
             .iter()
@@ -484,6 +494,245 @@ fn nature_daylight_burns_an_unprotected_vampire_form() {
     )
     .expect("Daylight should resolve");
     assert!((2..=4).contains(&hp_before.saturating_sub(game.player.hp)));
+}
+
+#[test]
+fn nature_second_book_projects_bolts_entangle_and_fixed_healing() {
+    for (level, frost_dice, fire_dice, beam_chance) in
+        [(5, 3, 5, 5), (25, 8, 10, 25), (50, 14, 16, 50)]
+    {
+        let projected = nature_high_mage_game(0x4e41_5455_5245_2000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        for (id, expected_dice, damage_type) in [
+            (
+                "demo.ability.nature-frost-bolt",
+                frost_dice,
+                DamageTypeDto::Cold,
+            ),
+            (
+                "demo.ability.nature-fire-bolt",
+                fire_dice,
+                DamageTypeDto::Fire,
+            ),
+        ] {
+            assert!(matches!(
+                projected[id].effects.as_slice(),
+                [AbilityEffectSpecDto::BoltOrBeamDamage {
+                    damage_dice,
+                    damage_sides: 8,
+                    damage_type: actual_type,
+                    beam_chance_percent: actual_chance,
+                    ..
+                }] if *damage_dice == expected_dice
+                    && *actual_type == damage_type
+                    && *actual_chance == beam_chance
+            ));
+        }
+        assert!(matches!(
+            projected["demo.ability.nature-entangle"].effects.as_slice(),
+            [AbilityEffectSpecDto::Entangle {
+                power,
+                duration_ticks: 50,
+            }] if *power == level * 2
+        ));
+    }
+
+    let mut powered = nature_high_mage_game(0x4e41_5455_5245_4850, 50);
+    grant_spell_power(&mut powered, 7);
+    let projected = powered
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert!(matches!(
+        projected["demo.ability.nature-entangle"].effects.as_slice(),
+        [AbilityEffectSpecDto::Entangle { power: 153, .. }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.nature-herbal-healing"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Heal { amount: 769 }, ..]
+    ));
+}
+
+#[test]
+fn nature_entangle_uses_the_original_unique_immunity_and_old_slow_save() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_534c, 50);
+    clear_monsters(&mut game);
+    let origin = game.player.position;
+    for (id, kind_id, offset) in [
+        ("test.entangle-normal", "demo.actor.small-kobold", 1),
+        ("test.entangle-unique", "demo.actor.serpent-of-chaos", 2),
+    ] {
+        let definition = game.content.actor(kind_id).expect("test actor").clone();
+        let position = Position {
+            x: origin.x + offset,
+            y: origin.y,
+        };
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+        game.entities.push(actor_from_runtime_spawn(
+            id,
+            kind_id,
+            position,
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        ));
+    }
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.nature-entangle",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Entangle should resolve");
+
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_SLOW && status.remaining_ticks == 50)
+    );
+    assert!(
+        game.entities[1]
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != STATUS_SLOW)
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if resolution.target_entity_id.as_deref() == Some("test.entangle-unique")
+                && matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::ApplyStatus {
+                    change: AbilityStatusChangeDto::Immune,
+                    ..
+                }])
+    )));
+}
+
+#[test]
+fn nature_gate_uses_all_three_level_bands_and_creates_upkeep_pets() {
+    let cast = |seed, level| {
+        let mut game = nature_high_mage_game(seed, level);
+        clear_monsters(&mut game);
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.nature-natures-gate",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Nature's Gate should resolve");
+        let resolution = events
+            .into_iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilitySummoned { resolution, .. } => Some(resolution),
+                _ => None,
+            })
+            .expect("Nature's Gate should report its summon result");
+        (game, resolution)
+    };
+
+    let (game, resolution) = cast(0x4e41_5455_5245_2911, 29);
+    assert_eq!(resolution.actor_kind_id, "animal-ranger");
+    assert_eq!(resolution.entity_ids.len(), 1);
+    assert_eq!(game.pet_upkeep().controlled_pets, 1);
+
+    let mut middle_categories = BTreeSet::new();
+    for seed in 0..96 {
+        let (game, resolution) = cast(0x4e41_5455_3500_0000 + seed, 35);
+        if !resolution.entity_ids.is_empty() {
+            assert!(game.entities.iter().all(|entity| {
+                entity.controller_id.as_deref() == Some(game.player.id.as_str())
+            }));
+            middle_categories.insert(resolution.actor_kind_id);
+        }
+        if middle_categories.len() == 3 {
+            break;
+        }
+    }
+    assert_eq!(
+        middle_categories,
+        BTreeSet::from([
+            "animal-ranger".to_owned(),
+            "hound".to_owned(),
+            "hydra".to_owned(),
+        ])
+    );
+
+    let mut saw_no_reinforcements = false;
+    let mut saw_ent = false;
+    for seed in 0..96 {
+        let (game, resolution) = cast(0x4e41_5455_4700_0000 + seed, 47);
+        if resolution.actor_kind_id == "nature-gate" {
+            saw_no_reinforcements = true;
+        } else if resolution.actor_kind_id == "ent" && !resolution.entity_ids.is_empty() {
+            saw_ent = true;
+            assert_eq!(resolution.summoned_kind_ids, ["demo.actor.ent"]);
+            assert_eq!(game.pet_upkeep().controlled_pets, 1);
+        }
+        if saw_no_reinforcements && saw_ent {
+            break;
+        }
+    }
+    assert!(saw_no_reinforcements && saw_ent);
+}
+
+#[test]
+fn nature_herbal_healing_scales_fixed_healing_and_cures_statuses() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_4848, 50);
+    grant_spell_power(&mut game, 7);
+    game.progress.hp_progression.fill(1_000);
+    game.player.max_hp = 1_000;
+    game.player.hp = 100;
+    let status = |kind_id: &str, remaining_ticks| StatusInstance {
+        kind_id: kind_id.to_owned(),
+        intensity: 1,
+        remaining_ticks,
+        source_id: Some("test.nature".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    game.player.statuses.push(status(STATUS_STUN, 40));
+    game.player.statuses.push(status(STATUS_BLEEDING, 80));
+    game.player.statuses.push(status(STATUS_POISON, 1_000));
+    game.resolve_player_ability(
+        "demo.ability.nature-herbal-healing",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Herbal Healing should resolve");
+    assert_eq!(game.player.hp, 869);
+    assert!(!game.player_has_status_kind(STATUS_STUN));
+    assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_POISON)
+            .map(|status| status.remaining_ticks),
+        Some(500)
+    );
 }
 
 #[test]

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.nature-frost-bolt",
+  "nameKey": "ability-demo-nature-frost-bolt-name",
+  "descriptionKey": "ability-demo-nature-frost-bolt-description",
+  "abilityProgramId": "demo.ability-program.nature-frost-bolt",
+  "target": { "modes": ["position", "entity", "direction"], "range": 8, "requiresLineOfEffect": true },
+  "affectsGroundItems": true,
+  "levelScaling": [{ "effectIndex": 0, "field": "damage-dice", "multiplier": 1, "divisor": 4, "levelOffset": 5 }],
+  "spellPowerFields": [{ "effectIndex": 0, "field": "final-damage" }],
+  "tags": ["cold", "nature", "spell"]
+}

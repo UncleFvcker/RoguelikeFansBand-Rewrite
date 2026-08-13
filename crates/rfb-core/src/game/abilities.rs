@@ -819,6 +819,9 @@ impl Game {
                     changed,
                 );
             }
+            (AbilityEffectDefinition::NatureGate { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_nature_gate_effect(&ability, events, changed);
+            }
             (AbilityEffectDefinition::Detect { .. }, AbilityTargetPlan::Detect) => {
                 self.resolve_player_detection_effect(&ability, events, changed);
             }
@@ -1013,6 +1016,9 @@ impl Game {
             }
             (AbilityEffectDefinition::VisibleApplyStatus { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_visible_status_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::Entangle { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_entangle_effect(&ability, events, changed);
             }
             (AbilityEffectDefinition::MassSleepOrStasis { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_mass_sleep_or_stasis_effect(&ability, events, changed)
@@ -2022,17 +2028,6 @@ impl Game {
         } else {
             let (trace, target_index) = self.trace_projectile_path_with_actor_policy(path, true);
             self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
-            if ability.affects_ground_items {
-                self.resolve_ground_item_projectile_effects(
-                    &ability.id,
-                    &[trace.landing],
-                    damage_type,
-                    true,
-                    events,
-                    changed,
-                    removed_entities,
-                );
-            }
             let Some(index) = target_index else {
                 events.push(DomainEvent::AbilityLanded {
                     ability_id: ability.id.clone(),
@@ -2045,7 +2040,7 @@ impl Game {
                 &ability.id,
                 base_raw_damage,
                 damage_type,
-                ability.affects_ground_items,
+                false,
                 events,
                 changed,
                 removed_entities,
@@ -3398,6 +3393,130 @@ impl Game {
                 None,
                 &mut self.rng,
             );
+            changed.insert(self.entities[index].position);
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: Some(entity_id),
+                    target_kind_id: Some(target_kind_id),
+                    effects: vec![resolution],
+                },
+                trace: None,
+            });
+        }
+    }
+
+    pub(super) fn resolve_player_entangle_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::Entangle {
+            power,
+            duration_ticks,
+        } = ability.effect
+        else {
+            unreachable!("entangle executor requires an entangle effect");
+        };
+        let target_ids = self
+            .entities
+            .iter()
+            .filter(|entity| entity.hp > 0 && self.entity_is_visible_to_player(entity))
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        let empty_resistances = BTreeMap::new();
+        let empty_brands = BTreeSet::new();
+        let empty_immunities = BTreeSet::new();
+        for entity_id in target_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let target_kind_id = self.entities[index].kind_id.clone();
+            let Some(definition) = self.content.actor(&target_kind_id) else {
+                continue;
+            };
+            let target_level = definition.level;
+            let unique = definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
+            let contest_roll = (!unique).then(|| {
+                let sides = power.saturating_sub(10).max(1);
+                u16::try_from(self.rng.bounded(u64::from(sides)) + 1)
+                    .expect("entangle roll must fit u16")
+                    .saturating_add(10)
+            });
+            let rejected =
+                unique || contest_roll.is_some_and(|roll| target_level > u32::from(roll));
+            let mut resolution = if rejected {
+                AbilityEffectResolutionDto::ApplyStatus {
+                    effect_index: 0,
+                    status_kind_id: STATUS_SLOW.to_owned(),
+                    intensity: 1,
+                    requested_duration_ticks: duration_ticks,
+                    applied_duration_ticks: 0,
+                    stacking: AbilityStatusStackingDto::Extend,
+                    resistance_type: None,
+                    resistance: None,
+                    power: Some(power),
+                    target_level: Some(target_level),
+                    power_roll: contest_roll,
+                    target_roll: contest_roll.map(|_| target_level),
+                    granted_resistances: Vec::new(),
+                    granted_brands: Vec::new(),
+                    granted_race_id: None,
+                    grants_wall_passage: false,
+                    incoming_damage_percent: 100,
+                    change: if unique {
+                        AbilityStatusChangeDto::Immune
+                    } else {
+                        AbilityStatusChangeDto::Resisted
+                    },
+                }
+            } else {
+                apply_ability_status_effect(
+                    &mut self.entities[index],
+                    &ability.id,
+                    0,
+                    STATUS_SLOW,
+                    1,
+                    duration_ticks,
+                    0,
+                    0,
+                    AbilityStatusStackingDefinition::Extend,
+                    None,
+                    None,
+                    &empty_resistances,
+                    &empty_brands,
+                    &StatModifiers::default(),
+                    &EquipmentBonuses::default(),
+                    &empty_immunities,
+                    None,
+                    false,
+                    100,
+                    None,
+                    None,
+                    &mut self.rng,
+                )
+            };
+            if let AbilityEffectResolutionDto::ApplyStatus {
+                power: resolved_power,
+                target_level: resolved_level,
+                power_roll,
+                target_roll,
+                ..
+            } = &mut resolution
+            {
+                *resolved_power = Some(power);
+                *resolved_level = Some(target_level);
+                *power_roll = contest_roll;
+                *target_roll = contest_roll.map(|_| target_level);
+            }
             changed.insert(self.entities[index].position);
             events.push(DomainEvent::AbilityEffectsResolved {
                 ability_id: ability.id.clone(),
@@ -6576,6 +6695,114 @@ impl Game {
         });
     }
 
+    pub(super) fn resolve_player_nature_gate_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::NatureGate {
+            animal_category,
+            hound_category,
+            hydra_category,
+            ent_actor_kind_id,
+            radius,
+            duration_turns,
+        } = &ability.effect
+        else {
+            unreachable!("nature gate executor requires a nature gate effect");
+        };
+        let level = self.progress.level;
+        let selection = if level < 30 {
+            Some((animal_category.as_str(), 1, None))
+        } else if level < 47 {
+            match self.rng.bounded(3) {
+                0 => Some((hound_category.as_str(), 1, None)),
+                1 => Some((hydra_category.as_str(), 1, None)),
+                _ => Some((
+                    animal_category.as_str(),
+                    1 + level.saturating_sub(15) / 10,
+                    None,
+                )),
+            }
+        } else if self.rng.bounded(5) == 0 {
+            Some(("ent", 1, Some(ent_actor_kind_id.as_str())))
+        } else {
+            None
+        };
+        let owner_id = self.player.id.clone();
+        let Some((category, count, fixed_actor_kind_id)) = selection else {
+            events.push(DomainEvent::AbilitySummoned {
+                ability_id: ability.id.clone(),
+                resolution: AbilitySummonResolutionDto {
+                    owner_id,
+                    actor_kind_id: "nature-gate".to_owned(),
+                    entity_ids: Vec::new(),
+                    positions: Vec::new(),
+                    duration_turns: *duration_turns,
+                    hostile: false,
+                    group: false,
+                    summoned_kind_ids: Vec::new(),
+                },
+            });
+            return;
+        };
+        let maximum_level_base = spell_power_value(u64::from(level), ability.spell_power_bonus);
+        let maximum_level_sides = spell_power_value(
+            u64::from(level.saturating_mul(2) / 3),
+            ability.spell_power_bonus,
+        )
+        .max(1);
+        let maximum_level = maximum_level_base
+            .saturating_add(self.rng.bounded(maximum_level_sides) + 1)
+            .min(u64::from(u16::MAX)) as u16;
+        let candidates = fixed_actor_kind_id.map_or_else(
+            || self.summon_category_candidate_kind_ids(category, None, maximum_level, false),
+            |kind_id| {
+                self.content
+                    .actor(kind_id)
+                    .filter(|definition| {
+                        definition.role == ActorRole::Monster
+                            && definition.level <= u32::from(maximum_level)
+                            && actor_answers_summons(definition)
+                    })
+                    .map(|definition| vec![definition.id.clone()])
+                    .unwrap_or_default()
+            },
+        );
+        let positions = self
+            .open_positions_around_for_actor_kinds(self.player.position, *radius, &candidates)
+            .into_iter()
+            .take(usize::from(count))
+            .collect::<Vec<_>>();
+        let resolution = self.resolve_category_summon(
+            CategorySummonSpec {
+                source_id: &ability.id,
+                owner_id: &owner_id,
+                category,
+                count_dice: 0,
+                count_sides: 0,
+                count_bonus: u8::try_from(count).expect("nature gate count must fit u8"),
+                maximum_count: Some(
+                    u8::try_from(count).expect("nature gate maximum count must fit u8"),
+                ),
+                hostile: false,
+                group_chance_percent: 0,
+                group_count_dice: 0,
+                group_count_sides: 0,
+                group_count_bonus: 0,
+                duration_turns: *duration_turns,
+            },
+            candidates,
+            positions,
+            changed,
+        );
+        events.push(DomainEvent::AbilitySummoned {
+            ability_id: ability.id.clone(),
+            resolution,
+        });
+    }
+
     pub(super) fn resolve_player_genocide_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -7617,6 +7844,7 @@ impl Game {
             }
             AbilityEffectDefinition::Heal { .. }
             | AbilityEffectDefinition::HealDice { .. }
+            | AbilityEffectDefinition::NatureGate { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::CreateStair { .. }
@@ -7647,6 +7875,7 @@ impl Game {
             }
             AbilityEffectDefinition::VisibleDamage { .. }
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
+            | AbilityEffectDefinition::Entangle { .. }
             | AbilityEffectDefinition::AggravateMonsters
             | AbilityEffectDefinition::Concentrate
             | AbilityEffectDefinition::NoOp { .. } => {

@@ -1608,6 +1608,49 @@
         {
           "additionalProperties": false,
           "properties": {
+            "animalCategory": {
+              "type": "string"
+            },
+            "durationTurns": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "entActorKindId": {
+              "type": "string"
+            },
+            "houndCategory": {
+              "type": "string"
+            },
+            "hydraCategory": {
+              "type": "string"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "nature-gate",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "animalCategory",
+            "houndCategory",
+            "hydraCategory",
+            "entActorKindId",
+            "radius",
+            "durationTurns"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "category": {
               "type": "string"
             },
@@ -2411,6 +2454,32 @@
             "intensity",
             "durationTicks",
             "stacking"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationTicks": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "power": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "entangle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "power",
+            "durationTicks"
           ],
           "type": "object"
         },

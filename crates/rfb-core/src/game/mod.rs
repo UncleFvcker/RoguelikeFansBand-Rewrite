@@ -6799,7 +6799,8 @@ fn apply_ability_level_scaling(
             }
             | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
-            },
+            }
+            | AbilityEffectDefinition::Entangle { power, .. },
             AbilityLevelScalingField::StatusPower,
         )
         | (
@@ -6949,6 +6950,10 @@ fn apply_ability_spell_power(
             *sides = u16::try_from(scaled(u64::from(*sides)))
                 .expect("spell-powered healing sides must fit u16");
         }
+        (AbilityEffectDefinition::Heal { amount }, AbilitySpellPowerField::HealingAmount) => {
+            *amount = u32::try_from(scaled(u64::from(*amount)))
+                .expect("spell-powered healing amount must fit u32");
+        }
         (
             AbilityEffectDefinition::Damage { damage_bonus, .. }
             | AbilityEffectDefinition::Malediction { damage_bonus, .. }
@@ -6999,7 +7004,8 @@ fn apply_ability_spell_power(
             }
             | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
-            },
+            }
+            | AbilityEffectDefinition::Entangle { power, .. },
             AbilitySpellPowerField::StatusPower,
         )
         | (AbilityEffectDefinition::Control { power, .. }, AbilitySpellPowerField::ControlPower)
@@ -7500,6 +7506,21 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             radius: *radius,
             duration_turns: *duration_turns,
         },
+        AbilityEffectDefinition::NatureGate {
+            animal_category,
+            hound_category,
+            hydra_category,
+            ent_actor_kind_id,
+            radius,
+            duration_turns,
+        } => AbilityEffectSpecDto::NatureGate {
+            animal_category: animal_category.clone(),
+            hound_category: hound_category.clone(),
+            hydra_category: hydra_category.clone(),
+            ent_actor_kind_id: ent_actor_kind_id.clone(),
+            radius: *radius,
+            duration_turns: *duration_turns,
+        },
         AbilityEffectDefinition::Detect {
             subject,
             category,
@@ -7729,6 +7750,13 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             resistance_type: resistance_type.map(DamageType::from).map(Into::into),
             power: *power,
             target_category: target_category.clone(),
+        },
+        AbilityEffectDefinition::Entangle {
+            power,
+            duration_ticks,
+        } => AbilityEffectSpecDto::Entangle {
+            power: *power,
+            duration_ticks: *duration_ticks,
         },
         AbilityEffectDefinition::MassSleepOrStasis { stasis, power, .. } => {
             AbilityEffectSpecDto::VisibleApplyStatus {

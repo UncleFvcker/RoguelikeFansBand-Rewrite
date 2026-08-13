@@ -590,6 +590,21 @@ pub(super) fn validate_abilities(
                         && (1..=64).contains(radius)
                         && *duration_turns <= 10_000
                 }
+                AbilityEffectDefinition::NatureGate {
+                    animal_category,
+                    hound_category,
+                    hydra_category,
+                    ent_actor_kind_id,
+                    radius,
+                    duration_turns,
+                } => {
+                    [animal_category, hound_category, hydra_category]
+                        .into_iter()
+                        .all(|category| actor_tag_values.contains(category))
+                        && validate_id(ent_actor_kind_id).is_ok()
+                        && (1..=64).contains(radius)
+                        && *duration_turns == 0
+                }
                 AbilityEffectDefinition::Detect {
                     subject,
                     category,
@@ -832,6 +847,15 @@ pub(super) fn validate_abilities(
                             .as_ref()
                             .is_none_or(|category| actor_tag_values.contains(category))
                 }
+                AbilityEffectDefinition::Entangle {
+                    power,
+                    duration_ticks,
+                } => {
+                    ((1..=1_000).contains(power)
+                        || (*power == 0
+                            && has_level_scaling(AbilityLevelScalingField::StatusPower)))
+                        && (1..=1_000_000).contains(duration_ticks)
+                }
                 AbilityEffectDefinition::MassSleepOrStasis {
                     stasis_at_level,
                     sleep_power_multiplier,
@@ -1064,6 +1088,7 @@ pub(super) fn validate_abilities(
             }
             AbilityEffectDefinition::Summon { .. }
             | AbilityEffectDefinition::SummonCategory { .. }
+            | AbilityEffectDefinition::NatureGate { .. }
             | AbilityEffectDefinition::AnimateDead { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
                     && ability.target.range == 0
@@ -1071,6 +1096,7 @@ pub(super) fn validate_abilities(
             }
             AbilityEffectDefinition::Heal { .. }
             | AbilityEffectDefinition::HealDice { .. }
+            | AbilityEffectDefinition::Entangle { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::Clairvoyance { .. }
@@ -1208,6 +1234,17 @@ pub(super) fn validate_abilities(
                         &ability.id,
                     )?;
                 }
+            }
+            if let AbilityEffectDefinition::NatureGate {
+                ent_actor_kind_id, ..
+            } = effect
+            {
+                require_actor_role(
+                    actor_roles,
+                    ent_actor_kind_id,
+                    ActorRole::Monster,
+                    &ability.id,
+                )?;
             }
             if let AbilityEffectDefinition::BrandWeapon { affix_id, .. } = effect {
                 require_reference(affix_ids, affix_id, &ability.id)?;

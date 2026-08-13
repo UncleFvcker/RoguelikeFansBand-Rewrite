@@ -3938,6 +3938,48 @@
         {
           "type": "object",
           "properties": {
+            "animalCategory": {
+              "type": "string"
+            },
+            "durationTurns": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "entActorKindId": {
+              "type": "string"
+            },
+            "houndCategory": {
+              "type": "string"
+            },
+            "hydraCategory": {
+              "type": "string"
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "nature-gate"
+            }
+          },
+          "required": [
+            "type",
+            "animalCategory",
+            "houndCategory",
+            "hydraCategory",
+            "entActorKindId",
+            "radius",
+            "durationTurns"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "category": {
               "type": "string"
             },
@@ -4808,6 +4850,31 @@
             "intensity",
             "durationTicks",
             "stacking"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "durationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "entangle"
+            }
+          },
+          "required": [
+            "type",
+            "power",
+            "durationTicks"
           ]
         },
         {

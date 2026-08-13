@@ -123,6 +123,7 @@
         "final-damage",
         "damage-sides",
         "damage-bonus",
+        "healing-amount",
         "healing-sides",
         "radius",
         "status-duration-ticks",

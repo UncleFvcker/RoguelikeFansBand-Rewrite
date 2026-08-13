@@ -303,6 +303,118 @@ fn nature_first_book_keeps_the_original_spell_table_and_allocation() {
 }
 
 #[test]
+fn nature_second_book_keeps_the_original_spell_table_and_allocation() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.nature-mastery")
+        .expect("Nature Mastery should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("nature"));
+    assert_eq!(book.rank, Some(2));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.nature-mastery")
+        .expect("Nature Mastery item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (20, 30, 1_000, Some("demo.ability-book.nature-mastery"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Nature Mastery should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (20, 50, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.nature-stone-to-mud", 5, 4, 30, 6),
+        ("demo.ability.nature-frost-bolt", 5, 4, 20, 6),
+        ("demo.ability.nature-awareness", 5, 5, 35, 6),
+        ("demo.ability.nature-fire-bolt", 5, 5, 30, 6),
+        ("demo.ability.nature-ray-of-sunlight", 7, 5, 30, 5),
+        ("demo.ability.nature-entangle", 14, 10, 35, 8),
+        ("demo.ability.nature-natures-gate", 20, 20, 80, 50),
+        ("demo.ability.nature-herbal-healing", 35, 50, 80, 50),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    for id in [
+        "demo.ability.nature-frost-bolt",
+        "demo.ability.nature-fire-bolt",
+    ] {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .expect("Nature elemental bolt should compile");
+        assert!(matches!(
+            ability.effect,
+            AbilityEffectDefinition::BoltOrBeamDamage {
+                damage_sides: 8,
+                beam_chance_modifier: 0,
+                ..
+            }
+        ));
+        assert!(ability.affects_ground_items);
+    }
+
+    assert!(
+        content
+            .actors
+            .iter()
+            .any(|actor| actor.tags.iter().any(|tag| tag == "animal-ranger"))
+    );
+}
+
+#[test]
 fn armageddon_first_book_keeps_the_original_spell_table_and_elemental_scaling() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = artifact.content;

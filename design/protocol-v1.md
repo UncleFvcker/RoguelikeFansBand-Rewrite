@@ -691,3 +691,8 @@ State Hash Schema v100。save 容器保持 v1，不为缺少这些字段的旧�
 地面物品增加 `acquire` 来源。Beam 现在可声明独立最大射程并参与等级、`spell_power` 缩放；
 这些都是既有能力内容的执行参数，不增加新的命令、待处理输入或 State Hash 字段。State
 Hash Schema 保持 v100，save 容器保持 v1。
+
+协议 1.203 为自然领域第二册增加窄化的 `entangle` 与 `nature-gate` 能力投影。前者保留
+唯一怪免疫和原版旧式等级检定；后者按施法者等级选择 Ranger 动物、猎犬、九头蛇或树人，
+生成物继续进入既有宠物维持系统。固定治疗值现在可显式参与 `spell_power`。这些变化不增加
+命令、待处理输入或持久状态，State Hash Schema 保持 v100，save 容器保持 v1。

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.202";
+pub const PROTOCOL_VERSION: &str = "1.203";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1171,6 +1171,14 @@ pub enum AbilityEffectSpecDto {
         radius: u8,
         duration_turns: u16,
     },
+    NatureGate {
+        animal_category: String,
+        hound_category: String,
+        hydra_category: String,
+        ent_actor_kind_id: String,
+        radius: u8,
+        duration_turns: u16,
+    },
     Detect {
         #[serde(default)]
         subject: AbilityDetectSubjectDto,
@@ -1330,6 +1338,10 @@ pub enum AbilityEffectSpecDto {
         power: Option<u16>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target_category: Option<String>,
+    },
+    Entangle {
+        power: u16,
+        duration_ticks: u32,
     },
     BrandWeapon {
         affix_id: String,

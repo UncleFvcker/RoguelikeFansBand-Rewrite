@@ -214,6 +214,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::ResistElements { .. }
                     | AbilityEffectDefinition::Summon { .. }
                     | AbilityEffectDefinition::SummonCategory { .. }
+                    | AbilityEffectDefinition::NatureGate { .. }
                     | AbilityEffectDefinition::Detect { .. }
                     | AbilityEffectDefinition::RefuelEquippedLight { .. }
                     | AbilityEffectDefinition::LightArea { .. }
@@ -228,6 +229,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::RestoreVitality { .. }
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                    | AbilityEffectDefinition::Entangle { .. }
                     | AbilityEffectDefinition::MassSleepOrStasis { .. }
                     | AbilityEffectDefinition::BlinkSelf { .. }
                     | AbilityEffectDefinition::TeleportSelf { .. }

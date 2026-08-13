@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.nature-mastery",
+  "nameKey": "ability-book-demo-nature-mastery-name",
+  "descriptionKey": "ability-book-demo-nature-mastery-description",
+  "realmId": "nature",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.nature-stone-to-mud",
+    "demo.ability.nature-frost-bolt",
+    "demo.ability.nature-awareness",
+    "demo.ability.nature-fire-bolt",
+    "demo.ability.nature-ray-of-sunlight",
+    "demo.ability.nature-entangle",
+    "demo.ability.nature-natures-gate",
+    "demo.ability.nature-herbal-healing"
+  ],
+  "tags": ["nature", "spellbook"]
+}
