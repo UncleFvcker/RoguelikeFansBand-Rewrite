@@ -425,8 +425,8 @@ struct DemoWildernessDungeonPlan {
     monster_preferences: Vec<String>,
     guardian: DemoDungeonGuardianPlan,
     final_object: DemoDungeonObjectPlan,
-    final_ego_source_index: u32,
-    substitute_source_index: u32,
+    final_ego_source_index: Option<u32>,
+    substitute_source_index: Option<u32>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -12349,8 +12349,8 @@ fn validate_demo_wilderness_plans(
         }
         if dungeon_flag_number(record, "FINAL_GUARDIAN_") != Some(dungeon.guardian.source_index)
             || dungeon_final_object(record).as_ref() != Some(&dungeon.final_object)
-            || dungeon_flag_number(record, "FINAL_EGO_") != Some(dungeon.final_ego_source_index)
-            || dungeon_flag_number(record, "SUBSTITUTE_") != Some(dungeon.substitute_source_index)
+            || dungeon_flag_number(record, "FINAL_EGO_") != dungeon.final_ego_source_index
+            || dungeon_flag_number(record, "SUBSTITUTE_") != dungeon.substitute_source_index
         {
             return Err(invalid_wilderness_selection(format!(
                 "planned dungeon {} guardian or final reward drifted",
@@ -12530,13 +12530,9 @@ pub fn sync_demo_wilderness(
         }));
     }
     for planned in &selection.dungeon_plans {
-        if !selection.dungeons.iter().any(|selected| {
-            selected.source_index == planned.source_index && selected.id == planned.id
-        }) || planned.position.x >= wilderness.width
-            || planned.position.y >= wilderness.height
-        {
+        if planned.position.x >= wilderness.width || planned.position.y >= wilderness.height {
             return Err(invalid_wilderness_selection(format!(
-                "inactive or out-of-bounds dungeon plan {}",
+                "out-of-bounds dungeon plan {}",
                 planned.id
             )));
         }
@@ -14613,6 +14609,32 @@ mod tests {
                 .len(),
             15
         );
+    }
+
+    #[test]
+    fn dungeon_plan_reward_additions_are_optional() {
+        let plan: DemoWildernessDungeonPlan = serde_json::from_value(serde_json::json!({
+            "sourceIndex": 2,
+            "sourceName": "Camelot",
+            "id": "demo.dungeon.camelot",
+            "position": { "x": 7, "y": 59 },
+            "minimumDepth": 20,
+            "maximumDepth": 35,
+            "monsterDivisor": 32,
+            "generationFlags": ["COFFEE"],
+            "monsterPreferences": ["KNIGHT", "R_CHAR_pHgd"],
+            "guardian": {
+                "sourceIndex": 1111,
+                "sourceName": "Arthur Pendragon",
+                "chineseName": "亚瑟·潘德拉贡",
+                "level": 32
+            },
+            "finalObject": { "tval": 34, "sval": 10 }
+        }))
+        .expect("dungeon plans without a final ego or substitute should parse");
+
+        assert_eq!(plan.final_ego_source_index, None);
+        assert_eq!(plan.substitute_source_index, None);
     }
 
     #[test]

@@ -91,6 +91,29 @@
       "finalObject": { "tval": 45, "sval": 0 },
       "finalEgoSourceIndex": 206,
       "substituteSourceIndex": 36
+    },
+    {
+      "sourceIndex": 2,
+      "sourceName": "Camelot",
+      "id": "demo.dungeon.camelot",
+      "position": { "x": 7, "y": 59 },
+      "minimumDepth": 20,
+      "maximumDepth": 35,
+      "monsterDivisor": 32,
+      "generationFlags": [
+        "COFFEE"
+      ],
+      "monsterPreferences": [
+        "KNIGHT",
+        "R_CHAR_pHgd"
+      ],
+      "guardian": {
+        "sourceIndex": 1111,
+        "sourceName": "Arthur Pendragon",
+        "chineseName": "亚瑟·潘德拉贡",
+        "level": 32
+      },
+      "finalObject": { "tval": 34, "sval": 10 }
     }
   ]
 }
