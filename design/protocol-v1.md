@@ -601,3 +601,8 @@ save 容器保持 v1，不兼容缺少该字段的旧开发存档。
 协议 1.188 / P60 为 `AbilityEffectSpecDto::SummonCategory` 增加可选
 `batchCandidates`，用于先掷数量、再以一次加权选择固定整批召唤对象。该字段仅允许怪物
 能力使用；没有新增持久状态，State Hash Schema 保持 v93，save 容器保持 v1。
+
+协议 1.189 / Arcane 第一册为 `AbilityEffectSpecDto` 增加窄化的 `light-area`、
+`terrain-beam`、`heal-dice` 与 `reduce-status` 投影，并为状态削减增加结构化结算结果。
+这些表面只承载区域照明、门闩/门陷阱射线与骰式治疗；没有新增待处理输入或存档字段，
+State Hash Schema 保持 v93，save 容器保持 v1。

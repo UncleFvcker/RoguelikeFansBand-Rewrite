@@ -129,6 +129,7 @@ pub enum AbilitySpellPowerField {
     FinalDamage,
     DamageSides,
     DamageBonus,
+    HealingSides,
     Radius,
     StatusDurationTicks,
     StatusDurationSides,
@@ -229,6 +230,14 @@ pub enum AbilityStatusStackingDefinition {
     KeepStrongest,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityTerrainBeamOperationDefinition {
+    JamDoors,
+    DestroyTrapsAndDoors,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -299,6 +308,11 @@ pub enum AbilityEffectDefinition {
         damage_dice: u16,
         damage_sides: u16,
     },
+    LightArea {
+        damage_dice: u16,
+        damage_sides: u16,
+        radius: u8,
+    },
     BoltOrBeamDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -307,6 +321,8 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
         beam_chance_percent: u8,
+        #[serde(default)]
+        beam_chance_modifier: i8,
     },
     BoltOrAreaDamage {
         damage_dice: u16,
@@ -486,6 +502,9 @@ pub enum AbilityEffectDefinition {
         target_terrain_id: String,
         radius: u8,
     },
+    TerrainBeam {
+        operation: AbilityTerrainBeamOperationDefinition,
+    },
     ApplyStatus {
         status_kind_id: String,
         intensity: u16,
@@ -562,6 +581,14 @@ pub enum AbilityEffectDefinition {
         failure_chance_percent: u8,
     },
     Heal {
+        amount: u32,
+    },
+    HealDice {
+        dice: u16,
+        sides: u16,
+    },
+    ReduceStatus {
+        status_kind_id: String,
         amount: u32,
     },
     VisibleDamage {
@@ -650,6 +677,7 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::JumpDamage { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::LightArea { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::ConeDamage { damage_sides, .. }
@@ -683,6 +711,7 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*full_identify_power), 1_000)),
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::LightArea { radius, .. }
             | AbilityEffectDefinition::JumpDamage { radius, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
             | AbilityEffectDefinition::ConeDamage { radius, .. }
@@ -840,12 +869,16 @@ pub(crate) fn valid_ability_spell_power(
                         | AbilityEffectDefinition::Malediction { .. }
                         | AbilityEffectDefinition::AreaDamage { .. }
                         | AbilityEffectDefinition::BeamDamage { .. }
+                        | AbilityEffectDefinition::LightArea { .. }
                         | AbilityEffectDefinition::BoltOrBeamDamage { .. }
                         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                         | AbilityEffectDefinition::ConeDamage { .. }
                         | AbilityEffectDefinition::VisibleDamage { .. }
                         | AbilityEffectDefinition::DrainLife { .. }
                 ),
+                AbilitySpellPowerField::HealingSides => {
+                    matches!(effect, AbilityEffectDefinition::HealDice { .. })
+                }
                 AbilitySpellPowerField::DamageBonus => matches!(
                     effect,
                     AbilityEffectDefinition::Damage { .. }
@@ -906,6 +939,8 @@ pub struct PlayerAbilityDefinition {
     pub resource_id: String,
     pub resource_cost: u32,
     pub base_failure_percent: u8,
+    #[serde(default)]
+    pub first_success_experience: u32,
     #[serde(default)]
     pub proficiency: AbilityProficiencyDefinition,
     #[serde(default)]

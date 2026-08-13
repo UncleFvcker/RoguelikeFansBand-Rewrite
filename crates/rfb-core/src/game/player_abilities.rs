@@ -185,6 +185,7 @@ impl Game {
     ) {
         let AbilityEffectDefinition::BoltOrBeamDamage {
             beam_chance_percent,
+            beam_chance_modifier,
             ..
         } = &mut ability.effect
         else {
@@ -197,6 +198,7 @@ impl Game {
             .saturating_mul(i32::from(profile.beam_chance_level_multiplier))
             .saturating_div(i32::from(profile.beam_chance_level_divisor))
             .saturating_add(i32::from(profile.beam_chance_bonus))
+            .saturating_add(i32::from(*beam_chance_modifier))
             .clamp(0, 100);
         *beam_chance_percent =
             u8::try_from(chance).expect("clamped casting beam chance must fit u8");

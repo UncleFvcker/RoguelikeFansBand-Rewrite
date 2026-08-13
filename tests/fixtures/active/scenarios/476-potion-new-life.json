@@ -36,7 +36,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 357,
+      "rngDrawCounter": 364,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -339,28 +339,28 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 98,
+            "potential": 108,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 148,
+            "potential": 118,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 88,
+            "potential": 98,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 148,
+            "potential": 128,
             "effective": 15,
             "index": 12
           },
@@ -374,7 +374,7 @@
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 108,
+            "potential": 138,
             "effective": 14,
             "index": 11
           }
@@ -1619,7 +1619,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 176,
+      "nextItemInstanceSerial": 179,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1627,7 +1627,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "19a1805d11224ff768bf10873a133a3163efdc5e2a5a6c39d0eb44fbeb09d894"
+      "stateHash": "2059ba7239270661c583f79e87d3a202ef15baff5ac697e94e331010cf6585bd"
     },
     "events": [
       {
@@ -1639,6 +1639,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "19a1805d11224ff768bf10873a133a3163efdc5e2a5a6c39d0eb44fbeb09d894"
+    "saveRoundTripStateHash": "2059ba7239270661c583f79e87d3a202ef15baff5ac697e94e331010cf6585bd"
   }
 }

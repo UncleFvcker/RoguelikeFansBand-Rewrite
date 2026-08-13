@@ -397,6 +397,12 @@ impl Game {
         events.push(DomainEvent::AbilityCastSucceeded {
             resolution: resolution.clone(),
         });
+        let first_success_experience =
+            if source == AbilitySourceDto::Learned && progress_before.cast_count == 0 {
+                Self::player_ability_parameters(&ability).first_success_experience
+            } else {
+                0
+            };
 
         let random_branch_index = if matches!(
             &ability.effect,
@@ -424,6 +430,9 @@ impl Game {
             && random_branch_index == Some(0)
         {
             self.add_virtue(VirtueKindDto::Unlife, 1);
+        }
+        if result.is_ok() && first_success_experience > 0 {
+            self.apply_player_experience(u64::from(first_success_experience), events);
         }
         result
     }
@@ -530,6 +539,13 @@ impl Game {
             ) => {
                 self.resolve_player_random_teleport_effect(&ability, candidates, events, changed);
             }
+            (AbilityEffectDefinition::LightArea { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_light_area_effect(&ability, events, changed, removed_entities)?;
+            }
+            (
+                AbilityEffectDefinition::TerrainBeam { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => self.resolve_player_terrain_beam_effect(&ability, path, events, changed),
             (AbilityEffectDefinition::FetchItem { .. }, AbilityTargetPlan::FetchItem { path }) => {
                 self.resolve_player_fetch_item_effect(&ability, path, events, changed)
             }
@@ -804,6 +820,12 @@ impl Game {
             }
             (AbilityEffectDefinition::Heal { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_healing_effect(&ability, events);
+            }
+            (AbilityEffectDefinition::HealDice { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_healing_dice_effect(&ability, events);
+            }
+            (AbilityEffectDefinition::ReduceStatus { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_status_reduction_effect(&ability, events);
             }
             (AbilityEffectDefinition::IdentifyItem { .. }, AbilityTargetPlan::Item { item_id }) => {
                 self.resolve_player_identify_item_effect(&ability, &item_id, events);
@@ -1487,6 +1509,159 @@ impl Game {
         Ok(())
     }
 
+    fn resolve_player_light_area_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::LightArea {
+            damage_dice,
+            damage_sides,
+            radius,
+        } = ability.effect
+        else {
+            unreachable!("light-area executor requires a light-area effect");
+        };
+        let (trace, _) = self.trace_projectile_path_with_actor_policy(Vec::new(), false);
+        let center = self.player.position;
+        let (affected_positions, targets) = self.area_damage_targets(center, radius, None);
+        let targets = targets
+            .into_iter()
+            .filter(|(entity_id, _)| {
+                self.entities.iter().any(|entity| {
+                    entity.id == *entity_id
+                        && entity.resistances.level(DamageType::Light)
+                            == ResistanceLevel::Vulnerable
+                })
+            })
+            .collect::<Vec<_>>();
+        let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+
+        let mut glow_positions = affected_positions.iter().copied().collect::<BTreeSet<_>>();
+        glow_positions.extend(self.connected_glow_positions(center));
+        for position in glow_positions {
+            let Some(index) = self.index(position) else {
+                continue;
+            };
+            if !self.glow[index] {
+                self.glow[index] = true;
+                changed.insert(position);
+            }
+        }
+
+        events.push(DomainEvent::AbilityAreaDamage {
+            ability_id: ability.id.clone(),
+            resolution: AbilityAreaDamageResolutionDto {
+                center,
+                radius,
+                base_raw_damage,
+                damage_type: DamageType::Light.into(),
+                affected_positions,
+                target_count: u16::try_from(targets.len()).unwrap_or(u16::MAX),
+            },
+            trace: trace.clone(),
+        });
+        for (entity_id, distance) in targets {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            self.resolve_weak_light_damage_to_entity(
+                index,
+                &ability.id,
+                rfb_area_damage(base_raw_damage, distance),
+                trace.clone(),
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        Ok(())
+    }
+
+    fn resolve_player_terrain_beam_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::TerrainBeam { operation } = ability.effect else {
+            unreachable!("terrain-beam executor requires a terrain-beam effect");
+        };
+        if operation == AbilityTerrainBeamOperationDefinition::JamDoors {
+            let _ = self.rng.bounded(30);
+        }
+        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
+        let mut affected_positions = trace.traversed.clone();
+        if trace.impact != trace.landing && self.index(trace.impact).is_some() {
+            affected_positions.push(trace.impact);
+        }
+        let mut replacements = Vec::new();
+        for position in affected_positions {
+            let Some(index) = self.index(position) else {
+                continue;
+            };
+            let Some(terrain) = self.content.terrain(&self.terrain[index]) else {
+                continue;
+            };
+            let target_id = match operation {
+                AbilityTerrainBeamOperationDefinition::JamDoors => {
+                    terrain.jam_to_terrain_id.as_ref()
+                }
+                AbilityTerrainBeamOperationDefinition::DestroyTrapsAndDoors => terrain
+                    .trap
+                    .as_ref()
+                    .map(|trap| &trap.disarm_to_terrain_id)
+                    .or_else(|| {
+                        terrain
+                            .tags
+                            .iter()
+                            .any(|tag| tag == "door")
+                            .then_some(terrain.bash_to_terrain_id.as_ref())
+                            .flatten()
+                    }),
+            };
+            if let Some(target_id) = target_id
+                && target_id != &terrain.id
+            {
+                replacements.push((position, terrain.id.clone(), target_id.clone()));
+            }
+        }
+
+        let mut groups = BTreeMap::<(String, String), Vec<Position>>::new();
+        for (position, source_id, target_id) in replacements {
+            self.replace_terrain_from_source(
+                position,
+                &target_id,
+                TerrainChangeSource::Magic,
+                events,
+                changed,
+            );
+            groups
+                .entry((source_id, target_id))
+                .or_default()
+                .push(position);
+        }
+        for ((source_id, target_id), positions) in groups {
+            events.push(DomainEvent::AbilityTerrainTransformed {
+                ability_id: ability.id.clone(),
+                resolution: AbilityTerrainTransformResolutionDto {
+                    center: self.player.position,
+                    radius: 0,
+                    source_terrain_ids: vec![source_id],
+                    target_terrain_id: target_id,
+                    transformed_positions: positions,
+                },
+            });
+        }
+    }
+
     pub(super) fn resolve_player_bolt_or_beam_damage_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -1501,6 +1676,7 @@ impl Game {
             damage_bonus,
             damage_type,
             beam_chance_percent,
+            ..
         } = &ability.effect
         else {
             unreachable!("bolt-or-beam executor requires a bolt-or-beam damage effect");
@@ -2555,6 +2731,8 @@ impl Game {
                 !matches!(
                     effect,
                     AbilityEffectDefinition::Heal { .. }
+                        | AbilityEffectDefinition::HealDice { .. }
+                        | AbilityEffectDefinition::ReduceStatus { .. }
                         | AbilityEffectDefinition::ApplyStatus { .. }
                         | AbilityEffectDefinition::RemoveStatus { .. }
                 )
@@ -2570,6 +2748,9 @@ impl Game {
                     },
                     AbilityEffectDefinition::Detect { .. } => AbilityTargetPlan::Detect,
                     AbilityEffectDefinition::Heal { .. }
+                    | AbilityEffectDefinition::HealDice { .. }
+                    | AbilityEffectDefinition::ReduceStatus { .. }
+                    | AbilityEffectDefinition::LightArea { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
                     | AbilityEffectDefinition::RemoveStatus { .. }
                     | AbilityEffectDefinition::VisibleDamage { .. }
@@ -2610,6 +2791,48 @@ impl Game {
                             AbilityEffectResolutionDto::Heal {
                                 effect_index,
                                 resolution: HealingResolutionDto { requested, applied },
+                            }
+                        }
+                        AbilityEffectDefinition::HealDice { dice, sides } => {
+                            let amount = self.roll_damage(*dice, *sides).max(0);
+                            let max_hp = self.effective_player_max_hp();
+                            let outcome = apply_healing(
+                                &mut self.player.hp,
+                                max_hp,
+                                HealingRequest::amount(amount),
+                            );
+                            AbilityEffectResolutionDto::Heal {
+                                effect_index,
+                                resolution: HealingResolutionDto {
+                                    requested: outcome.requested,
+                                    applied: outcome.applied,
+                                },
+                            }
+                        }
+                        AbilityEffectDefinition::ReduceStatus {
+                            status_kind_id,
+                            amount,
+                        } => {
+                            let (before, after) = self
+                                .player
+                                .statuses
+                                .iter()
+                                .position(|status| status.kind_id == *status_kind_id)
+                                .map_or((0, 0), |status_index| {
+                                    let before = self.player.statuses[status_index].remaining_ticks;
+                                    let after = before.saturating_sub(*amount);
+                                    if after == 0 {
+                                        self.player.statuses.remove(status_index);
+                                    } else {
+                                        self.player.statuses[status_index].remaining_ticks = after;
+                                    }
+                                    (before, after)
+                                });
+                            AbilityEffectResolutionDto::ReduceStatus {
+                                effect_index,
+                                status_kind_id: status_kind_id.clone(),
+                                before,
+                                after,
                             }
                         }
                         AbilityEffectDefinition::ApplyStatus {
@@ -2939,6 +3162,69 @@ impl Game {
                 requested: outcome.requested,
                 applied: outcome.applied,
             },
+        });
+    }
+
+    fn resolve_player_healing_dice_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::HealDice { dice, sides } = ability.effect else {
+            unreachable!("player healing-dice executor requires a healing-dice effect");
+        };
+        let amount = self.roll_damage(dice, sides).max(0);
+        let max_hp = self.effective_player_max_hp();
+        let outcome = apply_healing(&mut self.player.hp, max_hp, HealingRequest::amount(amount));
+        events.push(DomainEvent::AbilityHealed {
+            ability_id: ability.id.clone(),
+            resolution: HealingResolutionDto {
+                requested: outcome.requested,
+                applied: outcome.applied,
+            },
+        });
+    }
+
+    fn resolve_player_status_reduction_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::ReduceStatus {
+            ref status_kind_id,
+            amount,
+        } = ability.effect
+        else {
+            unreachable!("status reduction executor requires a reduce-status effect");
+        };
+        let (before, after) = self
+            .player
+            .statuses
+            .iter()
+            .position(|status| status.kind_id == *status_kind_id)
+            .map_or((0, 0), |index| {
+                let before = self.player.statuses[index].remaining_ticks;
+                let after = before.saturating_sub(amount);
+                if after == 0 {
+                    self.player.statuses.remove(index);
+                } else {
+                    self.player.statuses[index].remaining_ticks = after;
+                }
+                (before, after)
+            });
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::ReduceStatus {
+                    effect_index: 0,
+                    status_kind_id: status_kind_id.clone(),
+                    before,
+                    after,
+                }],
+            },
+            trace: None,
         });
     }
 
@@ -5596,12 +5882,17 @@ impl Game {
                         })
                 }
             }
-            AbilityEffectDefinition::Heal { .. } => (matches!(target, TargetSelection::SelfTarget)
-                && ability
-                    .target
-                    .modes
-                    .contains(&AbilityTargetModeDefinition::SelfTarget))
-            .then_some(AbilityTargetPlan::SelfTarget),
+            AbilityEffectDefinition::Heal { .. }
+            | AbilityEffectDefinition::HealDice { .. }
+            | AbilityEffectDefinition::ReduceStatus { .. }
+            | AbilityEffectDefinition::LightArea { .. } => {
+                (matches!(target, TargetSelection::SelfTarget)
+                    && ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget))
+                .then_some(AbilityTargetPlan::SelfTarget)
+            }
             AbilityEffectDefinition::RestoreVitality { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
@@ -5659,6 +5950,7 @@ impl Game {
             }
             AbilityEffectDefinition::BeamDamage { .. }
             | AbilityEffectDefinition::LightLine { .. }
+            | AbilityEffectDefinition::TerrainBeam { .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { .. } => self
                 .beam_ability_path(ability, target)
                 .map(|path| AbilityTargetPlan::Projectile {

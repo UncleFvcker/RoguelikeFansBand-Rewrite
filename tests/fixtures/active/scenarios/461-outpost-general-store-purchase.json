@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 165,
+      "rngDrawCounter": 166,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -159,112 +159,6 @@
           "stock": [
             {
               "id": "generated.item.101",
-              "kindId": "demo.item.flask-of-oil",
-              "displayNameKey": "item-demo-flask-of-oil-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
-              "unitPrice": 3,
-              "weightTenthsPound": 10,
-              "fuel": {
-                "kind": "oil",
-                "current": 7500,
-                "maximum": 7500,
-                "lightRadius": 0
-              },
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.102",
-              "kindId": "demo.item.fabric-bag",
-              "displayNameKey": "item-demo-fabric-bag-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
-              "unitPrice": 30,
-              "weightTenthsPound": 10,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.104",
-              "kindId": "demo.item.hard-biscuit",
-              "displayNameKey": "item-demo-hard-biscuit-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
-              "unitPrice": 1,
-              "weightTenthsPound": 2,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.105",
-              "kindId": "demo.item.strip-of-venison",
-              "displayNameKey": "item-demo-strip-of-venison-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
-              "unitPrice": 2,
-              "weightTenthsPound": 2,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.106",
-              "kindId": "demo.item.water-potion",
-              "displayNameKey": "item-demo-water-potion-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
-              "unitPrice": 1,
-              "weightTenthsPound": 4,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.107",
-              "kindId": "demo.item.apple-juice",
-              "displayNameKey": "item-demo-apple-juice-name",
-              "quantity": 4,
-              "maximumQuantity": 4,
-              "unitPrice": 1,
-              "weightTenthsPound": 4,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.108",
-              "kindId": "demo.item.pint-of-fine-ale",
-              "displayNameKey": "item-demo-pint-of-fine-ale-name",
-              "quantity": 4,
-              "maximumQuantity": 4,
-              "unitPrice": 1,
-              "weightTenthsPound": 5,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.109",
-              "kindId": "demo.item.pint-of-fine-wine",
-              "displayNameKey": "item-demo-pint-of-fine-wine-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 2,
-              "weightTenthsPound": 10,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.95",
-              "kindId": "demo.item.ration-of-food",
-              "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 3,
-              "weightTenthsPound": 10,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.96",
-              "kindId": "demo.item.piece-of-elvish-waybread",
-              "displayNameKey": "item-demo-piece-of-elvish-waybread-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
-              "unitPrice": 30,
-              "weightTenthsPound": 3,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.97",
               "kindId": "demo.item.wooden-torch",
               "displayNameKey": "item-demo-wooden-torch-name",
               "quantity": 3,
@@ -278,6 +172,128 @@
                 "lightRadius": 1
               },
               "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.102",
+              "kindId": "demo.item.brass-lantern",
+              "displayNameKey": "item-demo-brass-lantern-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 30,
+              "weightTenthsPound": 50,
+              "fuel": {
+                "kind": "lantern",
+                "current": 7500,
+                "maximum": 15000,
+                "lightRadius": 2
+              },
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.103",
+              "kindId": "demo.item.flask-of-oil",
+              "displayNameKey": "item-demo-flask-of-oil-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 3,
+              "weightTenthsPound": 10,
+              "fuel": {
+                "kind": "oil",
+                "current": 7500,
+                "maximum": 7500,
+                "lightRadius": 0
+              },
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.104",
+              "kindId": "demo.item.fabric-bag",
+              "displayNameKey": "item-demo-fabric-bag-name",
+              "quantity": 2,
+              "maximumQuantity": 2,
+              "unitPrice": 30,
+              "weightTenthsPound": 10,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.106",
+              "kindId": "demo.item.hard-biscuit",
+              "displayNameKey": "item-demo-hard-biscuit-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 1,
+              "weightTenthsPound": 2,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.107",
+              "kindId": "demo.item.strip-of-venison",
+              "displayNameKey": "item-demo-strip-of-venison-name",
+              "quantity": 3,
+              "maximumQuantity": 3,
+              "unitPrice": 2,
+              "weightTenthsPound": 2,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.108",
+              "kindId": "demo.item.water-potion",
+              "displayNameKey": "item-demo-water-potion-name",
+              "quantity": 4,
+              "maximumQuantity": 4,
+              "unitPrice": 1,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.109",
+              "kindId": "demo.item.apple-juice",
+              "displayNameKey": "item-demo-apple-juice-name",
+              "quantity": 4,
+              "maximumQuantity": 4,
+              "unitPrice": 1,
+              "weightTenthsPound": 4,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.110",
+              "kindId": "demo.item.pint-of-fine-ale",
+              "displayNameKey": "item-demo-pint-of-fine-ale-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 1,
+              "weightTenthsPound": 5,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.111",
+              "kindId": "demo.item.pint-of-fine-wine",
+              "displayNameKey": "item-demo-pint-of-fine-wine-name",
+              "quantity": 5,
+              "maximumQuantity": 5,
+              "unitPrice": 2,
+              "weightTenthsPound": 10,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.96",
+              "kindId": "demo.item.ration-of-food",
+              "displayNameKey": "item-demo-ration-of-food-name",
+              "quantity": 4,
+              "maximumQuantity": 4,
+              "unitPrice": 3,
+              "weightTenthsPound": 10,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.97",
+              "kindId": "demo.item.piece-of-elvish-waybread",
+              "displayNameKey": "item-demo-piece-of-elvish-waybread-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 30,
+              "weightTenthsPound": 3,
+              "quality": "ordinary"
             }
           ],
           "sellQuotes": [
@@ -289,8 +305,8 @@
             },
             {
               "itemId": "generated.item.100",
-              "kindId": "demo.item.brass-lantern",
-              "unitPrice": 28,
+              "kindId": "demo.item.wooden-torch",
+              "unitPrice": 1,
               "maximumQuantity": 1
             },
             {
@@ -455,10 +471,10 @@
       "playerDefense": 15,
       "playerSpeed": 110,
       "playerEnergyNeed": 0,
-      "playerCarriedWeightTenthsPound": 744,
+      "playerCarriedWeightTenthsPound": 724,
       "playerCarryCapacityTenthsPound": 1200,
       "playerEncumbranceSpeedPenalty": 0,
-      "playerGold": 999970,
+      "playerGold": 999999,
       "playerNutrition": 9999,
       "playerLevel": 1,
       "playerExperience": 0,
@@ -1318,20 +1334,20 @@
         },
         {
           "id": "generated.item.100",
-          "kindId": "demo.item.brass-lantern",
-          "displayNameKey": "item-demo-brass-lantern-name",
+          "kindId": "demo.item.wooden-torch",
+          "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "usable": false,
           "fuel": {
-            "kind": "lantern",
-            "current": 7500,
-            "maximum": 15000,
-            "lightRadius": 2
+            "kind": "torch",
+            "current": 4000,
+            "maximum": 5000,
+            "lightRadius": 1
           },
           "canReceiveRecharge": false,
           "canSupplyRecharge": false,
           "quantity": 1,
-          "weightTenthsPound": 50,
+          "weightTenthsPound": 30,
           "equipmentSlot": "light",
           "modifiers": {
             "attack": 0,
@@ -1756,7 +1772,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 170,
+      "nextItemInstanceSerial": 173,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1764,20 +1780,20 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "20c35bfc4ec61468c9f465d80996af1ed94693c785aa66745d2cc074fb18f9f3"
+      "stateHash": "4e7d4115a788a12730503e02c4dfdb1f20ad07ffea3677d04fbc4a5d6e1d8e2f"
     },
     "events": [
       {
         "kind": "shop.purchase",
         "messageKey": "shop-purchase-success",
         "args": {
-          "balance": "999970",
+          "balance": "999999",
           "item": "generated.item.100",
           "quantity": "1",
           "shop": "demo.shop.outpost-general-store",
-          "target": "demo.item.brass-lantern",
-          "totalPrice": "30",
-          "unitPrice": "30"
+          "target": "demo.item.wooden-torch",
+          "totalPrice": "1",
+          "unitPrice": "1"
         }
       }
     ]

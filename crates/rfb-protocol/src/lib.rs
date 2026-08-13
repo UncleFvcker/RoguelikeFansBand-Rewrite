@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.188";
+pub const PROTOCOL_VERSION: &str = "1.189";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -861,6 +861,14 @@ pub struct AbilitySummonCandidateSpecDto {
     pub weight: u16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AbilityTerrainBeamOperationDto {
+    JamDoors,
+    DestroyTrapsAndDoors,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
@@ -902,6 +910,11 @@ pub enum AbilityEffectSpecDto {
     LightLine {
         damage_dice: u16,
         damage_sides: u16,
+    },
+    LightArea {
+        damage_dice: u16,
+        damage_sides: u16,
+        radius: u8,
     },
     BoltOrBeamDamage {
         damage_dice: u16,
@@ -1072,6 +1085,9 @@ pub enum AbilityEffectSpecDto {
         target_terrain_id: String,
         radius: u8,
     },
+    TerrainBeam {
+        operation: AbilityTerrainBeamOperationDto,
+    },
     ApplyStatus {
         status_kind_id: String,
         intensity: u16,
@@ -1158,6 +1174,14 @@ pub enum AbilityEffectSpecDto {
         count: u8,
     },
     Heal {
+        amount: u32,
+    },
+    HealDice {
+        dice: u16,
+        sides: u16,
+    },
+    ReduceStatus {
+        status_kind_id: String,
         amount: u32,
     },
     VisibleDamage {
@@ -2205,6 +2229,12 @@ pub enum AbilityEffectResolutionDto {
         effect_index: u8,
         status_kind_id: String,
         removed: bool,
+    },
+    ReduceStatus {
+        effect_index: u8,
+        status_kind_id: String,
+        before: u32,
+        after: u32,
     },
     Skipped {
         effect_index: u8,
@@ -3476,6 +3506,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(AbilityRandomTargetDto);
     push_declaration!(AbilityRandomBranchSpecDto);
     push_declaration!(AbilitySummonCandidateSpecDto);
+    push_declaration!(AbilityTerrainBeamOperationDto);
     push_declaration!(AbilityEffectSpecDto);
     push_declaration!(AbilitySummonSpecDto);
     push_declaration!(AbilityDetectSpecDto);

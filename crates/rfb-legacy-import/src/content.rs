@@ -2297,14 +2297,12 @@ fn launcher_range(multiplier_percent: u16) -> u16 {
 }
 
 fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str> {
-    if entry.tval != DEATH_BOOK_TVAL {
-        return None;
-    }
-    match entry.sval {
-        DEATH_FIRST_BOOK_SVAL => Some(DEATH_FIRST_BOOK_ID),
-        DEATH_SECOND_BOOK_SVAL => Some(DEATH_SECOND_BOOK_ID),
-        DEATH_THIRD_BOOK_SVAL => Some(DEATH_THIRD_BOOK_ID),
-        DEATH_FOURTH_BOOK_SVAL => Some(DEATH_FOURTH_BOOK_ID),
+    match (entry.tval, entry.sval) {
+        (DEATH_BOOK_TVAL, DEATH_FIRST_BOOK_SVAL) => Some(DEATH_FIRST_BOOK_ID),
+        (DEATH_BOOK_TVAL, DEATH_SECOND_BOOK_SVAL) => Some(DEATH_SECOND_BOOK_ID),
+        (DEATH_BOOK_TVAL, DEATH_THIRD_BOOK_SVAL) => Some(DEATH_THIRD_BOOK_ID),
+        (DEATH_BOOK_TVAL, DEATH_FOURTH_BOOK_SVAL) => Some(DEATH_FOURTH_BOOK_ID),
+        (ARCANE_BOOK_TVAL, ARCANE_FIRST_BOOK_SVAL) => Some(ARCANE_FIRST_BOOK_ID),
         _ => None,
     }
 }
@@ -8968,6 +8966,9 @@ const DEATH_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-prayers";
 const DEATH_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-mass";
 const DEATH_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.death-black-channels";
 const DEATH_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.death-necronomicon";
+const ARCANE_BOOK_TVAL: u16 = 96;
+const ARCANE_FIRST_BOOK_SVAL: u16 = 0;
+const ARCANE_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-cantrips-for-beginners";
 const LEGACY_VAMPIRE_LORD_RACE_ID: &str = "rfb-legacy.race.vampire-lord-form";
 const LEGACY_VAMPIRE_LORD_SKILL_SET_ID: &str = "rfb-legacy.skill-set.race-vampire-lord-form";
 const LEGACY_SLAYING_WEAPON_AFFIX_ID: &str = "rfb-legacy.affix.slaying";
@@ -17165,7 +17166,7 @@ F:BRAND_VAMP | HOLD_LIFE
     }
 
     #[test]
-    fn death_physical_books_use_the_master_tval_without_capturing_necromancy() {
+    fn physical_spellbooks_use_explicit_realm_tvals_without_capturing_necromancy() {
         assert_eq!(
             death_first_book_json(&[])["nameKey"],
             "ability-book-legacy-death-black-prayers-name"
@@ -17198,6 +17199,22 @@ F:BRAND_VAMP | HOLD_LIFE
             };
             assert_eq!(player_ability_book_for_item(&necromancy_book), None);
         }
+
+        let arcane_book = LegacyItemEntry {
+            tval: ARCANE_BOOK_TVAL,
+            sval: ARCANE_FIRST_BOOK_SVAL,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(
+            player_ability_book_for_item(&arcane_book),
+            Some(ARCANE_FIRST_BOOK_ID)
+        );
+        let later_arcane_book = LegacyItemEntry {
+            tval: ARCANE_BOOK_TVAL,
+            sval: 1,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(player_ability_book_for_item(&later_arcane_book), None);
     }
 
     #[test]

@@ -270,6 +270,47 @@
         {
           "additionalProperties": false,
           "properties": {
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "light-area",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "radius"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "beamChanceModifier": {
+              "default": 0,
+              "format": "int8",
+              "maximum": 127,
+              "minimum": -128,
+              "type": "integer"
+            },
             "beamChancePercent": {
               "format": "uint8",
               "maximum": 255,
@@ -1346,6 +1387,23 @@
         {
           "additionalProperties": false,
           "properties": {
+            "operation": {
+              "$ref": "#/$defs/AbilityTerrainBeamOperationDefinition"
+            },
+            "type": {
+              "const": "terrain-beam",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "operation"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "durationDice": {
               "default": 0,
               "format": "uint16",
@@ -1827,6 +1885,56 @@
         {
           "additionalProperties": false,
           "properties": {
+            "dice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "sides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "heal-dice",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "dice",
+            "sides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "amount": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "reduce-status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId",
+            "amount"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "damageBonus": {
               "default": 0,
               "format": "uint16",
@@ -2214,6 +2322,13 @@
         "weight"
       ],
       "type": "object"
+    },
+    "AbilityTerrainBeamOperationDefinition": {
+      "enum": [
+        "jam-doors",
+        "destroy-traps-and-doors"
+      ],
+      "type": "string"
     },
     "ActorDamageType": {
       "enum": [

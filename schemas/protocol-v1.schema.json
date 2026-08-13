@@ -1535,6 +1535,41 @@
         {
           "type": "object",
           "properties": {
+            "after": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "before": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "reduce-status"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "statusKindId",
+            "before",
+            "after"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "effectIndex": {
               "type": "integer",
               "format": "uint8",
@@ -2232,6 +2267,39 @@
             "type",
             "damageDice",
             "damageSides"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "light-area"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "radius"
           ]
         },
         {
@@ -3204,6 +3272,22 @@
         {
           "type": "object",
           "properties": {
+            "operation": {
+              "$ref": "#/$defs/AbilityTerrainBeamOperationDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "terrain-beam"
+            }
+          },
+          "required": [
+            "type",
+            "operation"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "durationDice": {
               "type": "integer",
               "format": "uint16",
@@ -3649,6 +3733,54 @@
           },
           "required": [
             "type",
+            "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "dice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "sides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "heal-dice"
+            }
+          },
+          "required": [
+            "type",
+            "dice",
+            "sides"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "reduce-status"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId",
             "amount"
           ]
         },
@@ -4139,6 +4271,13 @@
       "required": [
         "from",
         "to"
+      ]
+    },
+    "AbilityTerrainBeamOperationDto": {
+      "type": "string",
+      "enum": [
+        "jam-doors",
+        "destroy-traps-and-doors"
       ]
     },
     "AbilityTerrainTransformResolutionDto": {

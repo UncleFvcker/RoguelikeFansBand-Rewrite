@@ -28,7 +28,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 165,
+      "rngDrawCounter": 166,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -158,6 +158,22 @@
           "stock": [
             {
               "id": "generated.item.100",
+              "kindId": "demo.item.wooden-torch",
+              "displayNameKey": "item-demo-wooden-torch-name",
+              "quantity": 4,
+              "maximumQuantity": 4,
+              "unitPrice": 1,
+              "weightTenthsPound": 30,
+              "fuel": {
+                "kind": "torch",
+                "current": 4000,
+                "maximum": 5000,
+                "lightRadius": 1
+              },
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.102",
               "kindId": "demo.item.brass-lantern",
               "displayNameKey": "item-demo-brass-lantern-name",
               "quantity": 1,
@@ -173,11 +189,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.101",
+              "id": "generated.item.103",
               "kindId": "demo.item.flask-of-oil",
               "displayNameKey": "item-demo-flask-of-oil-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
+              "quantity": 3,
+              "maximumQuantity": 3,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "fuel": {
@@ -189,7 +205,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.102",
+              "id": "generated.item.104",
               "kindId": "demo.item.fabric-bag",
               "displayNameKey": "item-demo-fabric-bag-name",
               "quantity": 2,
@@ -199,7 +215,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.104",
+              "id": "generated.item.106",
               "kindId": "demo.item.hard-biscuit",
               "displayNameKey": "item-demo-hard-biscuit-name",
               "quantity": 3,
@@ -209,7 +225,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.105",
+              "id": "generated.item.107",
               "kindId": "demo.item.strip-of-venison",
               "displayNameKey": "item-demo-strip-of-venison-name",
               "quantity": 3,
@@ -219,17 +235,17 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.106",
+              "id": "generated.item.108",
               "kindId": "demo.item.water-potion",
               "displayNameKey": "item-demo-water-potion-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
+              "quantity": 4,
+              "maximumQuantity": 4,
               "unitPrice": 1,
               "weightTenthsPound": 4,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.107",
+              "id": "generated.item.109",
               "kindId": "demo.item.apple-juice",
               "displayNameKey": "item-demo-apple-juice-name",
               "quantity": 4,
@@ -239,59 +255,43 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.108",
+              "id": "generated.item.110",
               "kindId": "demo.item.pint-of-fine-ale",
               "displayNameKey": "item-demo-pint-of-fine-ale-name",
-              "quantity": 4,
-              "maximumQuantity": 4,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 1,
               "weightTenthsPound": 5,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.109",
+              "id": "generated.item.111",
               "kindId": "demo.item.pint-of-fine-wine",
               "displayNameKey": "item-demo-pint-of-fine-wine-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 5,
+              "maximumQuantity": 5,
               "unitPrice": 2,
               "weightTenthsPound": 10,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.95",
+              "id": "generated.item.96",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 1,
-              "maximumQuantity": 1,
+              "quantity": 4,
+              "maximumQuantity": 4,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.96",
+              "id": "generated.item.97",
               "kindId": "demo.item.piece-of-elvish-waybread",
               "displayNameKey": "item-demo-piece-of-elvish-waybread-name",
               "quantity": 1,
               "maximumQuantity": 1,
               "unitPrice": 30,
               "weightTenthsPound": 3,
-              "quality": "ordinary"
-            },
-            {
-              "id": "generated.item.97",
-              "kindId": "demo.item.wooden-torch",
-              "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
-              "unitPrice": 1,
-              "weightTenthsPound": 30,
-              "fuel": {
-                "kind": "torch",
-                "current": 4000,
-                "maximum": 5000,
-                "lightRadius": 1
-              },
               "quality": "ordinary"
             }
           ],
@@ -1726,7 +1726,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 170,
+      "nextItemInstanceSerial": 173,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1734,7 +1734,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ae3cdf6c73ba390e638284f8538f55123e11eaf0a8ced0c57cb683b5c004baf1"
+      "stateHash": "5841715204cf3a23b15750d570f1da75916fe4dd008cc8720e242ff6f9b28fa3"
     },
     "changedCells": [
       {

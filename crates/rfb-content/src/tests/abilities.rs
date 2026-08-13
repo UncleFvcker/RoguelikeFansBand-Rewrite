@@ -117,3 +117,70 @@ fn zero_ability_bases_require_matching_level_scaling() {
         ));
     }
 }
+
+#[test]
+fn arcane_first_book_keeps_the_original_spell_table_and_narrow_effects() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = artifact.content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.cantrips-for-beginners")
+        .expect("Arcane first book should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("arcane"));
+    assert_eq!(book.rank, Some(1));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let expected = [
+        ("demo.ability.arcane-zap", 1, 1, 15, 4),
+        ("demo.ability.arcane-wizard-lock", 1, 1, 23, 5),
+        ("demo.ability.arcane-detect-invisibility", 1, 1, 23, 4),
+        ("demo.ability.arcane-detect-monsters", 1, 1, 23, 5),
+        ("demo.ability.arcane-blink", 2, 1, 23, 10),
+        ("demo.ability.arcane-light-area", 3, 2, 33, 18),
+        ("demo.ability.arcane-trap-door-destruction", 4, 4, 23, 28),
+        ("demo.ability.arcane-cure-light-wounds", 5, 4, 33, 25),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    let lock = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-wizard-lock")
+        .expect("Wizard Lock should compile");
+    assert!(matches!(
+        lock.effect,
+        AbilityEffectDefinition::TerrainBeam {
+            operation: AbilityTerrainBeamOperationDefinition::JamDoors
+        }
+    ));
+    let cure = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.arcane-cure-light-wounds")
+        .expect("Cure Light Wounds should compile");
+    assert!(matches!(
+        &cure.effect,
+        AbilityEffectDefinition::Sequence { effects }
+            if matches!(effects.as_slice(), [
+                AbilityEffectDefinition::HealDice { dice: 2, sides: 8 },
+                AbilityEffectDefinition::ReduceStatus { status_kind_id, amount: 10 }
+            ] if status_kind_id == "rfb.status.bleeding")
+    ));
+}

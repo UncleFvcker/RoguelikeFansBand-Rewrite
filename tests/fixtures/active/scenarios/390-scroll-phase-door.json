@@ -31,7 +31,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 177,
+      "rngDrawCounter": 178,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -300,8 +300,8 @@
         }
       ],
       "playerPosition": {
-        "x": 34,
-        "y": 7
+        "x": 49,
+        "y": 24
       },
       "playerHp": 33,
       "playerMaxHp": 33,
@@ -1500,7 +1500,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 171,
+      "nextItemInstanceSerial": 170,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1508,7 +1508,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "43393a1beca2d4eb0ba568f294143848ee34ac4c68d2b3f57f523e070a36f0f1"
+      "stateHash": "30d9aa30eeeb196a9d1c5cf0ed596d5a0ed939c961e6434e345acacc1fdbb12e"
     },
     "events": [
       {
@@ -1518,8 +1518,8 @@
           "fromX": "44",
           "fromY": "16",
           "source": "demo.item.flicker-scroll",
-          "toX": "34",
-          "toY": "7"
+          "toX": "49",
+          "toY": "24"
         },
         "outcome": {
           "type": "ability-teleport",
@@ -1529,13 +1529,13 @@
               "y": 16
             },
             "to": {
-              "x": 34,
-              "y": 7
+              "x": 49,
+              "y": 24
             }
           }
         }
       }
     ],
-    "saveRoundTripStateHash": "43393a1beca2d4eb0ba568f294143848ee34ac4c68d2b3f57f523e070a36f0f1"
+    "saveRoundTripStateHash": "30d9aa30eeeb196a9d1c5cf0ed596d5a0ed939c961e6434e345acacc1fdbb12e"
   }
 }

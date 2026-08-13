@@ -186,6 +186,7 @@ fn neglected_pet_checks_preserve_the_original_rng_gate_order() {
         .get_mut("demo.resource.mana")
         .expect("High-Mage should have mana")
         .current = 0;
+    game.rng = RfbRng::seeded(81);
     let draws_before = game.rng_draw_counter();
     let mut events = Vec::new();
     let disappeared =

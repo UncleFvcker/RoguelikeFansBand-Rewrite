@@ -114,6 +114,7 @@
     { "sourceIndex": 722, "id": "fabric-bag" },
     { "sourceIndex": 723, "id": "leather-pouch" },
     { "sourceIndex": 724, "id": "dwarven-backpack" },
-    { "sourceIndex": 310, "id": "ring" }
+    { "sourceIndex": 310, "id": "ring" },
+    { "sourceIndex": 524, "id": "cantrips-for-beginners" }
   ]
 }

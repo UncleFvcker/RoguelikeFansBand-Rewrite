@@ -17,7 +17,8 @@
   },
   "stock": [
     { "itemKindId": "demo.item.black-prayers", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
-    { "itemKindId": "demo.item.black-mass", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 }
+    { "itemKindId": "demo.item.black-mass", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.cantrips-for-beginners", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 }
   ],
   "maintenance": { "intervalWorldTicks": 10000 }
 }

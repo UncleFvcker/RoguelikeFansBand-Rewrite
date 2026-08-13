@@ -99,6 +99,23 @@
           { "abilityId": "demo.ability.death-hellfire", "minimumLevel": 40, "resourceCost": 53, "baseFailurePercent": 70 },
           { "abilityId": "demo.ability.death-wraithform", "minimumLevel": 45, "resourceCost": 75, "baseFailurePercent": 80 }
         ]
+      },
+      {
+        "realmId": "arcane",
+        "abilityBookIds": [
+          "demo.ability-book.cantrips-for-beginners"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.arcane-zap", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.arcane-wizard-lock", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 23 },
+          { "abilityId": "demo.ability.arcane-detect-invisibility", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 23 },
+          { "abilityId": "demo.ability.arcane-detect-monsters", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 23 },
+          { "abilityId": "demo.ability.arcane-blink", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 23 },
+          { "abilityId": "demo.ability.arcane-light-area", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 33 },
+          { "abilityId": "demo.ability.arcane-trap-door-destruction", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 23 },
+          { "abilityId": "demo.ability.arcane-cure-light-wounds", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 33 }
+        ]
       }
     ]
   },

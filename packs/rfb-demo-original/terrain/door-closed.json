@@ -12,5 +12,6 @@
   "bashToTerrainId": "demo.terrain.door-broken",
   "bashCheckDifficulty": 12,
   "monsterDoorPower": 0,
+  "jamToTerrainId": "demo.terrain.door-jammed-1",
   "tags": ["door", "door-closed", "passage"]
 }

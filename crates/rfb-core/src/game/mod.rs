@@ -57,20 +57,20 @@ use rfb_content::{
     AbilityGenocideScopeDefinition, AbilityLevelScalingCurveDefinition,
     AbilityLevelScalingDefinition, AbilityLevelScalingField, AbilityRandomTargetDefinition,
     AbilitySpellPowerDefinition, AbilitySpellPowerField, AbilityStatusStackingDefinition,
-    AbilityTargetDefinition, AbilityTargetModeDefinition, ActorDamageType, ActorMovementMode,
-    ActorResistanceLevel, ActorRole, AffixPropertyBundleDefinition, CastingAttribute,
-    CastingCapacityFormula, CastingFailureFormula, CastingLearningFormula,
-    CastingProfileDefinition, CastingRealmProfileDefinition, CastingStudyMode,
-    ClassAbilityDefinition, ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition,
-    EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
-    ItemAttributeDefinition, ItemCurseSeverityDefinition, ItemCurseTargetDefinition,
-    ItemDestructionElement, ItemEnchantmentRollDefinition, ItemShatterEffectDefinition,
-    ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition, ItemUseEffectDefinition,
-    MeleeBlowEffectDefinition, MonsterDropKindDefinition, MonsterPackBehavior,
-    MutationActivationDefinition, MutationPeriodicEffectDefinition, PlayerAbilityDefinition,
-    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
+    AbilityTargetDefinition, AbilityTargetModeDefinition, AbilityTerrainBeamOperationDefinition,
+    ActorDamageType, ActorMovementMode, ActorResistanceLevel, ActorRole,
+    AffixPropertyBundleDefinition, CastingAttribute, CastingCapacityFormula, CastingFailureFormula,
+    CastingLearningFormula, CastingProfileDefinition, CastingRealmProfileDefinition,
+    CastingStudyMode, ClassAbilityDefinition, ContentCatalog, DungeonInstanceLifecycle,
+    EncounterEntryDefinition, EncounterTableDefinition, EquipmentBonuses, EquipmentPassive,
+    FloorLifecycle, ItemAttributeDefinition, ItemCurseSeverityDefinition,
+    ItemCurseTargetDefinition, ItemDestructionElement, ItemEnchantmentRollDefinition,
+    ItemShatterEffectDefinition, ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition,
+    ItemUseEffectDefinition, MeleeBlowEffectDefinition, MonsterDropKindDefinition,
+    MonsterPackBehavior, MutationActivationDefinition, MutationPeriodicEffectDefinition,
+    PlayerAbilityDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
+    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, SkillKind, SlayLevel, SlayTarget,
     StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
     TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition, WeaponBrand,
     affix_is_compatible_with_item,
@@ -83,15 +83,16 @@ use rfb_protocol::{
     AbilityProficiencyRankDto, AbilityProgressSaveDto, AbilityRandomBranchSpecDto,
     AbilityRandomTargetDto, AbilityRecallActionDto, AbilitySourceDto, AbilityStatusChangeDto,
     AbilityStatusStackingDto, AbilitySummonCandidateSpecDto, AbilitySummonResolutionDto,
-    AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
-    AbilityVisibleDamageResolutionDto, AttackProfileDto, AutoGetModeDto, CampaignStatusDto,
-    CellLightDto, CellVisualDto, DamageDiceDto, Direction, EquipmentBonusesDto,
-    EquipmentPassiveDto, GameCommandEnvelope, GameUpdate, GoldAppearanceDto, HealingResolutionDto,
-    ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto, ItemCurseResolutionDto,
-    ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto,
-    ItemEnchantmentsDto, ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto,
-    ItemOriginKindDto, ItemPropertyDto, ItemQualityDto, LocaleDto, MapScaleDto, MeleeBlowDto,
-    MeleeRoutineDto, MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
+    AbilityTeleportResolutionDto, AbilityTerrainBeamOperationDto,
+    AbilityTerrainTransformResolutionDto, AbilityVisibleDamageResolutionDto, AttackProfileDto,
+    AutoGetModeDto, CampaignStatusDto, CellLightDto, CellVisualDto, DamageDiceDto, Direction,
+    EquipmentBonusesDto, EquipmentPassiveDto, GameCommandEnvelope, GameUpdate, GoldAppearanceDto,
+    HealingResolutionDto, ItemActivationDto, ItemChargesDto, ItemCurseRemovalResolutionDto,
+    ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto,
+    ItemEnchantmentResolutionDto, ItemEnchantmentsDto, ItemIdentificationDto,
+    ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemOriginKindDto, ItemPropertyDto,
+    ItemQualityDto, LocaleDto, MapScaleDto, MeleeBlowDto, MeleeRoutineDto,
+    MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
     MonsterAbilityTargetResolutionDto, MonsterDisplacementResolutionDto, MonsterPackBehaviorDto,
     MonsterPackRoleDto, PendingMutationDirectionDto, Position, ProjectileProfileDto,
@@ -1480,6 +1481,17 @@ impl Game {
             action.energy_cost()
         };
         action_cost = self.player_mutation_action_energy_cost(&action, action_cost);
+        let astral_guide_blink = match &action {
+            GameAction::CastAbility { ability_id, .. }
+                if self.player_has_astral_guide()
+                    && self.content.ability(ability_id).is_some_and(|ability| {
+                        matches!(ability.effect, AbilityEffectDefinition::BlinkSelf { .. })
+                    }) =>
+            {
+                Some(ability_id.clone())
+            }
+            _ => None,
+        };
         let automatic_pickup_after_move = matches!(&action, GameAction::Move { .. });
         let recover_after_wait = matches!(&action, GameAction::Wait);
         let pet_neglect_allowed = self.pet_upkeep().unsafe_warning();
@@ -2281,6 +2293,17 @@ impl Game {
             events.extend(self.resolve_wilderness_terrain_hazard(self.player.position));
         }
         if advances_world {
+            if astral_guide_blink.as_ref().is_some_and(|ability_id| {
+                events.iter().any(|event| {
+                    matches!(
+                        event,
+                        DomainEvent::AbilityCastSucceeded { resolution }
+                            if resolution.ability_id == *ability_id
+                    )
+                })
+            }) {
+                action_cost /= 3;
+            }
             spend_energy(&mut self.player.energy_need, action_cost);
             self.advance_until_player_ready(
                 false,
@@ -6234,6 +6257,10 @@ fn actor_matches_category(definition: &rfb_content::ActorDefinition, category: &
     if category == "any-monster" {
         return definition.role == ActorRole::Monster;
     }
+    if category == "normal-monster" {
+        return definition.role == ActorRole::Monster
+            && !definition.tags.iter().any(|tag| tag == "invisible");
+    }
     if category == "living" {
         return !definition
             .tags
@@ -6377,6 +6404,7 @@ fn apply_ability_level_scaling(
             | AbilityEffectDefinition::Malediction { damage_sides, .. }
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::LightArea { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::ConeDamage { damage_sides, .. }
@@ -6450,6 +6478,7 @@ fn apply_ability_level_scaling(
         }
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::LightArea { radius, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
             | AbilityEffectDefinition::ConeDamage { radius, .. }
             | AbilityEffectDefinition::BreathDamage { radius, .. }
@@ -6584,6 +6613,7 @@ fn apply_ability_spell_power(
             | AbilityEffectDefinition::Malediction { damage_sides, .. }
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
+            | AbilityEffectDefinition::LightArea { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { damage_sides, .. }
             | AbilityEffectDefinition::ConeDamage { damage_sides, .. }
@@ -6593,6 +6623,10 @@ fn apply_ability_spell_power(
         ) => {
             *damage_sides = u16::try_from(scaled(u64::from(*damage_sides)))
                 .expect("spell-powered damage sides must fit u16");
+        }
+        (AbilityEffectDefinition::HealDice { sides, .. }, AbilitySpellPowerField::HealingSides) => {
+            *sides = u16::try_from(scaled(u64::from(*sides)))
+                .expect("spell-powered healing sides must fit u16");
         }
         (
             AbilityEffectDefinition::Damage { damage_bonus, .. }
@@ -6771,12 +6805,22 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
         },
+        AbilityEffectDefinition::LightArea {
+            damage_dice,
+            damage_sides,
+            radius,
+        } => AbilityEffectSpecDto::LightArea {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            radius: *radius,
+        },
         AbilityEffectDefinition::BoltOrBeamDamage {
             damage_dice,
             damage_sides,
             damage_bonus,
             damage_type,
             beam_chance_percent,
+            ..
         } => AbilityEffectSpecDto::BoltOrBeamDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
@@ -7035,6 +7079,16 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             target_terrain_id: target_terrain_id.clone(),
             radius: *radius,
         },
+        AbilityEffectDefinition::TerrainBeam { operation } => AbilityEffectSpecDto::TerrainBeam {
+            operation: match operation {
+                AbilityTerrainBeamOperationDefinition::JamDoors => {
+                    AbilityTerrainBeamOperationDto::JamDoors
+                }
+                AbilityTerrainBeamOperationDefinition::DestroyTrapsAndDoors => {
+                    AbilityTerrainBeamOperationDto::DestroyTrapsAndDoors
+                }
+            },
+        },
         AbilityEffectDefinition::ApplyStatus {
             status_kind_id,
             intensity,
@@ -7145,6 +7199,17 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             count: *count,
         },
         AbilityEffectDefinition::Heal { amount } => AbilityEffectSpecDto::Heal { amount: *amount },
+        AbilityEffectDefinition::HealDice { dice, sides } => AbilityEffectSpecDto::HealDice {
+            dice: *dice,
+            sides: *sides,
+        },
+        AbilityEffectDefinition::ReduceStatus {
+            status_kind_id,
+            amount,
+        } => AbilityEffectSpecDto::ReduceStatus {
+            status_kind_id: status_kind_id.clone(),
+            amount: *amount,
+        },
         AbilityEffectDefinition::VisibleDamage {
             damage_dice,
             damage_sides,
