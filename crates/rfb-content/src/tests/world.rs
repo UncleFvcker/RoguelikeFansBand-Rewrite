@@ -9927,3 +9927,26 @@ fn p83_location_monsters_keep_their_legacy_dungeon_boundaries() {
                 == "rfb-legacy.ability.summon-gertrude-sisters-l40-1d1-1")
     );
 }
+
+#[test]
+fn p84a_knight_summon_candidates_have_the_formal_category_tag() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    for id in [
+        "novice-paladin",
+        "paladin",
+        "white-knight",
+        "ultra-elite-paladin",
+        "knight-templar",
+    ] {
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P84A should retain {id}"));
+        assert!(
+            actor.tags.iter().any(|tag| tag == "knight"),
+            "{id} should be eligible for the exact knight summon"
+        );
+    }
+}

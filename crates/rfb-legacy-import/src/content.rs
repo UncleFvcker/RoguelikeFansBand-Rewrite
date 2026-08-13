@@ -214,7 +214,6 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "CHAR_CLEAR"
             | "CHAR_MULTI"
             | "FEMALE"
-            | "KNIGHT"
             | "MALE"
             | "NASTY_GLYPH"
             | "NO_STUN"
@@ -8032,6 +8031,7 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "EGYPTIAN"
             | "OLYMPIAN"
             | "NO_SUMMON"
+            | "KNIGHT"
     ) {
         return true;
     }
@@ -8210,6 +8210,7 @@ fn monster_json(
         ("EGYPTIAN", "egyptian"),
         ("OLYMPIAN", "olympian"),
         ("NO_SUMMON", "no-summon"),
+        ("KNIGHT", "knight"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -8249,6 +8250,11 @@ fn monster_json(
     }
     if entry.flags.iter().any(|flag| flag == "NO_QUEST") {
         tags.push("no-quest".to_owned());
+    }
+    if entry.flags.iter().any(|flag| flag == "KNIGHT")
+        && entry.flags.iter().any(|flag| flag == "DUNGEON_2")
+    {
+        tags.push("camelot-knight".to_owned());
     }
     if entry
         .glyph
@@ -8989,10 +8995,16 @@ fn demo_monster_json(
         ("EGYPTIAN", "egyptian"),
         ("OLYMPIAN", "olympian"),
         ("NO_SUMMON", "no-summon"),
+        ("KNIGHT", "knight"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
         }
+    }
+    if entry.flags.iter().any(|flag| flag == "KNIGHT")
+        && entry.flags.iter().any(|flag| flag == "DUNGEON_2")
+    {
+        tags.insert("camelot-knight".to_owned());
     }
     value["tags"] = serde_json::json!(tags);
     if selection
@@ -9685,6 +9697,8 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_CAT" => ("cat", (1, 3, 1)),
         "S_UNIQUE" => ("unique", (1, 2, 0)),
         "S_GUARDIAN" => ("guardian", (1, 2, 0)),
+        "S_CAMELOT" => ("camelot-knight", (1, 2, 0)),
+        "S_KNIGHT" => ("knight", (1, 2, 0)),
         _ => return None,
     };
     Some(entry)
@@ -10128,7 +10142,18 @@ fn map_summon_spell_token(
     }
     let id = format!("rfb-legacy.ability.{suffix}");
     abilities.entry(id.clone()).or_insert_with(|| {
-        summon_category_ability(&suffix, category, maximum_level, dice, sides, bonus, None)
+        let mut ability =
+            summon_category_ability(&suffix, category, maximum_level, dice, sides, bonus, None);
+        if base == "S_KNIGHT" {
+            ability["effect"]["batchCandidates"] = serde_json::json!([
+                { "actorKindId": "demo.actor.novice-paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.white-knight", "weight": 1 },
+                { "actorKindId": "demo.actor.ultra-elite-paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.knight-templar", "weight": 1 },
+            ]);
+        }
+        ability
     });
     Some(id)
 }
@@ -14344,6 +14369,36 @@ mod tests {
         assert!(demo_monster_flag_is_handled("HINDU"));
         assert!(demo_monster_flag_is_handled("OLYMPIAN"));
         assert!(demo_monster_flag_is_handled("NO_SUMMON"));
+        assert!(demo_monster_flag_is_handled("KNIGHT"));
+        assert!(!demo_monster_audit_omission_is_safe("KNIGHT"));
+    }
+
+    #[test]
+    fn knight_flag_adds_generic_and_camelot_summon_tags() {
+        let monsters = parse_r_info(
+            "N:1:generic knight\nG:p:w\nI:110:1d1:1:1:1:1\nW:5:1:1:1:0:0\nB:HIT:HURT(1d1)\nF:KNIGHT\n\
+             N:2:Camelot knight\nG:p:w\nI:110:1d1:1:1:1:1\nW:5:1:1:1:0:0\nB:HIT:HURT(1d1)\nF:KNIGHT | DUNGEON_2\n",
+        )
+        .expect("synthetic knights should parse");
+
+        for (monster, id, is_camelot) in [
+            (&monsters[0], "generic-knight", false),
+            (&monsters[1], "camelot-knight", true),
+        ] {
+            let selection = DemoMonsterSelectionEntry {
+                source_index: monster.index,
+                source_id: None,
+                id: id.to_owned(),
+                tags: Vec::new(),
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            };
+            let actor = demo_monster_json(monster, &selection, &mut BTreeMap::new())
+                .expect("KNIGHT should import as a content tag");
+            let tags = actor["tags"].as_array().expect("tags should be an array");
+            assert!(tags.iter().any(|tag| tag == "knight"));
+            assert_eq!(tags.iter().any(|tag| tag == "camelot-knight"), is_camelot);
+        }
     }
 
     #[test]
@@ -16794,6 +16849,54 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
             tags.iter().any(|tag| tag == "legacy-import")
                 && tags.iter().any(|tag| tag == "kin-glyph-76")
         }));
+    }
+
+    #[test]
+    fn camelot_and_knight_summons_keep_their_exact_candidate_rules() {
+        let mut abilities = BTreeMap::new();
+        let camelot_id = map_spell_token(
+            "S_CAMELOT(1d2)",
+            32,
+            4,
+            "demo.actor.arthur-pendragon",
+            &mut abilities,
+        )
+        .expect("Camelot summon should map");
+        assert_eq!(
+            camelot_id,
+            "rfb-legacy.ability.summon-camelot-knight-l32-1d2"
+        );
+        let camelot = &abilities[&camelot_id]["effect"];
+        assert_eq!(camelot["category"], "camelot-knight");
+        assert_eq!(camelot["maximumLevel"], 32);
+        assert_eq!(camelot["countDice"], 1);
+        assert_eq!(camelot["countSides"], 2);
+        assert!(camelot.get("batchCandidates").is_none());
+
+        let knight_id = map_spell_token(
+            "S_KNIGHT(1d2)",
+            26,
+            10,
+            "demo.actor.camelot-knight",
+            &mut abilities,
+        )
+        .expect("exact knight summon should map");
+        assert_eq!(knight_id, "rfb-legacy.ability.summon-knight-l26-1d2");
+        let knight = &abilities[&knight_id]["effect"];
+        assert_eq!(knight["category"], "knight");
+        assert_eq!(knight["maximumLevel"], 26);
+        assert_eq!(knight["countDice"], 1);
+        assert_eq!(knight["countSides"], 2);
+        assert_eq!(
+            knight["batchCandidates"],
+            serde_json::json!([
+                { "actorKindId": "demo.actor.novice-paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.white-knight", "weight": 1 },
+                { "actorKindId": "demo.actor.ultra-elite-paladin", "weight": 1 },
+                { "actorKindId": "demo.actor.knight-templar", "weight": 1 },
+            ])
+        );
     }
 
     #[test]

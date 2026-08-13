@@ -429,7 +429,7 @@
       "sourceIndex": 147,
       "id": "novice-paladin",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["KNIGHT", "MALE"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 148,
@@ -2201,7 +2201,7 @@
       "sourceIndex": 1038,
       "id": "paladin",
       "tags": ["humanoid", "warrens"],
-      "omittedFlags": ["KNIGHT", "MALE"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 1039,
@@ -2975,7 +2975,7 @@
       "sourceIndex": 938,
       "id": "white-knight",
       "tags": ["orc-cave"],
-      "omittedFlags": ["MALE", "KNIGHT"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 446,
@@ -5195,7 +5195,7 @@
       "sourceIndex": 699,
       "id": "ultra-elite-paladin",
       "tags": ["orc-cave"],
-      "omittedFlags": ["KNIGHT", "MALE"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 1172,
@@ -5819,7 +5819,7 @@
       "sourceIndex": 1037,
       "id": "knight-templar",
       "tags": ["orc-cave"],
-      "omittedFlags": ["KNIGHT", "MALE"]
+      "omittedFlags": ["MALE"]
     },
     {
       "sourceIndex": 1394,
