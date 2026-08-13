@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/actor.schema.json",
+  "allocation": {
+    "friends": {
+      "chancePercent": 0,
+      "dice": 1,
+      "sides": 4
+    },
+    "habitats": [
+      "ocean"
+    ],
+    "legacyIndex": 1252,
+    "maxDepth": 75,
+    "rarity": 2,
+    "wildOnly": true
+  },
+  "attack": 5,
+  "damageDice": 4,
+  "damageSides": 7,
+  "damageType": "physical",
+  "defense": 4,
+  "descriptionKey": "actor-demo-shrieking-eel-description",
+  "experienceValue": 150,
+  "formatVersion": 1,
+  "glyph": "l",
+  "hitPointDice": {
+    "dice": 11,
+    "sides": 11
+  },
+  "id": "demo.actor.shrieking-eel",
+  "level": 23,
+  "maxHp": 66,
+  "meleeRoutine": {
+    "blows": [
+      {
+        "effects": [
+          {
+            "armorMitigated": true,
+            "damageDice": 4,
+            "damageSides": 7,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          {
+            "chancePercent": 50,
+            "durationDice": 2,
+            "durationSides": 3,
+            "type": "bleeding"
+          }
+        ],
+        "methodId": "rfb.blow.bite",
+        "toHit": 20
+      }
+    ]
+  },
+  "monsterCasting": {
+    "abilities": [
+      {
+        "abilityId": "rfb-legacy.ability.shriek",
+        "weight": 1
+      }
+    ],
+    "frequencyPercent": 16
+  },
+  "movement": {
+    "modes": [
+      "aquatic"
+    ]
+  },
+  "nameKey": "actor-demo-shrieking-eel-name",
+  "resistances": {
+    "water": "resistant"
+  },
+  "role": "monster",
+  "speed": 114,
+  "tags": [
+    "animal",
+    "kin-glyph-108",
+    "legacy-import",
+    "ocean"
+  ]
+}

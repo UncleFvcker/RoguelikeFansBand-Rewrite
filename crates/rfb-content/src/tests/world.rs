@@ -315,6 +315,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.blue-icky-thing", 252, 4, 50),
             ("demo.actor.blue-ringed-octopus", 1308, 1, 50),
             ("demo.actor.blue-yeek", 52, 1, 20),
+            ("demo.actor.boadile", 869, 40, 50),
             ("demo.actor.boldor-king-of-the-yeeks", 237, 3, 999),
             ("demo.actor.bomb-mosquito", 1017, 3, 20),
             ("demo.actor.box-jellyfish", 1309, 1, 50),
@@ -434,6 +435,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.giant-salamander", 143, 1, 40),
             ("demo.actor.giant-slug", 120, 1, 40),
             ("demo.actor.giant-spider", 175, 2, 40),
+            ("demo.actor.giant-squid", 482, 3, 70),
             ("demo.actor.giant-tarantula", 275, 3, 60),
             ("demo.actor.giant-white-ant", 75, 1, 30),
             ("demo.actor.giant-white-centipede", 24, 1, 10),
@@ -444,6 +446,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.giant-white-tick", 176, 2, 40),
             ("demo.actor.giant-yellow-toad", 1329, 6, 40),
             ("demo.actor.gibbering-mouther", 253, 4, 50),
+            ("demo.actor.giganto-the-gargantuan", 650, 6, 999),
             ("demo.actor.glyptodont", 1222, 3, 90),
             ("demo.actor.gnome-mage", 281, 2, 60),
             ("demo.actor.goblin", 87, 1, 40),
@@ -503,6 +506,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.ixitxachitl-priest", 328, 1, 80),
             ("demo.actor.jackal", 35, 1, 5),
             ("demo.actor.jambavan-king-of-the-beasts", 1385, 6, 999),
+            ("demo.actor.jaws", 467, 2, 999),
             ("demo.actor.jibaku-ghost", 1012, 2, 40),
             ("demo.actor.jormungand-the-midgard-serpent", 854, 1, 999),
             ("demo.actor.jumping-fireball", 299, 1, 50),
@@ -510,6 +514,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.kangaroo", 1317, 2, 50),
             ("demo.actor.killer-bee", 174, 2, 40),
             ("demo.actor.killer-brown-beetle", 236, 2, 50),
+            ("demo.actor.killer-whale", 363, 1, 80),
             ("demo.actor.king-cobra", 171, 2, 40),
             (
                 "demo.actor.king-duosi-the-chief-of-southerings",
@@ -562,9 +567,11 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.mine-dog", 221, 4, 50),
             ("demo.actor.mirkwood-spider", 277, 2, 50),
             ("demo.actor.moaning-spirit", 231, 2, 50),
+            ("demo.actor.moire-queen-of-rebma", 615, 3, 999),
             ("demo.actor.mongbat", 235, 3, 50),
             ("demo.actor.monkey-of-nikko", 925, 3, 40),
             ("demo.actor.moon-beast", 223, 1, 50),
+            ("demo.actor.mutant-manta-ray", 1333, 5, 90),
             ("demo.actor.nami-the-mate", 1021, 4, 999),
             ("demo.actor.nar-the-dwarf", 996, 2, 999),
             ("demo.actor.nekomata", 986, 3, 40),
@@ -639,6 +646,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.sasquatch", 343, 3, 70),
             ("demo.actor.scruffy-looking-hobbit", 74, 1, 30),
             ("demo.actor.sea-giant", 1276, 3, 999),
+            ("demo.actor.seahorse", 443, 2, 80),
             ("demo.actor.servant-of-glaaki", 181, 1, 40),
             ("demo.actor.shadow-creature-of-fiona", 201, 2, 40),
             ("demo.actor.shadow-hound", 272, 2, 60),
@@ -647,6 +655,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
             ("demo.actor.shambling-mound", 316, 2, 999),
             ("demo.actor.sheep", 1226, 4, 20),
             ("demo.actor.shrieker-mushroom-patch", 40, 1, 50),
+            ("demo.actor.shrieking-eel", 1252, 2, 75),
             ("demo.actor.silver-jelly", 73, 2, 30),
             ("demo.actor.skaven", 158, 1, 40),
             ("demo.actor.skaven-shaman", 217, 1, 50),
@@ -8297,7 +8306,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        769
+        772
     );
 }
 
@@ -9698,4 +9707,63 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
     ));
 
     validate_and_normalize(&mut content).expect("formal second town should validate");
+}
+
+#[test]
+fn p82a_ocean_monsters_keep_macro_habitat_boundaries() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P82A should contain {id}"))
+    };
+
+    for (id, source_index, level, habitats) in [
+        ("killer-whale", 363, 22, vec![ActorHabitat::Ocean]),
+        ("shrieking-eel", 1252, 23, vec![ActorHabitat::Ocean]),
+        (
+            "boadile",
+            869,
+            25,
+            vec![ActorHabitat::Ocean, ActorHabitat::Shore],
+        ),
+        ("jaws", 467, 30, vec![ActorHabitat::Ocean]),
+        ("giant-squid", 482, 32, vec![ActorHabitat::Ocean]),
+        ("seahorse", 443, 36, vec![ActorHabitat::Ocean]),
+        ("giganto-the-gargantuan", 650, 38, vec![ActorHabitat::Ocean]),
+        (
+            "moire-queen-of-rebma",
+            615,
+            39,
+            vec![
+                ActorHabitat::Ocean,
+                ActorHabitat::Shore,
+                ActorHabitat::Swamp,
+            ],
+        ),
+        ("mutant-manta-ray", 1333, 40, vec![ActorHabitat::Ocean]),
+    ] {
+        let actor = actor(id);
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("P82A ocean monster should retain allocation metadata");
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(allocation.legacy_index, source_index, "{id} source index");
+        assert!(allocation.wild_only, "{id} should remain wilderness-only");
+        assert_eq!(allocation.habitats, habitats, "{id} habitats");
+        assert!(
+            allocation.legacy_dungeon_indices.is_empty(),
+            "{id} should not enter a dungeon allocation"
+        );
+        assert!(actor.tags.iter().any(|tag| tag == "ocean"));
+        assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"));
+    }
+
+    assert!(actor("giant-squid").rideable);
+    assert!(actor("giganto-the-gargantuan").rideable);
+    assert!(actor("jaws").terrain_interaction.picks_up_items);
 }

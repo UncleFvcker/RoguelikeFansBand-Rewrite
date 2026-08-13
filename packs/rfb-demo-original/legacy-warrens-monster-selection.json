@@ -7802,6 +7802,60 @@
       "id": "the-variant-maintainer",
       "tags": ["orc-cave"],
       "omittedFlags": ["CAN_SPEAK", "MALE"]
+    },
+    {
+      "sourceIndex": 363,
+      "id": "killer-whale",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 1252,
+      "id": "shrieking-eel",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 869,
+      "id": "boadile",
+      "tags": ["ocean", "shore"],
+      "omittedFlags": ["POS_GAIN_AC", "STUPID"]
+    },
+    {
+      "sourceIndex": 467,
+      "id": "jaws",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 482,
+      "id": "giant-squid",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 443,
+      "id": "seahorse",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 650,
+      "id": "giganto-the-gargantuan",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 615,
+      "id": "moire-queen-of-rebma",
+      "tags": ["ocean", "shore", "swamp"],
+      "omittedFlags": ["CAN_SPEAK", "FEMALE", "POS_GAIN_AC", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 1333,
+      "id": "mutant-manta-ray",
+      "tags": ["ocean"],
+      "omittedFlags": ["POS_GAIN_AC"]
     }
   ]
 }
