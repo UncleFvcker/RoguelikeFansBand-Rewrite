@@ -601,3 +601,9 @@ save 容器保持 v1，不兼容缺少该字段的旧开发存档。
 协议 1.188 / P60 为 `AbilityEffectSpecDto::SummonCategory` 增加可选
 `batchCandidates`，用于先掷数量、再以一次加权选择固定整批召唤对象。该字段仅允许怪物
 能力使用；没有新增持久状态，State Hash Schema 保持 v93，save 容器保持 v1。
+
+协议 1.189 / contract-v285 将 `SavePayloadV1.defeatedUniqueActorKindIds` 泛化为必填的
+`defeatedLimitedActorCounts`，按 actor ID 持久化有限生命周期怪物的死亡数量。普通
+`unique` 的隐式生命周期上限仍为 1，`unique2` 仍只限制同时存活一只；显式
+`lifetimeInstanceLimit` 可提供更高的跨楼层、跨死亡总额度。该权威表进入 State Hash
+Schema v94，save 容器保持 v1，不兼容缺少新字段的旧开发存档。

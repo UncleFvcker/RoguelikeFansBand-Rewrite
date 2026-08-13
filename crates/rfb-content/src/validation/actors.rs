@@ -84,6 +84,12 @@ pub(super) fn validate_actors(
                 && (!actor.movement.modes.is_empty() || actor.movement.never_moves))
             || (actor.role != ActorRole::Monster && !actor.status_immunities.is_empty())
             || (actor.role != ActorRole::Monster && actor.reflects_bolts)
+            || actor.lifetime_instance_limit.is_some_and(|limit| {
+                limit < 2
+                    || actor.role != ActorRole::Monster
+                    || !actor.tags.iter().any(|tag| tag == "unique")
+                    || actor.tags.iter().any(|tag| tag == "unique2")
+            })
         {
             return Err(ContentError::InvalidActorStats(actor.id.clone()));
         }

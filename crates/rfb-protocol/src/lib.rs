@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.188";
+pub const PROTOCOL_VERSION: &str = "1.189";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -4170,6 +4170,13 @@ pub struct HomeStateSaveDto {
     pub inventory: Vec<InventoryItemSaveDto>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DefeatedActorCountSaveDto {
+    pub actor_kind_id: String,
+    pub count: u16,
+}
+
 fn is_zero_u32(value: &u32) -> bool {
     *value == 0
 }
@@ -4225,7 +4232,7 @@ pub struct SavePayloadV1 {
     pub task_states: Vec<TaskStateSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dungeon_states: Vec<DungeonStateSaveDto>,
-    pub defeated_unique_actor_kind_ids: Vec<String>,
+    pub defeated_limited_actor_counts: Vec<DefeatedActorCountSaveDto>,
     pub generated_artifact_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub town_states: Vec<TownStateSaveDto>,
@@ -4769,6 +4776,7 @@ mod tests {
         current["player"]["lockedMutationIds"] = serde_json::json!([]);
         current["player"]["minorSlowEnergy"] = serde_json::json!(0);
         current["reproductionSuppressed"] = serde_json::json!(false);
+        current["defeatedLimitedActorCounts"] = serde_json::json!([]);
         current["generatedArtifactIds"] = serde_json::json!([]);
         let mut missing_view_offset = current.clone();
         missing_view_offset

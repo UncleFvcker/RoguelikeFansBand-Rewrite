@@ -22,11 +22,12 @@ use crate::{
 use rfb_content::{ContentCatalog, FloorLifecycle, TaskObjectiveKind, WildernessTerrain};
 use rfb_protocol::{
     AbilityProgressSaveDto, ActorSaveDto, BodySlotSaveDto, CampaignStateSaveDto, CampaignStatusDto,
-    CarriedItemSaveDto, DungeonStateSaveDto, EquipmentItemSaveDto, FloorConnectionSaveDto,
-    FloorRegionSaveDto, HomeStateSaveDto, InventoryItemSaveDto, ItemKnowledgeSaveDto,
-    ItemPropertyKnowledgeSaveDto, ItemSaveDto, MapScaleDto, PlayerProgressSaveDto, PlayerSaveDto,
-    Position, ResourcePoolSaveDto, RngSaveDto, SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1,
-    ShopStateSaveDto, TaskStateSaveDto, TaskStatusKindDto, TerrainSaveDto, TownStateSaveDto,
+    CarriedItemSaveDto, DefeatedActorCountSaveDto, DungeonStateSaveDto, EquipmentItemSaveDto,
+    FloorConnectionSaveDto, FloorRegionSaveDto, HomeStateSaveDto, InventoryItemSaveDto,
+    ItemKnowledgeSaveDto, ItemPropertyKnowledgeSaveDto, ItemSaveDto, MapScaleDto,
+    PlayerProgressSaveDto, PlayerSaveDto, Position, ResourcePoolSaveDto, RngSaveDto,
+    SAVE_PAYLOAD_SCHEMA_VERSION, SavePayloadV1, ShopStateSaveDto, TaskStateSaveDto,
+    TaskStatusKindDto, TerrainSaveDto, TownStateSaveDto,
 };
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -586,7 +587,7 @@ fn item_property_knowledge_from_save(
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct StateHashPayloadV93<'a> {
+struct StateHashPayloadV94<'a> {
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -612,7 +613,7 @@ struct StateHashPayloadV93<'a> {
     item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     task_states: Vec<TaskStateSaveDto>,
     dungeon_states: Vec<DungeonStateSaveDto>,
-    defeated_unique_actor_kind_ids: Vec<&'a str>,
+    defeated_limited_actor_counts: Vec<DefeatedActorCountSaveRef<'a>>,
     generated_artifact_ids: Vec<&'a str>,
     town_states: Vec<TownStateSaveDto>,
     shop_states: Vec<ShopStateSaveDto>,
@@ -635,6 +636,13 @@ struct StateHashPayloadV93<'a> {
     current_dungeon_instance_id: Option<&'a str>,
     reproduction_suppressed: bool,
     stored_floors: Vec<FloorSaveForHash<'a>>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DefeatedActorCountSaveRef<'a> {
+    actor_kind_id: &'a str,
+    count: u16,
 }
 
 /// Borrowed twin of [`TerrainSaveDto`]: identical serde field names and order,
@@ -1199,21 +1207,27 @@ impl Game {
         }
         let campaign_state_missing = payload.campaign_state.is_none();
         let campaign_state = restore_campaign_state(payload.campaign_state.as_ref())?;
-        let defeated_unique_count = payload.defeated_unique_actor_kind_ids.len();
-        let defeated_unique_actor_kind_ids = payload
-            .defeated_unique_actor_kind_ids
+        let defeated_limited_count = payload.defeated_limited_actor_counts.len();
+        let defeated_limited_actor_counts = payload
+            .defeated_limited_actor_counts
             .into_iter()
-            .collect::<BTreeSet<_>>();
-        if defeated_unique_actor_kind_ids.len() != defeated_unique_count
-            || defeated_unique_actor_kind_ids.iter().any(|kind_id| {
-                !content.actor(kind_id).is_some_and(|definition| {
-                    definition.tags.iter().any(|tag| tag == "unique")
-                        && !definition.tags.iter().any(|tag| tag == "guardian")
+            .map(|entry| (entry.actor_kind_id, entry.count))
+            .collect::<BTreeMap<_, _>>();
+        if defeated_limited_actor_counts.len() != defeated_limited_count
+            || defeated_limited_actor_counts
+                .iter()
+                .any(|(kind_id, count)| {
+                    *count == 0
+                        || !content.actor(kind_id).is_some_and(|definition| {
+                            definition
+                                .finite_lifetime_instance_limit()
+                                .is_some_and(|limit| *count <= limit)
+                                && !definition.tags.iter().any(|tag| tag == "guardian")
+                        })
                 })
-            })
         {
             return Err(CoreError::InvalidSave(
-                "defeated unique actor state is invalid",
+                "defeated limited actor state is invalid",
             ));
         }
         let generated_artifact_count = payload.generated_artifact_ids.len();
@@ -1279,7 +1293,7 @@ impl Game {
             task_states,
             command_actor_deaths: Vec::new(),
             dungeon_states,
-            defeated_unique_actor_kind_ids,
+            defeated_limited_actor_counts,
             generated_artifact_ids,
             town_states,
             shop_states,
@@ -1366,10 +1380,13 @@ impl Game {
             task_progress: Vec::new(),
             task_states: self.task_states_to_save(),
             dungeon_states: self.dungeon_states_to_save(),
-            defeated_unique_actor_kind_ids: self
-                .defeated_unique_actor_kind_ids
+            defeated_limited_actor_counts: self
+                .defeated_limited_actor_counts
                 .iter()
-                .cloned()
+                .map(|(actor_kind_id, count)| DefeatedActorCountSaveDto {
+                    actor_kind_id: actor_kind_id.clone(),
+                    count: *count,
+                })
                 .collect(),
             generated_artifact_ids: self.generated_artifact_ids.iter().cloned().collect(),
             town_states: self
@@ -1410,7 +1427,7 @@ impl Game {
 
     #[must_use]
     pub fn state_hash(&self) -> String {
-        let payload = StateHashPayloadV93 {
+        let payload = StateHashPayloadV94 {
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1440,10 +1457,13 @@ impl Game {
             item_property_knowledge: self.item_property_knowledge_to_save(),
             task_states: self.task_states_to_save(),
             dungeon_states: self.dungeon_states_to_save(),
-            defeated_unique_actor_kind_ids: self
-                .defeated_unique_actor_kind_ids
+            defeated_limited_actor_counts: self
+                .defeated_limited_actor_counts
                 .iter()
-                .map(String::as_str)
+                .map(|(actor_kind_id, count)| DefeatedActorCountSaveRef {
+                    actor_kind_id,
+                    count: *count,
+                })
                 .collect(),
             generated_artifact_ids: self
                 .generated_artifact_ids

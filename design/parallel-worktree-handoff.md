@@ -359,3 +359,16 @@ git diff --stat
   `f7aebe082ef8e6b0d5e98633ea229592d516f9d9251db5645a99e11712098744`、Protocol `1.188`、
   State Hash Schema v93、save v1、active baseline `contract-v284`（26 条 exact fixture、
   零 waiver）。`codex/items-next` 与 `codex/monsters-next` 分支及工作树继续保留。
+
+## 21. monsters-next 当前交接（P61 戒灵生命周期）
+
+- 新增 actor `demo.actor.nazgul`（source index 696，中文名“戒灵”），占用内容字段
+  `lifetimeInstanceLimit: 5`；普通 `unique` 继续隐式使用上限 1，`unique2` 不记录死亡，
+  只限制同时存活一只。
+- `defeatedLimitedActorCounts` 是按 actor ID 计数的权威死亡表。普通分配、固定召唤、
+  分类召唤、当前楼层与 stored floors 恢复统一按“上限 - 已死亡 - 全楼层存活”计算额度；
+  非死亡移除不写入死亡表。戒灵沿用 `unique` 的变形免疫。
+- 共享协调点：pack `1.298.0` / content hash
+  `ea49544398120d561c201e480e8dce5b918c75d326a73b786ea4c0d371ad7a7b`、Protocol `1.189`、
+  State Hash Schema v94、save v1、active baseline `contract-v285`（26 条 exact fixture、
+  零 waiver）。旧开发存档不兼容缺少 `defeatedLimitedActorCounts` 的 payload。

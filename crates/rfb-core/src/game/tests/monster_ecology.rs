@@ -728,8 +728,9 @@ fn defeated_unique_state_round_trips_after_normal_unique_death() {
 
     assert!(
         restored
-            .defeated_unique_actor_kind_ids
-            .contains("demo.actor.dread-vampire")
+            .defeated_limited_actor_counts
+            .get("demo.actor.dread-vampire")
+            == Some(&1)
     );
     assert!(!restored.unique_actor_kind_is_available("demo.actor.dread-vampire"));
 }
@@ -769,8 +770,8 @@ fn unique2_allows_one_living_instance_but_returns_after_death() {
     assert!(game.unique_actor_kind_is_available("demo.actor.silver-angel"));
     assert!(
         !game
-            .defeated_unique_actor_kind_ids
-            .contains("demo.actor.silver-angel")
+            .defeated_limited_actor_counts
+            .contains_key("demo.actor.silver-angel")
     );
 }
 
@@ -837,6 +838,197 @@ fn save_rejects_duplicate_living_normal_unique_instances() {
     let error = Game::from_save(game.to_save()).expect_err("duplicate Unique save must fail");
     assert!(matches!(
         error,
-        CoreError::InvalidSave("living unique actor state is duplicated")
+        CoreError::InvalidSave("living limited actor state exceeds its lifetime limit")
     ));
+}
+
+#[test]
+fn nazgul_lifetime_limit_counts_current_and_stored_floors_and_round_trips() {
+    let mut game = enter_warrens(13);
+    game.entities.clear();
+    let definition = game
+        .content
+        .actor("demo.actor.nazgul")
+        .expect("P61 should import the Nazgul")
+        .clone();
+    assert_eq!(definition.lifetime_instance_limit, Some(5));
+    for ordinal in 0..3 {
+        game.push_generated_actor(
+            format!("test.nazgul.current.{ordinal}"),
+            &definition.id,
+            Position {
+                x: game.player.position.x + ordinal + 1,
+                y: game.player.position.y,
+            },
+        );
+    }
+    let stored = game
+        .stored_floors
+        .values_mut()
+        .next()
+        .expect("entering the Warrens should store the surface floor");
+    for ordinal in 0..2 {
+        stored.entities.push(actor_from_runtime_spawn(
+            &format!("test.nazgul.stored.{ordinal}"),
+            &definition.id,
+            Position {
+                x: ordinal + 1,
+                y: 1,
+            },
+            definition.max_hp,
+            definition.speed,
+            INITIAL_MONSTER_ENERGY_NEED,
+            true,
+        ));
+    }
+
+    assert_eq!(game.actor_kind_available_instance_count(&definition.id), 0);
+    let hash = game.state_hash();
+    let restored = Game::from_save(game.to_save()).expect("five living Nazgul should round-trip");
+    assert_eq!(restored.state_hash(), hash);
+    assert_eq!(
+        restored.actor_kind_available_instance_count(&definition.id),
+        0
+    );
+}
+
+#[test]
+fn nazgul_deaths_permanently_consume_the_five_instance_limit() {
+    let mut game = enter_warrens(14);
+    game.entities.clear();
+    let kind_id = "demo.actor.nazgul";
+    for ordinal in 0..5 {
+        game.push_generated_actor(
+            format!("test.nazgul.{ordinal}"),
+            kind_id,
+            game.player.position,
+        );
+        game.resolve_actor_death(
+            0,
+            DomainEvent::EntityDiedFromStatus {
+                target_kind_id: kind_id.to_owned(),
+                status_kind_id: STATUS_POISON.to_owned(),
+                damage: DamageOutcome {
+                    raw: 1,
+                    armor_reduction: 0,
+                    requested: 1,
+                    applied: 1,
+                    resistance_delta: 0,
+                    damage_type: DamageType::Poison,
+                    resistance: ResistanceLevel::Normal,
+                },
+            },
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Nazgul death should resolve");
+        assert_eq!(
+            game.actor_kind_available_instance_count(kind_id),
+            4 - ordinal
+        );
+    }
+
+    assert_eq!(game.defeated_limited_actor_counts.get(kind_id), Some(&5));
+    assert!(!game.unique_actor_kind_is_available(kind_id));
+    let restored = Game::from_save(game.to_save()).expect("Nazgul death count should round-trip");
+    assert_eq!(
+        restored.defeated_limited_actor_counts.get(kind_id),
+        Some(&5)
+    );
+}
+
+#[test]
+fn fixed_and_category_summons_share_the_nazgul_lifetime_quota() {
+    let mut fixed = enter_warrens(15);
+    fixed.entities.clear();
+    let mut ability = fixed
+        .content
+        .abilities()
+        .find(|ability| matches!(ability.effect, AbilityEffectDefinition::Summon { .. }))
+        .expect("demo should retain a fixed summon ability")
+        .clone();
+    let AbilityEffectDefinition::Summon {
+        actor_kind_id,
+        count,
+        radius,
+        ..
+    } = &mut ability.effect
+    else {
+        unreachable!("selected ability must remain a fixed summon")
+    };
+    *actor_kind_id = "demo.actor.nazgul".to_owned();
+    *count = 8;
+    *radius = 4;
+    let AbilityTargetPlan::Summon { positions } = fixed
+        .ability_target_plan(&ability, &TargetSelection::SelfTarget)
+        .expect("five available Nazgul should produce a summon plan")
+    else {
+        panic!("fixed summon should retain its target plan kind");
+    };
+    assert_eq!(positions.len(), 5);
+
+    let mut category = enter_warrens(16);
+    category.entities.clear();
+    let positions = category
+        .open_positions_around_for_actor_kind(category.player.position, 4, "demo.actor.nazgul")
+        .into_iter()
+        .take(8)
+        .collect();
+    let mut changed = BTreeSet::new();
+    let resolution = category.resolve_category_summon(
+        CategorySummonSpec {
+            source_id: "test.summon.nazgul",
+            owner_id: "test.owner",
+            category: "high-undead",
+            count_dice: 0,
+            count_sides: 0,
+            count_bonus: 8,
+            maximum_count: None,
+            hostile: true,
+            group_chance_percent: 0,
+            group_count_dice: 0,
+            group_count_sides: 0,
+            group_count_bonus: 0,
+            duration_turns: 0,
+        },
+        vec!["demo.actor.nazgul".to_owned()],
+        positions,
+        &mut changed,
+    );
+    assert_eq!(resolution.entity_ids.len(), 5);
+    assert_eq!(
+        category.actor_kind_available_instance_count("demo.actor.nazgul"),
+        0
+    );
+}
+
+#[test]
+fn nazgul_is_immune_to_monster_target_polymorph() {
+    let mut game = enter_warrens(17);
+    game.entities.clear();
+    game.push_generated_actor(
+        "test.nazgul".to_owned(),
+        "demo.actor.nazgul",
+        game.player.position,
+    );
+
+    assert!(matches!(
+        game.resolve_actor_polymorph_target(0, 100, 0, &mut BTreeSet::new()),
+        AbilityEffectResolutionDto::Skipped {
+            reason: AbilityEffectSkipReasonDto::Ineligible,
+            ..
+        }
+    ));
+}
+
+#[test]
+fn defeated_limited_actor_counts_are_required_in_new_saves() {
+    let mut value = serde_json::to_value(Game::new(18).to_save()).expect("save should serialize");
+    value
+        .as_object_mut()
+        .expect("save should be an object")
+        .remove("defeatedLimitedActorCounts");
+
+    assert!(serde_json::from_value::<rfb_protocol::SavePayloadV1>(value).is_err());
 }

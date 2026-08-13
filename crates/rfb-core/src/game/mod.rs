@@ -201,7 +201,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 93;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 94;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -874,7 +874,7 @@ pub struct Game {
     task_states: BTreeMap<String, TaskState>,
     command_actor_deaths: Vec<ActorDeathRecord>,
     dungeon_states: BTreeMap<String, DungeonState>,
-    defeated_unique_actor_kind_ids: BTreeSet<String>,
+    defeated_limited_actor_counts: BTreeMap<String, u16>,
     generated_artifact_ids: BTreeSet<String>,
     town_states: BTreeMap<String, TownState>,
     shop_states: BTreeMap<String, ShopState>,
@@ -1215,7 +1215,7 @@ impl Game {
             task_states,
             command_actor_deaths: Vec::new(),
             dungeon_states,
-            defeated_unique_actor_kind_ids: BTreeSet::new(),
+            defeated_limited_actor_counts: BTreeMap::new(),
             generated_artifact_ids,
             town_states,
             shop_states,
@@ -2927,8 +2927,9 @@ impl Game {
                 .iter()
                 .enumerate()
                 .filter_map(|(index, kind_id)| {
-                    self.actor_kind_can_enter_position(kind_id, position)
-                        .then_some(index)
+                    (self.actor_kind_available_instance_count(kind_id) > 0
+                        && self.actor_kind_can_enter_position(kind_id, position))
+                    .then_some(index)
                 })
                 .collect::<Vec<_>>();
             if eligible_choices.is_empty() {
@@ -2945,13 +2946,6 @@ impl Game {
                 .actor(&kind_id)
                 .expect("planned summon candidate must remain available")
                 .clone();
-            if definition
-                .tags
-                .iter()
-                .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
-            {
-                candidates.remove(choice);
-            }
             let id = self.summon_entity_id(spec.source_id, entity_ids.len());
             let mut entity = spawn_actor_from_definition(
                 &mut self.rng,
@@ -2975,9 +2969,12 @@ impl Game {
             }
             changed.insert(position);
             entity_ids.push(id);
-            summoned_kind_ids.push(kind_id);
+            summoned_kind_ids.push(kind_id.clone());
             used_positions.push(position);
             self.entities.push(entity);
+            if self.actor_kind_available_instance_count(&kind_id) == 0 {
+                candidates.remove(choice);
+            }
         }
         AbilitySummonResolutionDto {
             owner_id: spec.owner_id.to_owned(),

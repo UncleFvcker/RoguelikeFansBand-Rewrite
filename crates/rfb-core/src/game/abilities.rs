@@ -4677,7 +4677,7 @@ impl Game {
         else {
             unreachable!("summon executor requires a fixed summon effect");
         };
-        debug_assert_eq!(usize::from(*count), positions.len());
+        debug_assert!(positions.len() <= usize::from(*count));
         let definition = self
             .content
             .actor(actor_kind_id)
@@ -5406,28 +5406,26 @@ impl Game {
                 radius,
                 ..
             } => {
-                let unique = self.content.actor(actor_kind_id).is_some_and(|definition| {
-                    definition
-                        .tags
-                        .iter()
-                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
-                });
+                let available_count = self
+                    .actor_kind_available_instance_count(actor_kind_id)
+                    .min(usize::from(count));
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
                         .target
                         .modes
                         .contains(&AbilityTargetModeDefinition::SelfTarget)
-                    && (!unique || self.unique_actor_kind_is_available(actor_kind_id)))
-                .then(|| {
-                    self.summon_positions_around(
-                        self.player.position,
-                        if unique { 1 } else { count },
-                        radius,
-                        actor_kind_id,
-                    )
-                })
-                .flatten()
-                .map(|positions| AbilityTargetPlan::Summon { positions })
+                    && available_count > 0)
+                    .then(|| {
+                        self.summon_positions_around(
+                            self.player.position,
+                            u8::try_from(available_count)
+                                .expect("summon count is bounded by its u8 content field"),
+                            radius,
+                            actor_kind_id,
+                        )
+                    })
+                    .flatten()
+                    .map(|positions| AbilityTargetPlan::Summon { positions })
             }
             AbilityEffectDefinition::SummonCategory {
                 ref category,

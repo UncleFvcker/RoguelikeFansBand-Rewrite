@@ -6186,6 +6186,12 @@
       "id": "gragomani-the-leprechaun-prophet",
       "tags": ["orc-cave"],
       "omittedFlags": ["MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
+    },
+    {
+      "sourceIndex": 696,
+      "id": "nazgul",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     }
   ]
 }

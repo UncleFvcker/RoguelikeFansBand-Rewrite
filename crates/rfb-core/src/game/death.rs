@@ -633,11 +633,16 @@ impl Game {
             .content
             .actor(&removed.kind_id)
             .expect("removed actor definition must remain available");
-        if removed_definition.tags.iter().any(|tag| tag == "unique")
+        if removed_definition
+            .finite_lifetime_instance_limit()
+            .is_some()
             && !removed_definition.tags.iter().any(|tag| tag == "guardian")
         {
-            self.defeated_unique_actor_kind_ids
-                .insert(removed.kind_id.clone());
+            let defeated = self
+                .defeated_limited_actor_counts
+                .entry(removed.kind_id.clone())
+                .or_default();
+            *defeated = defeated.saturating_add(1);
         }
         let experience_value =
             self.player_kill_experience_reward(removed_definition.experience_value);

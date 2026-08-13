@@ -1565,6 +1565,16 @@
       "minimum": 0,
       "type": "integer"
     },
+    "lifetimeInstanceLimit": {
+      "description": "Maximum number of instances that may ever exist across one campaign.\nOrdinary `unique` actors implicitly use one when this is absent.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "light": {
       "anyOf": [
         {

@@ -29,6 +29,21 @@ fn p11_actor_facts_remain_explicit_and_narrow() {
 }
 
 #[test]
+fn p61_nazgul_has_a_five_instance_lifetime_limit() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let nazgul = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.nazgul")
+        .expect("P61 should import the Nazgul");
+
+    assert_eq!(nazgul.lifetime_instance_limit, Some(5));
+    assert_eq!(nazgul.finite_lifetime_instance_limit(), Some(5));
+    assert!(nazgul.tags.iter().any(|tag| tag == "unique"));
+}
+
+#[test]
 fn p24_slime_mold_retains_move_body_regeneration_and_existing_spells() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = artifact

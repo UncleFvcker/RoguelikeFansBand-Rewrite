@@ -1095,7 +1095,9 @@ impl Game {
                         break;
                     }
                     let kind_id = if let Some(kind_id) = &batch_kind_id {
-                        if !self.actor_kind_can_enter_position(kind_id, position) {
+                        if self.actor_kind_available_instance_count(kind_id) == 0
+                            || !self.actor_kind_can_enter_position(kind_id, position)
+                        {
                             continue;
                         }
                         kind_id.clone()
@@ -1104,8 +1106,9 @@ impl Game {
                             .iter()
                             .enumerate()
                             .filter_map(|(index, kind_id)| {
-                                self.actor_kind_can_enter_position(kind_id, position)
-                                    .then_some(index)
+                                (self.actor_kind_available_instance_count(kind_id) > 0
+                                    && self.actor_kind_can_enter_position(kind_id, position))
+                                .then_some(index)
                             })
                             .collect::<Vec<_>>();
                         if eligible_choices.is_empty() {
@@ -1125,13 +1128,6 @@ impl Game {
                         .actor(&kind_id)
                         .expect("validated summon candidate must remain available")
                         .clone();
-                    let unique = definition
-                        .tags
-                        .iter()
-                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
-                    if unique && batch_kind_id.is_none() {
-                        candidate_kind_ids.retain(|candidate| candidate != &kind_id);
-                    }
                     let id = self.summon_entity_id(&plan.ability.id, entity_ids.len());
                     let mut entity = spawn_actor_from_definition(
                         &mut self.rng,
@@ -1149,11 +1145,11 @@ impl Game {
                     });
                     changed.insert(position);
                     entity_ids.push(id);
-                    summoned_kind_ids.push(kind_id);
+                    summoned_kind_ids.push(kind_id.clone());
                     used_positions.push(position);
                     self.entities.push(entity);
-                    if unique {
-                        break;
+                    if self.actor_kind_available_instance_count(&kind_id) == 0 {
+                        candidate_kind_ids.retain(|candidate| candidate != &kind_id);
                     }
                 }
                 let summon = AbilitySummonResolutionDto {
@@ -2010,13 +2006,10 @@ impl Game {
                 radius,
                 ..
             } => {
-                let unique = self.content.actor(actor_kind_id).is_some_and(|definition| {
-                    definition
-                        .tags
-                        .iter()
-                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
-                });
-                if unique && !self.unique_actor_kind_is_available(actor_kind_id) {
+                let available_count = self
+                    .actor_kind_available_instance_count(actor_kind_id)
+                    .min(usize::from(*count));
+                if available_count == 0 {
                     return Err(MonsterAbilityPlanRejection {
                         reason: MonsterAbilityRejectionReasonDto::NoCandidates,
                         enemy_target_count: 0,
@@ -2026,7 +2019,8 @@ impl Game {
                 let positions = self
                     .summon_positions_around(
                         origin,
-                        if unique { 1 } else { *count },
+                        u8::try_from(available_count)
+                            .expect("summon count is bounded by its u8 content field"),
                         *radius,
                         actor_kind_id,
                     )

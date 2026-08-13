@@ -1034,10 +1034,11 @@ impl Game {
                     && definition.level <= u32::from(level)
                     && (allocation.max_depth == 0 || allocation.max_depth >= level)
                     && (!actor_is_unique(definition)
-                        || (self.unique_actor_kind_is_available(&definition.id)
-                            && !target_floor_kind_ids
-                                .iter()
-                                .any(|kind_id| kind_id == &definition.id)))
+                        || target_floor_kind_ids
+                            .iter()
+                            .filter(|kind_id| *kind_id == &definition.id)
+                            .count()
+                            < self.actor_kind_available_instance_count(&definition.id))
                     && actor_matches_surface_habitat(definition, terrain, wilderness_terrain)
                     && actor_matches_wilderness_daytime(definition, daytime)
                     && actor_can_cross_terrain(definition, terrain)
@@ -1255,21 +1256,37 @@ impl Game {
         }
     }
 
-    pub(super) fn unique_actor_kind_is_available(&self, kind_id: &str) -> bool {
-        if self.defeated_unique_actor_kind_ids.contains(kind_id)
-            || self
-                .entities
-                .iter()
-                .any(|actor| actor.kind_id == kind_id && actor.hp > 0)
-        {
-            return false;
+    pub(super) fn actor_kind_available_instance_count(&self, kind_id: &str) -> usize {
+        let Some(definition) = self.content.actor(kind_id) else {
+            return 0;
+        };
+        let living = self
+            .entities
+            .iter()
+            .chain(
+                self.stored_floors
+                    .values()
+                    .flat_map(|floor| floor.entities.iter()),
+            )
+            .filter(|actor| actor.kind_id == kind_id && actor.hp > 0)
+            .count();
+        if let Some(limit) = definition.finite_lifetime_instance_limit() {
+            let defeated = usize::from(
+                self.defeated_limited_actor_counts
+                    .get(kind_id)
+                    .copied()
+                    .unwrap_or(0),
+            );
+            return usize::from(limit).saturating_sub(defeated.saturating_add(living));
         }
-        !self.stored_floors.values().any(|floor| {
-            floor
-                .entities
-                .iter()
-                .any(|actor| actor.kind_id == kind_id && actor.hp > 0)
-        })
+        if definition.tags.iter().any(|tag| tag == "unique2") {
+            return usize::from(living == 0);
+        }
+        usize::MAX
+    }
+
+    pub(super) fn unique_actor_kind_is_available(&self, kind_id: &str) -> bool {
+        self.actor_kind_available_instance_count(kind_id) > 0
     }
 
     pub(super) fn original_allocation_level(&mut self, base_level: u16) -> u16 {
@@ -1377,10 +1394,11 @@ impl Game {
                     )
                     || (actor_is_unique(definition)
                         && (!allow_uniques
-                            || !self.unique_actor_kind_is_available(&definition.id)
                             || target_floor_kind_ids
                                 .iter()
-                                .any(|kind_id| kind_id == &definition.id)))
+                                .filter(|kind_id| *kind_id == &definition.id)
+                                .count()
+                                >= self.actor_kind_available_instance_count(&definition.id)))
                 {
                     return false;
                 }

@@ -4814,3 +4814,5 @@ ability-legacy-kin-gragomani-the-leprechaun-prophet-name = 召唤同类
 ability-legacy-kin-gragomani-the-leprechaun-prophet-description = 使用原版 RFB 的“召唤同类”怪物法术。
 ability-legacy-summon-gragomani-followers-1d4-4-name = 召唤追随者
 ability-legacy-summon-gragomani-followers-1d4-4-description = 先掷 1d4+4，再整批召唤同一种追随者：25% 恶毒的矮妖，75% 狂热矮妖。
+actor-demo-nazgul-name = 戒灵
+actor-demo-nazgul-description = 一个披着黑斗篷的高大戒灵，散发着恐惧的光环。

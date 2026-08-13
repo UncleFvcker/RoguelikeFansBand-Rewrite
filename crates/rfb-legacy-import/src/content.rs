@@ -8094,6 +8094,7 @@ fn monster_json(
         ("AURA_FEAR", "aura-fear"),
         ("TANUKI", "tanuki"),
         ("UNIQUE2", "unique2"),
+        ("NAZGUL", "unique"),
         ("TRUMP", "trump"),
         ("QUANTUM", "quantum"),
         ("CLEAR_HEAD", "clear-head"),
@@ -8172,6 +8173,9 @@ fn monster_json(
         "damageType": damage_type,
         "tags": tags,
     });
+    if entry.flags.iter().any(|flag| flag == "NAZGUL") {
+        value["lifetimeInstanceLimit"] = serde_json::json!(5);
+    }
     let resistances = resistances_from_flags(&entry.flags);
     if !resistances.is_empty() {
         value["resistances"] = serde_json::json!(resistances);
@@ -8470,6 +8474,7 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
                 | "AURA_FEAR"
                 | "TANUKI"
                 | "UNIQUE2"
+                | "NAZGUL"
                 | "WILD_ALL"
                 | "WILD_GRASS"
                 | "WILD_MOUNTAIN"
@@ -8807,6 +8812,7 @@ fn demo_monster_json(
         ("AURA_FEAR", "aura-fear"),
         ("TANUKI", "tanuki"),
         ("UNIQUE2", "unique2"),
+        ("NAZGUL", "unique"),
         ("TRUMP", "trump"),
         ("QUANTUM", "quantum"),
         ("CLEAR_HEAD", "clear-head"),
@@ -14390,6 +14396,34 @@ mod tests {
         for expected in ["aura-revenge", "aura-fear", "tanuki", "unique2"] {
             assert!(tags.iter().any(|tag| tag == expected), "missing {expected}");
         }
+    }
+
+    #[test]
+    fn demo_monster_import_maps_nazgul_lifetime_limit() {
+        let mut monsters = parse_r_info(
+            "N:696:Nazgul\nG:W:D\nI:125:66d66:90:141:10:180\nW:63:7:999:22000:0:0\nB:HIT:HURT(10d6)\nF:FORCE_MAXHP | NAZGUL | UNDEAD\n",
+        )
+        .expect("synthetic Nazgul should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 696,
+                source_id: None,
+                id: "nazgul".to_owned(),
+                tags: vec!["orc-cave".to_owned()],
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("NAZGUL should import through the shared lifetime field");
+
+        assert_eq!(actor["lifetimeInstanceLimit"], 5);
+        assert!(
+            actor["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "unique"))
+        );
     }
 
     #[test]

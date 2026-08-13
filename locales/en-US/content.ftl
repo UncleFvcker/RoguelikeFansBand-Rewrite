@@ -4812,3 +4812,5 @@ ability-legacy-kin-gragomani-the-leprechaun-prophet-name = Summon kin
 ability-legacy-kin-gragomani-the-leprechaun-prophet-description = Uses the summon kin monster spell from RFB.
 ability-legacy-summon-gragomani-followers-1d4-4-name = Summon followers
 ability-legacy-summon-gragomani-followers-1d4-4-description = Rolls 1d4+4, then summons that many malicious leprechauns (25%) or leprechaun fanatics (75%) as one same-kind group.
+actor-demo-nazgul-name = Nazgul
+actor-demo-nazgul-description = A tall black-cloaked Ringwraith radiating an aura of fear.
