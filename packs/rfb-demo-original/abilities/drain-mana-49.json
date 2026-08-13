@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.drain-mana-49",
+  "descriptionKey": "ability-legacy-drain-mana-49-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.drain-mana-49",
+  "nameKey": "ability-legacy-drain-mana-49-name",
+  "tags": [
+    "legacy-import",
+    "misc"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

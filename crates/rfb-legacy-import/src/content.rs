@@ -228,7 +228,6 @@ fn demo_monster_audit_omission_is_safe(flag: &str) -> bool {
             | "POS_SUST_STR"
             | "POS_SUST_WIS"
             | "POS_TELEPATHY"
-            | "EGYPTIAN"
             | "EGYPTIAN2"
             | "HINDU2"
             | "NORSE2"
@@ -8028,6 +8027,9 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "COLD_BLOOD"
             | "NORSE"
             | "HINDU"
+            | "EGYPTIAN"
+            | "OLYMPIAN"
+            | "NO_SUMMON"
     ) {
         return true;
     }
@@ -8174,6 +8176,9 @@ fn monster_json(
     if entry.index == 622 {
         tags.push("night-mare".to_owned());
     }
+    if entry.index == 816 {
+        tags.push("cyber".to_owned());
+    }
     for (flag, tag) in [
         ("ANIMAL", "animal"),
         ("EVIL", "evil"),
@@ -8200,6 +8205,9 @@ fn monster_json(
         ("AMBERITE", "amberite"),
         ("NORSE", "norse"),
         ("HINDU", "hindu"),
+        ("EGYPTIAN", "egyptian"),
+        ("OLYMPIAN", "olympian"),
+        ("NO_SUMMON", "no-summon"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -8911,6 +8919,9 @@ fn demo_monster_json(
     if entry.index == 622 {
         tags.insert("night-mare".to_owned());
     }
+    if entry.index == 816 {
+        tags.insert("cyber".to_owned());
+    }
     if entry.flags.iter().any(|flag| flag == "KAGE") {
         tags.insert("shadower-appearance".to_owned());
     }
@@ -8950,6 +8961,9 @@ fn demo_monster_json(
         ("AMBERITE", "amberite"),
         ("NORSE", "norse"),
         ("HINDU", "hindu"),
+        ("EGYPTIAN", "egyptian"),
+        ("OLYMPIAN", "olympian"),
+        ("NO_SUMMON", "no-summon"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -9619,6 +9633,8 @@ fn summon_spell_defaults(base: &str) -> Option<(&'static str, (u32, u32, u32))> 
         "S_AMBERITE" => ("amberite", (1, 2, 0)),
         "S_NAGA" => ("kin-glyph-110", (1, 3, 1)),
         "S_VANARA" => ("vanara", (1, 3, 1)),
+        "S_CYBER" => ("cyber", (1, 3, 0)),
+        "S_CAT" => ("cat", (1, 3, 1)),
         _ => return None,
     };
     Some(entry)
@@ -9640,7 +9656,13 @@ fn map_summon_spell_token(
     };
     if base == "S_PANTHEON" {
         let category = match caster_kind_id.rsplit('.').next()? {
-            "heimdall-guardian-of-bifrost" => "norse",
+            "heimdall-guardian-of-bifrost"
+            | "frigg-queen-of-asgard"
+            | "freyja-lady-of-the-slain"
+            | "odin-the-all-father" => "norse",
+            "indra-the-heavenly-king-of-meru" => "hindu",
+            "hermes-the-messenger-god" | "zeus-king-of-the-olympians" => "olympian",
+            "amun-the-mysterious" | "hathor-the-heavenly-cow" => "egyptian",
             _ => return None,
         };
         let suffix = format!("summon-{category}-l{level}-1d2");
@@ -13947,7 +13969,7 @@ mod tests {
         assert!(demo_monster_audit_omission_is_safe("POS_SUST_DEX"));
         assert!(demo_monster_audit_omission_is_safe("POS_SUST_INT"));
         assert!(demo_monster_audit_omission_is_safe("KILL_EXP"));
-        assert!(demo_monster_audit_omission_is_safe("EGYPTIAN"));
+        assert!(demo_monster_flag_is_handled("EGYPTIAN"));
         assert!(demo_monster_audit_omission_is_safe("EGYPTIAN2"));
         assert!(demo_monster_audit_omission_is_safe("HINDU2"));
         assert!(demo_monster_audit_omission_is_safe("NORSE2"));
@@ -13959,6 +13981,8 @@ mod tests {
         assert!(demo_monster_flag_is_handled("WILD_OCEAN"));
         assert!(demo_monster_flag_is_handled("NORSE"));
         assert!(demo_monster_flag_is_handled("HINDU"));
+        assert!(demo_monster_flag_is_handled("OLYMPIAN"));
+        assert!(demo_monster_flag_is_handled("NO_SUMMON"));
     }
 
     #[test]
@@ -16193,6 +16217,26 @@ F:ANIMAL | COLD_BLOOD\n";
     }
 
     #[test]
+    fn olympian_and_no_summon_flags_become_runtime_tags() {
+        let monsters = parse_r_info(
+            "N:1044:Olympian test\nG:P:w\nI:110:1d1:1:1:1:1\nW:1:1:1:1:0:0\nB:HIT:HURT(1d1)\nF:UNIQUE | OLYMPIAN | NO_SUMMON\n",
+        )
+        .expect("synthetic Olympian should parse");
+        let selection: DemoMonsterSelectionEntry = serde_json::from_value(serde_json::json!({
+            "sourceIndex": 1044,
+            "id": "olympian-test",
+            "tags": ["warrens"],
+            "omittedFlags": []
+        }))
+        .expect("synthetic selection should parse");
+        let actor = demo_monster_json(&monsters[0], &selection, &mut BTreeMap::new())
+            .expect("P75A flags should be handled");
+        let tags = actor["tags"].as_array().expect("tags should be an array");
+        assert!(tags.iter().any(|tag| tag == "olympian"));
+        assert!(tags.iter().any(|tag| tag == "no-summon"));
+    }
+
+    #[test]
     fn summon_tokens_map_to_category_and_kin_abilities() {
         const SUMMONER_R_INFO: &str = "\
 N:5:test bone caller\n\
@@ -16201,7 +16245,7 @@ I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
 F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF\n\
-S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LOUSE | S_CYBER\n";
+S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LOUSE | S_CYBER | S_CAT\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
 
@@ -16266,10 +16310,12 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 "rfb-legacy.ability.summon-spider-l20-1d3-1",
                 "rfb-legacy.ability.summon-hydra-l20-1d3-1",
                 "rfb-legacy.ability.summon-louse-l20-1d3-1",
+                "rfb-legacy.ability.summon-cyber-l20-1d3",
+                "rfb-legacy.ability.summon-cat-l20-1d3-1",
             ]
         );
-        // Uniques and cyber summons stay honest gaps.
-        assert_eq!(outcome.report.unmapped_spells["S_CYBER"], 1);
+        assert!(!outcome.report.unmapped_spells.contains_key("S_CYBER"));
+        assert!(!outcome.report.unmapped_spells.contains_key("S_CAT"));
 
         let kin = outcome
             .ability_files
@@ -16694,24 +16740,32 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
     }
 
     #[test]
-    fn heimdall_pantheon_summon_targets_norse_uniques() {
+    fn pantheon_summons_follow_the_casters_pantheon() {
         let mut abilities = BTreeMap::new();
-        let id = map_spell_token(
-            "S_PANTHEON",
-            77,
-            3,
-            "demo.actor.heimdall-guardian-of-bifrost",
-            &mut abilities,
-        )
-        .expect("Heimdall pantheon summon should map");
-        assert_eq!(id, "rfb-legacy.ability.summon-norse-l77-1d2");
-        let effect = &abilities[&id]["effect"];
-        assert_eq!(effect["type"], "summon-category");
-        assert_eq!(effect["category"], "norse");
-        assert_eq!(effect["maximumLevel"], 77);
-        assert_eq!(effect["countDice"], 1);
-        assert_eq!(effect["countSides"], 2);
-        assert!(effect.get("countBonus").is_none());
+        for (caster, category) in [
+            ("heimdall-guardian-of-bifrost", "norse"),
+            ("odin-the-all-father", "norse"),
+            ("indra-the-heavenly-king-of-meru", "hindu"),
+            ("zeus-king-of-the-olympians", "olympian"),
+            ("amun-the-mysterious", "egyptian"),
+        ] {
+            let id = map_spell_token(
+                "S_PANTHEON",
+                77,
+                3,
+                &format!("demo.actor.{caster}"),
+                &mut abilities,
+            )
+            .unwrap_or_else(|| panic!("{caster} pantheon summon should map"));
+            assert_eq!(id, format!("rfb-legacy.ability.summon-{category}-l77-1d2"));
+            let effect = &abilities[&id]["effect"];
+            assert_eq!(effect["type"], "summon-category");
+            assert_eq!(effect["category"], category);
+            assert_eq!(effect["maximumLevel"], 77);
+            assert_eq!(effect["countDice"], 1);
+            assert_eq!(effect["countSides"], 2);
+            assert!(effect.get("countBonus").is_none());
+        }
         assert!(
             map_spell_token(
                 "S_PANTHEON",

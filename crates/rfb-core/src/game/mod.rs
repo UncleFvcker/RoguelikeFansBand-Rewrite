@@ -2942,6 +2942,7 @@ impl Game {
                     && excluded_category
                         .is_none_or(|category| !actor_matches_category(definition, category))
                     && !definition.tags.iter().any(|tag| tag == "guardian")
+                    && actor_answers_summons(definition)
                     && definition.allocation.as_ref().is_none_or(|allocation| {
                         monster_ecology::actor_allocation_matches_task(allocation, current_task_id)
                     })
@@ -6329,6 +6330,10 @@ fn actor_matches_category(definition: &rfb_content::ActorDefinition, category: &
             .any(|tag| matches!(tag.as_str(), "demon" | "undead" | "nonliving"));
     }
     definition.tags.iter().any(|tag| tag == category)
+}
+
+fn actor_answers_summons(definition: &rfb_content::ActorDefinition) -> bool {
+    !definition.tags.iter().any(|tag| tag == "no-summon")
 }
 
 /// FrogComposband's melee `slay_tiers`, expressed in tenths. Integer

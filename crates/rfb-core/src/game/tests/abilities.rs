@@ -4058,6 +4058,24 @@ fn p55b_eagle_summon_includes_unseen_unique_eagles() {
 }
 
 #[test]
+fn p75a_no_summon_monsters_are_rejected_by_shared_candidate_filter() {
+    let game = Game::new(0);
+    let ring = game
+        .content
+        .actor("demo.actor.a-plain-gold-ring")
+        .expect("P75A Plain Gold Ring should compile");
+    assert!(ring.tags.iter().any(|tag| tag == "no-summon"));
+    assert!(!actor_answers_summons(ring));
+
+    let cyberdemon = game
+        .content
+        .actor("demo.actor.cyberdemon")
+        .expect("Cyberdemon should remain available");
+    assert!(cyberdemon.tags.iter().any(|tag| tag == "cyber"));
+    assert!(actor_answers_summons(cyberdemon));
+}
+
+#[test]
 fn p56b_gospel_summon_caps_one_d_four_at_three_tracking_pixels() {
     fn summon(seed: u64, capped: bool) -> Vec<String> {
         let mut game = Game::new(seed);

@@ -739,7 +739,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 768);
+    assert_eq!(orc_cave.len(), 782);
 
     for id in [
         "demo.actor.bunyip",
@@ -788,8 +788,8 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 1, 3, 2, 3, 10, 5, 4, 4, 3, 8, 3, 3, 3, 2, 0, 2,
-            2, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            6, 9, 10, 7, 5, 4, 6, 7, 7, 9, 7, 13, 1, 4, 3, 4, 11, 6, 4, 4, 4, 10, 3, 4, 4, 2, 1, 3,
+            3, 1, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 1,
         ]
     );
@@ -5326,6 +5326,88 @@ fn p74_level_91_127_direct_monsters_keep_source_identity() {
 }
 
 #[test]
+fn p75a_category_summoners_and_no_summon_actor_keep_source_semantics() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+
+    for (id, legacy_index, level) in [
+        ("hathor-the-heavenly-cow", 1271, 82),
+        ("freyja-lady-of-the-slain", 1352, 83),
+        ("mephistopheles-lord-of-hell", 831, 84),
+        ("surtur-the-giant-fire-demon", 837, 85),
+        ("frigg-queen-of-asgard", 1354, 86),
+        ("oremorj-the-cyberdemon-lord", 843, 89),
+        ("yog-sothoth-the-all-in-one", 845, 90),
+        ("durga-the-goddess-of-war", 1383, 90),
+        ("indra-the-heavenly-king-of-meru", 1391, 92),
+        ("nyarlathotep-the-crawling-chaos", 851, 93),
+        ("gothmog-the-high-captain-of-balrogs", 856, 95),
+        ("great-cthulhu", 857, 96),
+        ("amun-the-mysterious", 1266, 97),
+        ("a-plain-gold-ring", 864, 110),
+    ] {
+        let actor_id = format!("demo.actor.{id}");
+        let actor = artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should be imported"));
+        assert_eq!(actor.level, level, "{actor_id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{actor_id} source index"
+        );
+    }
+
+    for (ability_id, category, sides, bonus) in [
+        ("summon-cyber-l84-1d3", "cyber", 3, 0),
+        ("summon-cat-l83-1d3-1", "cat", 3, 1),
+        ("summon-egyptian-l82-1d2", "egyptian", 2, 0),
+        ("summon-hindu-l92-1d2", "hindu", 2, 0),
+        ("summon-norse-l83-1d2", "norse", 2, 0),
+    ] {
+        let ability = artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == format!("rfb-legacy.ability.{ability_id}"))
+            .unwrap_or_else(|| panic!("{ability_id} should be imported"));
+        let AbilityEffectDefinition::SummonCategory {
+            category: actual_category,
+            count_dice,
+            count_sides,
+            count_bonus,
+            ..
+        } = &ability.effect
+        else {
+            panic!("{ability_id} should remain a category summon");
+        };
+        assert_eq!(actual_category, category);
+        assert_eq!((*count_dice, *count_sides, *count_bonus), (1, sides, bonus));
+    }
+
+    let ring = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.a-plain-gold-ring")
+        .expect("Plain Gold Ring should be imported");
+    assert!(ring.tags.iter().any(|tag| tag == "no-summon"));
+    assert!(
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == "demo.actor.cyberdemon")
+            .is_some_and(|actor| actor.tags.iter().any(|tag| tag == "cyber"))
+    );
+}
+
+#[test]
 fn p68_low_risk_mappings_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -5483,7 +5565,9 @@ fn p69_pantheon_monsters_keep_source_identity_and_norse_summoning() {
         norse_ids,
         [
             "demo.actor.aegir-god-king-of-the-sea-giants",
+            "demo.actor.freyja-lady-of-the-slain",
             "demo.actor.freyr-lord-of-plenty",
+            "demo.actor.frigg-queen-of-asgard",
             "demo.actor.heimdall-guardian-of-bifrost",
             "demo.actor.magni-son-of-thor",
             "demo.actor.njord-lord-of-the-vanir",
@@ -8027,7 +8111,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        698
+        712
     );
 }
 
@@ -8124,7 +8208,7 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
                 .filter(|drop| drop.theme_table_id.as_deref() == Some("demo.loot-table.warrior"))
         })
         .collect::<Vec<_>>();
-    assert_eq!(warrior_drops.len(), 98);
+    assert_eq!(warrior_drops.len(), 99);
     assert!(
         warrior_drops
             .iter()

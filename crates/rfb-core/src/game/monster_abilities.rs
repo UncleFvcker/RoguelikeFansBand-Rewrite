@@ -2407,6 +2407,7 @@ impl Game {
                         && definition.level <= u32::from(*maximum_level)
                         && definition.tags.iter().any(|tag| tag == category)
                         && !definition.tags.iter().any(|tag| tag == "guardian")
+                        && actor_answers_summons(definition)
                         && definition.allocation.as_ref().is_none_or(|allocation| {
                             monster_ecology::actor_allocation_matches_task(
                                 allocation,

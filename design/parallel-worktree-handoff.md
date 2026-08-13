@@ -572,3 +572,19 @@ git diff --stat
   `3f329afbe222276e0f6d2b9c7861d5f065af4ec8633774bab3cbc6b1f2490818`；Protocol `1.195`、
   State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
   零 waiver）均不变。
+
+## 35. monsters-next 当前交接（P75A 分类召唤）
+
+- 新增 `S_CYBER`、`S_CAT` 与按施术者所属神系选择候选的 `S_PANTHEON` 映射；补齐 cyber、
+  Egyptian、Olympian 与 `no-summon` 内容标签。玩家与怪物分类召唤共用 `no-summon`
+  候选过滤，原版 `NO_SUMMON` 怪物仍可自然生成，但不会响应召唤。
+- 实际安全解锁 14 个 actor：7 个 Cyberdemon 召唤者、Freyja 与 Durga、Hathor、Frigg、
+  Indra、Amun，以及 a Plain Gold Ring；新增 61 个参数化 ability/program。原计划预计的
+  另外 7 个在首个分类 blocker 消除后暴露出 `S_UNIQUE` 或专属 `S_SPECIAL`，继续留在后续批次，
+  不以 omission 降级导入。
+- L81–127 联合审计为 76 selected、0 direct、40 blocked、6 excluded；没有新增 DTO、协议、
+  存档或 state-hash 字段，也不刷新 replay fixture。
+- 共享协调点：pack `1.315.0` / content hash
+  `3eca5a0bf28bde9471cd9f4f58bcf4f066d592a920e4d3ab7a08852dab10b74c`；Protocol `1.195`、
+  State Hash Schema v97、save v1、active baseline `contract-v292`（26 条 exact fixture、
+  零 waiver）均不变。

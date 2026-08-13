@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-great-cthulhu",
+  "descriptionKey": "ability-legacy-kin-great-cthulhu-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-great-cthulhu",
+  "nameKey": "ability-legacy-kin-great-cthulhu-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}
