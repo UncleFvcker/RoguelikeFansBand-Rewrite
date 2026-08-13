@@ -733,7 +733,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 697);
+    assert_eq!(orc_cave.len(), 702);
 
     for id in [
         "demo.actor.bunyip",
@@ -782,7 +782,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
             12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
-            6, 9, 7, 6, 5, 4, 6, 7, 5, 7, 6, 13,
+            6, 9, 7, 7, 5, 4, 6, 7, 6, 9, 7, 13,
         ]
     );
 
@@ -5304,6 +5304,76 @@ fn p68_low_risk_mappings_keep_source_semantics() {
 }
 
 #[test]
+fn p69_pantheon_monsters_keep_source_identity_and_norse_summoning() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("{id} should be imported"))
+    };
+
+    for (id, legacy_index, level, pantheon) in [
+        ("skadi-the-huntress", 1355, 72, "norse"),
+        ("heimdall-guardian-of-bifrost", 1348, 77, "norse"),
+        ("magni-son-of-thor", 1359, 78, "norse"),
+        ("ganesha-the-elephant-god", 1378, 78, "hindu"),
+        ("agni-the-threefold-fire", 1363, 79, "hindu"),
+    ] {
+        let actor = actor(id);
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index),
+            "{id} source index"
+        );
+        assert!(actor.tags.iter().any(|tag| tag == pantheon), "{id}");
+        assert!(actor.tags.iter().any(|tag| tag == "unique"), "{id}");
+    }
+
+    let norse_ids = artifact
+        .content
+        .actors
+        .iter()
+        .filter(|actor| actor.tags.iter().any(|tag| tag == "norse"))
+        .map(|actor| actor.id.as_str())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        norse_ids,
+        [
+            "demo.actor.heimdall-guardian-of-bifrost",
+            "demo.actor.magni-son-of-thor",
+            "demo.actor.skadi-the-huntress",
+        ]
+        .into_iter()
+        .collect()
+    );
+
+    let summon = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.summon-norse-l77-1d2")
+        .expect("Heimdall pantheon summon should be imported");
+    assert!(matches!(
+        summon.effect,
+        AbilityEffectDefinition::SummonCategory {
+            ref category,
+            maximum_level: 77,
+            count_dice: 1,
+            count_sides: 2,
+            count_bonus: 0,
+            ..
+        } if category == "norse"
+    ));
+}
+
+#[test]
 fn p64b_low_risk_mappings_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -7601,7 +7671,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        628
+        633
     );
 }
 
@@ -7698,7 +7768,7 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
                 .filter(|drop| drop.theme_table_id.as_deref() == Some("demo.loot-table.warrior"))
         })
         .collect::<Vec<_>>();
-    assert_eq!(warrior_drops.len(), 93);
+    assert_eq!(warrior_drops.len(), 94);
     assert!(
         warrior_drops
             .iter()

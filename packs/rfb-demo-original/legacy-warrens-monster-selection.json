@@ -6865,6 +6865,36 @@
       "id": "metal-babble-unique",
       "tags": ["orc-cave"],
       "omittedFlags": ["KILL_EXP", "NO_STUN", "POS_GAIN_AC", "POS_HOLD_LIFE", "POS_SEE_INVIS", "POS_SUST_CHR", "POS_SUST_CON", "POS_SUST_DEX", "POS_SUST_INT", "POS_SUST_STR", "POS_SUST_WIS"]
+    },
+    {
+      "sourceIndex": 1355,
+      "id": "skadi-the-huntress",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["FEMALE", "NORSE2", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1359,
+      "id": "magni-son-of-thor",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_SUST_STR"]
+    },
+    {
+      "sourceIndex": 1378,
+      "id": "ganesha-the-elephant-god",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "RES_WALL"]
+    },
+    {
+      "sourceIndex": 1363,
+      "id": "agni-the-threefold-fire",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "NO_STUN", "POS_SEE_INVIS", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1348,
+      "id": "heimdall-guardian-of-bifrost",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["MALE", "POS_SEE_INVIS"]
     }
   ]
 }

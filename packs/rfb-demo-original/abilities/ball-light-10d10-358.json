@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.ball-light-10d10-358",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-legacy-ball-light-10d10-358-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.ball-light-10d10-358",
+  "nameKey": "ability-legacy-ball-light-10d10-358-name",
+  "tags": [
+    "legacy-import",
+    "damage"
+  ],
+  "target": {
+    "modes": [
+      "position",
+      "entity"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

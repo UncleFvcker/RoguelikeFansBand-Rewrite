@@ -484,3 +484,15 @@ git diff --stat
 - 共享协调点：pack `1.307.0` / content hash
   `7d1d1a197247782f4c3466e4ff0465e0afdf10ff964ac564e95d7f206a0d23f3`；Protocol `1.189`、
   State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
+
+## 31. monsters-next 当前交接（P69 神系内容）
+
+- 导入女猎手斯卡蒂、彩虹桥守卫海姆达尔、索尔之子曼尼、象头神伽内什和三重火神阿耆尼；
+  `NORSE`、`HINDU` 分别落为 `norse`、`hindu` 内容标签，不新增神系启停状态。
+- 海姆达尔的 `S_PANTHEON` 复用现有 `SummonCategory`，召唤 1d2 个不高于 77 级的
+  `norse` 唯一怪物；唯一生命周期继续由现有统一额度检查约束。
+- L71–80 审计现为 72 selected、0 direct、4 blocked、7 excluded；剩余 blocker 仅为 Banor 三体
+  的 `SPECIAL` 和 Aegir 的 `S_SPECIAL`。
+- 共享协调点：pack `1.308.0` / content hash
+  `255d99b948f7200e2ec03ad78881a7d86d72ae6507eb616614e2b5a71ba210c3`；Protocol `1.189`、
+  State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.bolt-electricity-15d15-234",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageBonus": 234,
+      "damageDice": 15,
+      "damageSides": 15,
+      "damageType": "electricity",
+      "type": "damage"
+    }
+  ]
+}

@@ -7977,6 +7977,8 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
             | "FIXED_UNIQUE"
             | "NO_QUEST"
             | "COLD_BLOOD"
+            | "NORSE"
+            | "HINDU"
     ) {
         return true;
     }
@@ -8147,6 +8149,8 @@ fn monster_json(
         ("QUANTUM", "quantum"),
         ("CLEAR_HEAD", "clear-head"),
         ("AMBERITE", "amberite"),
+        ("NORSE", "norse"),
+        ("HINDU", "hindu"),
     ] {
         if entry.flags.iter().any(|value| value == flag) {
             tags.push(tag.to_owned());
@@ -8876,6 +8880,8 @@ fn demo_monster_json(
         ("QUANTUM", "quantum"),
         ("CLEAR_HEAD", "clear-head"),
         ("AMBERITE", "amberite"),
+        ("NORSE", "norse"),
+        ("HINDU", "hindu"),
     ] {
         if entry.flags.iter().any(|candidate| candidate == flag) {
             tags.insert(tag.to_owned());
@@ -9526,6 +9532,18 @@ fn map_summon_spell_token(
         Some((base, rest)) => (base, Some(rest.strip_suffix(')')?)),
         None => (token, None),
     };
+    if base == "S_PANTHEON" {
+        let category = match caster_kind_id.rsplit('.').next()? {
+            "heimdall-guardian-of-bifrost" => "norse",
+            _ => return None,
+        };
+        let suffix = format!("summon-{category}-l{level}-1d2");
+        let id = format!("rfb-legacy.ability.{suffix}");
+        abilities.entry(id.clone()).or_insert_with(|| {
+            summon_category_ability(&suffix, category, u32::from(level), 1, 2, 0, None)
+        });
+        return Some(id);
+    }
     if base == "S_SPECIAL" {
         if caster_kind_id.rsplit('.').next()? == "gragomani-the-leprechaun-prophet" {
             let suffix = "summon-gragomani-followers-1d4-4";
@@ -13694,6 +13712,8 @@ mod tests {
         assert!(demo_monster_flag_is_handled("TANUKI"));
         assert!(demo_monster_flag_is_handled("UNIQUE2"));
         assert!(demo_monster_flag_is_handled("WILD_OCEAN"));
+        assert!(demo_monster_flag_is_handled("NORSE"));
+        assert!(demo_monster_flag_is_handled("HINDU"));
     }
 
     #[test]
@@ -16300,6 +16320,37 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 "S_SPECIAL",
                 25,
                 2,
+                "demo.actor.someone-else",
+                &mut abilities,
+            )
+            .is_none()
+        );
+    }
+
+    #[test]
+    fn heimdall_pantheon_summon_targets_norse_uniques() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token(
+            "S_PANTHEON",
+            77,
+            3,
+            "demo.actor.heimdall-guardian-of-bifrost",
+            &mut abilities,
+        )
+        .expect("Heimdall pantheon summon should map");
+        assert_eq!(id, "rfb-legacy.ability.summon-norse-l77-1d2");
+        let effect = &abilities[&id]["effect"];
+        assert_eq!(effect["type"], "summon-category");
+        assert_eq!(effect["category"], "norse");
+        assert_eq!(effect["maximumLevel"], 77);
+        assert_eq!(effect["countDice"], 1);
+        assert_eq!(effect["countSides"], 2);
+        assert!(effect.get("countBonus").is_none());
+        assert!(
+            map_spell_token(
+                "S_PANTHEON",
+                77,
+                3,
                 "demo.actor.someone-else",
                 &mut abilities,
             )
