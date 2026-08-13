@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.bolt-physical-4d8",
+  "input": "cast-target",
+  "steps": [
+    {
+      "damageDice": 4,
+      "damageSides": 8,
+      "damageType": "physical",
+      "type": "damage"
+    }
+  ]
+}

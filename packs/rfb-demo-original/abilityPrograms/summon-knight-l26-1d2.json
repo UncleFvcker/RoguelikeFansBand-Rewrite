@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.summon-knight-l26-1d2",
+  "input": "self",
+  "steps": [
+    {
+      "batchCandidates": [
+        {
+          "actorKindId": "demo.actor.novice-paladin",
+          "weight": 1
+        },
+        {
+          "actorKindId": "demo.actor.paladin",
+          "weight": 1
+        },
+        {
+          "actorKindId": "demo.actor.white-knight",
+          "weight": 1
+        },
+        {
+          "actorKindId": "demo.actor.ultra-elite-paladin",
+          "weight": 1
+        },
+        {
+          "actorKindId": "demo.actor.knight-templar",
+          "weight": 1
+        }
+      ],
+      "category": "knight",
+      "countDice": 1,
+      "countSides": 2,
+      "durationTurns": 10000,
+      "maximumLevel": 26,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}

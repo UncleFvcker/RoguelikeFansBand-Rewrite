@@ -9950,3 +9950,66 @@ fn p84a_knight_summon_candidates_have_the_formal_category_tag() {
         );
     }
 }
+
+#[test]
+fn p84b_camelot_roster_stays_bound_to_legacy_dungeon_two() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = |id: &str| {
+        artifact
+            .content
+            .actors
+            .iter()
+            .find(|actor| actor.id == format!("demo.actor.{id}"))
+            .unwrap_or_else(|| panic!("P84B should contain {id}"))
+    };
+
+    for (id, source_index, level) in [
+        ("sir-kay", 1116, 22),
+        ("camelot-knight", 1117, 26),
+        ("sir-galahad", 1114, 28),
+        ("sir-gareth", 1115, 28),
+        ("sir-gawain", 1113, 29),
+        ("sir-lancelot", 1112, 30),
+        ("arthur-pendragon", 1111, 32),
+        ("mordred", 1119, 32),
+        ("morgana-le-fay", 1118, 35),
+        ("the-questing-beast", 1122, 35),
+    ] {
+        let actor = actor(id);
+        let allocation = actor
+            .allocation
+            .as_ref()
+            .expect("Camelot actors should retain dormant allocation metadata");
+        assert_eq!(actor.level, level, "{id} level");
+        assert_eq!(allocation.legacy_index, source_index, "{id} source index");
+        assert_eq!(allocation.legacy_dungeon_indices, [2], "{id} dungeon");
+        assert!(!allocation.wild_only, "{id} should remain dungeon-only");
+        assert!(actor.tags.iter().any(|tag| tag == "camelot"), "{id}");
+        assert!(!actor.tags.iter().any(|tag| tag == "orc-cave"), "{id}");
+    }
+
+    for (id, summon_ability_id) in [
+        ("sir-kay", "summon-camelot-knight-l22-1d2"),
+        ("camelot-knight", "summon-knight-l26-1d2"),
+        ("sir-galahad", "summon-camelot-knight-l28-1d2"),
+        ("sir-gareth", "summon-camelot-knight-l28-1d2"),
+        ("sir-gawain", "summon-camelot-knight-l29-1d2"),
+        ("sir-lancelot", "summon-camelot-knight-l30-1d2"),
+        ("arthur-pendragon", "summon-camelot-knight-l32-1d2"),
+    ] {
+        let actor = actor(id);
+        assert!(actor.tags.iter().any(|tag| tag == "knight"), "{id}");
+        assert!(actor.tags.iter().any(|tag| tag == "camelot-knight"), "{id}");
+        assert!(
+            actor
+                .monster_casting
+                .as_ref()
+                .expect("Camelot knight should retain spellcasting")
+                .abilities
+                .iter()
+                .any(|candidate| candidate.ability_id
+                    == format!("rfb-legacy.ability.{summon_ability_id}")),
+            "{id} summon"
+        );
+    }
+}

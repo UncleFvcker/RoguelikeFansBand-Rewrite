@@ -7958,6 +7958,66 @@
       "id": "nandi-the-bull-of-shiva",
       "tags": ["mount-meru"],
       "omittedFlags": ["MALE", "NO_STUN", "POS_GAIN_AC", "POS_TELEPATHY"]
+    },
+    {
+      "sourceIndex": 1116,
+      "id": "sir-kay",
+      "tags": ["camelot"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1117,
+      "id": "camelot-knight",
+      "tags": ["camelot"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1114,
+      "id": "sir-galahad",
+      "tags": ["camelot"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1115,
+      "id": "sir-gareth",
+      "tags": ["camelot"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1113,
+      "id": "sir-gawain",
+      "tags": ["camelot"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1112,
+      "id": "sir-lancelot",
+      "tags": ["camelot"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1111,
+      "id": "arthur-pendragon",
+      "tags": ["camelot"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1119,
+      "id": "mordred",
+      "tags": ["camelot"],
+      "omittedFlags": ["MALE"]
+    },
+    {
+      "sourceIndex": 1118,
+      "id": "morgana-le-fay",
+      "tags": ["camelot"],
+      "omittedFlags": ["FEMALE"]
+    },
+    {
+      "sourceIndex": 1122,
+      "id": "the-questing-beast",
+      "tags": ["camelot"],
+      "omittedFlags": ["FEMALE", "POS_GAIN_AC"]
     }
   ]
 }

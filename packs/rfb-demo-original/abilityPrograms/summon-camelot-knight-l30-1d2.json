@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability-program.summon-camelot-knight-l30-1d2",
+  "input": "self",
+  "steps": [
+    {
+      "category": "camelot-knight",
+      "countDice": 1,
+      "countSides": 2,
+      "durationTurns": 10000,
+      "maximumLevel": 30,
+      "radius": 2,
+      "type": "summon-category"
+    }
+  ]
+}
