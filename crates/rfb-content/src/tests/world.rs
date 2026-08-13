@@ -8318,6 +8318,7 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
         ("demo.loot-table.paladin", 73),
         ("demo.loot-table.dwarf", 6),
         ("demo.loot-table.ninja", 3),
+        ("demo.loot-table.hobbit", 32),
     ] {
         let table = artifact
             .content
@@ -8422,6 +8423,64 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
             .collect::<Vec<_>>(),
         vec![(10, 20), (40, 33)]
     );
+
+    let hobbit = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.hobbit")
+        .expect("Hobbit drop table should exist");
+    assert_eq!(
+        hobbit
+            .entries
+            .iter()
+            .map(|entry| entry.item_kind_id.as_str())
+            .collect::<BTreeSet<_>>()
+            .len(),
+        26
+    );
+    assert_eq!(
+        hobbit
+            .affix_weights
+            .iter()
+            .map(|entry| (entry.affix_id.as_deref(), entry.weight))
+            .collect::<Vec<_>>(),
+        vec![(None, 1)]
+    );
+    assert_eq!(
+        hobbit
+            .entries
+            .iter()
+            .filter(|entry| entry.item_kind_id == "demo.item.sixfold-provision")
+            .map(|entry| (entry.min_depth, entry.weight))
+            .collect::<Vec<_>>(),
+        vec![(20, 12), (30, 25), (40, 100)]
+    );
+    assert_eq!(
+        hobbit
+            .entries
+            .iter()
+            .filter(|entry| entry.item_kind_id == "demo.item.ration-of-food")
+            .map(|entry| (entry.min_depth, entry.weight))
+            .collect::<Vec<_>>(),
+        vec![(0, 100), (5, 100), (10, 100), (20, 100)]
+    );
+    for excluded in [
+        "demo.item.hard-biscuit",
+        "demo.item.strip-of-venison",
+        "demo.item.pint-of-fine-ale",
+        "demo.item.pint-of-fine-wine",
+        "demo.item.iron-shot",
+        "demo.item.mithril-shot",
+    ] {
+        assert!(
+            hobbit
+                .entries
+                .iter()
+                .all(|entry| entry.item_kind_id != excluded),
+            "{excluded} should not be in the Hobbit theme"
+        );
+    }
 }
 
 #[test]
