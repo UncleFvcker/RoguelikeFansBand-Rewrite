@@ -101,6 +101,9 @@ pub struct RaceDefinition {
     pub shop_adjust_percent: u16,
     #[serde(default)]
     pub base_hp: i32,
+    /// Intrinsic infravision range in map cells.
+    #[serde(default)]
+    pub infravision: i32,
     pub skill_set_id: String,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,

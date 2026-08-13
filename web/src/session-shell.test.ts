@@ -32,8 +32,7 @@ test("new character creation exposes all formal class slices", () => {
 });
 
 test("new character creation exposes only formal race slices", () => {
-  assert.deepEqual(PLAYTEST_RACE_IDS, ["demo.race.rfb-human"]);
-  assert.equal(PLAYTEST_RACE_IDS.some((id) => id.startsWith("rfb-legacy.")), false);
+  assert.deepEqual(PLAYTEST_RACE_IDS, ["demo.race.rfb-human", "rfb-legacy.race.half-orc"]);
 });
 
 test("session seeds canonicalize the complete unsigned 64-bit range", () => {

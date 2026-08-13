@@ -1162,7 +1162,7 @@ fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic(
         Game::new_with_build_race_and_name(
             17,
             "demo.build.warrior",
-            "rfb-legacy.race.half-orc",
+            "rfb-legacy.race.high-elf",
             "Adventurer",
         ),
         Err(CoreError::CharacterRaceUnavailable(_))
@@ -1176,6 +1176,66 @@ fn build_skill_growth_experience_multiplier_and_save_identity_are_deterministic(
         ),
         Err(CoreError::UnknownCharacterRace(_))
     ));
+}
+
+#[test]
+fn half_orc_infravision_and_level_thirty_talent_are_authoritative() {
+    let mut game = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        "rfb-legacy.race.half-orc",
+        "Adventurer",
+    )
+    .expect("formal Half-Orc should create");
+    assert_eq!(game.player_infravision_range(), 3);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Dark),
+        ResistanceLevel::Resistant
+    );
+
+    let level_29_experience = experience_required_for_level(29);
+    game.apply_unscaled_player_experience(level_29_experience, &mut Vec::new());
+    assert_eq!(game.progress.level, 29);
+    assert!(
+        game.snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
+
+    game.apply_unscaled_player_experience(
+        experience_required_for_level(30) - level_29_experience,
+        &mut Vec::new(),
+    );
+    let pending = game
+        .snapshot()
+        .player
+        .pending_race_mutation_choice
+        .expect("Half-Orc should choose a level 30 talent");
+    assert_eq!(pending.reward_id, "half-orc-talent");
+    assert_eq!(pending.candidates.len(), 20);
+    assert!(
+        pending
+            .candidates
+            .iter()
+            .any(|candidate| candidate.id == "rfb.mutation.sacred-vitality")
+    );
+
+    dispatch_next(
+        &mut game,
+        GameCommand::ChooseRaceMutation {
+            reward_id: pending.reward_id,
+            mutation_id: "rfb.mutation.sacred-vitality".to_owned(),
+        },
+    );
+    assert!(
+        game.progress
+            .locked_mutation_ids
+            .contains("rfb.mutation.sacred-vitality")
+    );
+    let restored = Game::from_save(game.to_save()).expect("Half-Orc save should restore");
+    assert_eq!(restored.build, game.build);
+    assert_eq!(restored.player_infravision_range(), 3);
 }
 
 #[test]

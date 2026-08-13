@@ -258,6 +258,24 @@ fn race_level_mutation_rewards_are_strict_and_canonical() {
     ));
 }
 
+#[test]
+fn race_infravision_is_nonnegative_and_bounded() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    for invalid in [-1, 65] {
+        let mut content = artifact.content.clone();
+        let human = content
+            .races
+            .iter_mut()
+            .find(|race| race.id == "demo.race.rfb-human")
+            .expect("Human race should exist");
+        human.infravision = invalid;
+        assert!(matches!(
+            validate_and_normalize(&mut content),
+            Err(ContentError::InvalidCharacterSource(id)) if id == "demo.race.rfb-human"
+        ));
+    }
+}
+
 fn human_level_mutation_rewards(
     content: &mut CompiledContentV1,
 ) -> &mut Vec<RaceLevelMutationRewardDefinition> {

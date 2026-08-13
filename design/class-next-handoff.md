@@ -291,3 +291,15 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `rfb-legacy.race.half-orc`，不得创建第二个 ID。
 - 协调版本保持 pack `1.330.0`、Protocol `1.201`、State Hash Schema v100、save v1、
   baseline `contract-v303`；按用户要求只运行新增和直接相关测试。
+
+## main 当前批次：正式种族 Commit 2 半兽人
+
+- 不新增内容 ID；正式选择直接提升 `rfb-legacy.race.half-orc` 与既有 skill set。新游戏列表
+  现包含 Human 和半兽人，职业构筑继续拥有玩家外观。
+- 按 RFB master 补齐 3 格红外视觉和 30 级天赋选择；静态属性、技能、生命、基础 HP、
+  经验、商店倍率与黑暗抗性已经核验一致。半兽人复用 Human 当前 20 项已闭环天赋池。
+- 原版池中尚未实现的七项 `ambidextrous`、`speed-reader`、`black-marketeer`、
+  `tread-softly`、`inspired-smithing`、`strong-mind`、`astral-guide` 继续隐藏。
+- 协调版本：pack `1.331.0` / hash
+  `340bc4e519c8ded18b69e24d9bb39e66f6e38e3e78832590ecc685d45b6c84c5`、Protocol `1.201`、
+  State Hash Schema v100、save v1、baseline `contract-v303`；未刷新既有 fixture。

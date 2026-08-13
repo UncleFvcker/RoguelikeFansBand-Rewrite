@@ -67,6 +67,7 @@
   "experiencePercent": 110,
   "formatVersion": 1,
   "id": "rfb-legacy.race.half-orc",
+  "infravision": 3,
   "kinCategory": "kin-glyph-111",
   "legacyIndex": 63,
   "lifePercent": 103,
@@ -77,13 +78,47 @@
     "strength": 2
   },
   "nameKey": "race-legacy-half-orc-name",
+  "levelMutationRewards": [
+    {
+      "id": "half-orc-talent",
+      "minimumLevel": 30,
+      "selection": {
+        "type": "choice",
+        "mutationIds": [
+          "rfb.mutation.fast-learner",
+          "rfb.mutation.weapon-skills",
+          "rfb.mutation.subtle-casting",
+          "rfb.mutation.peerless-sniper",
+          "rfb.mutation.unyielding",
+          "rfb.mutation.untouchable",
+          "rfb.mutation.loremaster",
+          "rfb.mutation.arcane-mastery",
+          "rfb.mutation.evasion",
+          "rfb.mutation.potion-chugger",
+          "rfb.mutation.one-with-magic",
+          "rfb.mutation.peerless-tracker",
+          "rfb.mutation.infernal-deal",
+          "rfb.mutation.fell-sorcery",
+          "rfb.mutation.sacred-vitality",
+          "rfb.mutation.cult-of-personality",
+          "rfb.mutation.fleet-of-foot",
+          "rfb.mutation.demonic-grasp",
+          "rfb.mutation.weird-mind",
+          "rfb.mutation.fantastic-frenzy"
+        ]
+      }
+    }
+  ],
   "resistances": {
     "dark": "resistant"
   },
   "shopAdjustPercent": 120,
   "skillSetId": "rfb-legacy.skill-set.race-half-orc",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

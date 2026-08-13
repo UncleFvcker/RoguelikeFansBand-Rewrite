@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.330.0");
+    assert_eq!(catalog.pack_version(), "1.331.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -352,6 +352,68 @@ fn formal_human_matches_rfb_static_profile() {
             "{build_id} must continue to use the formal Human race"
         );
     }
+}
+
+#[test]
+fn formal_half_orc_matches_rfb_profile_and_talent_pool() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let half_orc = catalog
+        .race("rfb-legacy.race.half-orc")
+        .expect("formal Half-Orc race");
+
+    assert_eq!(half_orc.modifiers.strength, 2);
+    assert_eq!(half_orc.modifiers.intelligence, -1);
+    assert_eq!(half_orc.modifiers.wisdom, 0);
+    assert_eq!(half_orc.modifiers.dexterity, 0);
+    assert_eq!(half_orc.modifiers.constitution, 1);
+    assert_eq!(half_orc.modifiers.charisma, -1);
+    assert_eq!(half_orc.life_percent, 103);
+    assert_eq!(half_orc.base_hp, 20);
+    assert_eq!(half_orc.experience_percent, 110);
+    assert_eq!(half_orc.shop_adjust_percent, 120);
+    assert_eq!(half_orc.infravision, 3);
+    assert_eq!(
+        half_orc.resistances.get(&ActorDamageType::Dark),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(half_orc.tags.iter().any(|tag| tag == "rfb-compatibility"));
+
+    let half_orc_skills = catalog
+        .skill_set(&half_orc.skill_set_id)
+        .expect("formal Half-Orc skill set");
+    assert_eq!(
+        half_orc_skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -3),
+            ("demo.skill.disarming", -3),
+            ("demo.skill.melee", 20),
+            ("demo.skill.perception", 5),
+            ("demo.skill.ranged", -5),
+            ("demo.skill.saving-throw", -1),
+            ("demo.skill.search", -1),
+            ("demo.skill.stealth", -2),
+        ]
+    );
+
+    let human_talent = catalog
+        .race("demo.race.rfb-human")
+        .expect("formal Human race")
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "human-talent")
+        .expect("Human talent");
+    let half_orc_talent = half_orc
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "half-orc-talent")
+        .expect("Half-Orc talent");
+    assert_eq!(half_orc_talent.minimum_level, 30);
+    assert_eq!(half_orc_talent.selection, human_talent.selection);
 }
 
 #[test]

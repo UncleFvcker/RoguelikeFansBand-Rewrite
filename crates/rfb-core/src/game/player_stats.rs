@@ -683,6 +683,9 @@ impl Game {
     }
 
     pub(super) fn player_infravision_range(&self) -> i32 {
+        let race = self
+            .character_definitions()
+            .map_or(0, |(_, race, _, _)| race.infravision);
         let equipment = self
             .items
             .iter()
@@ -702,9 +705,10 @@ impl Game {
         self.player
             .statuses
             .iter()
-            .fold(equipment.saturating_add(mutations), |total, status| {
-                total.saturating_add(status.granted_equipment_bonuses.infravision)
-            })
+            .fold(
+                race.saturating_add(equipment).saturating_add(mutations),
+                |total, status| total.saturating_add(status.granted_equipment_bonuses.infravision),
+            )
             .max(0)
     }
 

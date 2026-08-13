@@ -876,3 +876,20 @@ git diff --stat
 - 共享协调点保持 pack `1.330.0`、Protocol `1.201`、State Hash Schema v100、save v1、
   active baseline `contract-v303`。本批没有内容、权威状态或 State Hash 输入变化，不刷新
   既有 fixture；只执行新增种族覆盖/存档测试、桌面初始化测试与 Web 定向测试。
+
+## 45. main 当前交接（正式种族 Commit 2：半兽人）
+
+- 本批不新增内容 ID；正式半兽人直接复用 `rfb-legacy.race.half-orc` 与
+  `rfb-legacy.skill-set.race-half-orc`。items、monsters 和其他方向不得另建重复身份。
+- 半兽人按 `master:src/races_a.c` 保留 `+2/-1/0/0/+1/-1`、生命 103%、基础 HP 20、
+  经验 110%、商店 120%、八项技能与黑暗抗性，并补齐原版 3 格红外视觉。新游戏正式种族
+  列表现为 Human 与半兽人；玩家 actor 和 tileset 仍由职业构筑决定。
+- 半兽人在 30 级使用与 Human 相同的 20 项已闭环 `mut_demigod_pred` 候选。原版池中仍未
+  实现的七项为 `ambidextrous`、`speed-reader`、`black-marketeer`、`tread-softly`、
+  `inspired-smithing`、`strong-mind`、`astral-guide`；继续隐藏，不创建占位效果。
+- `RaceDefinition.infravision` 与 legacy race importer 现在保留种族红外视觉，当前正式内容
+  只为半兽人启用。该值由 race ID 和内容派生，不增加存档或 State Hash 字段。
+- 共享协调点：pack `1.331.0` / content hash
+  `340bc4e519c8ded18b69e24d9bb39e66f6e38e3e78832590ecc685d45b6c84c5`、Protocol
+  `1.201`、State Hash Schema v100、save v1、active baseline `contract-v303`。现有 fixture
+  均仍选择 Human，不刷新；只运行新增半兽人内容、成长/存档、importer 与 Web 定向测试。

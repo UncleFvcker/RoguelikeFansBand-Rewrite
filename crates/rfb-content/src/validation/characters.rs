@@ -171,7 +171,8 @@ pub(super) fn validate_characters(
         require_format_version(race.format_version, &race.id)?;
         validate_definition_id(&race.id, "race")?;
         validate_definition_text(&race.id, &race.name_key, &race.description_key)?;
-        if !(50..=200).contains(&race.shop_adjust_percent) {
+        if !(50..=200).contains(&race.shop_adjust_percent) || !(0..=64).contains(&race.infravision)
+        {
             return Err(ContentError::InvalidCharacterSource(race.id.clone()));
         }
         if race

@@ -5935,6 +5935,7 @@ fn race_json(
         "experiencePercent": entry.exp.clamp(25, 500),
         "shopAdjustPercent": entry.shop_adjust.clamp(50, 200),
         "baseHp": entry.base_hp.clamp(-1_000, 1_000),
+        "infravision": entry.infra.clamp(0, 64),
         "skillSetId": format!("rfb-legacy.skill-set.race-{}", entry.id),
         "kinCategory": format!("kin-glyph-{}", u32::from(legacy_race_kin_glyph(&entry.id))),
         "bodySlots": body_slots
@@ -18658,6 +18659,7 @@ S:ANY:Slot
                 life: 98,
                 base_hp: 22,
                 exp: 120,
+                infra: 3,
                 ..LegacyCharacterEntry::default()
             }],
             personalities: Vec::new(),
@@ -18676,6 +18678,7 @@ S:ANY:Slot
         assert_eq!(race["lifePercent"], 98);
         assert_eq!(race["experiencePercent"], 120);
         assert_eq!(race["baseHp"], 22);
+        assert_eq!(race["infravision"], 3);
         assert_eq!(race["kinCategory"], "kin-glyph-112");
         assert_eq!(race["modifiers"]["strength"], 1);
         assert_eq!(race["modifiers"]["dexterity"], -1);

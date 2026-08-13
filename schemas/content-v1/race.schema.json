@@ -252,6 +252,12 @@
     "id": {
       "type": "string"
     },
+    "infravision": {
+      "default": 0,
+      "description": "Intrinsic infravision range in map cells.",
+      "format": "int32",
+      "type": "integer"
+    },
     "kinCategory": {
       "default": null,
       "description": "Actor category used by player-kin summons. Omission makes that race\nproduce an observed zero-result summon instead of guessing ancestry.",
