@@ -158,6 +158,7 @@ message-ability-cone-damage = { $ability }向前展开半径 { $radius } 的锥�
 message-ability-teleport = { $ability }令你从（{ $fromX }，{ $fromY }）瞬移到（{ $toX }，{ $toY }）。
 message-ability-summon = { $ability } 在附近空地召唤了 { $count } 个{ $actor }。
 message-ability-detect = { $ability }侦测到附近 { $count } 处“{ $category }”地形线索。
+message-ability-monsters-probed = { $ability }探测到 { $count } 个可见怪物。
 message-ability-terrain-transform = { $ability }把 { $count } 个地形格重塑为{ $terrain }。
 message-ability-effects = { $ability }依次结算了 { $count } 项效果。
 message-ability-create-ammunition = 你通过{ $ability }获得了{ $item } × { $quantity }。

@@ -158,6 +158,7 @@ message-ability-cone-damage = { $ability } fans forward across radius { $radius 
 message-ability-teleport = { $ability } carries you from ({ $fromX }, { $fromY }) to ({ $toX }, { $toY }).
 message-ability-summon = { $ability } calls { $count } { $actor } into nearby open spaces.
 message-ability-detect = { $ability } detects { $count } nearby { $category } terrain cues.
+message-ability-monsters-probed = { $ability } probes { $count } visible monsters.
 message-ability-terrain-transform = { $ability } reshapes { $count } terrain cells into { $terrain }.
 message-ability-effects = { $ability } resolves an ordered sequence of { $count } effects.
 message-ability-create-ammunition = { $ability } creates { $item } × { $quantity }.

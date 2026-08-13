@@ -2247,6 +2247,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "probe-monsters",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "concentrate",
               "type": "string"
             }
@@ -2622,7 +2635,14 @@
         "shatter",
         "freezing",
         "knockback",
-        "piercing"
+        "piercing",
+        "evil",
+        "holy",
+        "exploding",
+        "double",
+        "thunder",
+        "needle",
+        "final"
       ],
       "type": "string"
     },

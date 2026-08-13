@@ -2151,6 +2151,114 @@ kbd {
   width: min(48rem, calc(100vw - 2rem));
 }
 
+.monster-probe-dialog {
+  width: min(54rem, calc(100vw - 2rem));
+}
+
+.monster-probe-workspace {
+  display: grid;
+  min-height: 24rem;
+  max-height: calc(100vh - 7rem);
+  grid-template-columns: minmax(13rem, 0.8fr) minmax(18rem, 1.2fr);
+  overflow: hidden;
+}
+
+.monster-probe-list {
+  display: grid;
+  align-content: start;
+  gap: 0.18rem;
+  margin: 0;
+  border-right: 1px solid var(--ui-line-soft);
+  padding: 0.75rem;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.monster-probe-row {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  gap: 0.55rem;
+  align-items: center;
+  border: 1px solid transparent;
+  padding: 0.45rem 0.55rem;
+  color: var(--ui-text);
+  background: transparent;
+  text-align: left;
+}
+
+.monster-probe-row:hover,
+.monster-probe-row[data-selected="true"] {
+  border-color: #4d4738;
+  background: #191812;
+}
+
+.monster-probe-row:focus-visible {
+  outline: 1px solid var(--ui-accent);
+  outline-offset: -1px;
+}
+
+.monster-probe-glyph {
+  color: #d6c98f;
+  font-family: "Cascadia Mono", Consolas, monospace;
+  text-align: center;
+}
+
+.monster-probe-row-hp,
+.monster-probe-empty {
+  color: var(--ui-faint);
+  font-family: "Cascadia Mono", Consolas, monospace;
+  font-size: 0.66rem;
+}
+
+.monster-probe-empty {
+  padding: 0.45rem 0.55rem;
+}
+
+.monster-probe-detail {
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.monster-probe-detail h3 {
+  margin: 0 0 0.75rem;
+  color: #eee5d3;
+  font-family: Georgia, "Songti SC", serif;
+}
+
+.monster-probe-stats {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.3rem 1rem;
+  margin: 0 0 1rem;
+}
+
+.monster-probe-stats dt,
+.monster-probe-group h4 {
+  color: var(--ui-accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.monster-probe-stats dd {
+  margin: 0;
+}
+
+.monster-probe-group + .monster-probe-group {
+  margin-top: 0.75rem;
+}
+
+.monster-probe-group h4,
+.monster-probe-group p {
+  margin: 0;
+}
+
+.monster-probe-group p {
+  margin-top: 0.25rem;
+  color: var(--ui-muted);
+  line-height: 1.5;
+}
+
 .mogaminator-dialog {
   width: min(55rem, calc(100vw - 2rem));
 }

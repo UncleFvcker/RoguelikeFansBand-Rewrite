@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v290`，机器可读政策固定在：
+当前逻辑基线是 `contract-v295`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -315,3 +315,9 @@ Random Telepathy、Nausea、Warning 与 Wraithform 复用变异移除、属性�
 升至 1.303.0。商店低概率库存增加公共初始化 RNG，save/state-hash 与物品投影也发生变化，
 因此全部 26 条 active fixture 刷新；捕获资格、生命检定、当前坐骑落马、释放敌对骰、恢复
 周期和 Unique 排除由 Core 聚焦测试覆盖，零 waiver。
+
+`contract-v293` 至 `contract-v295` 分三批增加狙击手共享底座、统一特殊射击事务与怪物
+探测投影。Commit 1 的专注和已探测种类使 Protocol 升至 1.196、State Hash Schema 升至
+v98，并刷新公共状态投影；Commit 2/3 只增加能力效果、typed event 与未正式绑定的运行时
+路径，最终 Protocol 为 1.198。后两批现有 26 条 fixture 均不进入狙击手能力路径，
+`verify-all` 零漂移，因此不刷新 assertions、零 waiver。

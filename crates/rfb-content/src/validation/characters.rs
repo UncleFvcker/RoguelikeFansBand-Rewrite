@@ -424,6 +424,7 @@ pub(super) fn validate_characters(
                                 ability.effect,
                                 crate::AbilityEffectDefinition::Concentrate
                                     | crate::AbilityEffectDefinition::SniperShot { .. }
+                                    | crate::AbilityEffectDefinition::ProbeMonsters
                             ) && class.sniping_profile.is_none())
                     })
                 || (activation.minimum_concentration != 0 && class.sniping_profile.is_none())

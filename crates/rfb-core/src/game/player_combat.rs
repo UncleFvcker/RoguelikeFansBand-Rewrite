@@ -27,6 +27,31 @@ fn concentrated_target_armor_class(armor_class: i32, concentration: u8) -> i32 {
     armor_class.saturating_mul(10_i32.saturating_sub(i32::from(concentration))) / 10
 }
 
+fn sniper_explosion_radius(concentration: u8) -> u8 {
+    (concentration.saturating_add(1) / 2).saturating_add(1)
+}
+
+fn roll_sniper_needle_vital_hit(
+    rng: &mut RfbRng,
+    target_level: u32,
+    concentration: u8,
+    unique: bool,
+) -> bool {
+    let inner_bound = u64::from(target_level) / u64::from(3_u8.saturating_add(concentration));
+    let inner = if inner_bound <= 1 {
+        1
+    } else {
+        rng.bounded(inner_bound) + 1
+    };
+    let outer_bound = inner.saturating_add(u64::from(8_u8.saturating_sub(concentration)));
+    let vital_hit = if outer_bound <= 1 {
+        true
+    } else {
+        rng.bounded(outer_bound) == 0
+    };
+    vital_hit && !unique
+}
+
 fn projectile_critical_chance(
     to_hit: i32,
     ranged_skill: i32,
@@ -54,11 +79,15 @@ fn projectile_critical_chance(
 fn sniper_shot_damage_multiplier(
     mode: ProjectileMode,
     concentration: u8,
+    slays: &BTreeMap<SlayTarget, SlayLevel>,
     brands: &BTreeSet<WeaponBrand>,
     light: ResistanceLevel,
     fire: ResistanceLevel,
     cold: ResistanceLevel,
+    electricity: ResistanceLevel,
     disintegrate: ResistanceLevel,
+    good: bool,
+    evil: bool,
     nonliving: bool,
 ) -> i32 {
     let focus = i32::from(concentration);
@@ -92,12 +121,42 @@ fn sniper_shot_damage_multiplier(
             }
             multiplier
         }
+        ProjectileMode::Sniper(SniperShotModeDefinition::Thunder)
+            if electricity != ResistanceLevel::Immune =>
+        {
+            let mut multiplier = 18 + 4 * focus;
+            if brands.contains(&WeaponBrand::Electricity) {
+                multiplier += 7;
+            }
+            multiplier
+        }
         ProjectileMode::Sniper(SniperShotModeDefinition::Shatter)
             if disintegrate == ResistanceLevel::Vulnerable || nonliving =>
         {
             15 + 2 * focus
         }
+        ProjectileMode::Sniper(SniperShotModeDefinition::Evil) if good => {
+            15 + 4 * focus + sniper_alignment_slay_bonus(slays, SlayTarget::Good)
+        }
+        ProjectileMode::Sniper(SniperShotModeDefinition::Holy) if evil => {
+            15 + 4 * focus
+                + if light == ResistanceLevel::Vulnerable {
+                    3 * focus
+                } else {
+                    0
+                }
+                + sniper_alignment_slay_bonus(slays, SlayTarget::Evil)
+        }
+        ProjectileMode::Sniper(SniperShotModeDefinition::Final) => 50,
         _ => 10,
+    }
+}
+
+fn sniper_alignment_slay_bonus(slays: &BTreeMap<SlayTarget, SlayLevel>, target: SlayTarget) -> i32 {
+    match slays.get(&target) {
+        Some(SlayLevel::Slay) => 5,
+        Some(SlayLevel::Kill) => 10,
+        None => 0,
     }
 }
 
@@ -115,12 +174,33 @@ impl ProjectileMode {
         )
     }
 
-    const fn always_breaks_ammunition(self) -> bool {
-        matches!(
-            self,
-            Self::Sniper(SniperShotModeDefinition::Shatter | SniperShotModeDefinition::Piercing)
-        )
+    const fn break_chance_override(self) -> Option<u8> {
+        match self {
+            Self::Sniper(
+                SniperShotModeDefinition::Shatter
+                | SniperShotModeDefinition::Piercing
+                | SniperShotModeDefinition::Exploding
+                | SniperShotModeDefinition::Needle
+                | SniperShotModeDefinition::Final,
+            ) => Some(100),
+            Self::Sniper(SniperShotModeDefinition::Evil | SniperShotModeDefinition::Holy) => {
+                Some(40)
+            }
+            _ => None,
+        }
     }
+}
+
+struct ProjectileShotOutcome {
+    trace: ProjectileTrace,
+    hit_body: bool,
+    fatal: bool,
+}
+
+#[derive(Default)]
+struct ProjectileCollisionOutcome {
+    knockback_landing: Option<Position>,
+    fatal: bool,
 }
 
 impl Game {
@@ -161,23 +241,105 @@ impl Game {
             events.push(DomainEvent::ProjectileUnavailable);
             return Ok(());
         };
-        let Some(path) = self.player_projectile_path_for_mode(&target, profile.range, mode) else {
-            events.push(DomainEvent::ProjectileTargetUnavailable);
-            return Ok(());
-        };
         let Some(ammo_item_id) = &profile.ammo_item_id else {
             events.push(DomainEvent::ProjectileAmmoUnavailable {
                 ammo_kind_id: profile.ammo_kind_id,
             });
             return Ok(());
         };
-        let Some(ammunition) = self.take_inventory_item(ammo_item_id)? else {
+        let ammo_item_id = ammo_item_id.clone();
+        let ammo_quantity = self
+            .items
+            .iter()
+            .find(|item| item.id == ammo_item_id && item.location == ItemLocation::Inventory)
+            .map_or(0, |item| item.quantity);
+        if ammo_quantity == 0 {
             events.push(DomainEvent::ProjectileAmmoUnavailable {
                 ammo_kind_id: profile.ammo_kind_id,
             });
             return Ok(());
+        }
+        let mode = if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Double)
+            && ammo_quantity < 2
+        {
+            ProjectileMode::Normal
+        } else {
+            mode
         };
-        let concentration = self.sniper_concentration;
+        let Some(path) = self.player_projectile_path_for_mode(&target, profile.range, mode) else {
+            events.push(DomainEvent::ProjectileTargetUnavailable);
+            return Ok(());
+        };
+        let starting_concentration = self.sniper_concentration;
+        let shot_concentration = if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Double)
+        {
+            starting_concentration.saturating_add(1) / 2
+        } else {
+            starting_concentration
+        };
+        let shot_count = if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Double) {
+            2
+        } else {
+            1
+        };
+        for _ in 0..shot_count {
+            let Some(ammunition) = self.take_inventory_item(&ammo_item_id)? else {
+                break;
+            };
+            let outcome = self.resolve_one_player_projectile(
+                &profile,
+                &path,
+                mode,
+                shot_concentration,
+                events,
+                changed,
+                removed_entities,
+            )?;
+            self.settle_projectile_ammunition(
+                ammunition,
+                outcome.trace.landing,
+                outcome.hit_body,
+                mode.break_chance_override()
+                    .unwrap_or(profile.ammo_break_chance_percent),
+                events,
+                changed,
+            );
+            if outcome.fatal {
+                break;
+            }
+        }
+        self.sniper_concentration = 0;
+        self.apply_ranged_easy_tiring_fatigue(7_500_i32.saturating_div(profile.base_shot));
+        if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Retreat) {
+            let radius = 10_u16.saturating_add(u16::from(starting_concentration).saturating_mul(2));
+            let candidates = self.random_teleport_candidates(radius);
+            if !candidates.is_empty() {
+                let index = usize::try_from(self.rng.bounded(candidates.len() as u64))
+                    .expect("bounded teleport candidate index must fit usize");
+                events.extend(self.relocate_player(candidates[index], changed));
+            }
+        }
+        if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Final) {
+            let slow_duration = i32::try_from(self.rng.bounded(7) + 7).unwrap_or(i32::MAX);
+            let stun_duration = i32::try_from(self.rng.bounded(25) + 1).unwrap_or(i32::MAX);
+            let source_id = self.player.kind_id.clone();
+            self.apply_player_melee_status(STATUS_SLOW, slow_duration, &source_id);
+            self.apply_player_melee_status(STATUS_STUN, stun_duration, &source_id);
+        }
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_one_player_projectile(
+        &mut self,
+        profile: &ResolvedProjectileProfile,
+        path: &[Position],
+        mode: ProjectileMode,
+        concentration: u8,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<ProjectileShotOutcome, CoreError> {
         let origin = self.player.position;
         let mut active_concentration = concentration;
         let mut impact = origin;
@@ -185,6 +347,7 @@ impl Game {
         let mut traversed = Vec::new();
         let mut collided = false;
         let mut broke_wall = false;
+        let mut fatal = false;
         for (path_index, position) in path.iter().copied().enumerate() {
             impact = position;
             let Some(terrain_index) = self.index(position) else {
@@ -221,6 +384,11 @@ impl Game {
             }
             landing = position;
             traversed.push(position);
+            if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Evil) {
+                self.glow[terrain_index] = false;
+                self.revealed_terrain.remove(&position);
+                changed.insert(position);
+            }
             if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Shining)
                 && !self.glow[terrain_index]
             {
@@ -253,9 +421,9 @@ impl Game {
                 landing,
                 traversed: traversed.clone(),
             };
-            if let Some(knockback_landing) = self.resolve_player_projectile_collision(
+            let outcome = self.resolve_player_projectile_collision(
                 target_index,
-                &profile,
+                profile,
                 mode,
                 active_concentration,
                 trace,
@@ -263,9 +431,11 @@ impl Game {
                 events,
                 changed,
                 removed_entities,
-            )? {
+            )?;
+            if let Some(knockback_landing) = outcome.knockback_landing {
                 landing = knockback_landing;
             }
+            fatal = outcome.fatal;
             if mode != ProjectileMode::Sniper(SniperShotModeDefinition::Piercing) {
                 break;
             }
@@ -285,30 +455,11 @@ impl Game {
                 trace: trace.clone(),
             });
         }
-        self.sniper_concentration = 0;
-        self.settle_projectile_ammunition(
-            ammunition,
-            trace.landing,
-            collided || broke_wall || mode.always_breaks_ammunition(),
-            if mode.always_breaks_ammunition() {
-                100
-            } else {
-                profile.ammo_break_chance_percent
-            },
-            events,
-            changed,
-        );
-        self.apply_ranged_easy_tiring_fatigue(7_500_i32.saturating_div(profile.base_shot));
-        if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Retreat) {
-            let radius = 10_u16.saturating_add(u16::from(concentration).saturating_mul(2));
-            let candidates = self.random_teleport_candidates(radius);
-            if !candidates.is_empty() {
-                let index = usize::try_from(self.rng.bounded(candidates.len() as u64))
-                    .expect("bounded teleport candidate index must fit usize");
-                events.extend(self.relocate_player(candidates[index], changed));
-            }
-        }
-        Ok(())
+        Ok(ProjectileShotOutcome {
+            trace,
+            hit_body: collided || broke_wall,
+            fatal,
+        })
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -323,7 +474,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<Option<Position>, CoreError> {
+    ) -> Result<ProjectileCollisionOutcome, CoreError> {
         let definition = self
             .actor_runtime_definition(&self.entities[index])
             .expect("projectile target definition must remain available")
@@ -391,7 +542,48 @@ impl Game {
                 target_kind_id,
                 trace,
             });
-            return Ok(None);
+            return Ok(ProjectileCollisionOutcome::default());
+        }
+        if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Holy)
+            && let Some(terrain_index) = self.index(self.entities[index].position)
+        {
+            self.glow[terrain_index] = true;
+            changed.insert(self.entities[index].position);
+        }
+        if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Needle) {
+            let unique = definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
+            let vital_hit = roll_sniper_needle_vital_hit(
+                &mut self.rng,
+                definition.level,
+                concentration,
+                unique,
+            );
+            let damage = resolve_damage(
+                DamagePacket::new(
+                    if vital_hit {
+                        self.entities[index].hp.saturating_add(1)
+                    } else {
+                        1
+                    },
+                    DamageType::Physical,
+                ),
+                ResistanceLevel::Normal,
+            );
+            return self.commit_player_projectile_damage(
+                index,
+                target_kind_id,
+                target_entity_id,
+                damage,
+                trace,
+                mode,
+                remaining_path,
+                events,
+                changed,
+                removed_entities,
+            );
         }
         let ammunition_critical_multiplier = self.roll_projectile_critical_multiplier(
             profile.ammunition_weight_tenths_pound,
@@ -405,13 +597,19 @@ impl Game {
             .max(sniper_shot_damage_multiplier(
                 mode,
                 concentration,
+                &profile.ammunition_slays,
                 &profile.ammunition_brands,
                 self.entities[index].resistances.level(DamageType::Light),
                 self.entities[index].resistances.level(DamageType::Fire),
                 self.entities[index].resistances.level(DamageType::Cold),
                 self.entities[index]
                     .resistances
+                    .level(DamageType::Electricity),
+                self.entities[index]
+                    .resistances
                     .level(DamageType::Disintegrate),
+                actor_matches_category(&definition, "good"),
+                actor_matches_category(&definition, "evil"),
                 actor_matches_category(&definition, "nonliving"),
             ));
         let raw_damage = projectile_raw_damage(
@@ -424,6 +622,17 @@ impl Game {
             profile.launcher_to_damage,
         )
         .max(0);
+        if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Exploding) {
+            return self.resolve_sniper_explosion(
+                self.entities[index].position,
+                sniper_explosion_radius(concentration),
+                raw_damage,
+                trace,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         let resistance = self.entities[index].resistances.level(profile.damage_type);
         let damage = resolve_armored_damage(
             raw_damage,
@@ -431,6 +640,34 @@ impl Game {
             target.armor_class.value,
             resistance,
         );
+        self.commit_player_projectile_damage(
+            index,
+            target_kind_id,
+            target_entity_id,
+            damage,
+            trace,
+            mode,
+            remaining_path,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn commit_player_projectile_damage(
+        &mut self,
+        index: usize,
+        target_kind_id: String,
+        target_entity_id: String,
+        damage: DamageOutcome,
+        trace: ProjectileTrace,
+        mode: ProjectileMode,
+        remaining_path: &[Position],
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<ProjectileCollisionOutcome, CoreError> {
         let application =
             plan_damage_application(&self.entities[index], damage, FatalityPolicy::AtOrBelowZero);
         commit_damage_application(&mut self.entities[index], &application);
@@ -455,21 +692,96 @@ impl Game {
                 changed,
                 removed_entities,
             )?;
-            return Ok(None);
+            return Ok(ProjectileCollisionOutcome {
+                fatal: true,
+                ..ProjectileCollisionOutcome::default()
+            });
         }
         if mode == ProjectileMode::Sniper(SniperShotModeDefinition::Knockback) {
             let distance = 3_usize.saturating_add(
                 usize::try_from(self.rng.bounded(5) + 1)
                     .expect("knockback distance must fit usize"),
             );
-            return Ok(self.knockback_projectile_target(
-                &target_entity_id,
-                remaining_path,
-                distance,
-                changed,
-            ));
+            return Ok(ProjectileCollisionOutcome {
+                knockback_landing: self.knockback_projectile_target(
+                    &target_entity_id,
+                    remaining_path,
+                    distance,
+                    changed,
+                ),
+                fatal: false,
+            });
         }
-        Ok(None)
+        Ok(ProjectileCollisionOutcome::default())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_sniper_explosion(
+        &mut self,
+        center: Position,
+        radius: u8,
+        raw_damage: i32,
+        trace: ProjectileTrace,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<ProjectileCollisionOutcome, CoreError> {
+        let (affected_positions, targets) = self.area_damage_targets(center, radius, None);
+        changed.extend(affected_positions);
+        let mut original_target_fatal = false;
+        for (target_entity_id, distance) in targets {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_entity_id)
+            else {
+                continue;
+            };
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .expect("explosion target definition must remain available")
+                .clone();
+            let target = self.actor_derived_stats(&self.entities[index], &definition, false);
+            let prepared = rfb_area_damage(raw_damage, distance);
+            let damage = resolve_armored_damage(
+                prepared,
+                DamageType::Physical,
+                target.armor_class.value,
+                self.entities[index].resistances.level(DamageType::Physical),
+            );
+            let application = plan_damage_application(
+                &self.entities[index],
+                damage,
+                FatalityPolicy::AtOrBelowZero,
+            );
+            commit_damage_application(&mut self.entities[index], &application);
+            events.push(DomainEvent::ProjectileHit {
+                target_kind_id: definition.id.clone(),
+                damage,
+                trace: trace.clone(),
+            });
+            self.wake_entity_after_damage(index, damage.applied, events);
+            if application.fatal {
+                original_target_fatal |= self.entities[index].position == center;
+                self.resolve_actor_death(
+                    index,
+                    DomainEvent::ProjectileSlew {
+                        target_kind_id: definition.id,
+                        damage,
+                        trace: trace.clone(),
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            } else {
+                self.resolve_monster_fear_aura(index, "hurt", true, events);
+            }
+        }
+        Ok(ProjectileCollisionOutcome {
+            fatal: original_target_fatal,
+            ..ProjectileCollisionOutcome::default()
+        })
     }
 
     fn knockback_projectile_target(
@@ -1649,15 +1961,17 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeSet;
+    use std::collections::{BTreeMap, BTreeSet};
 
-    use rfb_content::{SniperShotModeDefinition, WeaponBrand};
+    use rfb_content::{SlayLevel, SlayTarget, SniperShotModeDefinition, WeaponBrand};
 
     use crate::resistance::ResistanceLevel;
+    use crate::rng::RfbRng;
 
     use super::{
         ProjectileMode, concentrated_target_armor_class, projectile_critical_chance,
-        projectile_raw_damage, sniper_shot_damage_multiplier,
+        projectile_raw_damage, roll_sniper_needle_vital_hit, sniper_explosion_radius,
+        sniper_shot_damage_multiplier,
     };
 
     #[test]
@@ -1684,11 +1998,15 @@ mod tests {
             sniper_shot_damage_multiplier(
                 ProjectileMode::Sniper(SniperShotModeDefinition::Shining),
                 3,
+                &BTreeMap::new(),
                 &no_brands,
                 ResistanceLevel::Vulnerable,
                 ResistanceLevel::Normal,
                 ResistanceLevel::Normal,
                 ResistanceLevel::Normal,
+                ResistanceLevel::Normal,
+                false,
+                false,
                 false,
             ),
             23
@@ -1697,11 +2015,15 @@ mod tests {
             sniper_shot_damage_multiplier(
                 ProjectileMode::Sniper(SniperShotModeDefinition::Burning),
                 3,
+                &BTreeMap::new(),
                 &fire_brand,
                 ResistanceLevel::Normal,
                 ResistanceLevel::Vulnerable,
                 ResistanceLevel::Normal,
                 ResistanceLevel::Normal,
+                ResistanceLevel::Normal,
+                false,
+                false,
                 false,
             ),
             58
@@ -1710,11 +2032,15 @@ mod tests {
             sniper_shot_damage_multiplier(
                 ProjectileMode::Sniper(SniperShotModeDefinition::Burning),
                 3,
+                &BTreeMap::new(),
                 &fire_brand,
                 ResistanceLevel::Normal,
                 ResistanceLevel::Immune,
                 ResistanceLevel::Normal,
                 ResistanceLevel::Normal,
+                ResistanceLevel::Normal,
+                false,
+                false,
                 false,
             ),
             10
@@ -1723,11 +2049,15 @@ mod tests {
             sniper_shot_damage_multiplier(
                 ProjectileMode::Sniper(SniperShotModeDefinition::Freezing),
                 2,
+                &BTreeMap::new(),
                 &BTreeSet::from([WeaponBrand::Cold]),
                 ResistanceLevel::Normal,
                 ResistanceLevel::Normal,
                 ResistanceLevel::Vulnerable,
                 ResistanceLevel::Normal,
+                ResistanceLevel::Normal,
+                false,
+                false,
                 false,
             ),
             52
@@ -1736,14 +2066,122 @@ mod tests {
             sniper_shot_damage_multiplier(
                 ProjectileMode::Sniper(SniperShotModeDefinition::Shatter),
                 3,
+                &BTreeMap::new(),
                 &no_brands,
                 ResistanceLevel::Normal,
                 ResistanceLevel::Normal,
                 ResistanceLevel::Normal,
                 ResistanceLevel::Normal,
+                ResistanceLevel::Normal,
+                false,
+                false,
                 true,
             ),
             21
         );
+    }
+
+    #[test]
+    fn advanced_sniper_multipliers_use_the_stronger_special_or_ammunition_modifier() {
+        let slays = BTreeMap::from([
+            (SlayTarget::Good, SlayLevel::Kill),
+            (SlayTarget::Evil, SlayLevel::Slay),
+        ]);
+        let brands = BTreeSet::from([WeaponBrand::Electricity]);
+        let normal = ResistanceLevel::Normal;
+        assert_eq!(
+            sniper_shot_damage_multiplier(
+                ProjectileMode::Sniper(SniperShotModeDefinition::Evil),
+                4,
+                &slays,
+                &brands,
+                normal,
+                normal,
+                normal,
+                normal,
+                normal,
+                true,
+                false,
+                false,
+            ),
+            41
+        );
+        assert_eq!(
+            sniper_shot_damage_multiplier(
+                ProjectileMode::Sniper(SniperShotModeDefinition::Holy),
+                4,
+                &slays,
+                &brands,
+                ResistanceLevel::Vulnerable,
+                normal,
+                normal,
+                normal,
+                normal,
+                false,
+                true,
+                false,
+            ),
+            48
+        );
+        assert_eq!(
+            sniper_shot_damage_multiplier(
+                ProjectileMode::Sniper(SniperShotModeDefinition::Thunder),
+                3,
+                &slays,
+                &brands,
+                normal,
+                normal,
+                normal,
+                normal,
+                normal,
+                false,
+                false,
+                false,
+            ),
+            37
+        );
+        assert_eq!(
+            sniper_shot_damage_multiplier(
+                ProjectileMode::Sniper(SniperShotModeDefinition::Final),
+                7,
+                &slays,
+                &brands,
+                normal,
+                normal,
+                normal,
+                normal,
+                normal,
+                false,
+                false,
+                false,
+            ),
+            50
+        );
+    }
+
+    #[test]
+    fn explosion_radius_and_needle_nested_rng_follow_original_boundaries() {
+        assert_eq!(
+            [0, 1, 2, 3, 4, 7].map(sniper_explosion_radius),
+            [1, 2, 2, 3, 3, 5]
+        );
+
+        let mut low_level = RfbRng::seeded(1);
+        let draws_before = low_level.draw_counter;
+        let _ = roll_sniper_needle_vital_hit(&mut low_level, 1, 7, false);
+        assert_eq!(low_level.draw_counter, draws_before + 1);
+
+        let seed = (0..10_000)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                roll_sniper_needle_vital_hit(&mut rng, 50, 7, false)
+            })
+            .expect("a deterministic vital-hit seed should exist");
+        let mut ordinary = RfbRng::seeded(seed);
+        assert!(roll_sniper_needle_vital_hit(&mut ordinary, 50, 7, false));
+        let ordinary_draws = ordinary.draw_counter;
+        let mut unique = RfbRng::seeded(seed);
+        assert!(!roll_sniper_needle_vital_hit(&mut unique, 50, 7, true));
+        assert_eq!(unique.draw_counter, ordinary_draws);
     }
 }

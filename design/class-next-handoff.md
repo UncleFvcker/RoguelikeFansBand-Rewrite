@@ -214,3 +214,18 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `Projectile` 地形来源；穿透每继续越过一个碰撞目标才消耗一级专注。
 - 协调版本：pack `1.312.0`、Protocol `1.197`、State Hash Schema v98、save v1、
   active baseline `contract-v294`。
+
+## main 当前批次：狙击手 Commit 3 高级射击与探测怪物
+
+- 未新增正式 item、ability、material、affix、class 或 build ID；正式狙击手及其 16 个
+  职业能力仍由后续单职业内容提交拥有，其他内容分支无需预留身份。
+- `sniper-shot` 已覆盖邪恶、神圣、爆炸、双重、雷霆、针刺与圣星之箭；全部继续复用唯一
+  projectile 事务。特殊倍率和弹药品牌/杀戮倍率取最大值，再应用专注增伤；爆炸为物理
+  范围伤害，双重射击共享一次行动，针刺保留嵌套 RNG 与 Unique/Unique2 免疫，圣星之箭
+  射击后对玩家施加原版减速与震慑。
+- `probe-monsters` 只收集既可见又有投射视线的非模糊怪物，逐实体投影生命、速度、AC、
+  阵营、抗性、状态免疫、近战与施法能力，并记录稳定 actor kind lore。Web 收到 typed
+  outcome 后打开可浏览的探测面板。
+- 协调版本：pack `1.312.0`、Protocol `1.198`、State Hash Schema v98、save v1、
+  active baseline `contract-v295`。现有 26 条 fixture 不进入未正式绑定的狙击手能力路径，
+  因而只复验、不刷新断言。

@@ -663,3 +663,9 @@ save 容器保持 v1。
 特殊射击继续复用 `CastAbility`、现有目标选择和普通 projectile 事务；射程与行动能量取自
 当前发射器，不增加新的命令、待处理输入或持久状态。State Hash Schema 保持 v98，save
 容器保持 v1。
+
+协议 1.198 / contract-v295 为 `sniper-shot` 增加邪恶、神圣、爆炸、双重、雷霆、针刺和
+圣星之箭七种模式，并增加无参数 `probe-monsters` 效果及逐实体的怪物探测结算。探测结果
+投影稳定实体/种类 ID、位置、生命、速度、AC、阵营、抗性、状态免疫、近战与施法能力；
+已探测种类继续使用 contract-v293 已持久化的 `probedActorKindIds`。没有新增命令、待处理
+输入或权威状态结构，State Hash Schema 保持 v98，save 容器保持 v1。

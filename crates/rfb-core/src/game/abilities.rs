@@ -666,6 +666,9 @@ impl Game {
                 changed,
                 removed_entities,
             )?,
+            (AbilityEffectDefinition::ProbeMonsters, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_probe_monsters_effect(&ability, events, changed);
+            }
             (AbilityEffectDefinition::Earthquake { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_earthquake_effect(&ability, events, changed, removed_entities)?;
             }
@@ -5942,6 +5945,97 @@ impl Game {
         Ok(())
     }
 
+    pub(super) fn resolve_player_probe_monsters_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let mut monsters = Vec::new();
+        if !self.player_has_status_kind(STATUS_HALLUCINATION) {
+            let indices = self
+                .entities
+                .iter()
+                .enumerate()
+                .filter(|(_, entity)| {
+                    entity.hp > 0
+                        && self.entity_is_visible_to_player(entity)
+                        && !self.entity_is_fuzzy_to_player(entity)
+                        && has_line_of_effect(self, self.player.position, entity.position)
+                })
+                .map(|(index, _)| index)
+                .collect::<Vec<_>>();
+            for index in indices {
+                if self.entities[index].appearance_kind_id.take().is_some() {
+                    changed.insert(self.entities[index].position);
+                }
+                let entity = self.entities[index].clone();
+                let definition = self
+                    .actor_runtime_definition(&entity)
+                    .expect("probed actor definition must remain available")
+                    .clone();
+                self.probed_actor_kind_ids.insert(definition.id.clone());
+                let stats = self.actor_derived_stats(&entity, &definition, false);
+                let good = definition.tags.iter().any(|tag| tag == "good");
+                let evil = definition.tags.iter().any(|tag| tag == "evil");
+                let alignment = match (good, evil) {
+                    (true, true) => MonsterAlignmentDto::GoodAndEvil,
+                    (true, false) => MonsterAlignmentDto::Good,
+                    (false, true) => MonsterAlignmentDto::Evil,
+                    (false, false) => MonsterAlignmentDto::Neutral,
+                };
+                let faction = if self.actor_is_player_aligned(&entity) {
+                    rfb_protocol::EntityFactionDto::Player
+                } else if self.actor_is_friendly(&entity) {
+                    rfb_protocol::EntityFactionDto::Friendly
+                } else {
+                    rfb_protocol::EntityFactionDto::Hostile
+                };
+                let mut status_immunities = definition
+                    .status_immunities
+                    .iter()
+                    .cloned()
+                    .collect::<BTreeSet<_>>();
+                for status in &entity.statuses {
+                    status_immunities.extend(status.granted_status_immunities.iter().cloned());
+                }
+                let mut ability_ids = definition
+                    .monster_casting
+                    .as_ref()
+                    .map(|casting| {
+                        casting
+                            .abilities
+                            .iter()
+                            .map(|candidate| candidate.ability_id.clone())
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default();
+                ability_ids.sort();
+                ability_ids.dedup();
+                monsters.push(ProbedMonsterDto {
+                    entity_id: entity.id,
+                    kind_id: definition.id.clone(),
+                    glyph: definition.glyph.clone(),
+                    position: entity.position,
+                    hp: entity.hp,
+                    max_hp: entity.max_hp,
+                    speed: derived_speed(&stats.speed),
+                    armor_class: stats.armor_class.value,
+                    alignment,
+                    faction,
+                    resistances: entity.resistances.to_dtos(),
+                    status_immunities: status_immunities.into_iter().collect(),
+                    melee_routine: actor_melee_routine_dto(&definition),
+                    ability_ids,
+                });
+            }
+        }
+        events.push(DomainEvent::AbilityMonstersProbed {
+            ability_id: ability.id.clone(),
+            resolution: AbilityMonsterProbeResolutionDto { monsters },
+        });
+    }
+
     pub(super) fn resolve_player_detection_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -6360,6 +6454,8 @@ impl Game {
                     target: target.clone(),
                 })
             }
+            AbilityEffectDefinition::ProbeMonsters => matches!(target, TargetSelection::SelfTarget)
+                .then_some(AbilityTargetPlan::SelfTarget),
             AbilityEffectDefinition::Recall { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability

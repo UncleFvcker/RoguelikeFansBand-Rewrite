@@ -105,7 +105,16 @@ fn sniping_profiles_and_concentration_requirements_are_strict() {
     shot.effect = AbilityEffectDefinition::SniperShot {
         mode: SniperShotModeDefinition::Shining,
     };
+    let mut probe = shot.clone();
+    probe.id = "test.ability.sniper-probe".to_owned();
+    probe.target = AbilityTargetDefinition {
+        modes: vec![AbilityTargetModeDefinition::SelfTarget],
+        range: 0,
+        requires_line_of_effect: false,
+    };
+    probe.effect = AbilityEffectDefinition::ProbeMonsters;
     valid.abilities.push(shot);
+    valid.abilities.push(probe);
     let archer = valid
         .classes
         .iter_mut()
@@ -115,6 +124,14 @@ fn sniping_profiles_and_concentration_requirements_are_strict() {
     archer.abilities[0].ability_id = "test.ability.sniper-shot".to_owned();
     archer.abilities[0].minimum_concentration = 1;
     archer.abilities[0].hit_point_cost = 1;
+    let mut probe_binding = archer.abilities[0].clone();
+    probe_binding.ability_id = "test.ability.sniper-probe".to_owned();
+    probe_binding.minimum_level = 15;
+    probe_binding.governing_attribute = Some(TechniqueAttribute::Intelligence);
+    probe_binding.minimum_concentration = 0;
+    probe_binding.hit_point_cost = 20;
+    probe_binding.base_failure_percent = 80;
+    archer.abilities.push(probe_binding);
     assert!(validate_and_normalize(&mut valid).is_ok());
 
     let mut no_profile = artifact.content.clone();

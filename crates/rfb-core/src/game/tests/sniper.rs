@@ -10,6 +10,7 @@ const SNIPER_BUILD_ID: &str = "test.build.sniper";
 const CONCENTRATE_ABILITY_ID: &str = "test.ability.sniper-concentrate";
 const TECHNIQUE_ABILITY_ID: &str = "test.ability.sniper-technique";
 const SHINING_SHOT_ABILITY_ID: &str = "test.ability.sniper-shining-shot";
+const PROBE_ABILITY_ID: &str = "test.ability.sniper-probe";
 
 fn sniper_game(seed: u64) -> Game {
     static CONTENT: OnceLock<Arc<ContentCatalog>> = OnceLock::new();
@@ -63,10 +64,15 @@ fn sniper_game(seed: u64) -> Game {
             shining_shot.effect = AbilityEffectDefinition::SniperShot {
                 mode: SniperShotModeDefinition::Shining,
             };
+            let mut probe = concentrate.clone();
+            probe.id = PROBE_ABILITY_ID.to_owned();
+            probe.name_key = "test-sniper-probe-name".to_owned();
+            probe.description_key = "test-sniper-probe-description".to_owned();
+            probe.effect = AbilityEffectDefinition::ProbeMonsters;
             artifact
                 .content
                 .abilities
-                .extend([concentrate, technique, shining_shot]);
+                .extend([concentrate, technique, shining_shot, probe]);
 
             let mut class = artifact
                 .content
@@ -126,6 +132,18 @@ fn sniper_game(seed: u64) -> Game {
                     minimum_concentration: 1,
                     hit_point_cost: 1,
                     base_failure_percent: 0,
+                    minimum_failure_percent: 0,
+                },
+                ClassAbilityDefinition {
+                    ability_id: PROBE_ABILITY_ID.to_owned(),
+                    minimum_level: 15,
+                    ui_group_name_key: None,
+                    governing_attribute: Some(TechniqueAttribute::Intelligence),
+                    resource_id: None,
+                    resource_cost: 0,
+                    minimum_concentration: 0,
+                    hit_point_cost: 20,
+                    base_failure_percent: 80,
                     minimum_failure_percent: 0,
                 },
             ];
@@ -632,6 +650,217 @@ fn retreat_uses_focus_scaled_range_and_special_abilities_use_shot_energy() {
     assert_eq!(
         special.world_tick - tick_before,
         u32::try_from((expected_energy + energy_gain - 1) / energy_gain).unwrap()
+    );
+}
+
+#[test]
+fn double_shot_uses_two_instances_and_degrades_to_one_when_ammunition_is_short() {
+    let mut double = sniper_game(15);
+    prepare_shooting_line(&mut double);
+    double.sniper_concentration = 5;
+    let serial_before = double.next_item_instance_serial;
+    fire_mode(&mut double, SniperShotModeDefinition::Double);
+    assert_eq!(
+        double
+            .items
+            .iter()
+            .find(|item| item.id == "test.sniper-bolt")
+            .expect("remaining bolt stack")
+            .quantity,
+        18
+    );
+    assert_eq!(double.next_item_instance_serial, serial_before + 2);
+    assert_eq!(
+        double
+            .items
+            .iter()
+            .filter(|item| {
+                item.kind_id == "demo.item.bolt" && matches!(item.location, ItemLocation::Ground(_))
+            })
+            .count(),
+        2
+    );
+    assert_eq!(double.sniper_concentration, 0);
+
+    let mut fallback = sniper_game(16);
+    prepare_shooting_line(&mut fallback);
+    fallback
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.sniper-bolt")
+        .expect("bolt stack")
+        .quantity = 1;
+    let serial_before = fallback.next_item_instance_serial;
+    fire_mode(&mut fallback, SniperShotModeDefinition::Double);
+    assert_eq!(fallback.next_item_instance_serial, serial_before);
+    assert_eq!(
+        fallback
+            .items
+            .iter()
+            .filter(|item| {
+                item.kind_id == "demo.item.bolt" && matches!(item.location, ItemLocation::Ground(_))
+            })
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn exploding_shot_uses_focus_radius_and_final_shot_applies_original_recoil() {
+    let mut explosion = sniper_game(17);
+    prepare_shooting_line(&mut explosion);
+    for y in 7..=13 {
+        for x in 10..=18 {
+            replace_terrain(&mut explosion, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    push_durable_sheep(
+        &mut explosion,
+        "test.explosion.center",
+        Position { x: 12, y: 10 },
+    );
+    push_durable_sheep(
+        &mut explosion,
+        "test.explosion.inside",
+        Position { x: 12, y: 13 },
+    );
+    push_durable_sheep(
+        &mut explosion,
+        "test.explosion.outside",
+        Position { x: 16, y: 10 },
+    );
+    explosion.sniper_concentration = 3;
+    let hit_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) >= 10
+        })
+        .expect("a normal projectile hit seed should exist");
+    explosion.rng = RfbRng::seeded(hit_seed);
+    fire_mode(&mut explosion, SniperShotModeDefinition::Exploding);
+    assert!(
+        explosion
+            .entities
+            .iter()
+            .find(|actor| actor.id == "test.explosion.inside")
+            .expect("inside target")
+            .hp
+            < 1_000
+    );
+    assert_eq!(
+        explosion
+            .entities
+            .iter()
+            .find(|actor| actor.id == "test.explosion.outside")
+            .expect("outside target")
+            .hp,
+        1_000
+    );
+
+    let mut final_shot = sniper_game(18);
+    prepare_shooting_line(&mut final_shot);
+    let events = fire_mode(&mut final_shot, SniperShotModeDefinition::Final);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::ProjectileAmmoRecovered { .. }))
+    );
+    let slow = final_shot
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_SLOW)
+        .expect("final shot should slow the player");
+    let stun = final_shot
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_STUN)
+        .expect("final shot should stun the player");
+    assert!((7..=13).contains(&slow.remaining_ticks));
+    assert!((1..=25).contains(&stun.remaining_ticks));
+}
+
+#[test]
+fn probe_projects_each_visible_projectable_monster_and_records_lore_by_kind() {
+    let mut game = sniper_game(19);
+    prepare_shooting_line(&mut game);
+    for y in 9..=11 {
+        for x in 10..=16 {
+            let position = Position { x, y };
+            replace_terrain(&mut game, position, "demo.terrain.floor");
+            let index = game.index(position).expect("probe cell");
+            game.glow[index] = true;
+        }
+    }
+    push_durable_sheep(&mut game, "test.probe.one", Position { x: 12, y: 10 });
+    push_durable_sheep(&mut game, "test.probe.two", Position { x: 12, y: 11 });
+    replace_terrain(&mut game, Position { x: 13, y: 10 }, "demo.terrain.wall");
+    push_durable_sheep(&mut game, "test.probe.blocked", Position { x: 15, y: 10 });
+    game.progress.level = 15;
+    game.player.hp = 50;
+    game.player.max_hp = 50;
+    game.debug_ability_casts_succeed = true;
+    let projected_ability = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == PROBE_ABILITY_ID)
+        .expect("probe should be projected at level fifteen");
+    assert_eq!(projected_ability.minimum_level, 15);
+    assert_eq!(projected_ability.hit_point_cost, 20);
+    assert_eq!(projected_ability.resource_id, None);
+    assert!(matches!(
+        projected_ability.effects.as_slice(),
+        [AbilityEffectSpecDto::ProbeMonsters]
+    ));
+
+    let events = resolve_ability(&mut game, PROBE_ABILITY_ID, TargetSelection::SelfTarget);
+    let resolution = events
+        .iter()
+        .find_map(|event| match event {
+            DomainEvent::AbilityMonstersProbed { resolution, .. } => Some(resolution),
+            _ => None,
+        })
+        .expect("probe result should be emitted");
+    let projected = events
+        .iter()
+        .find(|event| matches!(event, DomainEvent::AbilityMonstersProbed { .. }))
+        .expect("probe event")
+        .clone()
+        .into_dto();
+    assert_eq!(projected.kind, "ability.monsters-probed");
+    assert!(matches!(
+        projected.outcome,
+        Some(GameEventOutcomeDto::AbilityMonsterProbe { ref resolution })
+            if resolution.monsters.len() == 2
+    ));
+    assert_eq!(
+        resolution
+            .monsters
+            .iter()
+            .map(|monster| monster.entity_id.as_str())
+            .collect::<Vec<_>>(),
+        ["test.probe.one", "test.probe.two"]
+    );
+    assert!(resolution.monsters.iter().all(|monster| {
+        monster.kind_id == "demo.actor.sheep"
+            && monster.hp == 1_000
+            && monster.max_hp == 1_000
+            && monster.melee_routine.blows.len()
+                == game
+                    .content
+                    .actor("demo.actor.sheep")
+                    .expect("sheep definition")
+                    .melee_routine
+                    .as_ref()
+                    .map_or(0, |routine| routine.blows.len())
+    }));
+    assert_eq!(game.player.hp, 30);
+    assert_eq!(
+        game.probed_actor_kind_ids,
+        BTreeSet::from(["demo.actor.sheep".to_owned()])
     );
 }
 

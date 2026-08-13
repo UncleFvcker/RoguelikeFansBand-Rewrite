@@ -255,6 +255,13 @@ pub enum SniperShotModeDefinition {
     Freezing,
     Knockback,
     Piercing,
+    Evil,
+    Holy,
+    Exploding,
+    Double,
+    Thunder,
+    Needle,
+    Final,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -668,6 +675,7 @@ pub enum AbilityEffectDefinition {
     SniperShot {
         mode: SniperShotModeDefinition,
     },
+    ProbeMonsters,
     Concentrate,
     Rodeo,
     NoOp {

@@ -118,6 +118,11 @@ export function createPresentationFormatter(
         return localization.format("message-ability-target-unavailable", {
           ability: contentName(event.args.target),
         });
+      case "ability-monsters-probed":
+        return localization.format("message-ability-monsters-probed", {
+          ability: contentName(event.args.target),
+          count: event.args.count ?? "0",
+        });
       case "ability-landed":
         return localization.format("message-ability-landed", {
           ability: contentName(event.args.target),

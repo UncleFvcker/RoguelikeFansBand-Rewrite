@@ -5,14 +5,14 @@ use std::collections::BTreeMap;
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBeamDamageResolutionDto, AbilityCastResolutionDto,
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
-    AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
-    AbilityVisibleDamageResolutionDto, CheckResolutionDto, Direction, GameEventDto,
-    GameEventOutcomeDto, HealingResolutionDto, ItemCurseRemovalResolutionDto,
-    ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentResolutionDto,
-    ItemIdentifyResolutionDto, ItemQualityDto, MonsterAbilityCastResolutionDto,
-    MonsterAbilityDecisionResolutionDto, MonsterDisplacementResolutionDto, Position,
-    ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
-    SummonCommandModeDto, SummonCommandResolutionDto,
+    AbilityMonsterProbeResolutionDto, AbilitySummonResolutionDto, AbilityTeleportResolutionDto,
+    AbilityTerrainTransformResolutionDto, AbilityVisibleDamageResolutionDto, CheckResolutionDto,
+    Direction, GameEventDto, GameEventOutcomeDto, HealingResolutionDto,
+    ItemCurseRemovalResolutionDto, ItemCurseResolutionDto, ItemCurseSeverityDto,
+    ItemEnchantmentResolutionDto, ItemIdentifyResolutionDto, ItemQualityDto,
+    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
+    MonsterDisplacementResolutionDto, Position, ProjectileTraceDto, ResourceRecoveryResolutionDto,
+    RestResolutionDto, RestStopReasonDto, SummonCommandModeDto, SummonCommandResolutionDto,
 };
 
 use crate::{
@@ -132,6 +132,10 @@ pub(crate) enum DomainEvent {
     },
     AbilityCastSucceeded {
         resolution: AbilityCastResolutionDto,
+    },
+    AbilityMonstersProbed {
+        ability_id: String,
+        resolution: AbilityMonsterProbeResolutionDto,
     },
     AbilityTargetUnavailable {
         ability_id: String,
@@ -1541,6 +1545,18 @@ impl DomainEvent {
                 "ability-cast-success",
                 [("target", resolution.ability_id.clone())],
                 GameEventOutcomeDto::AbilityCast { resolution },
+            ),
+            Self::AbilityMonstersProbed {
+                ability_id,
+                resolution,
+            } => dto_with_outcome(
+                "ability.monsters-probed",
+                "ability-monsters-probed",
+                [
+                    ("target", ability_id),
+                    ("count", resolution.monsters.len().to_string()),
+                ],
+                GameEventOutcomeDto::AbilityMonsterProbe { resolution },
             ),
             Self::AbilityTargetUnavailable { ability_id } => dto(
                 "ability.target-unavailable",

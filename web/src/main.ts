@@ -51,6 +51,7 @@ import { HomePanel } from "./home-panel";
 import { TaskServicePanel } from "./task-service-panel";
 import { ObjectListPanel } from "./object-list";
 import { MogaminatorEditor } from "./mogaminator-editor";
+import { MonsterProbePanel } from "./monster-probe-panel";
 
 const core = new TauriNativeTransport();
 const crashDiagnostics = new DesktopCrashDiagnostics();
@@ -138,6 +139,14 @@ const objectListPanel = new ObjectListPanel({
   visibleItemName,
   onTravel: (position) => void inputController.travelLocalTo(position),
 });
+const monsterProbePanel = new MonsterProbePanel({
+  document,
+  window,
+  localization,
+  contentName,
+  damageTypeName,
+  statusName,
+});
 const journeyGuidance = new JourneyGuidance({
   dom: appDom,
   localization,
@@ -165,6 +174,7 @@ const settingsPanel = new SettingsPanel({
     homePanel.localize();
     taskServicePanel.localize();
     objectListPanel.localize();
+    monsterProbePanel.localize();
     mogaminatorEditor?.localize();
     messagePanel.render();
   },
@@ -195,6 +205,7 @@ const gameSession = new GameSession({
     taskServicePanel.render(update);
     mogaminatorEditor?.render(update.mogaminator);
     promptMogaminatorQuery(update.mogaminator);
+    monsterProbePanel.observe(update.events);
     for (const event of update.events) addGameEvent(event);
     journeyGuidance.observeCommand(command, previous, update);
     journeyResult.renderUpdate(update);
@@ -417,6 +428,7 @@ shopPanel.install();
 homePanel.install();
 taskServicePanel.install();
 objectListPanel.install();
+monsterProbePanel.install();
 mogaminatorEditor.install();
 journeyGuidance.install();
 journeyResult.install();
@@ -436,6 +448,7 @@ window.addEventListener("beforeunload", () => {
   homePanel.dispose();
   taskServicePanel.dispose();
   objectListPanel.dispose();
+  monsterProbePanel.dispose();
   mogaminatorEditor?.dispose();
   settingsPanel.dispose();
   inputController.dispose();
@@ -548,6 +561,7 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   inputController.cancelTargeting(false);
   inputController.resetLocalTravel();
   objectListPanel.close();
+  monsterProbePanel.close();
   mogaminatorEditor?.close();
   shopPanel.reset();
   homePanel.reset();
@@ -597,6 +611,7 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   inputController.cancelTargeting(false);
   inputController.resetLocalTravel();
   objectListPanel.close();
+  monsterProbePanel.close();
   mogaminatorEditor?.close();
   shopPanel.reset();
   homePanel.reset();
@@ -663,6 +678,7 @@ function showSessionView(view: "title" | "new-game" | "load"): void {
   inputController.cancelTargeting(false);
   inputController.resetLocalTravel();
   objectListPanel.close();
+  monsterProbePanel.close();
   mogaminatorEditor?.close();
   shopPanel.reset();
   homePanel.reset();

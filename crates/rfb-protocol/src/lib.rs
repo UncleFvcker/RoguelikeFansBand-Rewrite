@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.197";
+pub const PROTOCOL_VERSION: &str = "1.198";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -882,6 +882,13 @@ pub enum SniperShotModeDto {
     Freezing,
     Knockback,
     Piercing,
+    Evil,
+    Holy,
+    Exploding,
+    Double,
+    Thunder,
+    Needle,
+    Final,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -1169,6 +1176,7 @@ pub enum AbilityEffectSpecDto {
     SniperShot {
         mode: SniperShotModeDto,
     },
+    ProbeMonsters,
     Concentrate,
     Rodeo,
     DrainLife {
@@ -1960,6 +1968,43 @@ pub struct AbilityCastResolutionDto {
     pub cooldown_after: u16,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum MonsterAlignmentDto {
+    Neutral,
+    Good,
+    Evil,
+    GoodAndEvil,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ProbedMonsterDto {
+    pub entity_id: String,
+    pub kind_id: String,
+    pub glyph: String,
+    pub position: Position,
+    pub hp: i32,
+    pub max_hp: i32,
+    pub speed: u16,
+    pub armor_class: i32,
+    pub alignment: MonsterAlignmentDto,
+    pub faction: EntityFactionDto,
+    pub resistances: Vec<ResistanceDto>,
+    pub status_immunities: Vec<String>,
+    pub melee_routine: MeleeRoutineDto,
+    pub ability_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AbilityMonsterProbeResolutionDto {
+    pub monsters: Vec<ProbedMonsterDto>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -2601,6 +2646,9 @@ pub enum GameEventOutcomeDto {
     },
     AbilityDetect {
         resolution: AbilityDetectResolutionDto,
+    },
+    AbilityMonsterProbe {
+        resolution: AbilityMonsterProbeResolutionDto,
     },
     AbilityTerrainTransform {
         resolution: AbilityTerrainTransformResolutionDto,
@@ -3687,6 +3735,9 @@ pub fn generated_typescript() -> String {
     push_declaration!(CheckOutcomeDto);
     push_declaration!(CheckResolutionDto);
     push_declaration!(AbilityCastResolutionDto);
+    push_declaration!(MonsterAlignmentDto);
+    push_declaration!(ProbedMonsterDto);
+    push_declaration!(AbilityMonsterProbeResolutionDto);
     push_declaration!(AbilityAreaDamageResolutionDto);
     push_declaration!(AbilityVisibleDamageResolutionDto);
     push_declaration!(AbilityBeamDamageResolutionDto);

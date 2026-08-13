@@ -3833,6 +3833,18 @@
           "properties": {
             "type": {
               "type": "string",
+              "const": "probe-monsters"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
               "const": "concentrate"
             }
           },
@@ -4409,6 +4421,20 @@
         "learnedCount",
         "capacity",
         "remainingSlots"
+      ]
+    },
+    "AbilityMonsterProbeResolutionDto": {
+      "type": "object",
+      "properties": {
+        "monsters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ProbedMonsterDto"
+          }
+        }
+      },
+      "required": [
+        "monsters"
       ]
     },
     "AbilityProficiencyRankDto": {
@@ -6833,6 +6859,22 @@
           "type": "object",
           "properties": {
             "resolution": {
+              "$ref": "#/$defs/AbilityMonsterProbeResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "ability-monster-probe"
+            }
+          },
+          "required": [
+            "type",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "resolution": {
               "$ref": "#/$defs/AbilityTerrainTransformResolutionDto"
             },
             "type": {
@@ -8943,6 +8985,15 @@
         "effects"
       ]
     },
+    "MonsterAlignmentDto": {
+      "type": "string",
+      "enum": [
+        "neutral",
+        "good",
+        "evil",
+        "good-and-evil"
+      ]
+    },
     "MonsterDisplacementResolutionDto": {
       "type": "object",
       "properties": {
@@ -9622,6 +9673,84 @@
         "y"
       ]
     },
+    "ProbedMonsterDto": {
+      "type": "object",
+      "properties": {
+        "abilityIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "alignment": {
+          "$ref": "#/$defs/MonsterAlignmentDto"
+        },
+        "armorClass": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "entityId": {
+          "type": "string"
+        },
+        "faction": {
+          "$ref": "#/$defs/EntityFactionDto"
+        },
+        "glyph": {
+          "type": "string"
+        },
+        "hp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "maxHp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "meleeRoutine": {
+          "$ref": "#/$defs/MeleeRoutineDto"
+        },
+        "position": {
+          "$ref": "#/$defs/Position"
+        },
+        "resistances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResistanceDto"
+          }
+        },
+        "speed": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "statusImmunities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "entityId",
+        "kindId",
+        "glyph",
+        "position",
+        "hp",
+        "maxHp",
+        "speed",
+        "armorClass",
+        "alignment",
+        "faction",
+        "resistances",
+        "statusImmunities",
+        "meleeRoutine",
+        "abilityIds"
+      ]
+    },
     "ProficiencyRankDto": {
       "type": "string",
       "enum": [
@@ -10262,7 +10391,14 @@
         "shatter",
         "freezing",
         "knockback",
-        "piercing"
+        "piercing",
+        "evil",
+        "holy",
+        "exploding",
+        "double",
+        "thunder",
+        "needle",
+        "final"
       ]
     },
     "StatModifiersDto": {

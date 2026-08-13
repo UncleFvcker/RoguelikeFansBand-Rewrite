@@ -580,3 +580,20 @@ git diff --stat
   `f66b18b842e434ef84787e664a4fe94107a27b2f47bbf0a6ddffb087c0c0284b`、Protocol `1.197`、
   State Hash Schema v98、save v1、active baseline `contract-v294`（26 条 exact fixture、
   零 waiver）。
+
+## 35. main 当前交接（狙击手 Commit 3：高级射击与探测怪物）
+
+- 本批不新增正式 item、ability、material、affix、class 或 build ID；正式狙击手职业内容
+  仍由 class 方向后续一次性导入，items/monsters 分支不应重复创建任何同义身份。
+- `sniper-shot` 新增邪恶、神圣、爆炸、双重、雷霆、针刺与圣星之箭七种模式。特殊倍率
+  与弹药既有品牌/杀戮倍率取最大值后再乘专注增伤；破损率、爆炸物理范围、双发实例顺序、
+  针刺嵌套 RNG/Unique 免疫及最终技后坐力均按 `master:src/sniper.c`、`src/cmd2.c` 接入
+  唯一 projectile resolver。
+- `probe-monsters` 使用自目标 ability program，只投影当前可见、非模糊且有投射视线的
+  怪物实例，不按种类合并。typed outcome 包含生命、速度、AC、阵营、抗性、状态免疫、
+  近战和施法能力；`probedActorKindIds` 复用 Commit 1 的 save/hash 字段。Web 端收到结果
+  后打开双栏浏览面板。
+- 共享协调点：pack `1.312.0` / content hash
+  `f66b18b842e434ef84787e664a4fe94107a27b2f47bbf0a6ddffb087c0c0284b`、Protocol `1.198`、
+  State Hash Schema v98、save v1、active baseline `contract-v295`（26 条 exact fixture、
+  零 waiver）。现有 fixture 不进入尚未正式绑定的狙击手路径，验证后不刷新 assertions。
