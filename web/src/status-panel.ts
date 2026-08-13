@@ -522,6 +522,20 @@ export class StatusPanel {
     renderWeaponProficiencies(this.#dom.weaponProficiencyMeleeList, "melee");
     renderWeaponProficiencies(this.#dom.weaponProficiencyLauncherList, "launcher");
     const mining = progress.miningProficiency;
+    const riding = progress.ridingProficiency;
+    const ridingRow = document.createElement("li");
+    ridingRow.className = "weapon-proficiency-row";
+    const ridingName = document.createElement("span");
+    ridingName.className = "weapon-proficiency-name";
+    ridingName.textContent = this.#localization.format("riding-proficiency");
+    const ridingValue = document.createElement("span");
+    ridingValue.className = "weapon-proficiency-value";
+    ridingValue.textContent = this.#localization.format("riding-proficiency-value", {
+      rank: this.#localization.format(proficiencyRankMessageKey(riding.rank)),
+      current: riding.current,
+      maximum: riding.maximum,
+    });
+    ridingRow.append(ridingName, ridingValue);
     const miningRow = document.createElement("li");
     miningRow.className = "weapon-proficiency-row";
     const miningName = document.createElement("span");
@@ -536,7 +550,7 @@ export class StatusPanel {
       maximum: mining.maximum,
     });
     miningRow.append(miningName, miningValue);
-    this.#dom.miningProficiencyList.replaceChildren(miningRow);
+    this.#dom.miningProficiencyList.replaceChildren(ridingRow, miningRow);
     this.#dom.materialList.replaceChildren(
       ...progress.materials.map((material) => {
         const row = document.createElement("li");

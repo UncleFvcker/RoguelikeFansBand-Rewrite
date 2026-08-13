@@ -87,6 +87,22 @@ test("mining proficiency growth uses the original bilingual message", () => {
   localization.setLocale("en-US");
 });
 
+test("riding proficiency growth uses the original staged message", () => {
+  const event = {
+    kind: "progress.riding-proficiency-improved",
+    messageKey: "riding-proficiency-improved-novice",
+    args: {},
+  };
+
+  assert.equal(
+    formatter.formatEvent(event),
+    "You are beginning to get the hang of riding. Keep at it!",
+  );
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "你开始掌握骑乘的窍门了。坚持下去！");
+  localization.setLocale("en-US");
+});
+
 test("Polymorph's rare cure uses the authoritative bilingual message", () => {
   const event = {
     kind: "mutation.all-cured",

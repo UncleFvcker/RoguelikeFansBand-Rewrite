@@ -384,6 +384,9 @@ fn restore_character_progress(
     let Some(saved) = saved else {
         let mut progress = CharacterProgress::legacy(base_max_hp);
         progress.replace_skills(expected_skills);
+        progress.riding_proficiency = class_id
+            .and_then(|id| content.class(id))
+            .map_or(0, |class| class.riding_proficiency.initial);
         progress.active_mutation_ids = active_mutation_ids;
         progress.locked_mutation_ids = locked_mutation_ids;
         return Ok(progress);
@@ -491,6 +494,7 @@ fn restore_character_progress(
         hp_progression: saved.hp_progression.clone(),
         skills,
         weapon_proficiencies,
+        riding_proficiency: saved.riding_proficiency,
         mining_proficiency: saved.mining_proficiency,
         materials,
         active_mutation_ids,
@@ -501,6 +505,15 @@ fn restore_character_progress(
     ) {
         return Err(CoreError::InvalidSave(
             "player weapon proficiency state is invalid",
+        ));
+    }
+    if !super::riding_proficiency::riding_proficiency_progress_is_valid(
+        content,
+        class_id,
+        progress.riding_proficiency,
+    ) {
+        return Err(CoreError::InvalidSave(
+            "player riding proficiency state is invalid",
         ));
     }
     if !super::mining::mining_progress_is_valid(&progress) {

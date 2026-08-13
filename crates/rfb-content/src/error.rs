@@ -93,6 +93,8 @@ pub enum ContentError {
     InvalidProjectileProfile(String),
     #[error("weapon proficiency definition or base item reference is invalid: {0}")]
     InvalidWeaponProficiency(String),
+    #[error("riding proficiency definition is invalid: {0}")]
+    InvalidRidingProficiency(String),
     #[error("fixed artifact generation definition is invalid: {0}")]
     InvalidArtifactGeneration(String),
     #[error("item throw profile is invalid: {0}")]

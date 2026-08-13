@@ -87,6 +87,23 @@ fn weapon_proficiency_content_rejects_invalid_bounds_and_base_aliases() {
 }
 
 #[test]
+fn riding_proficiency_content_rejects_invalid_bounds() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut invalid = artifact.content;
+    invalid
+        .classes
+        .iter_mut()
+        .find(|class| class.id == "demo.class.warrior")
+        .expect("Warrior class")
+        .riding_proficiency
+        .initial = 6_001;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidRidingProficiency(_))
+    ));
+}
+
+#[test]
 fn fixed_artifact_generation_matches_rfb_records_and_rejects_invalid_content() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     for (item_id, source_index, base_item_kind_id, rarity_one_in) in [

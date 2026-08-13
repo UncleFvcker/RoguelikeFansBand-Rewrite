@@ -570,6 +570,7 @@ impl Game {
                 })
                 .collect(),
             weapon_proficiencies: self.player_weapon_proficiencies(),
+            riding_proficiency: self.player_riding_proficiency(),
             mining_proficiency: self.player_mining_proficiency(),
             materials: self.player_materials(),
         }

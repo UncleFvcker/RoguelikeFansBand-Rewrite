@@ -667,6 +667,11 @@ impl Game {
                 self.build.as_ref().map(|build| build.class_id.as_str()),
                 &self.progress,
             )
+            || !super::riding_proficiency::riding_proficiency_progress_is_valid(
+                &self.content,
+                self.build.as_ref().map(|build| build.class_id.as_str()),
+                self.progress.riding_proficiency,
+            )
             || self.progress.hp_progression.first().copied() != Some(self.player.max_hp)
             || self.progress.hp_progression.windows(2).any(|window| {
                 let increase = window[1].saturating_sub(window[0]);

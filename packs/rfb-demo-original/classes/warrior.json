@@ -28,6 +28,7 @@
       "demo.item.sling": { "initial": 4000, "maximum": 7000 }
     }
   },
+  "ridingProficiency": { "initial": 0, "maximum": 6000 },
   "petUpkeepDivisor": 40,
   "startingItems": [
     { "itemKindId": "demo.item.broad-sword", "quantity": 1, "equipped": true },

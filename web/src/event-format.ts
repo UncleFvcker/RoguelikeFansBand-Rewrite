@@ -668,6 +668,12 @@ export function createPresentationFormatter(
         return localization.format("message-weapon-proficiency-improved", {
           target: visibleItemNameForKind(event.args.target),
         });
+      case "riding-proficiency-improved-novice":
+      case "riding-proficiency-improved-comfortable":
+      case "riding-proficiency-improved-technique":
+      case "riding-proficiency-improved-good":
+      case "riding-proficiency-improved-master":
+        return localization.format(`message-${event.messageKey}`);
       case "mining-proficiency-improved":
         return localization.format("message-mining-proficiency-improved");
       case "status-player-damage":

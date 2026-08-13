@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.188";
+pub const PROTOCOL_VERSION: &str = "1.189";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1387,6 +1387,8 @@ pub struct PlayerProgressDto {
     #[serde(default)]
     pub weapon_proficiencies: Vec<WeaponProficiencyDto>,
     #[serde(default)]
+    pub riding_proficiency: RidingProficiencyDto,
+    #[serde(default)]
     pub mining_proficiency: MiningProficiencyDto,
     #[serde(default)]
     pub materials: Vec<MaterialDto>,
@@ -1430,6 +1432,15 @@ pub struct WeaponProficiencyDto {
 #[serde(rename_all = "camelCase")]
 pub struct MiningProficiencyDto {
     pub digging_power: i32,
+    pub rank: ProficiencyRankDto,
+    pub current: u16,
+    pub maximum: u16,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct RidingProficiencyDto {
     pub rank: ProficiencyRankDto,
     pub current: u16,
     pub maximum: u16,
@@ -3456,6 +3467,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(ProficiencyRankDto);
     push_declaration!(WeaponProficiencyDto);
     push_declaration!(MiningProficiencyDto);
+    push_declaration!(RidingProficiencyDto);
     push_declaration!(MaterialDto);
     push_declaration!(PlayerBuildDto);
     push_declaration!(DamageDiceDto);
@@ -3735,6 +3747,7 @@ pub struct PlayerProgressSaveDto {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub skills: Vec<SkillProgressSaveDto>,
     pub weapon_proficiencies: Vec<WeaponProficiencySaveDto>,
+    pub riding_proficiency: u16,
     pub mining_proficiency: u16,
     pub materials: Vec<MaterialSaveDto>,
 }

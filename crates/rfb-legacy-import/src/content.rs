@@ -878,7 +878,7 @@ pub struct LegacySpellProfile {
 pub struct LegacyProficiencyProfile {
     pub class_index: u16,
     pub weapon_entries: Vec<LegacyWeaponProficiencyEntry>,
-    pub skill_entries: BTreeMap<u16, usize>,
+    pub skill_entries: Vec<LegacySkillProficiencyEntry>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -887,6 +887,13 @@ pub struct LegacyWeaponProficiencyEntry {
     pub weapon_subtype: u16,
     pub initial_rank: u8,
     pub maximum_rank: u8,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LegacySkillProficiencyEntry {
+    pub skill_index: u16,
+    pub initial: u16,
+    pub maximum: u16,
 }
 
 #[derive(Debug, Serialize)]
@@ -5559,7 +5566,7 @@ pub fn parse_m_info(text: &str) -> Result<Vec<LegacyMagicProfile>, LegacyImportE
     Ok(profiles)
 }
 
-/// Parses the per-class weapon rows and counts the still-unmodeled misc skills.
+/// Parses the per-class weapon and miscellaneous proficiency rows.
 pub fn parse_s_info(text: &str) -> Result<Vec<LegacyProficiencyProfile>, LegacyImportError> {
     let mut profiles = Vec::new();
     let mut current: Option<LegacyProficiencyProfile> = None;
@@ -5643,19 +5650,32 @@ pub fn parse_s_info(text: &str) -> Result<Vec<LegacyProficiencyProfile>, LegacyI
                 "S.skillIndex",
                 parts.first().copied(),
             )?;
-            let _: i64 = parse_number(
+            let initial = parse_number(
                 S_INFO_SOURCE,
                 line_number,
                 "S.minimum",
                 parts.get(1).copied(),
             )?;
-            let _: i64 = parse_number(
+            let maximum = parse_number(
                 S_INFO_SOURCE,
                 line_number,
                 "S.maximum",
                 parts.get(2).copied(),
             )?;
-            *profile.skill_entries.entry(skill_index).or_default() += 1;
+            if initial > maximum || maximum > 8_000 {
+                return Err(content_parse_error(
+                    S_INFO_SOURCE,
+                    line_number,
+                    "S",
+                    rest,
+                    "miscellaneous proficiency row is outside RFB limits",
+                ));
+            }
+            profile.skill_entries.push(LegacySkillProficiencyEntry {
+                skill_index,
+                initial,
+                maximum,
+            });
         }
     }
     if let Some(profile) = current.take() {
@@ -10668,15 +10688,15 @@ fn convert_content_from(
             .class_proficiency_gaps
             .entry("weapon-proficiency".to_owned())
             .or_default() += profile.weapon_entries.len();
-        for (skill_index, count) in &profile.skill_entries {
-            let gap = match skill_index {
+        for entry in &profile.skill_entries {
+            let gap = match entry.skill_index {
                 0 => "martial-arts-proficiency".to_owned(),
                 1 => "dual-wielding-proficiency".to_owned(),
                 2 => "riding-proficiency".to_owned(),
                 other => format!("skill-{other}-proficiency"),
             };
-            report.proficiency_skill_rows += *count;
-            *report.class_proficiency_gaps.entry(gap).or_default() += *count;
+            report.proficiency_skill_rows += 1;
+            *report.class_proficiency_gaps.entry(gap).or_default() += 1;
         }
     }
     let realm_readability = (!characters.magic_profiles.is_empty())
@@ -12898,6 +12918,26 @@ pub fn audit_demo_weapon_proficiencies(
                     "s_info has no class {class_index} profile"
                 ))
             })?;
+        let source_riding = source_profile
+            .skill_entries
+            .iter()
+            .find(|entry| entry.skill_index == 2)
+            .ok_or_else(|| {
+                LegacyImportError::InvalidDemoItemAudit(format!(
+                    "s_info class {class_index} has no riding proficiency row"
+                ))
+            })?;
+        let riding = &class["ridingProficiency"];
+        let actual_riding = (
+            riding["initial"].as_u64().map(|value| value as u16),
+            riding["maximum"].as_u64().map(|value| value as u16),
+        );
+        if actual_riding != (Some(source_riding.initial), Some(source_riding.maximum)) {
+            return Err(LegacyImportError::InvalidDemoItemAudit(format!(
+                "{file_name} riding proficiency is {:?}/{:?}, expected {}/{}",
+                actual_riding.0, actual_riding.1, source_riding.initial, source_riding.maximum
+            )));
+        }
 
         for (item_id, item) in &base_weapons {
             let source_row = source_profile
@@ -14774,6 +14814,28 @@ S:2:0:6000
             ]
         );
         assert_eq!(proficiency_profiles[0].skill_entries.len(), 3);
+        assert_eq!(
+            proficiency_profiles[0]
+                .skill_entries
+                .iter()
+                .find(|entry| entry.skill_index == 2),
+            Some(&LegacySkillProficiencyEntry {
+                skill_index: 2,
+                initial: 0,
+                maximum: 6_000,
+            })
+        );
+
+        let cavalry =
+            parse_s_info("N:22\nS:2:2000:8000\n").expect("Cavalry riding proficiency should parse");
+        assert_eq!(
+            cavalry[0].skill_entries,
+            [LegacySkillProficiencyEntry {
+                skill_index: 2,
+                initial: 2_000,
+                maximum: 8_000,
+            }]
+        );
 
         let characters = LegacyCharacterSources {
             classes: vec![mage],

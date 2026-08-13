@@ -681,6 +681,7 @@ pub(crate) fn player_to_save(
                     current: *current,
                 })
                 .collect(),
+            riding_proficiency: progress.riding_proficiency,
             mining_proficiency: progress.mining_proficiency,
             materials: progress
                 .materials

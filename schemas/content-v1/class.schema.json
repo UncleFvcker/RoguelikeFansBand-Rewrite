@@ -578,6 +578,28 @@
       ],
       "type": "object"
     },
+    "RidingProficiencyDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "initial": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "maximum": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "initial",
+        "maximum"
+      ],
+      "type": "object"
+    },
     "StartingItemDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -852,6 +874,10 @@
       "minimum": 0,
       "type": "integer"
     },
+    "ridingProficiency": {
+      "$ref": "#/$defs/RidingProficiencyDefinition",
+      "description": "RFB riding proficiency at birth and the class training ceiling."
+    },
     "skillSetId": {
       "type": "string"
     },
@@ -899,6 +925,7 @@
     "nameKey",
     "descriptionKey",
     "skillSetId",
+    "ridingProficiency",
     "tags"
   ],
   "title": "ClassDefinition",

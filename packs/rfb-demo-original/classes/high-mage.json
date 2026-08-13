@@ -26,6 +26,7 @@
       "demo.item.tanto": { "initial": 2000, "maximum": 6000 }
     }
   },
+  "ridingProficiency": { "initial": 0, "maximum": 0 },
   "petUpkeepDivisor": 25,
   "usesSpellScrolls": true,
   "castingProfile": {

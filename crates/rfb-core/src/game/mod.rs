@@ -134,6 +134,7 @@ mod player_abilities;
 mod player_combat;
 mod player_stats;
 mod progression;
+mod riding_proficiency;
 mod snapshot;
 mod status_effects;
 mod tasks;
@@ -201,7 +202,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 93;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 94;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -1024,9 +1025,10 @@ impl Game {
         let starting_torches = lighting::starting_torch_supply(build.as_ref(), &mut rng);
         let mut progress = CharacterProgress::new(seed, player_definition.max_hp);
         if let Some(identity) = build.as_ref() {
-            let (definition, _, _, _) = build_definitions(&content, identity)?;
+            let (definition, _, class, _) = build_definitions(&content, identity)?;
             progress.attributes = initial_character_attributes(definition);
             progress.maximum_attributes = progress.attributes;
+            progress.riding_proficiency = class.riding_proficiency.initial;
         }
         progress.replace_skills(character_skill_progress(
             &content,
@@ -4485,7 +4487,10 @@ impl Game {
             });
             return;
         }
-        let range = self.progress.level / 2 + 20;
+        let range = riding_proficiency::riding_attempt_range(
+            self.progress.riding_proficiency,
+            self.progress.level,
+        );
         let roll =
             u32::try_from(self.rng.bounded(u64::from(range)) + 1).expect("mount roll must fit u32");
         if definition.level > roll {

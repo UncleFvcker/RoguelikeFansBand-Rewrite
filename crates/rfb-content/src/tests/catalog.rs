@@ -6,7 +6,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.297.0");
+    assert_eq!(catalog.pack_version(), "1.298.0");
     assert!(catalog.mutation("rfb.mutation.spit-acid").is_some());
     assert!(
         catalog
@@ -49,6 +49,18 @@ fn compiled_catalog_indexes_current_rfb_content() {
     assert!(catalog.build("demo.build.archer").is_some());
     assert!(catalog.class("demo.class.paladin").is_some());
     assert!(catalog.build("demo.build.paladin-death").is_some());
+    for (class_id, initial, maximum) in [
+        ("demo.class.warrior", 0, 6_000),
+        ("demo.class.high-mage", 0, 0),
+        ("demo.class.archer", 0, 4_000),
+        ("demo.class.paladin", 0, 6_000),
+    ] {
+        let riding = catalog
+            .class(class_id)
+            .expect("formal class")
+            .riding_proficiency;
+        assert_eq!((riding.initial, riding.maximum), (initial, maximum));
+    }
     let warrior_proficiency = catalog
         .class("demo.class.warrior")
         .and_then(|class| class.weapon_proficiency.as_ref())

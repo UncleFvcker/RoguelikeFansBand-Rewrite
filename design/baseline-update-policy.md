@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v284`，机器可读政策固定在：
+当前逻辑基线是 `contract-v285`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -155,6 +155,12 @@ Artifact 5%、Great 20%、Good 40%，并由同一 d100 依次分段；Artifact �
 来源。Protocol 1.187、State Hash Schema v93、save v1 与内容包 1.294.0 均不变。
 现有 26 条 active fixture 不进入额外物品品质分支，逐条及全量 verify 均零语义漂移，
 因此不刷新无关快照、零 waiver。
+
+`contract-v285` 增加正式骑术熟练度。四个现有职业从 `master:s_info.txt` 保存各自
+出生值与上限；玩家当前值进入必填存档、状态哈希和成长面板。骑乘成功范围改为
+`riding / 50 + level / 2 + 20`，近战与射击碰撞接入原版成长公式，射击只在满足门槛时
+消耗一次二分 RNG。Protocol 升至 1.189、State Hash Schema 升至 v94，内容包升至
+1.298.0；公共进度投影与状态哈希变化要求统一刷新并复验 26 条 active fixture，零 waiver。
 
 ## 分类验证
 

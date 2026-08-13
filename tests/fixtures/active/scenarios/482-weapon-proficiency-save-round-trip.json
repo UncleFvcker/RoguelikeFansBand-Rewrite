@@ -1071,6 +1071,11 @@
             "hitBonus": 0
           }
         ],
+        "ridingProficiency": {
+          "rank": "unskilled",
+          "current": 0,
+          "maximum": 6000
+        },
         "miningProficiency": {
           "diggingPower": 23,
           "rank": "unskilled",
@@ -1607,8 +1612,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "79d07d8ea38ab81e2d4e5bfd7763090e1f2a76de9d7ed45ebf7dc6ffc3a84018"
+      "stateHash": "0a5f92b74413cc1a43462f4645ca0e0849162d9716d9571991b7936e23e23265"
     },
-    "saveRoundTripStateHash": "79d07d8ea38ab81e2d4e5bfd7763090e1f2a76de9d7ed45ebf7dc6ffc3a84018"
+    "saveRoundTripStateHash": "0a5f92b74413cc1a43462f4645ca0e0849162d9716d9571991b7936e23e23265"
   }
 }

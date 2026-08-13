@@ -242,6 +242,7 @@ pub struct CharacterProgress {
     /// Trained values above the active class's birth proficiency, keyed by
     /// canonical base item kind ID.
     pub weapon_proficiencies: BTreeMap<String, u16>,
+    pub riding_proficiency: u16,
     pub mining_proficiency: u16,
     pub materials: BTreeMap<String, u32>,
     pub active_mutation_ids: BTreeSet<String>,
@@ -298,6 +299,7 @@ impl CharacterProgress {
             hp_progression,
             skills: BTreeMap::new(),
             weapon_proficiencies: BTreeMap::new(),
+            riding_proficiency: 0,
             mining_proficiency: 0,
             materials: BTreeMap::new(),
             active_mutation_ids: BTreeSet::new(),

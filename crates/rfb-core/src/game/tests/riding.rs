@@ -4,6 +4,97 @@ use super::support::{
 };
 use super::*;
 
+fn mounted_game(seed: u64, mount_level: u32) -> Game {
+    let mut game = game_with_actor_definition(seed, "demo.actor.horse", |actor| {
+        actor.level = mount_level;
+    });
+    clear_monsters(&mut game);
+    game.push_generated_actor(
+        "test.mount".to_owned(),
+        "demo.actor.horse",
+        game.player.position,
+    );
+    game.entities[0].controller_id = Some(game.player.id.clone());
+    game.riding_actor_id = Some("test.mount".to_owned());
+    game
+}
+
+#[test]
+fn riding_proficiency_uses_original_melee_archery_and_fall_training_rules() {
+    let mut melee = mounted_game(44, 1);
+    melee.progress.riding_proficiency = 1_999;
+    assert!(matches!(
+        melee.train_riding_from_melee(80),
+        Some(DomainEvent::RidingProficiencyImproved { current: 2_000 })
+    ));
+
+    let mut archery = mounted_game(45, 1);
+    archery.progress.riding_proficiency = 3_999;
+    let mut expected_rng = archery.rng.clone();
+    let expected_gain = expected_rng.bounded(2) == 0;
+    let event = archery.train_riding_from_archery();
+    assert_eq!(archery.rng, expected_rng);
+    assert_eq!(
+        archery.progress.riding_proficiency,
+        3_999 + u16::from(expected_gain)
+    );
+    assert_eq!(event.is_some(), expected_gain);
+
+    archery.progress.riding_proficiency = 6_000;
+    let untouched_rng = archery.rng.clone();
+    assert_eq!(archery.train_riding_from_archery(), None);
+    assert_eq!(archery.rng, untouched_rng);
+
+    let mut fall = mounted_game(46, 30);
+    fall.progress.riding_proficiency = 1_999;
+    assert!(matches!(
+        fall.train_riding_from_fall_check(1_999),
+        Some(DomainEvent::RidingProficiencyImproved { current: 2_000 })
+    ));
+}
+
+#[test]
+fn riding_proficiency_is_authoritative_save_and_snapshot_state() {
+    let mut game = mounted_game(47, 1);
+    game.progress.riding_proficiency = 2_345;
+    let snapshot = game.snapshot();
+    assert_eq!(snapshot.player.progress.riding_proficiency.current, 2_345);
+    assert_eq!(snapshot.player.progress.riding_proficiency.maximum, 6_000);
+    assert_eq!(
+        snapshot.player.progress.riding_proficiency.rank,
+        rfb_protocol::ProficiencyRankDto::Beginner
+    );
+
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("riding proficiency should round-trip");
+    assert_eq!(restored.progress.riding_proficiency, 2_345);
+    assert_eq!(restored.state_hash(), game.state_hash());
+
+    let mut invalid = game.to_save();
+    invalid
+        .player
+        .progress
+        .as_mut()
+        .expect("formal game progress")
+        .riding_proficiency = 6_001;
+    assert!(matches!(
+        Game::from_save_with_content(invalid, game.content.clone()),
+        Err(CoreError::InvalidSave(
+            "player riding proficiency state is invalid"
+        ))
+    ));
+}
+
+#[test]
+fn riding_proficiency_save_field_is_required() {
+    let mut value = serde_json::to_value(Game::new(48).to_save()).expect("save should serialize");
+    value["player"]["progress"]
+        .as_object_mut()
+        .expect("progress should be an object")
+        .remove("ridingProficiency");
+    assert!(serde_json::from_value::<rfb_protocol::SavePayloadV1>(value).is_err());
+}
+
 #[test]
 fn mount_moves_with_player_round_trips_and_dismounts() {
     let mut game = game_with_actor_definition(41, "demo.actor.horse", |actor| {

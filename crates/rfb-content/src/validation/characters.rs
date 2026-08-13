@@ -243,6 +243,11 @@ pub(super) fn validate_characters(
                 return Err(ContentError::InvalidWeaponProficiency(class.id.clone()));
             }
         }
+        if class.riding_proficiency.initial > class.riding_proficiency.maximum
+            || class.riding_proficiency.maximum > 8_000
+        {
+            return Err(ContentError::InvalidRidingProficiency(class.id.clone()));
+        }
         if let Some(profile) = &mut class.casting_profile {
             profile
                 .realm_profiles

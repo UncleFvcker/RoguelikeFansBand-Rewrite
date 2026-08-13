@@ -8929,6 +8929,14 @@
           "maximum": 65535,
           "minimum": 0
         },
+        "ridingProficiency": {
+          "$ref": "#/$defs/RidingProficiencyDto",
+          "default": {
+            "current": 0,
+            "maximum": 0,
+            "rank": "unskilled"
+          }
+        },
         "skills": {
           "type": "array",
           "default": [],
@@ -9219,6 +9227,31 @@
         "mutation-direction-required",
         "pet-dismissal-required",
         "turn-limit"
+      ]
+    },
+    "RidingProficiencyDto": {
+      "type": "object",
+      "properties": {
+        "current": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "maximum": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "rank": {
+          "$ref": "#/$defs/ProficiencyRankDto"
+        }
+      },
+      "required": [
+        "rank",
+        "current",
+        "maximum"
       ]
     },
     "ShopCategoryDto": {

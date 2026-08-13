@@ -53,6 +53,7 @@
       "demo.item.zweihander": { "initial": 4000, "maximum": 8000 }
     }
   },
+  "ridingProficiency": { "initial": 0, "maximum": 6000 },
   "usesSpellScrolls": true,
   "castingProfile": {
     "resourceId": "demo.resource.mana",

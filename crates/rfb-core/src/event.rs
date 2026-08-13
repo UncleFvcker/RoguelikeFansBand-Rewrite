@@ -1118,6 +1118,9 @@ pub(crate) enum DomainEvent {
     WeaponProficiencyImproved {
         item_kind_id: String,
     },
+    RidingProficiencyImproved {
+        current: u16,
+    },
     MiningProficiencyImproved,
     TerrainFoundSomething,
     PlayerMeleeMissed {
@@ -4386,6 +4389,16 @@ impl DomainEvent {
                 "progress.weapon-proficiency-improved",
                 "weapon-proficiency-improved",
                 [("target", item_kind_id)],
+            ),
+            Self::RidingProficiencyImproved { current } => dto_without_args(
+                "progress.riding-proficiency-improved",
+                match current {
+                    ..=500 => "riding-proficiency-improved-novice",
+                    501..=1_000 => "riding-proficiency-improved-comfortable",
+                    1_001..=2_000 => "riding-proficiency-improved-technique",
+                    2_001..=5_000 => "riding-proficiency-improved-good",
+                    _ => "riding-proficiency-improved-master",
+                },
             ),
             Self::MiningProficiencyImproved => dto_without_args(
                 "progress.mining-proficiency-improved",

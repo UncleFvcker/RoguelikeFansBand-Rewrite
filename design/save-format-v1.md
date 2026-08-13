@@ -430,3 +430,8 @@ contract-v283 为 `SavePayloadV1` 增加必填 `generatedArtifactIds`，保存�
 元数据的 ID，以及存在神器实例却缺少相应登记的状态；集合允许保留已经销毁的神器。
 该状态进入 State Hash Schema v93，Protocol 升至 1.187，save 容器保持 v1，不提供旧
 开发存档兼容默认值。
+
+contract-v285 为 `PlayerProgressSaveDto` 增加必填 `ridingProficiency`。载入按当前职业
+内容严格校验 `initial <= current <= maximum <= 8000`；无职业构筑时只允许 0，不为缺少
+字段或低于职业出生值的旧开发存档补默认值。该状态进入 State Hash Schema v94，Protocol
+升至 1.189，save 容器保持 v1。

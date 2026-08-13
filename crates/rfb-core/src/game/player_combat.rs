@@ -67,6 +67,9 @@ impl Game {
             {
                 events.push(DomainEvent::WeaponProficiencyImproved { item_kind_id });
             }
+            if let Some(event) = self.train_riding_from_archery() {
+                events.push(event);
+            }
             let mut ranged_skill = attacker.ranged_skill.with_modifier(
                 StatLayer::Equipment,
                 profile.ammo_kind_id.clone(),
@@ -482,6 +485,9 @@ impl Game {
             && let Some(item_kind_id) = self.train_weapon_proficiency(item_id, definition.level)
         {
             events.push(DomainEvent::WeaponProficiencyImproved { item_kind_id });
+        }
+        if let Some(event) = self.train_riding_from_melee(definition.level) {
+            events.push(event);
         }
         let mut profiles = vec![weapon_profile];
         profiles.extend(

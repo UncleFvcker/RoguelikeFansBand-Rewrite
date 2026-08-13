@@ -43,7 +43,7 @@ export type AttributeValueDto = { natural: number, maximumNatural: number, poten
 
 export type AttributeSetDto = { strength: AttributeValueDto, intelligence: AttributeValueDto, wisdom: AttributeValueDto, dexterity: AttributeValueDto, constitution: AttributeValueDto, charisma: AttributeValueDto, };
 
-export type PlayerProgressDto = { level: number, maxLevel: number, experience: bigint, maximumExperience: bigint, lifeForce: number, levelCap: number, attributeCap: number, attributeIndexCap: number, experienceForNextLevel?: bigint | null, pendingAttributeIncreases: number, victoryLevelCapUnlocked: boolean, attributes: AttributeSetDto, skills: Array<SkillProgressDto>, weaponProficiencies: Array<WeaponProficiencyDto>, miningProficiency: MiningProficiencyDto, materials: Array<MaterialDto>, };
+export type PlayerProgressDto = { level: number, maxLevel: number, experience: bigint, maximumExperience: bigint, lifeForce: number, levelCap: number, attributeCap: number, attributeIndexCap: number, experienceForNextLevel?: bigint | null, pendingAttributeIncreases: number, victoryLevelCapUnlocked: boolean, attributes: AttributeSetDto, skills: Array<SkillProgressDto>, weaponProficiencies: Array<WeaponProficiencyDto>, ridingProficiency: RidingProficiencyDto, miningProficiency: MiningProficiencyDto, materials: Array<MaterialDto>, };
 
 export type SkillProgressDto = { id: string, nameKey: string, current: number, maximum: number, base: number, growthPerTenLevels: number, };
 
@@ -54,6 +54,8 @@ export type ProficiencyRankDto = "unskilled" | "beginner" | "skilled" | "expert"
 export type WeaponProficiencyDto = { itemKindId: string, nameKey: string, category: WeaponProficiencyCategoryDto, rank: ProficiencyRankDto, current: number, maximum: number, hitBonus: number, };
 
 export type MiningProficiencyDto = { diggingPower: number, rank: ProficiencyRankDto, current: number, maximum: number, };
+
+export type RidingProficiencyDto = { rank: ProficiencyRankDto, current: number, maximum: number, };
 
 export type MaterialDto = { materialId: string, nameKey: string, quantity: number, };
 

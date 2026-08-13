@@ -1079,6 +1079,11 @@
             "hitBonus": 0
           }
         ],
+        "ridingProficiency": {
+          "rank": "unskilled",
+          "current": 0,
+          "maximum": 6000
+        },
         "miningProficiency": {
           "diggingPower": 23,
           "rank": "unskilled",
@@ -1580,7 +1585,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "cebb0aadef9b2020b1a335f639214315452d9e1ded6e460af111f7a3766ce645"
+      "stateHash": "033415d37fac16e2f1f65122248229758dafdd2f056b849694a88aa1238054e5"
     },
     "events": [
       {
@@ -1595,9 +1600,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "cebb0aadef9b2020b1a335f639214315452d9e1ded6e460af111f7a3766ce645"
+        "stateHash": "033415d37fac16e2f1f65122248229758dafdd2f056b849694a88aa1238054e5"
       }
     ],
-    "saveRoundTripStateHash": "cebb0aadef9b2020b1a335f639214315452d9e1ded6e460af111f7a3766ce645"
+    "saveRoundTripStateHash": "033415d37fac16e2f1f65122248229758dafdd2f056b849694a88aa1238054e5"
   }
 }

@@ -359,3 +359,19 @@ git diff --stat
   `f7aebe082ef8e6b0d5e98633ea229592d516f9d9251db5645a99e11712098744`、Protocol `1.188`、
   State Hash Schema v93、save v1、active baseline `contract-v284`（26 条 exact fixture、
   零 waiver）。`codex/items-next` 与 `codex/monsters-next` 分支及工作树继续保留。
+
+## 21. main 当前交接（骑术熟练度 Commit 1）
+
+- 本批不新增 item、ability、material、affix 或其他正式内容 ID。职业内容新增必填的
+  `ridingProficiency`；现有四职业值来自 RFB master `s_info.txt`，未来 Cavalry 必须使用
+  已审计的 `2000/8000`，不得另设职业默认值。
+- `CharacterProgress.ridingProficiency` 是权威当前值，必填进入 save/state hash；面板在
+  “杂项熟练度”展示骑术专用等级阈值、当前值和职业上限。其他分支不得把它塞回逐等级重算
+  的通用 skill set，也不得套用武器熟练度的 4000/6000/7000/8000 等级边界。
+- 骑乘成功、近战成长和弹道碰撞成长均读取该状态。落马成长公式已有正式规则入口，但当前
+  main 尚无落马事务；后续骑术 Commit 2 必须在落马 RNG 前调用，不得为了提前消费接口而
+  在普通受伤路径伪造增长。
+- 共享协调点：pack `1.298.0` / content hash
+  `ce5843c05a1a11cd26f24868777b285ba41363e06e7dcbdfac0615df4e6596cb`、Protocol `1.189`、
+  State Hash Schema v94、save v1、active baseline `contract-v285`（26 条 exact fixture、
+  零 waiver）。

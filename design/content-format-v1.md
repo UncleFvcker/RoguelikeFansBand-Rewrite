@@ -679,3 +679,9 @@ hash 为 `ee2a72864ac9b521e5825f79a9e020cf798ff1a398e887ca2e7a2b1a5b8edbed`。
 contract-v283 开始消费上述 `artifactGeneration`。生成器按 `sourceIndex` 顺序检查正式
 候选，并用 `baseItemKindId`、`generationLevel` 和 `rarityOneIn` 执行 RFB 固定神器分配；
 本批不改变内容包或内容 hash，也不新增神器、基础物品、能力、材料或 affix ID。
+
+包 1.298.0 为职业定义增加必填 `ridingProficiency { initial, maximum }`，两值直接来自
+RFB `master:lib/edit/s_info.txt` 的 `S:2:start:max`，并满足
+`initial <= maximum <= 8000`。现有四职业分别为 Warrior 0/6000、High-Mage 0/0、
+Archer 0/4000、Paladin 0/6000；未来 Cavalry 的权威来源值为 2000/8000。本批没有新增
+内容 ID；content hash 为 `ce5843c05a1a11cd26f24868777b285ba41363e06e7dcbdfac0615df4e6596cb`。

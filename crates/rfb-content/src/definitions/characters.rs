@@ -158,6 +158,8 @@ pub struct ClassDefinition {
     /// RFB per-base-weapon birth proficiency and class training ceiling.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub weapon_proficiency: Option<WeaponProficiencyDefinition>,
+    /// RFB riding proficiency at birth and the class training ceiling.
+    pub riding_proficiency: RidingProficiencyDefinition,
     #[serde(default)]
     pub uses_spell_scrolls: bool,
     #[serde(default)]
@@ -207,6 +209,14 @@ pub struct WeaponProficiencyDefinition {
     pub default_maximum: u16,
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     pub overrides: BTreeMap<String, WeaponProficiencyBoundsDefinition>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RidingProficiencyDefinition {
+    pub initial: u16,
+    pub maximum: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
