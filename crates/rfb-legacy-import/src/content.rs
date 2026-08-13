@@ -9150,6 +9150,22 @@ fn map_spell_token(
     caster_kind_id: &str,
     abilities: &mut BTreeMap<String, serde_json::Value>,
 ) -> Option<String> {
+    if token == "WORLD" {
+        let id = "rfb-legacy.ability.world".to_owned();
+        abilities.entry(id.clone()).or_insert_with(|| {
+            serde_json::json!({
+                "$schema": format!("{SCHEMA_BASE}/ability.schema.json"),
+                "formatVersion": 1,
+                "id": id,
+                "nameKey": "ability-legacy-world-name",
+                "descriptionKey": "ability-legacy-world-description",
+                "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+                "effect": { "type": "no-op", "reason": "monster-world" },
+                "tags": ["legacy-import", "monster-only", "monster-world"],
+            })
+        });
+        return Some(id);
+    }
     if token == "BIRD_DROP" {
         let id = "rfb-legacy.ability.bird-drop".to_owned();
         abilities.entry(id.clone()).or_insert_with(|| {
@@ -9604,6 +9620,8 @@ fn map_summon_spell_token(
                 summon_category_ability(&suffix, "kin-glyph-111", u32::from(level), 1, 1, 1, None)
             } else if caster_tail == "bast-goddess-of-cats" {
                 summon_category_ability(&suffix, "kin-glyph-102", u32::from(level), 1, 1, 1, None)
+            } else if caster_tail == "dio-brando" {
+                summon_category_ability(&suffix, "kin-glyph-86", u32::from(level), 1, 1, 1, None)
             } else {
                 summon_kin_ability(&suffix, caster_kind_id)
             }
@@ -16064,6 +16082,32 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
                 (bonus > 0).then_some(bonus)
             );
         }
+    }
+
+    #[test]
+    fn p65_world_maps_to_the_monster_extra_action_marker() {
+        let mut abilities = BTreeMap::new();
+        let id = map_spell_token("WORLD", 66, 2, "demo.actor.dio-brando", &mut abilities)
+            .expect("WORLD should map");
+        assert_eq!(id, "rfb-legacy.ability.world");
+        let ability = &abilities[&id];
+        assert_eq!(ability["target"]["modes"], serde_json::json!(["self"]));
+        assert_eq!(ability["effect"]["type"], "no-op");
+        assert_eq!(ability["effect"]["reason"], "monster-world");
+        assert!(
+            ability["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "monster-world"))
+        );
+
+        let kin_id = map_spell_token("S_KIN", 66, 2, "demo.actor.dio-brando", &mut abilities)
+            .expect("Dio kin summon should map");
+        assert_eq!(kin_id, "rfb-legacy.ability.kin-dio-brando");
+        assert_eq!(abilities[&kin_id]["effect"]["type"], "summon-category");
+        assert_eq!(abilities[&kin_id]["effect"]["category"], "kin-glyph-86");
+        assert_eq!(abilities[&kin_id]["effect"]["countDice"], 1);
+        assert_eq!(abilities[&kin_id]["effect"]["countSides"], 1);
+        assert_eq!(abilities[&kin_id]["effect"]["countBonus"], 1);
     }
 
     #[test]

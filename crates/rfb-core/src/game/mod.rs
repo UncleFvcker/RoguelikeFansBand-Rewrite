@@ -4002,6 +4002,25 @@ impl Game {
         removed_entities: &mut Vec<String>,
         surround_reservations: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
+        self.resolve_monster_action_during_world(
+            index,
+            events,
+            changed,
+            removed_entities,
+            surround_reservations,
+            false,
+        )
+    }
+
+    fn resolve_monster_action_during_world(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+        surround_reservations: &mut BTreeSet<Position>,
+        world_stopped: bool,
+    ) -> Result<(), CoreError> {
         self.maybe_change_chameleon_form(index);
         self.reroll_shapechanger_appearance(index);
         let never_moves = self
@@ -4024,7 +4043,13 @@ impl Game {
         if !self.entities[index].alerted && !self.resolve_monster_detection(index, events) {
             return Ok(());
         }
-        if self.resolve_monster_ability_with_changes(index, events, changed, removed_entities)? {
+        if self.resolve_monster_ability_with_changes(
+            index,
+            events,
+            changed,
+            removed_entities,
+            world_stopped,
+        )? {
             return Ok(());
         }
         if !never_moves

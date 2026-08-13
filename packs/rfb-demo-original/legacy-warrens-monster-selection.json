@@ -6462,6 +6462,12 @@
       "id": "vasuki-the-serpent-king",
       "tags": ["orc-cave"],
       "omittedFlags": ["HINDU2", "MALE", "POS_GAIN_AC"]
+    },
+    {
+      "sourceIndex": 878,
+      "id": "dio-brando",
+      "tags": ["orc-cave"],
+      "omittedFlags": ["CAN_SPEAK", "MALE", "POS_HOLD_LIFE", "POS_SEE_INVIS"]
     }
   ]
 }

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb-legacy.ability-program.kin-dio-brando",
+  "descriptionKey": "ability-legacy-kin-dio-brando-description",
+  "formatVersion": 1,
+  "id": "rfb-legacy.ability.kin-dio-brando",
+  "nameKey": "ability-legacy-kin-dio-brando-name",
+  "tags": [
+    "legacy-import",
+    "summon"
+  ],
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

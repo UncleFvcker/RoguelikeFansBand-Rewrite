@@ -5207,3 +5207,11 @@ ability-legacy-summon-night-mare-l67-1d3-1-name = Summon Night mares
 ability-legacy-summon-night-mare-l67-1d3-1-description = Uses the summon night mares monster spell from RFB.
 ability-legacy-summon-undead-l68-1d3-name = Summon undead
 ability-legacy-summon-undead-l68-1d3-description = Uses the summon undead monster spell from RFB.
+
+# P65 monster time stop
+actor-demo-dio-brando-name = Dio Brando
+actor-demo-dio-brando-description = Dio Brando as recorded in the original RFB bestiary.
+ability-legacy-kin-dio-brando-name = Summon kin
+ability-legacy-kin-dio-brando-description = Uses the summon kin monster spell from RFB.
+ability-legacy-world-name = The World
+ability-legacy-world-description = Stops time and lets the caster act three or four additional times.

@@ -436,3 +436,18 @@ git diff --stat
 - 共享协调点：pack `1.303.0` / content hash
   `3ee672ec81f6a4c858ee72f01578c5cbf6383ffa990f9769312838ae7f1a0daa`；Protocol `1.189`、
   State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。
+
+## 27. monsters-next 当前交接（P65 迪奥·布兰度 WORLD）
+
+- 新增 actor `demo.actor.dio-brando`（source index 878，中文名“迪奥·布兰度”），保留原版
+  L66、Orc Cave 分配、近战、寒冷光环、能力和掉落。
+- `WORLD` 使用现有 self-target `NoOp` 内容效果加 `monster-world` 行为标签；施法后严格按原版
+  `1d2+2` 让同一怪物立即执行 3–4 次行动，不消耗普通能量、不推进 world tick 或其他怪物。
+  额外行动期间 WORLD 候选固定为无效，防止时间停止递归；施术者死亡、玩家死亡或楼层切换
+  会立即终止剩余行动。`S_KIN` 按原版 glyph `V` 召唤两个不高于 L66 的同族，避免唯一怪物
+  固定召唤自身而永远无候选。
+- 本批只增加调用期布尔门控，不增加持久状态、DTO、协议、存档或 state-hash 字段，因此不刷新
+  无关 replay fixture。
+- 共享协调点：pack `1.304.0` / content hash
+  `c2986cb253ea4364160787bba7f6ca119afae52f3fae0217655d55cca5c273f2`；Protocol `1.189`、
+  State Hash Schema v94、save v1、active replay baseline `contract-v285` 均不变。

@@ -846,6 +846,10 @@ impl Game {
                         hastened,
                     }
                 }
+                AbilityEffectDefinition::NoOp { reason } => AbilityEffectResolutionDto::NoOp {
+                    effect_index,
+                    reason: reason.clone(),
+                },
                 effect @ AbilityEffectDefinition::AnimateDead { .. } => {
                     let (resolution, positions) = self.resolve_monster_animate_dead_effect(
                         source_index,
@@ -1998,6 +2002,11 @@ impl Game {
         let origin = self.entities[index].position;
         let (target, enemy_target_count, friendly_risk_count) = match &ability.effect {
             AbilityEffectDefinition::Heal { .. } | AbilityEffectDefinition::AggravateMonsters => {
+                (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
+            }
+            AbilityEffectDefinition::NoOp { .. }
+                if ability.tags.iter().any(|tag| tag == "monster-world") =>
+            {
                 (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
             }
             AbilityEffectDefinition::Summon {

@@ -5209,3 +5209,11 @@ ability-legacy-summon-night-mare-l67-1d3-1-name = 召唤梦魇
 ability-legacy-summon-night-mare-l67-1d3-1-description = 使用原版 RFB 的“召唤梦魇”怪物法术。
 ability-legacy-summon-undead-l68-1d3-name = 召唤死灵
 ability-legacy-summon-undead-l68-1d3-description = 使用原版 RFB 的“召唤死灵”怪物法术。
+
+# P65 怪物时间停止
+actor-demo-dio-brando-name = 迪奥·布兰度
+actor-demo-dio-brando-description = 原版怪物：迪奥·布兰度。
+ability-legacy-kin-dio-brando-name = 召唤同类
+ability-legacy-kin-dio-brando-description = 使用原版 RFB 的“召唤同类”怪物法术。
+ability-legacy-world-name = 世界
+ability-legacy-world-description = 停止时间，让施术者立即额外行动三至四次。

@@ -733,7 +733,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         .iter()
         .filter(|actor| actor.tags.iter().any(|tag| tag == "orc-cave"))
         .collect::<Vec<_>>();
-    assert_eq!(orc_cave.len(), 630);
+    assert_eq!(orc_cave.len(), 631);
 
     for id in [
         "demo.actor.bunyip",
@@ -781,7 +781,7 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         level_counts,
         [
             16, 14, 12, 17, 24, 17, 19, 17, 18, 21, 7, 12, 29, 15, 27, 28, 19, 19, 11, 42, 12, 6,
-            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 2, 9, 4,
+            12, 14, 14, 7, 10, 6, 6, 17, 11, 8, 3, 8, 17, 9, 1, 6, 4, 17, 5, 4, 5, 2, 12, 3, 9, 4,
             6, 9,
         ]
     );
@@ -5218,6 +5218,59 @@ fn p64b_low_risk_mappings_keep_source_semantics() {
 }
 
 #[test]
+fn p65_dio_brando_binds_world_to_the_extra_action_marker() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let actor = artifact
+        .content
+        .actors
+        .iter()
+        .find(|actor| actor.id == "demo.actor.dio-brando")
+        .expect("Dio Brando should be imported");
+    assert_eq!(actor.level, 66);
+    assert_eq!(
+        actor
+            .allocation
+            .as_ref()
+            .map(|allocation| allocation.legacy_index),
+        Some(878)
+    );
+    assert!(actor.monster_casting.as_ref().is_some_and(|casting| {
+        casting
+            .abilities
+            .iter()
+            .any(|candidate| candidate.ability_id == "rfb-legacy.ability.world")
+    }));
+    assert!(matches!(
+        artifact
+            .content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "rfb-legacy.ability.kin-dio-brando")
+            .map(|ability| &ability.effect),
+        Some(AbilityEffectDefinition::SummonCategory {
+            category,
+            maximum_level: 66,
+            count_dice: 1,
+            count_sides: 1,
+            count_bonus: 1,
+            ..
+        }) if category == "kin-glyph-86"
+    ));
+
+    let world = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb-legacy.ability.world")
+        .expect("WORLD should be imported");
+    assert!(world.tags.iter().any(|tag| tag == "monster-world"));
+    assert!(matches!(
+        &world.effect,
+        AbilityEffectDefinition::NoOp { reason } if reason == "monster-world"
+    ));
+}
+
+#[test]
 fn p59a_nether_jump_and_contact_auras_keep_source_semantics() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let actor = |id: &str| {
@@ -7323,7 +7376,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     == Some("demo.loot-table.base-items")
             })
             .count(),
-        572
+        573
     );
 }
 
