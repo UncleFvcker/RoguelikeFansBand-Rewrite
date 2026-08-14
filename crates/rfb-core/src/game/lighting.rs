@@ -202,9 +202,13 @@ impl Game {
             .find(|item| {
                 matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "light")
             })
-            .and_then(|item| item.fuel)
-            .filter(|fuel| fuel.current > 0 && fuel.light_radius > 0)
-            .map_or(0, |fuel| i32::from(fuel.light_radius));
+            .map_or(0, |item| {
+                let fuel = item
+                    .fuel
+                    .filter(|fuel| fuel.current > 0)
+                    .map_or(0, |fuel| i32::from(fuel.light_radius));
+                fuel.max(self.item_equipment_bonuses(item).light_radius)
+            });
         let radius = equipment.max(self.player_mutation_light_radius());
         (radius > 0).then_some(radius)
     }

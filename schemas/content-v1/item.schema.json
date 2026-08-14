@@ -139,6 +139,14 @@
     "ArtifactGenerationDefinition": {
       "additionalProperties": false,
       "properties": {
+        "affixIds": {
+          "default": [],
+          "description": "Affixes intrinsic to this fixed artifact and rolled exactly once when it is created.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "baseItemKindId": {
           "description": "Ordinary base kind replaced when this fixed artifact is selected.",
           "type": "string"
@@ -234,6 +242,11 @@
           "format": "int32",
           "type": "integer"
         },
+        "lifePercent": {
+          "description": "Additive adjustment to RFB's equipment life multiplier. `9` means +9% max HP.",
+          "format": "int32",
+          "type": "integer"
+        },
         "lightRadius": {
           "default": 0,
           "format": "int32",
@@ -293,6 +306,18 @@
         "see-invisible",
         "vampiric",
         "hold-life",
+        "levitation",
+        "warning",
+        "slow-digestion",
+        "esp-animal",
+        "esp-undead",
+        "esp-demon",
+        "esp-orc",
+        "esp-troll",
+        "esp-giant",
+        "esp-dragon",
+        "esp-human",
+        "esp-good",
         "sustain-strength",
         "sustain-intelligence",
         "sustain-wisdom",
@@ -1191,6 +1216,10 @@
         }
       },
       "type": "object"
+    },
+    "resistsEnchantment": {
+      "default": false,
+      "type": "boolean"
     },
     "resistsMonsterDestruction": {
       "default": false,

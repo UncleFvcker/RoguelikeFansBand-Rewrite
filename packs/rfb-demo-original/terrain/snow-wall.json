@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.snow-wall",
+  "nameKey": "terrain-demo-snow-wall-name",
+  "descriptionKey": "terrain-demo-snow-wall-description",
+  "glyph": "#",
+  "walkable": false,
+  "blocksSight": true,
+  "allowsWallPassage": true,
+  "monsterDestroyToTerrainId": "demo.terrain.surface-snow",
+  "digging": { "resultTerrainId": "demo.terrain.surface-snow", "power": 5, "resolution": "soft" },
+  "tags": ["diggable", "snow", "wall"]
+}

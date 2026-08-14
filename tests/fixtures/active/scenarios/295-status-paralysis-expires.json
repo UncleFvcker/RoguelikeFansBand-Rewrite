@@ -965,6 +965,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.rune-sword",
+            "nameKey": "item-demo-rune-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.sabre",
             "nameKey": "item-demo-sabre-name",
             "category": "melee",
@@ -1066,6 +1075,15 @@
           {
             "itemKindId": "demo.item.trident",
             "nameKey": "item-demo-trident-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.trifurcate-spear",
+            "nameKey": "item-demo-trifurcate-spear-name",
             "category": "melee",
             "rank": "beginner",
             "current": 4000,
@@ -1664,7 +1682,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3b5adf4c4eef8bf6b8dda75dfc1cfe0992a8c389eab0b7b8ce4c4109a3b5add8"
+      "stateHash": "ac365ce46058a624f01795197c029c55cb057fe4b232ee0dfc420b4fe7666ae1"
     },
     "events": [
       {
@@ -1682,6 +1700,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "3b5adf4c4eef8bf6b8dda75dfc1cfe0992a8c389eab0b7b8ce4c4109a3b5add8"
+    "saveRoundTripStateHash": "ac365ce46058a624f01795197c029c55cb057fe4b232ee0dfc420b4fe7666ae1"
   }
 }

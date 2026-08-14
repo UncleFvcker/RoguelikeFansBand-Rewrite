@@ -33,6 +33,11 @@ pub(super) enum ItemUsePlan {
     Projectile {
         path: Vec<Position>,
     },
+    Cone {
+        path: Vec<Position>,
+        direction: Direction,
+        radius: u8,
+    },
     Detect,
     SummonCategory {
         category: String,
@@ -1014,11 +1019,21 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
-        let mut positions = self
-            .area_damage_cells(self.player.position, radius)
-            .into_iter()
-            .map(|(_, position)| position)
-            .collect::<BTreeSet<_>>();
+        let mut positions = if radius == u8::MAX {
+            (0..self.height)
+                .flat_map(|y| {
+                    (0..self.width).map(move |x| Position {
+                        x: i32::from(x),
+                        y: i32::from(y),
+                    })
+                })
+                .collect::<BTreeSet<_>>()
+        } else {
+            self.area_damage_cells(self.player.position, radius)
+                .into_iter()
+                .map(|(_, position)| position)
+                .collect::<BTreeSet<_>>()
+        };
         if connected_glow {
             positions.extend(self.connected_glow_positions(self.player.position));
         }
@@ -1607,7 +1622,9 @@ impl Game {
             let Some(definition) = self.content.item(&item.kind_id) else {
                 return false;
             };
-            if definition.tags.iter().any(|tag| tag == "no-enchant") {
+            if definition.resists_enchantment
+                || definition.tags.iter().any(|tag| tag == "no-enchant")
+            {
                 return false;
             }
             if to_armor.is_some() {
@@ -1678,6 +1695,7 @@ impl Game {
                     .tags
                     .iter()
                     .any(|tag| matches!(tag.as_str(), "artifact" | "no-enchant"))
+                && !definition.resists_enchantment
         })
     }
 
@@ -2605,6 +2623,32 @@ impl Game {
                 removed_entities,
             )?,
             (
+                effect @ ItemUseEffectDefinition::BeamDamage { .. },
+                plan @ ItemUsePlan::Projectile { .. },
+            ) => self.resolve_item_activation_beam_damage(
+                kind_id,
+                profile_id,
+                effect,
+                plan,
+                device_power_bonus,
+                events,
+                changed,
+                removed_entities,
+            )?,
+            (
+                effect @ ItemUseEffectDefinition::RandomElementConeDamage { .. },
+                plan @ ItemUsePlan::Cone { .. },
+            ) => self.resolve_item_random_element_cone_damage(
+                kind_id,
+                profile_id,
+                effect,
+                plan,
+                device_power_bonus,
+                events,
+                changed,
+                removed_entities,
+            )?,
+            (
                 ItemUseEffectDefinition::DispelCategory { category, damage },
                 ItemUsePlan::VisibleActors { actor_ids },
             ) => {
@@ -2839,11 +2883,23 @@ impl Game {
                     replacements: self.adjacent_trap_door_replacements(),
                 })
             }
-            ItemUseEffectDefinition::Damage { .. } => {
+            ItemUseEffectDefinition::Damage { .. } | ItemUseEffectDefinition::BeamDamage { .. } => {
                 let path = target_definition.and_then(|definition| {
                     target.and_then(|target| self.item_effect_path(definition, target))
                 })?;
                 Some(ItemUsePlan::Projectile { path })
+            }
+            ItemUseEffectDefinition::RandomElementConeDamage { radius, .. } => {
+                let TargetSelection::Direction { direction } = target? else {
+                    return None;
+                };
+                let path = target_definition
+                    .and_then(|definition| self.item_effect_path(definition, target?))?;
+                Some(ItemUsePlan::Cone {
+                    path,
+                    direction: *direction,
+                    radius: *radius,
+                })
             }
             ItemUseEffectDefinition::DispelCategory { .. }
             | ItemUseEffectDefinition::BanishVisible { .. } => {
@@ -4865,6 +4921,8 @@ impl Game {
                 self.resolve_item_self_knowledge(source_kind_id, events)
             }
             ItemUseEffectDefinition::Damage { .. }
+            | ItemUseEffectDefinition::BeamDamage { .. }
+            | ItemUseEffectDefinition::RandomElementConeDamage { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters
             | ItemUseEffectDefinition::MassGenocide { .. }

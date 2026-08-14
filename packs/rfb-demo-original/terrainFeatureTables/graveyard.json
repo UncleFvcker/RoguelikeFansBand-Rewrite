@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain-feature-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain-feature-table.graveyard",
+  "rolls": 68,
+  "entries": [
+    {
+      "terrainId": "demo.terrain.surface-water-shallow",
+      "placement": "room",
+      "weight": 1,
+      "minDepth": 50,
+      "maxDepth": 70
+    }
+  ]
+}

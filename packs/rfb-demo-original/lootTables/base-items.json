@@ -1019,6 +1019,12 @@
       "minDepth": 55
     },
     {
+      "itemKindId": "demo.item.multi-hued-dragon-scale-mail",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 75
+    },
+    {
       "itemKindId": "demo.item.mundanity-scroll",
       "weight": 10,
       "quantity": 1,
@@ -1413,6 +1419,12 @@
       "weight": 50,
       "quantity": 1,
       "minDepth": 90
+    },
+    {
+      "itemKindId": "demo.item.rune-sword",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 30
     },
     {
       "itemKindId": "demo.item.sabre",
@@ -1929,6 +1941,12 @@
       "weight": 100,
       "quantity": 1,
       "minDepth": 5
+    },
+    {
+      "itemKindId": "demo.item.trifurcate-spear",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 35
     },
     {
       "itemKindId": "demo.item.tsuyoshi-special",

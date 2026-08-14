@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 50000,
+  "descriptionKey": "item-demo-rune-sword-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 70,
+  "glyph": "|",
+  "id": "demo.item.rune-sword",
+  "initialCurse": "permanent",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 0,
+    "damageSides": 0,
+    "toDamage": -10,
+    "toHit": -10
+  },
+  "nameKey": "item-demo-rune-sword-name",
+  "passives": [
+    "vampiric"
+  ],
+  "resistsEnchantment": true,
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "unbrandable",
+    "weapon"
+  ],
+  "weightTenthsPound": 150
+}

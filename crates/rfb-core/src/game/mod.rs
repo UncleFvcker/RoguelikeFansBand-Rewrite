@@ -1224,7 +1224,7 @@ impl Game {
                 ))
             })
             .collect::<Result<Vec<_>, CoreError>>()?;
-        for dungeon in &world.dungeons {
+        for dungeon in world.dungeons.iter().filter(|_| world.wilderness.is_none()) {
             let Some(guardian) = &dungeon.entrance_guardian else {
                 continue;
             };
@@ -2436,6 +2436,9 @@ impl Game {
                                     .max(1);
                             }
                         }
+                    } else if self.warn_player_of_hidden_trap(target, &mut events, &mut changed) {
+                        // Warning spends the action revealing the danger; a repeated move is the
+                        // player's explicit choice to step onto the now-visible trap.
                     } else {
                         match self
                             .scroll_wilderness_for_player_entry(target, &mut removed_entities)?
@@ -5115,6 +5118,7 @@ impl Game {
                 (
                     guardian.reward_loot_table_id.clone(),
                     guardian.reward_artifact_item_kind_id.clone(),
+                    guardian.reward_first_realm_book_rank,
                 )
             });
         let floor_id = self.current_floor_id.clone();
@@ -5234,7 +5238,9 @@ impl Game {
                 );
             }
         }
-        if let Some((reward_table_id, reward_artifact_kind_id)) = guardian_reward {
+        if let Some((reward_table_id, reward_artifact_kind_id, first_realm_book_rank)) =
+            guardian_reward
+        {
             let artifact_reward = reward_artifact_kind_id.is_some();
             let context = reward_table_id.map(|table_id| LootContext {
                 table_id,
@@ -5244,13 +5250,40 @@ impl Game {
                     actor_id: actor.id.clone(),
                 },
             });
-            if let Some(kind_id) = reward_artifact_kind_id
+            let first_realm_book_kind_id = first_realm_book_rank.and_then(|rank| {
+                let realm_id = self
+                    .build
+                    .as_ref()
+                    .and_then(|identity| self.content.build(&identity.build_id))
+                    .and_then(|build| build.first_realm_id.as_deref())?;
+                self.content
+                    .item_definitions()
+                    .find(|item| {
+                        item.ability_book_id
+                            .as_deref()
+                            .and_then(|book_id| self.content.ability_book(book_id))
+                            .is_some_and(|book| {
+                                book.realm_id.as_deref() == Some(realm_id)
+                                    && book.rank == Some(rank)
+                            })
+                    })
+                    .map(|item| item.id.clone())
+            });
+            if let Some(kind_id) = first_realm_book_kind_id {
+                let context = context
+                    .as_ref()
+                    .expect("validated realm-book reward must retain a fallback table");
+                let draft = self.fixed_item_draft(context, kind_id);
+                generated.push(
+                    self.commit_generated_item_draft(draft, ItemLocation::Ground(actor.position))?,
+                );
+            } else if let Some(kind_id) = reward_artifact_kind_id
                 && !self.generated_artifact_ids.contains(&kind_id)
             {
                 let context = context
                     .as_ref()
                     .expect("validated artifact guardian reward must retain a fallback table");
-                let draft = self.fixed_artifact_draft(context, kind_id);
+                let draft = self.fixed_item_draft(context, kind_id);
                 generated.push(
                     self.commit_generated_item_draft(draft, ItemLocation::Ground(actor.position))?,
                 );
@@ -5438,7 +5471,7 @@ impl Game {
             if mode == ItemGenerationMode::Artifact
                 && let Some(kind_id) = self.roll_instant_fixed_artifact_kind_id(context)
             {
-                generated.push(self.fixed_artifact_draft(context, kind_id));
+                generated.push(self.fixed_item_draft(context, kind_id));
                 continue;
             }
             let entry_index = self.roll_weighted_index(&entry_weights);
@@ -5458,7 +5491,7 @@ impl Game {
                     self.roll_fixed_artifact_kind_id(context, Some(&entry.item_kind_id), false)
                 });
                 if let Some(kind_id) = artifact_kind_id {
-                    generated.push(self.fixed_artifact_draft(context, kind_id));
+                    generated.push(self.fixed_item_draft(context, kind_id));
                     continue;
                 }
             }
@@ -5629,13 +5662,21 @@ impl Game {
         None
     }
 
-    fn fixed_artifact_draft(
-        &mut self,
-        context: &LootContext,
-        kind_id: String,
-    ) -> GeneratedItemDraft {
-        let (activation, charges) =
-            initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, &[], context.depth);
+    fn fixed_item_draft(&mut self, context: &LootContext, kind_id: String) -> GeneratedItemDraft {
+        let affix_ids = self
+            .content
+            .item(&kind_id)
+            .and_then(|item| item.artifact_generation.as_ref())
+            .map(|generation| generation.affix_ids.clone())
+            .unwrap_or_default();
+        let rolled_affixes = self.roll_affix_properties(&affix_ids, context.depth);
+        let (activation, charges) = initial_item_runtime_state(
+            &self.content,
+            &mut self.rng,
+            &kind_id,
+            &affix_ids,
+            context.depth,
+        );
         GeneratedItemDraft {
             quantity: 1,
             origin_kind: match &context.source {
@@ -5643,8 +5684,8 @@ impl Game {
                 _ => None,
             },
             quality: ItemQualityDto::Ordinary,
-            affix_ids: Vec::new(),
-            rolled_affixes: Vec::new(),
+            affix_ids,
+            rolled_affixes,
             curse: initial_item_curse(&self.content, &kind_id),
             activation,
             charges,
@@ -5917,28 +5958,33 @@ impl Game {
     }
 
     fn entity_is_visible_by_telepathy(&self, entity: &Actor) -> bool {
-        if !self.player_has_telepathy()
+        let Some(definition) = self.actor_runtime_definition(entity) else {
+            return false;
+        };
+        let full_telepathy = self.player_has_telepathy();
+        let targeted_esp = self.player_has_targeted_esp(definition);
+        if (!full_telepathy && !targeted_esp)
             || squared_distance(self.player.position, entity.position)
                 > VISIBILITY_RADIUS * VISIBILITY_RADIUS
         {
             return false;
         }
-        self.actor_runtime_definition(entity)
-            .is_some_and(|definition| {
-                if self.player_has_mutation(HUMAN_WIS_MUTATION_ID)
-                    && !self.actor_is_player_side(entity)
-                    && definition.tags.iter().any(|tag| tag == "evil")
-                {
-                    return false;
-                }
-                if definition.tags.iter().any(|tag| tag == "empty-mind") {
-                    false
-                } else if definition.tags.iter().any(|tag| tag == "weird-mind") {
-                    entity.visible_weird_mind
-                } else {
-                    true
-                }
-            })
+        if targeted_esp {
+            return true;
+        }
+        if self.player_has_mutation(HUMAN_WIS_MUTATION_ID)
+            && !self.actor_is_player_side(entity)
+            && definition.tags.iter().any(|tag| tag == "evil")
+        {
+            return false;
+        }
+        if definition.tags.iter().any(|tag| tag == "empty-mind") {
+            false
+        } else if definition.tags.iter().any(|tag| tag == "weird-mind") {
+            entity.visible_weird_mind
+        } else {
+            true
+        }
     }
 
     fn entity_is_fuzzy_to_player(&self, entity: &Actor) -> bool {
@@ -6258,6 +6304,16 @@ impl Game {
         destination: Position,
         changed: &mut BTreeSet<Position>,
     ) -> Vec<DomainEvent> {
+        let forget_after_move = self
+            .content
+            .world(&self.world_id)
+            .and_then(|world| {
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == self.current_floor_id)
+            })
+            .is_some_and(|floor| floor.forget_after_move);
         let old_position = self.player.position;
         self.player.position = destination;
         if let Some(mount_id) = self.riding_actor_id.as_deref()
@@ -6297,7 +6353,39 @@ impl Game {
                 });
             }
         }
+        if forget_after_move {
+            self.clear_current_floor_memory(changed);
+        }
         events
+    }
+
+    fn warn_player_of_hidden_trap(
+        &mut self,
+        position: Position,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> bool {
+        if self.revealed_terrain.contains(&position)
+            || !self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::Warning)
+        {
+            return false;
+        }
+        let Some(index) = self.index(position) else {
+            return false;
+        };
+        let is_trap = self
+            .content
+            .terrain(&self.terrain[index])
+            .is_some_and(|terrain| terrain.trap.is_some());
+        if !is_trap || self.rng.bounded(13) == 0 {
+            return false;
+        }
+        self.revealed_terrain.insert(position);
+        changed.insert(position);
+        events.push(DomainEvent::ItemWarnedOfTrap { position });
+        true
     }
 
     fn passive_perception(&mut self, events: &mut Vec<DomainEvent>) -> Vec<Position> {
@@ -6471,6 +6559,7 @@ fn add_stat_modifiers_dto(total: &mut StatModifiersDto, addition: &StatModifiers
 
 fn equipment_bonuses_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
     EquipmentBonusesDto {
+        life_percent: bonuses.life_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -6494,6 +6583,18 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
         EquipmentPassive::SeeInvisible => EquipmentPassiveDto::SeeInvisible,
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
         EquipmentPassive::HoldLife => EquipmentPassiveDto::HoldLife,
+        EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
+        EquipmentPassive::Warning => EquipmentPassiveDto::Warning,
+        EquipmentPassive::SlowDigestion => EquipmentPassiveDto::SlowDigestion,
+        EquipmentPassive::EspAnimal => EquipmentPassiveDto::EspAnimal,
+        EquipmentPassive::EspUndead => EquipmentPassiveDto::EspUndead,
+        EquipmentPassive::EspDemon => EquipmentPassiveDto::EspDemon,
+        EquipmentPassive::EspOrc => EquipmentPassiveDto::EspOrc,
+        EquipmentPassive::EspTroll => EquipmentPassiveDto::EspTroll,
+        EquipmentPassive::EspGiant => EquipmentPassiveDto::EspGiant,
+        EquipmentPassive::EspDragon => EquipmentPassiveDto::EspDragon,
+        EquipmentPassive::EspHuman => EquipmentPassiveDto::EspHuman,
+        EquipmentPassive::EspGood => EquipmentPassiveDto::EspGood,
         EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
         EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
         EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
@@ -6615,6 +6716,7 @@ fn merge_stat_modifiers(total: &mut StatModifiers, addition: &StatModifiers) {
 }
 
 fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBonuses) {
+    total.life_percent = total.life_percent.saturating_add(addition.life_percent);
     total.melee_attacks = total.melee_attacks.saturating_add(addition.melee_attacks);
     total.melee_skill = total.melee_skill.saturating_add(addition.melee_skill);
     total.melee_damage = total.melee_damage.saturating_add(addition.melee_damage);

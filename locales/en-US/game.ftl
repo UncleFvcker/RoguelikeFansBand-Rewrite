@@ -500,6 +500,7 @@ message-skill-check-saving-throw-failure = You fail to resist the hostile pulse 
 message-skill-check-stealth-success = You remain unnoticed by { $source }.
 message-skill-check-stealth-failure = { $source } notices you.
 message-skill-check-perception-success = You notice an unusual detail nearby.
+message-item-warning-trap = Your equipment pulses, warning you of a trap ahead.
 message-skill-check-perception-failure = Nothing unusual catches your attention.
 message-item-use-food = You eat { $target }, restoring { $amount } food ({ $nutrition } / 15000).
 message-hunger-state-changed = You are now { $state }.

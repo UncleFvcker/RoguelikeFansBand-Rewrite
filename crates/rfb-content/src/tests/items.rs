@@ -144,6 +144,387 @@ fn p90b_olog_hai_reward_keeps_original_armour_affix_and_activation() {
 }
 
 #[test]
+fn p96b_trifurcate_spear_wrath_and_shared_fallback_match_rfb() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let spear = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.trifurcate-spear")
+        .expect("Trifurcate Spear should exist");
+    assert_eq!(spear.generation_level, 35);
+    assert_eq!(spear.weight_tenths_pound, 140);
+    assert_eq!(spear.base_value, 400);
+    assert_eq!(spear.equipment_slot.as_deref(), Some("weapon"));
+    assert_eq!(
+        spear.riding_weapon_kind,
+        Some(RidingWeaponKindDefinition::Compatible)
+    );
+    let melee = spear
+        .melee_profile
+        .as_ref()
+        .expect("Trifurcate Spear should be a melee weapon");
+    assert_eq!((melee.damage_dice, melee.damage_sides), (2, 10));
+    assert_eq!((melee.to_hit, melee.to_damage), (0, 0));
+
+    let allocation = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == spear.id)
+        })
+        .expect("Trifurcate Spear should retain its base allocation");
+    assert_eq!(allocation.weight, 33);
+    assert_eq!((allocation.min_depth, allocation.max_depth), (35, u16::MAX));
+
+    let wrath = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.trifurcate-spear-of-wrath")
+        .expect("Trifurcate Spear of Wrath should exist");
+    assert_eq!(wrath.generation_level, 70);
+    assert_eq!(wrath.weight_tenths_pound, 300);
+    assert_eq!(wrath.base_value, 90_000);
+    assert_eq!(
+        wrath.weapon_proficiency_base_item_id.as_deref(),
+        Some("demo.item.trifurcate-spear")
+    );
+    assert_eq!(
+        wrath.riding_weapon_kind,
+        Some(RidingWeaponKindDefinition::Compatible)
+    );
+    let generation = wrath
+        .artifact_generation
+        .as_ref()
+        .expect("Wrath should retain fixed-artifact generation data");
+    assert_eq!(generation.source_index, 107);
+    assert_eq!(generation.base_item_kind_id, "demo.item.trifurcate-spear");
+    assert_eq!(generation.rarity_one_in, 12);
+    assert!(!generation.instant);
+    assert_eq!(wrath.modifiers.strength, 2);
+    assert_eq!(wrath.modifiers.dexterity, 2);
+    let melee = wrath
+        .melee_profile
+        .as_ref()
+        .expect("Wrath should be a melee weapon");
+    assert_eq!((melee.damage_dice, melee.damage_sides), (3, 10));
+    assert_eq!((melee.to_hit, melee.to_damage), (16, 18));
+    assert!(wrath.brands.contains(&WeaponBrand::Chaos));
+    assert_eq!(wrath.slays.get(&SlayTarget::Evil), Some(&SlayLevel::Slay));
+    assert_eq!(wrath.slays.get(&SlayTarget::Undead), Some(&SlayLevel::Slay));
+    assert_eq!(
+        wrath.resistances.get(&ActorDamageType::Light),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        wrath.resistances.get(&ActorDamageType::Dark),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(wrath.passives.contains(&EquipmentPassive::SeeInvisible));
+    assert!(wrath.tags.iter().any(|tag| tag == "blessed-weapon"));
+    assert!(wrath.resists_monster_destruction);
+    assert!(wrath.resists_projection_destruction);
+
+    let fallback = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.trifurcate-spear-final-replacement")
+        .expect("shared Wrath fallback should exist");
+    assert_eq!(fallback.rolls, 1);
+    assert_eq!(fallback.entries.len(), 1);
+    assert_eq!(fallback.entries[0].item_kind_id, spear.id);
+    assert_eq!(
+        fallback.quality_weights[0].quality,
+        ItemQuality::Exceptional
+    );
+    assert!(fallback.affix_weights[0].affix_id.is_none());
+}
+
+#[test]
+fn p97c_multi_hued_dragon_scale_mail_keeps_resists_and_random_breath() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.multi-hued-dragon-scale-mail")
+        .expect("Multi-Hued Dragon Scale Mail should exist");
+    assert_eq!((item.generation_level, item.weight_tenths_pound), (75, 200));
+    assert_eq!(item.base_value, 150_000);
+    assert_eq!(item.equipment_slot.as_deref(), Some("body"));
+    assert_eq!(item.modifiers.defense, 50);
+    assert_eq!(item.equipment_bonuses.melee_skill, -2);
+    assert!(item.mogaminator_rare);
+    assert!(item.tags.iter().any(|tag| tag == "activatable"));
+    for damage_type in [
+        ActorDamageType::Acid,
+        ActorDamageType::Electricity,
+        ActorDamageType::Fire,
+        ActorDamageType::Cold,
+        ActorDamageType::Poison,
+    ] {
+        assert_eq!(
+            item.resistances.get(&damage_type),
+            Some(&ActorResistanceLevel::Resistant)
+        );
+    }
+    assert_eq!(
+        item.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Cold,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+        ])
+    );
+    assert!(item.elemental_destruction_vulnerabilities.is_empty());
+
+    let generation = item
+        .device_generation
+        .as_ref()
+        .expect("dragon scale mail should keep its activation");
+    assert_eq!(
+        generation.recovery,
+        Some(ItemDeviceRecoveryDefinition {
+            interval_ticks: 700,
+            energy_per_mille: 1_000,
+        })
+    );
+    let [activation] = generation.activations.as_slice() else {
+        panic!("dragon scale mail should have exactly one activation");
+    };
+    assert_eq!(activation.device_check_difficulty, 40);
+    assert_eq!(
+        activation.target.modes,
+        [AbilityTargetModeDefinition::Direction]
+    );
+    assert_eq!(activation.target.range, 18);
+    assert!(activation.target.requires_line_of_effect);
+    assert!(matches!(
+        &activation.effect,
+        ItemUseEffectDefinition::RandomElementConeDamage {
+            damage: 250,
+            damage_types,
+            radius: 2,
+        } if damage_types == &[
+            ActorDamageType::Acid,
+            ActorDamageType::Electricity,
+            ActorDamageType::Fire,
+            ActorDamageType::Cold,
+            ActorDamageType::Poison,
+        ]
+    ));
+
+    let allocation = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("dragon scale mail should retain its base allocation");
+    assert_eq!(allocation.weight, 12);
+    assert_eq!((allocation.min_depth, allocation.max_depth), (75, u16::MAX));
+
+    let reward = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.dragon-lair-final-reward")
+        .expect("Dragon's Lair reward table should exist");
+    assert_eq!(reward.rolls, 1);
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(reward.entries[0].item_kind_id, item.id);
+    assert_eq!(reward.quality_weights[0].quality, ItemQuality::Ordinary);
+    assert_eq!(reward.affix_weights.len(), 1);
+    assert_eq!(reward.affix_weights[0].affix_id, None);
+    assert_eq!(reward.affix_weights[0].weight, 1);
+}
+
+#[test]
+fn p99c_paurnimmen_keeps_artifact_identity_and_fixed_cold_beam() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.set-of-gauntlets-paurnimmen")
+        .expect("Paurnimmen should exist");
+    let generation = item
+        .artifact_generation
+        .as_ref()
+        .expect("Paurnimmen should retain artifact generation");
+    assert_eq!(generation.source_index, 185);
+    assert_eq!(generation.base_item_kind_id, "demo.item.set-of-gauntlets");
+    assert_eq!(generation.rarity_one_in, 20);
+    assert_eq!((item.generation_level, item.weight_tenths_pound), (30, 25));
+    assert_eq!(item.base_value, 13_000);
+    assert_eq!((item.modifiers.attack, item.modifiers.defense), (2, 9));
+    assert_eq!(item.brands, BTreeSet::from([WeaponBrand::Cold]));
+    assert_eq!(
+        item.resistances.get(&ActorDamageType::Cold),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+
+    let device = item
+        .device_generation
+        .as_ref()
+        .expect("Paurnimmen should keep its activation");
+    assert_eq!(
+        device.recovery,
+        Some(ItemDeviceRecoveryDefinition {
+            interval_ticks: 120,
+            energy_per_mille: 1_000,
+        })
+    );
+    let [activation] = device.activations.as_slice() else {
+        panic!("Paurnimmen should have one activation");
+    };
+    assert_eq!(activation.device_check_difficulty, 12);
+    assert_eq!(
+        activation.target.modes,
+        [AbilityTargetModeDefinition::Direction]
+    );
+    assert!(matches!(
+        activation.effect,
+        ItemUseEffectDefinition::BeamDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 40,
+            damage_type: ActorDamageType::Cold,
+        }
+    ));
+
+    let fallback = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.set-of-gauntlets-final-replacement")
+        .expect("Paurnimmen should have a unique-artifact fallback");
+    assert_eq!(
+        fallback.entries[0].item_kind_id,
+        "demo.item.set-of-gauntlets"
+    );
+    assert_eq!(
+        fallback.quality_weights[0].quality,
+        ItemQuality::Exceptional
+    );
+}
+
+#[test]
+fn p100c_soulsword_keeps_life_bonus_and_exact_extra_power_distribution() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.soulsword")
+        .expect("Soulsword should exist");
+    let generation = item
+        .artifact_generation
+        .as_ref()
+        .expect("Soulsword should retain artifact generation");
+    assert_eq!(generation.source_index, 89);
+    assert_eq!(generation.base_item_kind_id, "demo.item.scimitar");
+    assert_eq!(generation.rarity_one_in, 20);
+    assert_eq!(
+        generation.affix_ids,
+        ["rfb-legacy.affix.artifact-extra-res-or-power"]
+    );
+    assert_eq!((item.generation_level, item.weight_tenths_pound), (40, 130));
+    assert_eq!(item.base_value, 111_111);
+    assert_eq!((item.modifiers.intelligence, item.modifiers.wisdom), (3, 3));
+    assert_eq!(item.equipment_bonuses.life_percent, 9);
+    let melee = item
+        .melee_profile
+        .as_ref()
+        .expect("Soulsword melee profile");
+    assert_eq!((melee.damage_dice, melee.damage_sides), (3, 6));
+    assert_eq!((melee.to_hit, melee.to_damage), (9, 11));
+    assert_eq!(item.slays.len(), 5);
+    assert_eq!(item.resistances.len(), 4);
+    assert!(item.passives.contains(&EquipmentPassive::SeeInvisible));
+    assert!(item.passives.contains(&EquipmentPassive::HoldLife));
+    assert!(item.tags.iter().any(|tag| tag == "blessed-weapon"));
+
+    let affix = artifact
+        .content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.artifact-extra-res-or-power")
+        .expect("XTRA_RES_OR_POWER affix should exist");
+    let [group] = affix.roll_groups.as_slice() else {
+        panic!("XTRA_RES_OR_POWER should roll one group");
+    };
+    assert_eq!(group.rolls, 1);
+    assert_eq!(group.candidates.len(), 29);
+    assert_eq!(
+        group
+            .candidates
+            .iter()
+            .map(|candidate| candidate.weight)
+            .sum::<u32>(),
+        360
+    );
+    assert_eq!(
+        group
+            .candidates
+            .iter()
+            .filter(|candidate| candidate.weight == 15)
+            .count(),
+        12
+    );
+    assert_eq!(
+        group
+            .candidates
+            .iter()
+            .filter(|candidate| candidate.weight == 18)
+            .count(),
+        8
+    );
+    assert_eq!(
+        group
+            .candidates
+            .iter()
+            .filter(|candidate| candidate.weight == 4)
+            .count(),
+        9
+    );
+    let rolled_passives = group
+        .candidates
+        .iter()
+        .flat_map(|candidate| candidate.properties.passives.iter().copied())
+        .collect::<BTreeSet<_>>();
+    assert!(rolled_passives.contains(&EquipmentPassive::Warning));
+    assert!(rolled_passives.contains(&EquipmentPassive::SlowDigestion));
+    assert!(rolled_passives.contains(&EquipmentPassive::EspAnimal));
+    assert!(rolled_passives.contains(&EquipmentPassive::EspGood));
+
+    let fallback = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.graveyard-final-replacement")
+        .expect("Soulsword should have a unique-artifact fallback");
+    assert_eq!(fallback.entries[0].item_kind_id, "demo.item.scimitar");
+    assert_eq!(
+        fallback.quality_weights[0].quality,
+        ItemQuality::Exceptional
+    );
+}
+
+#[test]
 fn mirror_shield_keeps_original_reflection_and_allocation() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let item = artifact
@@ -425,6 +806,8 @@ fn riding_weapons_match_the_existing_rfb_master_subset() {
             "demo.item.sabre",
             "demo.item.spear",
             "demo.item.trident",
+            "demo.item.trifurcate-spear",
+            "demo.item.trifurcate-spear-of-wrath",
             "demo.item.tulwar",
             "demo.item.war-hammer",
         ]

@@ -806,7 +806,8 @@ impl Game {
             world.dungeons.iter().find_map(|dungeon| {
                 dungeon.entrance_guardian.as_ref().and_then(|guardian| {
                     (self.dungeon_is_active(&dungeon.id)
-                        && self.current_floor_id == world.initial_floor_id
+                        && (self.current_floor_id == world.initial_floor_id
+                            || self.is_wilderness_floor())
                         && guardian.instance_id == removed.id)
                         .then(|| (dungeon.id.clone(), guardian.actor_kind_id.clone()))
                 })

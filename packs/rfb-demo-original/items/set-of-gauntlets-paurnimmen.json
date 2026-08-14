@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.set-of-gauntlets-paurnimmen",
+  "nameKey": "item-demo-set-of-gauntlets-paurnimmen-name",
+  "descriptionKey": "item-demo-set-of-gauntlets-paurnimmen-description",
+  "glyph": "]",
+  "generationLevel": 30,
+  "weightTenthsPound": 25,
+  "maxStack": 1,
+  "baseValue": 13000,
+  "equipmentSlot": "gloves",
+  "artifactGeneration": { "sourceIndex": 185, "baseItemKindId": "demo.item.set-of-gauntlets", "rarityOneIn": 20, "instant": false },
+  "modifiers": { "attack": 2, "defense": 9 },
+  "brands": ["cold"],
+  "resistances": { "cold": "resistant" },
+  "elementalDestructionVulnerabilities": ["acid", "fire"],
+  "deviceGeneration": {
+    "recovery": { "intervalTicks": 120, "energyPerMille": 1000 },
+    "activations": [{
+      "id": "demo.item-activation.paurnimmen-cold-beam",
+      "nameKey": "item-activation-demo-cold-beam-name",
+      "weight": 1,
+      "minDepth": 1,
+      "maxDepth": 100,
+      "deviceCheckDifficulty": 12,
+      "charges": { "minimum": 1, "maximum": 1, "cost": 1 },
+      "target": { "modes": ["direction"], "range": 18, "requiresLineOfEffect": true },
+      "effectProgramId": "demo.effect.paurnimmen-cold-beam"
+    }]
+  },
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "tags": ["activatable", "artifact", "armor", "equipment", "rfb-compatibility"]
+}

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.curtain-closed",
+  "nameKey": "terrain-demo-curtain-closed-name",
+  "descriptionKey": "terrain-demo-curtain-closed-description",
+  "glyph": "'",
+  "walkable": false,
+  "blocksSight": true,
+  "allowsWallPassage": true,
+  "openToTerrainId": "demo.terrain.curtain-open",
+  "tags": ["curtain", "passage"]
+}

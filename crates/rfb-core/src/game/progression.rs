@@ -20,7 +20,7 @@ use crate::{
     },
 };
 
-use super::Game;
+use super::{Game, player_stats::apply_equipment_life_percent};
 
 pub(super) type CharacterDefinitions<'a> = (
     &'a CharacterBuildDefinition,
@@ -693,11 +693,13 @@ impl Game {
     }
 
     pub(super) fn player_max_hp_at_level(&self, level: u16) -> i32 {
-        self.character_base_max_hp_at_level(level)
-            .saturating_add(self.character_modifier_total(|modifiers| modifiers.max_hp))
-            .saturating_add(self.mutation_modifier_total(|modifiers| modifiers.max_hp))
-            .saturating_add(self.equipment_modifiers().max_hp)
-            .max(1)
+        apply_equipment_life_percent(
+            self.character_base_max_hp_at_level(level)
+                .saturating_add(self.character_modifier_total(|modifiers| modifiers.max_hp))
+                .saturating_add(self.mutation_modifier_total(|modifiers| modifiers.max_hp))
+                .saturating_add(self.equipment_modifiers().max_hp),
+            self.player_equipment_life_percent(),
+        )
     }
 
     pub(super) fn character_base_max_hp_at_level(&self, level: u16) -> i32 {

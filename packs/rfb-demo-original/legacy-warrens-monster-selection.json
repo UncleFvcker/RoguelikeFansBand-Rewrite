@@ -417,7 +417,7 @@
       "sourceIndex": 145,
       "id": "carnivorous-flying-monkey",
       "tags": ["monkey", "warrens"],
-      "omittedFlags": ["AUSSIE", "POS_GAIN_AC"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 146,
@@ -754,7 +754,7 @@
       "sourceIndex": 1226,
       "id": "sheep",
       "tags": ["sheep", "warrens"],
-      "omittedFlags": ["AUSSIE"]
+      "omittedFlags": []
     },
     {
       "sourceIndex": 924,
@@ -2765,7 +2765,7 @@
       "sourceIndex": 1044,
       "id": "white-crocodile",
       "tags": ["orc-cave"],
-      "omittedFlags": ["AUSSIE", "POS_GAIN_AC"]
+      "omittedFlags": ["POS_GAIN_AC"]
     },
     {
       "sourceIndex": 1145,
@@ -3965,7 +3965,7 @@
       "sourceIndex": 1228,
       "id": "beer-elemental",
       "tags": ["orc-cave"],
-      "omittedFlags": ["AUSSIE", "POS_GAIN_AC", "POS_HOLD_LIFE"]
+      "omittedFlags": ["POS_GAIN_AC", "POS_HOLD_LIFE"]
     },
     {
       "sourceIndex": 1341,

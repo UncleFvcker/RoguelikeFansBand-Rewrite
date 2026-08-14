@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.plains-of-oz-entrance",
+  "nameKey": "terrain-demo-plains-of-oz-entrance-name",
+  "descriptionKey": "terrain-demo-plains-of-oz-entrance-description",
+  "glyph": ">",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["stairs-down", "passage"]
+}

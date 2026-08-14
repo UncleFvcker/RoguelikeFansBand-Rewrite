@@ -1293,10 +1293,29 @@ impl Game {
                 .chance_one_in
                 .is_none_or(|chance| self.rng.bounded(u64::from(chance)) == 0)
         {
+            let (deep_terrain_id, shallow_terrain_id) = river
+                .alternative
+                .as_ref()
+                .filter(|alternative| {
+                    self.rng.bounded(u64::from(alternative.chance_denominator))
+                        < u64::from(alternative.chance_numerator)
+                })
+                .map_or(
+                    (
+                        river.deep_terrain_id.as_str(),
+                        river.shallow_terrain_id.as_str(),
+                    ),
+                    |alternative| {
+                        (
+                            alternative.deep_terrain_id.as_str(),
+                            alternative.shallow_terrain_id.as_str(),
+                        )
+                    },
+                );
             self.generate_river(
                 definition,
-                &river.deep_terrain_id,
-                &river.shallow_terrain_id,
+                deep_terrain_id,
+                shallow_terrain_id,
                 lake_origin.unwrap_or(Position {
                     x: i32::from(width / 2),
                     y: i32::from(height / 2),
@@ -1363,10 +1382,16 @@ impl Game {
                     &mut terrain,
                 )
             });
-        let door_position = (!maze_only && !cave_room_layout).then_some(Position {
-            x: (first_center.x + second_center.x) / 2,
-            y: first_center.y,
-        });
+        let door_position = (definition
+            .layout
+            .as_ref()
+            .is_none_or(|layout| layout.place_doors)
+            && !maze_only
+            && !cave_room_layout)
+            .then_some(Position {
+                x: (first_center.x + second_center.x) / 2,
+                y: first_center.y,
+            });
         if let Some(door_position) = door_position {
             set_generated_terrain(
                 &mut terrain,
@@ -1522,7 +1547,7 @@ impl Game {
             stair_reserved.insert(door_position);
         }
         if guardian.is_some() {
-            stair_reserved.insert(if cave_room_layout {
+            stair_reserved.insert(if maze_only || cave_room_layout {
                 second_center
             } else {
                 Position {
@@ -1709,7 +1734,7 @@ impl Game {
             occupied.insert(down_stair_position);
         }
         let guardian_position = guardian.map(|_| {
-            if cave_room_layout {
+            if maze_only || cave_room_layout {
                 second_center
             } else {
                 Position {

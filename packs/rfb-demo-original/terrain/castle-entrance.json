@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.castle-entrance",
+  "nameKey": "terrain-demo-castle-entrance-name",
+  "descriptionKey": "terrain-demo-castle-entrance-description",
+  "glyph": ">",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["stairs-down", "passage"]
+}

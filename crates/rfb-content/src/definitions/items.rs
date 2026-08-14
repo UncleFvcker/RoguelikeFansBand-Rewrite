@@ -61,6 +61,18 @@ pub enum EquipmentPassive {
     SeeInvisible,
     Vampiric,
     HoldLife,
+    Levitation,
+    Warning,
+    SlowDigestion,
+    EspAnimal,
+    EspUndead,
+    EspDemon,
+    EspOrc,
+    EspTroll,
+    EspGiant,
+    EspDragon,
+    EspHuman,
+    EspGood,
     SustainStrength,
     SustainIntelligence,
     SustainWisdom,
@@ -641,6 +653,19 @@ pub enum ItemUseEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
     },
+    BeamDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+    },
+    RandomElementConeDamage {
+        damage: u32,
+        damage_types: Vec<ActorDamageType>,
+        radius: u8,
+    },
     DispelCategory {
         category: String,
         damage: u32,
@@ -782,6 +807,9 @@ pub struct ArtifactGenerationDefinition {
     pub rarity_one_in: u16,
     #[serde(default)]
     pub instant: bool,
+    /// Affixes intrinsic to this fixed artifact and rolled exactly once when it is created.
+    #[serde(default)]
+    pub affix_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -899,6 +927,9 @@ pub struct ItemDefinition {
     /// Protects the base kind from `KILL_ITEM`; fixed artifacts use their artifact tag.
     #[serde(default)]
     pub resists_monster_destruction: bool,
+    /// RFB `OF_NO_ENCHANT`: no item-enchantment attempt may alter this base kind.
+    #[serde(default)]
+    pub resists_enchantment: bool,
     pub tags: Vec<String>,
 }
 

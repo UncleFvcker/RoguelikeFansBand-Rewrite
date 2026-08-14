@@ -1186,6 +1186,7 @@ impl Game {
             preferred_tags: Vec::new(),
             preferred_movement_modes: Vec::new(),
             preferred_habitats: Vec::new(),
+            preferred_damage_immunities: Vec::new(),
             special_div: 64,
             ambient_chance_one_in: 1,
         };
@@ -1458,6 +1459,13 @@ impl Game {
                 .preferred_habitats
                 .iter()
                 .any(|habitat| allocation.habitats.contains(habitat))
+            || policy
+                .preferred_damage_immunities
+                .iter()
+                .any(|damage_type| {
+                    definition.resistances.get(damage_type)
+                        == Some(&rfb_content::ActorResistanceLevel::Immune)
+                })
         {
             return base;
         }

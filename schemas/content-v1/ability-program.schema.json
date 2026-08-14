@@ -3175,6 +3175,11 @@
           "format": "int32",
           "type": "integer"
         },
+        "lifePercent": {
+          "description": "Additive adjustment to RFB's equipment life multiplier. `9` means +9% max HP.",
+          "format": "int32",
+          "type": "integer"
+        },
         "lightRadius": {
           "default": 0,
           "format": "int32",

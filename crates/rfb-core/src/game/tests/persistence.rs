@@ -129,7 +129,7 @@ fn fixed_artifact_instance_requires_its_generation_record() {
             item_id: "test.item-generation".to_owned(),
         },
     };
-    let draft = game.fixed_artifact_draft(&context, "demo.item.crisdurian".to_owned());
+    let draft = game.fixed_item_draft(&context, "demo.item.crisdurian".to_owned());
     let item = game
         .commit_generated_item_draft(draft, ItemLocation::Inventory)
         .expect("fixed artifact should commit");

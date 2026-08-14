@@ -98,9 +98,15 @@ impl Game {
             .is_multiple_of(NORMAL_DIGESTION_INTERVAL_TICKS)
         {
             let speed = derived_speed(&self.player_derived_stats().speed);
-            let digestion = u16::try_from(energy_gain(speed))
+            let mut digestion = u16::try_from(energy_gain(speed))
                 .expect("scheduler energy gain must fit nutrition")
                 .clamp(1, 100);
+            if self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::SlowDigestion)
+            {
+                digestion = (digestion / 2).max(1);
+            }
             self.nutrition = self.nutrition.saturating_sub(digestion);
         }
         let after_state = self.nutrition_state();

@@ -642,6 +642,9 @@ pub struct StatModifiers {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct EquipmentBonuses {
+    /// Additive adjustment to RFB's equipment life multiplier. `9` means +9% max HP.
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub life_percent: i32,
     #[serde(default)]
     pub melee_attacks: i32,
     #[serde(default)]
@@ -670,4 +673,8 @@ pub struct EquipmentBonuses {
     pub infravision: i32,
     #[serde(default)]
     pub light_radius: i32,
+}
+
+const fn is_zero_i32(value: &i32) -> bool {
+    *value == 0
 }

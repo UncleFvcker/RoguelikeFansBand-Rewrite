@@ -12,7 +12,7 @@ pub enum ContentError {
     InvalidContentDirectory(PathBuf),
     #[error("content entry must be a regular .json file: {0}")]
     InvalidContentFile(PathBuf),
-    #[error("content source file exceeds the 1 MiB limit: {0}")]
+    #[error("content source file exceeds the 2 MiB limit: {0}")]
     SourceFileTooLarge(PathBuf),
     #[error("content source pack exceeds the 16 MiB limit: {0} bytes")]
     SourcePackTooLarge(usize),

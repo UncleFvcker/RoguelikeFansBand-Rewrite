@@ -1259,7 +1259,17 @@ impl Game {
                 }
             }
             if let Some(guardian) = &dungeon.entrance_guardian {
-                let guardian_present = if self.current_floor_id == world.initial_floor_id {
+                let guardian_present = if world.wilderness.is_some() {
+                    self.entities
+                        .iter()
+                        .chain(
+                            self.stored_floors
+                                .values()
+                                .flat_map(|floor| floor.entities.iter()),
+                        )
+                        .any(|actor| actor.id == guardian.instance_id)
+                        .then_some(true)
+                } else if self.current_floor_id == world.initial_floor_id {
                     Some(
                         self.entities
                             .iter()
@@ -1277,7 +1287,8 @@ impl Game {
                         })
                 };
                 if guardian_present
-                    .is_none_or(|present| present == state.entrance_guardian_defeated)
+                    .is_some_and(|present| present == state.entrance_guardian_defeated)
+                    || world.wilderness.is_none() && guardian_present.is_none()
                 {
                     return Err(CoreError::InvalidSave(
                         "dungeon entrance guardian state is invalid",

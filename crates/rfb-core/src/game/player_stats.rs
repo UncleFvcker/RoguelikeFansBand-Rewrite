@@ -646,7 +646,7 @@ impl Game {
         modifiers
     }
 
-    fn item_equipment_bonuses(&self, item: &ItemInstance) -> EquipmentBonuses {
+    pub(super) fn item_equipment_bonuses(&self, item: &ItemInstance) -> EquipmentBonuses {
         let mut bonuses = self
             .content
             .item(&item.kind_id)
@@ -779,8 +779,44 @@ impl Game {
 
     pub(super) fn player_levitates(&self) -> bool {
         self.player_has_status_kind(STATUS_LEVITATION)
+            || self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::Levitation)
             || self.content.mutations().any(|mutation| {
                 mutation.levitation && self.progress.active_mutation_ids.contains(&mutation.id)
+            })
+    }
+
+    pub(super) fn player_has_targeted_esp(
+        &self,
+        definition: &rfb_content::ActorDefinition,
+    ) -> bool {
+        let passives = self.player_equipment_passives();
+        [
+            (EquipmentPassive::EspAnimal, "animal"),
+            (EquipmentPassive::EspUndead, "undead"),
+            (EquipmentPassive::EspDemon, "demon"),
+            (EquipmentPassive::EspOrc, "orc"),
+            (EquipmentPassive::EspTroll, "troll"),
+            (EquipmentPassive::EspGiant, "giant"),
+            (EquipmentPassive::EspDragon, "dragon"),
+            (EquipmentPassive::EspHuman, "human"),
+            (EquipmentPassive::EspGood, "good"),
+        ]
+        .into_iter()
+        .any(|(passive, tag)| {
+            passives.contains(&passive) && definition.tags.iter().any(|value| value == tag)
+        })
+    }
+
+    pub(super) fn player_equipment_life_percent(&self) -> i32 {
+        self.items
+            .iter()
+            .filter(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+            })
+            .fold(0_i32, |total, item| {
+                total.saturating_add(self.item_equipment_bonuses(item).life_percent)
             })
     }
 
@@ -2095,6 +2131,18 @@ impl Game {
         }
 
         let max_hp = pipeline.resolve(StatKind::MaxHp, StatBounds::UNBOUNDED);
+        let max_hp = if include_equipment {
+            let scaled =
+                apply_equipment_life_percent(max_hp.value, self.player_equipment_life_percent());
+            max_hp.with_modifier(
+                StatLayer::Equipment,
+                "rfb.equipment.life",
+                scaled.saturating_sub(max_hp.value),
+                StatBounds::NON_NEGATIVE,
+            )
+        } else {
+            max_hp
+        };
         ActorDerivedStats {
             max_hp: if include_equipment {
                 apply_player_life_force(max_hp, self.progress.life_force)
@@ -2137,4 +2185,19 @@ impl Game {
             dig_skill: pipeline.resolve(StatKind::DigSkill, StatBounds::NON_NEGATIVE),
         }
     }
+}
+
+pub(super) fn apply_equipment_life_percent(max_hp: i32, life_percent: i32) -> i32 {
+    let multiplier = 100_i32.saturating_add(life_percent).max(1);
+    i32::try_from(
+        i64::from(max_hp)
+            .saturating_mul(i64::from(multiplier))
+            .saturating_div(100),
+    )
+    .unwrap_or(if max_hp.is_negative() {
+        i32::MIN
+    } else {
+        i32::MAX
+    })
+    .max(1)
 }

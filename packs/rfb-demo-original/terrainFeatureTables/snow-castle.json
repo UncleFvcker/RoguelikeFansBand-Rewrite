@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain-feature-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain-feature-table.snow-castle",
+  "rolls": 320,
+  "entries": [
+    { "terrainId": "demo.terrain.slush", "placement": "room", "weight": 6, "minDepth": 30, "maxDepth": 50 },
+    { "terrainId": "demo.terrain.ice-floor", "placement": "room", "weight": 5, "minDepth": 30, "maxDepth": 50 }
+  ]
+}

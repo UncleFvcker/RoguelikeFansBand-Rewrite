@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.dragon-lair-entrance",
+  "nameKey": "terrain-demo-dragon-lair-entrance-name",
+  "descriptionKey": "terrain-demo-dragon-lair-entrance-description",
+  "glyph": ">",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["stairs-down", "passage"]
+}

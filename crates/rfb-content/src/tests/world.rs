@@ -3932,6 +3932,1577 @@ fn p90c_troll_cave_binds_substitution_ecology_terrain_shafts_and_guardian() {
 }
 
 #[test]
+fn p91b_eyrie_binds_entrance_ecology_shafts_guardians_and_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.eyrie")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Eyrie should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["H", "O", "Y"]);
+    assert_eq!(policy.preferred_tags, ["animal", "giant", "troll"]);
+    assert_eq!(policy.preferred_movement_modes, [ActorMovementMode::Fly]);
+    assert_eq!(policy.preferred_habitats, [ActorHabitat::Mountain]);
+    assert_eq!(policy.special_div, 16);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.eyrie")
+        .expect("Eyrie should exist");
+    assert_eq!(dungeon.legacy_index, Some(14));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.eyrie-depth-40");
+    assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.thorondor");
+    let entrance_guardian = dungeon
+        .entrance_guardian
+        .as_ref()
+        .expect("Eyrie should have an entrance guardian");
+    assert_eq!(
+        entrance_guardian.instance_id,
+        "demo.guardian.eyrie-entrance.1"
+    );
+    assert_eq!(entrance_guardian.actor_kind_id, "demo.actor.jubjub-bird");
+    assert_eq!(entrance_guardian.position, ContentPosition { x: 47, y: 16 });
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 76, y: 46 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.eyrie"
+            )
+        })
+    }));
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.eyrie"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 11);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (40..=50).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.eyrie-entrance")
+    );
+    assert_eq!(
+        floors[0].entry_connection_id.as_deref(),
+        Some("demo.connection.eyrie-depth-40-stairs-up")
+    );
+    assert!(floors.iter().all(|floor| {
+        (floor.width, floor.height) == (96, 33)
+            && floor.wall_terrain_id == "demo.terrain.mountain-wall"
+            && floor.floor_terrain_id == "demo.terrain.surface-grass"
+            && floor.layout.as_ref().is_some_and(|layout| {
+                layout.river.is_some()
+                    && layout.streamers.is_empty()
+                    && layout.rooms.as_ref().is_some_and(|rooms| {
+                        rooms.shapes
+                            == [ProceduralRoomShapeCandidateDefinition {
+                                shape: ProceduralRoomShape::Cavern,
+                                weight: 1,
+                            }]
+                    })
+            })
+    }));
+    assert_eq!(
+        floors
+            .iter()
+            .flat_map(|floor| &floor.connections)
+            .filter(|connection| connection.kind == FloorConnectionKind::Shaft)
+            .count(),
+        18
+    );
+
+    let final_floor = floors.last().expect("depth 50 should exist");
+    assert!(final_floor.final_floor);
+    let guardian = final_floor.guardian.as_ref().expect("Thorondor guardian");
+    assert_eq!(guardian.instance_id, "demo.guardian.eyrie.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.thorondor");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.eyrie-final-reward")
+    );
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.eyrie-final-reward")
+        .expect("Eyrie reward table");
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.new-life-potion");
+}
+
+#[test]
+fn p92b_labyrinth_binds_maze_forgetting_guardian_and_recall_rod() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.labyrinth")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Labyrinth should use global allocation");
+    assert!(policy.preferred_glyphs.is_empty());
+    assert!(policy.preferred_tags.is_empty());
+    assert!(policy.preferred_movement_modes.is_empty());
+    assert!(policy.preferred_habitats.is_empty());
+    assert_eq!(policy.special_div, 64);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.labyrinth")
+        .expect("Labyrinth should exist");
+    assert_eq!(dungeon.legacy_index, Some(4));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.labyrinth-depth-20");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.the-minotaur-of-the-labyrinth"
+    );
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 5, y: 48 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.labyrinth"
+            )
+        })
+    }));
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.labyrinth"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 9);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (20..=28).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.labyrinth-entrance")
+    );
+    assert!(floors.iter().all(|floor| {
+        floor.forget_after_move
+            && (floor.width, floor.height) == (66, 22)
+            && floor.wall_terrain_id == "demo.terrain.wall"
+            && floor.floor_terrain_id == "demo.terrain.floor"
+            && floor.layout.as_ref().is_some_and(|layout| {
+                layout.mode == ProceduralLayoutMode::MazeOnly
+                    && layout
+                        .maze
+                        .as_ref()
+                        .is_some_and(|maze| (maze.width, maze.height) == (61, 17))
+                    && layout.rooms.is_none()
+                    && layout.streamers.len() == 2
+            })
+            && floor
+                .generation_budget
+                .as_ref()
+                .is_some_and(|budget| budget.maze_floor_tiles == Some(557))
+    }));
+
+    let final_floor = floors.last().expect("depth 28 should exist");
+    assert!(final_floor.final_floor);
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("the Minotaur should guard depth 28");
+    assert_eq!(guardian.instance_id, "demo.guardian.labyrinth.1");
+    assert_eq!(
+        guardian.actor_kind_id,
+        "demo.actor.the-minotaur-of-the-labyrinth"
+    );
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.labyrinth-final-reward")
+    );
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.labyrinth-final-reward")
+        .expect("Labyrinth reward table");
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.recall-rod");
+
+    let rod = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.recall-rod")
+        .expect("fixed recall rod should exist");
+    let activation = &rod
+        .device_generation
+        .as_ref()
+        .expect("reward should be a rod")
+        .activations[0];
+    assert_eq!(activation.id, "demo.device-activation.recall");
+    assert_eq!(activation.device_check_difficulty, 27);
+    assert_eq!(
+        (
+            activation.charges.minimum,
+            activation.charges.maximum,
+            activation.charges.cost,
+        ),
+        (40, 40, 15)
+    );
+    assert!(matches!(
+        activation.effect,
+        ItemUseEffectDefinition::Recall {
+            delay_dice: 1,
+            delay_sides: 21,
+            delay_bonus: 14,
+        }
+    ));
+
+    let mut invalid = artifact.content.clone();
+    invalid
+        .encounter_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.encounter-table.labyrinth")
+        .and_then(|table| table.global_allocation.as_mut())
+        .expect("Labyrinth policy should exist")
+        .special_div = 16;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidEncounterTable(id)) if id == "demo.encounter-table.labyrinth"
+    ));
+}
+
+#[test]
+fn p93b_lonely_mountain_binds_lava_ecology_smaug_and_arkenstone() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.lonely-mountain")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Lonely Mountain should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["D", "d"]);
+    assert_eq!(policy.preferred_tags, ["dragon"]);
+    assert_eq!(policy.special_div, 10);
+    assert_eq!(policy.ambient_chance_one_in, 140);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.lonely-mountain")
+        .expect("Lonely Mountain should exist");
+    assert_eq!(dungeon.legacy_index, Some(23));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.lonely-mountain-depth-30");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.smaug-the-golden"
+    );
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 42, y: 58 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.lonely-mountain"
+            )
+        })
+    }));
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.lonely-mountain"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 11);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (30..=40).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.lonely-mountain-entrance")
+    );
+    assert!(floors.iter().all(|floor| {
+        (floor.width, floor.height) == (96, 33)
+            && floor.wall_terrain_id == "demo.terrain.wall"
+            && floor.floor_terrain_id == "demo.terrain.dirt"
+            && floor.layout.as_ref().is_some_and(|layout| {
+                layout.streamers.len() == 2
+                    && layout.river.as_ref().is_none_or(|river| {
+                        river.deep_terrain_id == "demo.terrain.surface-lava-deep"
+                            && river.shallow_terrain_id == "demo.terrain.surface-lava-shallow"
+                    })
+                    && layout.rooms.as_ref().is_some_and(|rooms| {
+                        rooms.shapes.iter().any(|candidate| {
+                            candidate.shape == ProceduralRoomShape::Cavern && candidate.weight == 9
+                        }) && rooms.shapes.iter().any(|candidate| {
+                            candidate.shape == ProceduralRoomShape::Rectangle
+                                && candidate.weight == 1
+                        })
+                    })
+            })
+    }));
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| floor
+                .layout
+                .as_ref()
+                .is_some_and(|layout| layout.river.is_some()))
+            .count(),
+        9
+    );
+    let lake_terrain = floors
+        .iter()
+        .filter_map(|floor| {
+            floor
+                .layout
+                .as_ref()
+                .and_then(|layout| layout.lake.as_ref())
+                .map(|lake| lake.deep_terrain_id.as_str())
+        })
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        lake_terrain,
+        [
+            "demo.terrain.rubble",
+            "demo.terrain.surface-lava-deep",
+            "demo.terrain.surface-tree",
+        ]
+        .into_iter()
+        .collect()
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| floor
+                .layout
+                .as_ref()
+                .is_some_and(|layout| layout.destroyed.is_some()))
+            .count(),
+        2
+    );
+
+    let guardian = floors
+        .last()
+        .and_then(|floor| floor.guardian.as_ref())
+        .expect("Smaug should guard depth 40");
+    assert_eq!(guardian.instance_id, "demo.guardian.lonely-mountain.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.smaug-the-golden");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.lonely-mountain-final-replacement")
+    );
+    assert_eq!(
+        guardian.reward_artifact_item_kind_id.as_deref(),
+        Some("demo.item.arkenstone-of-thrain")
+    );
+
+    let base = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.arkenstone")
+        .expect("Arkenstone base kind should exist");
+    assert_eq!((base.generation_level, base.weight_tenths_pound), (50, 5));
+    assert_eq!(base.base_value, 25_000);
+    assert_eq!(base.equipment_slot.as_deref(), Some("light"));
+
+    let arkenstone = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.arkenstone-of-thrain")
+        .expect("the fixed Arkenstone should exist");
+    assert_eq!(
+        (arkenstone.generation_level, arkenstone.weight_tenths_pound),
+        (50, 20)
+    );
+    assert_eq!(arkenstone.base_value, 100_000);
+    assert_eq!(arkenstone.equipment_bonuses.light_radius, 3);
+    assert_eq!(
+        arkenstone.artifact_generation,
+        Some(ArtifactGenerationDefinition {
+            source_index: 329,
+            base_item_kind_id: "demo.item.arkenstone".to_owned(),
+            rarity_one_in: 5,
+            instant: true,
+            affix_ids: Vec::new(),
+        })
+    );
+    assert_eq!(
+        arkenstone.resistances.get(&ActorDamageType::Light),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        arkenstone.resistances.get(&ActorDamageType::Dark),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(
+        arkenstone
+            .passives
+            .contains(&EquipmentPassive::SeeInvisible)
+    );
+    assert!(arkenstone.passives.contains(&EquipmentPassive::HoldLife));
+    let generation = arkenstone
+        .device_generation
+        .as_ref()
+        .expect("the Arkenstone should retain Clairvoyance");
+    assert_eq!(
+        generation.recovery,
+        Some(ItemDeviceRecoveryDefinition {
+            interval_ticks: 1_500,
+            energy_per_mille: 1_000,
+        })
+    );
+    let activation = &generation.activations[0];
+    assert_eq!(activation.device_check_difficulty, 50);
+    assert_eq!(
+        (
+            activation.charges.minimum,
+            activation.charges.maximum,
+            activation.charges.cost,
+        ),
+        (1, 1, 1)
+    );
+    let ItemUseEffectDefinition::Sequence { effects } = &activation.effect else {
+        panic!("Clairvoyance should retain its ordered full-floor effects");
+    };
+    assert_eq!(effects.len(), 5);
+    assert!(matches!(
+        effects[0],
+        ItemUseEffectDefinition::Detect {
+            subject: AbilityDetectSubjectDefinition::Terrain,
+            ref category,
+            radius: u8::MAX,
+            persistent: true,
+            through_walls: true,
+        } if category == "map"
+    ));
+    assert!(matches!(
+        effects[1],
+        ItemUseEffectDefinition::SetFloorGlow {
+            glow: true,
+            radius: u8::MAX,
+            connected_glow: false,
+        }
+    ));
+    assert!(matches!(
+        effects[2],
+        ItemUseEffectDefinition::Detect {
+            subject: AbilityDetectSubjectDefinition::Item,
+            ref category,
+            radius: u8::MAX,
+            persistent: false,
+            through_walls: true,
+        } if category == "item"
+    ));
+}
+
+#[test]
+fn p97d_dragon_lair_binds_dragons_guardians_layers_and_scale_mail() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.dragon-lair")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Dragon's Lair should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["D", "d"]);
+    assert_eq!(policy.preferred_tags, ["dragon"]);
+    assert_eq!(policy.special_div, 10);
+    assert_eq!(policy.ambient_chance_one_in, 140);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.dragon-lair")
+        .expect("Dragon's Lair should exist");
+    assert_eq!(dungeon.legacy_index, Some(5));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.dragon-lair-depth-60");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.tiamat-celestial-dragon-of-evil"
+    );
+    let entrance_guardian = dungeon
+        .entrance_guardian
+        .as_ref()
+        .expect("Ancient multi-hued dragon should guard the entrance");
+    assert_eq!(
+        entrance_guardian.actor_kind_id,
+        "demo.actor.ancient-multi-hued-dragon"
+    );
+    assert_eq!(entrance_guardian.position, ContentPosition { x: 41, y: 16 });
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 74, y: 28 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.dragon-lair"
+            )
+        })
+    }));
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.dragon-lair"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 13);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (60..=72).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.dragon-lair-entrance")
+    );
+    assert!(floors.iter().all(|floor| {
+        (floor.width, floor.height) == (96, 33)
+            && floor.floor_terrain_id == "demo.terrain.dirt"
+            && floor.encounter_table_id.as_deref() == Some("demo.encounter-table.dragon-lair")
+            && floor.layout.as_ref().is_some_and(|layout| {
+                layout.streamers.len() == 2
+                    && layout.river.as_ref().is_none_or(|river| {
+                        river.deep_terrain_id == "demo.terrain.surface-lava-deep"
+                            && river.shallow_terrain_id == "demo.terrain.surface-lava-shallow"
+                            && river.chance_one_in == Some(7)
+                    })
+                    && layout.rooms.as_ref().is_some_and(|rooms| {
+                        rooms.shapes.iter().any(|candidate| {
+                            candidate.shape == ProceduralRoomShape::Cavern && candidate.weight == 9
+                        }) && rooms.shapes.iter().any(|candidate| {
+                            candidate.shape == ProceduralRoomShape::Rectangle
+                                && candidate.weight == 1
+                        })
+                    })
+            })
+    }));
+    let lake_depths = floors
+        .iter()
+        .filter(|floor| {
+            floor
+                .layout
+                .as_ref()
+                .is_some_and(|layout| layout.lake.is_some())
+        })
+        .map(|floor| floor.depth)
+        .collect::<BTreeSet<_>>();
+    assert_eq!(lake_depths, BTreeSet::from([62, 66, 68]));
+    let lake_terrain = floors
+        .iter()
+        .filter_map(|floor| {
+            floor
+                .layout
+                .as_ref()
+                .and_then(|layout| layout.lake.as_ref())
+                .map(|lake| lake.deep_terrain_id.as_str())
+        })
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        lake_terrain,
+        BTreeSet::from([
+            "demo.terrain.rubble",
+            "demo.terrain.surface-lava-deep",
+            "demo.terrain.surface-tree",
+        ])
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| floor
+                .layout
+                .as_ref()
+                .is_some_and(|layout| layout.destroyed.is_some()))
+            .map(|floor| floor.depth)
+            .collect::<Vec<_>>(),
+        [64]
+    );
+
+    let final_floor = floors.last().expect("depth 72 should exist");
+    assert!(final_floor.final_floor);
+    assert!(final_floor.next_floor_id.is_none());
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("Tiamat should guard depth 72");
+    assert_eq!(guardian.instance_id, "demo.guardian.dragon-lair.1");
+    assert_eq!(
+        guardian.actor_kind_id,
+        "demo.actor.tiamat-celestial-dragon-of-evil"
+    );
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.dragon-lair-final-reward")
+    );
+    assert!(guardian.reward_artifact_item_kind_id.is_none());
+}
+
+#[test]
+fn p98b_castle_binds_rooms_ecology_guardians_and_representative_layers() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.castle")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Castle should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["H", "g", "h", "p"]);
+    assert_eq!(policy.preferred_tags, ["demon"]);
+    assert_eq!(policy.special_div, 16);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.castle")
+        .expect("Castle should exist");
+    assert_eq!(dungeon.legacy_index, Some(12));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.castle-depth-40");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.layzark-the-emperor"
+    );
+    let entrance_guardian = dungeon
+        .entrance_guardian
+        .as_ref()
+        .expect("Anti-paladin should guard the entrance");
+    assert_eq!(entrance_guardian.actor_kind_id, "demo.actor.anti-paladin");
+    assert_eq!(entrance_guardian.position, ContentPosition { x: 40, y: 16 });
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 88, y: 34 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.castle"
+            )
+        })
+    }));
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.castle"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 26);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (40..=65).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.castle-entrance")
+    );
+    assert!(floors.iter().all(|floor| {
+        (floor.width, floor.height) == (66, 22)
+            && floor.floor_terrain_id == "demo.terrain.floor"
+            && floor.encounter_table_id.as_deref() == Some("demo.encounter-table.castle")
+            && floor.layout.as_ref().is_some_and(|layout| {
+                layout.cavern.is_none()
+                    && layout.lake.is_none()
+                    && layout.river.is_none()
+                    && layout.destroyed.is_none()
+                    && layout.streamers.is_empty()
+                    && layout.rooms.as_ref().is_some_and(|rooms| {
+                        rooms.shapes.len() == 1
+                            && rooms.shapes[0].shape == ProceduralRoomShape::Rectangle
+                    })
+            })
+    }));
+
+    let arena = floors
+        .iter()
+        .find(|floor| floor.depth == 45)
+        .expect("depth 45 should represent ARENA");
+    let arena_budget = arena
+        .generation_budget
+        .as_ref()
+        .expect("arena should retain a room budget");
+    assert_eq!(arena_budget.room_placements, Some(2));
+    assert_eq!(arena_budget.room_area_tiles, Some(1200));
+    let arena_rooms = arena
+        .layout
+        .as_ref()
+        .and_then(|layout| layout.rooms.as_ref())
+        .expect("arena should retain large rectangular rooms");
+    assert_eq!(arena_rooms.placement, ProceduralRoomPlacement::Partitioned);
+    assert_eq!((arena_rooms.min_width, arena_rooms.min_height), (28, 17));
+
+    let curtain = floors
+        .iter()
+        .find(|floor| floor.depth == 50)
+        .expect("depth 50 should represent CURTAIN");
+    assert_eq!(
+        curtain.closed_door_terrain_id,
+        "demo.terrain.curtain-closed"
+    );
+    let glass = floors
+        .iter()
+        .find(|floor| floor.depth == 55)
+        .expect("depth 55 should represent GLASS_ROOM");
+    assert_eq!(glass.wall_terrain_id, "demo.terrain.glass-wall");
+
+    let closed_curtain = content
+        .terrain
+        .iter()
+        .find(|terrain| terrain.id == "demo.terrain.curtain-closed")
+        .expect("closed curtain should exist");
+    assert!(!closed_curtain.walkable);
+    assert!(closed_curtain.blocks_sight);
+    assert_eq!(
+        closed_curtain.open_to_terrain_id.as_deref(),
+        Some("demo.terrain.curtain-open")
+    );
+    let open_curtain = content
+        .terrain
+        .iter()
+        .find(|terrain| terrain.id == "demo.terrain.curtain-open")
+        .expect("open curtain should exist");
+    assert!(open_curtain.walkable);
+    assert!(!open_curtain.blocks_sight);
+    assert_eq!(
+        open_curtain.close_to_terrain_id.as_deref(),
+        Some("demo.terrain.curtain-closed")
+    );
+    let glass_wall = content
+        .terrain
+        .iter()
+        .find(|terrain| terrain.id == "demo.terrain.glass-wall")
+        .expect("glass wall should exist");
+    assert!(!glass_wall.walkable);
+    assert!(!glass_wall.blocks_sight);
+    assert!(glass_wall.allows_wall_passage);
+
+    let final_floor = floors.last().expect("depth 65 should exist");
+    assert!(final_floor.final_floor);
+    assert!(final_floor.next_floor_id.is_none());
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("Layzark should guard depth 65");
+    assert_eq!(guardian.instance_id, "demo.guardian.castle.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.layzark-the-emperor");
+    assert!(guardian.reward_loot_table_id.is_none());
+    assert!(guardian.reward_artifact_item_kind_id.is_none());
+}
+
+#[test]
+fn p99d_giants_hall_and_snow_castle_bind_substitution_layers_and_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let giants_hall = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.giants-hall")
+        .expect("Giant's Hall should exist");
+    assert_eq!(giants_hall.legacy_index, Some(24));
+    assert_eq!(
+        giants_hall
+            .substitution
+            .as_ref()
+            .map(|substitution| substitution.alternate_dungeon_id.as_str()),
+        Some("demo.dungeon.snow-castle")
+    );
+    let snow_castle = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.snow-castle")
+        .expect("Snow castle should exist");
+    assert_eq!(snow_castle.legacy_index, Some(38));
+    assert!(snow_castle.substitution.is_none());
+    for (dungeon_id, position) in [
+        ("demo.dungeon.giants-hall", ContentPosition { x: 63, y: 44 }),
+        ("demo.dungeon.snow-castle", ContentPosition { x: 65, y: 44 }),
+    ] {
+        assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+            wilderness.locations.iter().any(|location| {
+                matches!(
+                    location,
+                    WildernessLocationDefinition::Dungeon { position: actual, dungeon_id: actual_id }
+                        if *actual == position && actual_id == dungeon_id
+                )
+            })
+        }));
+    }
+
+    let giant_policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.giants-hall")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Giant's Hall should use global allocation");
+    assert_eq!(giant_policy.preferred_tags, ["giant"]);
+    assert_eq!(giant_policy.special_div, 2);
+    let snow_policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.snow-castle")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Snow castle should use global allocation");
+    assert_eq!(snow_policy.preferred_tags, ["giant"]);
+    assert_eq!(snow_policy.preferred_habitats, [ActorHabitat::Snow]);
+    assert_eq!(
+        snow_policy.preferred_damage_immunities,
+        [ActorDamageType::Cold]
+    );
+    assert_eq!(snow_policy.special_div, 2);
+
+    let giant_floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.giants-hall"))
+        .collect::<Vec<_>>();
+    assert_eq!(giant_floors.len(), 11);
+    assert!(giant_floors.iter().all(|floor| {
+        (floor.width, floor.height) == (96, 33)
+            && floor.floor_terrain_id == "demo.terrain.surface-grass"
+            && floor.layout.as_ref().is_some_and(|layout| {
+                !layout.place_doors
+                    && layout.river.as_ref().and_then(|river| river.chance_one_in) == Some(7)
+            })
+    }));
+
+    let snow_floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.snow-castle"))
+        .collect::<Vec<_>>();
+    assert_eq!(snow_floors.len(), 21);
+    assert!(snow_floors.iter().all(|floor| {
+        (floor.width, floor.height) == (66, 22)
+            && floor.floor_terrain_id == "demo.terrain.surface-snow"
+            && floor.terrain_feature_table_id.as_deref()
+                == Some("demo.terrain-feature-table.snow-castle")
+            && floor
+                .layout
+                .as_ref()
+                .is_some_and(|layout| !layout.place_doors)
+    }));
+    assert_eq!(
+        snow_floors
+            .iter()
+            .filter(|floor| floor.wall_terrain_id == "demo.terrain.ice-wall")
+            .count(),
+        13
+    );
+    assert!(snow_floors.iter().enumerate().all(|(index, floor)| {
+        let expected_shafts = usize::from(index >= 2) + usize::from(index + 2 < snow_floors.len());
+        floor
+            .connections
+            .iter()
+            .filter(|connection| connection.kind == FloorConnectionKind::Shaft)
+            .count()
+            == expected_shafts
+    }));
+
+    for final_floor in [giant_floors.last().unwrap(), snow_floors.last().unwrap()] {
+        let guardian = final_floor
+            .guardian
+            .as_ref()
+            .expect("Utgard-Loke should guard the end");
+        assert_eq!(guardian.actor_kind_id, "demo.actor.utgard-loke");
+        assert_eq!(
+            guardian.reward_artifact_item_kind_id.as_deref(),
+            Some("demo.item.set-of-gauntlets-paurnimmen")
+        );
+        assert_eq!(
+            guardian.reward_loot_table_id.as_deref(),
+            Some("demo.loot-table.set-of-gauntlets-final-replacement")
+        );
+    }
+}
+
+#[test]
+fn p100d_graveyard_binds_undead_ecology_layers_shafts_and_soulsword() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.graveyard")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Graveyard should use global allocation");
+    assert_eq!(policy.preferred_tags, ["nonliving", "undead"]);
+    assert_eq!(policy.special_div, 4);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+
+    let feature_table = content
+        .terrain_feature_tables
+        .iter()
+        .find(|table| table.id == "demo.terrain-feature-table.graveyard")
+        .expect("Graveyard shallow-water feature table");
+    assert_eq!(feature_table.rolls, 68);
+    assert_eq!(feature_table.entries.len(), 1);
+    assert_eq!(
+        feature_table.entries[0].terrain_id,
+        "demo.terrain.surface-water-shallow"
+    );
+    assert_eq!(
+        feature_table.entries[0].placement,
+        TerrainFeaturePlacement::Room
+    );
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 85, y: 19 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.graveyard"
+            )
+        })
+    }));
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.graveyard")
+        .expect("Graveyard should exist");
+    assert_eq!(dungeon.legacy_index, Some(6));
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.vecna-the-emperor-lich"
+    );
+    let entrance = dungeon
+        .entrance_guardian
+        .as_ref()
+        .expect("Master lich should guard the entrance");
+    assert_eq!(entrance.actor_kind_id, "demo.actor.master-lich");
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.graveyard"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 21);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (50..=70).collect::<Vec<_>>()
+    );
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.graveyard-entrance")
+    );
+    assert!(floors.iter().all(|floor| {
+        floor.encounter_table_id.as_deref() == Some("demo.encounter-table.graveyard")
+            && floor.terrain_feature_table_id.as_deref()
+                == Some("demo.terrain-feature-table.graveyard")
+    }));
+    assert!(floors.iter().enumerate().all(|(index, floor)| {
+        let expected_shafts = usize::from(index >= 2) + usize::from(index + 2 < floors.len());
+        floor
+            .connections
+            .iter()
+            .filter(|connection| connection.kind == FloorConnectionKind::Shaft)
+            .count()
+            == expected_shafts
+    }));
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| floor
+                .layout
+                .as_ref()
+                .is_some_and(|layout| layout.destroyed.is_some()))
+            .map(|floor| floor.depth)
+            .collect::<Vec<_>>(),
+        [54]
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .find(|floor| floor.depth == 58)
+            .and_then(|floor| floor.layout.as_ref())
+            .and_then(|layout| layout.rooms.as_ref())
+            .map(|rooms| rooms.placement),
+        Some(ProceduralRoomPlacement::Partitioned)
+    );
+    let water_lake = floors
+        .iter()
+        .find(|floor| floor.depth == 62)
+        .and_then(|floor| floor.layout.as_ref())
+        .and_then(|layout| layout.lake.as_ref())
+        .expect("depth 62 should represent LAKE_WATER");
+    assert_eq!(
+        water_lake.deep_terrain_id,
+        "demo.terrain.surface-water-deep"
+    );
+    let rubble_lake = floors
+        .iter()
+        .find(|floor| floor.depth == 66)
+        .and_then(|floor| floor.layout.as_ref())
+        .and_then(|layout| layout.lake.as_ref())
+        .expect("depth 66 should represent LAKE_RUBBLE");
+    assert_eq!(rubble_lake.deep_terrain_id, "demo.terrain.rubble");
+
+    let guardian = floors
+        .last()
+        .and_then(|floor| floor.guardian.as_ref())
+        .expect("Vecna should guard depth 70");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.vecna-the-emperor-lich");
+    assert_eq!(
+        guardian.reward_artifact_item_kind_id.as_deref(),
+        Some("demo.item.soulsword")
+    );
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.graveyard-final-replacement")
+    );
+}
+
+#[test]
+fn p101c_witch_wood_and_plains_of_oz_bind_substitution_ecology_coffee_and_book_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = |id: &str| {
+        content
+            .encounter_tables
+            .iter()
+            .find(|table| table.id == id)
+            .and_then(|table| table.global_allocation.as_ref())
+            .unwrap_or_else(|| panic!("{id} should use global allocation"))
+    };
+    let witch_policy = policy("demo.encounter-table.witch-wood");
+    assert_eq!(witch_policy.preferred_glyphs, ["B", "C"]);
+    assert_eq!(witch_policy.preferred_tags, ["animal"]);
+    assert_eq!(witch_policy.preferred_habitats, [ActorHabitat::Wood]);
+    assert_eq!(witch_policy.special_div, 8);
+    assert_eq!(witch_policy.ambient_chance_one_in, 160);
+    let oz_policy = policy("demo.encounter-table.plains-of-oz");
+    assert_eq!(oz_policy.preferred_tags, ["aussie"]);
+    assert_eq!(oz_policy.special_div, 1);
+    assert_eq!(oz_policy.ambient_chance_one_in, 120);
+
+    for (actor_id, legacy_index) in [
+        ("demo.actor.carnivorous-flying-monkey", 145),
+        ("demo.actor.white-crocodile", 1044),
+        ("demo.actor.sheep", 1226),
+        ("demo.actor.beer-elemental", 1228),
+    ] {
+        let actor = content
+            .actors
+            .iter()
+            .find(|actor| actor.id == actor_id)
+            .unwrap_or_else(|| panic!("{actor_id} should exist"));
+        assert_eq!(
+            actor
+                .allocation
+                .as_ref()
+                .map(|allocation| allocation.legacy_index),
+            Some(legacy_index)
+        );
+        assert!(actor.tags.iter().any(|tag| tag == "aussie"));
+    }
+
+    let feature_table = |id: &str| {
+        content
+            .terrain_feature_tables
+            .iter()
+            .find(|table| table.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    let witch_features = feature_table("demo.terrain-feature-table.witch-wood");
+    assert_eq!(witch_features.rolls, 90);
+    assert_eq!(
+        witch_features
+            .entries
+            .iter()
+            .map(|entry| (entry.terrain_id.as_str(), entry.weight))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([
+            ("demo.terrain.surface-flower", 1),
+            ("demo.terrain.surface-swamp", 2),
+        ])
+    );
+    let oz_features = feature_table("demo.terrain-feature-table.plains-of-oz");
+    assert_eq!(oz_features.rolls, 135);
+    assert_eq!(
+        oz_features
+            .entries
+            .iter()
+            .map(|entry| (entry.terrain_id.as_str(), entry.weight))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([("demo.terrain.dirt", 2), ("demo.terrain.surface-brake", 1),])
+    );
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let location = |dungeon_id: &str, expected: ContentPosition| {
+        assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+            wilderness.locations.iter().any(|location| {
+                matches!(
+                    location,
+                    WildernessLocationDefinition::Dungeon { position, dungeon_id: id }
+                        if *position == expected && id == dungeon_id
+                )
+            })
+        }));
+    };
+    location("demo.dungeon.witch-wood", ContentPosition { x: 63, y: 53 });
+    location(
+        "demo.dungeon.plains-of-oz",
+        ContentPosition { x: 65, y: 54 },
+    );
+    let witch = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.witch-wood")
+        .expect("Witch Wood should exist");
+    assert_eq!(witch.legacy_index, Some(7));
+    assert_eq!(
+        witch.substitution,
+        Some(DungeonSubstitutionDefinition {
+            alternate_dungeon_id: "demo.dungeon.plains-of-oz".to_owned(),
+            alternate_gate_one_in: None,
+        })
+    );
+    let plains = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.plains-of-oz")
+        .expect("Plains of Oz should exist");
+    assert_eq!(plains.legacy_index, Some(35));
+    assert!(plains.substitution.is_none());
+
+    for (dungeon_id, depths, dimensions, guardian_id, entry_id, shafts) in [
+        (
+            "demo.dungeon.witch-wood",
+            (25..=40).collect::<Vec<_>>(),
+            (96, 33),
+            "demo.actor.gertrude",
+            "demo.terrain.witch-wood-entrance",
+            false,
+        ),
+        (
+            "demo.dungeon.plains-of-oz",
+            (18..=36).collect::<Vec<_>>(),
+            (66, 22),
+            "demo.actor.the-wicked-witch-of-the-south-east",
+            "demo.terrain.plains-of-oz-entrance",
+            true,
+        ),
+    ] {
+        let mut floors = world
+            .procedural_floors
+            .iter()
+            .filter(|floor| floor.dungeon_id.as_deref() == Some(dungeon_id))
+            .collect::<Vec<_>>();
+        floors.sort_by_key(|floor| floor.depth);
+        assert_eq!(
+            floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+            depths
+        );
+        assert_eq!(floors[0].entry_terrain_id.as_deref(), Some(entry_id));
+        assert!(floors.iter().all(|floor| {
+            (floor.width, floor.height) == dimensions
+                && floor
+                    .layout
+                    .as_ref()
+                    .is_some_and(|layout| !layout.place_doors)
+        }));
+        assert!(floors.iter().enumerate().all(|(index, floor)| {
+            let shaft_count = floor
+                .connections
+                .iter()
+                .filter(|connection| connection.kind == FloorConnectionKind::Shaft)
+                .count();
+            shaft_count
+                == if shafts {
+                    usize::from(index >= 2) + usize::from(index + 2 < floors.len())
+                } else {
+                    0
+                }
+        }));
+        let guardian = floors
+            .last()
+            .and_then(|floor| floor.guardian.as_ref())
+            .expect("final guardian");
+        assert_eq!(guardian.actor_kind_id, guardian_id);
+        assert_eq!(guardian.reward_first_realm_book_rank, Some(3));
+        assert_eq!(
+            guardian.reward_loot_table_id.as_deref(),
+            Some("demo.loot-table.first-realm-third-book-fallback")
+        );
+    }
+}
+
+#[test]
+fn p94b_mine_binds_mixed_rivers_guardians_rich_veins_and_healing_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.mine")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Mine should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["$"]);
+    assert_eq!(policy.special_div, 1);
+    assert_eq!(policy.ambient_chance_one_in, 80);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.mine")
+        .expect("Mine should exist");
+    assert_eq!(dungeon.legacy_index, Some(15));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.mine-depth-75");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.polyphemus-the-blind-cyclops"
+    );
+    let entrance_guardian = dungeon
+        .entrance_guardian
+        .as_ref()
+        .expect("Elder storm giant should guard the entrance");
+    assert_eq!(
+        entrance_guardian.actor_kind_id,
+        "demo.actor.elder-storm-giant"
+    );
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 49, y: 23 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.mine"
+            )
+        })
+    }));
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.mine"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 6);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (75..=80).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.mine-entrance")
+    );
+    for floor in &floors {
+        assert_eq!((floor.width, floor.height), (66, 22));
+        assert_eq!(floor.wall_terrain_id, "demo.terrain.wall");
+        assert_eq!(floor.floor_terrain_id, "demo.terrain.floor");
+        let budget = floor
+            .generation_budget
+            .as_ref()
+            .expect("Mine generation budget");
+        assert_eq!(budget.streamer_placements, Some(4));
+        assert_eq!(budget.streamer_area_tiles, Some(320));
+        let layout = floor.layout.as_ref().expect("Mine layout");
+        assert_eq!(layout.streamers.len(), 2);
+        assert!(layout.streamers.iter().all(|streamer| {
+            streamer
+                .treasure
+                .as_ref()
+                .is_some_and(|treasure| treasure.known_one_in == 2 && treasure.hidden_one_in == 2)
+        }));
+        let river = layout.river.as_ref().expect("Mine river policy");
+        assert_eq!(river.chance_one_in, Some(7));
+        assert_eq!(river.deep_terrain_id, "demo.terrain.surface-water-deep");
+        assert_eq!(
+            river.shallow_terrain_id,
+            "demo.terrain.surface-water-shallow"
+        );
+        let alternative = river
+            .alternative
+            .as_ref()
+            .expect("Mine should choose lava as its alternate river");
+        assert_eq!(
+            alternative.deep_terrain_id,
+            "demo.terrain.surface-lava-deep"
+        );
+        assert_eq!(
+            alternative.shallow_terrain_id,
+            "demo.terrain.surface-lava-shallow"
+        );
+        assert_eq!(alternative.chance_numerator, floor.depth + 1);
+        assert_eq!(alternative.chance_denominator, 256);
+    }
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| floor
+                .layout
+                .as_ref()
+                .is_some_and(|layout| layout.destroyed.is_some()))
+            .count(),
+        1
+    );
+
+    let guardian = floors
+        .last()
+        .and_then(|floor| floor.guardian.as_ref())
+        .expect("Polyphemus should guard depth 80");
+    assert_eq!(guardian.instance_id, "demo.guardian.mine.1");
+    assert_eq!(
+        guardian.actor_kind_id,
+        "demo.actor.polyphemus-the-blind-cyclops"
+    );
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.mine-final-reward")
+    );
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.mine-final-reward")
+        .expect("Mine reward table should exist");
+    assert_eq!(
+        reward.entries[0].item_kind_id,
+        "demo.item.star-healing-potion"
+    );
+
+    let mut invalid = artifact.content.clone();
+    let alternative = invalid
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .and_then(|world| {
+            world
+                .procedural_floors
+                .iter_mut()
+                .find(|floor| floor.id == "demo.floor.mine-depth-75")
+        })
+        .and_then(|floor| floor.layout.as_mut())
+        .and_then(|layout| layout.river.as_mut())
+        .and_then(|river| river.alternative.as_mut())
+        .expect("Mine alternative river should remain available");
+    alternative.chance_numerator = alternative.chance_denominator;
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidProceduralFloor(id)) if id == "demo.floor.mine-depth-75"
+    ));
+}
+
+#[test]
+fn p95b_battlefield_binds_alignment_shafts_guardians_and_rune_sword() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.battlefield")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Battlefield should use global allocation");
+    assert!(policy.preferred_glyphs.is_empty());
+    assert_eq!(policy.preferred_tags, ["evil", "good"]);
+    assert_eq!(policy.special_div, 0);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.battlefield")
+        .expect("Battlefield should exist");
+    assert_eq!(dungeon.legacy_index, Some(32));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.battlefield-depth-30");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.khamul-the-easterling"
+    );
+    let entrance_guardian = dungeon
+        .entrance_guardian
+        .as_ref()
+        .expect("Black wraith should guard the entrance");
+    assert_eq!(entrance_guardian.actor_kind_id, "demo.actor.black-wraith");
+    assert_eq!(entrance_guardian.position, ContentPosition { x: 45, y: 16 });
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 75, y: 57 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.battlefield"
+            )
+        })
+    }));
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.battlefield"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 21);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (30..=50).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.battlefield-entrance")
+    );
+    assert_eq!(
+        floors[0].entry_connection_id.as_deref(),
+        Some("demo.connection.battlefield-depth-30-stairs-up")
+    );
+    assert!(floors.iter().all(|floor| {
+        (floor.width, floor.height) == (96, 33)
+            && floor.floor_terrain_id == "demo.terrain.floor"
+            && floor.terrain_feature_table_id.as_deref()
+                == Some("demo.terrain-feature-table.battlefield")
+    }));
+    assert_eq!(
+        floors
+            .iter()
+            .flat_map(|floor| &floor.connections)
+            .filter(|connection| connection.kind == FloorConnectionKind::Shaft)
+            .count(),
+        38
+    );
+    let guardian = floors
+        .last()
+        .and_then(|floor| floor.guardian.as_ref())
+        .expect("Khamul should guard depth 50");
+    assert_eq!(guardian.instance_id, "demo.guardian.battlefield.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.khamul-the-easterling");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.battlefield-final-reward")
+    );
+
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.battlefield-final-reward")
+        .expect("Battlefield reward table should exist");
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.rune-sword");
+    let rune_sword = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.rune-sword")
+        .expect("Rune Sword should exist");
+    assert_eq!(rune_sword.generation_level, 70);
+    assert_eq!(rune_sword.weight_tenths_pound, 150);
+    assert_eq!(rune_sword.base_value, 50_000);
+    assert_eq!(
+        rune_sword.initial_curse,
+        Some(ItemCurseSeverityDefinition::Permanent)
+    );
+    assert!(rune_sword.resists_enchantment);
+    assert!(rune_sword.passives.contains(&EquipmentPassive::Vampiric));
+    let melee = rune_sword
+        .melee_profile
+        .as_ref()
+        .expect("Rune Sword melee profile");
+    assert_eq!((melee.damage_dice, melee.damage_sides), (0, 0));
+    assert_eq!((melee.to_hit, melee.to_damage), (-10, -10));
+    assert_eq!(
+        rune_sword.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+            ItemDestructionElement::Cold,
+        ])
+    );
+}
+
+#[test]
 fn p89d_hideout_binds_depths_ecology_guardian_and_am_quest_reward() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = &artifact.content;
@@ -4213,6 +5784,7 @@ fn p89e_man_cave_binds_substitution_depths_guardian_and_lotharang() {
             base_item_kind_id: "demo.item.battle-axe".to_owned(),
             rarity_one_in: 5,
             instant: false,
+            affix_ids: Vec::new(),
         })
     );
     let melee = lotharang.melee_profile.as_ref().expect("Lotharang melee");
@@ -7983,6 +9555,10 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
                 town_id: "demo.town.outpost".to_owned(),
             },
             WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 5, y: 48 },
+                dungeon_id: "demo.dungeon.labyrinth".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
                 position: ContentPosition { x: 7, y: 59 },
                 dungeon_id: "demo.dungeon.camelot".to_owned(),
             },
@@ -8003,6 +9579,14 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
                 dungeon_id: "demo.dungeon.warrens".to_owned(),
             },
             WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 30, y: 27 },
+                dungeon_id: "demo.dungeon.atlantis".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 30, y: 27 },
+                dungeon_id: "demo.dungeon.numenor".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
                 position: ContentPosition { x: 30, y: 45 },
                 dungeon_id: "demo.dungeon.orc-cave".to_owned(),
             },
@@ -8011,8 +9595,52 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
                 dungeon_id: "demo.dungeon.troll-cave".to_owned(),
             },
             WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 42, y: 58 },
+                dungeon_id: "demo.dungeon.lonely-mountain".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
                 position: ContentPosition { x: 47, y: 53 },
                 dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 49, y: 23 },
+                dungeon_id: "demo.dungeon.mine".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 63, y: 44 },
+                dungeon_id: "demo.dungeon.giants-hall".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 63, y: 53 },
+                dungeon_id: "demo.dungeon.witch-wood".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 65, y: 44 },
+                dungeon_id: "demo.dungeon.snow-castle".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 65, y: 54 },
+                dungeon_id: "demo.dungeon.plains-of-oz".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 74, y: 28 },
+                dungeon_id: "demo.dungeon.dragon-lair".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 75, y: 57 },
+                dungeon_id: "demo.dungeon.battlefield".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 76, y: 46 },
+                dungeon_id: "demo.dungeon.eyrie".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 85, y: 19 },
+                dungeon_id: "demo.dungeon.graveyard".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 88, y: 34 },
+                dungeon_id: "demo.dungeon.castle".to_owned(),
             },
         ]
     );
@@ -9292,7 +10920,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 330);
+    assert_eq!(base_items.entries.len(), 333);
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -9340,7 +10968,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 306);
+    assert_eq!(active_source_items.len(), 309);
 
     let source_items_without_allocations =
         BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
@@ -9354,7 +10982,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 296);
+    assert_eq!(expected_item_ids.len(), 299);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -11222,4 +12850,334 @@ fn p85_level_zero_roster_stays_in_its_wilderness_habitats() {
         assert!(actor.tags.iter().any(|tag| tag == "fixed-unique"), "{id}");
     }
     assert!(actor("scrawny-horse").rideable);
+}
+
+#[test]
+fn p96c_numenor_atlantis_share_entry_substitution_and_aquatic_ecology() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.numenor-atlantis")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Numenor and Atlantis should share global allocation");
+    assert!(policy.preferred_glyphs.is_empty());
+    assert!(policy.preferred_tags.is_empty());
+    assert_eq!(
+        policy.preferred_movement_modes,
+        [
+            ActorMovementMode::Aquatic,
+            ActorMovementMode::Fly,
+            ActorMovementMode::Swim,
+        ]
+    );
+    assert_eq!(policy.preferred_habitats, [ActorHabitat::Ocean]);
+    assert_eq!(policy.special_div, 0);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+
+    let terrain = content
+        .terrain
+        .iter()
+        .find(|terrain| terrain.id == "demo.terrain.numenor-atlantis-entrance")
+        .expect("shared underwater entrance terrain");
+    assert_eq!(terrain.glyph, ">");
+    assert!(terrain.tags.iter().any(|tag| tag == "stairs-down"));
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let locations = world
+        .wilderness
+        .as_ref()
+        .expect("Middle-earth wilderness")
+        .locations
+        .iter()
+        .filter_map(|location| match location {
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 30, y: 27 },
+                dungeon_id,
+            } if matches!(
+                dungeon_id.as_str(),
+                "demo.dungeon.numenor" | "demo.dungeon.atlantis"
+            ) =>
+            {
+                Some(dungeon_id.as_str())
+            }
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        locations,
+        BTreeSet::from(["demo.dungeon.atlantis", "demo.dungeon.numenor"])
+    );
+
+    let numenor = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.numenor")
+        .expect("Numenor should exist");
+    let atlantis = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.atlantis")
+        .expect("Atlantis should exist");
+    assert_eq!(numenor.legacy_index, Some(11));
+    assert_eq!(atlantis.legacy_index, Some(41));
+    assert_eq!(
+        numenor.substitution,
+        Some(DungeonSubstitutionDefinition {
+            alternate_dungeon_id: "demo.dungeon.atlantis".to_owned(),
+            alternate_gate_one_in: None,
+        })
+    );
+    assert!(atlantis.substitution.is_none());
+    assert_eq!(
+        numenor.guardian_actor_kind_id,
+        "demo.actor.jormungand-the-midgard-serpent"
+    );
+    assert_eq!(
+        atlantis.guardian_actor_kind_id,
+        "demo.actor.kundry-queen-of-the-lost-haven"
+    );
+    let numenor_entrance = numenor
+        .entrance_guardian
+        .as_ref()
+        .expect("Numenor entrance guardian");
+    let atlantis_entrance = atlantis
+        .entrance_guardian
+        .as_ref()
+        .expect("Atlantis entrance guardian");
+    assert_ne!(numenor_entrance.instance_id, atlantis_entrance.instance_id);
+    assert_ne!(numenor_entrance.position, atlantis_entrance.position);
+    assert_eq!(numenor_entrance.actor_kind_id, "demo.actor.lesser-kraken");
+    assert_eq!(atlantis_entrance.actor_kind_id, "demo.actor.lesser-kraken");
+
+    for (dungeon_id, depths, final_guardian) in [
+        (
+            "demo.dungeon.numenor",
+            (55..=75).collect::<Vec<_>>(),
+            "demo.actor.jormungand-the-midgard-serpent",
+        ),
+        (
+            "demo.dungeon.atlantis",
+            (55..=65).collect::<Vec<_>>(),
+            "demo.actor.kundry-queen-of-the-lost-haven",
+        ),
+    ] {
+        let mut floors = world
+            .procedural_floors
+            .iter()
+            .filter(|floor| floor.dungeon_id.as_deref() == Some(dungeon_id))
+            .collect::<Vec<_>>();
+        floors.sort_by_key(|floor| floor.depth);
+        assert_eq!(
+            floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+            depths
+        );
+        assert_eq!(
+            floors[0].entry_terrain_id.as_deref(),
+            Some("demo.terrain.numenor-atlantis-entrance")
+        );
+        assert!(floors.iter().all(|floor| {
+            floor.encounter_table_id.as_deref() == Some("demo.encounter-table.numenor-atlantis")
+        }));
+        assert!(floors.windows(2).all(|pair| {
+            pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+                && pair[1].return_floor_id == pair[0].id
+        }));
+        let guardian = floors
+            .last()
+            .and_then(|floor| floor.guardian.as_ref())
+            .expect("final guardian");
+        assert_eq!(guardian.actor_kind_id, final_guardian);
+        assert_eq!(
+            guardian.reward_artifact_item_kind_id.as_deref(),
+            Some("demo.item.trifurcate-spear-of-wrath")
+        );
+        assert_eq!(
+            guardian.reward_loot_table_id.as_deref(),
+            Some("demo.loot-table.trifurcate-spear-final-replacement")
+        );
+    }
+}
+
+#[test]
+fn p96d_numenor_atlantis_bind_water_mix_veins_stairs_and_representative_layers() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let feature_table = |id: &str| {
+        content
+            .terrain_feature_tables
+            .iter()
+            .find(|table| table.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    let numenor_features = feature_table("demo.terrain-feature-table.numenor");
+    assert_eq!(numenor_features.rolls, 160);
+    assert_eq!(numenor_features.entries.len(), 1);
+    assert_eq!(
+        numenor_features.entries[0].terrain_id,
+        "demo.terrain.surface-water-shallow"
+    );
+    assert_eq!(
+        numenor_features.entries[0].placement,
+        TerrainFeaturePlacement::Room
+    );
+    let atlantis_features = feature_table("demo.terrain-feature-table.atlantis");
+    assert_eq!(atlantis_features.rolls, 320);
+    assert_eq!(
+        atlantis_features
+            .entries
+            .iter()
+            .map(|entry| (entry.terrain_id.as_str(), entry.weight, entry.placement))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([
+            (
+                "demo.terrain.surface-water-deep",
+                1,
+                TerrainFeaturePlacement::Room,
+            ),
+            (
+                "demo.terrain.surface-water-shallow",
+                1,
+                TerrainFeaturePlacement::Room,
+            ),
+        ])
+    );
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    for (
+        dungeon_id,
+        feature_table_id,
+        feature_placements,
+        expected_lake_depths,
+        expected_destroyed_depths,
+        has_river,
+    ) in [
+        (
+            "demo.dungeon.numenor",
+            "demo.terrain-feature-table.numenor",
+            160,
+            vec![65],
+            vec![70],
+            true,
+        ),
+        (
+            "demo.dungeon.atlantis",
+            "demo.terrain-feature-table.atlantis",
+            320,
+            vec![60],
+            vec![],
+            false,
+        ),
+    ] {
+        let mut floors = world
+            .procedural_floors
+            .iter()
+            .filter(|floor| floor.dungeon_id.as_deref() == Some(dungeon_id))
+            .collect::<Vec<_>>();
+        floors.sort_by_key(|floor| floor.depth);
+        assert!(floors.iter().all(|floor| floor.connections.is_empty()));
+        assert_eq!(
+            floors
+                .iter()
+                .filter(|floor| floor
+                    .layout
+                    .as_ref()
+                    .is_some_and(|layout| layout.lake.is_some()))
+                .map(|floor| floor.depth)
+                .collect::<Vec<_>>(),
+            expected_lake_depths
+        );
+        assert_eq!(
+            floors
+                .iter()
+                .filter(|floor| floor
+                    .layout
+                    .as_ref()
+                    .is_some_and(|layout| layout.destroyed.is_some()))
+                .map(|floor| floor.depth)
+                .collect::<Vec<_>>(),
+            expected_destroyed_depths
+        );
+
+        for floor in floors {
+            assert_eq!(
+                floor.loot_table_id.as_deref(),
+                Some("demo.loot-table.base-items")
+            );
+            assert_eq!(
+                floor.terrain_feature_table_id.as_deref(),
+                Some(feature_table_id)
+            );
+            let budget = floor.generation_budget.as_ref().expect("generation budget");
+            assert_eq!(budget.room_area_tiles, Some(800));
+            assert_eq!(budget.streamer_placements, Some(2));
+            assert_eq!(budget.streamer_area_tiles, Some(32));
+            assert_eq!(budget.feature_placements, Some(feature_placements));
+            assert_eq!(budget.river_area_tiles, has_river.then_some(160));
+            assert_eq!(
+                (budget.lake_area_tiles, budget.lake_deep_area_tiles),
+                if floor.depth == expected_lake_depths[0] {
+                    (Some(360), Some(120))
+                } else {
+                    (None, None)
+                }
+            );
+            assert_eq!(
+                (budget.destruction_centers, budget.destroyed_area_tiles),
+                if expected_destroyed_depths.contains(&floor.depth) {
+                    (Some(1), Some(96))
+                } else {
+                    (None, None)
+                }
+            );
+
+            let layout = floor.layout.as_ref().expect("standard room layout");
+            assert_eq!(
+                layout
+                    .rooms
+                    .as_ref()
+                    .expect("room geometry")
+                    .shapes
+                    .iter()
+                    .map(|shape| (shape.shape, shape.weight))
+                    .collect::<Vec<_>>(),
+                vec![(ProceduralRoomShape::Rectangle, 1)]
+            );
+            assert_eq!(
+                layout
+                    .streamers
+                    .iter()
+                    .map(|streamer| (streamer.terrain_id.as_str(), streamer.weight))
+                    .collect::<BTreeMap<_, _>>(),
+                BTreeMap::from([
+                    ("demo.terrain.magma-vein", 1),
+                    ("demo.terrain.quartz-vein", 1),
+                ])
+            );
+            assert_eq!(layout.river.is_some(), has_river);
+            if let Some(river) = &layout.river {
+                assert_eq!(river.deep_terrain_id, "demo.terrain.surface-water-deep");
+                assert_eq!(
+                    river.shallow_terrain_id,
+                    "demo.terrain.surface-water-shallow"
+                );
+                assert_eq!(river.chance_one_in, Some(7));
+            }
+            let stairs = layout.stairs.as_ref().expect("ordinary stair ranges");
+            assert_eq!((stairs.up.minimum, stairs.up.maximum), (1, 2));
+            assert_eq!(
+                stairs.down.map(|range| (range.minimum, range.maximum)),
+                (!floor.final_floor).then_some((4, 5))
+            );
+        }
+    }
 }

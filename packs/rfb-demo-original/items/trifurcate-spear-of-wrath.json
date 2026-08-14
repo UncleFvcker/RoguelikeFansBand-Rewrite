@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.trifurcate-spear-of-wrath",
+  "nameKey": "item-demo-trifurcate-spear-of-wrath-name",
+  "descriptionKey": "item-demo-trifurcate-spear-of-wrath-description",
+  "elementalDestructionVulnerabilities": ["acid", "fire"],
+  "glyph": "/",
+  "generationLevel": 70,
+  "weightTenthsPound": 300,
+  "maxStack": 1,
+  "ridingWeaponKind": "compatible",
+  "baseValue": 90000,
+  "equipmentSlot": "weapon",
+  "weaponProficiencyBaseItemId": "demo.item.trifurcate-spear",
+  "artifactGeneration": {
+    "sourceIndex": 107,
+    "baseItemKindId": "demo.item.trifurcate-spear",
+    "rarityOneIn": 12,
+    "instant": false
+  },
+  "modifiers": { "strength": 2, "dexterity": 2 },
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 16,
+    "toDamage": 18,
+    "damageDice": 3,
+    "damageSides": 10
+  },
+  "slays": { "evil": "slay", "undead": "slay" },
+  "brands": ["chaos"],
+  "resistances": { "light": "resistant", "dark": "resistant" },
+  "passives": ["see-invisible"],
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "tags": ["artifact", "blessed-weapon", "equipment", "weapon"]
+}

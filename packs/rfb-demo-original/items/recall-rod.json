@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.recall-rod",
+  "nameKey": "item-demo-recall-rod-name",
+  "appearanceNameKey": "item-demo-unfamiliar-rod-name",
+  "descriptionKey": "item-demo-recall-rod-description",
+  "glyph": "-",
+  "generationLevel": 10,
+  "mogaminatorRare": false,
+  "weightTenthsPound": 15,
+  "maxStack": 1,
+  "baseValue": 1000,
+  "deviceGeneration": {
+    "recovery": { "intervalTicks": 1, "energyPerMille": 10 },
+    "activations": [
+      {
+        "id": "demo.device-activation.recall",
+        "nameKey": "device-activation-demo-recall-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 27,
+        "charges": { "minimum": 40, "maximum": 40, "cost": 15 },
+        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+        "effectProgramId": "demo.effect.recall-homeward"
+      }
+    ]
+  },
+  "tags": ["device", "dungeon-reward", "rfb", "rod"]
+}

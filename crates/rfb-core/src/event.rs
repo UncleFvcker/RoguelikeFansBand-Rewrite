@@ -596,6 +596,9 @@ pub(crate) enum DomainEvent {
         succeeded: bool,
         resolution: CheckResolutionDto,
     },
+    ItemWarnedOfTrap {
+        position: Position,
+    },
     TerrainDug {
         position: Position,
     },
@@ -2811,6 +2814,11 @@ impl DomainEvent {
                 "skill-check-perception-failure",
                 [],
                 GameEventOutcomeDto::Check { resolution },
+            ),
+            Self::ItemWarnedOfTrap { position } => dto(
+                "item.warning-trap",
+                "item-warning-trap",
+                [("x", position.x.to_string()), ("y", position.y.to_string())],
             ),
             Self::TerrainDug { position } => dto(
                 "terrain.dug",

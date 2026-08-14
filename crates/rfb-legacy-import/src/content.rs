@@ -426,6 +426,8 @@ struct DemoWildernessDungeonPlan {
     #[serde(default)]
     floor_terrain_distribution: Vec<DemoDungeonFloorTerrainPlan>,
     tunnel_percent: Option<u16>,
+    #[serde(default)]
+    initial_guardian: Option<DemoDungeonGuardianPlan>,
     guardian: DemoDungeonGuardianPlan,
     final_object: Option<DemoDungeonObjectPlan>,
     final_artifact_source_index: Option<u32>,
@@ -746,6 +748,14 @@ pub struct LegacyEgoEntry {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LegacyArtifactActivation {
+    pub token: String,
+    pub power: u16,
+    pub recovery_turns: u16,
+    pub extra: u32,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LegacyArtifactEntry {
     pub index: u32,
     pub name: String,
@@ -764,6 +774,7 @@ pub struct LegacyArtifactEntry {
     pub to_armor: i32,
     pub flags: Vec<String>,
     pub has_activation: bool,
+    pub activation: Option<LegacyArtifactActivation>,
 }
 
 /// One b_info body template: slot type tokens in file order.
@@ -3387,8 +3398,27 @@ fn legacy_device_generation(entry: &LegacyItemEntry) -> Option<serde_json::Value
             "effect": effect
         })
     };
-    let activations = match entry.tval {
-        65 => vec![
+    let activations = match (entry.tval, entry.sval) {
+        (38, 6) => vec![activation(
+            "rfb-legacy.item-activation.multi-hued-dragon-breath",
+            "item-activation-demo-multi-hued-dragon-breath-name",
+            40,
+            1,
+            1,
+            1,
+            serde_json::json!({
+                "modes": ["direction"],
+                "range": 18,
+                "requiresLineOfEffect": true
+            }),
+            serde_json::json!({
+                "type": "random-element-cone-damage",
+                "damage": 250,
+                "damageTypes": ["acid", "electricity", "fire", "cold", "poison"],
+                "radius": 2
+            }),
+        )],
+        (65, _) => vec![
             activation(
                 "rfb-legacy.device-activation.frost-bolt",
                 "device-activation-legacy-frost-bolt-name",
@@ -3428,7 +3458,7 @@ fn legacy_device_generation(entry: &LegacyItemEntry) -> Option<serde_json::Value
                 }),
             ),
         ],
-        66 => vec![activation(
+        (66, _) => vec![activation(
             "rfb-legacy.device-activation.detect-traps",
             "device-activation-legacy-detect-traps-name",
             10,
@@ -3448,7 +3478,7 @@ fn legacy_device_generation(entry: &LegacyItemEntry) -> Option<serde_json::Value
                 "persistent": true
             }),
         )],
-        55 => vec![activation(
+        (55, _) => vec![activation(
             "rfb-legacy.device-activation.heal",
             "device-activation-legacy-heal-name",
             20,
@@ -3467,12 +3497,18 @@ fn legacy_device_generation(entry: &LegacyItemEntry) -> Option<serde_json::Value
         )],
         _ => return None,
     };
-    let interval_ticks = if entry.tval == 66 { 1 } else { 10 };
+    let (interval_ticks, energy_per_mille) = if (entry.tval, entry.sval) == (38, 6) {
+        (700, 1_000)
+    } else if entry.tval == 66 {
+        (1, 10)
+    } else {
+        (10, 10)
+    };
     Some(serde_json::json!({
         "activations": activations,
         "recovery": {
             "intervalTicks": interval_ticks,
-            "energyPerMille": 10
+            "energyPerMille": energy_per_mille
         }
     }))
 }
@@ -3495,6 +3531,8 @@ fn item_json_with_terrain(
     {
         tags.push("unbrandable");
     }
+    let resists_enchantment = entry.flags.iter().any(|flag| flag == "NO_ENCHANT")
+        || matches!((entry.tval, entry.sval), (23, 32 | 34));
     let use_action = fixed_consumable_use_action_with_terrain(entry, terrain_creation);
     let device_generation = legacy_device_generation(entry);
     let behavior_gap = if entry.tval == 70 && entry.sval == 52 {
@@ -3527,8 +3565,12 @@ fn item_json_with_terrain(
         "weightTenthsPound": entry.weight_tenths_pound.max(1),
         "maxStack": shape.max_stack,
         "baseValue": entry.base_value,
-        "tags": tags,
+        "resistsEnchantment": resists_enchantment,
+        "tags": tags.clone(),
     });
+    if matches!((entry.tval, entry.sval), (23, 34)) {
+        value["initialCurse"] = serde_json::json!("permanent");
+    }
     if entry.tval == 11 {
         value["captureBall"] = serde_json::json!(true);
     }
@@ -3542,6 +3584,10 @@ fn item_json_with_terrain(
     if let Some(device_generation) = device_generation {
         value["maxStack"] = serde_json::json!(1);
         value["deviceGeneration"] = device_generation;
+        if shape.slot.is_some() {
+            tags.push("activatable");
+            value["tags"] = serde_json::json!(tags);
+        }
     }
     if let Some((effect, radius)) = potion_shatter_effect(entry) {
         value["shatterEffect"] = effect;
@@ -3574,12 +3620,17 @@ fn item_json_with_terrain(
     }
     if shape.melee {
         let (dice, sides) = entry.damage_dice.unwrap_or((1, 1));
+        let (damage_dice, damage_sides) = if (dice, sides) == (0, 0) {
+            (0, 0)
+        } else {
+            (dice.clamp(1, 100), sides.clamp(1, 10_000))
+        };
         value["meleeProfile"] = serde_json::json!({
             "attacks": 1,
             "toHit": entry.to_hit.clamp(-1_000_000, 1_000_000),
             "toDamage": entry.to_damage.clamp(-1_000_000, 1_000_000),
-            "damageDice": dice.clamp(1, 100),
-            "damageSides": sides.clamp(1, 10_000),
+            "damageDice": damage_dice,
+            "damageSides": damage_sides,
         });
     }
     if entry.flags.iter().any(|flag| flag == "RIDING") {
@@ -3672,8 +3723,10 @@ fn item_json_with_terrain(
     }
     apply_item_destruction_properties(&mut value, entry.tval, &entry.flags);
     for flag in &entry.flags {
-        if matches!(flag.as_str(), "NO_REMOVE" | "RIDING" | "REFLECT")
-            || item_destruction_flag_is_mapped(flag)
+        if matches!(
+            flag.as_str(),
+            "NO_ENCHANT" | "NO_REMOVE" | "RIDING" | "REFLECT"
+        ) || item_destruction_flag_is_mapped(flag)
         {
             continue;
         }
@@ -3788,7 +3841,6 @@ fn demo_item_json(
     if (!ordinary_equipment && !shape.tags_contain("ammunition"))
         || (shape.behavior_gap.is_some() && !bare_jewelry)
         || fixed_consumable_use_action_with_terrain(entry, None).is_some()
-        || legacy_device_generation(entry).is_some()
         || player_ability_book_for_item(entry).is_some()
     {
         return Err(LegacyImportError::InvalidDemoItemSelection(format!(
@@ -4062,13 +4114,37 @@ pub fn parse_a_info(text: &str) -> Result<Vec<LegacyArtifactEntry>, LegacyImport
                     .filter(|flag| !flag.is_empty())
                     .map(str::to_owned),
             );
-        } else if let Some(rest) = line.strip_prefix("E:")
-            && rest
-                .split(':')
-                .next()
+        } else if let Some(rest) = line.strip_prefix("E:") {
+            let parts = rest.split(':').map(str::trim).collect::<Vec<_>>();
+            if parts
+                .first()
                 .is_some_and(|token| token.bytes().all(|b| b.is_ascii()) && !token.is_empty())
-        {
-            entry.has_activation = true;
+            {
+                entry.has_activation = true;
+                if parts.len() == 4 {
+                    entry.activation = Some(LegacyArtifactActivation {
+                        token: parts[0].to_owned(),
+                        power: parse_number(
+                            A_INFO_SOURCE,
+                            line_number,
+                            "E.power",
+                            parts.get(1).copied(),
+                        )?,
+                        recovery_turns: parse_number(
+                            A_INFO_SOURCE,
+                            line_number,
+                            "E.recoveryTurns",
+                            parts.get(2).copied(),
+                        )?,
+                        extra: parse_number(
+                            A_INFO_SOURCE,
+                            line_number,
+                            "E.extra",
+                            parts.get(3).copied(),
+                        )?,
+                    });
+                }
+            }
         }
     }
     if let Some(entry) = current.take() {
@@ -4410,6 +4486,22 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
             fold.consumed.insert(flag.to_owned());
         }
     }
+    if flags.iter().any(|value| value == "LIFE") && pval != 0 {
+        add_equipment_bonus(
+            &mut fold,
+            "lifePercent",
+            pval.saturating_mul(3).clamp(-100, 100),
+        );
+        fold.consumed.insert("LIFE".to_owned());
+    }
+    if flags.iter().any(|value| value == "DEC_LIFE") && pval != 0 {
+        add_equipment_bonus(
+            &mut fold,
+            "lifePercent",
+            pval.saturating_mul(-3).clamp(-100, 100),
+        );
+        fold.consumed.insert("DEC_LIFE".to_owned());
+    }
     fold.passives.sort_unstable();
     fold
 }
@@ -4734,9 +4826,27 @@ fn artifact_json(
             "rarityOneIn": entry.rarity_one_in,
             "instant": entry.flags.iter().any(|flag| flag == "INSTA_ART"),
         });
+        if entry.flags.iter().any(|flag| flag == "XTRA_RES_OR_POWER") {
+            value["artifactGeneration"]["affixIds"] =
+                serde_json::json!(["rfb-legacy.affix.artifact-extra-res-or-power"]);
+        }
     }
     if let Some(slot) = shape.slot {
         value["equipmentSlot"] = serde_json::json!(slot);
+    }
+    if entry.flags.iter().any(|flag| flag == "RIDING") {
+        value["ridingWeaponKind"] =
+            serde_json::json!(if matches!((entry.tval, entry.sval), (22, 20 | 29)) {
+                "lance"
+            } else {
+                "compatible"
+            });
+    }
+    if entry.flags.iter().any(|flag| flag == "BLESSED") {
+        value["tags"]
+            .as_array_mut()
+            .expect("artifact tags should be an array")
+            .insert(1, serde_json::json!("blessed-weapon"));
     }
     if shape.melee && shape.slot == Some("weapon") {
         let (dice, sides) = entry.damage_dice.unwrap_or((1, 1));
@@ -4819,7 +4929,43 @@ fn artifact_json(
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
     apply_item_destruction_properties(&mut value, entry.tval, &entry.flags);
-    if entry.has_activation {
+    if let Some(activation) = entry
+        .activation
+        .as_ref()
+        .filter(|activation| activation.token == "BEAM_COLD")
+    {
+        value["tags"]
+            .as_array_mut()
+            .expect("artifact tags should be an array")
+            .insert(0, serde_json::json!("activatable"));
+        value["deviceGeneration"] = serde_json::json!({
+            "recovery": {
+                "intervalTicks": u32::from(activation.recovery_turns) * 10,
+                "energyPerMille": 1_000
+            },
+            "activations": [{
+                "id": "rfb-legacy.item-activation.cold-beam",
+                "nameKey": "item-activation-demo-cold-beam-name",
+                "weight": 1,
+                "minDepth": 1,
+                "maxDepth": 100,
+                "deviceCheckDifficulty": activation.power,
+                "charges": {"minimum": 1, "maximum": 1, "cost": 1},
+                "target": {
+                    "modes": ["direction"],
+                    "range": 18,
+                    "requiresLineOfEffect": true
+                },
+                "effect": {
+                    "type": "beam-damage",
+                    "damageDice": 0,
+                    "damageSides": 0,
+                    "damageBonus": activation.extra,
+                    "damageType": "cold"
+                }
+            }]
+        });
+    } else if entry.has_activation {
         *report
             .item_behavior_gaps
             .entry("artifact-activation".to_owned())
@@ -4830,6 +4976,7 @@ fn artifact_json(
         // so their flags stay visible in the gap report.
         if (has_slot && attribute_flag_is_mapped(flag))
             || flag == "INSTA_ART"
+            || matches!(flag.as_str(), "BLESSED" | "RIDING" | "XTRA_RES_OR_POWER")
             || item_destruction_flag_is_mapped(flag)
         {
             continue;
@@ -8632,6 +8779,7 @@ fn monster_json(
     }
     for (flag, tag) in [
         ("ANIMAL", "animal"),
+        ("AUSSIE", "aussie"),
         ("EVIL", "evil"),
         ("GOOD", "good"),
         ("HUMAN", "human"),
@@ -9042,6 +9190,7 @@ fn demo_monster_flag_is_handled(flag: &str) -> bool {
             flag,
             "FORCE_MAXHP"
                 | "ANIMAL"
+                | "AUSSIE"
                 | "EVIL"
                 | "GOOD"
                 | "HUMAN"
@@ -9440,6 +9589,7 @@ fn demo_monster_json(
     }
     for (flag, tag) in [
         ("ANIMAL", "animal"),
+        ("AUSSIE", "aussie"),
         ("EVIL", "evil"),
         ("GOOD", "good"),
         ("HUMAN", "human"),
@@ -11949,7 +12099,7 @@ fn effect_program_from_inline(
             .and_then(serde_json::Value::as_str)
             .ok_or_else(|| format!("{id} step has no effect type"))?;
         let step_input = match step_type {
-            "damage" => "actor",
+            "damage" | "beam-damage" | "random-element-cone-damage" => "actor",
             "identify-item" | "enchant-item" | "recharge-from-device" => "item",
             "genocide" => "glyph",
             _ => "self",
@@ -12665,6 +12815,24 @@ fn dungeon_flag_number(record: &LegacyDungeonRecord, prefix: &str) -> Option<u32
         .find_map(|flag| flag.strip_prefix(prefix)?.parse().ok())
 }
 
+fn dungeon_monster_divisor(record: &LegacyDungeonRecord) -> u32 {
+    dungeon_flag_number(record, "MONSTER_DIV_").unwrap_or_default()
+}
+
+fn dungeon_generation_flags(record: &LegacyDungeonRecord) -> BTreeSet<String> {
+    record
+        .flags
+        .iter()
+        .filter(|flag| {
+            !flag.starts_with("FINAL_")
+                && !flag.starts_with("INITIAL_GUARDIAN_")
+                && !flag.starts_with("MONSTER_DIV_")
+                && !flag.starts_with("SUBSTITUTE_")
+        })
+        .cloned()
+        .collect()
+}
+
 fn dungeon_final_object(record: &LegacyDungeonRecord) -> Option<DemoDungeonObjectPlan> {
     let value = record
         .flags
@@ -12799,24 +12967,14 @@ fn validate_demo_wilderness_plans(
             || record.position != Some((dungeon.position.x, dungeon.position.y))
             || record.minimum_depth != Some(dungeon.minimum_depth)
             || record.maximum_depth != Some(dungeon.maximum_depth)
-            || dungeon_flag_number(record, "MONSTER_DIV_")
-                != Some(u32::from(dungeon.monster_divisor))
+            || dungeon_monster_divisor(record) != u32::from(dungeon.monster_divisor)
         {
             return Err(invalid_wilderness_selection(format!(
                 "planned dungeon {} identity, position, depth, or divisor drifted",
                 dungeon.id
             )));
         }
-        let source_generation_flags = record
-            .flags
-            .iter()
-            .filter(|flag| {
-                !flag.starts_with("FINAL_")
-                    && !flag.starts_with("MONSTER_DIV_")
-                    && !flag.starts_with("SUBSTITUTE_")
-            })
-            .cloned()
-            .collect::<BTreeSet<_>>();
+        let source_generation_flags = dungeon_generation_flags(record);
         if dungeon
             .generation_flags
             .iter()
@@ -12880,6 +13038,37 @@ fn validate_demo_wilderness_plans(
                 "planned dungeon {} guardian identity drifted",
                 dungeon.id
             )));
+        }
+        if let Some(initial_guardian) = &dungeon.initial_guardian {
+            if dungeon_flag_number(record, "INITIAL_GUARDIAN_")
+                != Some(initial_guardian.source_index)
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "planned dungeon {} initial guardian drifted",
+                    dungeon.id
+                )));
+            }
+            let monster = monsters
+                .iter()
+                .find(|monster| monster.index == initial_guardian.source_index)
+                .ok_or_else(|| {
+                    invalid_wilderness_selection(format!(
+                        "planned initial guardian index {} is absent",
+                        initial_guardian.source_index
+                    ))
+                })?;
+            let chinese_name = chinese_monster_names
+                .get(initial_guardian.source_index as usize)
+                .and_then(Option::as_deref);
+            if monster.name != initial_guardian.source_name
+                || monster.level != Some(initial_guardian.level)
+                || chinese_name != Some(&initial_guardian.chinese_name)
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "planned dungeon {} initial guardian identity drifted",
+                    dungeon.id
+                )));
+            }
         }
     }
 
@@ -15418,6 +15607,836 @@ mod tests {
         assert_eq!(troll_cave.final_artifact_source_index, None);
         assert_eq!(troll_cave.final_ego_source_index, Some(72));
         assert_eq!(troll_cave.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p91a_eyrie_plan_locks_entrance_ecology_guardians_and_reward() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let eyrie = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 14)
+            .expect("Eyrie should have an implementation plan");
+
+        assert_eq!(eyrie.source_name, "Eyrie");
+        assert_eq!(eyrie.id, "demo.dungeon.eyrie");
+        assert_eq!(eyrie.position, DemoWildernessPosition { x: 76, y: 46 });
+        assert_eq!((eyrie.minimum_depth, eyrie.maximum_depth), (40, 50));
+        assert_eq!(eyrie.monster_divisor, 16);
+        assert_eq!(
+            eyrie.generation_flags,
+            [
+                "WATER_RIVER",
+                "CAVE",
+                "CAVERN",
+                "NO_DOORS",
+                "BIG",
+                "ALL_SHAFTS",
+            ]
+        );
+        assert_eq!(
+            eyrie.monster_preferences,
+            [
+                "TROLL",
+                "GIANT",
+                "CAN_FLY",
+                "ANIMAL",
+                "WILD_MOUNTAIN",
+                "R_CHAR_OYH",
+            ]
+        );
+        assert_eq!(
+            eyrie.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GRASS".to_owned(),
+                    percent: 100,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GRASS".to_owned(),
+                    percent: 0,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GRASS".to_owned(),
+                    percent: 0,
+                },
+            ]
+        );
+        assert_eq!(eyrie.tunnel_percent, Some(0));
+        let entrance_guardian = eyrie
+            .initial_guardian
+            .as_ref()
+            .expect("Eyrie should lock its entrance guardian");
+        assert_eq!(entrance_guardian.source_index, 640);
+        assert_eq!(entrance_guardian.source_name, "Jubjub bird");
+        assert_eq!(entrance_guardian.chinese_name, "加布加布鸟");
+        assert_eq!(entrance_guardian.level, 40);
+        assert_eq!(eyrie.guardian.source_index, 468);
+        assert_eq!(eyrie.guardian.source_name, "Thorondor");
+        assert_eq!(eyrie.guardian.chinese_name, "巨鹰之王索隆多");
+        assert_eq!(eyrie.guardian.level, 55);
+        assert_eq!(
+            eyrie.final_object,
+            Some(DemoDungeonObjectPlan { tval: 75, sval: 63 })
+        );
+        assert_eq!(eyrie.final_artifact_source_index, None);
+        assert_eq!(eyrie.final_ego_source_index, None);
+        assert_eq!(eyrie.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p92a_labyrinth_plan_locks_maze_forgetting_guardian_and_recall_rod() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let labyrinth = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 4)
+            .expect("Labyrinth should have an implementation plan");
+
+        assert_eq!(labyrinth.source_name, "Labyrinth");
+        assert_eq!(labyrinth.id, "demo.dungeon.labyrinth");
+        assert_eq!(labyrinth.position, DemoWildernessPosition { x: 5, y: 48 });
+        assert_eq!((labyrinth.minimum_depth, labyrinth.maximum_depth), (20, 28));
+        assert_eq!(labyrinth.monster_divisor, 64);
+        assert_eq!(labyrinth.generation_flags, ["MAZE", "SMALLEST", "FORGET"]);
+        assert!(labyrinth.monster_preferences.is_empty());
+        assert_eq!(
+            labyrinth.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 100,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+            ]
+        );
+        assert_eq!(labyrinth.tunnel_percent, Some(100));
+        assert_eq!(labyrinth.guardian.source_index, 1034);
+        assert_eq!(
+            labyrinth.guardian.source_name,
+            "The Minotaur of the Labyrinth"
+        );
+        assert_eq!(labyrinth.guardian.chinese_name, "迷宫牛头怪");
+        assert_eq!(labyrinth.guardian.level, 35);
+        assert_eq!(
+            labyrinth.final_object,
+            Some(DemoDungeonObjectPlan { tval: 66, sval: 0 })
+        );
+        assert_eq!(labyrinth.final_artifact_source_index, None);
+        assert_eq!(labyrinth.final_ego_source_index, Some(56));
+        assert_eq!(labyrinth.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p93a_lonely_mountain_plan_locks_lava_ecology_guardian_and_arkenstone() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let lonely_mountain = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 23)
+            .expect("Lonely Mountain should have an implementation plan");
+
+        assert_eq!(lonely_mountain.source_name, "Lonely Mountain");
+        assert_eq!(lonely_mountain.id, "demo.dungeon.lonely-mountain");
+        assert_eq!(
+            lonely_mountain.position,
+            DemoWildernessPosition { x: 42, y: 58 }
+        );
+        assert_eq!(
+            (lonely_mountain.minimum_depth, lonely_mountain.maximum_depth),
+            (30, 40)
+        );
+        assert_eq!(lonely_mountain.monster_divisor, 10);
+        assert_eq!(
+            lonely_mountain.generation_flags,
+            [
+                "BIG",
+                "LAVA_RIVER",
+                "CAVERN",
+                "DESTROY",
+                "CAVE",
+                "LAKE_LAVA",
+                "LAKE_TREE",
+                "LAKE_RUBBLE",
+            ]
+        );
+        assert_eq!(lonely_mountain.monster_preferences, ["DRAGON", "R_CHAR_dD"]);
+        assert_eq!(
+            lonely_mountain.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "DIRT".to_owned(),
+                    percent: 100,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+            ]
+        );
+        assert_eq!(lonely_mountain.tunnel_percent, Some(0));
+        assert_eq!(lonely_mountain.guardian.source_index, 697);
+        assert_eq!(lonely_mountain.guardian.source_name, "Smaug the Golden");
+        assert_eq!(lonely_mountain.guardian.chinese_name, "黄金史矛革");
+        assert_eq!(lonely_mountain.guardian.level, 45);
+        assert_eq!(lonely_mountain.final_object, None);
+        assert_eq!(lonely_mountain.final_artifact_source_index, Some(329));
+        assert_eq!(lonely_mountain.final_ego_source_index, None);
+        assert_eq!(lonely_mountain.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p97a_dragon_lair_plan_locks_lava_ecology_guardians_and_scale_mail() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let dragon_lair = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 5)
+            .expect("Dragon's Lair should have an implementation plan");
+
+        assert_eq!(dragon_lair.source_name, "Dragon's lair");
+        assert_eq!(dragon_lair.id, "demo.dungeon.dragon-lair");
+        assert_eq!(
+            dragon_lair.position,
+            DemoWildernessPosition { x: 74, y: 28 }
+        );
+        assert_eq!(
+            (dragon_lair.minimum_depth, dragon_lair.maximum_depth),
+            (60, 72)
+        );
+        assert_eq!(dragon_lair.monster_divisor, 10);
+        assert_eq!(
+            dragon_lair.generation_flags,
+            [
+                "BIG",
+                "LAVA_RIVER",
+                "CAVERN",
+                "DESTROY",
+                "CAVE",
+                "LAKE_LAVA",
+                "LAKE_TREE",
+                "LAKE_RUBBLE",
+            ]
+        );
+        assert_eq!(dragon_lair.monster_preferences, ["DRAGON", "R_CHAR_dD"]);
+        assert_eq!(
+            dragon_lair.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "DIRT".to_owned(),
+                    percent: 100,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+            ]
+        );
+        assert_eq!(dragon_lair.tunnel_percent, Some(0));
+        let entrance_guardian = dragon_lair
+            .initial_guardian
+            .as_ref()
+            .expect("Dragon's Lair should lock its entrance guardian");
+        assert_eq!(entrance_guardian.source_index, 675);
+        assert_eq!(entrance_guardian.source_name, "Ancient multi-hued dragon");
+        assert_eq!(entrance_guardian.chinese_name, "上古多彩龙");
+        assert_eq!(entrance_guardian.level, 43);
+        assert_eq!(dragon_lair.guardian.source_index, 795);
+        assert_eq!(
+            dragon_lair.guardian.source_name,
+            "Tiamat, Celestial Dragon of Evil"
+        );
+        assert_eq!(dragon_lair.guardian.chinese_name, "邪恶天龙提亚马特");
+        assert_eq!(dragon_lair.guardian.level, 70);
+        assert_eq!(
+            dragon_lair.final_object,
+            Some(DemoDungeonObjectPlan { tval: 38, sval: 6 })
+        );
+        assert_eq!(dragon_lair.final_artifact_source_index, None);
+        assert_eq!(dragon_lair.final_ego_source_index, None);
+        assert_eq!(dragon_lair.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p98a_castle_plan_locks_rooms_ecology_and_guardians() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let castle = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 12)
+            .expect("Castle should have an implementation plan");
+
+        assert_eq!(castle.source_name, "Castle");
+        assert_eq!(castle.id, "demo.dungeon.castle");
+        assert_eq!(castle.position, DemoWildernessPosition { x: 88, y: 34 });
+        assert_eq!((castle.minimum_depth, castle.maximum_depth), (40, 65));
+        assert_eq!(castle.monster_divisor, 16);
+        assert_eq!(
+            castle.generation_flags,
+            ["ARENA", "NO_CAVE", "CURTAIN", "GLASS_ROOM"]
+        );
+        assert_eq!(castle.monster_preferences, ["DEMON", "R_CHAR_phHg"]);
+        assert_eq!(
+            castle.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 100,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+            ]
+        );
+        assert_eq!(castle.tunnel_percent, Some(100));
+        let entrance_guardian = castle
+            .initial_guardian
+            .as_ref()
+            .expect("Castle should lock its entrance guardian");
+        assert_eq!(entrance_guardian.source_index, 497);
+        assert_eq!(entrance_guardian.source_name, "Anti-paladin");
+        assert_eq!(entrance_guardian.chinese_name, "反圣武士");
+        assert_eq!(entrance_guardian.level, 33);
+        assert_eq!(castle.guardian.source_index, 882);
+        assert_eq!(castle.guardian.source_name, "Layzark, the Emperor");
+        assert_eq!(castle.guardian.chinese_name, "皇帝雷扎克");
+        assert_eq!(castle.guardian.level, 65);
+        assert_eq!(castle.final_object, None);
+        assert_eq!(castle.final_artifact_source_index, None);
+        assert_eq!(castle.final_ego_source_index, None);
+        assert_eq!(castle.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p99a_giants_hall_and_snow_castle_plan_lock_substitution_and_artifact() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let find = |index| {
+            selection
+                .dungeon_plans
+                .iter()
+                .find(|plan| plan.source_index == index)
+                .expect("P99 dungeon should have an implementation plan")
+        };
+        let giants_hall = find(24);
+        assert_eq!(giants_hall.source_name, "Giant's Hall");
+        assert_eq!(
+            giants_hall.position,
+            DemoWildernessPosition { x: 63, y: 44 }
+        );
+        assert_eq!(
+            (giants_hall.minimum_depth, giants_hall.maximum_depth),
+            (30, 40)
+        );
+        assert_eq!(giants_hall.monster_divisor, 2);
+        assert_eq!(
+            giants_hall.generation_flags,
+            ["WATER_RIVER", "CAVE", "CAVERN", "NO_DOORS", "BIG"]
+        );
+        assert_eq!(giants_hall.monster_preferences, ["GIANT"]);
+        assert_eq!(giants_hall.final_artifact_source_index, Some(185));
+        assert_eq!(giants_hall.substitute_source_index, Some(38));
+
+        let snow_castle = find(38);
+        assert_eq!(snow_castle.source_name, "Snow castle");
+        assert_eq!(
+            snow_castle.position,
+            DemoWildernessPosition { x: 65, y: 44 }
+        );
+        assert_eq!(
+            (snow_castle.minimum_depth, snow_castle.maximum_depth),
+            (30, 50)
+        );
+        assert_eq!(snow_castle.monster_divisor, 2);
+        assert_eq!(
+            snow_castle.generation_flags,
+            ["ALL_SHAFTS", "WILD_TYPE_13", "NO_CAVE", "NO_DOORS"]
+        );
+        assert_eq!(
+            snow_castle.monster_preferences,
+            ["GIANT", "WILD_SNOW", "IM_COLD"]
+        );
+        assert_eq!(
+            snow_castle
+                .floor_terrain_distribution
+                .iter()
+                .map(|entry| (entry.source_tag.as_str(), entry.percent))
+                .collect::<Vec<_>>(),
+            [("SNOW_FLOOR", 45), ("SLUSH", 30), ("ICE_FLOOR", 25)]
+        );
+        for plan in [giants_hall, snow_castle] {
+            assert_eq!(plan.guardian.source_index, 683);
+            assert_eq!(plan.guardian.source_name, "Utgard-Loke");
+            assert_eq!(plan.guardian.chinese_name, "乌特加德-洛基");
+            assert_eq!(plan.guardian.level, 44);
+            assert_eq!(plan.final_artifact_source_index, Some(185));
+        }
+    }
+
+    #[test]
+    fn p100a_graveyard_plan_locks_ecology_layers_guardians_and_soulsword() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let graveyard = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 6)
+            .expect("Graveyard should have an implementation plan");
+
+        assert_eq!(graveyard.source_name, "Graveyard");
+        assert_eq!(graveyard.id, "demo.dungeon.graveyard");
+        assert_eq!(graveyard.position, DemoWildernessPosition { x: 85, y: 19 });
+        assert_eq!((graveyard.minimum_depth, graveyard.maximum_depth), (50, 70));
+        assert_eq!(graveyard.monster_divisor, 4);
+        assert_eq!(
+            graveyard.generation_flags,
+            [
+                "WATER_RIVER",
+                "DESTROY",
+                "ARENA",
+                "LAKE_WATER",
+                "LAKE_RUBBLE",
+                "ALL_SHAFTS",
+            ]
+        );
+        assert_eq!(graveyard.monster_preferences, ["UNDEAD", "NONLIVING"]);
+        assert_eq!(
+            graveyard
+                .floor_terrain_distribution
+                .iter()
+                .map(|entry| (entry.source_tag.as_str(), entry.percent))
+                .collect::<Vec<_>>(),
+            [("FLOOR", 85), ("SHALLOW_WATER", 15), ("FLOOR", 0)]
+        );
+        assert_eq!(graveyard.tunnel_percent, Some(30));
+        let entrance = graveyard
+            .initial_guardian
+            .as_ref()
+            .expect("Graveyard should lock its entrance guardian");
+        assert_eq!(
+            (
+                entrance.source_index,
+                entrance.source_name.as_str(),
+                entrance.chinese_name.as_str(),
+                entrance.level,
+            ),
+            (658, "Master lich", "巫妖大师", 41)
+        );
+        assert_eq!(
+            (
+                graveyard.guardian.source_index,
+                graveyard.guardian.source_name.as_str(),
+                graveyard.guardian.chinese_name.as_str(),
+                graveyard.guardian.level,
+            ),
+            (804, "Vecna, the Emperor Lich", "巫妖之王维克那", 72)
+        );
+        assert_eq!(graveyard.final_artifact_source_index, Some(89));
+        assert_eq!(graveyard.final_object, None);
+        assert_eq!(graveyard.final_ego_source_index, None);
+        assert_eq!(graveyard.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p101a_witch_wood_and_plains_of_oz_lock_substitution_coffee_and_book_reward() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let plan = |source_index| {
+            selection
+                .dungeon_plans
+                .iter()
+                .find(|plan| plan.source_index == source_index)
+                .unwrap_or_else(|| panic!("dungeon {source_index} should have a plan"))
+        };
+        let witch_wood = plan(7);
+        let plains = plan(35);
+
+        assert_eq!(witch_wood.source_name, "Witch Wood");
+        assert_eq!(witch_wood.id, "demo.dungeon.witch-wood");
+        assert_eq!(witch_wood.position, DemoWildernessPosition { x: 63, y: 53 });
+        assert_eq!(
+            (witch_wood.minimum_depth, witch_wood.maximum_depth),
+            (25, 40)
+        );
+        assert_eq!(witch_wood.monster_divisor, 8);
+        assert_eq!(
+            witch_wood.generation_flags,
+            ["NO_DOORS", "WATER_RIVER", "WILD_TYPE_7"]
+        );
+        assert_eq!(
+            witch_wood.monster_preferences,
+            ["ANIMAL", "R_CHAR_BC", "WILD_WOOD", "FOREST"]
+        );
+        assert_eq!(witch_wood.substitute_source_index, Some(35));
+
+        assert_eq!(plains.source_name, "Plains of Oz");
+        assert_eq!(plains.id, "demo.dungeon.plains-of-oz");
+        assert_eq!(plains.position, DemoWildernessPosition { x: 65, y: 54 });
+        assert_eq!((plains.minimum_depth, plains.maximum_depth), (18, 36));
+        assert_eq!(plains.monster_divisor, 1);
+        assert_eq!(
+            plains.generation_flags,
+            [
+                "NO_DOORS",
+                "WATER_RIVER",
+                "COFFEE",
+                "WILD_TYPE_7",
+                "ALL_SHAFTS"
+            ]
+        );
+        assert_eq!(plains.monster_preferences, ["AUSSIE"]);
+        assert_eq!(plains.substitute_source_index, None);
+
+        for (dungeon, guardian) in [
+            (witch_wood, (1150, "Gertrude", "格特鲁德")),
+            (
+                plains,
+                (1306, "The Wicked Witch of the South-East", "东南方坏女巫"),
+            ),
+        ] {
+            assert_eq!(dungeon.tunnel_percent, Some(15));
+            assert_eq!(dungeon.guardian.source_index, guardian.0);
+            assert_eq!(dungeon.guardian.source_name, guardian.1);
+            assert_eq!(dungeon.guardian.chinese_name, guardian.2);
+            assert_eq!(dungeon.guardian.level, 40);
+            assert_eq!(
+                dungeon.final_object,
+                Some(DemoDungeonObjectPlan { tval: 90, sval: 2 })
+            );
+        }
+    }
+
+    #[test]
+    fn p101b_aussie_monster_flag_becomes_an_ecology_tag() {
+        let mut monsters = parse_r_info(
+            "N:145:Carnivorous flying monkey\nG:H:p\nI:110:22d9:30:20:20:30\nW:8:2:40:30:100:188\nB:CLAW:HURT(2d5)\nF:ANIMAL | CAN_FLY | WILD_WOOD | AUSSIE\n",
+        )
+        .expect("synthetic Aussie monster should parse");
+        let actor = demo_monster_json(
+            &monsters.remove(0),
+            &DemoMonsterSelectionEntry {
+                source_index: 145,
+                source_id: None,
+                id: "carnivorous-flying-monkey".to_owned(),
+                tags: Vec::new(),
+                omitted_flags: Vec::new(),
+                omitted_spells: Vec::new(),
+            },
+            &mut BTreeMap::new(),
+        )
+        .expect("AUSSIE should import through the shared tag");
+
+        assert!(
+            actor["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "aussie"))
+        );
+    }
+
+    #[test]
+    fn p94a_mine_plan_locks_mixed_rivers_guardians_and_healing_reward() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let mine = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 15)
+            .expect("Mine should have an implementation plan");
+
+        assert_eq!(mine.source_name, "Mine");
+        assert_eq!(mine.id, "demo.dungeon.mine");
+        assert_eq!(mine.position, DemoWildernessPosition { x: 49, y: 23 });
+        assert_eq!((mine.minimum_depth, mine.maximum_depth), (75, 80));
+        assert_eq!(mine.monster_divisor, 1);
+        assert_eq!(
+            mine.generation_flags,
+            [
+                "WATER_RIVER",
+                "CAVE",
+                "CAVERN",
+                "SMALLEST",
+                "LAVA_RIVER",
+                "DESTROY",
+            ]
+        );
+        assert_eq!(mine.monster_preferences, ["R_CHAR_$"]);
+        assert_eq!(
+            mine.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 100,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+            ]
+        );
+        assert_eq!(mine.tunnel_percent, Some(0));
+        let entrance_guardian = mine
+            .initial_guardian
+            .as_ref()
+            .expect("Mine should lock its entrance guardian");
+        assert_eq!(entrance_guardian.source_index, 1128);
+        assert_eq!(entrance_guardian.source_name, "Elder storm giant");
+        assert_eq!(entrance_guardian.chinese_name, "远古风暴巨人");
+        assert_eq!(entrance_guardian.level, 56);
+        assert_eq!(mine.guardian.source_index, 1250);
+        assert_eq!(mine.guardian.source_name, "Polyphemus, the Blind Cyclops");
+        assert_eq!(mine.guardian.chinese_name, "瞎眼独眼巨人波吕斐摩斯");
+        assert_eq!(mine.guardian.level, 80);
+        assert_eq!(
+            mine.final_object,
+            Some(DemoDungeonObjectPlan { tval: 75, sval: 38 })
+        );
+        assert_eq!(mine.final_artifact_source_index, None);
+        assert_eq!(mine.final_ego_source_index, None);
+        assert_eq!(mine.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p95a_battlefield_plan_locks_alignment_guardians_shafts_and_rune_sword() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let battlefield = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 32)
+            .expect("Battlefield should have an implementation plan");
+
+        assert_eq!(battlefield.source_name, "Battlefield");
+        assert_eq!(battlefield.id, "demo.dungeon.battlefield");
+        assert_eq!(
+            battlefield.position,
+            DemoWildernessPosition { x: 75, y: 57 }
+        );
+        assert_eq!(
+            (battlefield.minimum_depth, battlefield.maximum_depth),
+            (30, 50)
+        );
+        assert_eq!(battlefield.monster_divisor, 0);
+        assert_eq!(battlefield.generation_flags, ["ALL_SHAFTS"]);
+        assert_eq!(battlefield.monster_preferences, ["GOOD", "EVIL"]);
+        assert_eq!(
+            battlefield.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 50,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "DIRT".to_owned(),
+                    percent: 50,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+            ]
+        );
+        assert_eq!(battlefield.tunnel_percent, Some(8));
+        let entrance_guardian = battlefield
+            .initial_guardian
+            .as_ref()
+            .expect("Battlefield should lock its entrance guardian");
+        assert_eq!(entrance_guardian.source_index, 607);
+        assert_eq!(entrance_guardian.source_name, "Black wraith");
+        assert_eq!(entrance_guardian.chinese_name, "黑幽灵");
+        assert_eq!(entrance_guardian.level, 38);
+        assert_eq!(battlefield.guardian.source_index, 738);
+        assert_eq!(battlefield.guardian.source_name, "Khamul the Easterling");
+        assert_eq!(battlefield.guardian.chinese_name, "东方人克哈穆尔");
+        assert_eq!(battlefield.guardian.level, 53);
+        assert_eq!(
+            battlefield.final_object,
+            Some(DemoDungeonObjectPlan { tval: 23, sval: 34 })
+        );
+        assert_eq!(battlefield.final_artifact_source_index, None);
+        assert_eq!(battlefield.final_ego_source_index, None);
+        assert_eq!(battlefield.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p96a_numenor_atlantis_plan_locks_substitution_water_guardians_and_wrath() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let plan = |source_index| {
+            selection
+                .dungeon_plans
+                .iter()
+                .find(|plan| plan.source_index == source_index)
+                .expect("submerged dungeon should have an implementation plan")
+        };
+        let numenor = plan(11);
+        let atlantis = plan(41);
+        let terrain = |entries: &[(&str, u16)]| {
+            entries
+                .iter()
+                .map(|(source_tag, percent)| DemoDungeonFloorTerrainPlan {
+                    source_tag: (*source_tag).to_owned(),
+                    percent: *percent,
+                })
+                .collect::<Vec<_>>()
+        };
+        let assert_entrance_guardian = |plan: &DemoWildernessDungeonPlan| {
+            let guardian = plan
+                .initial_guardian
+                .as_ref()
+                .expect("submerged dungeon should lock the Lesser kraken");
+            assert_eq!(
+                (
+                    guardian.source_index,
+                    guardian.source_name.as_str(),
+                    guardian.chinese_name.as_str(),
+                    guardian.level,
+                ),
+                (740, "Lesser kraken", "次级克拉肯", 54)
+            );
+        };
+
+        assert_eq!(numenor.source_name, "Numenor");
+        assert_eq!(numenor.id, "demo.dungeon.numenor");
+        assert_eq!(numenor.position, DemoWildernessPosition { x: 30, y: 27 });
+        assert_eq!((numenor.minimum_depth, numenor.maximum_depth), (55, 75));
+        assert_eq!(numenor.monster_divisor, 0);
+        assert_eq!(
+            numenor.generation_flags,
+            ["LAKE_WATER", "WATER_RIVER", "DESTROY"]
+        );
+        assert_eq!(
+            numenor.monster_preferences,
+            ["CAN_SWIM", "CAN_FLY", "AQUATIC", "WILD_OCEAN"]
+        );
+        assert_eq!(
+            numenor.floor_terrain_distribution,
+            terrain(&[("FLOOR", 80), ("SHALLOW_WATER", 20), ("FLOOR", 0)])
+        );
+        assert_eq!(numenor.tunnel_percent, Some(100));
+        assert_entrance_guardian(numenor);
+        assert_eq!(
+            (
+                numenor.guardian.source_index,
+                numenor.guardian.source_name.as_str(),
+                numenor.guardian.chinese_name.as_str(),
+                numenor.guardian.level,
+            ),
+            (
+                854,
+                "Jormungand the Midgard Serpent",
+                "尘世巨蟒耶梦加得",
+                75,
+            )
+        );
+        assert_eq!(numenor.substitute_source_index, Some(41));
+
+        assert_eq!(atlantis.source_name, "Atlantis");
+        assert_eq!(atlantis.id, "demo.dungeon.atlantis");
+        assert_eq!(atlantis.position, DemoWildernessPosition { x: 30, y: 27 });
+        assert_eq!((atlantis.minimum_depth, atlantis.maximum_depth), (55, 65));
+        assert_eq!(atlantis.monster_divisor, 0);
+        assert_eq!(atlantis.generation_flags, ["LAKE_WATER"]);
+        assert_eq!(
+            atlantis.monster_preferences,
+            ["CAN_SWIM", "CAN_FLY", "AQUATIC", "WILD_OCEAN"]
+        );
+        assert_eq!(
+            atlantis.floor_terrain_distribution,
+            terrain(&[("FLOOR", 60), ("DEEP_WATER", 20), ("SHALLOW_WATER", 20),])
+        );
+        assert_eq!(atlantis.tunnel_percent, Some(40));
+        assert_entrance_guardian(atlantis);
+        assert_eq!(
+            (
+                atlantis.guardian.source_index,
+                atlantis.guardian.source_name.as_str(),
+                atlantis.guardian.chinese_name.as_str(),
+                atlantis.guardian.level,
+            ),
+            (
+                1254,
+                "Kundry, Queen of the Lost Haven",
+                "失落避风港女王昆德丽",
+                69,
+            )
+        );
+        assert_eq!(atlantis.substitute_source_index, None);
+
+        for plan in [numenor, atlantis] {
+            assert_eq!(plan.final_object, None);
+            assert_eq!(plan.final_artifact_source_index, Some(107));
+            assert_eq!(plan.final_ego_source_index, None);
+        }
+
+        let implicit_zero = LegacyDungeonRecord::default();
+        let explicit_zero = LegacyDungeonRecord {
+            flags: vec![
+                "LAKE_WATER".to_owned(),
+                "INITIAL_GUARDIAN_740".to_owned(),
+                "FINAL_GUARDIAN_1254".to_owned(),
+                "FINAL_ARTIFACT_107".to_owned(),
+                "MONSTER_DIV_0".to_owned(),
+                "SUBSTITUTE_41".to_owned(),
+            ],
+            ..LegacyDungeonRecord::default()
+        };
+        assert_eq!(dungeon_monster_divisor(&implicit_zero), 0);
+        assert_eq!(dungeon_monster_divisor(&explicit_zero), 0);
+        assert_eq!(
+            dungeon_generation_flags(&explicit_zero),
+            BTreeSet::from(["LAKE_WATER".to_owned()])
+        );
     }
 
     #[test]
@@ -18959,11 +19978,11 @@ A:1/1
     }
 
     #[test]
-    fn authoritative_unbrandable_weapons_receive_a_content_tag() {
-        for (sval, name, flags) in [
-            (32, "Poison Needle", Vec::new()),
-            (34, "Rune Sword", Vec::new()),
-            (1, "Sticky Blade", vec!["NO_REMOVE".to_owned()]),
+    fn authoritative_unbrandable_and_unenchantable_weapons_keep_their_rules() {
+        for (sval, name, flags, resists_enchantment) in [
+            (32, "Poison Needle", Vec::new(), true),
+            (34, "Rune Sword", Vec::new(), true),
+            (1, "Sticky Blade", vec!["NO_REMOVE".to_owned()], false),
         ] {
             let item = item_json(
                 &LegacyItemEntry {
@@ -18987,6 +20006,13 @@ A:1/1
                     .iter()
                     .any(|tag| tag == "unbrandable")
             );
+            assert_eq!(
+                item["resistsEnchantment"].as_bool().unwrap_or(false),
+                resists_enchantment
+            );
+            if sval == 34 {
+                assert_eq!(item["initialCurse"], "permanent");
+            }
         }
     }
 
@@ -22105,6 +23131,245 @@ F:BRAND_VAMP | HOLD_LIFE
         for (class_id, expected) in [("mage", true), ("sorcerer", false), ("red-mage", false)] {
             assert_eq!(legacy_class_uses_spell_scrolls(class_id), expected);
         }
+    }
+
+    #[test]
+    fn p96b_trifurcate_spear_and_wrath_map_riding_and_blessed_flags() {
+        const TRIFURCATE_SPEAR_K_INFO: &str = "N:*:& Trifurcate Spear~
+G:/:o
+I:22:26:0
+W:35:0:0:140:400
+A:35/3
+P:0:2d10:0:0:0
+F:SHOW_MODS | RIDING
+";
+        let items = parse_k_info(TRIFURCATE_SPEAR_K_INFO).expect("Trifurcate Spear should parse");
+        let [entry] = items.as_slice() else {
+            panic!("Trifurcate Spear should be one record");
+        };
+        let spear = demo_item_json(entry, "trifurcate-spear", &LauncherAmmoIndex::default())
+            .expect("Trifurcate Spear should be behavior-complete");
+        assert_eq!(spear["id"], "demo.item.trifurcate-spear");
+        assert_eq!(spear["generationLevel"], 35);
+        assert_eq!(spear["weightTenthsPound"], 140);
+        assert_eq!(spear["baseValue"], 400);
+        assert_eq!(spear["meleeProfile"]["damageDice"], 2);
+        assert_eq!(spear["meleeProfile"]["damageSides"], 10);
+        assert_eq!(spear["ridingWeaponKind"], "compatible");
+        assert_eq!(entry.allocations[0].level, 35);
+        assert_eq!(entry.allocations[0].chance, 3);
+
+        const WRATH_A_INFO: &str = "N:107:of Wrath
+I:22:26:2
+W:70:12:300:90000
+P:0:3d10:16:18:0
+F:STR | DEX | HIDE_TYPE | BRAND_CHAOS |
+F:SLAY_EVIL | SLAY_UNDEAD | RES_LITE | RES_DARK | SEE_INVIS |
+F:BLESSED | SHOW_MODS | RIDING
+";
+        let artifacts = parse_a_info(WRATH_A_INFO).expect("Wrath should parse");
+        let [entry] = artifacts.as_slice() else {
+            panic!("Wrath should be one record");
+        };
+        let mut report = ContentImportReport::default();
+        let wrath = artifact_json(
+            entry,
+            "trifurcate-spear-of-wrath",
+            Some("demo.item.trifurcate-spear"),
+            &LauncherAmmoIndex::default(),
+            &mut report,
+        );
+        assert_eq!(wrath["artifactGeneration"]["sourceIndex"], 107);
+        assert_eq!(wrath["artifactGeneration"]["rarityOneIn"], 12);
+        assert_eq!(wrath["artifactGeneration"]["instant"], false);
+        assert_eq!(wrath["generationLevel"], 70);
+        assert_eq!(wrath["weightTenthsPound"], 300);
+        assert_eq!(wrath["baseValue"], 90_000);
+        assert_eq!(wrath["meleeProfile"]["damageDice"], 3);
+        assert_eq!(wrath["meleeProfile"]["damageSides"], 10);
+        assert_eq!(wrath["meleeProfile"]["toHit"], 16);
+        assert_eq!(wrath["meleeProfile"]["toDamage"], 18);
+        assert_eq!(wrath["modifiers"]["strength"], 2);
+        assert_eq!(wrath["modifiers"]["dexterity"], 2);
+        assert_eq!(wrath["brands"], serde_json::json!(["chaos"]));
+        assert_eq!(wrath["slays"]["evil"], "slay");
+        assert_eq!(wrath["slays"]["undead"], "slay");
+        assert_eq!(wrath["resistances"]["light"], "resistant");
+        assert_eq!(wrath["resistances"]["dark"], "resistant");
+        assert_eq!(wrath["passives"], serde_json::json!(["see-invisible"]));
+        assert_eq!(wrath["ridingWeaponKind"], "compatible");
+        assert!(
+            wrath["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "blessed-weapon"))
+        );
+        assert!(!report.unmapped_artifact_flags.contains_key("RIDING"));
+        assert!(!report.unmapped_artifact_flags.contains_key("BLESSED"));
+    }
+
+    #[test]
+    fn p97b_multi_hued_dragon_scale_mail_maps_random_breath_activation() {
+        const MULTI_HUED_DRAGON_SCALE_MAIL: &str = "N:297:Multi-Hued Dragon Scale Mail~
+G:[:v
+I:38:6:0
+W:75:0:0:200:150000
+A:75/8
+P:40:2d4:-2:0:10
+F:RES_ACID | RES_ELEC | RES_FIRE | RES_COLD | RES_POIS
+F:IGNORE_ACID | IGNORE_ELEC | IGNORE_FIRE | IGNORE_COLD
+E:BREATHE_ONE_MULTIHUED:40:70:250
+";
+        let items = parse_k_info(MULTI_HUED_DRAGON_SCALE_MAIL)
+            .expect("Multi-Hued Dragon Scale Mail should parse");
+        let [entry] = items.as_slice() else {
+            panic!("Multi-Hued Dragon Scale Mail should be one record");
+        };
+        let armor = demo_item_json(
+            entry,
+            "multi-hued-dragon-scale-mail",
+            &LauncherAmmoIndex::default(),
+        )
+        .expect("Multi-Hued Dragon Scale Mail should be behavior-complete");
+
+        assert_eq!(armor["generationLevel"], 75);
+        assert_eq!(armor["weightTenthsPound"], 200);
+        assert_eq!(armor["baseValue"], 150_000);
+        assert_eq!(armor["equipmentSlot"], "body");
+        assert_eq!(armor["modifiers"]["defense"], 50);
+        assert_eq!(armor["equipmentBonuses"]["meleeSkill"], -2);
+        for element in ["acid", "electricity", "fire", "cold", "poison"] {
+            assert_eq!(armor["resistances"][element], "resistant");
+        }
+        assert!(
+            armor["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "activatable"))
+        );
+        let generation = &armor["deviceGeneration"];
+        assert_eq!(generation["recovery"]["intervalTicks"], 700);
+        assert_eq!(generation["recovery"]["energyPerMille"], 1_000);
+        let activation = &generation["activations"][0];
+        assert_eq!(activation["deviceCheckDifficulty"], 40);
+        assert_eq!(
+            activation["target"]["modes"],
+            serde_json::json!(["direction"])
+        );
+        assert_eq!(activation["target"]["range"], 18);
+        assert_eq!(activation["effect"]["type"], "random-element-cone-damage");
+        assert_eq!(activation["effect"]["damage"], 250);
+        assert_eq!(activation["effect"]["radius"], 2);
+        assert_eq!(entry.allocations[0].level, 75);
+        assert_eq!(entry.allocations[0].chance, 8);
+
+        let program = effect_program_from_inline(
+            "demo.effect.multi-hued-dragon-breath",
+            activation["effect"].clone(),
+        )
+        .expect("random breath should compile as a directional item effect");
+        assert_eq!(program["input"], "actor");
+    }
+
+    #[test]
+    fn p99b_paurnimmen_maps_cold_brand_resistance_and_beam_activation() {
+        const PAURNIMMEN_A_INFO: &str = "N:185:'Paurnimmen'
+I:31:3:0
+W:30:20:25:13000
+P:2:1d1:2:2:7
+F:RES_COLD | BRAND_COLD
+E:BEAM_COLD:12:12:40
+E:你的护手被冰雪所覆盖……
+";
+        let artifacts = parse_a_info(PAURNIMMEN_A_INFO).expect("Paurnimmen should parse");
+        let [entry] = artifacts.as_slice() else {
+            panic!("Paurnimmen should be one record");
+        };
+        let mut report = ContentImportReport::default();
+        let paurnimmen = artifact_json(
+            entry,
+            "set-of-gauntlets-paurnimmen",
+            Some("demo.item.set-of-gauntlets"),
+            &LauncherAmmoIndex::default(),
+            &mut report,
+        );
+
+        assert_eq!(paurnimmen["artifactGeneration"]["sourceIndex"], 185);
+        assert_eq!(paurnimmen["artifactGeneration"]["rarityOneIn"], 20);
+        assert_eq!(paurnimmen["generationLevel"], 30);
+        assert_eq!(paurnimmen["weightTenthsPound"], 25);
+        assert_eq!(paurnimmen["baseValue"], 13_000);
+        assert_eq!(paurnimmen["modifiers"]["attack"], 2);
+        assert_eq!(paurnimmen["modifiers"]["defense"], 9);
+        assert_eq!(paurnimmen["brands"], serde_json::json!(["cold"]));
+        assert_eq!(paurnimmen["resistances"]["cold"], "resistant");
+        let generation = &paurnimmen["deviceGeneration"];
+        assert_eq!(generation["recovery"]["intervalTicks"], 120);
+        let activation = &generation["activations"][0];
+        assert_eq!(activation["deviceCheckDifficulty"], 12);
+        assert_eq!(activation["effect"]["type"], "beam-damage");
+        assert_eq!(activation["effect"]["damageBonus"], 40);
+        assert_eq!(activation["effect"]["damageType"], "cold");
+        assert!(
+            !report
+                .item_behavior_gaps
+                .contains_key("artifact-activation")
+        );
+
+        let program = effect_program_from_inline(
+            "demo.effect.paurnimmen-cold-beam",
+            activation["effect"].clone(),
+        )
+        .expect("cold beam should compile as a directional item effect");
+        assert_eq!(program["input"], "actor");
+    }
+
+    #[test]
+    fn p100b_soulsword_maps_life_and_extra_res_or_power_without_gaps() {
+        const SOULSWORD_A_INFO: &str = "N:89:'Soulsword'
+I:23:18:3
+W:40:20:130:111111
+P:0:3d6:9:11:0
+F:INT | WIS | LIFE | SEE_INVIS | BLESSED |
+F:SLAY_ANIMAL | SLAY_EVIL | SLAY_UNDEAD | SLAY_DRAGON | SLAY_DEMON |
+F:RES_CHAOS | RES_DISEN | RES_NEXUS | RES_NETHER | HOLD_LIFE |
+F:SHOW_MODS | XTRA_RES_OR_POWER
+";
+        let artifacts = parse_a_info(SOULSWORD_A_INFO).expect("Soulsword should parse");
+        let [entry] = artifacts.as_slice() else {
+            panic!("Soulsword should be one record");
+        };
+        let mut report = ContentImportReport::default();
+        let soulsword = artifact_json(
+            entry,
+            "soulsword",
+            Some("demo.item.scimitar"),
+            &LauncherAmmoIndex::default(),
+            &mut report,
+        );
+
+        assert_eq!(soulsword["artifactGeneration"]["sourceIndex"], 89);
+        assert_eq!(soulsword["artifactGeneration"]["rarityOneIn"], 20);
+        assert_eq!(
+            soulsword["artifactGeneration"]["affixIds"],
+            serde_json::json!(["rfb-legacy.affix.artifact-extra-res-or-power"])
+        );
+        assert_eq!(soulsword["equipmentBonuses"]["lifePercent"], 9);
+        assert_eq!(soulsword["modifiers"]["intelligence"], 3);
+        assert_eq!(soulsword["modifiers"]["wisdom"], 3);
+        assert_eq!(soulsword["meleeProfile"]["damageDice"], 3);
+        assert_eq!(soulsword["meleeProfile"]["damageSides"], 6);
+        assert_eq!(soulsword["meleeProfile"]["toHit"], 9);
+        assert_eq!(soulsword["meleeProfile"]["toDamage"], 11);
+        assert_eq!(
+            soulsword["passives"],
+            serde_json::json!(["hold-life", "see-invisible"])
+        );
+        assert!(!report.unmapped_artifact_flags.contains_key("LIFE"));
+        assert!(
+            !report
+                .unmapped_artifact_flags
+                .contains_key("XTRA_RES_OR_POWER")
+        );
+        assert!(!report.unmapped_artifact_flags.contains_key("BLESSED"));
     }
 
     #[test]

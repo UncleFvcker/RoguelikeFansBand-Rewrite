@@ -1,5 +1,46 @@
 {
   "$defs": {
+    "ActorDamageType": {
+      "enum": [
+        "physical",
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison",
+        "light",
+        "dark",
+        "blindness",
+        "fear",
+        "confusion",
+        "nether",
+        "nexus",
+        "sound",
+        "shards",
+        "rock",
+        "chaos",
+        "disenchant",
+        "time",
+        "mana",
+        "gravity",
+        "inertia",
+        "plasma",
+        "force",
+        "nuke",
+        "disintegrate",
+        "storm",
+        "holy-fire",
+        "hell-fire",
+        "ice",
+        "water",
+        "psi",
+        "curse",
+        "meteor",
+        "rocket",
+        "telekinesis"
+      ],
+      "type": "string"
+    },
     "ActorHabitat": {
       "enum": [
         "all",
@@ -229,6 +270,12 @@
           "maximum": 65535,
           "minimum": 0,
           "type": "integer"
+        },
+        "preferredDamageImmunities": {
+          "items": {
+            "$ref": "#/$defs/ActorDamageType"
+          },
+          "type": "array"
         },
         "preferredGlyphs": {
           "items": {
