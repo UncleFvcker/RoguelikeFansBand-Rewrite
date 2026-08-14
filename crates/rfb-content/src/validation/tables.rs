@@ -712,7 +712,7 @@ pub(super) fn validate_tables(
         require_schema(&table.schema, TERRAIN_FEATURE_TABLE_SCHEMA, &table.id)?;
         require_format_version(table.format_version, &table.id)?;
         validate_definition_id(&table.id, "terrain-feature-table")?;
-        if !(1..=256).contains(&table.rolls) || table.entries.is_empty() || table.entries.len() > 64
+        if !(1..=320).contains(&table.rolls) || table.entries.is_empty() || table.entries.len() > 64
         {
             return Err(ContentError::InvalidTerrainFeatureTable(table.id.clone()));
         }

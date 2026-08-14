@@ -1728,7 +1728,7 @@ pub(super) fn validate_world(
                 let table = terrain_feature_tables
                     .get(table_id)
                     .expect("validated terrain feature table must remain available");
-                if !(1..=256).contains(&placements)
+                if !(1..=320).contains(&placements)
                     || placements > table.rolls
                     || eligible_terrain_feature_entries.is_empty()
                 {

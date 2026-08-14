@@ -2984,6 +2984,7 @@ actor-demo-ghoulking-description = 大块大块的肉正从这个腐烂的怪物
 floor-demo-orc-cave-depth-name = 兽人洞穴
 floor-demo-camelot-depth-name = 卡美洛
 floor-demo-tidal-cave-depth-name = 潮汐洞穴
+floor-demo-icky-cave-depth-name = 黏液洞穴
 item-demo-ring-name = 戒指
 item-demo-ring-description = 一枚可以承载魔法属性的普通戒指。
 affix-legacy-combat-name = 战斗之
@@ -3576,6 +3577,8 @@ terrain-demo-camelot-entrance-name = 卡美洛入口
 terrain-demo-camelot-entrance-description = 通往传说中卡美洛之地的入口。
 terrain-demo-tidal-cave-entrance-name = 潮汐洞穴入口
 terrain-demo-tidal-cave-entrance-description = 一个通往潮汐洞穴的湿滑入口。
+terrain-demo-icky-cave-entrance-name = 黏液洞穴入口
+terrain-demo-icky-cave-entrance-description = 恶心洞穴的入口
 
 
 floor-demo-outpost-sewer-name = 下水道

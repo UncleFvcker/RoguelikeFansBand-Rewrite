@@ -572,6 +572,30 @@ fn p87b_dungeon_definition_excludes_a_tagless_guardian_from_allocation() {
 }
 
 #[test]
+fn p88c_icky_cave_glyphs_are_or_preferences_and_queen_is_a_guardian() {
+    let mut game = enter_warrens(88);
+    let policy = game
+        .content
+        .encounter_table("demo.encounter-table.icky-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Icky Cave global allocation policy")
+        .clone();
+    let mut actor = game
+        .content
+        .actor("demo.actor.newt")
+        .expect("Newt definition")
+        .clone();
+
+    for glyph in ["i", "j", "M"] {
+        actor.glyph = glyph.to_owned();
+        assert_eq!(game.original_dungeon_weight(&actor, &policy), 100);
+    }
+    actor.glyph = "x".to_owned();
+    assert_eq!(game.original_dungeon_weight(&actor, &policy), 50);
+    assert!(game.actor_kind_is_dungeon_guardian("demo.actor.the-icky-queen"));
+}
+
+#[test]
 fn p87e_tidal_cave_allocation_keeps_location_locks_and_grendel_out() {
     let mut game =
         Game::new_with_build(87, "demo.build.warrior").expect("Middle-earth should create");

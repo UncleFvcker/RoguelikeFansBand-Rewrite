@@ -3760,6 +3760,158 @@ fn p87c_tidal_cave_binds_depths_water_features_river_and_guardian() {
 }
 
 #[test]
+fn p88c_icky_cave_binds_ecology_terrain_mix_depths_and_guardian() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.icky-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Icky Cave should use global allocation");
+    assert_eq!(
+        policy
+            .preferred_glyphs
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>(),
+        ["M", "i", "j"].into_iter().collect()
+    );
+    assert!(policy.preferred_tags.is_empty());
+    assert!(policy.preferred_movement_modes.is_empty());
+    assert!(policy.preferred_habitats.is_empty());
+    assert_eq!(policy.special_div, 32);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.icky-cave")
+        .expect("Icky Cave content should exist");
+    assert_eq!(dungeon.legacy_index, Some(21));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.icky-cave-depth-10");
+    assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.the-icky-queen");
+    assert!(
+        !world
+            .wilderness
+            .as_ref()
+            .expect("Middle-earth should retain wilderness")
+            .locations
+            .iter()
+            .any(|location| matches!(
+                location,
+                WildernessLocationDefinition::Dungeon { dungeon_id, .. }
+                    if dungeon_id == "demo.dungeon.icky-cave"
+            ))
+    );
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.icky-cave"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 11);
+    assert_eq!(
+        (floors[0].depth, floors[0].width, floors[0].height),
+        (10, 66, 22)
+    );
+    assert!(
+        floors[1..]
+            .iter()
+            .all(|floor| (floor.width, floor.height) == (96, 33))
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.icky-cave-entrance")
+    );
+
+    for floor in &floors {
+        assert_eq!(floor.floor_terrain_id, "demo.terrain.surface-grass");
+        assert_eq!(
+            floor.encounter_table_id.as_deref(),
+            Some("demo.encounter-table.icky-cave")
+        );
+        assert_eq!(
+            floor.terrain_feature_table_id.as_deref(),
+            Some("demo.terrain-feature-table.icky-cave")
+        );
+        let budget = floor.generation_budget.as_ref().expect("generation budget");
+        assert_eq!(budget.room_area_tiles, Some(800));
+        assert_eq!(budget.feature_placements, Some(320));
+        let layout = floor.layout.as_ref().expect("Icky Cave layout");
+        assert_eq!(
+            layout
+                .rooms
+                .as_ref()
+                .expect("room geometry")
+                .shapes
+                .iter()
+                .map(|shape| (shape.shape, shape.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([
+                (ProceduralRoomShape::Rectangle, 1),
+                (ProceduralRoomShape::Cavern, 9),
+            ])
+        );
+        assert_eq!(
+            layout
+                .streamers
+                .iter()
+                .map(|streamer| (streamer.terrain_id.as_str(), streamer.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([
+                ("demo.terrain.magma-vein", 1),
+                ("demo.terrain.quartz-vein", 1),
+            ])
+        );
+    }
+
+    let final_floor = floors.last().expect("depth 20 should exist");
+    assert!(final_floor.final_floor);
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("The Icky Queen guardian");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.the-icky-queen");
+    assert!(guardian.reward_loot_table_id.is_none());
+
+    let feature_table = content
+        .terrain_feature_tables
+        .iter()
+        .find(|table| table.id == "demo.terrain-feature-table.icky-cave")
+        .expect("Icky Cave terrain feature table");
+    assert_eq!(feature_table.rolls, 320);
+    assert_eq!(
+        feature_table
+            .entries
+            .iter()
+            .map(|entry| (entry.terrain_id.as_str(), entry.weight, entry.placement))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([
+            (
+                "demo.terrain.surface-swamp",
+                1,
+                TerrainFeaturePlacement::Room,
+            ),
+            (
+                "demo.terrain.surface-water-shallow",
+                1,
+                TerrainFeaturePlacement::Room,
+            ),
+        ])
+    );
+}
+
+#[test]
 fn p87d_tidal_cave_binds_wilderness_entrance_and_fixed_reward() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = &artifact.content;

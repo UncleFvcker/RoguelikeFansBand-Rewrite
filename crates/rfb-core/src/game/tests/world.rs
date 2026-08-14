@@ -946,6 +946,48 @@ fn p87c_tidal_cave_room_water_and_optional_river_use_existing_terrain() {
 }
 
 #[test]
+fn p88c_icky_cave_small_floor_uses_the_existing_grass_swamp_water_mix() {
+    let mut game = Game::new_with_build(88, "demo.build.warrior")
+        .expect("Icky Cave generation proof should create");
+    let definition = game
+        .content
+        .world(&game.world_id)
+        .expect("Middle-earth should remain available")
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.icky-cave-depth-10")
+        .expect("Icky Cave depth 10 should remain available")
+        .clone();
+    game.rng = RfbRng::seeded(88);
+
+    let generated = game
+        .generate_procedural_floor(&definition, None)
+        .expect("Icky Cave depth 10 should generate");
+    let terrain_count = |terrain_id: &str| {
+        generated
+            .terrain
+            .iter()
+            .filter(|generated_id| generated_id.as_str() == terrain_id)
+            .count()
+    };
+    let swamp = terrain_count("demo.terrain.surface-swamp");
+    let shallow_water = terrain_count("demo.terrain.surface-water-shallow");
+
+    assert_eq!((generated.width, generated.height), (66, 22));
+    assert_eq!(swamp + shallow_water, 320);
+    assert!(swamp > 0);
+    assert!(shallow_water > 0);
+    assert!(terrain_count("demo.terrain.surface-grass") > 0);
+    assert_eq!(terrain_count("demo.terrain.surface-water-deep"), 0);
+    assert!(
+        !generated
+            .entities
+            .iter()
+            .any(|actor| actor.kind_id == "demo.actor.the-icky-queen")
+    );
+}
+
+#[test]
 fn p87e_tidal_cave_all_depths_keep_water_and_stairs_reachable() {
     let mut game =
         Game::new_with_build(87, "demo.build.warrior").expect("Middle-earth should create");
