@@ -3760,6 +3760,179 @@ fn p87c_tidal_cave_binds_depths_water_features_river_and_guardian() {
 }
 
 #[test]
+fn p89d_hideout_binds_depths_ecology_guardian_and_am_quest_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.hideout")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Hideout should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["p"]);
+    assert_eq!(policy.preferred_tags, ["thief"]);
+    assert_eq!(policy.special_div, 32);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.hideout")
+        .expect("Hideout content should exist");
+    assert_eq!(dungeon.legacy_index, Some(31));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.hideout-depth-8");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.meng-huo-the-king-of-southerings"
+    );
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 28, y: 52 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.hideout"
+            )
+        })
+    }));
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.hideout"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 11);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (8..=18).collect::<Vec<_>>()
+    );
+    assert_eq!((floors[0].width, floors[0].height), (66, 22));
+    assert!(
+        floors[1..]
+            .iter()
+            .all(|floor| (floor.width, floor.height) == (96, 33))
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.hideout-entrance")
+    );
+    for floor in &floors {
+        assert_eq!(floor.floor_terrain_id, "demo.terrain.floor");
+        assert_eq!(floor.closed_door_terrain_id, "demo.terrain.door-secret");
+        let layout = floor.layout.as_ref().expect("Hideout layout");
+        assert_eq!(
+            layout
+                .rooms
+                .as_ref()
+                .expect("Hideout room geometry")
+                .shapes
+                .iter()
+                .map(|shape| (shape.shape, shape.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([(ProceduralRoomShape::Rectangle, 1)])
+        );
+        assert_eq!(
+            layout
+                .streamers
+                .iter()
+                .map(|streamer| (streamer.terrain_id.as_str(), streamer.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([
+                ("demo.terrain.magma-vein", 1),
+                ("demo.terrain.quartz-vein", 1),
+            ])
+        );
+    }
+
+    let guardian = floors
+        .last()
+        .and_then(|floor| floor.guardian.as_ref())
+        .expect("Meng Huo should guard depth 18");
+    assert_eq!(guardian.instance_id, "demo.guardian.hideout.1");
+    assert_eq!(
+        guardian.actor_kind_id,
+        "demo.actor.meng-huo-the-king-of-southerings"
+    );
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.hideout-final-reward")
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| floor.guardian.is_some())
+            .count(),
+        1
+    );
+
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.hideout-final-reward")
+        .expect("Hideout should have a final reward table");
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.amulet");
+    assert_eq!(reward.quality_weights[0].quality, ItemQuality::Fine);
+    assert_eq!(
+        reward.affix_weights[0].affix_id.as_deref(),
+        Some("rfb-legacy.affix.amulet-am-quest")
+    );
+    let affix = content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.amulet-am-quest")
+        .expect("AM_QUEST amulet mapping should exist");
+    let amulet = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.amulet")
+        .expect("base amulet should exist");
+    assert!(affix_is_compatible_with_item(affix, amulet, 18));
+    assert_eq!(affix.roll_groups.len(), 1);
+    assert_eq!(affix.roll_groups[0].rolls, 3);
+    assert!(
+        affix.roll_groups[0]
+            .candidates
+            .iter()
+            .all(|candidate| candidate.properties != AffixPropertyBundleDefinition::default())
+    );
+
+    let hideout_exclusives = content
+        .actors
+        .iter()
+        .filter(|actor| {
+            actor
+                .allocation
+                .as_ref()
+                .is_some_and(|allocation| allocation.legacy_dungeon_indices == [31])
+        })
+        .map(|actor| actor.id.as_str())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        hideout_exclusives,
+        BTreeSet::from([
+            "demo.actor.dailai-dongzhu-captain-of-southerings",
+            "demo.actor.king-duosi-the-chief-of-southerings",
+            "demo.actor.king-mulu-the-chief-of-southerings",
+            "demo.actor.lady-zhurong-the-avatar-of-flame-spirit",
+            "demo.actor.meng-huo-the-king-of-southerings",
+            "demo.actor.meng-you-the-brother-of-meng-huo",
+            "demo.actor.wutugu-the-chief-of-southerings",
+        ])
+    );
+}
+
+#[test]
 fn p88c_icky_cave_binds_ecology_terrain_mix_depths_and_guardian() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = &artifact.content;

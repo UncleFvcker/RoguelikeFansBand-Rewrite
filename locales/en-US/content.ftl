@@ -3577,6 +3577,9 @@ terrain-demo-icky-cave-entrance-name = entrance to Icky Cave
 terrain-demo-icky-cave-entrance-description = The entrance to the Icky caves.
 terrain-demo-hideout-entrance-name = entrance to the Hideout
 terrain-demo-hideout-entrance-description = A shady entrance to a rebel hideout.
+floor-demo-hideout-depth-name = Hideout
+affix-legacy-amulet-am-quest-name = AM_QUEST
+affix-legacy-amulet-am-quest-description = An RFB quest-reward amulet with guaranteed magical properties.
 
 
 floor-demo-outpost-sewer-name = The Sewer

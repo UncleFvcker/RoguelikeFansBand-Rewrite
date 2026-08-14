@@ -3581,6 +3581,9 @@ terrain-demo-icky-cave-entrance-name = 黏液洞穴入口
 terrain-demo-icky-cave-entrance-description = 恶心洞穴的入口
 terrain-demo-hideout-entrance-name = 藏身处入口
 terrain-demo-hideout-entrance-description = 一个通向叛军藏身处的阴暗入口
+floor-demo-hideout-depth-name = 藏身处
+affix-legacy-amulet-am-quest-name = AM_QUEST
+affix-legacy-amulet-am-quest-description = 具有至少一项魔法属性的 RFB 原版任务奖赏护身符。
 
 
 floor-demo-outpost-sewer-name = 下水道

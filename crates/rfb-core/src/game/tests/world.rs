@@ -169,8 +169,8 @@ fn game_with_dungeon_substitution(seed: u64) -> Game {
     let primary = world
         .dungeons
         .iter_mut()
-        .find(|dungeon| dungeon.id == "demo.dungeon.camelot")
-        .expect("Camelot should remain available");
+        .find(|dungeon| dungeon.id == "demo.dungeon.hideout")
+        .expect("Hideout should remain available");
     primary.legacy_index = Some(31);
     primary.substitution = Some(rfb_content::DungeonSubstitutionDefinition {
         alternate_dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
@@ -195,14 +195,14 @@ fn game_with_dungeon_substitution(seed: u64) -> Game {
         } = location
             && matches!(
                 dungeon_id.as_str(),
-                "demo.dungeon.camelot" | "demo.dungeon.tidal-cave"
+                "demo.dungeon.hideout" | "demo.dungeon.tidal-cave"
             )
         {
             *position = shared_position;
         }
     }
     for floor_id in [
-        "demo.floor.camelot-depth-20",
+        "demo.floor.hideout-depth-8",
         "demo.floor.tidal-cave-depth-15",
     ] {
         world
@@ -224,20 +224,20 @@ fn game_with_dungeon_substitution(seed: u64) -> Game {
 #[test]
 fn p89b_substitute_selection_is_seeded_persisted_and_hashed() {
     let primary = game_with_dungeon_substitution(0);
-    assert!(primary.dungeon_is_active("demo.dungeon.camelot"));
+    assert!(primary.dungeon_is_active("demo.dungeon.hideout"));
     assert!(!primary.dungeon_is_active("demo.dungeon.tidal-cave"));
     let failed_extra_gate = game_with_dungeon_substitution(1_528);
-    assert!(failed_extra_gate.dungeon_is_active("demo.dungeon.camelot"));
+    assert!(failed_extra_gate.dungeon_is_active("demo.dungeon.hideout"));
     assert!(!failed_extra_gate.dungeon_is_active("demo.dungeon.tidal-cave"));
 
     let mut alternate = game_with_dungeon_substitution(1_536);
-    assert!(!alternate.dungeon_is_active("demo.dungeon.camelot"));
+    assert!(!alternate.dungeon_is_active("demo.dungeon.hideout"));
     assert!(alternate.dungeon_is_active("demo.dungeon.tidal-cave"));
     let mut opposite_selection = alternate.clone();
     opposite_selection
         .dungeon_states
-        .get_mut("demo.dungeon.camelot")
-        .expect("Camelot state")
+        .get_mut("demo.dungeon.hideout")
+        .expect("Hideout state")
         .suppressed = false;
     opposite_selection
         .dungeon_states
@@ -248,13 +248,13 @@ fn p89b_substitute_selection_is_seeded_persisted_and_hashed() {
     let mut suppressed_conquest = alternate.clone();
     suppressed_conquest
         .dungeon_states
-        .get_mut("demo.dungeon.camelot")
-        .expect("Camelot state")
+        .get_mut("demo.dungeon.hideout")
+        .expect("Hideout state")
         .guardian_defeated = true;
     assert_eq!(suppressed_conquest.campaign_counts().0, 0);
     assert!(suppressed_conquest.validate_loaded_state().is_err());
     alternate.advance_wilderness_generation();
-    assert!(!alternate.dungeon_is_active("demo.dungeon.camelot"));
+    assert!(!alternate.dungeon_is_active("demo.dungeon.hideout"));
     assert!(alternate.dungeon_is_active("demo.dungeon.tidal-cave"));
 
     let payload = alternate.to_save();
@@ -262,12 +262,12 @@ fn p89b_substitute_selection_is_seeded_persisted_and_hashed() {
         payload
             .dungeon_states
             .iter()
-            .any(|state| { state.dungeon_id == "demo.dungeon.camelot" && state.suppressed })
+            .any(|state| { state.dungeon_id == "demo.dungeon.hideout" && state.suppressed })
     );
     let restored = Game::from_save_with_content(payload, alternate.content.clone())
         .expect("substitution state should restore");
     assert_eq!(restored.state_hash(), alternate.state_hash());
-    assert!(!restored.dungeon_is_active("demo.dungeon.camelot"));
+    assert!(!restored.dungeon_is_active("demo.dungeon.hideout"));
     assert!(restored.dungeon_is_active("demo.dungeon.tidal-cave"));
 }
 
@@ -276,9 +276,9 @@ fn p89c_outpost_shared_entrance_routes_only_to_the_active_dungeon() {
     for (seed, active_dungeon, active_floor, active_guardian, suppressed_guardian) in [
         (
             0,
-            "demo.dungeon.camelot",
-            "demo.floor.camelot-depth-20",
-            "demo.actor.arthur-pendragon",
+            "demo.dungeon.hideout",
+            "demo.floor.hideout-depth-8",
+            "demo.actor.meng-huo-the-king-of-southerings",
             "demo.actor.grendel",
         ),
         (
@@ -286,7 +286,7 @@ fn p89c_outpost_shared_entrance_routes_only_to_the_active_dungeon() {
             "demo.dungeon.tidal-cave",
             "demo.floor.tidal-cave-depth-15",
             "demo.actor.grendel",
-            "demo.actor.arthur-pendragon",
+            "demo.actor.meng-huo-the-king-of-southerings",
         ),
     ] {
         let mut game = game_with_dungeon_substitution(seed);
@@ -300,7 +300,7 @@ fn p89c_outpost_shared_entrance_routes_only_to_the_active_dungeon() {
         assert_eq!(
             cell.locations
                 .iter()
-                .filter(|location| location.id == "demo.dungeon.camelot"
+                .filter(|location| location.id == "demo.dungeon.hideout"
                     || location.id == "demo.dungeon.tidal-cave")
                 .count(),
             1
@@ -328,6 +328,37 @@ fn p89c_outpost_shared_entrance_routes_only_to_the_active_dungeon() {
             .expect("shared entrance should enter its active dungeon");
         assert_eq!(game.current_floor_id, active_floor);
     }
+}
+
+#[test]
+fn p89d_hideout_reward_materializes_a_nonblank_am_quest_amulet() {
+    let mut game =
+        Game::new_with_build(89, "demo.build.warrior").expect("Hideout reward game should create");
+    let reward = game
+        .generate_loot_instances(
+            &LootContext {
+                table_id: "demo.loot-table.hideout-final-reward".to_owned(),
+                floor_id: "demo.floor.hideout-depth-18".to_owned(),
+                depth: 18,
+                source: LootSource::FloorRoom {
+                    room_id: "demo.guardian.hideout.1".to_owned(),
+                    spawn_id: "demo.guardian.hideout.reward".to_owned(),
+                },
+            },
+            ItemLocation::Ground(game.player.position),
+        )
+        .expect("Hideout reward should generate");
+
+    assert_eq!(reward.len(), 1);
+    let reward = &reward[0];
+    assert_eq!(reward.kind_id, "demo.item.amulet");
+    assert_eq!(reward.quality, ItemQualityDto::Fine);
+    assert_eq!(reward.affix_ids, ["rfb-legacy.affix.amulet-am-quest"]);
+    assert_eq!(reward.rolled_affixes.len(), 1);
+    assert_ne!(
+        reward.rolled_affixes[0].properties,
+        rfb_content::AffixPropertyBundleDefinition::default()
+    );
 }
 
 #[test]
