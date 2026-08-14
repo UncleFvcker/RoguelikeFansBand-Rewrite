@@ -243,6 +243,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
                     | AbilityEffectDefinition::Entangle { .. }
                     | AbilityEffectDefinition::MassSleepOrStasis { .. }
+                    | AbilityEffectDefinition::SleepingDust { .. }
                     | AbilityEffectDefinition::BlinkSelf { .. }
                     | AbilityEffectDefinition::TeleportSelf { .. }
                     | AbilityEffectDefinition::ReportMagic

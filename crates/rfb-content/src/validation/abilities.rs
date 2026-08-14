@@ -1026,6 +1026,9 @@ pub(super) fn validate_abilities(
                         && !upgraded_name_key.is_empty()
                         && !upgraded_description_key.is_empty()
                 }
+                AbilityEffectDefinition::SleepingDust { visible_at_level } => {
+                    (1..=100).contains(visible_at_level)
+                }
                 AbilityEffectDefinition::BrandWeapon { affix_id, .. } => {
                     validate_id(affix_id).is_ok()
                 }
@@ -1310,6 +1313,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::VisibleDamage { .. }
             | AbilityEffectDefinition::VisibleApplyStatus { .. }
             | AbilityEffectDefinition::MassSleepOrStasis { .. }
+            | AbilityEffectDefinition::SleepingDust { .. }
             | AbilityEffectDefinition::RestoreVitality { .. }
             | AbilityEffectDefinition::ReportMagic
             | AbilityEffectDefinition::Earthquake { .. }

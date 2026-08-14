@@ -145,6 +145,30 @@ impl Game {
     }
 
     pub(super) fn apply_player_level_scaling(ability: &mut AbilityDefinition, level: u16) {
+        let sleeping_dust_visible_at_level = match &ability.effect {
+            AbilityEffectDefinition::SleepingDust { visible_at_level } => Some(*visible_at_level),
+            _ => None,
+        };
+        if let Some(visible_at_level) = sleeping_dust_visible_at_level {
+            ability.effect = if level >= visible_at_level {
+                AbilityEffectDefinition::VisibleApplyStatus {
+                    status_kind_id: STATUS_SLEEP.to_owned(),
+                    intensity: 1,
+                    duration_ticks: 500,
+                    duration_dice: 0,
+                    duration_sides: 0,
+                    stacking: AbilityStatusStackingDefinition::KeepStrongest,
+                    resistance_type: None,
+                    power: Some(level),
+                    target_category: None,
+                }
+            } else {
+                AbilityEffectDefinition::Sanctuary {
+                    power: level,
+                    radius: 1,
+                }
+            };
+        }
         match &mut ability.effect {
             AbilityEffectDefinition::IdentifyOrMassIdentify {
                 mass_at_level,

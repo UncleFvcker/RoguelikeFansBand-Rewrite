@@ -3152,6 +3152,26 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "sleeping-dust",
+              "type": "string"
+            },
+            "visibleAtLevel": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "type",
+            "visibleAtLevel"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "affixId": {
               "type": "string"
             },

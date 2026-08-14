@@ -2915,6 +2915,133 @@ const RACE_STONE_TO_MUD_ABILITY_ID: &str = "rfb.ability.race.stone-to-mud";
 const RACE_THROW_BOULDER_ABILITY_ID: &str = "rfb.ability.race.throw-boulder";
 const RACE_WOOD_ELF_NATURE_AWARENESS_ABILITY_ID: &str =
     "rfb.ability.race.wood-elf-nature-awareness";
+const RACE_SPRITE_SLEEPING_DUST_ABILITY_ID: &str = "rfb.ability.race.sleeping-dust";
+
+#[test]
+fn formal_sprite_sleeping_dust_switches_from_adjacent_to_visible_at_twenty_five() {
+    let projected = |game: &Game| {
+        game.snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == RACE_SPRITE_SLEEPING_DUST_ABILITY_ID)
+            .expect("Sprite Sleeping Dust should be projected")
+    };
+    let target_ids = |events: &[DomainEvent]| {
+        events
+            .iter()
+            .filter_map(|event| match event {
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
+                    resolution.target_entity_id.clone()
+                }
+                _ => None,
+            })
+            .collect::<BTreeSet<_>>()
+    };
+    let add_targets = |game: &mut Game| {
+        clear_monsters(game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        let origin = game.player.position;
+        for (id, kind_id, position) in [
+            (
+                "test.sprite.unseen-adjacent",
+                "demo.actor.clear-icky-thing",
+                Position {
+                    x: origin.x + 1,
+                    y: origin.y,
+                },
+            ),
+            (
+                "test.sprite.visible-distant",
+                "demo.actor.small-kobold",
+                Position {
+                    x: origin.x + 2,
+                    y: origin.y,
+                },
+            ),
+        ] {
+            game.push_generated_actor(id.to_owned(), kind_id, position);
+        }
+        assert!(!game.entity_is_visible_to_player(&game.entities[0]));
+        assert!(game.entity_is_visible_to_player(&game.entities[1]));
+    };
+
+    let mut level_eleven = sprite_game(391);
+    level_eleven.progress.level = 11;
+    let locked = projected(&level_eleven);
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(locked.minimum_level, 12);
+    assert_eq!(locked.base_resource_cost, 12);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Intelligence),
+    );
+    assert!(!locked.can_cast);
+
+    let mut nearby = sprite_game(391);
+    nearby.progress.level = 24;
+    nearby.progress.max_level = 24;
+    nearby.debug_set_ability_casts_succeed(true);
+    add_targets(&mut nearby);
+    assert!(matches!(
+        projected(&nearby).effects.as_slice(),
+        [AbilityEffectSpecDto::Sanctuary {
+            power: 24,
+            radius: 1,
+        }]
+    ));
+    let nearby_hp = nearby.player.hp;
+    let mut nearby_events = Vec::new();
+    nearby
+        .resolve_player_ability(
+            RACE_SPRITE_SLEEPING_DUST_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut nearby_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("nearby Sleeping Dust should resolve");
+    assert_eq!(nearby.player.hp, nearby_hp - 12);
+    assert_eq!(
+        target_ids(&nearby_events),
+        BTreeSet::from(["test.sprite.unseen-adjacent".to_owned()]),
+    );
+
+    let mut visible = sprite_game(392);
+    visible.progress.level = 25;
+    visible.progress.max_level = 25;
+    visible.refresh_character_skills();
+    visible.debug_set_ability_casts_succeed(true);
+    add_targets(&mut visible);
+    assert!(matches!(
+        projected(&visible).effects.as_slice(),
+        [AbilityEffectSpecDto::VisibleApplyStatus {
+            status_kind_id,
+            power: Some(25),
+            ..
+        }] if status_kind_id == STATUS_SLEEP
+    ));
+    let mut replay = visible.clone();
+    for cast in [&mut visible, &mut replay] {
+        let mut events = Vec::new();
+        cast.resolve_player_ability(
+            RACE_SPRITE_SLEEPING_DUST_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("visible Sleeping Dust should resolve");
+        assert_eq!(
+            target_ids(&events),
+            BTreeSet::from(["test.sprite.visible-distant".to_owned()]),
+        );
+    }
+    assert_eq!(visible.state_hash(), replay.state_hash());
+    let restored = Game::from_save_with_content(visible.to_save(), visible.content.clone())
+        .expect("Sleeping Dust result should restore");
+    assert_eq!(restored.state_hash(), visible.state_hash());
+}
 
 #[test]
 fn formal_wood_elf_nature_awareness_unlocks_at_twenty_and_reuses_full_detection() {

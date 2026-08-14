@@ -5691,6 +5691,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "probing_spell" => "rfb.ability.race.probe-monsters",
             "restore_life_spell" => "rfb.ability.race.restore-life",
             "scare_monster_spell" => "rfb.ability.race.scare-monster",
+            "sleeping_dust_spell" => "rfb.ability.race.sleeping-dust",
             "spit_acid_spell" => "rfb.ability.race.spit-acid",
             "stone_skin_spell" => "rfb.ability.race.golem-stone-skin",
             "stone_to_mud_spell" => "rfb.ability.race.stone-to-mud",
@@ -6515,6 +6516,15 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    if entry.id == "sprite" {
+        return vec![
+            "humanoid",
+            "legacy-import",
+            "polymorph-candidate",
+            "rfb-compatibility",
+            "standard-body",
+        ];
+    }
     if entry.id == "archon" {
         return vec![
             "angel",
@@ -21525,6 +21535,64 @@ static void _archon_calc_bonuses(void)
         );
         assert_eq!(race["levitation"], true);
         assert_eq!(race["seeInvisible"], true);
+        assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
+    }
+
+    #[test]
+    fn sprite_passives_and_sleeping_dust_power_are_mapped() {
+        const SOURCE: &str = r#"
+static power_info _sprite_get_powers[] =
+{
+    { A_INT, {12, 12, 50, sleeping_dust_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+static void _sprite_calc_bonuses(void)
+{
+    p_ptr->levitation = TRUE;
+    res_add(RES_LITE);
+    p_ptr->pspeed += (p_ptr->lev) / 10;
+}
+"#;
+        let mut sprite = LegacyCharacterEntry {
+            id: "sprite".to_owned(),
+            calc_bonuses_fn: Some("_sprite_calc_bonuses".to_owned()),
+            get_powers_fn: Some("_sprite_get_powers".to_owned()),
+            hooks: vec!["calc_bonuses".to_owned(), "get_powers".to_owned()],
+            ..LegacyCharacterEntry::default()
+        };
+        let (resistances, _, _, _, _, _, _, _, speed_per_ten_levels, _, _) =
+            parse_calc_bonuses_defenses(SOURCE, "_sprite_calc_bonuses");
+        sprite.resistances = resistances;
+        sprite.speed_per_ten_levels = speed_per_ten_levels;
+        sprite.levitation = parse_calc_bonuses_levitation(SOURCE, "_sprite_calc_bonuses");
+        parse_race_powers(SOURCE, &mut sprite);
+
+        assert_eq!(
+            legacy_race_tags(&sprite),
+            [
+                "humanoid",
+                "legacy-import",
+                "polymorph-candidate",
+                "rfb-compatibility",
+                "standard-body",
+            ],
+        );
+        assert_eq!(
+            sprite.abilities,
+            [LegacyInnatePower {
+                governing_attribute: "intelligence".to_owned(),
+                minimum_level: 12,
+                cost: 12,
+                base_failure_percent: 50,
+                ability_id: "rfb.ability.race.sleeping-dust".to_owned(),
+            }],
+        );
+        let mut report = ContentImportReport::default();
+        let race = race_json(&sprite, &[], &mut report);
+        assert_eq!(race["levitation"], true);
+        assert_eq!(race["resistances"]["light"], "resistant");
+        assert_eq!(race["levelStatScalings"][0]["stat"], "speed");
+        assert_eq!(race["levelStatScalings"][0]["divisor"], 10);
         assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
     }
 

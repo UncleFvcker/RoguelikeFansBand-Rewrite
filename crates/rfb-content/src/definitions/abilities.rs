@@ -864,6 +864,9 @@ pub enum AbilityEffectDefinition {
         #[cfg_attr(feature = "schemas", schemars(skip))]
         power: u16,
     },
+    SleepingDust {
+        visible_at_level: u16,
+    },
     BrandWeapon {
         affix_id: String,
         #[serde(default)]

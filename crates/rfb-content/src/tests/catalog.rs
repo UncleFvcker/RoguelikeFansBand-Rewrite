@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.369.0");
+    assert_eq!(catalog.pack_version(), "1.370.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -2023,6 +2023,113 @@ fn formal_archon_completes_the_authoritative_profile_and_static_passives() {
     );
     assert!(archon.abilities.is_empty());
     assert!(archon.starting_items.is_empty());
+}
+
+#[test]
+fn formal_sprite_completes_the_authoritative_profile_and_sleeping_dust_power() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let sprite = catalog
+        .race("rfb-legacy.race.sprite")
+        .expect("formal Sprite race");
+
+    assert_eq!(
+        [
+            sprite.modifiers.strength,
+            sprite.modifiers.intelligence,
+            sprite.modifiers.wisdom,
+            sprite.modifiers.dexterity,
+            sprite.modifiers.constitution,
+            sprite.modifiers.charisma,
+        ],
+        [-4, 3, 3, 3, -2, -2],
+    );
+    assert_eq!(
+        (
+            sprite.life_percent,
+            sprite.base_hp,
+            sprite.experience_percent,
+            sprite.infravision,
+            sprite.shop_adjust_percent,
+        ),
+        (92, 14, 135, 4, 90),
+    );
+    assert!(sprite.levitation);
+    assert_eq!(
+        sprite.resistances.get(&ActorDamageType::Light),
+        Some(&ActorResistanceLevel::Resistant),
+    );
+    assert_eq!(
+        sprite.level_stat_scalings,
+        [RaceLevelStatScalingDefinition {
+            stat: RaceLevelStatDefinition::Speed,
+            multiplier: 1,
+            divisor: 10,
+        }],
+    );
+    assert_eq!(sprite.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(
+            sprite.tags.iter().any(|candidate| candidate == tag),
+            "{tag}"
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&sprite.skill_set_id)
+        .expect("formal Sprite skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [10, 6, 6, 4, 10, 10, -12, 0],
+    );
+
+    let [activation] = sprite.abilities.as_slice() else {
+        panic!("Sprite should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.sleeping-dust",
+            12,
+            TechniqueAttribute::Intelligence,
+            12,
+            50,
+        ),
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Sprite Sleeping Dust ability");
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::SleepingDust {
+            visible_at_level: 25,
+        }
+    ));
+    assert!(sprite.starting_items.is_empty());
 }
 
 #[test]

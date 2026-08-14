@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.sleeping-dust",
+      "minimumLevel": 12,
+      "governingAttribute": "intelligence",
+      "cost": 12,
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 14,
   "bodySlots": [
     {
@@ -67,9 +76,18 @@
   "experiencePercent": 135,
   "formatVersion": 1,
   "id": "rfb-legacy.race.sprite",
+  "infravision": 4,
   "kinCategory": "kin-glyph-73",
   "legacyIndex": 28,
+  "levelStatScalings": [
+    {
+      "stat": "speed",
+      "multiplier": 1,
+      "divisor": 10
+    }
+  ],
   "lifePercent": 92,
+  "levitation": true,
   "modifiers": {
     "charisma": -2,
     "constitution": -2,
@@ -85,7 +103,10 @@
   "shopAdjustPercent": 90,
   "skillSetId": "rfb-legacy.skill-set.race-sprite",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

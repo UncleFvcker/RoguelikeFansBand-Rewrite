@@ -8448,6 +8448,9 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
                 target_category: None,
             }
         }
+        AbilityEffectDefinition::SleepingDust { .. } => {
+            unreachable!("sleeping dust must be level-scaled before projection")
+        }
         AbilityEffectDefinition::BrandWeapon {
             affix_id,
             brand,

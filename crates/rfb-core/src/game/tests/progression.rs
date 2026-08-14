@@ -671,6 +671,98 @@ fn formal_archon_and_temporary_form_apply_and_remove_static_passives() {
 }
 
 #[test]
+fn formal_sprite_and_temporary_form_apply_level_speed_and_static_passives() {
+    for (level, expected_speed) in [(9, 0), (10, 1), (19, 1), (20, 2)] {
+        let mut sprite = sprite_game(390);
+        sprite.progress.level = level;
+        assert_eq!(
+            species_contribution(
+                &sprite.player_derived_stats().speed,
+                "rfb-legacy.race.sprite",
+            ),
+            expected_speed,
+            "Sprite speed at level {level}",
+        );
+    }
+
+    let mut sprite = sprite_game(390);
+    sprite.progress.level = 20;
+    sprite.progress.max_level = 20;
+    sprite.refresh_character_skills();
+    assert!(sprite.player_levitates());
+    assert!(sprite.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly));
+    assert_eq!(sprite.player_infravision_range(), 4);
+    assert_eq!(
+        sprite
+            .effective_player_resistances()
+            .level(DamageType::Light),
+        ResistanceLevel::Resistant,
+    );
+    let restored = Game::from_save_with_content(sprite.to_save(), sprite.content.clone())
+        .expect("Sprite should round-trip");
+    assert_eq!(restored.state_hash(), sprite.state_hash());
+
+    let mut human = Game::new_with_build_race_and_name(
+        390,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human warrior should create");
+    human.progress.level = 20;
+    human.progress.max_level = 20;
+    human.refresh_character_skills();
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.sprite-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.sprite".to_owned());
+    human.player.statuses.push(form);
+    assert!(human.player_levitates());
+    assert_eq!(human.player_infravision_range(), 4);
+    assert_eq!(
+        human
+            .effective_player_resistances()
+            .level(DamageType::Light),
+        ResistanceLevel::Resistant,
+    );
+    assert_eq!(
+        species_contribution(
+            &human.player_derived_stats().speed,
+            "rfb-legacy.race.sprite",
+        ),
+        2,
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == "rfb.ability.race.sleeping-dust")
+    );
+
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert!(!human.player_levitates());
+    assert_eq!(human.player_infravision_range(), 0);
+    assert_eq!(
+        human
+            .effective_player_resistances()
+            .level(DamageType::Light),
+        ResistanceLevel::Normal,
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != "rfb.ability.race.sleeping-dust")
+    );
+}
+
+#[test]
 fn draconian_subraces_are_available_to_formal_character_creation() {
     for suffix in [
         "red", "white", "blue", "black", "green", "bronze", "crystal", "gold", "shadow",

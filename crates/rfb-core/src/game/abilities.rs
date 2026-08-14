@@ -11156,6 +11156,7 @@ impl Game {
             | AbilityEffectDefinition::Invulnerability { .. }
             | AbilityEffectDefinition::LightArea { .. }
             | AbilityEffectDefinition::MassSleepOrStasis { .. }
+            | AbilityEffectDefinition::SleepingDust { .. }
             | AbilityEffectDefinition::Sanctuary { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
