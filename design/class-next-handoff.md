@@ -547,3 +547,30 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 协调版本为 pack `1.344.0` / hash
   `7930a9ba2980097431e039479334265842cb54bd143e279efde2c93fd47da96b`、Protocol `1.204`、State Hash
   Schema v100、save v1、active baseline `contract-v303`。未运行或刷新全量 fixture。
+
+## main 当前批次：独眼巨人正式内容、投掷巨石与岩石伤害
+
+- 权威来源为 RFB `master:src/races_a.c`、`master:src/spells_s.c`、`master:src/gf.c` 与
+  `master:src/virtue.c`。正式种族复用 `rfb-legacy.race.cyclops` 和
+  `rfb-legacy.skill-set.race-cyclops`；新增并由种族方向拥有
+  `rfb.ability.race.throw-boulder` 与 `rfb.ability-program.race.throw-boulder`。本批不新增或占用
+  item、material、affix、resource 或 actor ID。
+- 独眼巨人按原版闭合六维 `[4,-3,-2,-3,4,-1]`、生命 108%、基础 HP 24、经验 155%、商店
+  135%、八项技能、1 格红外、音波抗性、Cyclops kin、Standard 身体、初始“知识”和 20 级
+  STR/动态消耗/50“投掷巨石”；原版没有等级奖励。New Game 通过既有 `raceId` 正式开放，玩家
+  actor 与 tileset 继续由职业 build 决定。
+- 投掷巨石的伤害严格使用原版 `py_prorata_level_aux(250, 2, 1, 2)`，20 级为 54、50 级为
+  250；消耗为伤害除以 7 向上取整，分别为 8 和 36。为此只给既有等级缩放补充显式线性权重，
+  并让先天能力费用复用同一 prorated 公式，没有建立种族专用计算分支。
+- 新增 `rock` 伤害类型：无音波抗性的怪物按原版等级检定承受眩晕；巨石反射回玩家时等概率进入
+  碎片/流血或音波/眩晕分支，并复用既有库存损坏事务。岩石同时摧毁当前内容中的树木与寒冷易损
+  地面物品。Protocol 推进到 `1.212`；没有新增权威状态或 save 字段，State Hash Schema 保持
+  v104，save header/payload schema 保持 v2。
+- 聚焦验证通过：`rfb-content` 247 项、`rfb-legacy-import` 124 项、`rfb-localization` 11 项，
+  独眼巨人伤害/费用/失败支付/save/replay/变形测试，岩石反射与地形/地面物品 4 项测试，种族美德
+  测试，`verify-source`、内容 schema 与协议绑定检查，Web 新游戏 7 项、TypeScript typecheck、
+  `cargo fmt --check` 和 `git diff --check`。未运行或刷新全量 fixture。
+- 协调版本为 pack `1.347.0` / hash
+  `ed59d59d22b47cc3695b727fb64eff5ffe3fa7d6058560bd17f87b4c9525b40c`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。本批已随
+  本节共同提交；下一正式种族为伊克人 `rfb-legacy.race.yeek`。

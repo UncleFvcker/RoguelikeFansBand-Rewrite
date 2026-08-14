@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.346.0");
+    assert_eq!(catalog.pack_version(), "1.347.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1142,6 +1142,112 @@ fn formal_half_titan_matches_rfb_profile_and_reuses_monster_probe() {
             .effect,
         AbilityEffectDefinition::ProbeMonsters
     ));
+}
+
+#[test]
+fn formal_cyclops_matches_rfb_profile_and_throw_boulder_power() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let cyclops = catalog
+        .race("rfb-legacy.race.cyclops")
+        .expect("formal Cyclops race");
+
+    assert_eq!(
+        [
+            cyclops.modifiers.strength,
+            cyclops.modifiers.intelligence,
+            cyclops.modifiers.wisdom,
+            cyclops.modifiers.dexterity,
+            cyclops.modifiers.constitution,
+            cyclops.modifiers.charisma,
+        ],
+        [4, -3, -2, -3, 4, -1]
+    );
+    assert_eq!(cyclops.life_percent, 108);
+    assert_eq!(cyclops.base_hp, 24);
+    assert_eq!(cyclops.experience_percent, 155);
+    assert_eq!(cyclops.shop_adjust_percent, 135);
+    assert_eq!(cyclops.infravision, 1);
+    assert_eq!(cyclops.kin_category.as_deref(), Some("kin-glyph-80"));
+    assert_eq!(
+        cyclops.resistances.get(&ActorDamageType::Sound),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(cyclops.level_mutation_rewards.is_empty());
+    assert_eq!(cyclops.abilities.len(), 1);
+    let activation = &cyclops.abilities[0];
+    assert_eq!(activation.minimum_level, 20);
+    assert_eq!(activation.governing_attribute, TechniqueAttribute::Strength);
+    assert_eq!(activation.cost, 0);
+    assert_eq!(activation.base_failure_percent, 50);
+    assert_eq!(activation.ability_id, "rfb.ability.race.throw-boulder");
+    assert_eq!(
+        activation.cost_scaling,
+        Some(InnatePowerCostScalingDefinition {
+            curve: InnatePowerCostScalingCurveDefinition::Prorated,
+            start_level: 1,
+            level_interval: 1,
+            amount: 250,
+            divisor: 7,
+            round_up: true,
+            linear_weight: 2,
+            quadratic_weight: 1,
+            cubic_weight: 2,
+        })
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(cyclops.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&cyclops.skill_set_id)
+        .expect("formal Cyclops skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -3),
+            ("demo.skill.disarming", -4),
+            ("demo.skill.melee", 20),
+            ("demo.skill.perception", 5),
+            ("demo.skill.ranged", 10),
+            ("demo.skill.saving-throw", -3),
+            ("demo.skill.search", -2),
+            ("demo.skill.stealth", -2),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.throw-boulder")
+        .expect("Cyclops boulder ability");
+    assert!(ability.affects_ground_items);
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::BoltOrBeamDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 0,
+            damage_type: ActorDamageType::Rock,
+            beam_chance_percent: 0,
+            ..
+        }
+    ));
+    assert_eq!(ability.level_scaling.len(), 1);
+    let scaling = &ability.level_scaling[0];
+    assert_eq!(scaling.curve, AbilityLevelScalingCurveDefinition::Prorated);
+    assert_eq!(scaling.linear_weight, 2);
+    assert_eq!(scaling.quadratic_weight, 1);
+    assert_eq!(scaling.cubic_weight, 2);
+    assert_eq!(scaling.multiplier, 250);
 }
 
 #[test]
@@ -3189,9 +3295,15 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
             .unwrap()
             .cost_scaling,
         Some(InnatePowerCostScalingDefinition {
+            curve: InnatePowerCostScalingCurveDefinition::Step,
             start_level: 5,
             level_interval: 5,
             amount: 1,
+            divisor: 1,
+            round_up: false,
+            linear_weight: 1,
+            quadratic_weight: 0,
+            cubic_weight: 0,
         })
     );
     assert_eq!(

@@ -2095,6 +2095,127 @@ fn reflecting_monsters_redirect_only_single_target_bolts() {
 }
 
 #[test]
+fn reflected_rock_uses_the_original_shards_and_sound_riders() {
+    let make_game = |seed| {
+        let mut game = Game::new(seed);
+        clear_monsters(&mut game);
+        game.player.position = Position { x: 3, y: 3 };
+        game.player.hp = 100;
+        for x in 3..=5 {
+            replace_terrain(&mut game, Position { x, y: 3 }, "demo.terrain.floor");
+        }
+        let definition = game
+            .content
+            .actor("demo.actor.buzzy-beetle")
+            .expect("reflecting monster should exist")
+            .clone();
+        game.entities.push(actor_from_runtime_spawn(
+            "test.actor.rock-reflector",
+            &definition.id,
+            Position { x: 5, y: 3 },
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        ));
+        game
+    };
+    let path = vec![Position { x: 4, y: 3 }, Position { x: 5, y: 3 }];
+    let mut saw_shards = false;
+    let mut saw_sound = false;
+
+    for seed in 0..2_048 {
+        let mut game = make_game(seed);
+        let mut ability = game
+            .content
+            .ability("rfb-legacy.ability.bolt-physical-1d4")
+            .expect("single-target bolt should exist")
+            .clone();
+        ability.effect = AbilityEffectDefinition::Damage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 54,
+            damage_type: ActorDamageType::Rock,
+        };
+        let mut events = Vec::new();
+        game.resolve_player_projectile_damage_effect(
+            &ability,
+            path.clone(),
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("rock bolt should resolve");
+        if !events.iter().any(|event| {
+            matches!(
+                event,
+                DomainEvent::BoltReflected {
+                    outcome: BoltReflectionOutcome::Hit { target_kind_id, .. },
+                    ..
+                } if target_kind_id == &game.player.kind_id
+            )
+        }) {
+            continue;
+        }
+        assert_eq!(game.player.hp, 46);
+        if let Some(bleeding) = game
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_BLEEDING)
+        {
+            saw_shards = true;
+            assert_eq!(bleeding.remaining_ticks, 27);
+            assert!(!game.player_has_status_kind(STATUS_STUN));
+        } else {
+            saw_sound = true;
+            let stun = game
+                .player
+                .statuses
+                .iter()
+                .find(|status| status.kind_id == STATUS_STUN)
+                .expect("sound-side reflected rock should stun");
+            assert!((1..=23).contains(&stun.remaining_ticks));
+        }
+        if saw_shards && saw_sound {
+            break;
+        }
+    }
+    assert!(saw_shards && saw_sound);
+}
+
+#[test]
+fn rock_projectiles_destroy_trees_and_cold_vulnerable_ground_items() {
+    let mut game = Game::new(0);
+    let position = game.player.position;
+    replace_terrain(&mut game, position, "demo.terrain.surface-tree");
+    game.resolve_projectile_terrain_effects(&[position], DamageType::Rock, &mut BTreeSet::new());
+    assert_eq!(
+        game.terrain[game
+            .index(position)
+            .expect("player position should remain in bounds")],
+        "demo.terrain.surface-grass"
+    );
+
+    give_inventory_item(&mut game, "test.rock-potion", "demo.item.antidote-potion");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.rock-potion")
+        .expect("test potion should exist")
+        .location = ItemLocation::Ground(position);
+    game.resolve_ground_item_projectile_effects(
+        "test.rock",
+        &[position],
+        DamageType::Rock,
+        true,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    assert!(game.items.iter().all(|item| item.id != "test.rock-potion"));
+}
+
+#[test]
 fn genocide_erases_without_rewards_or_corpses_and_uniques_resist() {
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -2782,6 +2903,7 @@ const RACE_PHASE_DOOR_ABILITY_ID: &str = "rfb.ability.race.phase-door";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
 const RACE_PROBE_MONSTERS_ABILITY_ID: &str = "rfb.ability.race.probe-monsters";
 const RACE_STONE_TO_MUD_ABILITY_ID: &str = "rfb.ability.race.stone-to-mud";
+const RACE_THROW_BOULDER_ABILITY_ID: &str = "rfb.ability.race.throw-boulder";
 
 #[test]
 fn race_ability_follows_the_effective_race_and_projects_its_source() {
@@ -3707,6 +3829,231 @@ fn half_titan_probe_knowledge_survives_losing_the_race_power_and_reloading() {
         .expect("probe knowledge should not require a current Sniper or Half-Titan source");
     assert!(restored.probed_actor_kind_ids.contains("demo.actor.sheep"));
     assert_eq!(restored.state_hash(), hash);
+}
+
+#[test]
+fn cyclops_throw_boulder_scales_stuns_and_round_trips_deterministically() {
+    fn cast_boulder(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            RACE_THROW_BOULDER_ABILITY_ID,
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Cyclops boulder should resolve");
+        events
+    }
+
+    let mut game = Game::new_with_build_race_and_name(
+        103,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.cyclops",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Cyclops High-Mage should create");
+    clear_monsters(&mut game);
+    assert_eq!(game.player_infravision_range(), 1);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Sound),
+        ResistanceLevel::Resistant
+    );
+
+    let level_nineteen_experience = crate::stats::experience_required_for_level(19);
+    game.apply_unscaled_player_experience(level_nineteen_experience, &mut Vec::new());
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_THROW_BOULDER_ABILITY_ID)
+        .expect("Cyclops boulder should be projected before it unlocks");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Strength)
+    );
+    assert_eq!(locked.minimum_level, 20);
+    assert_eq!((locked.base_resource_cost, locked.resource_cost), (0, 8));
+    assert!(!locked.can_cast);
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(20) - level_nineteen_experience,
+        &mut Vec::new(),
+    );
+    game.player.position = Position { x: 3, y: 3 };
+    for position in [Position { x: 3, y: 3 }, Position { x: 4, y: 3 }] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor(
+        "test.cyclops-boulder-target".to_owned(),
+        "demo.actor.warrens-keeper",
+        Position { x: 4, y: 3 },
+    );
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+
+    let available = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_THROW_BOULDER_ABILITY_ID)
+        .expect("Cyclops boulder should remain projected");
+    assert_eq!(
+        (available.base_resource_cost, available.resource_cost),
+        (0, 8)
+    );
+    assert!(available.can_cast);
+    assert!(matches!(
+        available.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrBeamDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 54,
+            damage_type: DamageTypeDto::Rock,
+            beam_chance_percent: 0,
+            ..
+        }]
+    ));
+
+    let mut level_fifty = game.clone();
+    level_fifty.progress.level = 50;
+    let level_fifty = level_fifty
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_THROW_BOULDER_ABILITY_ID)
+        .expect("level-fifty Cyclops boulder");
+    assert_eq!(level_fifty.resource_cost, 36);
+    assert!(matches!(
+        level_fifty.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrBeamDamage {
+            damage_bonus: 250,
+            damage_type: DamageTypeDto::Rock,
+            ..
+        }]
+    ));
+
+    let mut failed = game.clone();
+    let failure_percent = available.failure_percent;
+    let failure_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(failure_percent)
+        })
+        .expect("Cyclops boulder should have a failing percentile seed");
+    failed.rng = RfbRng::seeded(failure_seed);
+    let failed_mana = failed.resources["demo.resource.mana"].current;
+    let failed_events = cast_boulder(&mut failed);
+    assert!(matches!(
+        failed_events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert_eq!(
+        failed.resources["demo.resource.mana"].current,
+        failed_mana - 8
+    );
+    assert_eq!(failed.entities[0].hp, 150);
+
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Cyclops boulder setup should reload");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    game.debug_set_ability_casts_succeed(true);
+    restored.debug_set_ability_casts_succeed(true);
+    let mana_before = game.resources["demo.resource.mana"].current;
+    let events = cast_boulder(&mut game);
+    let restored_events = cast_boulder(&mut restored);
+    assert_eq!(restored_events, events);
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        game.resources["demo.resource.mana"].current,
+        mana_before - 8
+    );
+    assert_eq!(game.entities[0].hp, 96);
+    assert_eq!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_STUN)
+            .expect("unresisted boulder should stun")
+            .remaining_ticks,
+        17
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityHit { damage, .. }
+            if damage.raw == 54 && damage.applied == 54
+    )));
+
+    let mut resistant = Game::from_save_with_content(failed.to_save(), failed.content.clone())
+        .expect("resistant boulder setup should reload");
+    resistant.entities[0]
+        .resistances
+        .set(DamageType::Sound, ResistanceLevel::Resistant);
+    resistant.debug_set_ability_casts_succeed(true);
+    cast_boulder(&mut resistant);
+    assert_eq!(resistant.entities[0].hp, 96);
+    assert!(
+        resistant.entities[0]
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != STATUS_STUN)
+    );
+
+    let mut human = Game::new_with_build_race_and_name(
+        104,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human Warrior should create");
+    human.progress.level = 20;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.cyclops-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.cyclops".to_owned());
+    human.player.statuses.push(form);
+    assert_eq!(human.player_infravision_range(), 1);
+    assert_eq!(
+        human
+            .effective_player_resistances()
+            .level(DamageType::Sound),
+        ResistanceLevel::Resistant
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == RACE_THROW_BOULDER_ABILITY_ID)
+    );
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(human.player_infravision_range(), 0);
+    assert_eq!(
+        human
+            .effective_player_resistances()
+            .level(DamageType::Sound),
+        ResistanceLevel::Normal
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_THROW_BOULDER_ABILITY_ID)
+    );
 }
 
 #[test]

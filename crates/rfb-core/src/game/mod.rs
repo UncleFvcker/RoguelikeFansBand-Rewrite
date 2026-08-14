@@ -70,18 +70,18 @@ use rfb_content::{
     CastingProfileDefinition, CastingRealmProfileDefinition, CastingStudyMode,
     ClassAbilityDefinition, ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition,
     EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
-    InnatePowerDefinition, ItemAttributeDefinition, ItemCurseSeverityDefinition,
-    ItemCurseTargetDefinition, ItemDestructionElement, ItemDeviceGenerationDefinition,
-    ItemEnchantmentRollDefinition, ItemShatterEffectDefinition, ItemSummonLevelSourceDefinition,
-    ItemSummonSelectorDefinition, ItemUseEffectDefinition, MeleeBlowEffectDefinition,
-    MonsterDropKindDefinition, MonsterPackBehavior, MutationPeriodicEffectDefinition,
-    PlayerAbilityDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
-    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
-    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition,
-    RidingWeaponKindDefinition, SkillKind, SlayLevel, SlayTarget, SniperShotModeDefinition,
-    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
-    TerrainDiggingResolution, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition,
-    WeaponBrand, affix_is_compatible_with_item,
+    InnatePowerCostScalingCurveDefinition, InnatePowerDefinition, ItemAttributeDefinition,
+    ItemCurseSeverityDefinition, ItemCurseTargetDefinition, ItemDestructionElement,
+    ItemDeviceGenerationDefinition, ItemEnchantmentRollDefinition, ItemShatterEffectDefinition,
+    ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition, ItemUseEffectDefinition,
+    MeleeBlowEffectDefinition, MonsterDropKindDefinition, MonsterPackBehavior,
+    MutationPeriodicEffectDefinition, PlayerAbilityDefinition, ProceduralLayoutMode,
+    ProceduralMazeDefinition, ProceduralPitDefinition, ProceduralRoomGeometryDefinition,
+    ProceduralRoomPlacement, ProceduralRoomShape, ProceduralStreamerCandidateDefinition,
+    RaceDefinition, RidingWeaponKindDefinition, SkillKind, SlayLevel, SlayTarget,
+    SniperShotModeDefinition, StartingItemDefinition, StatModifiers, TaskObjectiveKind,
+    TechniqueAttribute, TerrainDiggingResolution, TerrainFeatureEntryDefinition,
+    ThemeVaultCandidateDefinition, WeaponBrand, affix_is_compatible_with_item,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBanishTargetDto, AbilityBeamDamageResolutionDto,
@@ -6844,26 +6844,38 @@ fn scaled_ability_level_value(
                 .saturating_mul(u64::from(scaling.multiplier))
                 / u64::from(scaling.divisor)
         }
-        AbilityLevelScalingCurveDefinition::Prorated => {
-            let level = u64::from(level.min(50));
-            let amount = u64::from(scaling.multiplier);
-            if level == 50 {
-                amount
-            } else {
-                let linear_weight = 1_u64;
-                let quadratic_weight = u64::from(scaling.quadratic_weight);
-                let cubic_weight = u64::from(scaling.cubic_weight);
-                let weight = linear_weight + quadratic_weight + cubic_weight;
-                amount * level * linear_weight / (50 * weight)
-                    + amount * level * level * quadratic_weight / (50 * 50 * weight)
-                    + (amount * level * level / 50) * level * cubic_weight / (50 * 50 * weight)
-            }
-        }
+        AbilityLevelScalingCurveDefinition::Prorated => prorated_level_value(
+            u64::from(scaling.multiplier),
+            level,
+            scaling.linear_weight,
+            scaling.quadratic_weight,
+            scaling.cubic_weight,
+        ),
     };
     let scaled = base.saturating_add(addition);
     scaling
         .maximum
         .map_or(scaled, |maximum| scaled.min(maximum))
+}
+
+fn prorated_level_value(
+    amount: u64,
+    level: u16,
+    linear_weight: u16,
+    quadratic_weight: u16,
+    cubic_weight: u16,
+) -> u64 {
+    let level = u64::from(level.min(50));
+    if level == 50 {
+        return amount;
+    }
+    let linear_weight = u64::from(linear_weight);
+    let quadratic_weight = u64::from(quadratic_weight);
+    let cubic_weight = u64::from(cubic_weight);
+    let total_weight = linear_weight + quadratic_weight + cubic_weight;
+    amount * level * linear_weight / (50 * total_weight)
+        + amount * level * level * quadratic_weight / (50 * 50 * total_weight)
+        + (amount * level * level / 50) * level * cubic_weight / (50 * 50 * total_weight)
 }
 
 fn apply_ability_level_scaling(

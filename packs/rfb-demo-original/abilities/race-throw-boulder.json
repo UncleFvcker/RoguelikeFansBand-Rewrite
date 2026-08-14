@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.race.throw-boulder",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-race-throw-boulder-description",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.throw-boulder",
+  "levelScaling": [
+    {
+      "curve": "prorated",
+      "divisor": 1,
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "linearWeight": 2,
+      "multiplier": 250,
+      "quadraticWeight": 1,
+      "cubicWeight": 2
+    }
+  ],
+  "nameKey": "ability-rfb-race-throw-boulder-name",
+  "tags": [
+    "bolt",
+    "race",
+    "rock"
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  }
+}

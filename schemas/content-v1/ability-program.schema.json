@@ -1991,6 +1991,9 @@
                 "psi": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
+                "rock": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
                 "rocket": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
@@ -2946,6 +2949,13 @@
           "minimum": 0,
           "type": "integer"
         },
+        "linearWeight": {
+          "default": 1,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
         "maximum": {
           "default": null,
           "format": "uint64",
@@ -3101,6 +3111,7 @@
         "nexus",
         "sound",
         "shards",
+        "rock",
         "chaos",
         "disenchant",
         "time",

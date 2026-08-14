@@ -1,5 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.throw-boulder",
+      "minimumLevel": 20,
+      "governingAttribute": "strength",
+      "cost": 0,
+      "costScaling": {
+        "curve": "prorated",
+        "startLevel": 1,
+        "levelInterval": 1,
+        "amount": 250,
+        "divisor": 7,
+        "roundUp": true,
+        "linearWeight": 2,
+        "quadraticWeight": 1,
+        "cubicWeight": 2
+      },
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 24,
   "bodySlots": [
     {
@@ -67,6 +87,7 @@
   "experiencePercent": 155,
   "formatVersion": 1,
   "id": "rfb-legacy.race.cyclops",
+  "infravision": 1,
   "kinCategory": "kin-glyph-80",
   "legacyIndex": 14,
   "lifePercent": 108,
@@ -85,7 +106,10 @@
   "shopAdjustPercent": 135,
   "skillSetId": "rfb-legacy.skill-set.race-cyclops",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

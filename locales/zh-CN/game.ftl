@@ -278,6 +278,7 @@ damage-type-nether-name = 地狱
 damage-type-nexus-name = 因果混乱
 damage-type-sound-name = 音波
 damage-type-shards-name = 碎片
+damage-type-rock-name = 岩石
 damage-type-chaos-name = 混沌
 damage-type-disenchant-name = 去魔
 damage-type-time-name = 时间逆转

@@ -1162,3 +1162,22 @@ git diff --stat
   State Hash Schema v104、save v2。共同初始化 RNG 改变后已按规则刷新并验证 26 个 active fixtures；
   Rust workspace 728 项 core、246 项 content 及其余 crate 测试、Clippy、生成器、source/content
   验证，以及 Web 148 项测试、typecheck 和生产 UI build 均通过。
+
+## 63. main 当前交接（独眼巨人、投掷巨石与岩石伤害）
+
+- 种族方向继续拥有既有 `rfb-legacy.race.cyclops` 与
+  `rfb-legacy.skill-set.race-cyclops`，并新增、拥有 `rfb.ability.race.throw-boulder` 和
+  `rfb.ability-program.race.throw-boulder`；其他方向不得复制这些身份。本批没有新增或占用 item、
+  material、affix、resource 或 actor ID。
+- 独眼巨人已按 RFB master 闭合完整静态资料、音波抗性、初始“知识”和 20 级 STR“投掷巨石”。
+  伤害及额外费用共用显式权重的 prorated 缩放，20 级为 54 伤害/8 消耗，50 级为 250/36；
+  New Game 已加入既有 `raceId`，玩家外观继续由职业 build 决定。
+- 共享伤害枚举新增 `rock`。怪物侧保留无音波抗性时的原版眩晕检定；反射到玩家时保留碎片/流血和
+  音波/眩晕二选一及库存损坏，并接入树木、寒冷易损地面物品事务。Protocol 因公共 DTO 枚举推进到
+  `1.212`，生成的 schema 与 TypeScript binding 已同步；没有新权威状态、save 字段或公共初始化
+  RNG 变化，因此不刷新 active fixture。
+- 共享协调点为 pack `1.347.0` / content hash
+  `ed59d59d22b47cc3695b727fb64eff5ffe3fa7d6058560bd17f87b4c9525b40c`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。聚焦内容、
+  导入器、本地化、核心、Web、生成器与格式检查均通过；本批已随本节共同提交。下一正式种族是
+  `rfb-legacy.race.yeek`。

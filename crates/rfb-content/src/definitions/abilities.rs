@@ -204,10 +204,16 @@ pub struct AbilityLevelScalingDefinition {
     pub maximum: Option<u64>,
     #[serde(default)]
     pub curve: AbilityLevelScalingCurveDefinition,
+    #[serde(default = "default_level_scaling_linear_weight")]
+    pub linear_weight: u16,
     #[serde(default)]
     pub quadratic_weight: u16,
     #[serde(default)]
     pub cubic_weight: u16,
+}
+
+const fn default_level_scaling_linear_weight() -> u16 {
+    1
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1022,12 +1028,15 @@ pub(crate) fn valid_ability_level_scaling(
                 && scaling.level_offset <= 100
                 && match scaling.curve {
                     AbilityLevelScalingCurveDefinition::Linear => {
-                        scaling.quadratic_weight == 0 && scaling.cubic_weight == 0
+                        scaling.linear_weight == 1
+                            && scaling.quadratic_weight == 0
+                            && scaling.cubic_weight == 0
                     }
                     AbilityLevelScalingCurveDefinition::Prorated => {
                         scaling.divisor == 1
                             && scaling.level_offset == 0
                             && scaling.maximum.is_none()
+                            && (1..=100).contains(&scaling.linear_weight)
                             && scaling.quadratic_weight <= 100
                             && scaling.cubic_weight <= 100
                     }

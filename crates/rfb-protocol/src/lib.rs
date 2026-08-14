@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.211";
+pub const PROTOCOL_VERSION: &str = "1.212";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
 
@@ -1909,6 +1909,7 @@ pub enum DamageTypeDto {
     Nexus,
     Sound,
     Shards,
+    Rock,
     Chaos,
     Disenchant,
     Time,

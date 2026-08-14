@@ -35,6 +35,7 @@
         "nexus",
         "sound",
         "shards",
+        "rock",
         "chaos",
         "disenchant",
         "time",
@@ -1103,6 +1104,9 @@
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
                 "psi": {
+                  "$ref": "#/$defs/ActorResistanceLevel"
+                },
+                "rock": {
                   "$ref": "#/$defs/ActorResistanceLevel"
                 },
                 "rocket": {

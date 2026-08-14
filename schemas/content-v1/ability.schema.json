@@ -42,6 +42,13 @@
           "minimum": 0,
           "type": "integer"
         },
+        "linearWeight": {
+          "default": 1,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
         "maximum": {
           "default": null,
           "format": "uint64",

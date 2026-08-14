@@ -738,3 +738,8 @@ State Hash Schema v103；save 容器保持 v1，旧开发存档不兼容。
 同时为 `DungeonStateSaveDto` 增加必填 `suppressed`，持久化共享入口地牢的替代选择；该状态
 及合并后的状态增量进入 State Hash Schema v104，save header/payload schema 升至 v2，
 二进制容器格式仍为 v1；不为缺少新字段的旧开发存档提供兼容默认值。
+
+协议 1.212 为 `DamageTypeDto` 增加 `rock`，供独眼巨人的“投掷巨石”区分原版岩石命中：
+怪物若没有音波抗性则进行等级检定并可能眩晕；反射回玩家时按原版等概率进入碎片/流血或
+音波/眩晕分支，并复用现有元素库存损坏事务。该变化不增加命令、权威状态或 save 字段，
+State Hash Schema 保持 v104，save header/payload schema 保持 v2。

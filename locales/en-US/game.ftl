@@ -278,6 +278,7 @@ damage-type-nether-name = nether
 damage-type-nexus-name = nexus
 damage-type-sound-name = sound
 damage-type-shards-name = shards
+damage-type-rock-name = rock
 damage-type-chaos-name = chaos
 damage-type-disenchant-name = disenchantment
 damage-type-time-name = time

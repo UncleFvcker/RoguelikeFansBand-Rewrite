@@ -27,10 +27,34 @@
       ],
       "type": "object"
     },
+    "InnatePowerCostScalingCurveDefinition": {
+      "enum": [
+        "step",
+        "prorated"
+      ],
+      "type": "string"
+    },
     "InnatePowerCostScalingDefinition": {
       "additionalProperties": false,
       "properties": {
         "amount": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "cubicWeight": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "curve": {
+          "$ref": "#/$defs/InnatePowerCostScalingCurveDefinition",
+          "default": "step"
+        },
+        "divisor": {
+          "default": 1,
           "format": "uint32",
           "minimum": 0,
           "type": "integer"
@@ -40,6 +64,24 @@
           "maximum": 65535,
           "minimum": 0,
           "type": "integer"
+        },
+        "linearWeight": {
+          "default": 1,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "quadraticWeight": {
+          "default": 0,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "roundUp": {
+          "default": false,
+          "type": "boolean"
         },
         "startLevel": {
           "format": "uint16",
@@ -523,6 +565,9 @@
           "$ref": "#/$defs/ActorResistanceLevel"
         },
         "psi": {
+          "$ref": "#/$defs/ActorResistanceLevel"
+        },
+        "rock": {
           "$ref": "#/$defs/ActorResistanceLevel"
         },
         "rocket": {

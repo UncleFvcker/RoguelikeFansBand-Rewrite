@@ -14,6 +14,7 @@ fn projectile_destroys_tree(damage_type: DamageType) -> bool {
             | DamageType::Poison
             | DamageType::Sound
             | DamageType::Shards
+            | DamageType::Rock
             | DamageType::Chaos
             | DamageType::Disenchant
             | DamageType::Time
@@ -467,7 +468,11 @@ impl Game {
                 self.element_destroys_item(item, ItemDestructionElement::Fire, true)
                     || self.element_destroys_item(item, ItemDestructionElement::Cold, true)
             }
-            DamageType::Ice | DamageType::Shards | DamageType::Sound | DamageType::Force => {
+            DamageType::Ice
+            | DamageType::Shards
+            | DamageType::Rock
+            | DamageType::Sound
+            | DamageType::Force => {
                 self.element_destroys_item(item, ItemDestructionElement::Cold, false)
             }
             DamageType::Mana | DamageType::Disintegrate => true,

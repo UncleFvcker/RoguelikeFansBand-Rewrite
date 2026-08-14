@@ -4,11 +4,11 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
     AbilityBookDefinition, AbilityDefinition, ActorDefinition, ActorRole, BUILD_SCHEMA,
-    CLASS_SCHEMA, CharacterBuildDefinition, ClassDefinition, ContentError, ItemDefinition,
-    MutationDefinition, PERSONALITY_SCHEMA, PersonalityDefinition, RACE_SCHEMA, RaceDefinition,
-    RaceMutationSelectionDefinition, SKILL_SCHEMA, SKILL_SET_SCHEMA, SkillDefinition, SkillKind,
-    SkillSetDefinition, StartingItemDefinition, StatModifiers, TerrainDefinition,
-    valid_ability_level_scaling,
+    CLASS_SCHEMA, CharacterBuildDefinition, ClassDefinition, ContentError,
+    InnatePowerCostScalingCurveDefinition, ItemDefinition, MutationDefinition, PERSONALITY_SCHEMA,
+    PersonalityDefinition, RACE_SCHEMA, RaceDefinition, RaceMutationSelectionDefinition,
+    SKILL_SCHEMA, SKILL_SET_SCHEMA, SkillDefinition, SkillKind, SkillSetDefinition,
+    StartingItemDefinition, StatModifiers, TerrainDefinition, valid_ability_level_scaling,
 };
 
 use super::shared::{
@@ -230,6 +230,24 @@ pub(super) fn validate_characters(
                         || scaling.level_interval > 100
                         || scaling.amount == 0
                         || scaling.amount > 1_000_000
+                        || scaling.divisor == 0
+                        || scaling.divisor > 1_000_000
+                        || match scaling.curve {
+                            InnatePowerCostScalingCurveDefinition::Step => {
+                                scaling.divisor != 1
+                                    || scaling.round_up
+                                    || scaling.linear_weight != 1
+                                    || scaling.quadratic_weight != 0
+                                    || scaling.cubic_weight != 0
+                            }
+                            InnatePowerCostScalingCurveDefinition::Prorated => {
+                                scaling.start_level != 1
+                                    || scaling.level_interval != 1
+                                    || !(1..=100).contains(&scaling.linear_weight)
+                                    || scaling.quadratic_weight > 100
+                                    || scaling.cubic_weight > 100
+                            }
+                        }
                 })
                 || activation.base_failure_percent > 95
                 || activation

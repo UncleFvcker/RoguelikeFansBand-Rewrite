@@ -2506,6 +2506,9 @@ impl Game {
         }
 
         if hit_player {
+            if damage_type == DamageType::Rock {
+                self.resolve_reflected_rock_player_rider(&reflector_kind_id, raw_damage, events);
+            }
             let target = self.player_derived_stats();
             let resistance = self.effective_player_resistances().level(damage_type);
             let damage = self.reduce_player_damage(resolve_armored_damage(
@@ -2570,7 +2573,16 @@ impl Game {
                 },
                 trace,
             });
-            if application.fatal {
+            if !application.fatal && damage_type == DamageType::Rock {
+                self.resolve_ability_damage_rider(
+                    index,
+                    source_kind_id,
+                    damage_type,
+                    raw_damage,
+                    resistance,
+                    changed,
+                );
+            } else if application.fatal {
                 self.resolve_actor_death_without_rewards(
                     index,
                     None,
@@ -2589,6 +2601,55 @@ impl Game {
             trace,
         });
         Ok(())
+    }
+
+    fn resolve_reflected_rock_player_rider(
+        &mut self,
+        source_kind_id: &str,
+        raw_damage: i32,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let resistances = self.effective_player_resistances();
+        if self.rng.bounded(2) == 0 {
+            if matches!(
+                resistances.level(DamageType::Shards),
+                ResistanceLevel::Vulnerable | ResistanceLevel::Normal
+            ) {
+                self.apply_player_melee_status(
+                    STATUS_BLEEDING,
+                    raw_damage.max(0) / 2,
+                    source_kind_id,
+                );
+            }
+            self.damage_player_inventory(
+                source_kind_id,
+                DamageType::Shards,
+                false,
+                raw_damage,
+                events,
+            );
+        } else {
+            if matches!(
+                resistances.level(DamageType::Sound),
+                ResistanceLevel::Vulnerable | ResistanceLevel::Normal
+            ) {
+                let maximum = if raw_damage > 90 {
+                    35
+                } else {
+                    raw_damage.max(0) / 3 + 5
+                };
+                let duration = i32::try_from(self.rng.bounded(maximum as u64) + 1)
+                    .expect("rock stun roll must fit i32");
+                self.apply_player_melee_status(STATUS_STUN, duration, source_kind_id);
+            }
+            self.damage_player_inventory(
+                source_kind_id,
+                DamageType::Sound,
+                false,
+                raw_damage,
+                events,
+            );
+        }
     }
 
     pub(super) fn resolve_player_cone_damage_effect(

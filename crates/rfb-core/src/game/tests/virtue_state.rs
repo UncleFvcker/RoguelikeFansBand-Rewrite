@@ -249,6 +249,22 @@ fn formal_races_receive_their_original_race_virtues() {
         ]
     );
 
+    let cyclops = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.cyclops",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Cyclops Archer should create");
+    assert_eq!(
+        &virtue_kinds(&cyclops)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Knowledge,
+        ]
+    );
+
     let dunadan = Game::new_with_build_race_and_name(
         43,
         "demo.build.archer",

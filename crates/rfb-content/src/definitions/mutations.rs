@@ -96,9 +96,38 @@ pub struct MutationRatioDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InnatePowerCostScalingDefinition {
+    #[serde(default)]
+    pub curve: InnatePowerCostScalingCurveDefinition,
     pub start_level: u16,
     pub level_interval: u16,
     pub amount: u32,
+    #[serde(default = "default_cost_scaling_divisor")]
+    pub divisor: u32,
+    #[serde(default)]
+    pub round_up: bool,
+    #[serde(default = "default_cost_scaling_linear_weight")]
+    pub linear_weight: u16,
+    #[serde(default)]
+    pub quadratic_weight: u16,
+    #[serde(default)]
+    pub cubic_weight: u16,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum InnatePowerCostScalingCurveDefinition {
+    #[default]
+    Step,
+    Prorated,
+}
+
+const fn default_cost_scaling_divisor() -> u32 {
+    1
+}
+
+const fn default_cost_scaling_linear_weight() -> u16 {
+    1
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

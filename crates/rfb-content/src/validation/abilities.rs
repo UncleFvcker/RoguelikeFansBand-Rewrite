@@ -248,7 +248,10 @@ pub(super) fn validate_abilities(
                     ..
                 } => {
                     (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
-                        || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
+                        || (*damage_dice == 0
+                            && *damage_sides == 0
+                            && (*damage_bonus > 0
+                                || has_level_scaling(AbilityLevelScalingField::DamageBonus))))
                         && *damage_bonus <= 10_000
                         && *beam_chance_percent <= 100
                         && (-100..=100).contains(beam_chance_modifier)

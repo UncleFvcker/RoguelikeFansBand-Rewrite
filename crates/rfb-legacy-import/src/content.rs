@@ -5339,6 +5339,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "poison_dart_spell" => "rfb.ability.race.poison-dart",
             "probing_spell" => "rfb.ability.race.probe-monsters",
             "stone_to_mud_spell" => "rfb.ability.race.stone-to-mud",
+            "throw_boulder_spell" => "rfb.ability.race.throw-boulder",
             _ => {
                 gaps.push(format!("get_powers:{spell}"));
                 continue;
@@ -6157,6 +6158,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
     if matches!(
         entry.id.as_str(),
         "barbarian"
+            | "cyclops"
             | "dunadan"
             | "dwarf"
             | "gnome"
@@ -19643,6 +19645,19 @@ race_t *test_beast_get_race(void)
                 "standard-body",
             ]
         );
+        let cyclops = LegacyCharacterEntry {
+            id: "cyclops".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&cyclops),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
     }
 
     #[test]
@@ -19658,6 +19673,7 @@ static power_info _barbarian_get_powers[] =
     { A_DEX, {12, 8, 50, poison_dart_spell}},
     { A_INT, {15, 10, 60, probing_spell}},
     { A_STR, {20, 10, 70, stone_to_mud_spell}},
+    { A_STR, {20, 0, 50, throw_boulder_spell}},
     { A_WIS, {12, 7, 40, mystery_spell}},
     { -1, {-1, -1, -1, NULL} }
 };
@@ -19747,6 +19763,13 @@ race_t *barbarian_get_race(void)
                     base_failure_percent: 70,
                     ability_id: "rfb.ability.race.stone-to-mud".to_owned(),
                 },
+                LegacyInnatePower {
+                    governing_attribute: "strength".to_owned(),
+                    minimum_level: 20,
+                    cost: 0,
+                    base_failure_percent: 50,
+                    ability_id: "rfb.ability.race.throw-boulder".to_owned(),
+                },
             ]
         );
         assert!(!barbarian.hooks.iter().any(|hook| hook == "get_powers"));
@@ -19791,7 +19814,11 @@ race_t *barbarian_get_race(void)
             race["abilities"][7]["abilityId"],
             "rfb.ability.race.stone-to-mud"
         );
-        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(8));
+        assert_eq!(
+            race["abilities"][8]["abilityId"],
+            "rfb.ability.race.throw-boulder"
+        );
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(9));
         assert_eq!(race["resistances"]["fear"], "resistant");
         assert!(
             race["tags"]

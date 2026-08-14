@@ -83,7 +83,9 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.kobold" => kinds.push(VirtueKindDto::Honour),
             "rfb-legacy.race.dwarf" => kinds.push(VirtueKindDto::Diligence),
             "rfb-legacy.race.nibelung" => kinds.push(VirtueKindDto::Patience),
-            "rfb-legacy.race.gnome" => kinds.push(VirtueKindDto::Knowledge),
+            "rfb-legacy.race.gnome" | "rfb-legacy.race.cyclops" => {
+                kinds.push(VirtueKindDto::Knowledge);
+            }
             "rfb-legacy.race.half-giant" => kinds.push(VirtueKindDto::Justice),
             "rfb-legacy.race.half-troll" => kinds.push(VirtueKindDto::Valour),
             "rfb-legacy.race.half-titan" => kinds.push(VirtueKindDto::Harmony),

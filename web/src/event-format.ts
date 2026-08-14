@@ -1547,6 +1547,7 @@ export function createPresentationFormatter(
       nexus: "damage-type-nexus-name",
       sound: "damage-type-sound-name",
       shards: "damage-type-shards-name",
+      rock: "damage-type-rock-name",
       chaos: "damage-type-chaos-name",
       disenchant: "damage-type-disenchant-name",
       time: "damage-type-time-name",

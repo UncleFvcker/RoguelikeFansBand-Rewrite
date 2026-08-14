@@ -88,6 +88,7 @@ pub enum ActorDamageType {
     Nexus,
     Sound,
     Shards,
+    Rock,
     Chaos,
     Disenchant,
     Time,

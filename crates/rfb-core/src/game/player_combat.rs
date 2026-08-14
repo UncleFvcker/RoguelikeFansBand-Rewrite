@@ -381,7 +381,7 @@ impl Game {
         }
     }
 
-    fn resolve_ability_damage_rider(
+    pub(super) fn resolve_ability_damage_rider(
         &mut self,
         index: usize,
         ability_id: &str,
@@ -400,6 +400,20 @@ impl Game {
         let stun_amount = monster_stun_amount(raw_damage);
 
         match damage_type {
+            DamageType::Rock
+                if !stun_immune
+                    && matches!(
+                        self.entities[index].resistances.level(DamageType::Sound),
+                        ResistanceLevel::Vulnerable | ResistanceLevel::Normal
+                    ) =>
+            {
+                let save_maximum = (1 + level / 12).saturating_mul(level).max(1);
+                if self.rng.bounded(save_maximum)
+                    < u64::try_from(raw_damage.max(0)).unwrap_or(u64::MAX)
+                {
+                    self.apply_actor_melee_status(index, STATUS_STUN, stun_amount, ability_id);
+                }
+            }
             DamageType::Ice if !stun_immune => {
                 let intensity =
                     u16::try_from(self.rng.bounded(15) + 1).expect("ice stun roll must fit u16");

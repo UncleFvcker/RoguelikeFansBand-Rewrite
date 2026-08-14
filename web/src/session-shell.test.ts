@@ -48,6 +48,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.half-giant",
     "rfb-legacy.race.half-troll",
     "rfb-legacy.race.half-titan",
+    "rfb-legacy.race.cyclops",
   ]);
 });
 
@@ -171,6 +172,15 @@ test("new character requests preserve the selected formal race", () => {
       "Atlas",
     ).raceId,
     "rfb-legacy.race.half-titan",
+  );
+  assert.equal(
+    createNewSessionRequest(
+      "95",
+      "demo.build.warrior",
+      "rfb-legacy.race.cyclops",
+      "Polyphemus",
+    ).raceId,
+    "rfb-legacy.race.cyclops",
   );
 });
 

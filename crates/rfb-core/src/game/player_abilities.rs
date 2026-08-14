@@ -559,14 +559,37 @@ impl Game {
     }
 
     pub(super) fn innate_power_resource_cost(&self, activation: &InnatePowerDefinition) -> u32 {
-        let extra = activation.cost_scaling.map_or(0, |scaling| {
-            if self.progress.level < scaling.start_level {
-                0
-            } else {
-                u32::from((self.progress.level - scaling.start_level) / scaling.level_interval + 1)
-                    .saturating_mul(scaling.amount)
-            }
-        });
+        let extra = activation
+            .cost_scaling
+            .map_or(0, |scaling| match scaling.curve {
+                InnatePowerCostScalingCurveDefinition::Step => {
+                    if self.progress.level < scaling.start_level {
+                        0
+                    } else {
+                        u32::from(
+                            (self.progress.level - scaling.start_level) / scaling.level_interval
+                                + 1,
+                        )
+                        .saturating_mul(scaling.amount)
+                    }
+                }
+                InnatePowerCostScalingCurveDefinition::Prorated => {
+                    let value = prorated_level_value(
+                        u64::from(scaling.amount),
+                        self.progress.level,
+                        scaling.linear_weight,
+                        scaling.quadratic_weight,
+                        scaling.cubic_weight,
+                    );
+                    let divisor = u64::from(scaling.divisor);
+                    let scaled = if scaling.round_up {
+                        value.saturating_add(divisor - 1) / divisor
+                    } else {
+                        value / divisor
+                    };
+                    u32::try_from(scaled).unwrap_or(u32::MAX)
+                }
+            });
         activation.cost.saturating_add(extra)
     }
 
