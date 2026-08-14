@@ -5254,6 +5254,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
         let ability_id = match spell {
             "berserk_spell" => "rfb.ability.race.berserk",
             "create_food_spell" => "rfb.ability.race.create-food",
+            "poison_dart_spell" => "rfb.ability.race.poison-dart",
             _ => {
                 gaps.push(format!("get_powers:{spell}"));
                 continue;
@@ -6069,7 +6070,10 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             "standard-body",
         ];
     }
-    if matches!(entry.id.as_str(), "barbarian" | "dunadan" | "hobbit") {
+    if matches!(
+        entry.id.as_str(),
+        "barbarian" | "dunadan" | "hobbit" | "kobold"
+    ) {
         return vec![
             "humanoid",
             "legacy-import",
@@ -19080,6 +19084,19 @@ race_t *test_beast_get_race(void)
                 "standard-body",
             ]
         );
+        let kobold = LegacyCharacterEntry {
+            id: "kobold".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&kobold),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
     }
 
     #[test]
@@ -19089,6 +19106,7 @@ static power_info _barbarian_get_powers[] =
 {
     { A_STR, {8, 10, 30, berserk_spell}},
     { A_INT, {15, 10, 50, create_food_spell}},
+    { A_DEX, {12, 8, 50, poison_dart_spell}},
     { A_WIS, {12, 7, 40, mystery_spell}},
     { -1, {-1, -1, -1, NULL} }
 };
@@ -19136,6 +19154,13 @@ race_t *barbarian_get_race(void)
                     base_failure_percent: 50,
                     ability_id: "rfb.ability.race.create-food".to_owned(),
                 },
+                LegacyInnatePower {
+                    governing_attribute: "dexterity".to_owned(),
+                    minimum_level: 12,
+                    cost: 8,
+                    base_failure_percent: 50,
+                    ability_id: "rfb.ability.race.poison-dart".to_owned(),
+                },
             ]
         );
         assert!(!barbarian.hooks.iter().any(|hook| hook == "get_powers"));
@@ -19156,7 +19181,11 @@ race_t *barbarian_get_race(void)
             race["abilities"][1]["abilityId"],
             "rfb.ability.race.create-food"
         );
-        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(2));
+        assert_eq!(
+            race["abilities"][2]["abilityId"],
+            "rfb.ability.race.poison-dart"
+        );
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(3));
         assert_eq!(race["resistances"]["fear"], "resistant");
         assert!(
             race["tags"]

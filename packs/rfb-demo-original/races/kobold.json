@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.poison-dart",
+      "minimumLevel": 12,
+      "governingAttribute": "dexterity",
+      "cost": 8,
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 19,
   "bodySlots": [
     {
@@ -67,6 +76,7 @@
   "experiencePercent": 90,
   "formatVersion": 1,
   "id": "rfb-legacy.race.kobold",
+  "infravision": 3,
   "kinCategory": "kin-glyph-107",
   "legacyIndex": 17,
   "lifePercent": 98,
@@ -83,7 +93,10 @@
   "shopAdjustPercent": 120,
   "skillSetId": "rfb-legacy.skill-set.race-kobold",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

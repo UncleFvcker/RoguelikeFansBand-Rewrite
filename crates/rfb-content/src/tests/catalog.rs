@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.337.0");
+    assert_eq!(catalog.pack_version(), "1.338.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -495,6 +495,104 @@ fn formal_hobbit_matches_rfb_profile_and_create_food_power() {
             item_kind_id,
             quantity: 1,
         } if item_kind_id == "demo.item.ration-of-food"
+    ));
+}
+
+#[test]
+fn formal_kobold_matches_rfb_profile_and_poison_dart_power() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let kobold = catalog
+        .race("rfb-legacy.race.kobold")
+        .expect("formal Kobold race");
+
+    assert_eq!(
+        [
+            kobold.modifiers.strength,
+            kobold.modifiers.intelligence,
+            kobold.modifiers.wisdom,
+            kobold.modifiers.dexterity,
+            kobold.modifiers.constitution,
+            kobold.modifiers.charisma,
+        ],
+        [1, -1, 0, 1, 0, -2]
+    );
+    assert_eq!(kobold.life_percent, 98);
+    assert_eq!(kobold.base_hp, 19);
+    assert_eq!(kobold.experience_percent, 90);
+    assert_eq!(kobold.shop_adjust_percent, 120);
+    assert_eq!(kobold.infravision, 3);
+    assert_eq!(kobold.kin_category.as_deref(), Some("kin-glyph-107"));
+    assert_eq!(
+        kobold.resistances.get(&ActorDamageType::Poison),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(kobold.level_mutation_rewards.is_empty());
+    assert_eq!(
+        kobold.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 12,
+            governing_attribute: TechniqueAttribute::Dexterity,
+            cost: 8,
+            cost_scaling: None,
+            base_failure_percent: 50,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.poison-dart".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(kobold.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&kobold.skill_set_id)
+        .expect("formal Kobold skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -2),
+            ("demo.skill.disarming", -2),
+            ("demo.skill.melee", 10),
+            ("demo.skill.perception", 8),
+            ("demo.skill.ranged", 3),
+            ("demo.skill.saving-throw", -1),
+            ("demo.skill.search", 1),
+            ("demo.skill.stealth", -1),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.poison-dart")
+        .expect("Kobold Poison Dart ability");
+    assert_eq!(ability.target.range, 18);
+    assert!(!ability.affects_ground_items);
+    assert!(ability.spell_power_fields.is_empty());
+    assert_eq!(ability.level_scaling.len(), 1);
+    assert_eq!(
+        ability.level_scaling[0].field,
+        AbilityLevelScalingField::DamageBonus
+    );
+    assert_eq!(ability.level_scaling[0].level_offset, 1);
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::BoltOrBeamDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 1,
+            damage_type: ActorDamageType::Poison,
+            beam_chance_percent: 0,
+            ..
+        }
     ));
 }
 

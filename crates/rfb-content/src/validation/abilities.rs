@@ -240,8 +240,8 @@ pub(super) fn validate_abilities(
                     beam_chance_modifier,
                     ..
                 } => {
-                    (1..=100).contains(damage_dice)
-                        && (1..=10_000).contains(damage_sides)
+                    (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
+                        || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
                         && *damage_bonus <= 10_000
                         && *beam_chance_percent <= 100
                         && (-100..=100).contains(beam_chance_modifier)

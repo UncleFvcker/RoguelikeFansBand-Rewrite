@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability-program.race.poison-dart",
+  "input": "cast-target",
+  "steps": [
+    {
+      "type": "bolt-or-beam-damage",
+      "damageDice": 0,
+      "damageSides": 0,
+      "damageBonus": 1,
+      "damageType": "poison",
+      "beamChancePercent": 0
+    }
+  ]
+}

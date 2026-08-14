@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.poison-dart",
+  "nameKey": "ability-rfb-race-poison-dart-name",
+  "descriptionKey": "ability-rfb-race-poison-dart-description",
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "abilityProgramId": "rfb.ability-program.race.poison-dart",
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "levelOffset": 1,
+      "multiplier": 1,
+      "divisor": 1
+    }
+  ],
+  "tags": [
+    "bolt",
+    "poison",
+    "race"
+  ]
+}

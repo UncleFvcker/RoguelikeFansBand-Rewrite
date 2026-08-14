@@ -2564,6 +2564,7 @@ const MUTATION_CONTRACT_ABILITY_ID: &str = "demo.ability.mutation-contract";
 const MUTATION_CONTRACT_ID: &str = "rfb.mutation.spit-acid";
 const RACE_BERSERK_ABILITY_ID: &str = "rfb.ability.race.berserk";
 const RACE_CREATE_FOOD_ABILITY_ID: &str = "rfb.ability.race.create-food";
+const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
 
 #[test]
 fn race_ability_follows_the_effective_race_and_projects_its_source() {
@@ -2641,6 +2642,77 @@ fn race_ability_follows_the_effective_race_and_projects_its_source() {
             .iter()
             .all(|ability| ability.id != RACE_BERSERK_ABILITY_ID)
     );
+}
+
+#[test]
+fn formal_kobold_poison_dart_is_a_fixed_level_poison_bolt_without_ammunition() {
+    let mut game = Game::new_with_build_race_and_name(
+        91,
+        "demo.build.warrior",
+        "rfb-legacy.race.kobold",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Kobold warrior should create");
+    clear_monsters(&mut game);
+    game.progress.level = 11;
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_POISON_DART_ABILITY_ID)
+        .expect("Kobold Poison Dart should be projected before it unlocks");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Dexterity)
+    );
+    assert_eq!(locked.minimum_level, 12);
+    assert_eq!(locked.base_resource_cost, 8);
+    assert!(!locked.can_cast);
+
+    game.progress.level = 12;
+    game.debug_set_ability_casts_succeed(true);
+    game.player.position = Position { x: 3, y: 3 };
+    for position in [
+        Position { x: 3, y: 3 },
+        Position { x: 4, y: 3 },
+        Position { x: 5, y: 3 },
+    ] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    for (id, x) in [("test.actor.near", 4), ("test.actor.far", 5)] {
+        game.entities.push(actor_from_runtime_spawn(
+            id,
+            "demo.actor.gloom-weaver",
+            Position { x, y: 3 },
+            100,
+            100,
+            100,
+            true,
+        ));
+    }
+    let hp_before = game.player.hp;
+    let serial_before = game.next_item_instance_serial;
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+
+    game.resolve_player_ability(
+        RACE_POISON_DART_ABILITY_ID,
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Kobold Poison Dart should resolve");
+
+    assert_eq!(game.player.hp, hp_before - 8);
+    assert_eq!(game.entities[0].hp, 88);
+    assert_eq!(game.entities[1].hp, 100);
+    assert_eq!(game.next_item_instance_serial, serial_before);
+    assert_eq!(game.rng_draw_counter(), draws_before + 2);
 }
 
 #[test]
