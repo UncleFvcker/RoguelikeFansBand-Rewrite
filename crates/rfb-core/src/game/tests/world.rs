@@ -345,6 +345,227 @@ fn p89_defeat_guardian(game: &mut Game, guardian_id: &str) -> (GameUpdate, Posit
 }
 
 #[test]
+fn p90c_troll_cave_generation_keeps_terrain_mix_lakes_shafts_and_connectivity() {
+    let mut game =
+        Game::new_with_build(180, "demo.build.warrior").expect("Middle-earth should create");
+    let mut definitions = game
+        .content
+        .world(&game.world_id)
+        .expect("Middle-earth should remain available")
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.troll-cave"))
+        .cloned()
+        .collect::<Vec<_>>();
+    definitions.sort_by_key(|floor| floor.depth);
+    assert_eq!(definitions.len(), 19);
+    let mut generated_mountain_walls = 0;
+
+    for definition in definitions {
+        let generated = game
+            .generate_procedural_floor(&definition, None)
+            .expect("Troll cave floor should generate");
+        let start = generated
+            .connections
+            .first()
+            .expect("Troll cave floor should retain a connection")
+            .position;
+        let mut reached = BTreeSet::new();
+        let mut pending = std::collections::VecDeque::from([start]);
+        while let Some(position) = pending.pop_front() {
+            if position.x < 0
+                || position.y < 0
+                || position.x >= i32::from(generated.width)
+                || position.y >= i32::from(generated.height)
+                || !reached.insert(position)
+            {
+                continue;
+            }
+            let index = position.y as usize * usize::from(generated.width) + position.x as usize;
+            if !game
+                .content
+                .terrain(&generated.terrain[index])
+                .is_some_and(|terrain| terrain.walkable)
+            {
+                reached.remove(&position);
+                continue;
+            }
+            for (dx, dy) in [(0, -1), (1, 0), (0, 1), (-1, 0)] {
+                pending.push_back(Position {
+                    x: position.x + dx,
+                    y: position.y + dy,
+                });
+            }
+        }
+        assert!(
+            generated
+                .connections
+                .iter()
+                .all(|connection| reached.contains(&connection.position)),
+            "depth {} connection network",
+            definition.depth
+        );
+        assert_eq!(
+            generated
+                .terrain
+                .iter()
+                .filter(|terrain| terrain.as_str() == "demo.terrain.surface-grass")
+                .count(),
+            240,
+            "depth {} grass budget",
+            definition.depth
+        );
+        assert!(
+            generated
+                .terrain
+                .iter()
+                .filter(|terrain| terrain.as_str() == "demo.terrain.dirt")
+                .count()
+                > 240,
+            "depth {} should remain dirt-dominant",
+            definition.depth
+        );
+        generated_mountain_walls += generated
+            .terrain
+            .iter()
+            .filter(|terrain| terrain.as_str() == "demo.terrain.mountain-wall")
+            .count();
+        assert_eq!(generated.connections.len(), definition.connections.len());
+        assert!(generated.terrain.iter().any(|terrain| {
+            terrain == "demo.terrain.shaft-up" || terrain == "demo.terrain.shaft-down"
+        }));
+        if definition.layout.as_ref().is_some_and(|layout| {
+            layout
+                .lake
+                .as_ref()
+                .is_some_and(|lake| lake.deep_terrain_id == "demo.terrain.surface-water-deep")
+        }) {
+            assert!(
+                generated
+                    .terrain
+                    .iter()
+                    .any(|terrain| terrain == "demo.terrain.surface-water-deep"),
+                "depth {} water lake",
+                definition.depth
+            );
+        }
+        if definition.layout.as_ref().is_some_and(|layout| {
+            layout
+                .lake
+                .as_ref()
+                .is_some_and(|lake| lake.deep_terrain_id == "demo.terrain.rubble")
+        }) {
+            assert!(
+                generated
+                    .terrain
+                    .iter()
+                    .any(|terrain| terrain == "demo.terrain.rubble"),
+                "depth {} rubble lake",
+                definition.depth
+            );
+        }
+    }
+    assert!(generated_mountain_walls > 0);
+}
+
+#[test]
+fn p90c_troll_cave_shared_entry_shafts_conquest_and_reward_are_one_shot() {
+    let mut game =
+        Game::new_with_build(180, "demo.build.warrior").expect("Middle-earth should create");
+    assert!(!game.dungeon_is_active("demo.dungeon.orc-cave"));
+    assert!(game.dungeon_is_active("demo.dungeon.troll-cave"));
+    let cell = game.wilderness_cell_dto(Position { x: 30, y: 45 });
+    assert!(
+        cell.locations
+            .iter()
+            .any(|location| location.id == "demo.dungeon.troll-cave")
+    );
+    assert!(
+        cell.locations
+            .iter()
+            .all(|location| location.id != "demo.dungeon.orc-cave")
+    );
+
+    dispatch_next(&mut game, enter_world_map_command());
+    game.wilderness_position = Some(Position { x: 30, y: 45 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    place_player_on_terrain(&mut game, "demo.terrain.orc-cave-entrance");
+    let root = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(root.floor_id, "demo.floor.troll-cave-depth-18");
+
+    let shaft_down = game
+        .floor_connections
+        .iter()
+        .find(|connection| connection.id == "demo.connection.troll-cave-depth-18-shaft-down")
+        .expect("depth 18 should have a down shaft")
+        .position;
+    game.player.position = shaft_down;
+    let skipped = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(skipped.floor_id, "demo.floor.troll-cave-depth-20");
+    let shaft_up = game
+        .floor_connections
+        .iter()
+        .find(|connection| connection.id == "demo.connection.troll-cave-depth-20-shaft-up")
+        .expect("depth 20 should have the reciprocal up shaft")
+        .position;
+    game.player.position = shaft_up;
+    let returned = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(returned.floor_id, "demo.floor.troll-cave-depth-18");
+
+    for depth in 19..=36 {
+        game.entities.clear();
+        let connection_id = format!("demo.connection.troll-cave-depth-{}-stairs-down", depth - 1);
+        game.player.position = game
+            .floor_connections
+            .iter()
+            .find(|connection| connection.id == connection_id)
+            .unwrap_or_else(|| panic!("depth {} regular down stairs", depth - 1))
+            .position;
+        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            update.floor_id,
+            format!("demo.floor.troll-cave-depth-{depth}")
+        );
+    }
+
+    let (update, guardian_position) = p89_defeat_guardian(&mut game, "demo.guardian.troll-cave.1");
+    assert_eq!(update.campaign.status, CampaignStatusDto::Active);
+    assert_eq!(update.campaign.conquered_dungeons, 1);
+    assert_eq!(update.campaign.score, 10_000);
+    assert!(game.dungeon_states["demo.dungeon.troll-cave"].guardian_defeated);
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| {
+                item.location == ItemLocation::Ground(guardian_position)
+                    && item.kind_id == "demo.item.metal-lamellar-armour"
+                    && item.affix_ids == ["rfb-legacy.affix.olog-hai"]
+            })
+            .count(),
+        1
+    );
+
+    game.entities.clear();
+    let after_conquest = dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(after_conquest.campaign.conquered_dungeons, 1);
+    assert_eq!(after_conquest.campaign.score, 10_000);
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| {
+                item.kind_id == "demo.item.metal-lamellar-armour"
+                    && item.affix_ids == ["rfb-legacy.affix.olog-hai"]
+            })
+            .count(),
+        1
+    );
+    let hash = game.state_hash();
+    let restored = Game::from_save(game.to_save()).expect("Troll cave conquest should restore");
+    assert_eq!(restored.state_hash(), hash);
+    assert!(restored.dungeon_states["demo.dungeon.troll-cave"].guardian_defeated);
+}
+
+#[test]
 fn p89f_hideout_conquest_and_am_quest_reward_are_one_shot() {
     let mut game = p89_reach_shared_dungeon_guardian(0, "hideout");
     let (update, guardian_position) = p89_defeat_guardian(&mut game, "demo.guardian.hideout.1");

@@ -1413,14 +1413,22 @@ pub(super) fn validate_world(
                     }
                 }
                 let validate_hydrology_terrain =
-                    |deep_terrain_id: &str, shallow_terrain_id: &str| {
+                    |deep_terrain_id: &str,
+                     shallow_terrain_id: &str,
+                     allow_rubble_floor_boundary: bool| {
                         require_reference(terrain_ids, deep_terrain_id, &procedural.id)?;
                         require_reference(terrain_ids, shallow_terrain_id, &procedural.id)?;
+                        let rubble_floor_boundary = allow_rubble_floor_boundary
+                            && shallow_terrain_id == procedural.floor_terrain_id
+                            && terrain_tags
+                                .get(deep_terrain_id)
+                                .is_some_and(|tags| tags.contains("rubble"));
                         if deep_terrain_id == shallow_terrain_id
                             || terrain_walkability.get(deep_terrain_id) != Some(&false)
                             || terrain_walkability.get(shallow_terrain_id) != Some(&true)
-                            || [deep_terrain_id, shallow_terrain_id]
-                                .contains(&procedural.floor_terrain_id.as_str())
+                            || (!rubble_floor_boundary
+                                && [deep_terrain_id, shallow_terrain_id]
+                                    .contains(&procedural.floor_terrain_id.as_str()))
                             || [deep_terrain_id, shallow_terrain_id]
                                 .contains(&procedural.wall_terrain_id.as_str())
                             || layout.cavern.as_ref().is_some_and(|cavern| {
@@ -1448,6 +1456,7 @@ pub(super) fn validate_world(
                         validate_hydrology_terrain(
                             &lake.deep_terrain_id,
                             &lake.shallow_terrain_id,
+                            true,
                         )?;
                         if !(24..=interior_area).contains(&area_tiles)
                             || deep_area_tiles < 4
@@ -1468,6 +1477,7 @@ pub(super) fn validate_world(
                         validate_hydrology_terrain(
                             &river.deep_terrain_id,
                             &river.shallow_terrain_id,
+                            false,
                         )?;
                         let center_x = procedural.width / 2;
                         let center_y = procedural.height / 2;
@@ -2700,6 +2710,9 @@ pub(super) fn validate_world(
                     .connections
                     .iter()
                     .filter_map(|connection| {
+                        if !matches!(connection.kind, FloorConnectionKind::Stairs) {
+                            return None;
+                        }
                         let target = members
                             .iter()
                             .find(|candidate| candidate.id == connection.target_floor_id)?;
@@ -2727,6 +2740,9 @@ pub(super) fn validate_world(
                     .connections
                     .iter()
                     .filter_map(|connection| {
+                        if !matches!(connection.kind, FloorConnectionKind::Stairs) {
+                            return None;
+                        }
                         let target = members
                             .iter()
                             .find(|candidate| candidate.id == connection.target_floor_id)?;

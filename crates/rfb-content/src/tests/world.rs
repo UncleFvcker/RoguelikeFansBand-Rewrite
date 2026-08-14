@@ -3760,6 +3760,178 @@ fn p87c_tidal_cave_binds_depths_water_features_river_and_guardian() {
 }
 
 #[test]
+fn p90c_troll_cave_binds_substitution_ecology_terrain_shafts_and_guardian() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.troll-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Troll cave should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["O", "T", "h", "p"]);
+    assert_eq!(policy.preferred_tags, ["animal", "troll"]);
+    assert_eq!(policy.special_div, 12);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let orc_cave = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.orc-cave")
+        .expect("Orc Cave should exist");
+    assert_eq!(
+        orc_cave.substitution,
+        Some(DungeonSubstitutionDefinition {
+            alternate_dungeon_id: "demo.dungeon.troll-cave".to_owned(),
+            alternate_gate_one_in: None,
+        })
+    );
+    let troll_cave = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.troll-cave")
+        .expect("Troll cave should exist");
+    assert_eq!(troll_cave.legacy_index, Some(36));
+    assert_eq!(troll_cave.root_floor_id, "demo.floor.troll-cave-depth-18");
+    assert_eq!(
+        troll_cave.guardian_actor_kind_id,
+        "demo.actor.spulga-the-troll-priestess"
+    );
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.troll-cave"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 19);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (18..=36).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.orc-cave-entrance")
+    );
+    assert_eq!(
+        floors[0].entry_connection_id.as_deref(),
+        Some("demo.connection.troll-cave-depth-18-stairs-up")
+    );
+    assert!(floors.iter().all(|floor| {
+        floor.floor_terrain_id == "demo.terrain.dirt"
+            && floor.terrain_feature_table_id.as_deref()
+                == Some("demo.terrain-feature-table.troll-cave")
+            && floor
+                .layout
+                .as_ref()
+                .and_then(|layout| layout.rooms.as_ref())
+                .is_some_and(|rooms| {
+                    rooms.shapes.iter().any(|candidate| {
+                        candidate.shape == ProceduralRoomShape::Cavern && candidate.weight == 9
+                    })
+                })
+    }));
+    assert!(floors.iter().all(|floor| {
+        floor.wall_terrain_id == "demo.terrain.wall"
+            && floor.layout.as_ref().is_some_and(|layout| {
+                layout.streamers.iter().any(|streamer| {
+                    streamer.terrain_id == "demo.terrain.mountain-wall" && streamer.weight == 3
+                })
+            })
+    }));
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| {
+                floor.layout.as_ref().is_some_and(|layout| {
+                    layout.lake.as_ref().is_some_and(|lake| {
+                        lake.deep_terrain_id == "demo.terrain.surface-water-deep"
+                    })
+                })
+            })
+            .count(),
+        2
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| {
+                floor.layout.as_ref().is_some_and(|layout| {
+                    layout.lake.as_ref().is_some_and(|lake| {
+                        lake.deep_terrain_id == "demo.terrain.rubble"
+                            && lake.shallow_terrain_id == "demo.terrain.dirt"
+                    })
+                })
+            })
+            .count(),
+        1
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| floor
+                .layout
+                .as_ref()
+                .is_some_and(|layout| layout.river.is_some()))
+            .count(),
+        18
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| {
+                floor
+                    .layout
+                    .as_ref()
+                    .is_some_and(|layout| layout.destroyed.is_some())
+            })
+            .count(),
+        3
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .flat_map(|floor| &floor.connections)
+            .filter(|connection| connection.kind == FloorConnectionKind::Shaft)
+            .count(),
+        34
+    );
+
+    let feature_table = content
+        .terrain_feature_tables
+        .iter()
+        .find(|table| table.id == "demo.terrain-feature-table.troll-cave")
+        .expect("Troll cave terrain mix");
+    assert_eq!(feature_table.rolls, 240);
+    assert_eq!(feature_table.entries.len(), 1);
+    assert_eq!(
+        feature_table.entries[0].terrain_id,
+        "demo.terrain.surface-grass"
+    );
+
+    let final_floor = floors.last().expect("depth 36 should exist");
+    assert!(final_floor.final_floor);
+    let guardian = final_floor.guardian.as_ref().expect("Spulga guardian");
+    assert_eq!(guardian.instance_id, "demo.guardian.troll-cave.1");
+    assert_eq!(
+        guardian.actor_kind_id,
+        "demo.actor.spulga-the-troll-priestess"
+    );
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.troll-cave-final-reward")
+    );
+}
+
+#[test]
 fn p89d_hideout_binds_depths_ecology_guardian_and_am_quest_reward() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = &artifact.content;

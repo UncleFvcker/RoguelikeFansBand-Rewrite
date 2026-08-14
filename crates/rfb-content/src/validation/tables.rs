@@ -750,7 +750,11 @@ pub(super) fn validate_tables(
                             .digging
                             .as_ref()
                             .is_some_and(|digging| digging.result_terrain_id.is_some())
-                        || terrain.walkable && terrain.tags.iter().any(|tag| tag == "water")
+                        || terrain.walkable
+                            && terrain
+                                .tags
+                                .iter()
+                                .any(|tag| matches!(tag.as_str(), "water" | "grass" | "dirt"))
                 }
                 TerrainFeaturePlacement::Corridor => terrain.open_to_terrain_id.is_some(),
             };
