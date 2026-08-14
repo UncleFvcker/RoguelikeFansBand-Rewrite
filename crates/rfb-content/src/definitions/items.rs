@@ -129,6 +129,29 @@ pub struct RfbEgoGenerationDefinition {
     pub types: Vec<RfbEgoTypeDefinition>,
 }
 
+/// Stable identity copied from one authoritative `k_info` base-kind record.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RfbBaseKindDefinition {
+    pub source_index: u32,
+    pub tval: u16,
+    pub sval: u16,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AffixNamePlacementDefinition {
+    #[default]
+    Automatic,
+    FullName,
+}
+
+fn is_automatic_affix_name_placement(value: &AffixNamePlacementDefinition) -> bool {
+    *value == AffixNamePlacementDefinition::Automatic
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -193,6 +216,9 @@ pub struct AffixDefinition {
     /// Optional authoritative RFB ego identity and allocation metadata.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rfb_ego: Option<RfbEgoGenerationDefinition>,
+    /// Whether this affix composes around or replaces the base item name.
+    #[serde(default, skip_serializing_if = "is_automatic_affix_name_placement")]
+    pub name_placement: AffixNamePlacementDefinition,
     #[serde(default)]
     pub modifiers: StatModifiers,
     /// Equipment-only combat, skill, and sensory bonuses.
@@ -874,6 +900,10 @@ pub struct ItemDefinition {
     /// allocation rarity or a generated quality.
     #[serde(default)]
     pub mogaminator_rare: bool,
+    /// Optional authoritative RFB base-kind identity. Adapted and rewrite-only
+    /// item definitions intentionally leave this unset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rfb_base_kind: Option<RfbBaseKindDefinition>,
     pub weight_tenths_pound: u16,
     /// Original object pval used by the tunneling flag.
     #[serde(default)]

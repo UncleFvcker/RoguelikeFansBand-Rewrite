@@ -775,6 +775,13 @@ pub struct LegacyItemEntry {
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct LegacyEgoActivation {
+    pub token: String,
+    pub power: u16,
+    pub recovery_turns: u16,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct LegacyEgoEntry {
     pub index: u32,
     pub name: String,
@@ -788,6 +795,7 @@ pub struct LegacyEgoEntry {
     pub max_pval: i32,
     pub flags: Vec<String>,
     pub has_activation: bool,
+    pub activation: Option<LegacyEgoActivation>,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -3620,6 +3628,13 @@ fn item_json_with_terrain(
         "resistsEnchantment": resists_enchantment,
         "tags": tags.clone(),
     });
+    if entry.index != 0 {
+        value["rfbBaseKind"] = serde_json::json!({
+            "sourceIndex": entry.index,
+            "tval": entry.tval,
+            "sval": entry.sval,
+        });
+    }
     if matches!((entry.tval, entry.sval), (23, 34)) {
         value["initialCurse"] = serde_json::json!("permanent");
     }
@@ -4035,8 +4050,19 @@ pub fn parse_e_info(text: &str) -> Result<Vec<LegacyEgoEntry>, LegacyImportError
                     .filter(|flag| !flag.is_empty())
                     .map(str::to_owned),
             );
-        } else if line.starts_with("E:") {
+        } else if let Some(rest) = line.strip_prefix("E:") {
+            let parts = parse_fields(E_INFO_SOURCE, line_number, "E", rest, 3)?;
             entry.has_activation = true;
+            entry.activation = Some(LegacyEgoActivation {
+                token: parts[0].to_owned(),
+                power: parse_number(E_INFO_SOURCE, line_number, "E.power", parts.get(1).copied())?,
+                recovery_turns: parse_number(
+                    E_INFO_SOURCE,
+                    line_number,
+                    "E.recoveryTurns",
+                    parts.get(2).copied(),
+                )?,
+            });
         }
     }
     if let Some(entry) = current.take() {
@@ -4341,7 +4367,7 @@ fn apply_item_destruction_properties(value: &mut serde_json::Value, tval: u16, f
 
 /// Display-only object flags with no Rewrite behaviour to express.
 fn item_flag_not_applicable(flag: &str) -> bool {
-    matches!(flag, "SHOW_MODS" | "HIDE_TYPE" | "FULL_NAME")
+    matches!(flag, "SHOW_MODS" | "HIDE_TYPE")
 }
 
 #[derive(Debug, Default)]
@@ -4668,6 +4694,9 @@ fn ego_json(
         if item_destruction_flag_is_mapped(flag) {
             continue;
         }
+        if flag == "FULL_NAME" {
+            continue;
+        }
         account_item_flag(
             flag,
             &fold,
@@ -4703,6 +4732,9 @@ fn ego_json(
     });
     if let Some(max_level) = entry.max_level {
         value["generationMaxLevel"] = serde_json::json!(max_level);
+    }
+    if entry.flags.iter().any(|flag| flag == "FULL_NAME") {
+        value["namePlacement"] = serde_json::json!("full-name");
     }
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
@@ -14813,34 +14845,43 @@ fn selected_demo_items<'a>(
         })
         .map(|entry| (entry.index, entry))
         .collect::<BTreeMap<_, _>>();
-    let mut selected = BTreeSet::new();
-    selection
-        .items
-        .iter()
-        .map(|selected_entry| {
-            if !selected.insert(selected_entry.id.clone()) {
-                return Err(LegacyImportError::InvalidDemoItemSelection(format!(
-                    "duplicate item {}",
-                    selected_entry.id
-                )));
-            }
-            let entry = by_index.get(&selected_entry.source_index).ok_or_else(|| {
-                LegacyImportError::InvalidDemoItemSelection(format!(
-                    "unknown legacy source index {}",
-                    selected_entry.source_index
-                ))
-            })?;
-            let actual_id = kebab(&entry.name);
-            let expected_source_id = selected_entry.expected_source_id();
-            if actual_id != expected_source_id {
-                return Err(LegacyImportError::InvalidDemoItemSelection(format!(
-                    "source index {} is {actual_id}, expected {expected_source_id}",
-                    selected_entry.source_index
-                )));
-            }
-            Ok((selected_entry, *entry))
-        })
-        .collect()
+    let mut selected_ids = BTreeSet::new();
+    let mut weapon_and_tool_source_indices = BTreeSet::new();
+    let mut weapon_and_tool_base_kinds = BTreeSet::new();
+    let mut selected = Vec::with_capacity(selection.items.len());
+    for selected_entry in &selection.items {
+        if !selected_ids.insert(selected_entry.id.clone()) {
+            return Err(LegacyImportError::InvalidDemoItemSelection(format!(
+                "duplicate item {}",
+                selected_entry.id
+            )));
+        }
+        let entry = *by_index.get(&selected_entry.source_index).ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemSelection(format!(
+                "unknown legacy source index {}",
+                selected_entry.source_index
+            ))
+        })?;
+        let actual_id = kebab(&entry.name);
+        let expected_source_id = selected_entry.expected_source_id();
+        if actual_id != expected_source_id {
+            return Err(LegacyImportError::InvalidDemoItemSelection(format!(
+                "source index {} is {actual_id}, expected {expected_source_id}",
+                selected_entry.source_index
+            )));
+        }
+        if item_shape(entry.tval).is_some_and(|shape| matches!(shape.slot, Some("weapon" | "tool")))
+            && (!weapon_and_tool_source_indices.insert(entry.index)
+                || !weapon_and_tool_base_kinds.insert((entry.tval, entry.sval)))
+        {
+            return Err(LegacyImportError::InvalidDemoItemSelection(format!(
+                "duplicate weapon/tool source identity {} ({}/{})",
+                entry.index, entry.tval, entry.sval
+            )));
+        }
+        selected.push((selected_entry, entry));
+    }
+    Ok(selected)
 }
 
 fn parse_chinese_name_table(
@@ -14894,6 +14935,587 @@ const CRAFT_EGO_TYPES: &[&str] = &[
     "BOOTS",
     "ROBE",
 ];
+
+#[derive(Debug)]
+struct EgoContractExpectation {
+    index: u32,
+    chinese_name: &'static str,
+    types: &'static [&'static str],
+    level: u16,
+    max_level: Option<u16>,
+    rarity: u16,
+    combat_maxima: [i32; 4],
+    flags: &'static [&'static str],
+    activation: Option<(&'static str, u16, u16)>,
+    subtype_restriction: Option<&'static str>,
+    branch_activation: Option<&'static str>,
+}
+
+const WEAPON_DIGGER_EGO_EXPECTATIONS: &[EgoContractExpectation] = &[
+    EgoContractExpectation {
+        index: 1,
+        chinese_name: "杀戮之",
+        types: &["WEAPON"],
+        level: 0,
+        max_level: None,
+        rarity: 2,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &[],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 2,
+        chinese_name: "锋利之",
+        types: &["WEAPON"],
+        level: 10,
+        max_level: None,
+        rarity: 2,
+        combat_maxima: [0, 0, 0, 5],
+        flags: &["VORPAL", "TUNNEL"],
+        activation: None,
+        subtype_restriction: Some("sword-or-polearm; diamond-edge-one-in-8"),
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 3,
+        chinese_name: "原力之",
+        types: &["WEAPON"],
+        level: 20,
+        max_level: None,
+        rarity: 4,
+        combat_maxima: [3, 3, 0, 2],
+        flags: &["INT", "WIS", "BRAND_MANA", "SEE_INVIS"],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 4,
+        chinese_name: "(受祝福的)",
+        types: &["WEAPON", "DIGGER"],
+        level: 0,
+        max_level: Some(60),
+        rarity: 8,
+        combat_maxima: [0, 0, 0, 3],
+        flags: &["WIS", "BLESSED", "XTRA_POWER"],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 5,
+        chinese_name: "额外攻击之",
+        types: &["WEAPON", "DIGGER"],
+        level: 50,
+        max_level: None,
+        rarity: 8,
+        combat_maxima: [0, 0, 0, 6],
+        flags: &["BLOWS"],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 6,
+        chinese_name: "(奥秘的)",
+        types: &["WEAPON"],
+        level: 50,
+        max_level: None,
+        rarity: 6,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &["SPELL_POWER", "BRAND_MANA", "DEC_STR", "DEC_DEX", "DEC_CON"],
+        activation: None,
+        subtype_restriction: Some("wizardstaff"),
+        branch_activation: Some("mage"),
+    },
+    EgoContractExpectation {
+        index: 7,
+        chinese_name: "(毁灭的)",
+        types: &["WEAPON"],
+        level: 40,
+        max_level: None,
+        rarity: 3,
+        combat_maxima: [0, 10, 0, 0],
+        flags: &[],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 8,
+        chinese_name: "(混沌的)",
+        types: &["WEAPON"],
+        level: 30,
+        max_level: None,
+        rarity: 4,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &[
+            "BRAND_CHAOS",
+            "RES_CHAOS",
+            "XTRA_RES",
+            "IGNORE_ELEC",
+            "IGNORE_ACID",
+            "IGNORE_FIRE",
+        ],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: Some("chaos"),
+    },
+    EgoContractExpectation {
+        index: 9,
+        chinese_name: "(工匠的)",
+        types: &["WEAPON"],
+        level: 15,
+        max_level: Some(70),
+        rarity: 2,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &["IGNORE_FIRE", "IGNORE_COLD", "IGNORE_ELEC"],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: Some("selected-element"),
+    },
+    EgoContractExpectation {
+        index: 10,
+        chinese_name: "(圣战的)",
+        types: &["WEAPON"],
+        level: 40,
+        max_level: None,
+        rarity: 4,
+        combat_maxima: [6, 6, 0, 4],
+        flags: &[
+            "WIS",
+            "SLAY_EVIL",
+            "SLAY_UNDEAD",
+            "SLAY_DEMON",
+            "SEE_INVIS",
+            "BLESSED",
+            "RES_FEAR",
+            "ONE_SUSTAIN",
+        ],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: Some("priestly"),
+    },
+    EgoContractExpectation {
+        index: 11,
+        chinese_name: "(恶魔的)",
+        types: &["WEAPON"],
+        level: 70,
+        max_level: None,
+        rarity: 6,
+        combat_maxima: [0, 0, 0, 3],
+        flags: &["BLOWS", "STR", "DEX", "DEC_WIS"],
+        activation: Some(("DESTRUCTION", 50, 150)),
+        subtype_restriction: None,
+        branch_activation: Some("demon-overrides-fixed"),
+    },
+    EgoContractExpectation {
+        index: 12,
+        chinese_name: "(死亡的)",
+        types: &["WEAPON", "DIGGER"],
+        level: 20,
+        max_level: None,
+        rarity: 4,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &["BRAND_VAMP", "HOLD_LIFE"],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: Some("necromantic"),
+    },
+    EgoContractExpectation {
+        index: 13,
+        chinese_name: "(生命的)",
+        types: &["WEAPON"],
+        level: 20,
+        max_level: None,
+        rarity: 4,
+        combat_maxima: [0, 0, 0, 4],
+        flags: &["HOLD_LIFE", "LIFE", "BLESSED", "SLAY_UNDEAD", "SLAY_DEMON"],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 14,
+        chinese_name: "(自然的)",
+        types: &["WEAPON"],
+        level: 15,
+        max_level: None,
+        rarity: 2,
+        combat_maxima: [0, 0, 0, 2],
+        flags: &["INT", "SLAY_ANIMAL", "REGEN", "ESP_ANIMAL"],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: Some("ranger"),
+    },
+    EgoContractExpectation {
+        index: 15,
+        chinese_name: "(王牌的)",
+        types: &["WEAPON"],
+        level: 30,
+        max_level: None,
+        rarity: 6,
+        combat_maxima: [4, 4, 0, 2],
+        flags: &[
+            "SLAY_EVIL",
+            "TELEPORT",
+            "FREE_ACT",
+            "SEARCH",
+            "REGEN",
+            "SLOW_DIGEST",
+            "RES_NEXUS",
+            "XTRA_H_RES",
+        ],
+        activation: Some(("TELEPORT", 15, 25)),
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 16,
+        chinese_name: "(狂野的)",
+        types: &["WEAPON"],
+        level: 80,
+        max_level: None,
+        rarity: 16,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &["BRAND_WILD", "XTRA_RES", "XTRA_H_RES", "XTRA_POWER"],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 17,
+        chinese_name: "(秩序的)",
+        types: &["WEAPON"],
+        level: 90,
+        max_level: None,
+        rarity: 16,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &["BRAND_ORDER", "RES_SOUND", "RES_SHARDS"],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 18,
+        chinese_name: "(防御者的)",
+        types: &["WEAPON"],
+        level: 20,
+        max_level: None,
+        rarity: 4,
+        combat_maxima: [4, 4, 8, 0],
+        flags: &[
+            "FREE_ACT",
+            "SEE_INVIS",
+            "ONE_SUSTAIN",
+            "IGNORE_ACID",
+            "IGNORE_ELEC",
+            "IGNORE_FIRE",
+            "IGNORE_COLD",
+        ],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 19,
+        chinese_name: "西方之地的",
+        types: &["WEAPON"],
+        level: 20,
+        max_level: Some(50),
+        rarity: 3,
+        combat_maxima: [5, 5, 0, 2],
+        flags: &[
+            "STR",
+            "DEX",
+            "CON",
+            "SLAY_ORC",
+            "SLAY_TROLL",
+            "SLAY_GIANT",
+            "ESP_ORC",
+            "ESP_TROLL",
+            "ESP_GIANT",
+            "FREE_ACT",
+            "SEE_INVIS",
+        ],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 20,
+        chinese_name: "贡多林的",
+        types: &["WEAPON"],
+        level: 25,
+        max_level: None,
+        rarity: 3,
+        combat_maxima: [8, 8, 0, 0],
+        flags: &[
+            "SLAY_DEMON",
+            "SLAY_ORC",
+            "SLAY_TROLL",
+            "SLAY_DRAGON",
+            "LITE",
+            "RES_DARK",
+            "SEE_INVIS",
+            "FREE_ACT",
+            "IGNORE_ACID",
+            "IGNORE_FIRE",
+        ],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 21,
+        chinese_name: "魔古尔的",
+        types: &["WEAPON"],
+        level: 0,
+        max_level: None,
+        rarity: 16,
+        combat_maxima: [20, 20, 10, 0],
+        flags: &[
+            "SEE_INVIS",
+            "AGGRAVATE",
+            "HEAVY_CURSE",
+            "CURSED",
+            "SLAY_UNDEAD",
+            "BRAND_POIS",
+            "ESP_UNDEAD",
+            "SLAY_GOOD",
+            "RANDOM_CURSE2",
+        ],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 22,
+        chinese_name: "(图案的)",
+        types: &["WEAPON"],
+        level: 40,
+        max_level: None,
+        rarity: 6,
+        combat_maxima: [6, 6, 0, 3],
+        flags: &[
+            "STR",
+            "CON",
+            "SLAY_EVIL",
+            "SLAY_DEMON",
+            "SLAY_UNDEAD",
+            "FREE_ACT",
+            "SEE_INVIS",
+            "XTRA_H_RES",
+        ],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 23,
+        chinese_name: "诺多精灵的",
+        types: &["WEAPON"],
+        level: 70,
+        max_level: None,
+        rarity: 50,
+        combat_maxima: [10, 10, 0, 5],
+        flags: &[
+            "CHR",
+            "SPEED",
+            "REGEN",
+            "LITE",
+            "SLAY_EVIL",
+            "SLAY_DEMON",
+            "SLAY_UNDEAD",
+            "BRAND_COLD",
+            "RES_LITE",
+            "FREE_ACT",
+            "SEE_INVIS",
+            "SLOW_DIGEST",
+            "IGNORE_ACID",
+            "IGNORE_FIRE",
+            "IGNORE_COLD",
+            "IGNORE_ELEC",
+        ],
+        activation: None,
+        subtype_restriction: Some("non-chaos-sword-with-base-damage-at-least-10"),
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 24,
+        chinese_name: "马战之",
+        types: &["WEAPON"],
+        level: 20,
+        max_level: None,
+        rarity: 1,
+        combat_maxima: [5, 5, 0, 0],
+        flags: &[],
+        activation: Some(("CHARGE", 10, 100)),
+        subtype_restriction: Some("lance-or-heavy-lance"),
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 25,
+        chinese_name: "& 地狱长枪~",
+        types: &["WEAPON"],
+        level: 30,
+        max_level: None,
+        rarity: 2,
+        combat_maxima: [6, 6, 0, 0],
+        flags: &["SLAY_GOOD", "FULL_NAME"],
+        activation: None,
+        subtype_restriction: Some("lance-or-heavy-lance"),
+        branch_activation: Some("demon"),
+    },
+    EgoContractExpectation {
+        index: 26,
+        chinese_name: "& 神圣长枪~",
+        types: &["WEAPON"],
+        level: 40,
+        max_level: None,
+        rarity: 4,
+        combat_maxima: [7, 7, 0, 0],
+        flags: &["SLAY_EVIL", "BLESSED", "FULL_NAME"],
+        activation: None,
+        subtype_restriction: Some("lance-or-heavy-lance"),
+        branch_activation: Some("priestly"),
+    },
+    EgoContractExpectation {
+        index: 27,
+        chinese_name: "(三头马车)",
+        types: &["WEAPON"],
+        level: 60,
+        max_level: None,
+        rarity: 24,
+        combat_maxima: [10, 10, 0, 0],
+        flags: &[],
+        activation: None,
+        subtype_restriction: Some("sword"),
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 40,
+        chinese_name: "挖掘之",
+        types: &["DIGGER"],
+        level: 0,
+        max_level: Some(40),
+        rarity: 1,
+        combat_maxima: [0, 0, 0, 5],
+        flags: &["TUNNEL", "AWARE", "IGNORE_ACID"],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 41,
+        chinese_name: "溶解之",
+        types: &["DIGGER"],
+        level: 10,
+        max_level: None,
+        rarity: 2,
+        combat_maxima: [0, 3, 0, 5],
+        flags: &["TUNNEL", "BRAND_ACID", "IGNORE_ACID"],
+        activation: None,
+        subtype_restriction: None,
+        branch_activation: None,
+    },
+    EgoContractExpectation {
+        index: 42,
+        chinese_name: "瓦解之",
+        types: &["DIGGER"],
+        level: 50,
+        max_level: None,
+        rarity: 4,
+        combat_maxima: [0, 7, 0, 5],
+        flags: &["TUNNEL", "BRAND_ACID", "STR", "IGNORE_ACID"],
+        activation: Some(("STONE_TO_MUD", 10, 5)),
+        subtype_restriction: Some("mattock"),
+        branch_activation: None,
+    },
+];
+
+fn validate_weapon_digger_ego_contract(
+    egos: &[LegacyEgoEntry],
+    chinese_names: &[Option<String>],
+) -> Result<(), LegacyImportError> {
+    let actual_indices = egos
+        .iter()
+        .filter(|ego| {
+            ego.slots
+                .iter()
+                .any(|slot| slot == "WEAPON" || slot == "DIGGER")
+        })
+        .map(|ego| ego.index)
+        .collect::<Vec<_>>();
+    let expected_indices = WEAPON_DIGGER_EGO_EXPECTATIONS
+        .iter()
+        .map(|expectation| expectation.index)
+        .collect::<Vec<_>>();
+    if actual_indices != expected_indices
+        || WEAPON_DIGGER_EGO_EXPECTATIONS
+            .iter()
+            .filter(|expectation| expectation.subtype_restriction.is_some())
+            .count()
+            != 8
+        || WEAPON_DIGGER_EGO_EXPECTATIONS
+            .iter()
+            .filter(|expectation| expectation.branch_activation.is_some())
+            .count()
+            != 9
+        || WEAPON_DIGGER_EGO_EXPECTATIONS
+            .iter()
+            .filter(|expectation| {
+                expectation.activation.is_some() || expectation.branch_activation.is_some()
+            })
+            .count()
+            != 12
+    {
+        return Err(LegacyImportError::InvalidEgoAudit(
+            "weapon/digger ego contract shape changed".to_owned(),
+        ));
+    }
+
+    for expectation in WEAPON_DIGGER_EGO_EXPECTATIONS {
+        let ego = egos
+            .iter()
+            .find(|ego| ego.index == expectation.index)
+            .expect("the exact source-index list was checked above");
+        let actual_types = ego.slots.iter().map(String::as_str).collect::<Vec<_>>();
+        let actual_flags = ego.flags.iter().map(String::as_str).collect::<Vec<_>>();
+        let actual_activation = ego.activation.as_ref().map(|activation| {
+            (
+                activation.token.as_str(),
+                activation.power,
+                activation.recovery_turns,
+            )
+        });
+        let actual_chinese_name = chinese_names
+            .get(expectation.index as usize)
+            .and_then(Option::as_deref);
+        if actual_chinese_name != Some(expectation.chinese_name)
+            || actual_types != expectation.types
+            || ego.level != expectation.level
+            || ego.max_level != expectation.max_level
+            || ego.rarity != expectation.rarity
+            || [
+                ego.max_to_hit,
+                ego.max_to_damage,
+                ego.max_to_armor,
+                ego.max_pval,
+            ] != expectation.combat_maxima
+            || actual_flags != expectation.flags
+            || actual_activation != expectation.activation
+        {
+            return Err(LegacyImportError::InvalidEgoAudit(format!(
+                "weapon/digger ego {} no longer matches its authoritative expectation",
+                expectation.index
+            )));
+        }
+    }
+    Ok(())
+}
 
 fn add_occurrences(total: &mut BTreeMap<String, usize>, additions: &BTreeMap<String, usize>) {
     for (key, count) in additions {
@@ -15038,6 +15660,7 @@ pub fn audit_egos(source: &Path) -> Result<EgoAuditReport, LegacyImportError> {
         &read_legacy_object_at(source, &source_commit, E_NAME_ZH_SOURCE)?,
         E_NAME_ZH_SOURCE,
     )?;
+    validate_weapon_digger_ego_contract(&egos, &chinese_names)?;
     audit_ego_sources(source_commit, &egos, &chinese_names)
 }
 
@@ -20077,6 +20700,10 @@ W:1:0:0:4:5
             .map(|(_, value)| value)
             .expect("allocated item should import");
         assert_eq!(item["generationLevel"], 42);
+        assert_eq!(
+            item["rfbBaseKind"],
+            serde_json::json!({"sourceIndex": 1, "tval": 23, "sval": 17})
+        );
 
         let entries = outcome
             .loot_table_files
@@ -20298,6 +20925,32 @@ A:1/1
         let entry = &selection.items[0];
         assert_eq!(entry.expected_source_id(), "set-of-leather-gloves");
         assert_eq!(entry.id, "leather-gloves");
+    }
+
+    #[test]
+    fn selected_demo_weapons_reject_duplicate_source_identity() {
+        let selection: DemoItemSelection = serde_json::from_value(serde_json::json!({
+            "schemaVersion": 1,
+            "items": [
+                {"sourceIndex": 25, "sourceId": "lance", "id": "first-lance"},
+                {"sourceIndex": 25, "sourceId": "lance", "id": "second-lance"}
+            ]
+        }))
+        .expect("duplicate-source selection should parse");
+        let entries = [LegacyItemEntry {
+            index: 25,
+            name: "Lance".to_owned(),
+            glyph: Some('/'),
+            tval: 22,
+            sval: 10,
+            ..LegacyItemEntry::default()
+        }];
+
+        assert!(matches!(
+            selected_demo_items(&selection, &entries),
+            Err(LegacyImportError::InvalidDemoItemSelection(message))
+                if message.contains("duplicate weapon/tool source identity 25 (22/10)")
+        ));
     }
 
     #[test]
@@ -21795,6 +22448,30 @@ static cptr _ego_name_zh[] =
         assert!(!report.entries[1].current_importer_expressible);
         assert_eq!(report.entries[1].unmapped_flags, ["REFLECT"]);
         assert!(report.entries[2].has_activation);
+        assert_eq!(
+            egos[2].activation,
+            Some(LegacyEgoActivation {
+                token: "BERSERK".to_owned(),
+                power: 50,
+                recovery_turns: 100,
+            })
+        );
+    }
+
+    #[test]
+    fn full_name_weapon_egos_emit_explicit_name_placement() {
+        let egos = parse_e_info(
+            "N:25:& Hell Lance~\nT:WEAPON\nW:30:*:2\nC:6:6:0:0\nF:SLAY_GOOD | FULL_NAME\n\
+             N:26:& Holy Lance~\nT:WEAPON\nW:40:*:4\nC:7:7:0:0\nF:SLAY_EVIL | BLESSED | FULL_NAME\n",
+        )
+        .expect("full-name lance egos should parse");
+        let mut report = ContentImportReport::default();
+        for (ego, id) in egos.iter().zip(["hell-lance", "holy-lance"]) {
+            let value = ego_json(ego, id, &mut report);
+            assert_eq!(value["namePlacement"], "full-name");
+        }
+        assert!(!report.unmapped_ego_flags.contains_key("FULL_NAME"));
+        assert!(!report.not_applicable_item_flags.contains_key("FULL_NAME"));
     }
 
     #[test]

@@ -1853,3 +1853,54 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
         assert!(item.use_action.is_some(), "{id} should be usable");
     }
 }
+
+#[test]
+fn rfb_base_kind_identity_rejects_duplicate_source_indices_and_kind_values() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let set_identities = |content: &mut CompiledContentV1, second: RfbBaseKindDefinition| {
+        let short_sword = content
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.short-sword")
+            .expect("Short Sword should exist");
+        short_sword.rfb_base_kind = Some(RfbBaseKindDefinition {
+            source_index: 100,
+            tval: 23,
+            sval: 10,
+        });
+        let broad_sword = content
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.broad-sword")
+            .expect("Broad Sword should exist");
+        broad_sword.rfb_base_kind = Some(second);
+    };
+
+    let mut duplicate_index = artifact.content.clone();
+    set_identities(
+        &mut duplicate_index,
+        RfbBaseKindDefinition {
+            source_index: 100,
+            tval: 23,
+            sval: 16,
+        },
+    );
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_index),
+        Err(ContentError::InvalidItemSourceIdentity(_))
+    ));
+
+    let mut duplicate_kind = artifact.content;
+    set_identities(
+        &mut duplicate_kind,
+        RfbBaseKindDefinition {
+            source_index: 101,
+            tval: 23,
+            sval: 10,
+        },
+    );
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_kind),
+        Err(ContentError::InvalidItemSourceIdentity(_))
+    ));
+}

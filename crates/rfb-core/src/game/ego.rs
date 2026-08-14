@@ -260,6 +260,7 @@ mod tests {
                 rarity,
                 types,
             }),
+            name_placement: Default::default(),
             modifiers: StatModifiers::default(),
             equipment_bonuses: EquipmentBonuses::default(),
             resistances: BTreeMap::new(),

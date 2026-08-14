@@ -716,6 +716,35 @@
       ],
       "type": "object"
     },
+    "RfbBaseKindDefinition": {
+      "additionalProperties": false,
+      "description": "Stable identity copied from one authoritative `k_info` base-kind record.",
+      "properties": {
+        "sourceIndex": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sval": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tval": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sourceIndex",
+        "tval",
+        "sval"
+      ],
+      "type": "object"
+    },
     "RidingWeaponKindDefinition": {
       "description": "RFB weapons carrying `OF_RIDING`; lances additionally receive their\noriginal mounted hit and damage-dice bonuses.",
       "enum": [
@@ -1228,6 +1257,17 @@
     "resistsProjectionDestruction": {
       "default": false,
       "type": "boolean"
+    },
+    "rfbBaseKind": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RfbBaseKindDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "ridingWeaponKind": {
       "anyOf": [

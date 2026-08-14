@@ -106,6 +106,13 @@
       ],
       "type": "string"
     },
+    "AffixNamePlacementDefinition": {
+      "enum": [
+        "automatic",
+        "full-name"
+      ],
+      "type": "string"
+    },
     "AffixPropertyBundleDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -3224,6 +3231,10 @@
     },
     "nameKey": {
       "type": "string"
+    },
+    "namePlacement": {
+      "$ref": "#/$defs/AffixNamePlacementDefinition",
+      "description": "Whether this affix composes around or replaces the base item name."
     },
     "passives": {
       "default": [],

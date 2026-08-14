@@ -13,8 +13,8 @@ use crate::{
     ItemDeviceActivationDefinition, ItemDeviceChargeRangeDefinition,
     ItemDeviceGenerationDefinition, ItemDeviceRecoveryDefinition, ItemFuelDefinition,
     ItemMountUseDefinition, ItemShatterEffectDefinition, ItemUseActionDefinition,
-    ProjectileProfileDefinition, RidingWeaponKindDefinition, SlayLevel, SlayTarget, StatModifiers,
-    ThrowProfileDefinition, WeaponBrand,
+    ProjectileProfileDefinition, RfbBaseKindDefinition, RidingWeaponKindDefinition, SlayLevel,
+    SlayTarget, StatModifiers, ThrowProfileDefinition, WeaponBrand,
     effect_programs::{
         ResolvedEffectProgram, effect_program_input_matches_device_target,
         resolve_source_item_effect,
@@ -38,6 +38,8 @@ pub(crate) struct SourceItemDefinition {
     generation_level: u16,
     #[serde(default)]
     mogaminator_rare: bool,
+    #[serde(default)]
+    rfb_base_kind: Option<RfbBaseKindDefinition>,
     weight_tenths_pound: u16,
     #[serde(default)]
     tunneling_pval: i16,
@@ -260,6 +262,7 @@ impl SourceItemDefinition {
             glyph: self.glyph,
             generation_level: self.generation_level,
             mogaminator_rare: self.mogaminator_rare,
+            rfb_base_kind: self.rfb_base_kind,
             weight_tenths_pound: self.weight_tenths_pound,
             tunneling_pval: self.tunneling_pval,
             max_stack: self.max_stack,

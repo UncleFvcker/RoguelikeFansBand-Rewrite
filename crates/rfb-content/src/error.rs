@@ -79,6 +79,8 @@ pub enum ContentError {
     InvalidItemWeight(String),
     #[error("item appearance must use a distinct valid message key: {0}")]
     InvalidItemAppearance(String),
+    #[error("RFB base-kind source identity is invalid or duplicated: {0}")]
+    InvalidItemSourceIdentity(String),
     #[error("item break chance is outside 0..=100 percent: {0}")]
     InvalidItemBreakChance(String),
     #[error("item equipment slot is invalid or requires maxStack 1: {0}")]
