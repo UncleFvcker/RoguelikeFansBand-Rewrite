@@ -702,6 +702,7 @@ impl Game {
             &self.content,
             &mut self.rng,
             &spawn.kind_id,
+            &spawn.affix_ids,
             definition.depth,
         );
         ItemInstance {
@@ -2465,6 +2466,7 @@ impl Game {
                 &self.content,
                 &mut self.rng,
                 &entry.item_kind_id,
+                &[],
                 definition.depth,
             );
             items.push(ItemInstance {
@@ -2502,6 +2504,7 @@ impl Game {
                         &self.content,
                         &mut self.rng,
                         &kind_id,
+                        &[],
                         definition.depth,
                     );
                     let fuel = initial_item_fuel(&self.content, &kind_id);

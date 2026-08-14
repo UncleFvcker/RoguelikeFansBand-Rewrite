@@ -7,7 +7,8 @@ use crate::*;
 use super::shared::{
     affix_property_bundle_out_of_range, attribute_modifiers_out_of_range,
     equipment_bonuses_out_of_range, insert_definition_id, normalize_tags, require_format_version,
-    require_schema, validate_definition_id, validate_definition_text, validate_status_immunities,
+    require_schema, validate_definition_id, validate_definition_text, validate_id,
+    validate_message_key, validate_status_immunities,
 };
 
 pub(super) struct AffixValidationOutputs {
@@ -25,6 +26,13 @@ pub(super) fn validate_affixes(
         validate_definition_id(&affix.id, "affix")?;
         validate_definition_text(&affix.id, &affix.name_key, &affix.description_key)?;
         validate_status_immunities(&affix.id, &mut affix.status_immunities)?;
+        if affix
+            .device_generation
+            .as_ref()
+            .is_some_and(|generation| !valid_affix_device_generation(generation))
+        {
+            return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
+        }
         let mut roll_substance = false;
         if affix.roll_groups.len() > 16 {
             return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
@@ -67,6 +75,7 @@ pub(super) fn validate_affixes(
             || affix.resists_projection_destruction
             || affix.resists_monster_destruction
             || affix.protects_quiver_ammunition
+            || affix.device_generation.is_some()
             || roll_substance;
         if !has_substance
             || affix.generation_level > affix.generation_max_level
@@ -87,4 +96,39 @@ pub(super) fn validate_affixes(
         affix_ids.insert(affix.id.clone());
     }
     Ok(AffixValidationOutputs { affix_ids })
+}
+
+fn valid_affix_device_generation(generation: &ItemDeviceGenerationDefinition) -> bool {
+    let [activation] = generation.activations.as_slice() else {
+        return false;
+    };
+    let valid_effect = matches!(
+        activation.effect,
+        ItemUseEffectDefinition::ApplyBerserkStrength {
+            duration_dice: 1..=100,
+            duration_sides: 1..=1_000_000,
+            duration_bonus: 0..=1_000_000,
+        }
+    );
+    let self_target = activation.target.modes.as_slice()
+        == [AbilityTargetModeDefinition::SelfTarget]
+        && activation.target.range == 0
+        && !activation.target.requires_line_of_effect;
+    let valid_recovery = generation.recovery.is_some_and(|recovery| {
+        (1..=10_000).contains(&recovery.interval_ticks)
+            && (1..=1_000).contains(&recovery.energy_per_mille)
+    });
+    validate_id(&activation.id).is_ok()
+        && validate_message_key(&activation.name_key).is_ok()
+        && (1..=1_000_000).contains(&activation.weight)
+        && activation.min_depth == 1
+        && activation.max_depth == 100
+        && (1..=1_000_000).contains(&activation.device_check_difficulty)
+        && (1..=1_000_000).contains(&activation.charges.minimum)
+        && activation.charges.minimum <= activation.charges.maximum
+        && activation.charges.maximum <= 1_000_000
+        && (1..=activation.charges.minimum).contains(&activation.charges.cost)
+        && self_target
+        && valid_effect
+        && valid_recovery
 }

@@ -68,16 +68,17 @@ use rfb_content::{
     ClassAbilityDefinition, ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition,
     EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
     ItemAttributeDefinition, ItemCurseSeverityDefinition, ItemCurseTargetDefinition,
-    ItemDestructionElement, ItemEnchantmentRollDefinition, ItemShatterEffectDefinition,
-    ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition, ItemUseEffectDefinition,
-    MeleeBlowEffectDefinition, MonsterDropKindDefinition, MonsterPackBehavior,
-    MutationActivationDefinition, MutationPeriodicEffectDefinition, PlayerAbilityDefinition,
-    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, RaceDefinition, RidingWeaponKindDefinition, SkillKind,
-    SlayLevel, SlayTarget, SniperShotModeDefinition, StartingItemDefinition, StatModifiers,
-    TaskObjectiveKind, TechniqueAttribute, TerrainDiggingResolution, TerrainFeatureEntryDefinition,
-    ThemeVaultCandidateDefinition, WeaponBrand, affix_is_compatible_with_item,
+    ItemDestructionElement, ItemDeviceGenerationDefinition, ItemEnchantmentRollDefinition,
+    ItemShatterEffectDefinition, ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition,
+    ItemUseEffectDefinition, MeleeBlowEffectDefinition, MonsterDropKindDefinition,
+    MonsterPackBehavior, MutationActivationDefinition, MutationPeriodicEffectDefinition,
+    PlayerAbilityDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
+    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition,
+    RidingWeaponKindDefinition, SkillKind, SlayLevel, SlayTarget, SniperShotModeDefinition,
+    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
+    TerrainDiggingResolution, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition,
+    WeaponBrand, affix_is_compatible_with_item,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBanishTargetDto, AbilityBeamDamageResolutionDto,
@@ -773,7 +774,7 @@ fn append_starting_item(
         .checked_add(1)
         .ok_or(CoreError::ItemIdExhausted)?;
     let (activation, charges) =
-        initial_item_runtime_state(content, rng, &starting_item.item_kind_id, 1);
+        initial_item_runtime_state(content, rng, &starting_item.item_kind_id, &[], 1);
     let quantity = starting_item
         .maximum_quantity
         .map_or(starting_item.quantity, |maximum| {
@@ -852,16 +853,32 @@ fn initial_item_curse(content: &ContentCatalog, kind_id: &str) -> Option<ItemCur
         .map(item_curse_severity_dto)
 }
 
+pub(crate) fn item_device_generation<'a>(
+    content: &'a ContentCatalog,
+    kind_id: &str,
+    affix_ids: &[String],
+) -> Option<&'a ItemDeviceGenerationDefinition> {
+    let definition = content.item(kind_id)?;
+    definition.device_generation.as_ref().or_else(|| {
+        affix_ids.iter().find_map(|affix_id| {
+            content
+                .affix(affix_id)
+                .and_then(|affix| affix.device_generation.as_ref())
+        })
+    })
+}
+
 fn initial_item_runtime_state(
     content: &ContentCatalog,
     rng: &mut RfbRng,
     kind_id: &str,
+    affix_ids: &[String],
     depth: u16,
 ) -> (Option<ItemActivationDto>, Option<ItemChargesDto>) {
-    let Some(definition) = content.item(kind_id) else {
+    if content.item(kind_id).is_none() {
         return (None, None);
-    };
-    let Some(generation) = &definition.device_generation else {
+    }
+    let Some(generation) = item_device_generation(content, kind_id, affix_ids) else {
         return (None, initial_item_charges(content, kind_id));
     };
     let power = depth.clamp(1, 100);
@@ -1171,8 +1188,13 @@ impl Game {
             .items
             .iter()
             .map(|spawn| {
-                let (activation, charges) =
-                    initial_item_runtime_state(&content, &mut rng, &spawn.kind_id, 1);
+                let (activation, charges) = initial_item_runtime_state(
+                    &content,
+                    &mut rng,
+                    &spawn.kind_id,
+                    &spawn.affix_ids,
+                    1,
+                );
                 ItemInstance {
                     id: spawn.instance_id.clone(),
                     kind_id: spawn.kind_id.clone(),
@@ -2786,7 +2808,7 @@ impl Game {
             return Err(CoreError::UnknownItem(kind_id.to_owned()));
         }
         let (activation, charges) =
-            initial_item_runtime_state(&self.content, &mut self.rng, kind_id, depth);
+            initial_item_runtime_state(&self.content, &mut self.rng, kind_id, &[], depth);
         self.items.push(ItemInstance {
             id: id.to_owned(),
             kind_id: kind_id.to_owned(),
@@ -4180,9 +4202,7 @@ impl Game {
             return Ok(None);
         }
         if let Some(activation) = &item.activation
-            && definition
-                .device_generation
-                .as_ref()
+            && item_device_generation(&self.content, &item.kind_id, &item.affix_ids)
                 .and_then(|generation| {
                     generation
                         .activations
@@ -4212,9 +4232,7 @@ impl Game {
         })?;
         let definition = self.content.item(&item.kind_id)?;
         if let Some(activation) = &item.activation {
-            let profile = definition
-                .device_generation
-                .as_ref()?
+            let profile = item_device_generation(&self.content, &item.kind_id, &item.affix_ids)?
                 .activations
                 .iter()
                 .find(|candidate| candidate.id == activation.profile_id)?;
@@ -5348,6 +5366,7 @@ impl Game {
                 &self.content,
                 &mut self.rng,
                 &entry.item_kind_id,
+                &affix_ids,
                 generation_depth,
             );
             generated.push(GeneratedItemDraft {
@@ -5462,7 +5481,7 @@ impl Game {
         kind_id: String,
     ) -> GeneratedItemDraft {
         let (activation, charges) =
-            initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, context.depth);
+            initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, &[], context.depth);
         GeneratedItemDraft {
             quantity: 1,
             origin_kind: match &context.source {

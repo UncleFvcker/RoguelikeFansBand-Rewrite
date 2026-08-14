@@ -510,7 +510,7 @@ impl Game {
         };
         let corpse = if let Some(kind_id) = corpse_kind_id {
             let (activation, charges) =
-                initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, 1);
+                initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, &[], 1);
             Some(ItemInstance {
                 id: self.allocate_item_instance_id()?,
                 activation,

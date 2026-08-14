@@ -551,7 +551,7 @@ pub(super) fn reward_item(
         })
         .collect();
     let (activation, mut charges) =
-        initial_item_runtime_state(content, rng, &entry.item_kind_id, 1);
+        initial_item_runtime_state(content, rng, &entry.item_kind_id, &entry.affix_ids, 1);
     if let Some(charges) = &mut charges {
         charges.current = charges.maximum;
     }

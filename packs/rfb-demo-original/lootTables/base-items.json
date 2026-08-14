@@ -965,6 +965,12 @@
       "minDepth": 10
     },
     {
+      "itemKindId": "demo.item.metal-lamellar-armour",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45
+    },
+    {
       "itemKindId": "demo.item.might-tonic",
       "weight": 16,
       "quantity": 1,

@@ -15,7 +15,7 @@ use crate::{
 
 use super::{
     BodySlot, Game, STATUS_INVENTORY_PROTECTION, body_slot_instance_for_type,
-    item_can_occupy_slot_type,
+    item_can_occupy_slot_type, item_device_generation,
 };
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -1435,10 +1435,7 @@ impl Game {
 
     fn item_has_recharge_capacity(&self, item: &ItemInstance) -> bool {
         item.activation.is_some()
-            && self
-                .content
-                .item(&item.kind_id)
-                .is_some_and(|definition| definition.device_generation.is_some())
+            && item_device_generation(&self.content, &item.kind_id, &item.affix_ids).is_some()
             && item
                 .charges
                 .is_some_and(|charges| charges.current < charges.maximum)

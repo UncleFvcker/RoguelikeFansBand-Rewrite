@@ -1,4 +1,147 @@
 use super::*;
+use std::collections::BTreeSet;
+
+#[test]
+fn p90b_olog_hai_reward_keeps_original_armour_affix_and_activation() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.metal-lamellar-armour")
+        .expect("Metal Lamellar Armour should exist");
+    assert_eq!(item.generation_level, 45);
+    assert_eq!(item.weight_tenths_pound, 340);
+    assert_eq!(item.base_value, 1_150);
+    assert_eq!(item.equipment_slot.as_deref(), Some("body"));
+    assert_eq!(item.modifiers.defense, 23);
+    assert_eq!(item.equipment_bonuses.melee_skill, -3);
+    let allocation = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Metal Lamellar Armour should retain its base allocation");
+    assert_eq!(allocation.weight, 100);
+    assert_eq!((allocation.min_depth, allocation.max_depth), (45, u16::MAX));
+
+    let affix = artifact
+        .content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.olog-hai")
+        .expect("Olog-hai affix should exist");
+    assert!(affix_is_compatible_with_item(affix, item, 36));
+    assert_eq!(affix.modifiers.strength, 4);
+    assert_eq!(affix.modifiers.intelligence, -4);
+    assert_eq!(affix.modifiers.defense, 10);
+    assert_eq!(affix.equipment_bonuses.melee_damage, 7);
+    assert_eq!(
+        affix.resistances.get(&ActorDamageType::Acid),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        affix.resistances.get(&ActorDamageType::Poison),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(affix.passives.contains(&EquipmentPassive::Regeneration));
+    assert!(
+        affix
+            .elemental_destruction_immunities
+            .contains(&ItemDestructionElement::Acid)
+    );
+
+    let roll_group = affix.roll_groups.as_slice();
+    let [roll_group] = roll_group else {
+        panic!("Olog-hai should roll one high resistance group");
+    };
+    assert_eq!(roll_group.rolls, 1);
+    assert_eq!(roll_group.candidates.len(), 12);
+    assert!(
+        roll_group
+            .candidates
+            .iter()
+            .all(|candidate| candidate.weight == 1)
+    );
+    let rolled_resistances = roll_group
+        .candidates
+        .iter()
+        .flat_map(|candidate| candidate.properties.resistances.keys().copied())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        rolled_resistances,
+        BTreeSet::from([
+            ActorDamageType::Poison,
+            ActorDamageType::Light,
+            ActorDamageType::Dark,
+            ActorDamageType::Shards,
+            ActorDamageType::Blindness,
+            ActorDamageType::Confusion,
+            ActorDamageType::Sound,
+            ActorDamageType::Nether,
+            ActorDamageType::Nexus,
+            ActorDamageType::Chaos,
+            ActorDamageType::Disenchant,
+            ActorDamageType::Fear,
+        ])
+    );
+
+    let generation = affix
+        .device_generation
+        .as_ref()
+        .expect("Olog-hai should provide a device activation");
+    assert_eq!(
+        generation.recovery,
+        Some(ItemDeviceRecoveryDefinition {
+            interval_ticks: 50,
+            energy_per_mille: 1_000,
+        })
+    );
+    let [activation] = generation.activations.as_slice() else {
+        panic!("Olog-hai should provide exactly one activation");
+    };
+    assert_eq!(activation.device_check_difficulty, 10);
+    assert_eq!(
+        activation.charges,
+        ItemDeviceChargeRangeDefinition {
+            minimum: 1,
+            maximum: 1,
+            cost: 1,
+        }
+    );
+    assert!(matches!(
+        activation.effect,
+        ItemUseEffectDefinition::ApplyBerserkStrength {
+            duration_dice: 1,
+            duration_sides: 25,
+            duration_bonus: 25,
+        }
+    ));
+
+    let reward = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.troll-cave-final-reward")
+        .expect("Troll cave reward table should exist");
+    assert_eq!(reward.rolls, 1);
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(
+        reward.entries[0].item_kind_id,
+        "demo.item.metal-lamellar-armour"
+    );
+    assert_eq!(reward.quality_weights[0].quality, ItemQuality::Fine);
+    assert_eq!(
+        reward.affix_weights[0].affix_id.as_deref(),
+        Some("rfb-legacy.affix.olog-hai")
+    );
+}
 
 #[test]
 fn mirror_shield_keeps_original_reflection_and_allocation() {

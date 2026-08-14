@@ -179,6 +179,11 @@ pub struct AffixDefinition {
     /// Protects ammunition assigned to this equipped quiver from inventory damage.
     #[serde(default)]
     pub protects_quiver_ammunition: bool,
+    /// Optional activation contributed by this affix. The generated activation
+    /// and charges are materialized on the item instance like an intrinsic
+    /// device activation.
+    #[serde(default)]
+    pub device_generation: Option<ItemDeviceGenerationDefinition>,
     /// Keeps a fixed reward affix without promoting the item above ordinary quality.
     #[serde(default)]
     pub preserves_ordinary_quality: bool,
