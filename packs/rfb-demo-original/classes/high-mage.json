@@ -276,6 +276,23 @@
           { "abilityId": "demo.ability.nature-gravity-storm", "minimumLevel": 38, "resourceCost": 35, "baseFailurePercent": 70 },
           { "abilityId": "demo.ability.nature-natures-wrath", "minimumLevel": 39, "resourceCost": 65, "baseFailurePercent": 55 }
         ]
+      },
+      {
+        "realmId": "life",
+        "abilityBookIds": [
+          "demo.ability-book.book-of-common-prayer"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.life-cure-light-wounds", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.life-bless", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.life-regeneration", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.life-call-light", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.life-detect-doors-and-traps", "minimumLevel": 5, "resourceCost": 5, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.life-cure-medium-wounds", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.life-cure-poison", "minimumLevel": 9, "resourceCost": 9, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.life-satisfy-hunger", "minimumLevel": 12, "resourceCost": 10, "baseFailurePercent": 35 }
+        ]
       }
     ]
   },

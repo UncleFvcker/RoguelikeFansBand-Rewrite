@@ -2330,6 +2330,7 @@ fn launcher_range(multiplier_percent: u16) -> u16 {
 
 fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str> {
     match (entry.tval, entry.sval) {
+        (LIFE_BOOK_TVAL, LIFE_FIRST_BOOK_SVAL) => Some(LIFE_FIRST_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_FIRST_BOOK_SVAL) => Some(DEATH_FIRST_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_SECOND_BOOK_SVAL) => Some(DEATH_SECOND_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_THIRD_BOOK_SVAL) => Some(DEATH_THIRD_BOOK_ID),
@@ -9204,6 +9205,9 @@ pub struct ContentImportOutcome {
 
 const LEGACY_RESOURCE_ID: &str = "rfb-legacy.resource.essence";
 const LEGACY_MANA_RESOURCE_ID: &str = "rfb-legacy.resource.mana";
+const LIFE_BOOK_TVAL: u16 = 90;
+const LIFE_FIRST_BOOK_SVAL: u16 = 0;
+const LIFE_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.life-book-of-common-prayer";
 const DEATH_REALM_INDEX: u8 = 4;
 const DEATH_BOOK_TVAL: u16 = 94;
 const DEATH_FIRST_BOOK_SVAL: u16 = 0;
@@ -19178,6 +19182,22 @@ F:BRAND_VAMP | HOLD_LIFE
 
     #[test]
     fn physical_spellbooks_use_explicit_realm_tvals_without_capturing_necromancy() {
+        let life_book = LegacyItemEntry {
+            tval: LIFE_BOOK_TVAL,
+            sval: LIFE_FIRST_BOOK_SVAL,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(
+            player_ability_book_for_item(&life_book),
+            Some(LIFE_FIRST_BOOK_ID)
+        );
+        let unsupported_life_book = LegacyItemEntry {
+            tval: LIFE_BOOK_TVAL,
+            sval: 1,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(player_ability_book_for_item(&unsupported_life_book), None);
+
         assert_eq!(
             death_first_book_json(&[])["nameKey"],
             "ability-book-legacy-death-black-prayers-name"

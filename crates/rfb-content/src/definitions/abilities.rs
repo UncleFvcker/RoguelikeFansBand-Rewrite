@@ -135,6 +135,7 @@ pub enum AbilityLevelScalingField {
 #[serde(rename_all = "kebab-case")]
 pub enum AbilitySpellPowerField {
     FinalDamage,
+    FinalHealing,
     DamageSides,
     DamageBonus,
     HealingAmount,
@@ -1040,12 +1041,16 @@ pub(crate) fn valid_ability_spell_power(
                         | AbilityEffectDefinition::Malediction { .. }
                         | AbilityEffectDefinition::AreaDamage { .. }
                         | AbilityEffectDefinition::BeamDamage { .. }
+                        | AbilityEffectDefinition::LightArea { .. }
                         | AbilityEffectDefinition::BoltOrBeamDamage { .. }
                         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                         | AbilityEffectDefinition::ConeDamage { .. }
                         | AbilityEffectDefinition::VisibleDamage { .. }
                         | AbilityEffectDefinition::DrainLife { .. }
                 ),
+                AbilitySpellPowerField::FinalHealing => {
+                    matches!(effect, AbilityEffectDefinition::HealDice { .. })
+                }
                 AbilitySpellPowerField::DamageSides => matches!(
                     effect,
                     AbilityEffectDefinition::Damage { .. }

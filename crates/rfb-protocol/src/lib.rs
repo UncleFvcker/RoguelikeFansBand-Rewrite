@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.205";
+pub const PROTOCOL_VERSION: &str = "1.206";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -994,6 +994,8 @@ pub enum AbilityEffectSpecDto {
         damage_dice: u16,
         damage_sides: u16,
         radius: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     BoltOrBeamDamage {
         damage_dice: u16,
@@ -1328,6 +1330,8 @@ pub enum AbilityEffectSpecDto {
     HealDice {
         dice: u16,
         sides: u16,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_healing_spell_power_bonus: Option<i32>,
     },
     ReduceStatus {
         status_kind_id: String,

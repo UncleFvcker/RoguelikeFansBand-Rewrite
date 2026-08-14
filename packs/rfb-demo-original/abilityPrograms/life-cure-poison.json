@@ -1,0 +1,7 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.life-cure-poison",
+  "input": "self",
+  "steps": [{ "type": "reduce-status", "statusKindId": "rfb.status.poison", "amount": 125, "currentDivisor": 3 }]
+}

@@ -12,6 +12,7 @@ const ARCANE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-arcane";
 const SORCERY_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-sorcery";
 const ARMAGEDDON_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-armageddon";
 const NATURE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-nature";
+const LIFE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-life";
 
 fn high_mage_game(seed: u64) -> Game {
     Game::new_with_build(seed, HIGH_MAGE_BUILD_ID).expect("Death High-Mage build should create")
@@ -185,6 +186,34 @@ fn nature_high_mage_game(seed: u64, level: u16) -> Game {
     game
 }
 
+fn life_high_mage_game(seed: u64, level: u16) -> Game {
+    let mut game = Game::new_with_build(seed, LIFE_HIGH_MAGE_BUILD_ID)
+        .expect("Life High-Mage build should create");
+    game.progress.level = level;
+    game.progress.max_level = level;
+    game.learned_abilities.extend(
+        [
+            "demo.ability.life-cure-light-wounds",
+            "demo.ability.life-bless",
+            "demo.ability.life-regeneration",
+            "demo.ability.life-call-light",
+            "demo.ability.life-detect-doors-and-traps",
+            "demo.ability.life-cure-medium-wounds",
+            "demo.ability.life-cure-poison",
+            "demo.ability.life-satisfy-hunger",
+        ]
+        .into_iter()
+        .map(str::to_owned),
+    );
+    game.refresh_player_resource_maxima();
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 100;
+    game.debug_ability_casts_succeed = true;
+    game
+}
+
 fn grant_spell_power(game: &mut Game, bonus: i32) {
     game.player.statuses.push(StatusInstance {
         kind_id: "test.status.spell-power".to_owned(),
@@ -299,6 +328,281 @@ fn armageddon_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
 }
 
 #[test]
+fn life_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
+    let game = Game::new_with_build(0x4c49_4645_3031, LIFE_HIGH_MAGE_BUILD_ID)
+        .expect("Life High-Mage build should create");
+    let carried = game
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        })
+        .map(|item| item.kind_id.as_str())
+        .collect::<BTreeSet<_>>();
+    for expected in [
+        "demo.item.book-of-common-prayer",
+        "demo.item.dagger",
+        "demo.item.robe",
+        "demo.item.clarity-draught",
+        "demo.item.magic-missile-wand",
+    ] {
+        assert!(carried.contains(expected));
+    }
+    for excluded in [
+        "demo.item.black-prayers",
+        "demo.item.cantrips-for-beginners",
+        "demo.item.beginners-handbook",
+        "demo.item.book-of-elements",
+        "demo.item.call-of-the-wild",
+    ] {
+        assert!(!carried.contains(excluded));
+    }
+
+    let learned = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .filter(|ability| ability.source == AbilitySourceDto::Learned)
+        .collect::<Vec<_>>();
+    assert_eq!(learned.len(), 8);
+    assert!(
+        learned
+            .iter()
+            .all(|ability| ability.id.starts_with("demo.ability.life-"))
+    );
+}
+
+#[test]
+fn life_first_book_projects_final_healing_light_and_status_formulas() {
+    for (level, expected_sides, expected_radius) in
+        [(1, 0, 1), (25, 12, 3), (50, 25, 6)]
+    {
+        let projected = life_high_mage_game(0x4c49_4645_5000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        assert!(matches!(
+            projected["demo.ability.life-call-light"].effects.as_slice(),
+            [AbilityEffectSpecDto::LightArea {
+                damage_dice: 2,
+                damage_sides,
+                radius,
+                final_damage_spell_power_bonus: None,
+            }] if *damage_sides == expected_sides && *radius == expected_radius
+        ));
+    }
+
+    let mut game = life_high_mage_game(0x4c49_4645_5052, 50);
+    grant_spell_power(&mut game, 7);
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    for id in [
+        "demo.ability.life-cure-light-wounds",
+        "demo.ability.life-cure-medium-wounds",
+    ] {
+        assert!(matches!(
+            projected[id].effects.as_slice(),
+            [
+                AbilityEffectSpecDto::HealDice {
+                    final_healing_spell_power_bonus: Some(7),
+                    ..
+                },
+                ..
+            ]
+        ));
+    }
+    assert!(matches!(
+        projected["demo.ability.life-call-light"].effects.as_slice(),
+        [AbilityEffectSpecDto::LightArea {
+            damage_dice: 2,
+            damage_sides: 25,
+            radius: 9,
+            final_damage_spell_power_bonus: Some(7),
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.life-bless"].effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 18,
+            duration_sides: 18,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.life-regeneration"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 123,
+            duration_sides: 123,
+            ..
+        }]
+    ));
+}
+
+#[test]
+fn life_first_book_applies_final_healing_and_light_after_the_roll() {
+    let mut plain = life_high_mage_game(0x4c49_4645_524f, 50);
+    let mut powered = plain.clone();
+    grant_spell_power(&mut powered, 7);
+    for game in [&mut plain, &mut powered] {
+        game.player.max_hp = 1_000;
+        game.player.hp = 1;
+        game.rng = RfbRng::seeded(0x4845_414c);
+    }
+    plain
+        .resolve_player_ability(
+            "demo.ability.life-cure-medium-wounds",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("plain Cure Medium Wounds should resolve");
+    powered
+        .resolve_player_ability(
+            "demo.ability.life-cure-medium-wounds",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("powered Cure Medium Wounds should resolve");
+    let plain_healing = plain.player.hp - 1;
+    let powered_healing = powered.player.hp - 1;
+    assert_eq!(powered_healing, plain_healing + plain_healing * 7 / 13);
+
+    let light_damage = |game: &mut Game| {
+        game.rng = RfbRng::seeded(0x4c49_4748);
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.life-call-light",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Call Light should resolve");
+        events
+            .into_iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilityAreaDamage { resolution, .. } => {
+                    Some(resolution.base_raw_damage)
+                }
+                _ => None,
+            })
+            .expect("Call Light should report its rolled damage")
+    };
+    let plain_light = light_damage(&mut plain);
+    let powered_light = light_damage(&mut powered);
+    assert_eq!(powered_light, plain_light + plain_light * 7 / 13);
+}
+
+#[test]
+fn life_first_book_applies_blessing_regeneration_and_cures() {
+    let mut game = life_high_mage_game(0x4c49_4645_4355, 50);
+    grant_spell_power(&mut game, 7);
+    for ability_id in ["demo.ability.life-bless", "demo.ability.life-regeneration"] {
+        game.resolve_player_ability(
+            ability_id,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap_or_else(|error| panic!("{ability_id} should resolve: {error}"));
+    }
+    let blessed = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.blessed")
+        .expect("Bless should apply the shared blessed status");
+    assert!((19..=36).contains(&blessed.remaining_ticks));
+    assert_eq!(blessed.granted_modifiers.defense, 5);
+    assert_eq!(blessed.granted_equipment_bonuses.melee_skill, 10);
+    let regeneration = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_REGENERATION)
+        .expect("Regeneration should apply the shared regeneration status");
+    assert!((124..=246).contains(&regeneration.remaining_ticks));
+    assert_eq!(game.player_regeneration_rate_percent(), 200);
+
+    let status = |kind_id: &str, remaining_ticks| StatusInstance {
+        kind_id: kind_id.to_owned(),
+        intensity: 1,
+        remaining_ticks,
+        source_id: Some("test.life".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    game.player.statuses.push(status(STATUS_BLEEDING, 300));
+    game.player.statuses.push(status(STATUS_POISON, 1_000));
+    game.resolve_player_ability(
+        "demo.ability.life-cure-medium-wounds",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Medium Wounds should resolve");
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_BLEEDING)
+            .map(|status| status.remaining_ticks),
+        Some(130)
+    );
+    game.resolve_player_ability(
+        "demo.ability.life-cure-poison",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Poison should resolve");
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_POISON)
+            .map(|status| status.remaining_ticks),
+        Some(667)
+    );
+    game.nutrition = 1;
+    game.resolve_player_ability(
+        "demo.ability.life-satisfy-hunger",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Satisfy Hunger should resolve");
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+}
+
+#[test]
 fn nature_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
     let game = Game::new_with_build(0x4e41_5455_5245_3031, NATURE_HIGH_MAGE_BUILD_ID)
         .expect("Nature High-Mage build should create");
@@ -379,6 +683,7 @@ fn nature_first_book_projects_level_and_spell_power_formulas() {
                 damage_dice: 2,
                 damage_sides,
                 radius,
+                ..
             }] if *damage_sides == light_sides && *radius == light_radius
         ));
     }

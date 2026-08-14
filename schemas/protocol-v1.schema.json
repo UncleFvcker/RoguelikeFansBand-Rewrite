@@ -2888,6 +2888,13 @@
               "maximum": 65535,
               "minimum": 0
             },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "radius": {
               "type": "integer",
               "format": "uint8",
@@ -4799,6 +4806,13 @@
               "format": "uint16",
               "maximum": 65535,
               "minimum": 0
+            },
+            "finalHealingSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
             },
             "sides": {
               "type": "integer",

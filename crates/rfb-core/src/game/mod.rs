@@ -7170,6 +7170,7 @@ fn apply_ability_spell_power(
         (
             _,
             AbilitySpellPowerField::FinalDamage
+            | AbilitySpellPowerField::FinalHealing
             | AbilitySpellPowerField::RandomChoiceRoll
             | AbilitySpellPowerField::MaledictionDeathRayPower
             | AbilitySpellPowerField::MaledictionFearPower
@@ -7301,6 +7302,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
             radius: *radius,
+            final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::BoltOrBeamDamage {
             damage_dice,
@@ -7806,6 +7808,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::HealDice { dice, sides } => AbilityEffectSpecDto::HealDice {
             dice: *dice,
             sides: *sides,
+            final_healing_spell_power_bonus: None,
         },
         AbilityEffectDefinition::ReduceStatus {
             status_kind_id,
@@ -7943,6 +7946,10 @@ fn player_ability_effect_spec_dto(
                 final_damage_spell_power_bonus,
                 ..
             }
+            | AbilityEffectSpecDto::LightArea {
+                final_damage_spell_power_bonus,
+                ..
+            }
             | AbilityEffectSpecDto::BoltOrBeamDamage {
                 final_damage_spell_power_bonus,
                 ..
@@ -7965,6 +7972,16 @@ fn player_ability_effect_spec_dto(
             } => *final_damage_spell_power_bonus = bonus,
             _ => unreachable!("validated final damage marker must project a damage effect"),
         }
+    }
+    if ability_has_spell_power_field(ability, effect_index, AbilitySpellPowerField::FinalHealing) {
+        let AbilityEffectSpecDto::HealDice {
+            final_healing_spell_power_bonus,
+            ..
+        } = &mut spec
+        else {
+            unreachable!("validated final healing marker must project a healing-dice effect");
+        };
+        *final_healing_spell_power_bonus = Some(ability.spell_power_bonus);
     }
     if ability_has_spell_power_field(
         ability,

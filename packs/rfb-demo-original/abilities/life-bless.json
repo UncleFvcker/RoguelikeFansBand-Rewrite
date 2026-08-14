@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.life-bless",
+  "nameKey": "ability-demo-life-bless-name",
+  "descriptionKey": "ability-demo-life-bless-description",
+  "abilityProgramId": "demo.ability-program.life-bless",
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "status-duration-ticks" },
+    { "effectIndex": 0, "field": "status-duration-sides" }
+  ],
+  "tags": ["blessing", "life", "spell"]
+}

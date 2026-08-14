@@ -707,3 +707,8 @@ v101；save 容器保持 v1，不为缺少该字段的旧开发存档提供兼�
 `1d6` 选择；仅闪电矢和三连碎片球分支保存 `PlayerSaveDto.pendingAbilityDirection`，待玩家
 选择方向后才一次性支付已结算的法力、熟练度和行动成本，取消不留下部分效果。该待处理状态
 进入 State Hash Schema v102；save 容器保持 v1，不兼容缺少该字段的旧开发存档。
+
+协议 1.206 为生命领域第一册补充 `heal-dice` 的整次治疗量 `spell_power` 投影，并允许
+`light-area` 声明整次伤害的 `spell_power`。两者只增加可观察公式元数据，运行时继续复用既有
+治疗、照明与区域伤害事务；不增加命令、持久状态或 State Hash 输入。State Hash Schema
+保持 v102，save 容器保持 v1。

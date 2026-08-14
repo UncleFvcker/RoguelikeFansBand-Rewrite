@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/build.schema.json",
+  "formatVersion": 1,
+  "id": "demo.build.high-mage-life",
+  "nameKey": "build-demo-high-mage-life-name",
+  "descriptionKey": "build-demo-high-mage-life-description",
+  "raceId": "demo.race.rfb-human",
+  "classId": "demo.class.high-mage",
+  "personalityId": "demo.personality.ordinary",
+  "playerActorId": "demo.actor.high-mage-player",
+  "firstRealmId": "life",
+  "startingItems": [
+    { "itemKindId": "demo.item.book-of-common-prayer", "quantity": 1 }
+  ],
+  "attributes": {
+    "strength": 13,
+    "intelligence": 13,
+    "wisdom": 13,
+    "dexterity": 13,
+    "constitution": 13,
+    "charisma": 13
+  },
+  "tags": ["caster", "high-mage", "life", "rfb-compatibility"]
+}

@@ -137,6 +137,7 @@ pub(super) fn english_item_name(kind_id: &str) -> Option<&'static str> {
         "demo.item.star-enlightenment-potion" => Some("Potion of *Enlightenment*"),
         "demo.item.star-healing-potion" => Some("Potion of *Healing*"),
         "demo.item.black-prayers" => Some("[Black Prayers]"),
+        "demo.item.book-of-common-prayer" => Some("[Book of Common Prayer]"),
         "demo.item.call-of-the-wild" => Some("[Call of the Wild]"),
         "demo.item.nature-mastery" => Some("[Nature Mastery]"),
         "demo.item.natures-gifts" => Some("[Nature's Gifts]"),

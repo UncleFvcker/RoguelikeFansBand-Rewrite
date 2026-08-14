@@ -188,6 +188,125 @@ fn arcane_first_book_keeps_the_original_spell_table_and_narrow_effects() {
 }
 
 #[test]
+fn life_first_book_keeps_the_original_spell_table_allocation_and_final_scaling() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.book-of-common-prayer")
+        .expect("Book of Common Prayer should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("life"));
+    assert_eq!(book.rank, Some(1));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.book-of-common-prayer")
+        .expect("Book of Common Prayer item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (10, 30, 100, Some("demo.ability-book.book-of-common-prayer"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Book of Common Prayer should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (10, 30, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.life-cure-light-wounds", 1, 1, 20, 4),
+        ("demo.ability.life-bless", 2, 2, 25, 4),
+        ("demo.ability.life-regeneration", 3, 3, 25, 4),
+        ("demo.ability.life-call-light", 4, 4, 25, 4),
+        ("demo.ability.life-detect-doors-and-traps", 5, 5, 25, 4),
+        ("demo.ability.life-cure-medium-wounds", 6, 5, 30, 4),
+        ("demo.ability.life-cure-poison", 9, 9, 30, 3),
+        ("demo.ability.life-satisfy-hunger", 12, 10, 35, 3),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    for id in [
+        "demo.ability.life-cure-light-wounds",
+        "demo.ability.life-cure-medium-wounds",
+    ] {
+        let cure = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        assert_eq!(
+            cure.spell_power_fields
+                .iter()
+                .map(|field| (field.effect_index, field.field))
+                .collect::<BTreeSet<_>>(),
+            BTreeSet::from([(0, AbilitySpellPowerField::FinalHealing)])
+        );
+    }
+    let call_light = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.life-call-light")
+        .expect("Call Light should compile");
+    assert_eq!(
+        call_light
+            .spell_power_fields
+            .iter()
+            .map(|field| (field.effect_index, field.field))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([
+            (0, AbilitySpellPowerField::FinalDamage),
+            (0, AbilitySpellPowerField::Radius),
+        ])
+    );
+}
+
+#[test]
 fn nature_first_book_keeps_the_original_spell_table_and_allocation() {
     let content = compile_pack_dir(&original_pack_path())
         .expect("original pack should compile")

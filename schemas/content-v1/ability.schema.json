@@ -122,6 +122,7 @@
     "AbilitySpellPowerField": {
       "enum": [
         "final-damage",
+        "final-healing",
         "damage-sides",
         "damage-bonus",
         "healing-amount",

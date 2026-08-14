@@ -162,6 +162,7 @@
     { "sourceIndex": 463, "sourceName": "Clarity:Metallic", "sourceId": "clarity-metallic", "itemId": "demo.item.clarity-draught", "status": "active", "contract": "contract-v111-restorative-items" },
     { "sourceIndex": 464, "sourceName": "Great Clarity:Acrid", "sourceId": "great-clarity-acrid", "itemId": "demo.item.great-clarity-potion", "status": "active", "contract": "phase-19-p3-2-low-coupling-potions" },
     { "sourceIndex": 466, "sourceName": "Mead of Poetry:Bright Orange", "sourceId": "mead-of-poetry-bright-orange", "itemId": "demo.item.muse-tonic", "status": "active", "contract": "contract-v141-potion-poetic-inspiration" },
+    { "sourceIndex": 500, "sourceName": "[Book of Common Prayer]", "sourceId": "book-of-common-prayer", "itemId": "demo.item.book-of-common-prayer", "status": "active", "contract": "class-high-mage-life-first-book" },
     { "sourceIndex": 504, "sourceName": "[Beginner's Handbook]", "sourceId": "beginners-handbook", "itemId": "demo.item.beginners-handbook", "status": "active", "contract": "class-high-mage-sorcery-first-book" },
     { "sourceIndex": 505, "sourceName": "[Master Sorcerer's Handbook]", "sourceId": "master-sorcerers-handbook", "itemId": "demo.item.master-sorcerers-handbook", "status": "active", "contract": "class-high-mage-sorcery-second-book" },
     { "sourceIndex": 506, "sourceName": "[Pattern Sorcery]", "sourceId": "pattern-sorcery", "itemId": "demo.item.pattern-sorcery", "status": "active", "contract": "class-high-mage-sorcery-third-book" },

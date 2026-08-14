@@ -1883,6 +1883,13 @@ impl Game {
             })
             .collect::<Vec<_>>();
         let base_raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("light damage must be non-negative"),
+        ))
+        .expect("spell-powered light damage must fit i32");
 
         let mut glow_positions = affected_positions.iter().copied().collect::<BTreeSet<_>>();
         glow_positions.extend(self.connected_glow_positions(center));
@@ -3259,6 +3266,13 @@ impl Game {
                         }
                         AbilityEffectDefinition::HealDice { dice, sides } => {
                             let amount = self.roll_damage(*dice, *sides).max(0);
+                            let amount = i32::try_from(spell_powered_ability_value(
+                                ability,
+                                effect_index,
+                                AbilitySpellPowerField::FinalHealing,
+                                u64::try_from(amount).expect("healing must be non-negative"),
+                            ))
+                            .expect("spell-powered healing must fit i32");
                             let outcome = self.apply_player_healing(amount);
                             AbilityEffectResolutionDto::Heal {
                                 effect_index,
@@ -3867,6 +3881,13 @@ impl Game {
             unreachable!("player healing-dice executor requires a healing-dice effect");
         };
         let amount = self.roll_damage(dice, sides).max(0);
+        let amount = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalHealing,
+            u64::try_from(amount).expect("healing must be non-negative"),
+        ))
+        .expect("spell-powered healing must fit i32");
         let outcome = self.apply_player_healing(amount);
         events.push(DomainEvent::AbilityHealed {
             ability_id: ability.id.clone(),

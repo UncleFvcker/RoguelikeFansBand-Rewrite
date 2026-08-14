@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.book-of-common-prayer",
+  "nameKey": "ability-book-demo-book-of-common-prayer-name",
+  "descriptionKey": "ability-book-demo-book-of-common-prayer-description",
+  "realmId": "life",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.life-cure-light-wounds",
+    "demo.ability.life-bless",
+    "demo.ability.life-regeneration",
+    "demo.ability.life-call-light",
+    "demo.ability.life-detect-doors-and-traps",
+    "demo.ability.life-cure-medium-wounds",
+    "demo.ability.life-cure-poison",
+    "demo.ability.life-satisfy-hunger"
+  ],
+  "tags": ["life", "spellbook"]
+}
