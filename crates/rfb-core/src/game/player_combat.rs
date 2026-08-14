@@ -1598,6 +1598,7 @@ impl Game {
         let mut retaliation_blow_index = 0_usize;
         let mut touched_surviving_target = false;
         let mut allow_criticals = true;
+        let mut impact_earthquake_item_id = None;
         'profiles: for (profile, profile_attacks) in profiles {
             let vampiric_weapon =
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
@@ -1652,6 +1653,8 @@ impl Game {
                     })
                 };
                 let order = has_trait(WeaponTraitDto::Order);
+                let impact = has_trait(WeaponTraitDto::Impact);
+                let stun = has_trait(WeaponTraitDto::Stun);
                 let vorpal_chance = if has_trait(WeaponTraitDto::Vorpal2) {
                     Some(2_u64)
                 } else if has_trait(WeaponTraitDto::Vorpal) {
@@ -1689,6 +1692,14 @@ impl Game {
                         ))
                         .saturating_div(100);
                 }
+                let impact_triggered = impact && (base_damage > 50 || self.rng.bounded(7) == 0);
+                if impact_triggered {
+                    impact_earthquake_item_id = profile.source_item_id.clone();
+                }
+                let weapon_stun = impact_triggered && base_damage > 50
+                    || stun
+                        && self.rng.bounded(100) + 1
+                            < u64::try_from(base_damage.max(0)).unwrap_or(u64::MAX);
                 if let Some(chance) = vorpal_chance
                     && self.rng.bounded(chance.saturating_mul(3).saturating_div(2)) == 0
                 {
@@ -1729,6 +1740,20 @@ impl Game {
                 events.push(profile.hit_event(&target_kind, damage));
                 self.wake_entity_after_damage(index, damage.applied, events);
                 if !application.fatal {
+                    if weapon_stun
+                        && !self.actor_has_status_immunity(index, STATUS_STUN)
+                        && !definition.tags.iter().any(|tag| tag == "resist-all")
+                    {
+                        self.apply_actor_melee_status(
+                            index,
+                            STATUS_STUN,
+                            monster_stun_amount(base_damage),
+                            profile
+                                .source_item_id
+                                .as_deref()
+                                .unwrap_or("rfb.weapon.stun"),
+                        );
+                    }
                     match strike_mode {
                         Some(DraconianStrikeModeDefinition::Stun) => {
                             self.resolve_draconian_stunning_strike(
@@ -1820,6 +1845,16 @@ impl Game {
                 .position(|entity| entity.id == target_entity_id)
         {
             self.resolve_monster_fear_aura(index, "contact", false, events);
+        }
+        if !self.player_is_dead()
+            && let Some(source_item_id) = impact_earthquake_item_id
+        {
+            self.resolve_player_impact_earthquake(
+                source_item_id,
+                events,
+                changed,
+                removed_entities,
+            )?;
         }
         Ok(PlayerMeleeOutcome {
             attacks_used,

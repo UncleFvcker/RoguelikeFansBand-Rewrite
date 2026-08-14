@@ -18,6 +18,7 @@ const NATURE_WRATH_ABILITY_ID: &str = "demo.ability.nature-natures-wrath";
 enum EarthquakeSource {
     Ability(String),
     Monster(String),
+    Weapon(String),
 }
 
 pub(super) fn nature_wrath_direction_roll(events: &[DomainEvent]) -> Option<u8> {
@@ -6768,6 +6769,30 @@ impl Game {
         )
     }
 
+    pub(super) fn resolve_player_impact_earthquake(
+        &mut self,
+        source_item_id: String,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        self.resolve_earthquake(
+            self.player.position,
+            10,
+            15,
+            "demo.terrain.floor",
+            &[
+                "demo.terrain.wall".to_owned(),
+                "demo.terrain.quartz-vein".to_owned(),
+                "demo.terrain.magma-vein".to_owned(),
+            ],
+            EarthquakeSource::Weapon(source_item_id),
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn resolve_earthquake(
         &mut self,
@@ -6810,6 +6835,7 @@ impl Game {
         let terrain_change_source = match &source {
             EarthquakeSource::Ability(_) => TerrainChangeSource::Magic,
             EarthquakeSource::Monster(_) => TerrainChangeSource::Monster,
+            EarthquakeSource::Weapon(_) => TerrainChangeSource::Magic,
         };
         let mut captured_balls = self
             .items
@@ -6894,6 +6920,12 @@ impl Game {
                             });
                         }
                     }
+                    EarthquakeSource::Weapon(source_item_id) => {
+                        events.push(DomainEvent::PlayerWeaponEarthquakeHit {
+                            source_item_id: source_item_id.clone(),
+                            damage,
+                        });
+                    }
                 }
                 self.replace_terrain_from_source(
                     *position,
@@ -6969,12 +7001,28 @@ impl Game {
                                 changed,
                                 removed_entities,
                             )?,
+                        EarthquakeSource::Weapon(source_item_id) => self.resolve_actor_death(
+                            actor_index,
+                            DomainEvent::PlayerWeaponEarthquakeSlew {
+                                source_item_id: source_item_id.clone(),
+                                target_kind_id,
+                                damage,
+                            },
+                            events,
+                            changed,
+                            removed_entities,
+                        )?,
                     }
                 } else if let EarthquakeSource::Monster(source_kind_id) = &source {
                     events.push(DomainEvent::MonsterMeleeEntityHit {
                         source_kind_id: source_kind_id.clone(),
                         target_kind_id,
                         method_id: Some("rfb.blow.shatter".to_owned()),
+                        damage,
+                    });
+                } else if let EarthquakeSource::Weapon(source_item_id) = &source {
+                    events.push(DomainEvent::PlayerWeaponEarthquakeHit {
+                        source_item_id: source_item_id.clone(),
                         damage,
                     });
                 }
@@ -7038,6 +7086,12 @@ impl Game {
             EarthquakeSource::Monster(source_kind_id) => {
                 events.push(DomainEvent::MonsterEarthquakeResolved {
                     source_kind_id,
+                    resolution,
+                });
+            }
+            EarthquakeSource::Weapon(source_item_id) => {
+                events.push(DomainEvent::PlayerWeaponEarthquakeResolved {
+                    source_item_id,
                     resolution,
                 });
             }

@@ -3,6 +3,7 @@
 use rfb_protocol::{MeleeDamageDiceDto, WeaponTraitDto};
 
 use super::{support::clear_monsters, *};
+use crate::game::player_stats::good_priest_weapon_penalty;
 
 fn weapon_index(game: &Game) -> usize {
     game.items
@@ -241,4 +242,214 @@ fn order_weapon_rolls_maximum_damage_and_skips_weapon_dice_and_critical_rng() {
         .expect("equipped weapon should expose a melee profile");
     assert_eq!((profile.damage.dice, profile.damage.sides), (2, 6));
     assert!(base.item_melee_profile(item).is_some());
+}
+
+#[test]
+fn impact_weapon_reuses_earthquake_and_strong_hit_stun_without_extra_trigger_rng() {
+    let base = melee_game(0, "demo.build.warrior");
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(*seed);
+            add_weapon_trait(&mut game, WeaponTraitDto::Impact, 60, 1);
+            add_weapon_trait(&mut game, WeaponTraitDto::Order, 60, 1);
+            resolve_melee(&mut game)
+                .iter()
+                .any(|event| matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. }))
+        })
+        .expect("a deterministic strong impact hit should exist");
+    let mut strong = base.clone();
+    strong.rng = RfbRng::seeded(seed);
+    add_weapon_trait(&mut strong, WeaponTraitDto::Impact, 60, 1);
+    add_weapon_trait(&mut strong, WeaponTraitDto::Order, 60, 1);
+    let events = resolve_melee(&mut strong);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::PlayerWeaponEarthquakeResolved { source_item_id, .. }
+            if source_item_id == &strong.items[weapon_index(&strong)].id
+    )));
+    assert!(
+        strong.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN)
+    );
+
+    let weak_seed = (0..10_000)
+        .find(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(*seed);
+            add_weapon_trait(&mut game, WeaponTraitDto::Impact, 1, 1);
+            add_weapon_trait(&mut game, WeaponTraitDto::Order, 1, 1);
+            let events = resolve_melee(&mut game);
+            events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::PlayerMeleeHit { .. }))
+                && !events.iter().any(|event| {
+                    matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. })
+                })
+        })
+        .expect("a deterministic non-triggering impact hit should exist");
+    let mut weak = base.clone();
+    weak.rng = RfbRng::seeded(weak_seed);
+    add_weapon_trait(&mut weak, WeaponTraitDto::Impact, 1, 1);
+    add_weapon_trait(&mut weak, WeaponTraitDto::Order, 1, 1);
+    let events = resolve_melee(&mut weak);
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::PlayerWeaponEarthquakeResolved { .. }))
+    );
+    assert!(
+        !weak.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN)
+    );
+
+    let mut missed = base.clone();
+    add_weapon_trait(&mut missed, WeaponTraitDto::Impact, 1, 1);
+    force_melee_misses(&mut missed);
+    let mut control = missed.clone();
+    clear_weapon_traits(&mut control);
+    resolve_melee(&mut missed);
+    resolve_melee(&mut control);
+    assert_eq!(missed.rng.draw_counter, control.rng.draw_counter);
+}
+
+#[test]
+fn stun_weapon_checks_post_critical_damage_and_respects_immunity() {
+    let base = melee_game(0, "demo.build.warrior");
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(*seed);
+            add_weapon_trait(&mut game, WeaponTraitDto::Stun, 101, 1);
+            add_weapon_trait(&mut game, WeaponTraitDto::Order, 101, 1);
+            resolve_melee(&mut game);
+            game.entities[0]
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_STUN)
+        })
+        .expect("a deterministic stunning hit should exist");
+    let mut stunned = base.clone();
+    stunned.rng = RfbRng::seeded(seed);
+    add_weapon_trait(&mut stunned, WeaponTraitDto::Stun, 101, 1);
+    add_weapon_trait(&mut stunned, WeaponTraitDto::Order, 101, 1);
+    resolve_melee(&mut stunned);
+    assert!(
+        stunned.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN)
+    );
+
+    let mut immune = base.clone();
+    immune.rng = RfbRng::seeded(seed);
+    add_weapon_trait(&mut immune, WeaponTraitDto::Stun, 101, 1);
+    add_weapon_trait(&mut immune, WeaponTraitDto::Order, 101, 1);
+    immune.entities[0].statuses.push(StatusInstance {
+        kind_id: "test.weapon-trait.stun-immunity".to_owned(),
+        intensity: 1,
+        remaining_ticks: 10,
+        source_id: Some("test.weapon-trait".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::from([STATUS_STUN.to_owned()]),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    resolve_melee(&mut immune);
+    assert!(
+        !immune.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN)
+    );
+    assert_eq!(stunned.rng.draw_counter, immune.rng.draw_counter);
+
+    let mut too_weak = base.clone();
+    too_weak.rng = RfbRng::seeded(seed);
+    add_weapon_trait(&mut too_weak, WeaponTraitDto::Stun, 1, 1);
+    add_weapon_trait(&mut too_weak, WeaponTraitDto::Order, 1, 1);
+    resolve_melee(&mut too_weak);
+    assert!(
+        !too_weak.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN)
+    );
+
+    let mut missed = base.clone();
+    add_weapon_trait(&mut missed, WeaponTraitDto::Stun, 101, 1);
+    force_melee_misses(&mut missed);
+    let mut control = missed.clone();
+    clear_weapon_traits(&mut control);
+    resolve_melee(&mut missed);
+    resolve_melee(&mut control);
+    assert_eq!(missed.rng.draw_counter, control.rng.draw_counter);
+}
+
+#[test]
+fn blessed_weapon_resists_curses_and_exempts_good_priest_weapon_penalties() {
+    assert!(good_priest_weapon_penalty(true, true, Some(23), false));
+    assert!(!good_priest_weapon_penalty(true, true, Some(23), true));
+    assert!(!good_priest_weapon_penalty(true, false, Some(23), false));
+    assert!(!good_priest_weapon_penalty(true, true, Some(21), false));
+
+    let base = melee_game(0, "demo.build.warrior");
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(*seed);
+            add_weapon_trait(&mut game, WeaponTraitDto::Blessed, 2, 6);
+            game.curse_equipped_item(CurseEquippedItemRequest::new(
+                EquippedItemCurseTarget::Weapon,
+            ))
+            .resisted
+        })
+        .expect("a deterministic blessed resistance seed should exist");
+    let mut blessed = base.clone();
+    blessed.rng = RfbRng::seeded(seed);
+    add_weapon_trait(&mut blessed, WeaponTraitDto::Blessed, 2, 6);
+    let outcome = blessed.curse_equipped_item(CurseEquippedItemRequest::new(
+        EquippedItemCurseTarget::Weapon,
+    ));
+    assert!(outcome.resisted);
+    assert_eq!(blessed.items[weapon_index(&blessed)].curse, None);
+
+    let mut ordinary = base.clone();
+    ordinary.rng = RfbRng::seeded(seed);
+    let outcome = ordinary.curse_equipped_item(CurseEquippedItemRequest::new(
+        EquippedItemCurseTarget::Weapon,
+    ));
+    assert!(!outcome.resisted);
+    assert_eq!(
+        ordinary.items[weapon_index(&ordinary)].curse,
+        Some(ItemCurseSeverityDto::Normal)
+    );
+
+    let mut forced = base.clone();
+    add_weapon_trait(&mut forced, WeaponTraitDto::Blessed, 2, 6);
+    forced.debug_item_curses_land = true;
+    let before = forced.rng.draw_counter;
+    let outcome = forced.curse_equipped_item(CurseEquippedItemRequest::new(
+        EquippedItemCurseTarget::Weapon,
+    ));
+    assert!(!outcome.resisted);
+    assert_eq!(forced.rng.draw_counter, before);
+
+    let mut no_candidate = base.clone();
+    let index = weapon_index(&no_candidate);
+    no_candidate.items[index].location = ItemLocation::Inventory;
+    let before = no_candidate.rng.draw_counter;
+    let outcome = no_candidate.curse_equipped_item(CurseEquippedItemRequest::new(
+        EquippedItemCurseTarget::Weapon,
+    ));
+    assert_eq!(outcome.item_id, None);
+    assert_eq!(no_candidate.rng.draw_counter, before);
 }

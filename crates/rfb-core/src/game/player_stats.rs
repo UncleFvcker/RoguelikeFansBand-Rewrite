@@ -47,6 +47,15 @@ const DRACONIAN_STRENGTH_BLOW: [u16; 38] = [
     120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240,
 ];
 
+pub(in crate::game) fn good_priest_weapon_penalty(
+    priest_class: bool,
+    good_realm: bool,
+    weapon_tval: Option<u16>,
+    blessed: bool,
+) -> bool {
+    priest_class && good_realm && matches!(weapon_tval, Some(22 | 23)) && !blessed
+}
+
 fn draconian_innate_blows(attributes: AttributeSet, weight: u16, maximum: u16) -> u16 {
     let strength_index = usize::from(
         attributes
@@ -1419,6 +1428,21 @@ impl Game {
                 .item(&item.kind_id)
                 .and_then(|item_definition| {
                     item_definition.melee_profile.as_ref().map(|profile| {
+                        let (priest_class, good_realm) = self.character_definitions().map_or(
+                            (false, false),
+                            |(build, _, class, _)| {
+                                (
+                                    class.tags.iter().any(|tag| tag == "priest"),
+                                    [
+                                        build.first_realm_id.as_deref(),
+                                        build.second_realm_id.as_deref(),
+                                    ]
+                                    .into_iter()
+                                    .flatten()
+                                    .any(|realm| matches!(realm, "life" | "crusade")),
+                                )
+                            },
+                        );
                         (
                             item.id.clone(),
                             item.kind_id.clone(),
@@ -1429,6 +1453,12 @@ impl Game {
                             item.rolled_affixes
                                 .iter()
                                 .find_map(|rolled| rolled.melee_damage_dice),
+                            good_priest_weapon_penalty(
+                                priest_class,
+                                good_realm,
+                                item_definition.rfb_base_kind.map(|kind| kind.tval),
+                                Self::item_has_weapon_trait(item, WeaponTraitDto::Blessed),
+                            ),
                         )
                     })
                 })
@@ -1439,9 +1469,10 @@ impl Game {
             dice,
             sides,
             damage_type,
-            to_hit,
+            mut to_hit,
             mounted_to_hit,
             critical_weight_tenths_pound,
+            priest_weapon_penalty,
         ) = equipped_weapon.map_or_else(
             || {
                 (
@@ -1453,6 +1484,7 @@ impl Game {
                     0,
                     0,
                     None,
+                    false,
                 )
             },
             |(
@@ -1463,6 +1495,7 @@ impl Game {
                 weight,
                 enchantment_to_hit,
                 rolled_damage,
+                priest_weapon_penalty,
             )| {
                 let (mounted_to_hit, mounted_dice) =
                     self.riding_mount_level().map_or((0, 0), |mount_level| {
@@ -1490,6 +1523,7 @@ impl Game {
                         .saturating_add(mounted_to_hit),
                     mounted_to_hit,
                     Some(weight),
+                    priest_weapon_penalty,
                 )
             },
         );
@@ -1519,13 +1553,24 @@ impl Game {
                 StatBounds::NON_NEGATIVE,
             );
         }
+        let mut to_damage = stats.melee_damage_bonus.value;
+        if priest_weapon_penalty {
+            melee_skill = melee_skill.with_modifier(
+                StatLayer::Class,
+                "rfb.class.priest-unblessed-weapon",
+                -2,
+                StatBounds::NON_NEGATIVE,
+            );
+            to_hit = to_hit.saturating_sub(2);
+            to_damage = to_damage.saturating_sub(2);
+        }
         ResolvedAttackProfile {
             attacks: u16::try_from(stats.melee_attacks.value)
                 .expect("derived melee attack count must fit u16"),
             extra_attack_chance_percent: 0,
             melee_skill,
             to_hit,
-            to_damage: stats.melee_damage_bonus.value,
+            to_damage,
             damage_dice: dice,
             damage_sides: sides,
             damage_type: DamageType::from(damage_type),
