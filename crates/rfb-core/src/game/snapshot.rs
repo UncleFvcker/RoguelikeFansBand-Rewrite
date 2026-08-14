@@ -1593,6 +1593,8 @@ impl Game {
                     identify_all_items_cost: facility.identify_all_items_cost,
                     overview_message_key: facility.overview_message_key.clone(),
                     legal_name_change_cost: facility.legal_name_change_cost,
+                    membership: self.town_facility_membership(facility),
+                    service_actions: self.town_facility_service_dtos(facility),
                     tasks,
                 }
             })

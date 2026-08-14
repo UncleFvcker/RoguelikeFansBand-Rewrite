@@ -727,3 +727,9 @@ content hash 为 `e0e6820f83989f8790a455d6af5656ec833341e03ef84b2005652c898c47e5
 消息键，并增加只承载明确设施服务的 `service` 类别。Anambar 新增图书馆与蘑菇店；图书馆费用
 及“托妮卡”、蘑菇店“马丁”等中文名均锁定 RFB `master`，蘑菇库存复用 Outpost 已支持的五种
 物品。content hash 为 `990e57bb72cc98469da7a3a6950ac15db9ae051d7e396fd3f85f7a9628fada2a`。
+
+包 1.369.0 / P105 为 `TownFacilityDefinition` 增加职业、种族、领域的 Owner/Member 列表，
+以及封闭的类型化 `serviceActions`。Anambar 新增武器大师、战士公会、玛门神庙、弓箭手公会和
+王牌之塔；五名业主、九项服务、原版价格和会员关系均由 RFB `master:t_ana.txt` 锁定。零价武器、
+护甲和弓强化采用原版最低价格 1500，Owner 为 750；弹药按堆叠数量采用声明的 44/22 单价。
+content hash 为 `6a383c424681994144ba97a0c46710dc58f031b1dfb74b916a8a0335ef43040d`。

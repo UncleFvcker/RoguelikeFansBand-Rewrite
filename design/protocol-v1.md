@@ -793,3 +793,9 @@ schema 保持 v2。
 `IdentifyAllAtFacility` 命令，并在 `TaskServiceDto` 投影研究费用、全部鉴定费用和城镇纵览
 消息键。研究复用完整鉴定事务，全部鉴定复用随身物品鉴定事务；城镇纵览仅显示投影文本，不提交
 核心命令。没有新增持久状态，State Hash Schema 保持 v104，save header/payload schema 保持 v2。
+
+协议 1.223 / P105 增加类型化 `UseFacilityService` 命令，并在 `TaskServiceDto` 投影当前
+`visitor/member/owner` 身份以及服务价格和可强化物品目标。Anambar 的治疗、属性与生命力恢复、
+随机治愈变异、四类装备强化、护甲评估和召回都复用既有核心事务；设施动作不消耗回合，失败不
+扣费。城镇楼层现在与初始地表一样允许启动已有召回目的地。没有新增持久状态，State Hash Schema
+保持 v104，save header/payload schema 保持 v2。

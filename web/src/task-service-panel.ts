@@ -7,6 +7,8 @@ import type {
   GameEventDto,
   GameSnapshot,
   GameUpdate,
+  FacilityMembershipDto,
+  FacilityServiceKindDto,
   ItemIdentificationDto,
   TaskServiceDto,
   TaskStatusDto,
@@ -150,6 +152,21 @@ export class TaskServicePanel {
       } else if (action === "overview") {
         this.#overviewVisible = true;
         this.#renderPanel();
+      } else if (action === "service") {
+        const facilityService = facilityButton.dataset.facilityService as
+          | FacilityServiceKindDto
+          | undefined;
+        if (facilityService) {
+          const select = this.#dom.list.querySelector<HTMLSelectElement>(
+            `select[data-facility-service="${facilityService}"]`,
+          );
+          void this.#dispatch({
+            type: "use-facility-service",
+            facilityId: service.id,
+            service: facilityService,
+            itemId: select?.value || undefined,
+          });
+        }
       } else if (action === "rename") {
         const input = this.#dom.list.querySelector<HTMLInputElement>("[data-player-name]");
         if (input) {
@@ -180,6 +197,7 @@ export class TaskServicePanel {
     this.#dom.description.textContent = this.#localization.format(service.descriptionKey);
     this.#dom.owner.textContent = this.#localization.format("task-service-owner", {
       owner: this.#localization.format(service.ownerNameKey),
+      membership: this.#localization.format(facilityMembershipKey(service.membership)),
     });
     this.#renderTasks();
     this.#dom.feedback.textContent = this.#feedback
@@ -270,6 +288,43 @@ export class TaskServicePanel {
       button.dataset.facilityAction = "overview";
       button.disabled = this.#state.busy;
       button.textContent = this.#localization.format("action-facility-overview");
+      row.append(button);
+      this.#dom.list.append(row);
+    }
+    const carriedItems = new Map(
+      [...this.#state.inventory, ...this.#state.equipment].map((item) => [item.id, item]),
+    );
+    for (const facilityService of service.serviceActions ?? []) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      if (facilityServiceUsesItem(facilityService.kind)) {
+        const select = document.createElement("select");
+        select.dataset.facilityService = facilityService.kind;
+        for (const target of facilityService.targets ?? []) {
+          const item = carriedItems.get(target.itemId);
+          if (!item) continue;
+          const option = document.createElement("option");
+          option.value = target.itemId;
+          option.textContent = this.#localization.format("facility-service-target-price", {
+            target: this.#visibleItemName(item.displayNameKey, item.kindId),
+            cost: target.cost,
+          });
+          select.append(option);
+        }
+        row.append(select);
+      }
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-button task-service-action";
+      button.dataset.facilityAction = "service";
+      button.dataset.facilityService = facilityService.kind;
+      button.disabled = this.#state.busy
+        || facilityServiceUsesItem(facilityService.kind)
+          && (facilityService.targets?.length ?? 0) === 0;
+      button.textContent = this.#localization.format(
+        facilityServiceActionKey(facilityService.kind),
+        facilityServiceUsesItem(facilityService.kind) ? undefined : { cost: facilityService.cost },
+      );
       row.append(button);
       this.#dom.list.append(row);
     }
@@ -364,6 +419,13 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "facility.identified" ||
       event?.kind === "facility.identify-all-unavailable" ||
       event?.kind === "facility.identified-all" ||
+      event?.kind === "facility.service-unavailable" ||
+      event?.kind === "facility.healed" ||
+      event?.kind === "facility.vitality-restored" ||
+      event?.kind === "facility.mutation-cured" ||
+      event?.kind === "facility.item-enchanted" ||
+      event?.kind === "facility.armor-assessed" ||
+      event?.kind === "facility.recall-started" ||
       event?.kind === "facility.rename-unavailable" ||
       event?.kind === "facility.renamed"
     ) {
@@ -371,6 +433,18 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
     }
   }
   return undefined;
+}
+
+export function facilityMembershipKey(membership: FacilityMembershipDto) {
+  return `facility-membership-${membership}` as const;
+}
+
+export function facilityServiceUsesItem(service: FacilityServiceKindDto): boolean {
+  return service.startsWith("enchant-");
+}
+
+export function facilityServiceActionKey(service: FacilityServiceKindDto) {
+  return `action-facility-${service}` as const;
 }
 
 export function facilityIdentificationCandidate(

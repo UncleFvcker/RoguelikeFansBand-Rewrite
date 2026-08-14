@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::game::tests::support::{dispatch_next, test_caster_game};
+use rfb_protocol::{FacilityMembershipDto, FacilityServiceKindDto};
 
 const GENERAL_STORE_ID: &str = "demo.shop.outpost-general-store";
 const ARMOURY_ID: &str = "demo.shop.outpost-armoury";
@@ -17,6 +18,11 @@ const HOME_ID: &str = "demo.town-facility.outpost-home";
 const ANAMBAR_HOME_ID: &str = "demo.town-facility.anambar-home";
 const ANAMBAR_INN_ID: &str = "demo.shop.anambar-inn";
 const ANAMBAR_LIBRARY_ID: &str = "demo.town-facility.anambar-library";
+const ANAMBAR_WEAPON_MASTER_ID: &str = "demo.town-facility.anambar-weapon-master";
+const ANAMBAR_WARRIOR_GUILD_ID: &str = "demo.town-facility.anambar-warrior-guild";
+const ANAMBAR_MAMMON_TEMPLE_ID: &str = "demo.town-facility.anambar-mammon-temple";
+const ANAMBAR_ARCHER_GUILD_ID: &str = "demo.town-facility.anambar-archer-guild";
+const ANAMBAR_TRUMP_TOWER_ID: &str = "demo.town-facility.anambar-trump-tower";
 const OUTPOST_COUNT_ID: &str = "demo.town-facility.outpost-count";
 
 fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
@@ -70,6 +76,39 @@ fn anambar_library_game(seed: u64) -> Game {
             .task_services
             .iter()
             .any(|service| service.id == ANAMBAR_LIBRARY_ID && service.player_at_entrance)
+    );
+    game
+}
+
+fn anambar_facility_game(
+    seed: u64,
+    build_id: &str,
+    race_id: Option<&str>,
+    facility_id: &str,
+    position: Position,
+) -> Game {
+    let mut game = match race_id {
+        Some(race_id) => {
+            Game::new_with_build_race_and_name(seed, build_id, race_id, Game::DEFAULT_PLAYER_NAME)
+        }
+        None => Game::new_with_build(seed, build_id),
+    }
+    .expect("Middle-earth game should start");
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 26, y: 39 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    game.player.position = position;
+    assert!(
+        game.snapshot()
+            .task_services
+            .iter()
+            .any(|service| service.id == facility_id && service.player_at_entrance)
     );
     game
 }
@@ -650,6 +689,280 @@ fn p104c_anambar_library_identifies_researches_and_identifies_all_without_time_o
     assert_eq!(all.gold, 350);
     assert_eq!(rejected.events[0].kind, "facility.identify-all-unavailable");
     assert_eq!(rejected.events[0].args["reason"], "nothing-to-identify");
+}
+
+#[test]
+fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_and_recall() {
+    let mut warrior = anambar_facility_game(
+        105,
+        "demo.build.warrior",
+        None,
+        ANAMBAR_WARRIOR_GUILD_ID,
+        Position { x: 35, y: 7 },
+    );
+    let guild = warrior
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_WARRIOR_GUILD_ID)
+        .expect("warrior guild should be projected");
+    assert_eq!(guild.membership, FacilityMembershipDto::Owner);
+    let weapon_service = guild
+        .service_actions
+        .iter()
+        .find(|service| service.kind == FacilityServiceKindDto::EnchantWeapon)
+        .expect("warrior guild should enchant weapons");
+    assert_eq!(weapon_service.cost, 750);
+    let weapon_id = weapon_service
+        .targets
+        .first()
+        .expect("warrior should carry an enchantable weapon")
+        .item_id
+        .clone();
+    warrior.gold = 750;
+    let tick = warrior.world_tick;
+    let draws = warrior.rng_draw_counter();
+    let enchanted = dispatch_next(
+        &mut warrior,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_WARRIOR_GUILD_ID.to_owned(),
+            service: FacilityServiceKindDto::EnchantWeapon,
+            item_id: Some(weapon_id),
+        },
+    );
+    assert_eq!(warrior.gold, 0);
+    assert_eq!(warrior.world_tick, tick);
+    assert!(warrior.rng_draw_counter() > draws);
+    assert!(
+        enchanted
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.item-enchanted")
+    );
+
+    let archer = anambar_facility_game(
+        106,
+        "demo.build.archer",
+        None,
+        ANAMBAR_ARCHER_GUILD_ID,
+        Position { x: 47, y: 7 },
+    );
+    let archer_guild = archer
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_ARCHER_GUILD_ID)
+        .expect("archer guild should be projected");
+    assert_eq!(archer_guild.membership, FacilityMembershipDto::Owner);
+    let ammunition = archer_guild
+        .service_actions
+        .iter()
+        .find(|service| service.kind == FacilityServiceKindDto::EnchantAmmunition)
+        .and_then(|service| service.targets.first())
+        .expect("archer should carry enchantable ammunition");
+    let quantity = archer
+        .items
+        .iter()
+        .find(|item| item.id == ammunition.item_id)
+        .expect("projected ammunition should exist")
+        .quantity;
+    assert_eq!(ammunition.cost, 22 * quantity);
+
+    let mut healing = anambar_facility_game(
+        107,
+        "demo.build.paladin-death",
+        None,
+        ANAMBAR_MAMMON_TEMPLE_ID,
+        Position { x: 39, y: 7 },
+    );
+    let temple = healing
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_MAMMON_TEMPLE_ID)
+        .expect("Mammon temple should be projected");
+    assert_eq!(temple.membership, FacilityMembershipDto::Member);
+    assert_eq!(
+        temple
+            .service_actions
+            .iter()
+            .find(|service| service.kind == FacilityServiceKindDto::Heal)
+            .map(|service| service.cost),
+        Some(500)
+    );
+    healing.player.hp = 1;
+    healing
+        .player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_POISON, 20, "test.p105").status);
+    healing.gold = 500;
+    let tick = healing.world_tick;
+    let draws = healing.rng_draw_counter();
+    let healed = dispatch_next(
+        &mut healing,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_MAMMON_TEMPLE_ID.to_owned(),
+            service: FacilityServiceKindDto::Heal,
+            item_id: None,
+        },
+    );
+    assert_eq!(
+        healing.player.hp,
+        201.min(healing.effective_player_max_hp())
+    );
+    assert!(!healing.player_has_status_kind(STATUS_POISON));
+    assert_eq!(healing.gold, 0);
+    assert_eq!(healing.world_tick, tick);
+    assert_eq!(healing.rng_draw_counter(), draws);
+    assert!(
+        healed
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.healed")
+    );
+
+    let mut restored = anambar_facility_game(
+        108,
+        "demo.build.warrior",
+        None,
+        ANAMBAR_MAMMON_TEMPLE_ID,
+        Position { x: 39, y: 7 },
+    );
+    restored.progress.attributes.strength = restored
+        .progress
+        .maximum_attributes
+        .strength
+        .saturating_sub(1);
+    restored.progress.maximum_experience = restored.progress.experience.saturating_add(10);
+    restored.progress.life_force = 900;
+    restored.gold = 2_500;
+    let update = dispatch_next(
+        &mut restored,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_MAMMON_TEMPLE_ID.to_owned(),
+            service: FacilityServiceKindDto::RestoreVitality,
+            item_id: None,
+        },
+    );
+    assert_eq!(
+        restored.progress.attributes,
+        restored.progress.maximum_attributes
+    );
+    assert_eq!(
+        restored.progress.experience,
+        restored.progress.maximum_experience
+    );
+    assert_eq!(restored.progress.life_force, 1_000);
+    assert_eq!(restored.gold, 0);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.vitality-restored")
+    );
+
+    let mut mutated = anambar_facility_game(
+        109,
+        "demo.build.warrior",
+        None,
+        ANAMBAR_MAMMON_TEMPLE_ID,
+        Position { x: 39, y: 7 },
+    );
+    mutated.progress.active_mutation_ids.clear();
+    mutated.progress.locked_mutation_ids.clear();
+    mutated
+        .progress
+        .active_mutation_ids
+        .insert("rfb.mutation.alcohol".to_owned());
+    mutated.gold = 100_000;
+    let update = dispatch_next(
+        &mut mutated,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_MAMMON_TEMPLE_ID.to_owned(),
+            service: FacilityServiceKindDto::CureMutation,
+            item_id: None,
+        },
+    );
+    assert!(mutated.progress.active_mutation_ids.is_empty());
+    assert_eq!(mutated.gold, 0);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.mutation-cured")
+    );
+
+    let mut assessed = anambar_facility_game(
+        110,
+        "demo.build.warrior",
+        None,
+        ANAMBAR_WEAPON_MASTER_ID,
+        Position { x: 31, y: 7 },
+    );
+    assessed.gold = 400;
+    let update = dispatch_next(
+        &mut assessed,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_WEAPON_MASTER_ID.to_owned(),
+            service: FacilityServiceKindDto::AssessArmor,
+            item_id: None,
+        },
+    );
+    assert_eq!(assessed.gold, 0);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.armor-assessed")
+    );
+
+    let mut recall = anambar_facility_game(
+        111,
+        "demo.build.warrior",
+        None,
+        ANAMBAR_TRUMP_TOWER_ID,
+        Position { x: 35, y: 15 },
+    );
+    let mut amberite_form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 20, "test.p105").status;
+    amberite_form.granted_race_id = Some("rfb-legacy.race.amberite".to_owned());
+    recall.player.statuses.push(amberite_form);
+    let tower = recall
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_TRUMP_TOWER_ID)
+        .expect("Trump tower should be projected");
+    assert_eq!(tower.membership, FacilityMembershipDto::Member);
+    assert_eq!(tower.service_actions[0].cost, 150);
+    recall.recall = Some(RecallStateDto {
+        dungeon_id: "demo.dungeon.warrens".to_owned(),
+        floor_id: "demo.floor.warrens-depth-1".to_owned(),
+        remaining_turns: None,
+    });
+    recall.gold = 150;
+    let update = dispatch_next(
+        &mut recall,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_TRUMP_TOWER_ID.to_owned(),
+            service: FacilityServiceKindDto::Recall,
+            item_id: None,
+        },
+    );
+    assert_eq!(recall.gold, 0, "{:?}", update.events);
+    assert_eq!(
+        recall
+            .recall
+            .as_ref()
+            .and_then(|recall| recall.remaining_turns),
+        Some(2)
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.recall-started")
+    );
 }
 
 #[test]

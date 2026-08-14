@@ -422,6 +422,11 @@ struct DemoWildernessTownPlan {
     standard_facilities: Vec<DemoTownFacilityPlan>,
     inn: DemoTownBuildingPlan,
     library: DemoTownBuildingPlan,
+    weapon_master: DemoTownBuildingPlan,
+    warrior_guild: DemoTownBuildingPlan,
+    mammon_temple: DemoTownBuildingPlan,
+    archer_guild: DemoTownBuildingPlan,
+    trump_tower: DemoTownBuildingPlan,
 }
 
 #[derive(Debug, Deserialize)]
@@ -440,7 +445,17 @@ struct DemoTownBuildingPlan {
     owner_race: String,
     #[serde(default)]
     access: Option<String>,
+    #[serde(default)]
+    memberships: Vec<DemoTownBuildingMembershipPlan>,
     services: Vec<DemoTownBuildingServicePlan>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTownBuildingMembershipPlan {
+    source_tag: char,
+    identity: String,
+    role: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -13011,7 +13026,15 @@ fn validate_demo_wilderness_plans(
             }
         }
 
-        for building in [&town.inn, &town.library] {
+        for building in [
+            &town.inn,
+            &town.library,
+            &town.weapon_master,
+            &town.warrior_guild,
+            &town.mammon_temple,
+            &town.archer_guild,
+            &town.trump_tower,
+        ] {
             let building_name = format!(
                 "B:{}:N:{}:{}:{}",
                 building.building_index, building.name, building.owner_name, building.owner_race
@@ -13052,6 +13075,51 @@ fn validate_demo_wilderness_plans(
                         town.id, building.building_index
                     )));
                 }
+            }
+            let mut memberships = BTreeSet::new();
+            let mut membership_lines = BTreeSet::new();
+            for membership in &building.memberships {
+                if !matches!(membership.source_tag, 'C' | 'R' | 'M')
+                    || !memberships.insert((membership.source_tag, membership.identity.as_str()))
+                {
+                    return Err(invalid_wilderness_selection(format!(
+                        "town plan {} building {} membership is invalid or duplicated",
+                        town.id, building.building_index
+                    )));
+                }
+                let membership_line = format!(
+                    "B:{}:{}:{}:{}",
+                    building.building_index,
+                    membership.source_tag,
+                    membership.identity,
+                    membership.role
+                );
+                membership_lines.insert(membership_line.clone());
+                if !town_source
+                    .lines()
+                    .any(|line| line.trim() == membership_line)
+                {
+                    return Err(invalid_wilderness_selection(format!(
+                        "town plan {} building {} membership drifted",
+                        town.id, building.building_index
+                    )));
+                }
+            }
+            let source_membership_lines = town_source
+                .lines()
+                .map(str::trim)
+                .filter(|line| {
+                    ['C', 'R', 'M'].into_iter().any(|source_tag| {
+                        line.starts_with(&format!("B:{}:{}:", building.building_index, source_tag))
+                    })
+                })
+                .map(str::to_owned)
+                .collect::<BTreeSet<_>>();
+            if !building.memberships.is_empty() && membership_lines != source_membership_lines {
+                return Err(invalid_wilderness_selection(format!(
+                    "town plan {} building {} membership set drifted",
+                    town.id, building.building_index
+                )));
             }
         }
     }
@@ -13198,14 +13266,14 @@ pub fn sync_demo_wilderness(
         ));
     }
     let selection: DemoWildernessSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
-    if selection.schema_version != 5
+    if selection.schema_version != 6
         || selection.towns.is_empty()
         || selection.dungeons.is_empty()
         || selection.town_plans.is_empty()
         || selection.dungeon_plans.is_empty()
     {
         return Err(LegacyImportError::InvalidDemoWildernessSelection(
-            "selection must use schemaVersion 5 and contain active towns, town plans, active dungeons, and dungeon plans"
+            "selection must use schemaVersion 6 and contain active towns, town plans, active dungeons, and dungeon plans"
                 .to_owned(),
         ));
     }
@@ -24322,7 +24390,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 5);
+        assert_eq!(selection.schema_version, 6);
         let anambar = selection
             .town_plans
             .iter()
@@ -24362,6 +24430,90 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
                 (3, "鉴定所有物品", 350, 350, 'p', 26, 0),
             ]
         );
+    }
+
+    #[test]
+    fn p105a_anambar_plan_locks_recovery_enchantment_and_recall_buildings() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 6);
+        let anambar = selection
+            .town_plans
+            .iter()
+            .find(|plan| plan.id == "demo.town.anambar")
+            .expect("Anambar should have an implementation plan");
+        assert_eq!(
+            [
+                &anambar.weapon_master,
+                &anambar.warrior_guild,
+                &anambar.mammon_temple,
+                &anambar.archer_guild,
+                &anambar.trump_tower,
+            ]
+            .map(|building| (
+                building.building_index,
+                building.name.as_str(),
+                building.owner_name.as_str(),
+                building.owner_race.as_str(),
+            )),
+            [
+                (6, "武器大师", "锤趾汤姆泰克", "精灵"),
+                (7, "战士公会", "扼龙者罗伯塔", "仿生人"),
+                (9, "玛门神庙", "灰衣托利亚", "仿生人"),
+                (11, "弓箭手公会", "奈尔多利恩", "高等精灵"),
+                (14, "王牌之塔", "伊万·叶克尼亚兹", "人类"),
+            ]
+        );
+        assert_eq!(
+            anambar
+                .mammon_temple
+                .services
+                .iter()
+                .map(|service| (
+                    service.name.as_str(),
+                    service.minimum_cost,
+                    service.maximum_cost,
+                    service.action_id,
+                ))
+                .collect::<Vec<_>>(),
+            [
+                ("付钱治疗", 0, 500, 28),
+                ("属性恢复", 500, 2_500, 29),
+                ("治疗突变", 10_000, 100_000, 35),
+            ]
+        );
+        assert_eq!(
+            anambar
+                .archer_guild
+                .services
+                .iter()
+                .map(|service| (
+                    service.name.as_str(),
+                    service.minimum_cost,
+                    service.maximum_cost,
+                    service.action_id,
+                ))
+                .collect::<Vec<_>>(),
+            [("强化弹药", 22, 44, 30), ("强化弓", 0, 0, 31)]
+        );
+        assert!(anambar.warrior_guild.memberships.iter().any(|membership| {
+            membership.source_tag == 'C'
+                && membership.identity == "Warrior"
+                && membership.role == "Owner"
+        }));
+        assert!(anambar.mammon_temple.memberships.iter().any(|membership| {
+            membership.source_tag == 'C'
+                && membership.identity == "Paladin"
+                && membership.role == "Member"
+        }));
+        assert!(anambar.trump_tower.memberships.iter().any(|membership| {
+            membership.source_tag == 'M'
+                && membership.identity == "Trump"
+                && membership.role == "Owner"
+        }));
+        assert_eq!(anambar.trump_tower.services[0].action_id, 33);
     }
 
     #[test]

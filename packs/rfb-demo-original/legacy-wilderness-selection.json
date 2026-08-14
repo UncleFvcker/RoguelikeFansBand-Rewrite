@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "worldId": "demo.world.middle-earth",
   "towns": [
     {
@@ -128,6 +128,81 @@
           { "actionIndex": 1, "name": "城镇纵览", "minimumCost": 0, "maximumCost": 0, "command": "h", "actionId": 2, "restriction": 0 },
           { "actionIndex": 2, "name": "鉴定单件物品", "minimumCost": 50, "maximumCost": 50, "command": "i", "actionId": 44, "restriction": 0 },
           { "actionIndex": 3, "name": "鉴定所有物品", "minimumCost": 350, "maximumCost": 350, "command": "p", "actionId": 26, "restriction": 0 }
+        ]
+      },
+      "weaponMaster": {
+        "buildingIndex": 6,
+        "name": "武器大师",
+        "ownerName": "锤趾汤姆泰克",
+        "ownerRace": "精灵",
+        "services": [
+          { "actionIndex": 0, "name": "评估护甲等级(AC)", "minimumCost": 400, "maximumCost": 400, "command": "a", "actionId": 46, "restriction": 0 }
+        ]
+      },
+      "warriorGuild": {
+        "buildingIndex": 7,
+        "name": "战士公会",
+        "ownerName": "扼龙者罗伯塔",
+        "ownerRace": "仿生人",
+        "memberships": [
+          { "sourceTag": "C", "identity": "*", "role": "None" },
+          { "sourceTag": "C", "identity": "Warrior", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Samurai", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Cavalry", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Berserker", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Blood-Knight", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Mauler", "role": "Owner" }
+        ],
+        "services": [
+          { "actionIndex": 0, "name": "强化武器", "minimumCost": 0, "maximumCost": 0, "command": "w", "actionId": 23, "restriction": 0 },
+          { "actionIndex": 1, "name": "强化护甲", "minimumCost": 0, "maximumCost": 0, "command": "a", "actionId": 24, "restriction": 0 }
+        ]
+      },
+      "mammonTemple": {
+        "buildingIndex": 9,
+        "name": "玛门神庙",
+        "ownerName": "灰衣托利亚",
+        "ownerRace": "仿生人",
+        "memberships": [
+          { "sourceTag": "C", "identity": "*", "role": "None" },
+          { "sourceTag": "C", "identity": "Priest", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Paladin", "role": "Member" }
+        ],
+        "services": [
+          { "actionIndex": 0, "name": "付钱治疗", "minimumCost": 0, "maximumCost": 500, "command": "h", "actionId": 28, "restriction": 0 },
+          { "actionIndex": 1, "name": "属性恢复", "minimumCost": 500, "maximumCost": 2500, "command": "r", "actionId": 29, "restriction": 0 },
+          { "actionIndex": 2, "name": "治疗突变", "minimumCost": 10000, "maximumCost": 100000, "command": "m", "actionId": 35, "restriction": 0 }
+        ]
+      },
+      "archerGuild": {
+        "buildingIndex": 11,
+        "name": "弓箭手公会",
+        "ownerName": "奈尔多利恩",
+        "ownerRace": "高等精灵",
+        "memberships": [
+          { "sourceTag": "C", "identity": "*", "role": "None" },
+          { "sourceTag": "C", "identity": "Ranger", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Archer", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Sniper", "role": "Owner" }
+        ],
+        "services": [
+          { "actionIndex": 0, "name": "强化弹药", "minimumCost": 22, "maximumCost": 44, "command": "a", "actionId": 30, "restriction": 0 },
+          { "actionIndex": 1, "name": "强化弓", "minimumCost": 0, "maximumCost": 0, "command": "b", "actionId": 31, "restriction": 0 }
+        ]
+      },
+      "trumpTower": {
+        "buildingIndex": 14,
+        "name": "王牌之塔",
+        "ownerName": "伊万·叶克尼亚兹",
+        "ownerRace": "人类",
+        "memberships": [
+          { "sourceTag": "R", "identity": "*", "role": "None" },
+          { "sourceTag": "R", "identity": "Amberite", "role": "Member" },
+          { "sourceTag": "M", "identity": "*", "role": "None" },
+          { "sourceTag": "M", "identity": "Trump", "role": "Owner" }
+        ],
+        "services": [
+          { "actionIndex": 0, "name": "传送回地下城", "minimumCost": 0, "maximumCost": 150, "command": "r", "actionId": 33, "restriction": 0 }
         ]
       }
     }

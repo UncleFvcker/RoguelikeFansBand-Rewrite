@@ -7,8 +7,8 @@ use rfb_protocol::{
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
     AbilityMonsterProbeResolutionDto, AbilityProbeAlignmentDto, AbilityProbeTargetDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
-    AbilityVisibleDamageResolutionDto, CheckResolutionDto, Direction, GameEventDto,
-    GameEventOutcomeDto, HealingResolutionDto, ItemCurseRemovalResolutionDto,
+    AbilityVisibleDamageResolutionDto, CheckResolutionDto, Direction, FacilityServiceKindDto,
+    GameEventDto, GameEventOutcomeDto, HealingResolutionDto, ItemCurseRemovalResolutionDto,
     ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentResolutionDto,
     ItemIdentifyResolutionDto, ItemQualityDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterDisplacementResolutionDto, Position,
@@ -19,10 +19,24 @@ use rfb_protocol::{
 use crate::{
     effect::DamageOutcome,
     game::town::{
-        FacilityIdentifyAllOutcome, FacilityIdentifyOutcome, FacilityRenameOutcome, InnStayOutcome,
-        InnTravelOutcome, ShopTransactionOutcome,
+        FacilityIdentifyAllOutcome, FacilityIdentifyOutcome, FacilityRenameOutcome,
+        FacilityServiceOutcome, InnStayOutcome, InnTravelOutcome, ShopTransactionOutcome,
     },
 };
+
+const fn facility_service_key(service: FacilityServiceKindDto) -> &'static str {
+    match service {
+        FacilityServiceKindDto::Heal => "heal",
+        FacilityServiceKindDto::RestoreVitality => "restore-vitality",
+        FacilityServiceKindDto::CureMutation => "cure-mutation",
+        FacilityServiceKindDto::EnchantWeapon => "enchant-weapon",
+        FacilityServiceKindDto::EnchantArmor => "enchant-armor",
+        FacilityServiceKindDto::EnchantAmmunition => "enchant-ammunition",
+        FacilityServiceKindDto::EnchantBow => "enchant-bow",
+        FacilityServiceKindDto::AssessArmor => "assess-armor",
+        FacilityServiceKindDto::Recall => "recall",
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ItemAttributeChange {
@@ -645,6 +659,14 @@ pub(crate) enum DomainEvent {
     },
     FacilityItemsIdentified {
         outcome: FacilityIdentifyAllOutcome,
+    },
+    FacilityServiceUnavailable {
+        facility_id: String,
+        service: FacilityServiceKindDto,
+        reason: String,
+    },
+    FacilityServiceCompleted {
+        outcome: FacilityServiceOutcome,
     },
     FacilityRenameUnavailable {
         facility_id: String,
@@ -2980,6 +3002,123 @@ impl DomainEvent {
                     ("balance", outcome.gold_balance.to_string()),
                 ],
             ),
+            Self::FacilityServiceUnavailable {
+                facility_id,
+                service,
+                reason,
+            } => dto(
+                "facility.service-unavailable",
+                "facility-service-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("service", facility_service_key(service).to_owned()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::FacilityServiceCompleted { outcome } => match outcome {
+                FacilityServiceOutcome::Healed {
+                    facility_id,
+                    healed,
+                    mount_healed,
+                    statuses_removed,
+                    cost,
+                    gold_balance,
+                } => dto(
+                    "facility.healed",
+                    "facility-healing-completed",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("healed", healed.to_string()),
+                        ("mountHealed", mount_healed.to_string()),
+                        ("statusesRemoved", statuses_removed.to_string()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                ),
+                FacilityServiceOutcome::VitalityRestored {
+                    facility_id,
+                    cost,
+                    gold_balance,
+                } => dto(
+                    "facility.vitality-restored",
+                    "facility-vitality-restored",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                ),
+                FacilityServiceOutcome::MutationCured {
+                    facility_id,
+                    mutation_id,
+                    cost,
+                    gold_balance,
+                } => dto(
+                    "facility.mutation-cured",
+                    "facility-mutation-cured",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("mutation", mutation_id.clone()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                ),
+                FacilityServiceOutcome::ItemEnchanted {
+                    facility_id,
+                    cost,
+                    gold_balance,
+                    resolution,
+                } => dto_with_outcome(
+                    "facility.item-enchanted",
+                    "facility-item-enchanted",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("target", resolution.item_kind_id.clone()),
+                        ("toHit", resolution.to_hit.after.to_string()),
+                        ("toDamage", resolution.to_damage.after.to_string()),
+                        ("toArmor", resolution.to_armor.after.to_string()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                    GameEventOutcomeDto::ItemEnchantment {
+                        resolution: resolution.clone(),
+                    },
+                ),
+                FacilityServiceOutcome::ArmorAssessed {
+                    facility_id,
+                    armor_class,
+                    protection_percent,
+                    cost,
+                    gold_balance,
+                } => dto(
+                    "facility.armor-assessed",
+                    "facility-armor-assessed",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("armorClass", armor_class.to_string()),
+                        ("protection", protection_percent.to_string()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                ),
+                FacilityServiceOutcome::RecallStarted {
+                    facility_id,
+                    dungeon_id,
+                    floor_id,
+                    cost,
+                    gold_balance,
+                } => dto(
+                    "facility.recall-started",
+                    "facility-recall-started",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("dungeon", dungeon_id.clone()),
+                        ("floor", floor_id.clone()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                ),
+            },
             Self::FacilityRenameUnavailable {
                 facility_id,
                 reason,

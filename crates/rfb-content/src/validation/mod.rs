@@ -425,6 +425,7 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         TownValidationRefs {
             items: &content.items,
             races: &content.races,
+            classes: &content.classes,
         },
         &mut all_ids,
     )?;

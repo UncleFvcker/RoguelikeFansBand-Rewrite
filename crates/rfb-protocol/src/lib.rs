@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.222";
+pub const PROTOCOL_VERSION: &str = "1.223";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
 
@@ -249,6 +249,12 @@ pub enum GameCommand {
     },
     IdentifyAllAtFacility {
         facility_id: String,
+    },
+    UseFacilityService {
+        facility_id: String,
+        service: FacilityServiceKindDto,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        item_id: Option<String>,
     },
     RenameAtFacility {
         facility_id: String,
@@ -3922,7 +3928,54 @@ pub struct TaskServiceDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub legal_name_change_cost: Option<u32>,
     #[serde(default)]
+    pub membership: FacilityMembershipDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub service_actions: Vec<FacilityServiceDto>,
+    #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum FacilityMembershipDto {
+    #[default]
+    Visitor,
+    Member,
+    Owner,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum FacilityServiceKindDto {
+    Heal,
+    RestoreVitality,
+    CureMutation,
+    EnchantWeapon,
+    EnchantArmor,
+    EnchantAmmunition,
+    EnchantBow,
+    AssessArmor,
+    Recall,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct FacilityServiceTargetDto {
+    pub item_id: String,
+    pub cost: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct FacilityServiceDto {
+    pub kind: FacilityServiceKindDto,
+    pub cost: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub targets: Vec<FacilityServiceTargetDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4228,6 +4281,10 @@ pub fn generated_typescript() -> String {
     push_declaration!(ShopDto);
     push_declaration!(HomeItemDto);
     push_declaration!(HomeDto);
+    push_declaration!(FacilityMembershipDto);
+    push_declaration!(FacilityServiceKindDto);
+    push_declaration!(FacilityServiceTargetDto);
+    push_declaration!(FacilityServiceDto);
     push_declaration!(TaskServiceDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
@@ -5122,6 +5179,11 @@ mod tests {
             },
             GameCommand::IdentifyAllAtFacility {
                 facility_id: "demo.town-facility.anambar-library".to_owned(),
+            },
+            GameCommand::UseFacilityService {
+                facility_id: "demo.town-facility.anambar-mammon-temple".to_owned(),
+                service: FacilityServiceKindDto::Heal,
+                item_id: None,
             },
             GameCommand::RenameAtFacility {
                 facility_id: "demo.town-facility.outpost-count".to_owned(),

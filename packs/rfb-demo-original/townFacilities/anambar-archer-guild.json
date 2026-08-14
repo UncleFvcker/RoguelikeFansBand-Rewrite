@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.anambar-archer-guild",
+  "nameKey": "town-facility-demo-anambar-archer-guild-name",
+  "descriptionKey": "town-facility-demo-anambar-archer-guild-description",
+  "townId": "demo.town.anambar",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-anambar-archer-guild-owner-name",
+  "ownerClassIds": ["demo.class.archer", "demo.class.sniper"],
+  "serviceActions": [
+    { "kind": "enchant-ammunition", "ownerCost": 22, "otherCost": 44 },
+    { "kind": "enchant-bow", "ownerCost": 0, "otherCost": 0 }
+  ],
+  "entrancePosition": { "x": 20, "y": 1 },
+  "entranceTerrainId": "demo.terrain.archer-guild-entrance"
+}

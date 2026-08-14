@@ -3257,7 +3257,7 @@ impl Game {
         restored
     }
 
-    fn restore_player_experience_and_life_force(
+    pub(super) fn restore_player_experience_and_life_force(
         &mut self,
         life_force_amount: u16,
         events: &mut Vec<DomainEvent>,

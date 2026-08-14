@@ -50,8 +50,46 @@ pub struct TownFacilityDefinition {
     pub overview_message_key: Option<String>,
     #[serde(default)]
     pub legal_name_change_cost: Option<u32>,
+    #[serde(default)]
+    pub owner_class_ids: Vec<String>,
+    #[serde(default)]
+    pub member_class_ids: Vec<String>,
+    #[serde(default)]
+    pub owner_race_ids: Vec<String>,
+    #[serde(default)]
+    pub member_race_ids: Vec<String>,
+    #[serde(default)]
+    pub owner_realm_ids: Vec<String>,
+    #[serde(default)]
+    pub member_realm_ids: Vec<String>,
+    #[serde(default)]
+    pub service_actions: Vec<TownFacilityServiceDefinition>,
     pub entrance_position: ContentPosition,
     pub entrance_terrain_id: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownFacilityServiceDefinition {
+    pub kind: TownFacilityServiceKind,
+    pub owner_cost: u32,
+    pub other_cost: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum TownFacilityServiceKind {
+    Heal,
+    RestoreVitality,
+    CureMutation,
+    EnchantWeapon,
+    EnchantArmor,
+    EnchantAmmunition,
+    EnchantBow,
+    AssessArmor,
+    Recall,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

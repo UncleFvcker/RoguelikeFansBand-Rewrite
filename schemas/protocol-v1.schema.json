@@ -7353,6 +7353,68 @@
         "sustain-charisma"
       ]
     },
+    "FacilityMembershipDto": {
+      "type": "string",
+      "enum": [
+        "visitor",
+        "member",
+        "owner"
+      ]
+    },
+    "FacilityServiceDto": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "kind": {
+          "$ref": "#/$defs/FacilityServiceKindDto"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FacilityServiceTargetDto"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "cost"
+      ]
+    },
+    "FacilityServiceKindDto": {
+      "type": "string",
+      "enum": [
+        "heal",
+        "restore-vitality",
+        "cure-mutation",
+        "enchant-weapon",
+        "enchant-armor",
+        "enchant-ammunition",
+        "enchant-bow",
+        "assess-armor",
+        "recall"
+      ]
+    },
+    "FacilityServiceTargetDto": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "itemId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "itemId",
+        "cost"
+      ]
+    },
     "GameCommand": {
       "oneOf": [
         {
@@ -8147,6 +8209,32 @@
           "required": [
             "type",
             "facilityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "itemId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "service": {
+              "$ref": "#/$defs/FacilityServiceKindDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "use-facility-service"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "service"
           ]
         },
         {
@@ -12691,6 +12779,10 @@
           "format": "uint32",
           "minimum": 0
         },
+        "membership": {
+          "$ref": "#/$defs/FacilityMembershipDto",
+          "default": "visitor"
+        },
         "nameKey": {
           "type": "string"
         },
@@ -12713,6 +12805,12 @@
           ],
           "format": "uint32",
           "minimum": 0
+        },
+        "serviceActions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FacilityServiceDto"
+          }
         },
         "tasks": {
           "type": "array",

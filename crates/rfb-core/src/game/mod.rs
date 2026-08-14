@@ -1744,6 +1744,7 @@ impl Game {
                     | GameAction::IdentifyAtFacility { .. }
                     | GameAction::ResearchItemAtFacility { .. }
                     | GameAction::IdentifyAllAtFacility { .. }
+                    | GameAction::UseFacilityService { .. }
                     | GameAction::IncreaseAttribute { .. }
                     | GameAction::ChooseRaceMutation { .. }
                     | GameAction::LeaveWorldMap
@@ -1960,6 +1961,23 @@ impl Game {
                     }),
                 }
             }
+            GameAction::UseFacilityService {
+                facility_id,
+                service,
+                item_id,
+            } => match self.use_town_facility_service(
+                &facility_id,
+                service,
+                item_id.as_deref(),
+                &mut events,
+            ) {
+                Ok(outcome) => events.push(DomainEvent::FacilityServiceCompleted { outcome }),
+                Err(reason) => events.push(DomainEvent::FacilityServiceUnavailable {
+                    facility_id,
+                    service,
+                    reason: reason.to_owned(),
+                }),
+            },
             GameAction::RenameAtFacility { facility_id, name } => {
                 match self.rename_at_facility(&facility_id, &name) {
                     Ok(outcome) => events.push(DomainEvent::FacilityPlayerRenamed { outcome }),

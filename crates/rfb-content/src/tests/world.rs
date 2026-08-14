@@ -13554,3 +13554,106 @@ fn p104b_anambar_library_and_shroomery_are_fully_bound() {
         }));
     }
 }
+
+#[test]
+fn p105b_anambar_recovery_enchantment_and_recall_facilities_are_fully_bound() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let town = artifact
+        .content
+        .towns
+        .iter()
+        .find(|town| town.id == "demo.town.anambar")
+        .expect("Anambar should exist");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == town.floor_id)
+        .and_then(|floor| floor.inline_map.as_ref())
+        .expect("Anambar should use a fixed map");
+    let expected = [
+        (
+            "demo.town-facility.anambar-weapon-master",
+            ContentPosition { x: 4, y: 1 },
+            "demo.terrain.weapon-master-entrance",
+        ),
+        (
+            "demo.town-facility.anambar-warrior-guild",
+            ContentPosition { x: 8, y: 1 },
+            "demo.terrain.warrior-guild-entrance",
+        ),
+        (
+            "demo.town-facility.anambar-mammon-temple",
+            ContentPosition { x: 12, y: 1 },
+            "demo.terrain.mammon-temple-entrance",
+        ),
+        (
+            "demo.town-facility.anambar-archer-guild",
+            ContentPosition { x: 20, y: 1 },
+            "demo.terrain.archer-guild-entrance",
+        ),
+        (
+            "demo.town-facility.anambar-trump-tower",
+            ContentPosition { x: 8, y: 9 },
+            "demo.terrain.trump-tower-entrance",
+        ),
+    ];
+    for (facility_id, position, terrain_id) in expected {
+        assert!(town.facility_ids.contains(&facility_id.to_owned()));
+        let facility = artifact
+            .content
+            .town_facilities
+            .iter()
+            .find(|facility| facility.id == facility_id)
+            .expect("P105 facility should exist");
+        assert_eq!(facility.category, TownFacilityCategory::Service);
+        assert_eq!(facility.entrance_position, position);
+        assert_eq!(facility.entrance_terrain_id, terrain_id);
+        assert!(!facility.service_actions.is_empty());
+        assert!(floor.terrain_overrides.iter().any(|override_| {
+            override_.terrain_id == terrain_id && override_.positions == [position]
+        }));
+    }
+
+    let facility = |id: &str| {
+        artifact
+            .content
+            .town_facilities
+            .iter()
+            .find(|facility| facility.id == id)
+            .expect("P105 facility should exist")
+    };
+    assert_eq!(
+        facility("demo.town-facility.anambar-warrior-guild").owner_class_ids,
+        ["demo.class.cavalry", "demo.class.warrior"]
+    );
+    assert_eq!(
+        facility("demo.town-facility.anambar-mammon-temple").member_class_ids,
+        ["demo.class.paladin"]
+    );
+    assert_eq!(
+        facility("demo.town-facility.anambar-trump-tower").member_race_ids,
+        ["rfb-legacy.race.amberite"]
+    );
+    assert_eq!(
+        facility("demo.town-facility.anambar-trump-tower").owner_realm_ids,
+        ["trump"]
+    );
+    assert_eq!(
+        facility("demo.town-facility.anambar-mammon-temple")
+            .service_actions
+            .iter()
+            .map(|service| (service.kind, service.owner_cost, service.other_cost))
+            .collect::<Vec<_>>(),
+        [
+            (TownFacilityServiceKind::Heal, 0, 500),
+            (TownFacilityServiceKind::RestoreVitality, 500, 2_500),
+            (TownFacilityServiceKind::CureMutation, 10_000, 100_000),
+        ]
+    );
+}

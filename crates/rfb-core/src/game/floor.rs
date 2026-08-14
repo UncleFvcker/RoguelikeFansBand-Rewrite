@@ -503,7 +503,7 @@ impl Game {
             .content
             .world(&self.world_id)
             .expect("active world must remain available");
-        if self.current_floor_id == world.initial_floor_id {
+        if self.current_floor_id == world.initial_floor_id || self.current_town().is_some() {
             let dungeon = world
                 .dungeons
                 .iter()

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use rfb_protocol::{
-    AttributeKindDto, AutoGetModeDto, Direction, GameCommand, LocaleDto, SummonCommandModeDto,
-    TargetSelection,
+    AttributeKindDto, AutoGetModeDto, Direction, FacilityServiceKindDto, GameCommand, LocaleDto,
+    SummonCommandModeDto, TargetSelection,
 };
 
 use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
@@ -129,6 +129,11 @@ pub(crate) enum GameAction {
     IdentifyAllAtFacility {
         facility_id: String,
     },
+    UseFacilityService {
+        facility_id: String,
+        service: FacilityServiceKindDto,
+        item_id: Option<String>,
+    },
     RenameAtFacility {
         facility_id: String,
         name: String,
@@ -226,6 +231,7 @@ impl GameAction {
             | Self::IdentifyAtFacility { .. }
             | Self::ResearchItemAtFacility { .. }
             | Self::IdentifyAllAtFacility { .. }
+            | Self::UseFacilityService { .. }
             | Self::RenameAtFacility { .. }
             | Self::StayAtInn { .. }
             | Self::TravelFromInn { .. }
@@ -395,6 +401,15 @@ impl From<GameCommand> for GameAction {
             GameCommand::IdentifyAllAtFacility { facility_id } => {
                 Self::IdentifyAllAtFacility { facility_id }
             }
+            GameCommand::UseFacilityService {
+                facility_id,
+                service,
+                item_id,
+            } => Self::UseFacilityService {
+                facility_id,
+                service,
+                item_id,
+            },
             GameCommand::RenameAtFacility { facility_id, name } => {
                 Self::RenameAtFacility { facility_id, name }
             }

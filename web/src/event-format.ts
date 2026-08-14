@@ -791,6 +791,47 @@ export function createPresentationFormatter(
         return localization.format("facility-identify-all-unavailable", {
           reason: facilityServiceReason(event.args.reason),
         });
+      case "facility-healing-completed":
+        return localization.format("facility-healing-completed", {
+          healed: event.args.healed ?? "?",
+          mountHealed: event.args.mountHealed ?? "?",
+          statusesRemoved: event.args.statusesRemoved ?? "?",
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-vitality-restored":
+      case "facility-mutation-cured":
+        return localization.format(event.messageKey as MessageKey, {
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-item-enchanted":
+        return localization.format("facility-item-enchanted", {
+          target: visibleItemNameForKind(event.args.target),
+          toHit: event.args.toHit ?? "?",
+          toDamage: event.args.toDamage ?? "?",
+          toArmor: event.args.toArmor ?? "?",
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-armor-assessed":
+        return localization.format("facility-armor-assessed", {
+          armorClass: event.args.armorClass ?? "?",
+          protection: event.args.protection ?? "?",
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-recall-started":
+        return localization.format("facility-recall-started", {
+          dungeon: contentName(event.args.dungeon),
+          floor: event.args.floor ?? "?",
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-service-unavailable":
+        return localization.format("facility-service-unavailable", {
+          reason: facilityServiceReason(event.args.reason),
+        });
       case "facility-rename-completed":
         return localization.format("facility-rename-completed", {
           previousName: event.args.previousName ?? "?",
