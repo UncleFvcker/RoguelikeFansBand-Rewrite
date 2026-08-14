@@ -7957,3 +7957,6 @@ ability-demo-life-holy-vision-name = 神圣视界
 ability-demo-life-holy-vision-description = 全面鉴定一件物品。
 ability-demo-life-ultimate-resistance-name = 终极抵抗
 ability-demo-life-ultimate-resistance-description = 暂时获得全面抗性、防御能力和接触反击光环。
+floor-demo-chameleon-cave-depth-name = 变色龙洞穴
+terrain-demo-chameleon-cave-entrance-name = 变色龙洞穴入口
+terrain-demo-chameleon-cave-entrance-description = 通向变色龙巢穴的入口

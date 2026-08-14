@@ -811,6 +811,41 @@
         "level": 40
       },
       "finalObject": { "tval": 90, "sval": 2 }
+    },
+    {
+      "sourceIndex": 18,
+      "sourceName": "Chameleon cave",
+      "id": "demo.dungeon.chameleon-cave",
+      "position": { "x": 94, "y": 52 },
+      "minimumDepth": 30,
+      "maximumDepth": 45,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "CAVERN",
+        "WATER_RIVER",
+        "LAVA_RIVER",
+        "ARENA",
+        "DESTROY",
+        "LAKE_WATER",
+        "LAKE_LAVA",
+        "LAKE_RUBBLE",
+        "LAKE_TREE",
+        "CHAMELEON"
+      ],
+      "monsterPreferences": ["CHAMELEON"],
+      "floorTerrainDistribution": [
+        { "sourceTag": "FLOOR", "percent": 100 },
+        { "sourceTag": "FLOOR", "percent": 0 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 50,
+      "guardian": {
+        "sourceIndex": 1041,
+        "sourceName": "Chameleon Lord",
+        "chineseName": "变色龙领主",
+        "level": 45
+      },
+      "finalObject": { "tval": 75, "sval": 66 }
     }
   ]
 }

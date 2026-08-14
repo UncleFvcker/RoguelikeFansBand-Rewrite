@@ -7953,3 +7953,6 @@ ability-demo-life-holy-vision-name = Holy Vision
 ability-demo-life-holy-vision-description = Fully identifies an item.
 ability-demo-life-ultimate-resistance-name = Ultimate Resistance
 ability-demo-life-ultimate-resistance-description = Temporarily grants comprehensive defenses, resistances, and contact auras.
+floor-demo-chameleon-cave-depth-name = Chameleon Cave
+terrain-demo-chameleon-cave-entrance-name = entrance to Chameleon Cave
+terrain-demo-chameleon-cave-entrance-description = The entrance to a cave infested with chameleons.

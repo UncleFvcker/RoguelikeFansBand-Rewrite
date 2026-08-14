@@ -9642,6 +9642,10 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
                 position: ContentPosition { x: 88, y: 34 },
                 dungeon_id: "demo.dungeon.castle".to_owned(),
             },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 94, y: 52 },
+                dungeon_id: "demo.dungeon.chameleon-cave".to_owned(),
+            },
         ]
     );
     let anambar = artifact
@@ -12786,6 +12790,139 @@ fn p84b_camelot_roster_stays_bound_to_legacy_dungeon_two() {
             "{id} summon"
         );
     }
+}
+
+#[test]
+fn p102b_chameleon_cave_binds_ecology_layout_guardian_and_polymorph_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.chameleon-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Chameleon cave should use global allocation");
+    assert_eq!(policy.preferred_tags, ["chameleon"]);
+    assert_eq!(policy.special_div, 0);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.chameleon-cave-final-reward")
+        .expect("Chameleon cave reward should exist");
+    assert_eq!(reward.rolls, 1);
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.polymorph-potion");
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 94, y: 52 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.chameleon-cave"
+            )
+        })
+    }));
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.chameleon-cave")
+        .expect("Chameleon cave should exist");
+    assert_eq!(dungeon.legacy_index, Some(18));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.chameleon-cave-depth-30");
+    assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.chameleon-lord");
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.chameleon-cave"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (30..=45).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.chameleon-cave-entrance")
+    );
+    assert!(floors.iter().all(|floor| {
+        (floor.width, floor.height) == (96, 33)
+            && floor.wall_terrain_id == "demo.terrain.wall"
+            && floor.floor_terrain_id == "demo.terrain.floor"
+    }));
+
+    for floor in floors
+        .iter()
+        .filter(|floor| !matches!(floor.depth, 33 | 41))
+    {
+        let river = floor
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.river.as_ref())
+            .expect("ordinary Chameleon cave layer should retain a river policy");
+        assert_eq!(river.chance_one_in, Some(7));
+        assert_eq!(river.deep_terrain_id, "demo.terrain.surface-water-deep");
+        let alternative = river
+            .alternative
+            .as_ref()
+            .expect("lava should be the alternate river");
+        assert_eq!(
+            alternative.deep_terrain_id,
+            "demo.terrain.surface-lava-deep"
+        );
+        assert_eq!(alternative.chance_numerator, floor.depth + 1);
+        assert_eq!(alternative.chance_denominator, 256);
+    }
+    let layer = |depth| {
+        floors
+            .iter()
+            .find(|floor| floor.depth == depth)
+            .and_then(|floor| floor.layout.as_ref())
+            .unwrap_or_else(|| panic!("depth {depth} layout"))
+    };
+    assert_eq!(
+        layer(33).lake.as_ref().map(|lake| (
+            lake.deep_terrain_id.as_str(),
+            lake.shallow_terrain_id.as_str()
+        )),
+        Some(("demo.terrain.surface-tree", "demo.terrain.surface-grass"))
+    );
+    assert_eq!(
+        layer(35).rooms.as_ref().map(|rooms| rooms.placement),
+        Some(ProceduralRoomPlacement::Partitioned)
+    );
+    assert!(layer(39).destroyed.is_some());
+    assert_eq!(
+        layer(41).lake.as_ref().map(|lake| (
+            lake.deep_terrain_id.as_str(),
+            lake.shallow_terrain_id.as_str()
+        )),
+        Some(("demo.terrain.rubble", "demo.terrain.floor"))
+    );
+
+    let guardian = floors
+        .last()
+        .and_then(|floor| floor.guardian.as_ref())
+        .expect("Chameleon Lord should guard depth 45");
+    assert_eq!(guardian.instance_id, "demo.guardian.chameleon-cave.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.chameleon-lord");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.chameleon-cave-final-reward")
+    );
 }
 
 #[test]

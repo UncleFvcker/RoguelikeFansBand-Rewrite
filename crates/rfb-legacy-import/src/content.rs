@@ -24186,6 +24186,71 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
     }
 
     #[test]
+    fn p102a_chameleon_cave_plan_locks_ecology_layout_guardian_and_reward() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let cave = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 18)
+            .expect("Chameleon cave should have an implementation plan");
+
+        assert_eq!(cave.source_name, "Chameleon cave");
+        assert_eq!(cave.id, "demo.dungeon.chameleon-cave");
+        assert_eq!(cave.position, DemoWildernessPosition { x: 94, y: 52 });
+        assert_eq!((cave.minimum_depth, cave.maximum_depth), (30, 45));
+        assert_eq!(cave.monster_divisor, 0);
+        assert_eq!(
+            cave.generation_flags,
+            [
+                "CAVERN",
+                "WATER_RIVER",
+                "LAVA_RIVER",
+                "ARENA",
+                "DESTROY",
+                "LAKE_WATER",
+                "LAKE_LAVA",
+                "LAKE_RUBBLE",
+                "LAKE_TREE",
+                "CHAMELEON",
+            ]
+        );
+        assert_eq!(cave.monster_preferences, ["CHAMELEON"]);
+        assert_eq!(
+            cave.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 100
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0
+                },
+            ]
+        );
+        assert_eq!(cave.tunnel_percent, Some(50));
+        assert!(cave.initial_guardian.is_none());
+        assert_eq!(cave.guardian.source_index, 1041);
+        assert_eq!(cave.guardian.source_name, "Chameleon Lord");
+        assert_eq!(cave.guardian.chinese_name, "变色龙领主");
+        assert_eq!(cave.guardian.level, 45);
+        assert_eq!(
+            cave.final_object,
+            Some(DemoDungeonObjectPlan { tval: 75, sval: 66 })
+        );
+        assert_eq!(cave.final_artifact_source_index, None);
+        assert_eq!(cave.final_ego_source_index, None);
+        assert_eq!(cave.substitute_source_index, None);
+    }
+
+    #[test]
     fn melee_brain_smash_reuses_psi_damage_and_status_riders() {
         let mut monsters = parse_r_info(
             "N:781:Ultimate beholder\nG:e:o\nI:120:40d100:30:80:10:100\nW:66:4:999:18000:0:0\nB:GAZE:BRAIN_SMASH(5d5)\nF:FORCE_MAXHP\n",

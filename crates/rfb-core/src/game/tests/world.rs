@@ -4950,6 +4950,66 @@ fn returning_to_the_outpost_coordinate_restores_its_preserved_floor() {
 }
 
 #[test]
+fn p102c_chameleon_cave_generates_chameleons_and_rewards_polymorph() {
+    let mut game =
+        Game::new_with_build(202, "demo.build.warrior").expect("Middle-earth should create");
+    let mut floors = game
+        .content
+        .world(&game.world_id)
+        .expect("Middle-earth should remain available")
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.chameleon-cave"))
+        .cloned()
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 16);
+
+    let mut initialized_forms = 0;
+    for definition in &floors {
+        let generated = game
+            .generate_procedural_floor(definition, None)
+            .unwrap_or_else(|error| panic!("{} should generate: {error}", definition.id));
+        assert!(generated.entities.iter().any(|actor| {
+            matches!(
+                actor.kind_id.as_str(),
+                "demo.actor.chameleon" | "demo.actor.chameleon-lord"
+            )
+        }));
+        assert!(generated.entities.iter().all(|actor| matches!(
+            actor.kind_id.as_str(),
+            "demo.actor.chameleon" | "demo.actor.chameleon-lord"
+        )));
+        initialized_forms += generated
+            .entities
+            .iter()
+            .filter(|actor| actor.appearance_kind_id.is_some())
+            .count();
+    }
+    assert!(initialized_forms > 0);
+
+    let final_floor = floors.last().expect("depth 45 should exist").clone();
+    let generated = game
+        .generate_procedural_floor(&final_floor, None)
+        .expect("Chameleon cave final floor should generate");
+    let guardian = generated
+        .entities
+        .iter()
+        .find(|actor| actor.id == "demo.guardian.chameleon-cave.1")
+        .cloned()
+        .expect("Chameleon Lord should guard depth 45");
+    game.current_floor_id = final_floor.id;
+    let (items, _) = game
+        .generate_death_loot(&guardian)
+        .expect("Chameleon Lord reward should generate");
+    assert!(
+        items
+            .iter()
+            .any(|item| item.kind_id == "demo.item.polymorph-potion")
+    );
+}
+
+#[test]
 fn formal_towns_share_the_continuous_surface_and_initialize_facilities_lazily() {
     const SECOND_TOWN_ID: &str = "demo.town.second";
     const SECOND_FLOOR_ID: &str = "demo.floor.second-town";
