@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-14
-当前基线：本文所在的 `main` 提交（龙人专项阶段 6）
+当前实现基线：`ef212db26`（龙人专项阶段 6；阶段 7 为本文档封板）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -75,8 +75,9 @@ New Game 当前按以下稳定 ID 开放：
 “职业 × 种族”的重复 Build JSON。玩家外观目前由职业 Build 决定，新增普通种族不复制玩家 Actor 或
 tileset 映射。
 
-龙人专项已完成六个阶段：修正旧 pack 断言；加入亚种变异覆盖、漂浮、种族 AC、等级反射和职业
-候选过滤模型；加入红、白、蓝、黑、绿、青铜、水晶、金、阴影九个 Race、SkillSet 与动态喷吐；
+龙人专项已完成六个实现阶段，并在阶段 7 完成交接封板：修正旧 pack 断言；加入亚种变异覆盖、漂浮、
+种族 AC、等级反射和职业候选过滤模型；加入红、白、蓝、黑、绿、青铜、水晶、金、阴影九个 Race、
+SkillSet 与动态喷吐；
 闭合八项普通 35 级力量；闭合“变形”的龙形身体、装备迁移、AC、爪击/撕咬、职业倍率、物理
 变形免疫及 save/state-hash/replay 聚焦生命周期；最后增加正式选择标签和 New Game“龙人分支”。
 九个 Race 现在在 35 级提供九选一并永久锁定：
@@ -86,6 +87,17 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
 九个 Race 均带 `rfb-compatibility`，通过既有 `raceId` 请求正式创建；仍刻意不带
 `polymorph-candidate`，不会混入普通临时变形候选。玩家 Actor 与 tileset 继续由职业 Build 决定。
 在已跳过龙人的普通静态序列中，下一项仍是 `rfb-legacy.race.golem`（魔像）。
+
+### 龙人专项最终证据
+
+- 最终实现提交：`ef212db26`（`Expose Draconian subraces in New Game`）。最终协调点为 pack
+  `1.357.0` / content hash `43c8437b663e727646a077e75a1f7a55318651087062542ffa6e60fbe399108c`；
+  Protocol `1.212`、State Hash Schema v104、save v2 和 `contract-v303` fixture baseline 均未改变。
+- 阶段 6 只运行三项新增聚焦测试：核心九亚种正式创建、Web 九亚种分组、本地化 optgroup label；三项
+  均通过。`verify-source`、相关 Rust 测试目标 `cargo check`、Web typecheck、Rust format 与 diff 检查
+  通过。
+- 阶段 3–5 的新增行为测试证据见 [`class-next-handoff.md`](class-next-handoff.md) 对应小节。依用户要求，
+  本专项各阶段未运行或刷新全量测试与 fixture；后续主合并里程碑验收负责累计回归。
 
 ## 2. 权威来源与不可变规则
 

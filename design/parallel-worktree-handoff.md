@@ -1338,3 +1338,18 @@ git diff --stat
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。本阶段只运行
   三项新增聚焦测试；source、相关 Rust 测试目标编译、Web typecheck、格式和 diff 检查通过，未运行
   或刷新全量测试与 fixture。下一普通静态种族仍为 `rfb-legacy.race.golem`（魔像）。
+
+## 73. main 当前交接（龙人专项阶段 7：里程碑最终交接）
+
+- 跨工作树最终实现基线为 `ef212db26`（`Expose Draconian subraces in New Game`），协调版本为 pack
+  `1.357.0` / content hash `43c8437b663e727646a077e75a1f7a55318651087062542ffa6e60fbe399108c`、
+  Protocol `1.212`、State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact
+  fixture）。阶段 7 为文档封板，不推进任何版本或 lock。
+- 九个龙人 Race/SkillSet、逐亚种喷吐 Ability/Program、35 级力量、变形 mutation 及其既有 ID 继续由
+  种族方向拥有；没有遗留待声明的龙人 item、material、affix、resource、actor 或公共协议 ID。其他
+  工作树只复用这些身份，不得复制、改名或恢复隐藏标签。
+- 最终入口的三项新增测试——九亚种正式创建、New Game 龙人分组、本地化 optgroup label——均通过；
+  `verify-source`、相关 Rust 测试目标编译、Web typecheck、格式和 diff 检查通过。阶段 3–5 的新增行为
+  测试记录在 `class-next-handoff.md`，按用户要求没有累计运行全量测试或刷新 fixture。
+- 龙人专项至此封板。普通临时 polymorph 仍不得自动加入九个龙人亚种；职业/种族方向的下一项为
+  `rfb-legacy.race.golem`（魔像）。

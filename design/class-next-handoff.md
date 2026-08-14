@@ -783,3 +783,21 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   正式创建、New Game 分组和本地化 label 聚焦测试通过，source lock、相关 Rust 测试目标编译和 Web
   typecheck 同步通过；按用户要求未运行或刷新全量测试与 fixture。下一普通静态种族仍为魔像
   `rfb-legacy.race.golem`。
+
+## main 当前批次：龙人专项阶段 7、里程碑最终交接
+
+- 龙人专项最终实现点为 `ef212db26`（`Expose Draconian subraces in New Game`）。六个实现提交依次为：
+  `f1b6495bc` 修正小恶魔 pack 断言、`7627b020b` 增加龙人亚种/突变模型、`4fcbc78fa` 增加九亚种与
+  动态喷吐、`f67db14ab` 闭合八项 35 级力量、`adac1f190` 闭合变形、`ef212db26` 正式开放 New Game。
+- 最终协调点为 pack `1.357.0` / content hash
+  `43c8437b663e727646a077e75a1f7a55318651087062542ffa6e60fbe399108c`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。阶段 7 只更新
+  交接文档，不修改内容、协议、状态、存档或 fixture，因此不再推进版本或重建 content lock。
+- 阶段 6 新增并通过的最终入口测试为
+  `draconian_subraces_are_available_to_formal_character_creation`、
+  `the New Game form groups all nine formal Draconian subraces` 和
+  `localized label attributes preserve grouped option children`。`verify-source`、相关 Rust 测试目标
+  `cargo check`、Web typecheck、`cargo fmt --check` 与 `git diff --check` 通过。
+- 阶段 3–5 的内容、喷吐、35 级力量、龙形身体、装备、AC、爪/咬、免疫、save/state-hash/replay
+  聚焦证据保留在上方对应小节。依用户要求没有累计运行全量测试或刷新 fixture；该工作留给后续主合并
+  里程碑验收。职业/种族导入的下一普通静态项为 `rfb-legacy.race.golem`（魔像）。
