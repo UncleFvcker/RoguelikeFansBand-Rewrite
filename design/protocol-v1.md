@@ -691,3 +691,8 @@ State Hash Schema v100。save 容器保持 v1，不为缺少这些字段的旧�
 能力与职业能力、已学法术和变异能力在同一 `AbilityDto` 列表中保持可辨来源。能力继续复用
 既有 `CastAbility`、目标选择和结算投影；没有新增命令、权威状态或 save 字段，State Hash
 Schema 保持 v100，save 容器保持 v1。
+
+协议 1.203 / active baseline contract-v303 为 `AbilityDto` 增加可选的
+`governingAttribute`，用于显示种族、变异及职业主动能力的当前检定属性。它只投影既有内容
+定义，不增加命令、权威状态、RNG 或 save 字段；State Hash Schema 保持 v100，save 容器
+保持 v1。

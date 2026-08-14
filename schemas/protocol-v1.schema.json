@@ -487,6 +487,16 @@
           "maximum": 255,
           "minimum": 0
         },
+        "governingAttribute": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AttributeKindDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "hitPointCost": {
           "type": "integer",
           "format": "uint32",

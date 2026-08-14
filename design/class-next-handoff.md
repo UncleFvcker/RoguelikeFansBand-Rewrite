@@ -399,3 +399,16 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `fecd2a3598b99e61a66e07c76376e0e6c79da2e1702d6dafa2ce63ca0859cb8f`、Protocol `1.202`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。New Game 列表与前端入口留给
   Commit 3；本批只运行新增和直接相关测试。
+
+## main 当前批次：野蛮人 Commit 3 新游戏 UI 与验收
+
+- New Game 正式种族列表加入 `rfb-legacy.race.barbarian` / “野蛮人”，沿用既有 `raceId`
+  请求；玩家 actor 和三套 tileset 外观继续完全由职业 build 决定，不创建种族副本。
+- `AbilityDto.governingAttribute` 投影已有主动能力检定属性；能力面板现在把野蛮人狂暴显示为
+  “先天”、8 级、STR、消耗 10 和当前失败率。协议推进到 `1.203`，不增加命令、状态或存档字段。
+- 正式内容、7/8 级边界、SP 到 HP 支付、失败支付、零预算拒绝、持续时间/等级伤害、重施、
+  狂暴禁法术、临时变形、30 级天赋选择、save 与 replay 均由聚焦测试覆盖。依用户要求未运行或
+  刷新全量 fixture。
+- 协调版本为 pack `1.336.0` / hash
+  `fecd2a3598b99e61a66e07c76376e0e6c79da2e1702d6dafa2ce63ca0859cb8f`、Protocol `1.203`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。

@@ -11,16 +11,17 @@ use crate::{
 };
 use rfb_content::{
     AbilityEffectDefinition, CastingStudyMode, ItemUseEffectDefinition, MutationRatingDefinition,
-    TownFacilityCategory, WildernessDefinition, WildernessLocationDefinition, WildernessTerrain,
+    TechniqueAttribute, TownFacilityCategory, WildernessDefinition, WildernessLocationDefinition,
+    WildernessTerrain,
 };
 use rfb_protocol::{
     AbilityDetectSpecDto, AbilityDto, AbilityLearningDto, AbilitySourceDto, AbilityStudyModeDto,
-    AbilitySummonSpecDto, AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeSetDto,
-    AttributeValueDto, BodySlotDto, CampaignStateDto, CapturedActorDto, CellDto, CellVisualDto,
-    ContentVisualDto, DamageDiceDto, EntityDto, EntityFactionDto, EquipmentItemDto, GameSnapshot,
-    InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto, MutationRatingDto,
-    PROTOCOL_VERSION, PendingRaceMutationChoiceDto, PetDto, PlayerBuildDto, PlayerDto,
-    PlayerMutationDto, PlayerProgressDto, Position, ResistanceDto, ResourcePoolDto,
+    AbilitySummonSpecDto, AbilityTerrainTransformSpecDto, AttackProfileDto, AttributeKindDto,
+    AttributeSetDto, AttributeValueDto, BodySlotDto, CampaignStateDto, CapturedActorDto, CellDto,
+    CellVisualDto, ContentVisualDto, DamageDiceDto, EntityDto, EntityFactionDto, EquipmentItemDto,
+    GameSnapshot, InventoryItemDto, ItemDto, ItemKnowledgeDto, MapScaleDto, MeleeRoutineDto,
+    MutationRatingDto, PROTOCOL_VERSION, PendingRaceMutationChoiceDto, PetDto, PlayerBuildDto,
+    PlayerDto, PlayerMutationDto, PlayerProgressDto, Position, ResistanceDto, ResourcePoolDto,
     SkillProgressDto, SummonDto, TaskServiceDto, TaskStatusDto, TerrainInteractionDto,
     TerrainInteractionKindDto, VisibilityState, WildernessLocationDto, WildernessLocationKindDto,
 };
@@ -36,6 +37,18 @@ use super::{
 const WILDERNESS_TOWN_ID: &str = "core.wilderness.town";
 const WILDERNESS_ROAD_ID: &str = "core.wilderness.road";
 const WILDERNESS_DUNGEON_ID: &str = "core.wilderness.dungeon";
+
+const fn technique_attribute_dto(attribute: TechniqueAttribute) -> AttributeKindDto {
+    match attribute {
+        TechniqueAttribute::Strength => AttributeKindDto::Strength,
+        TechniqueAttribute::Intelligence => AttributeKindDto::Intelligence,
+        TechniqueAttribute::Wisdom => AttributeKindDto::Wisdom,
+        TechniqueAttribute::Dexterity => AttributeKindDto::Dexterity,
+        TechniqueAttribute::Constitution => AttributeKindDto::Constitution,
+        TechniqueAttribute::Charisma => AttributeKindDto::Charisma,
+    }
+}
+
 const WILDERNESS_VISUALS: [(&str, &str); 18] = [
     ("core.wilderness.edge", "#"),
     (WILDERNESS_TOWN_ID, "#"),
@@ -371,6 +384,14 @@ impl Game {
                     AbilitySourceDto::Race => race_activation,
                     AbilitySourceDto::Class | AbilitySourceDto::Learned => None,
                 };
+                let governing_attribute = match source {
+                    AbilitySourceDto::Mutation | AbilitySourceDto::Race => innate_activation
+                        .map(|activation| technique_attribute_dto(activation.governing_attribute)),
+                    AbilitySourceDto::Class => class_activation
+                        .and_then(|activation| activation.governing_attribute)
+                        .map(technique_attribute_dto),
+                    AbilitySourceDto::Learned => None,
+                };
                 let (
                     minimum_level,
                     ui_group_name_key,
@@ -503,6 +524,7 @@ impl Game {
                     book_rank: book.and_then(|book| book.rank),
                     minimum_level,
                     source,
+                    governing_attribute,
                     resource_id,
                     base_resource_cost,
                     resource_cost,

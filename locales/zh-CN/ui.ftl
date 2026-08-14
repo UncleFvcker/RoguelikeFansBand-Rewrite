@@ -287,6 +287,7 @@ ability-resource-value = { $resource }：{ $current } / { $maximum } · 等待 +
 sniper-concentration = 专注
 ability-learning-value = 已学 { $learned } / { $capacity } · 剩余 { $remaining } 个容量
 ability-summary = 等级 { $level } · 消耗 { $cost }（基础 { $baseCost }）· 失败率 { $failure }%
+ability-summary-governed = 等级 { $level } · { $attribute } · 消耗 { $cost }（基础 { $baseCost }）· 失败率 { $failure }%
 ability-concentration-summary = 需要专注 { $concentration }
 ability-hit-point-cost-summary = 生命消耗 { $cost }
 ability-area-summary = 爆发半径 { $radius }

@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  abilityAttributeAbbreviation,
   abilityPresentation,
   abilityStatusMessageKey,
   formatAttributeValue,
@@ -86,6 +87,7 @@ test("mutation presentation exposes ratings and the shared ability source", () =
     abilityStatusMessageKey({ source: "race", learned: false }),
     "ability-status-innate",
   );
+  assert.equal(abilityAttributeAbbreviation("strength"), "STR");
 });
 
 test("Paladin Hell Lance stays visible as a level-gated class power", () => {

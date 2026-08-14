@@ -1000,12 +1000,18 @@ export class StatusPanel {
     description.textContent = this.#localization.format(ability.descriptionKey as MessageKey);
     const summary = document.createElement("span");
     summary.className = "ability-summary";
-    summary.textContent = this.#localization.format("ability-summary", {
-      level: ability.minimumLevel,
-      baseCost: ability.baseResourceCost,
-      cost: ability.resourceCost,
-      failure: ability.failurePercent,
-    });
+    summary.textContent = this.#localization.format(
+      ability.governingAttribute ? "ability-summary-governed" : "ability-summary",
+      {
+        level: ability.minimumLevel,
+        attribute: ability.governingAttribute
+          ? abilityAttributeAbbreviation(ability.governingAttribute)
+          : "",
+        baseCost: ability.baseResourceCost,
+        cost: ability.resourceCost,
+        failure: ability.failurePercent,
+      },
+    );
     const proficiency = document.createElement("span");
     proficiency.className = "ability-summary";
     proficiency.textContent = this.#localization.format("ability-proficiency-summary", {
@@ -1186,6 +1192,17 @@ export function abilityStatusMessageKey(
   if (ability.source === "class") return "ability-status-class";
   if (ability.source === "race") return "ability-status-innate";
   return ability.learned ? "ability-status-learned" : "ability-status-unlearned";
+}
+
+export function abilityAttributeAbbreviation(attribute: AttributeKindDto): string {
+  return {
+    strength: "STR",
+    intelligence: "INT",
+    wisdom: "WIS",
+    dexterity: "DEX",
+    constitution: "CON",
+    charisma: "CHR",
+  }[attribute];
 }
 
 export type AbilityPresentationEntry =

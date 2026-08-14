@@ -991,3 +991,17 @@ git diff --stat
   `fecd2a3598b99e61a66e07c76376e0e6c79da2e1702d6dafa2ce63ca0859cb8f`、Protocol `1.202`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。前端 New Game 入口尚未加入，
   留给 Commit 3；不刷新全量 fixture。
+
+## 53. main 当前交接（野蛮人 Commit 3：新游戏 UI 与验收）
+
+- New Game 已正式开放 `rfb-legacy.race.barbarian` / “野蛮人”，通过既有 `raceId` 选择路径
+  初始化。玩家 actor 与 tileset 仍由职业 build 唯一决定，本批不新增外观资源。
+- `AbilityDto` 增加可选 `governingAttribute`，使既有 STR 检定数据进入能力面板；野蛮人狂暴
+  显示“先天”、8 级、STR、消耗 10 和当前失败率。该字段也适用于已有变异/职业主动能力，不
+  复制内容配置。
+- 聚焦验收覆盖正式静态档案、恐惧抗性、7/8 级能力边界、SP→HP、失败支付、零预算拒绝、
+  `10 + 1d(level)`、`level / 5`、重施不缩短、狂暴禁法术、临时野蛮人形态、30 级天赋、save
+  与 replay。依用户要求不运行或刷新全量 fixture，留待合并验收。
+- 共享协调点为 pack `1.336.0` / content hash
+  `fecd2a3598b99e61a66e07c76376e0e6c79da2e1702d6dafa2ce63ca0859cb8f`、Protocol `1.203`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。

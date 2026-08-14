@@ -287,6 +287,7 @@ ability-resource-value = { $resource }: { $current } / { $maximum } · wait +{ $
 sniper-concentration = Concentration
 ability-learning-value = Learned { $learned } / { $capacity } · { $remaining } slots remaining
 ability-summary = Level { $level } · cost { $cost } (base { $baseCost }) · failure { $failure }%
+ability-summary-governed = Level { $level } · { $attribute } · cost { $cost } (base { $baseCost }) · failure { $failure }%
 ability-concentration-summary = Requires concentration { $concentration }
 ability-hit-point-cost-summary = HP cost { $cost }
 ability-area-summary = Burst radius { $radius }

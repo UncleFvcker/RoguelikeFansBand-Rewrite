@@ -115,6 +115,7 @@ fn level_thirty_race_talent_choices_are_replayable() {
     for (seed, race_id) in [
         (83, "rfb-legacy.race.half-orc"),
         (85, "rfb-legacy.race.dunadan"),
+        (86, "rfb-legacy.race.barbarian"),
     ] {
         let initial = level_thirty_race(seed, race_id);
         let pending = initial

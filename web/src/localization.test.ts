@@ -56,6 +56,16 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
     "Mana: 10 / 21 · wait +1 · rest +3",
   );
   assert.equal(
+    localization.format("ability-summary-governed", {
+      level: 8,
+      attribute: "STR",
+      cost: 10,
+      baseCost: 10,
+      failure: 17,
+    }),
+    "Level 8 · STR · cost 10 (base 10) · failure 17%",
+  );
+  assert.equal(
     localization.format("message-item-drop-success", { stacks: 1, quantity: 2 }),
     "You drop 1 stack containing 2 items.",
   );
@@ -97,6 +107,16 @@ test("Fluent formats locale-specific grammar and plural selection", () => {
       rest: 3,
     }),
     "法力：10 / 21 · 等待 +1 · 休息 +3",
+  );
+  assert.equal(
+    localization.format("ability-summary-governed", {
+      level: 8,
+      attribute: "STR",
+      cost: 10,
+      baseCost: 10,
+      failure: 17,
+    }),
+    "等级 8 · STR · 消耗 10（基础 10）· 失败率 17%",
   );
   assert.equal(
     localization.format("message-item-pickup-success", {

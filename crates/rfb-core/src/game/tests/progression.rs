@@ -1190,6 +1190,14 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
         Game::DEFAULT_PLAYER_NAME,
     )
     .expect("formal Dunadan should create");
+    let barbarian = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        "rfb-legacy.race.barbarian",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal Barbarian should create");
+    assert_eq!(barbarian.player.kind_id, human.player.kind_id);
 
     let human_attributes = human.effective_player_attributes();
     let half_orc_attributes = half_orc.effective_player_attributes();
@@ -1227,6 +1235,22 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
     }
     assert!(dunadan.effective_player_max_hp() > human.effective_player_max_hp());
 
+    let barbarian_attributes = barbarian.effective_player_attributes();
+    for (attribute, bonus) in [
+        (AttributeKind::Strength, 3),
+        (AttributeKind::Intelligence, -2),
+        (AttributeKind::Wisdom, -1),
+        (AttributeKind::Dexterity, 1),
+        (AttributeKind::Constitution, 2),
+        (AttributeKind::Charisma, 2),
+    ] {
+        assert_eq!(
+            i16::from(barbarian_attributes.index(attribute)),
+            i16::from(human_attributes.index(attribute)) + bonus
+        );
+    }
+    assert!(barbarian.effective_player_max_hp() > human.effective_player_max_hp());
+
     let human_skills = human.effective_player_skill_progress();
     let half_orc_skills = half_orc.effective_player_skill_progress();
     assert_eq!(
@@ -1246,6 +1270,15 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
         dunadan_skills["demo.skill.perception"].current,
         human_skills["demo.skill.perception"].current + 3
     );
+    let barbarian_skills = barbarian.effective_player_skill_progress();
+    assert_eq!(
+        barbarian_skills["demo.skill.melee"].current,
+        human_skills["demo.skill.melee"].current + 12
+    );
+    assert_eq!(
+        barbarian_skills["demo.skill.device"].current + 7,
+        human_skills["demo.skill.device"].current
+    );
 
     let shop_factor = |game: &Game| {
         game.snapshot()
@@ -1257,6 +1290,7 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
             .price_factor_percent
     };
     assert!(shop_factor(&half_orc) > shop_factor(&human));
+    assert!(shop_factor(&barbarian) > shop_factor(&human));
 
     let mut human_experience = human.clone();
     let mut half_orc_experience = half_orc.clone();
@@ -1272,6 +1306,10 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
     let mut dunadan_experience = dunadan.clone();
     dunadan_experience.apply_player_experience(100, &mut Vec::new());
     assert_eq!(dunadan_experience.progress.experience, 160);
+
+    let mut barbarian_experience = barbarian.clone();
+    barbarian_experience.apply_player_experience(100, &mut Vec::new());
+    assert_eq!(barbarian_experience.progress.experience, 135);
 
     let default = Game::new_with_build(83, "demo.build.warrior")
         .expect("Warrior build should retain its Human default");
@@ -1519,6 +1557,7 @@ fn barbarian_fear_power_and_level_thirty_talent_are_authoritative() {
         game.effective_player_resistances().level(DamageType::Fear),
         ResistanceLevel::Resistant
     );
+    game.progress.level = 7;
     let locked = game
         .snapshot()
         .player
@@ -1527,34 +1566,105 @@ fn barbarian_fear_power_and_level_thirty_talent_are_authoritative() {
         .find(|ability| ability.id == "rfb.ability.race.berserk")
         .expect("Barbarian should project Berserk");
     assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(locked.governing_attribute, Some(AttributeKindDto::Strength));
     assert_eq!(locked.minimum_level, 8);
+    assert_eq!(locked.base_resource_cost, 10);
+    assert_eq!(locked.resource_cost, 10);
+    assert_eq!(locked.failure_percent, 100);
     assert!(!locked.can_cast);
 
     game.progress.level = 8;
+    let available = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "rfb.ability.race.berserk")
+        .expect("Barbarian Berserk should remain projected");
+    assert!(available.can_cast);
+    assert!(available.failure_percent < 100);
+    let mut reward_game = Game::new_with_build_race_and_name(
+        86,
+        "demo.build.warrior",
+        "rfb-legacy.race.barbarian",
+        "Conan",
+    )
+    .expect("formal Barbarian reward game should create");
+    let level_29_experience = experience_required_for_level(29);
+    reward_game.apply_unscaled_player_experience(level_29_experience, &mut Vec::new());
     assert!(
-        game.snapshot()
-            .player
-            .abilities
-            .iter()
-            .find(|ability| ability.id == "rfb.ability.race.berserk")
-            .expect("Barbarian Berserk should remain projected")
-            .can_cast
-    );
-    game.progress.level = 29;
-    assert!(
-        game.snapshot()
+        reward_game
+            .snapshot()
             .player
             .pending_race_mutation_choice
             .is_none()
     );
-    game.progress.level = 30;
-    let pending = game
+    reward_game.apply_unscaled_player_experience(
+        experience_required_for_level(30) - level_29_experience,
+        &mut Vec::new(),
+    );
+    let pending = reward_game
         .snapshot()
         .player
         .pending_race_mutation_choice
         .expect("Barbarian should choose a level 30 talent");
     assert_eq!(pending.reward_id, "barbarian-talent");
     assert_eq!(pending.candidates.len(), 20);
+    dispatch_next(
+        &mut reward_game,
+        GameCommand::ChooseRaceMutation {
+            reward_id: pending.reward_id,
+            mutation_id: "rfb.mutation.sacred-vitality".to_owned(),
+        },
+    );
+    let restored = Game::from_save(reward_game.to_save()).expect("Barbarian save should restore");
+    assert!(
+        restored
+            .progress
+            .locked_mutation_ids
+            .contains("rfb.mutation.sacred-vitality")
+    );
+    assert!(
+        restored
+            .snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
+
+    let mut temporary = Game::new_with_build_race_and_name(
+        86,
+        "demo.build.warrior",
+        "rfb-legacy.race.high-elf",
+        "Finrod",
+    )
+    .expect("formal High-Elf should create");
+    temporary.progress.level = 30;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.barbarian-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.barbarian".to_owned());
+    temporary.player.statuses.push(form);
+    assert_eq!(
+        temporary
+            .effective_player_resistances()
+            .level(DamageType::Fear),
+        ResistanceLevel::Resistant
+    );
+    assert!(
+        temporary
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == "rfb.ability.race.berserk")
+    );
+    assert!(
+        temporary
+            .snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
 }
 
 #[test]

@@ -2564,42 +2564,28 @@ const MUTATION_CONTRACT_ABILITY_ID: &str = "demo.ability.mutation-contract";
 const MUTATION_CONTRACT_ID: &str = "rfb.mutation.spit-acid";
 const RACE_BERSERK_ABILITY_ID: &str = "rfb.ability.race.berserk";
 
-fn race_ability_catalog() -> Arc<rfb_content::ContentCatalog> {
-    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(std::path::Path::parent)
-        .expect("core crate should be inside the workspace")
-        .join("packs/rfb-demo-original");
-    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
-    artifact
-        .content
-        .races
-        .iter_mut()
-        .find(|race| race.id == "demo.race.rfb-human")
-        .expect("Human race should exist")
-        .abilities
-        .push(InnatePowerDefinition {
-            minimum_level: 8,
-            governing_attribute: TechniqueAttribute::Strength,
-            cost: 10,
-            cost_scaling: None,
-            base_failure_percent: 30,
-            minimum_failure_percent: None,
-            ability_id: RACE_BERSERK_ABILITY_ID.to_owned(),
-        });
-    Arc::new(rfb_content::ContentCatalog::from_artifact(
-        rfb_content::encode_content(artifact.content)
-            .expect("race ability contract content should remain valid"),
-    ))
-}
-
 #[test]
 fn race_ability_follows_the_effective_race_and_projects_its_source() {
-    let catalog = race_ability_catalog();
-    let mut game =
-        Game::from_content_with_build(0, catalog, DEFAULT_WORLD_ID, "demo.build.warrior")
-            .expect("warrior build should create");
+    let mut game = Game::new_with_build_race_and_name(
+        0,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human warrior should create");
     game.progress.level = 7;
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_BERSERK_ABILITY_ID)
+    );
+
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.race-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.barbarian".to_owned());
+    game.player.statuses.push(form);
 
     let locked = game
         .snapshot()
@@ -2607,8 +2593,12 @@ fn race_ability_follows_the_effective_race_and_projects_its_source() {
         .abilities
         .into_iter()
         .find(|ability| ability.id == RACE_BERSERK_ABILITY_ID)
-        .expect("the selected Human race should project its ability");
+        .expect("the temporary Barbarian form should project its ability");
     assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Strength)
+    );
     assert_eq!(locked.minimum_level, 8);
     assert!(!locked.can_cast);
 
@@ -2640,18 +2630,6 @@ fn race_ability_follows_the_effective_race_and_projects_its_source() {
         .statuses
         .retain(|status| status.kind_id != STATUS_CONFUSION);
 
-    let mut form =
-        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.race-form").status;
-    form.granted_race_id = Some("rfb-legacy.race.high-elf".to_owned());
-    game.player.statuses.push(form);
-    assert!(
-        game.snapshot()
-            .player
-            .abilities
-            .iter()
-            .all(|ability| ability.id != RACE_BERSERK_ABILITY_ID)
-    );
-
     game.player
         .statuses
         .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
@@ -2660,19 +2638,19 @@ fn race_ability_follows_the_effective_race_and_projects_its_source() {
             .player
             .abilities
             .iter()
-            .any(|ability| ability.id == RACE_BERSERK_ABILITY_ID)
+            .all(|ability| ability.id != RACE_BERSERK_ABILITY_ID)
     );
 }
 
 #[test]
 fn racial_berserk_pays_hp_obeys_fear_and_never_shortens_a_stronger_rage() {
-    let mut game = Game::from_content_with_build(
+    let mut game = Game::new_with_build_race_and_name(
         0,
-        race_ability_catalog(),
-        DEFAULT_WORLD_ID,
         "demo.build.warrior",
+        "rfb-legacy.race.barbarian",
+        Game::DEFAULT_PLAYER_NAME,
     )
-    .expect("warrior build should create");
+    .expect("Barbarian warrior should create");
     game.progress.level = 8;
     clear_monsters(&mut game);
     game.player
@@ -2743,6 +2721,109 @@ fn racial_berserk_pays_hp_obeys_fear_and_never_shortens_a_stronger_rage() {
             .remaining_ticks,
         100
     );
+}
+
+#[test]
+fn formal_barbarian_berserk_spills_sp_into_hp_pays_on_failure_and_rejects_zero_budget() {
+    let prepare = || {
+        let mut game = Game::new_with_build_race_and_name(
+            0,
+            "demo.build.high-mage-death",
+            "rfb-legacy.race.barbarian",
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect("Barbarian High-Mage should create");
+        game.progress.level = 8;
+        clear_monsters(&mut game);
+        game
+    };
+
+    let mut succeeded = prepare();
+    succeeded.debug_set_ability_casts_succeed(true);
+    succeeded
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana")
+        .current = 3;
+    let hp_before = succeeded.player.hp;
+    let mut events = Vec::new();
+    succeeded
+        .resolve_player_ability(
+            RACE_BERSERK_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Barbarian Berserk should spend SP before HP");
+    let resolution = mutation_cast_resolution(&events);
+    assert!(resolution.succeeded);
+    assert_eq!(resolution.resource_paid, 3);
+    assert_eq!(resolution.hp_paid, 7);
+    assert_eq!(succeeded.player.hp, hp_before - 7);
+
+    let mut failed = prepare();
+    failed
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana")
+        .current = 3;
+    let failure_percent = failed
+        .snapshot()
+        .player
+        .abilities
+        .iter()
+        .find(|ability| ability.id == RACE_BERSERK_ABILITY_ID)
+        .expect("Barbarian Berserk should be projected")
+        .failure_percent;
+    let seed = (0..4_096)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(failure_percent)
+        })
+        .expect("Barbarian Berserk should have a reachable failure roll");
+    failed.rng = RfbRng::seeded(seed);
+    let hp_before = failed.player.hp;
+    events.clear();
+    failed
+        .resolve_player_ability(
+            RACE_BERSERK_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("a failed Barbarian Berserk should still pay");
+    let resolution = mutation_cast_resolution(&events);
+    assert!(!resolution.succeeded);
+    assert_eq!(resolution.resource_paid, 3);
+    assert_eq!(resolution.hp_paid, 7);
+    assert_eq!(failed.player.hp, hp_before - 7);
+
+    let mut rejected = prepare();
+    rejected
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana")
+        .current = 0;
+    rejected.player.hp = 9;
+    let draws_before = rejected.rng_draw_counter();
+    events.clear();
+    rejected
+        .resolve_player_ability(
+            RACE_BERSERK_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("an empty Barbarian power budget should reject cleanly");
+    assert_eq!(rejected.player.hp, 9);
+    assert_eq!(rejected.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == "insufficient-resource"
+    ));
 }
 
 fn mutation_ability_catalog(
