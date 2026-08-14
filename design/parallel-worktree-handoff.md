@@ -1303,3 +1303,21 @@ git diff --stat
   `6ee346ff1ecf60fe7c2dd62806d65a12dfe6db65b013a2cde828dcd421fdc32d`、Protocol `1.212`、
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。本批仅运行
   新增的内容、核心与中文聚焦测试；source/schema/格式/相关编译检查通过，未运行全量 fixture。
+
+## 71. main 当前交接（龙人专项阶段 5：变形与龙形身体）
+
+- 种族方向复用并继续拥有既有 `rfb.mutation.draconian-metamorphosis`，没有新增 ability、ability
+  program、item、material、affix、resource、actor 或公共协议 ID；其他方向不得复制该 mutation，
+  也不得另建龙形状态、身体或攻击身份。ledger 已将该项从 blocked 改为 active。
+- 九个隐藏龙人 Race 的 35 级候选池均加入变形，弓箭手、骑兵和狙击手按原版排除。选择后由出生
+  龙人身份和已锁定 mutation 派生永久龙形：身体使用六个戒指及护符、光源、斗篷、头盔槽，失效
+  装备复用既有迁移事务回包；AC、爪击、撕咬及亚种/职业倍率均在现有统计和近战路径实时计算。
+- 变形龙人对物理 polymorph 入口免疫；临时种族形态仍具有更高优先级，结束时会通过同一身体协调
+  路径回到龙形。存档继续使用既有 `bodySlots`、出生种族和锁定 mutation，未新增权威状态、Protocol
+  DTO、State Hash Schema 或 save schema。其他工作树若触及身体槽迁移、mutation 锁定、近战攻击
+  档案或玩家 polymorph，必须保留这一单一事实源和龙形优先级。
+- 共享协调点为 pack `1.356.0` / content hash
+  `08a6e2a8f95727c4b47b4d2485c81decad7d42d8a0215e30253eea62cc4dc943`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。本阶段仅运行
+  新增内容、核心和 replay 聚焦测试；source/格式/相关编译检查通过，未运行或刷新全量测试与 fixture。
+  九个 Race 仍不带 `rfb-compatibility`，不得提前加入 New Game 白名单或正式 UI。

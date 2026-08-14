@@ -303,8 +303,12 @@ impl Game {
     }
 
     fn player_is_polymorph_immune(&self) -> bool {
-        self.character_definitions()
-            .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == POLYMORPH_IMMUNE_TAG))
+        self.progress
+            .active_mutation_ids
+            .contains(DRACONIAN_METAMORPHOSIS_MUTATION_ID)
+            || self.character_definitions().is_some_and(|(_, race, _, _)| {
+                race.tags.iter().any(|tag| tag == POLYMORPH_IMMUNE_TAG)
+            })
     }
 
     fn permanent_player_race_legacy_index(&self) -> Option<u16> {
@@ -418,6 +422,33 @@ impl Game {
                 break;
             };
             self.items[item_index].location = ItemLocation::Ground(self.player.position);
+        }
+    }
+
+    pub(super) fn resolved_player_body_slots(&self) -> Result<Vec<BodySlot>, CoreError> {
+        if let Some(race) = self
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_PLAYER_POLYMORPH)
+            .and_then(|status| status.granted_race_id.as_deref())
+            .and_then(|race_id| self.content.race(race_id))
+        {
+            return Ok(body_slots_for_race(race));
+        }
+        resolve_permanent_body_slots(
+            &self.content,
+            self.build.as_ref(),
+            &self.progress.active_mutation_ids,
+        )
+    }
+
+    pub(super) fn reconcile_player_body_slots_for_current_form(&mut self) {
+        let next_slots = self
+            .resolved_player_body_slots()
+            .expect("validated player body must remain resolvable");
+        if self.body_slots != next_slots {
+            self.reconcile_player_body_slots(next_slots);
         }
     }
 

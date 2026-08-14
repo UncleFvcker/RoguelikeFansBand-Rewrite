@@ -2,6 +2,78 @@
 
 use super::*;
 
+const DRACONIAN_BLOW_RANGES: [(u16, u16); 38] = [
+    (0, 200),
+    (0, 200),
+    (10, 200),
+    (20, 210),
+    (30, 220),
+    (40, 230),
+    (50, 240),
+    (60, 250),
+    (70, 260),
+    (80, 270),
+    (90, 280),
+    (100, 290),
+    (110, 300),
+    (120, 350),
+    (130, 400),
+    (140, 450),
+    (150, 460),
+    (160, 470),
+    (170, 480),
+    (180, 490),
+    (190, 500),
+    (200, 520),
+    (210, 540),
+    (220, 560),
+    (230, 580),
+    (240, 600),
+    (250, 610),
+    (260, 620),
+    (280, 630),
+    (300, 640),
+    (320, 650),
+    (340, 660),
+    (350, 670),
+    (360, 680),
+    (370, 690),
+    (380, 700),
+    (390, 725),
+    (400, 750),
+];
+const DRACONIAN_STRENGTH_BLOW: [u16; 38] = [
+    3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110,
+    120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240,
+];
+
+fn draconian_innate_blows(attributes: AttributeSet, weight: u16, maximum: u16) -> u16 {
+    let strength_index = usize::from(
+        attributes
+            .index(AttributeKind::Strength)
+            .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
+    );
+    let dexterity_index = usize::from(
+        attributes
+            .index(AttributeKind::Dexterity)
+            .min(crate::stats::PRE_VICTORY_ATTRIBUTE_INDEX_CAP),
+    );
+    let (minimum, maximum_for_dexterity) = DRACONIAN_BLOW_RANGES[dexterity_index];
+    let strength = DRACONIAN_STRENGTH_BLOW[strength_index]
+        .saturating_mul(55)
+        .saturating_div(weight.max(70))
+        .min(110);
+    minimum
+        .saturating_add(
+            maximum_for_dexterity
+                .saturating_sub(minimum)
+                .saturating_mul(strength)
+                / 110,
+        )
+        .max(100)
+        .min(maximum)
+}
+
 fn temporary_sustain_passive(status_kind_id: &str) -> Option<EquipmentPassive> {
     match status_kind_id {
         STATUS_HOLD_LIFE => Some(EquipmentPassive::HoldLife),
@@ -77,6 +149,7 @@ fn apply_player_life_force(stat: DerivedStat, life_force: u16) -> DerivedStat {
 #[derive(Clone)]
 pub(in crate::game) struct ResolvedAttackProfile {
     pub(in crate::game) attacks: u16,
+    pub(in crate::game) extra_attack_chance_percent: u8,
     pub(in crate::game) melee_skill: DerivedStat,
     pub(in crate::game) to_hit: i32,
     pub(in crate::game) to_damage: i32,
@@ -1323,6 +1396,7 @@ impl Game {
         ResolvedAttackProfile {
             attacks: u16::try_from(stats.melee_attacks.value)
                 .expect("derived melee attack count must fit u16"),
+            extra_attack_chance_percent: 0,
             melee_skill,
             to_hit,
             to_damage: stats.melee_damage_bonus.value,
@@ -1357,7 +1431,7 @@ impl Game {
             })
             .collect::<Vec<_>>();
         mutations.sort_by_key(|mutation| mutation.source_index);
-        mutations
+        let mut profiles = mutations
             .into_iter()
             .map(|mutation| {
                 let attack = mutation
@@ -1391,6 +1465,7 @@ impl Game {
                     });
                 ResolvedAttackProfile {
                     attacks: 1,
+                    extra_attack_chance_percent: 0,
                     melee_skill,
                     to_hit: critical_to_hit,
                     to_damage: innate_damage_bonus.saturating_add(attack.to_damage),
@@ -1403,7 +1478,156 @@ impl Game {
                     critical_weight_tenths_pound: Some(attack.weight_tenths_pound),
                 }
             })
-            .collect()
+            .collect::<Vec<_>>();
+        if self.player_has_draconian_metamorphosis() {
+            profiles.extend(
+                self.draconian_metamorphosis_attack_profiles(&innate_skill, innate_damage_bonus),
+            );
+        }
+        profiles
+    }
+
+    pub(super) fn player_has_draconian_metamorphosis(&self) -> bool {
+        self.progress
+            .active_mutation_ids
+            .contains(DRACONIAN_METAMORPHOSIS_MUTATION_ID)
+            && !self
+                .player
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_PLAYER_POLYMORPH)
+            && self
+                .selected_race_definition()
+                .is_some_and(|race| race.tags.iter().any(|tag| tag == "draconian"))
+    }
+
+    pub(super) fn draconian_metamorphosis_attack_level(&self) -> u16 {
+        let level = self.progress.level.min(50).saturating_mul(2);
+        let race_percent =
+            self.selected_race_definition()
+                .map_or(100, |race| match race.id.as_str() {
+                    "rfb-legacy.race.draconian-red" | "rfb-legacy.race.draconian-white" => 105,
+                    "rfb-legacy.race.draconian-blue" => 95,
+                    "rfb-legacy.race.draconian-bronze"
+                    | "rfb-legacy.race.draconian-crystal"
+                    | "rfb-legacy.race.draconian-gold" => 90,
+                    "rfb-legacy.race.draconian-shadow" => 85,
+                    _ => 100,
+                });
+        let class_percent =
+            self.build
+                .as_ref()
+                .map_or(100, |build| match build.class_id.as_str() {
+                    "demo.class.warrior" => 120,
+                    "demo.class.paladin" => 110,
+                    "demo.class.high-mage" => 80,
+                    _ => 100,
+                });
+        level
+            .saturating_mul(race_percent)
+            .saturating_div(100)
+            .max(1)
+            .saturating_mul(class_percent)
+            .saturating_div(100)
+            .max(1)
+    }
+
+    fn draconian_metamorphosis_armor_class(&self) -> i32 {
+        if !self.player_has_draconian_metamorphosis() {
+            return 0;
+        }
+        let level = self.progress.level.min(50);
+        15_i32
+            .saturating_add(i32::from(level / 10).saturating_mul(5))
+            .saturating_add(
+                i32::try_from(prorated_level_value(75, level, 1, 1, 1))
+                    .expect("prorated Draconian armor must fit i32"),
+            )
+    }
+
+    fn draconian_metamorphosis_attack_profiles(
+        &self,
+        innate_skill: &DerivedStat,
+        innate_damage_bonus: i32,
+    ) -> Vec<ResolvedAttackProfile> {
+        let level = self.progress.level.min(50);
+        let attack_level = self.draconian_metamorphosis_attack_level();
+        let to_hit = i32::from(level.saturating_mul(3) / 5);
+        let skill = innate_skill.with_modifier(
+            StatLayer::Status,
+            DRACONIAN_METAMORPHOSIS_MUTATION_ID,
+            to_hit,
+            StatBounds::NON_NEGATIVE,
+        );
+        let critical_to_hit = skill
+            .contributions
+            .iter()
+            .filter(|contribution| {
+                matches!(
+                    contribution.layer,
+                    StatLayer::Equipment
+                        | StatLayer::Status
+                        | StatLayer::Stance
+                        | StatLayer::Environment
+                )
+            })
+            .fold(0_i32, |total, contribution| {
+                total.saturating_add(contribution.amount)
+            });
+        let profile = |name: &str,
+                       blows: u16,
+                       damage_dice: u16,
+                       damage_sides: u16,
+                       weight_tenths_pound: u16| {
+            ResolvedAttackProfile {
+                attacks: blows / 100,
+                extra_attack_chance_percent: u8::try_from(blows % 100)
+                    .expect("fractional Draconian blows must fit u8"),
+                melee_skill: skill.clone(),
+                to_hit: critical_to_hit,
+                to_damage: innate_damage_bonus,
+                damage_dice,
+                damage_sides,
+                damage_type: DamageType::Physical,
+                source_item_id: None,
+                source_mutation_id: Some(DRACONIAN_METAMORPHOSIS_MUTATION_ID.to_owned()),
+                attack_name: Some(name.to_owned()),
+                critical_weight_tenths_pound: Some(weight_tenths_pound),
+            }
+        };
+        let claw_weight = 100_u16.saturating_add(attack_level);
+        let claw_blows =
+            draconian_innate_blows(self.effective_player_attributes(), claw_weight, 400);
+        let bite_maximum = match attack_level {
+            175.. => 400,
+            160.. => 300,
+            135.. => 250,
+            85.. => 200,
+            70.. => 150,
+            _ => 100,
+        };
+        let bite_weight = 200_u16.saturating_add(attack_level.saturating_mul(2));
+        let bite_blows = draconian_innate_blows(
+            self.effective_player_attributes(),
+            bite_weight,
+            bite_maximum,
+        );
+        vec![
+            profile(
+                "爪击",
+                claw_blows,
+                1 + attack_level / 15,
+                3 + level / 16,
+                claw_weight,
+            ),
+            profile(
+                "撕咬",
+                bite_blows,
+                1 + level / 10,
+                4 + attack_level / 6,
+                bite_weight,
+            ),
+        ]
     }
 
     pub(super) fn player_has_mighty_throw(&self) -> bool {
@@ -1822,11 +2046,17 @@ impl Game {
                     ),
                     (
                         StatKind::ArmorClass,
-                        rating_to_armor_class(modifiers.defense).saturating_add(
-                            self.birth_race_mutation_override(&mutation.id)
-                                .and_then(|override_| override_.armor_class)
-                                .unwrap_or(mutation.armor_class),
-                        ),
+                        rating_to_armor_class(modifiers.defense)
+                            .saturating_add(
+                                self.birth_race_mutation_override(&mutation.id)
+                                    .and_then(|override_| override_.armor_class)
+                                    .unwrap_or(mutation.armor_class),
+                            )
+                            .saturating_add(
+                                (mutation.id == DRACONIAN_METAMORPHOSIS_MUTATION_ID)
+                                    .then(|| self.draconian_metamorphosis_armor_class())
+                                    .unwrap_or(0),
+                            ),
                     ),
                     (StatKind::Speed, modifiers.speed),
                     (

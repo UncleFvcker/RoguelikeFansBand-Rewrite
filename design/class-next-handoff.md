@@ -740,3 +740,27 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。新增内容矩阵、
   选择/锁定/save、召唤执行、九种打击行为和权威中文测试通过；source lock、schema、格式和相关编译
   检查通过。按用户要求未运行或刷新全量 fixture。
+
+## main 当前批次：龙人专项阶段 5、变形与龙形身体
+
+- 权威来源为 RFB `master:src/races_a.c`、`master:src/mut_a.c`、`master:src/mut.c`、
+  `master:src/gf.c` 和 `master:lib/edit/b_info.txt`。九个隐藏 Race 的 35 级候选池现在加入既有
+  `rfb.mutation.draconian-metamorphosis`（“变形”），选择后与其他龙人力量一样永久锁定；弓箭手、
+  骑兵和狙击手继续按原版从该候选中排除。mutation ledger 已将它改为 active，active 总数为 139。
+- 龙形身体精确使用六个戒指槽及护符、光源、斗篷和头盔槽。选择变形时复用现有身体槽迁移事务，
+  武器、弓、身体甲、手套和靴子等失效装备按确定顺序回包；龙形由“出生龙人亚种 + 已激活变形”
+  派生，临时种族变形优先，解除后会恢复龙形，因此没有增加重复的权威形态状态。
+- 龙形 AC 按原版获得 `15 + 5 * (level / 10)` 基础 AC 和按等级 prorated 到 75 的加值。普通武器/徒手
+  基础攻击被爪击和撕咬替换：爪击为 `(1 + L/15)d(3 + level/16)`、撕咬为
+  `(1 + level/10)d(4 + L/6)`，其中 `L` 为下述攻击等级；命中、重量、攻击上限和不足一次的概率均
+  复用原版表。攻击等级从
+  `2 * level` 起算，并应用红/白 105、黑/绿 100、蓝 95、青铜/水晶/金 90、阴影 85 的亚种倍率，
+  再应用战士 120、圣骑士 110、高阶法师 80 的职业倍率；其他可选职业使用 100。
+- 变形龙人对物理 polymorph 入口免疫，拒绝路径不消耗 RNG。身体槽继续存入既有 `bodySlots`，读档
+  校验、state hash 和 replay 都从既有出生种族与锁定 mutation 恢复同一龙形；Protocol 保持
+  `1.212`、State Hash Schema 保持 v104、save schema 保持 v2，没有新增协议或存档字段。
+- 协调版本为 pack `1.356.0` / hash
+  `08a6e2a8f95727c4b47b4d2485c81decad7d42d8a0215e30253eea62cc4dc943`。新增内容矩阵、核心的身体/
+  装备/AC/攻击/免疫/save/state-hash 测试及 replay 聚焦测试通过；source lock、格式和相关编译检查
+  同步完成。按用户要求未运行或刷新全量测试与 fixture。九个 Race 仍隐藏且没有
+  `rfb-compatibility`；出生亚种选择和正式 New Game/UI 入口留给下一里程碑。

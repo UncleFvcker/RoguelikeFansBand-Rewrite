@@ -676,6 +676,20 @@ const STANDARD_BODY_SLOTS: [(&str, &str); 15] = [
     ("tool", "tool"),
 ];
 
+const DRACONIAN_METAMORPHOSIS_MUTATION_ID: &str = "rfb.mutation.draconian-metamorphosis";
+const DRAGON_BODY_SLOTS: [(&str, &str); 10] = [
+    ("ring-1", "ring"),
+    ("ring-2", "ring"),
+    ("ring-3", "ring"),
+    ("ring-4", "ring"),
+    ("ring-5", "ring"),
+    ("ring-6", "ring"),
+    ("amulet", "amulet"),
+    ("light", "light"),
+    ("cloak", "cloak"),
+    ("head", "head"),
+];
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct BodySlot {
     id: String,
@@ -684,6 +698,16 @@ struct BodySlot {
 
 fn standard_body_slots() -> Vec<BodySlot> {
     STANDARD_BODY_SLOTS
+        .iter()
+        .map(|(id, slot_type)| BodySlot {
+            id: (*id).to_owned(),
+            slot_type: (*slot_type).to_owned(),
+        })
+        .collect()
+}
+
+fn dragon_body_slots() -> Vec<BodySlot> {
+    DRAGON_BODY_SLOTS
         .iter()
         .map(|(id, slot_type)| BodySlot {
             id: (*id).to_owned(),
@@ -716,6 +740,23 @@ fn resolve_body_slots(
         return Ok(standard_body_slots());
     };
     let (_, race, _, _) = build_definitions(content, identity)?;
+    Ok(body_slots_for_race(race))
+}
+
+fn resolve_permanent_body_slots(
+    content: &ContentCatalog,
+    identity: Option<&CharacterBuildIdentity>,
+    active_mutation_ids: &BTreeSet<String>,
+) -> Result<Vec<BodySlot>, CoreError> {
+    let Some(identity) = identity else {
+        return Ok(standard_body_slots());
+    };
+    let (_, race, _, _) = build_definitions(content, identity)?;
+    if race.tags.iter().any(|tag| tag == "draconian")
+        && active_mutation_ids.contains(DRACONIAN_METAMORPHOSIS_MUTATION_ID)
+    {
+        return Ok(dragon_body_slots());
+    }
     Ok(body_slots_for_race(race))
 }
 

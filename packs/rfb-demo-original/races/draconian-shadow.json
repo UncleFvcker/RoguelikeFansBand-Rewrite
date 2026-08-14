@@ -101,11 +101,17 @@
           "rfb.mutation.draconian-regen",
           "rfb.mutation.draconian-kin",
           "rfb.mutation.draconian-lore",
-          "rfb.mutation.draconian-resistance"
+          "rfb.mutation.draconian-resistance",
+          "rfb.mutation.draconian-metamorphosis"
         ]
       }
     }
   ],
+  "mutationChoiceExclusionsByClass": {
+    "demo.class.archer": ["rfb.mutation.draconian-metamorphosis"],
+    "demo.class.cavalry": ["rfb.mutation.draconian-metamorphosis"],
+    "demo.class.sniper": ["rfb.mutation.draconian-metamorphosis"]
+  },
   "mutationOverrides": {
     "rfb.mutation.draconian-shield": {
       "description": "龙皮：你获得 +25 AC",

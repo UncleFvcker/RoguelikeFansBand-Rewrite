@@ -1,4 +1,4 @@
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use super::*;
 
@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.355.0");
+    assert_eq!(catalog.pack_version(), "1.356.0");
     assert_eq!(catalog.races().count(), 55);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -2024,7 +2024,7 @@ fn hidden_draconian_subraces_match_rfb_profiles_and_breath_bindings() {
 }
 
 #[test]
-fn draconian_level_35_power_matrix_matches_rfb_master() {
+fn draconian_level_35_power_matrix_includes_completed_metamorphosis() {
     let pack = original_pack_path();
     let catalog = ContentCatalog::from_artifact(
         compile_pack_dir(&pack).expect("original pack should compile"),
@@ -2038,6 +2038,7 @@ fn draconian_level_35_power_matrix_matches_rfb_master() {
         "rfb.mutation.draconian-kin",
         "rfb.mutation.draconian-lore",
         "rfb.mutation.draconian-resistance",
+        "rfb.mutation.draconian-metamorphosis",
     ];
     let profiles = [
         (
@@ -2135,11 +2136,17 @@ fn draconian_level_35_power_matrix_matches_rfb_master() {
             actual_ids.iter().map(String::as_str).collect::<Vec<_>>(),
             mutation_ids
         );
-        assert!(
-            !actual_ids
-                .iter()
-                .any(|id| id == "rfb.mutation.draconian-metamorphosis")
-        );
+        for class_id in [
+            "demo.class.archer",
+            "demo.class.cavalry",
+            "demo.class.sniper",
+        ] {
+            assert_eq!(
+                race.mutation_choice_exclusions_by_class[class_id],
+                BTreeSet::from(["rfb.mutation.draconian-metamorphosis".to_owned()]),
+                "{suffix}:{class_id}"
+            );
+        }
 
         let shield = &race.mutation_overrides["rfb.mutation.draconian-shield"];
         assert_eq!(
@@ -2227,11 +2234,12 @@ fn draconian_level_35_power_matrix_matches_rfb_master() {
         assert_eq!(entry["status"], "active", "{id}");
         assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
     }
-    let metamorphosis = entries
-        .iter()
-        .find(|entry| entry["id"] == "rfb.mutation.draconian-metamorphosis")
-        .expect("metamorphosis ledger entry");
-    assert_eq!(metamorphosis["status"], "blocked");
+    let metamorphosis = catalog
+        .mutation("rfb.mutation.draconian-metamorphosis")
+        .expect("Draconian metamorphosis mutation");
+    assert_eq!(metamorphosis.name, "变形");
+    assert_eq!(metamorphosis.description, "你变形成了一条龙！");
+    assert_eq!(metamorphosis.random_weight, 0);
 }
 
 #[test]
@@ -3072,7 +3080,7 @@ fn mutation_definitions_match_the_frozen_legacy_ledger() {
             .iter()
             .filter(|mutation| mutation["status"] == "active")
             .count(),
-        138
+        139
     );
 }
 
@@ -4293,7 +4301,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
             .iter()
             .filter(|entry| entry["status"] == "active")
             .count(),
-        138
+        139
     );
     assert_eq!(
         entries

@@ -206,7 +206,7 @@ fn race_reward_game(build_id: &str) -> Game {
         .expect("test race reward game should create")
 }
 
-fn draconian_reward_game() -> Game {
+fn draconian_reward_game_for_build(build_id: &str) -> Game {
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(std::path::Path::parent)
@@ -217,11 +217,12 @@ fn draconian_reward_game() -> Game {
         .content
         .builds
         .iter()
-        .find(|build| build.id == "demo.build.high-mage-death")
-        .expect("Death High-Mage build should exist")
+        .find(|build| build.id == build_id)
+        .unwrap_or_else(|| panic!("{build_id} should exist"))
         .clone();
-    build.id = "test.build.draconian-red".to_owned();
+    build.id = format!("test.build.draconian-red.{}", build.class_id);
     build.race_id = "rfb-legacy.race.draconian-red".to_owned();
+    let test_build_id = build.id.clone();
     artifact.content.builds.push(build);
     artifact
         .content
@@ -235,12 +236,16 @@ fn draconian_reward_game() -> Game {
         rfb_content::encode_content(artifact.content)
             .expect("test Draconian content should remain valid"),
     ));
-    Game::from_content_with_build(3535, catalog, DEFAULT_WORLD_ID, "test.build.draconian-red")
+    Game::from_content_with_build(3535, catalog, DEFAULT_WORLD_ID, &test_build_id)
         .expect("hidden Draconian should be usable by the internal test build")
 }
 
+fn draconian_reward_game() -> Game {
+    draconian_reward_game_for_build("demo.build.high-mage-death")
+}
+
 #[test]
-fn draconian_level_35_reward_revalidates_all_eight_completed_powers() {
+fn draconian_level_35_reward_revalidates_all_nine_completed_powers() {
     let mut game = draconian_reward_game();
     clear_monsters(&mut game);
     game.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
@@ -265,6 +270,7 @@ fn draconian_level_35_reward_revalidates_all_eight_completed_powers() {
             "rfb.mutation.draconian-kin",
             "rfb.mutation.draconian-lore",
             "rfb.mutation.draconian-resistance",
+            "rfb.mutation.draconian-metamorphosis",
         ]
     );
 
@@ -452,6 +458,163 @@ fn draconian_level_35_reward_revalidates_all_eight_completed_powers() {
             .pending_race_mutation_choice
             .is_none()
     );
+}
+
+#[test]
+fn draconian_metamorphosis_replaces_body_and_derives_combat_save_and_hash_state() {
+    let mut game = draconian_reward_game();
+    clear_monsters(&mut game);
+    game.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+    let hash_before = game.state_hash();
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == "demo.item.dagger" && matches!(item.location, ItemLocation::Equipped { .. })
+    }));
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == "demo.item.robe" && matches!(item.location, ItemLocation::Equipped { .. })
+    }));
+
+    assert!(game.choose_race_mutation(
+        "draconian-power",
+        DRACONIAN_METAMORPHOSIS_MUTATION_ID,
+        &mut Vec::new(),
+    ));
+    assert_eq!(
+        game.body_slots
+            .iter()
+            .map(|slot| (slot.id.as_str(), slot.slot_type.as_str()))
+            .collect::<Vec<_>>(),
+        [
+            ("ring-1", "ring"),
+            ("ring-2", "ring"),
+            ("ring-3", "ring"),
+            ("ring-4", "ring"),
+            ("ring-5", "ring"),
+            ("ring-6", "ring"),
+            ("amulet", "amulet"),
+            ("light", "light"),
+            ("cloak", "cloak"),
+            ("head", "head"),
+        ]
+    );
+    assert!(game.items.iter().all(|item| {
+        !matches!(item.location, ItemLocation::Equipped { .. })
+            || matches!(
+                game.body_slot_type(match &item.location {
+                    ItemLocation::Equipped { slot_id } => slot_id,
+                    _ => unreachable!(),
+                }),
+                Some("ring" | "amulet" | "light" | "cloak" | "head")
+            )
+    }));
+    for kind_id in ["demo.item.dagger", "demo.item.robe"] {
+        assert!(
+            game.items.iter().any(|item| {
+                item.kind_id == kind_id && item.location == ItemLocation::Inventory
+            })
+        );
+    }
+
+    assert!(game.player_has_draconian_metamorphosis());
+    assert_eq!(game.draconian_metamorphosis_attack_level(), 58);
+    let stats = game.player_derived_stats();
+    assert!(stats.armor_class.contributions.iter().any(|contribution| {
+        contribution.source_id == DRACONIAN_METAMORPHOSIS_MUTATION_ID && contribution.amount == 67
+    }));
+    let attacks = game.player_mutation_innate_attack_profiles(&stats, None);
+    let metamorphosis_attacks = attacks
+        .iter()
+        .filter(|attack| {
+            attack.source_mutation_id.as_deref() == Some(DRACONIAN_METAMORPHOSIS_MUTATION_ID)
+        })
+        .map(|attack| {
+            (
+                attack.attack_name.as_deref(),
+                attack.damage_dice,
+                attack.damage_sides,
+                attack.attacks,
+                attack.extra_attack_chance_percent,
+            )
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(
+        metamorphosis_attacks,
+        [(Some("爪击"), 4, 5, 1, 6), (Some("撕咬"), 4, 13, 1, 0)]
+    );
+
+    let rng_before_polymorph = game.rng.clone();
+    game.resolve_player_polymorph("demo.actor.lord-of-change", 61, &mut Vec::new());
+    assert_eq!(game.rng, rng_before_polymorph);
+    assert!(
+        !game
+            .player
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_PLAYER_POLYMORPH)
+    );
+    assert_ne!(game.state_hash(), hash_before);
+
+    let saved = game.to_save();
+    assert_eq!(saved.player.body_slots.len(), 10);
+    assert!(
+        saved
+            .player
+            .locked_mutation_ids
+            .iter()
+            .any(|id| id == DRACONIAN_METAMORPHOSIS_MUTATION_ID)
+    );
+    let restored = Game::from_save_with_content(saved, game.content.clone())
+        .expect("Draconian metamorphosis save should restore");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.body_slots, game.body_slots);
+    assert_eq!(
+        restored.player_derived_stats().armor_class.value,
+        game.player_derived_stats().armor_class.value
+    );
+}
+
+#[test]
+fn draconian_metamorphosis_uses_class_multipliers_and_original_exclusions() {
+    for (build_id, expected_attack_level) in [
+        ("demo.build.warrior", 87),
+        ("demo.build.paladin-death", 80),
+        ("demo.build.high-mage-death", 58),
+    ] {
+        let mut game = draconian_reward_game_for_build(build_id);
+        clear_monsters(&mut game);
+        game.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+        assert!(game.choose_race_mutation(
+            "draconian-power",
+            DRACONIAN_METAMORPHOSIS_MUTATION_ID,
+            &mut Vec::new(),
+        ));
+        assert_eq!(
+            game.draconian_metamorphosis_attack_level(),
+            expected_attack_level,
+            "{build_id}"
+        );
+    }
+
+    for build_id in [
+        "demo.build.archer",
+        "demo.build.cavalry",
+        "demo.build.sniper",
+    ] {
+        let mut game = draconian_reward_game_for_build(build_id);
+        clear_monsters(&mut game);
+        game.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+        let pending = game
+            .snapshot()
+            .player
+            .pending_race_mutation_choice
+            .expect("Draconian power should remain selectable");
+        assert_eq!(pending.candidates.len(), 8, "{build_id}");
+        assert!(
+            !pending
+                .candidates
+                .iter()
+                .any(|candidate| candidate.id == DRACONIAN_METAMORPHOSIS_MUTATION_ID)
+        );
+    }
 }
 
 #[test]

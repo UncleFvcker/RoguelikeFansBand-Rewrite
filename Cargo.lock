@@ -2753,6 +2753,7 @@ dependencies = [
 name = "rfb-replay"
 version = "0.1.0"
 dependencies = [
+ "rfb-content",
  "rfb-core",
  "rfb-protocol",
  "rmp-serde",

@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use std::sync::Arc;
+
 use rfb_core::stats::experience_required_for_level;
 use rfb_protocol::{
     ActorSaveDto, Direction, GameCommand, MapScaleDto, MonsterPackBehaviorDto, Position,
@@ -147,6 +149,44 @@ fn level_thirty_race_talent_choices_are_replayable() {
 }
 
 #[test]
+fn draconian_metamorphosis_choice_and_body_are_replayable() {
+    let initial = level_thirty_five_draconian(87);
+    let pending = initial
+        .snapshot()
+        .player
+        .pending_race_mutation_choice
+        .expect("level 35 Draconian should require a power choice");
+    assert!(
+        pending
+            .candidates
+            .iter()
+            .any(|candidate| candidate.id == "rfb.mutation.draconian-metamorphosis")
+    );
+    let mut recorder = ReplayRecorder::new(initial.clone());
+    recorder
+        .dispatch(GameCommand::ChooseRaceMutation {
+            reward_id: pending.reward_id,
+            mutation_id: "rfb.mutation.draconian-metamorphosis".to_owned(),
+        })
+        .expect("Draconian metamorphosis choice should execute");
+    let (final_game, replay) = recorder.finish();
+
+    let saved = final_game.to_save();
+    assert_eq!(saved.player.body_slots.len(), 10);
+    assert!(
+        saved
+            .player
+            .locked_mutation_ids
+            .iter()
+            .any(|id| id == "rfb.mutation.draconian-metamorphosis")
+    );
+    let verification =
+        verify(&replay, initial).expect("Draconian metamorphosis replay should verify");
+    assert_eq!(verification.commands_verified, 1);
+    assert_eq!(verification.final_state_hash, final_game.state_hash());
+}
+
+#[test]
 fn high_elf_invisible_detection_roll_is_replayable() {
     let initial = invisible_replay_game(84, "rfb-legacy.race.high-elf");
     assert_eq!(
@@ -275,6 +315,99 @@ fn level_thirty_race(seed: u64, race_id: &str) -> Game {
             .clamp(0, skill.maximum);
     }
     Game::from_save(payload).expect("level 30 race replay precondition should restore")
+}
+
+fn level_thirty_five_draconian(seed: u64) -> Game {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("replay crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    let mut build = artifact
+        .content
+        .builds
+        .iter()
+        .find(|build| build.id == "demo.build.warrior")
+        .expect("Warrior build should exist")
+        .clone();
+    build.id = "test.build.replay.draconian-red".to_owned();
+    build.race_id = "rfb-legacy.race.draconian-red".to_owned();
+    artifact.content.builds.push(build);
+    artifact
+        .content
+        .races
+        .iter_mut()
+        .find(|race| race.id == "rfb-legacy.race.draconian-red")
+        .expect("red Draconian race should exist")
+        .tags
+        .push("rfb-compatibility".to_owned());
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("test Draconian content should remain valid"),
+    ));
+    let mut payload = Game::from_content_with_build(
+        seed,
+        catalog.clone(),
+        rfb_core::DEFAULT_WORLD_ID,
+        "test.build.replay.draconian-red",
+    )
+    .expect("hidden Draconian should be usable by the replay test build")
+    .to_save();
+    let identity = payload
+        .player
+        .build
+        .as_ref()
+        .expect("formal build identity")
+        .clone();
+    let skill_set_ids = [
+        catalog
+            .race(&identity.race_id)
+            .expect("Draconian race")
+            .skill_set_id
+            .clone(),
+        catalog
+            .class(&identity.class_id)
+            .expect("Warrior class")
+            .skill_set_id
+            .clone(),
+        catalog
+            .personality(&identity.personality_id)
+            .expect("Ordinary personality")
+            .skill_set_id
+            .clone(),
+    ];
+    let progress = payload
+        .player
+        .progress
+        .as_mut()
+        .expect("formal build should save character progress");
+    progress.level = 35;
+    progress.max_level = 35;
+    progress.experience = experience_required_for_level(35);
+    progress.maximum_experience = progress.experience;
+    progress.pending_attribute_increases = 7;
+    for skill in &mut progress.skills {
+        let (base, growth) = skill_set_ids
+            .iter()
+            .filter_map(|skill_set_id| catalog.skill_set(skill_set_id))
+            .flat_map(|skill_set| &skill_set.entries)
+            .filter(|entry| entry.skill_id == skill.id)
+            .fold((0_i32, 0_i32), |(base, growth), entry| {
+                (
+                    base.saturating_add(entry.base),
+                    growth.saturating_add(entry.growth_per_ten_levels),
+                )
+            });
+        skill.base = base;
+        skill.growth_per_ten_levels = growth;
+        skill.maximum = catalog.skill(&skill.id).expect("skill definition").maximum;
+        skill.current = base
+            .saturating_add(growth.saturating_mul(35).saturating_div(10))
+            .clamp(0, skill.maximum);
+    }
+    Game::from_save_with_content(payload, catalog)
+        .expect("level 35 Draconian replay precondition should restore")
 }
 
 fn invisible_replay_game(seed: u64, race_id: &str) -> Game {

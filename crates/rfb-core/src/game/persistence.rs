@@ -46,8 +46,8 @@ use super::{
     STATE_HASH_SCHEMA_VERSION, TaskState, base_dungeon_states, character_skill_progress,
     dungeon_instance_id, dungeon_instance_storage_key, floor_dungeon_id, initial_task_states,
     load_built_in_content, normalize_player_name, parse_dungeon_instance_ordinal,
-    resolve_body_slots, resolve_character_build, task_definition, task_floors, task_objectives,
-    tasks::task_initial_state,
+    resolve_character_build, resolve_permanent_body_slots, task_definition, task_floors,
+    task_objectives, tasks::task_initial_state,
 };
 
 struct TaskRestoreContext<'a> {
@@ -1034,7 +1034,7 @@ impl Game {
         // derive them from the build's race (or the standard body) with no
         // RNG involvement.
         let body_slots = if payload.player.body_slots.is_empty() {
-            resolve_body_slots(&content, build.as_ref())?
+            resolve_permanent_body_slots(&content, build.as_ref(), &progress.active_mutation_ids)?
         } else {
             let mut seen_slot_ids = BTreeSet::new();
             let slots = payload

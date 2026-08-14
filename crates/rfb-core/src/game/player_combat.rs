@@ -1542,15 +1542,27 @@ impl Game {
         if let Some(event) = self.train_riding_from_melee(definition.level) {
             events.push(event);
         }
-        let mut profiles = vec![weapon_profile];
+        let mut profiles = if self.player_has_draconian_metamorphosis() {
+            Vec::new()
+        } else {
+            vec![weapon_profile]
+        };
         profiles.extend(
             self.player_mutation_innate_attack_profiles(&attacker, equipped_weapon_id.as_deref()),
         );
+        let profiles = profiles
+            .into_iter()
+            .map(|profile| {
+                let attacks = profile.attacks.saturating_add(u16::from(
+                    profile.extra_attack_chance_percent > 0
+                        && self.rng.bounded(100) < u64::from(profile.extra_attack_chance_percent),
+                ));
+                (profile, attacks)
+            })
+            .collect::<Vec<_>>();
         let attacks_available = profiles
             .iter()
-            .fold(0_u16, |total, profile| {
-                total.saturating_add(profile.attacks)
-            })
+            .fold(0_u16, |total, (_, attacks)| total.saturating_add(*attacks))
             .max(1);
         let mut attacks_used = 0_u16;
         let mut killed = false;
@@ -1558,7 +1570,7 @@ impl Game {
         let mut retaliation_blow_index = 0_usize;
         let mut touched_surviving_target = false;
         let mut allow_criticals = true;
-        'profiles: for profile in profiles {
+        'profiles: for (profile, profile_attacks) in profiles {
             let vampiric_weapon =
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
                     || profile.source_item_id.as_ref().is_some_and(|item_id| {
@@ -1576,7 +1588,7 @@ impl Game {
                 &definition,
                 strike_mode,
             );
-            for _ in 0..profile.attacks {
+            for _ in 0..profile_attacks {
                 attacks_used = attacks_used.saturating_add(1);
                 self.apply_easy_tiring_fatigue(50);
                 if profile.melee_skill.value <= 0

@@ -731,16 +731,7 @@ impl Game {
             return Err(CoreError::InvalidSave("character progress is invalid"));
         }
         self.validate_actor(&self.player, ActorRole::Player)?;
-        let expected_body_slots = self
-            .player
-            .statuses
-            .iter()
-            .find(|status| status.kind_id == STATUS_PLAYER_POLYMORPH)
-            .and_then(|status| status.granted_race_id.as_deref())
-            .and_then(|race_id| self.content.race(race_id))
-            .map(body_slots_for_race)
-            .map(Ok)
-            .unwrap_or_else(|| resolve_body_slots(&self.content, self.build.as_ref()))?;
+        let expected_body_slots = self.resolved_player_body_slots()?;
         if self.body_slots != expected_body_slots {
             return Err(CoreError::InvalidSave(
                 "player body slots do not match the active race",

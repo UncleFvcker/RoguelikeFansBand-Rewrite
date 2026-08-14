@@ -3109,6 +3109,7 @@ impl Game {
         self.progress.attribute_potentials = attribute_potentials;
         self.progress.clamp_attributes_to_potentials();
         let removed_mutations = self.remove_all_unlocked_mutations_without_refresh();
+        self.reconcile_player_body_slots_for_current_form();
         self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
 
         for (mutation_id, name) in removed_mutations {

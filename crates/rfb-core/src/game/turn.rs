@@ -539,8 +539,7 @@ impl Game {
             );
         }
         if player_race_status_expiring {
-            let body_slots = resolve_body_slots(&self.content, self.build.as_ref())?;
-            self.reconcile_player_body_slots(body_slots);
+            self.reconcile_player_body_slots_for_current_form();
         }
         if invulnerability_expiring {
             spend_energy(&mut self.player.energy_need, STANDARD_ACTION_COST);

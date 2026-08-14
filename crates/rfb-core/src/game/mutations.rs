@@ -1175,6 +1175,7 @@ impl Game {
         if !self.gain_mutation_without_refresh(mutation_id, events) {
             return false;
         }
+        self.reconcile_player_body_slots_for_current_form();
         self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
         true
     }
@@ -1247,6 +1248,7 @@ impl Game {
         if !self.lose_mutation_without_refresh(mutation_id, events) {
             return false;
         }
+        self.reconcile_player_body_slots_for_current_form();
         self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
         true
     }
@@ -1280,6 +1282,7 @@ impl Game {
             return 0;
         }
 
+        self.reconcile_player_body_slots_for_current_form();
         self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
         for (mutation_id, name) in &removed {
             events.push(DomainEvent::MutationLost {
@@ -1394,6 +1397,7 @@ impl Game {
             for (mutation_id, name) in removed {
                 events.push(DomainEvent::MutationLost { mutation_id, name });
             }
+            self.reconcile_player_body_slots_for_current_form();
             self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
             return true;
         }
@@ -1436,6 +1440,7 @@ impl Game {
         }
 
         if changed {
+            self.reconcile_player_body_slots_for_current_form();
             self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
         }
         changed
