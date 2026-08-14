@@ -1760,6 +1760,13 @@
       "maxDepth": 50
     },
     {
+      "itemKindId": "demo.item.natures-gifts",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45,
+      "maxDepth": 90
+    },
+    {
       "itemKindId": "demo.item.book-of-elements",
       "weight": 100,
       "quantity": 1,

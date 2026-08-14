@@ -658,6 +658,26 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "call-sunlight",
+              "type": "string"
+            },
+            "vampireDamage": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "type",
+            "vampireDamage"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "probe",
               "type": "string"
             }
@@ -1738,6 +1758,30 @@
         {
           "additionalProperties": false,
           "properties": {
+            "sourceTerrainIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "create-adjacent-terrain",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "operation": {
               "$ref": "#/$defs/AbilityTerrainBeamOperationDefinition"
             },
@@ -2574,6 +2618,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "protect-from-corrosion",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "branches": {
               "items": {
                 "$ref": "#/$defs/AbilityRandomBranchDefinition"
@@ -2807,6 +2864,7 @@
         "status-intensity",
         "status-duration-ticks",
         "status-duration-sides",
+        "status-defense",
         "status-power",
         "status-melee-damage",
         "control-power",

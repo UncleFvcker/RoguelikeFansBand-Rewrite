@@ -24,6 +24,9 @@ pub(super) enum AbilityTargetPlan {
         center: Position,
         positions: Vec<Position>,
     },
+    AdjacentTerrain {
+        replacements: Vec<(Position, String)>,
+    },
     Teleport {
         destination: Position,
     },
@@ -796,6 +799,9 @@ impl Game {
             (AbilityEffectDefinition::Clairvoyance { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_clairvoyance_effect(&ability, events, changed)
             }
+            (AbilityEffectDefinition::CallSunlight { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_call_sunlight_effect(&ability, events, changed);
+            }
             (AbilityEffectDefinition::ResistElements { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_resist_elements_effect(&ability, events)
             }
@@ -842,6 +848,15 @@ impl Game {
                     changed,
                 );
             }
+            (
+                AbilityEffectDefinition::CreateAdjacentTerrain { .. },
+                AbilityTargetPlan::AdjacentTerrain { replacements },
+            ) => self.resolve_player_adjacent_terrain_creation_effect(
+                &ability,
+                replacements,
+                events,
+                changed,
+            ),
             (
                 AbilityEffectDefinition::ApplyStatus { .. }
                 | AbilityEffectDefinition::RemoveStatus { .. },
@@ -1029,6 +1044,10 @@ impl Game {
             (AbilityEffectDefinition::BrandWeapon { .. }, AbilityTargetPlan::Item { item_id }) => {
                 self.resolve_player_brand_weapon_effect(&ability, &item_id, events);
             }
+            (
+                AbilityEffectDefinition::ProtectFromCorrosion,
+                AbilityTargetPlan::Item { item_id },
+            ) => self.resolve_player_corrosion_protection_effect(&ability, &item_id, events),
             (AbilityEffectDefinition::NoOp { .. }, _) => {
                 self.resolve_player_no_op_effect(&ability, events);
             }
@@ -1772,48 +1791,62 @@ impl Game {
                 removed_entities,
             )?;
         }
+        if sunlight_burn_damage_dice > 0 && self.player_fails_sunlight_save() {
+            let raw_damage = self
+                .roll_damage(sunlight_burn_damage_dice, sunlight_burn_damage_sides)
+                .max(0);
+            self.apply_player_sunlight_damage(&ability.id, raw_damage, events);
+        }
+        Ok(())
+    }
+
+    fn player_fails_sunlight_save(&mut self) -> bool {
         let vampire = self
             .character_definitions()
             .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "vampire"));
-        if vampire && sunlight_burn_damage_dice > 0 {
-            let light_resistance = self
-                .effective_player_resistances()
-                .level(DamageType::Light)
-                .reduction_percent()
-                .max(0);
-            let saved = self.rng.bounded(33) < u64::try_from(light_resistance).unwrap_or(0);
-            if !saved {
-                let raw_damage = self
-                    .roll_damage(sunlight_burn_damage_dice, sunlight_burn_damage_sides)
-                    .max(0);
-                let damage = resolve_damage(
-                    DamagePacket::new(raw_damage, DamageType::Light),
-                    ResistanceLevel::Normal,
-                );
-                let application =
-                    plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-                commit_damage_application(&mut self.player, &application);
-                events.push(DomainEvent::AbilityHit {
-                    ability_id: ability.id.clone(),
-                    target_kind_id: self.player.kind_id.clone(),
-                    damage,
-                    trace: ProjectileTrace {
-                        origin: center,
-                        impact: center,
-                        landing: center,
-                        traversed: vec![center],
-                    },
-                });
-                if application.fatal {
-                    events.push(DomainEvent::PlayerDied {
-                        source_kind_id: self.player.kind_id.clone(),
-                        method_id: Some(ability.id.clone()),
-                        damage,
-                    });
-                }
-            }
+        if !vampire {
+            return false;
         }
-        Ok(())
+        let light_resistance = self
+            .effective_player_resistances()
+            .level(DamageType::Light)
+            .reduction_percent()
+            .max(0);
+        self.rng.bounded(33) >= u64::try_from(light_resistance).unwrap_or(0)
+    }
+
+    fn apply_player_sunlight_damage(
+        &mut self,
+        ability_id: &str,
+        raw_damage: i32,
+        events: &mut Vec<DomainEvent>,
+    ) -> i32 {
+        let damage = resolve_damage(
+            DamagePacket::new(raw_damage, DamageType::Light),
+            ResistanceLevel::Normal,
+        );
+        let application = plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
+        commit_damage_application(&mut self.player, &application);
+        let center = self.player.position;
+        events.push(DomainEvent::AbilityHit {
+            ability_id: ability_id.to_owned(),
+            target_kind_id: self.player.kind_id.clone(),
+            damage,
+            trace: ProjectileTrace {
+                origin: center,
+                impact: center,
+                landing: center,
+                traversed: vec![center],
+            },
+        });
+        if application.fatal {
+            events.push(DomainEvent::PlayerDied {
+                source_kind_id: self.player.kind_id.clone(),
+                method_id: Some(ability_id.to_owned()),
+                damage,
+            });
+        }
+        damage.applied
     }
 
     fn resolve_player_terrain_beam_effect(
@@ -3038,6 +3071,7 @@ impl Game {
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
                     | AbilityEffectDefinition::AggravateMonsters
+                    | AbilityEffectDefinition::CallSunlight { .. }
                     | AbilityEffectDefinition::NoOp { .. } => AbilityTargetPlan::SelfTarget,
                     _ => unreachable!("validated self sequence must remain self-targeted"),
                 };
@@ -3936,6 +3970,58 @@ impl Game {
                         .iter()
                         .any(|tag| matches!(tag.as_str(), "artifact" | "unbrandable"))
             })
+    }
+
+    fn item_can_receive_corrosion_protection(&self, item: &ItemInstance) -> bool {
+        (matches!(
+            &item.location,
+            ItemLocation::Inventory | ItemLocation::Equipped { .. }
+        ) || item.location == ItemLocation::Ground(self.player.position))
+            && self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "armor"))
+    }
+
+    fn resolve_player_corrosion_protection_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        item_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        debug_assert!(matches!(
+            ability.effect,
+            AbilityEffectDefinition::ProtectFromCorrosion
+        ));
+        let item = self
+            .items
+            .iter_mut()
+            .find(|item| item.id == item_id)
+            .expect("planned corrosion protection target must remain available");
+        let item_kind_id = item.kind_id.clone();
+        let already_protected = !item
+            .permanent_destruction_immunities
+            .insert(ItemDestructionElement::Acid);
+        let defense_before = item.enchantments.to_armor;
+        if item.curse.is_none() && item.enchantments.to_armor < 0 {
+            item.enchantments.to_armor = 0;
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::ProtectFromCorrosion {
+                    effect_index: 0,
+                    item_id: item_id.to_owned(),
+                    item_kind_id,
+                    already_protected,
+                    defense_before,
+                    defense_after: item.enchantments.to_armor,
+                }],
+            },
+            trace: None,
+        });
     }
 
     pub(super) fn resolve_player_brand_weapon_effect(
@@ -5046,6 +5132,7 @@ impl Game {
             rolled_affixes: Vec::new(),
             enchantments: ItemEnchantmentsDto::default(),
             curse: None,
+            permanent_destruction_immunities: Default::default(),
             activation: None,
             charges: None,
             fuel: None,
@@ -5129,6 +5216,7 @@ impl Game {
             rolled_affixes: Vec::new(),
             enchantments: ItemEnchantmentsDto::default(),
             curse: None,
+            permanent_destruction_immunities: Default::default(),
             activation: None,
             charges: None,
             fuel: None,
@@ -6347,70 +6435,7 @@ impl Game {
         self.add_virtue(VirtueKindDto::Knowledge, 1);
         self.add_virtue(VirtueKindDto::Enlightenment, 1);
 
-        let mut mapped_positions = Vec::with_capacity(self.terrain.len());
-        for y in 0..self.height {
-            for x in 0..self.width {
-                let position = Position {
-                    x: i32::from(x),
-                    y: i32::from(y),
-                };
-                let index = self.index(position).expect("floor position must be valid");
-                if !self.explored[index] || !self.glow[index] {
-                    changed.insert(position);
-                }
-                self.explored[index] = true;
-                self.glow[index] = true;
-                mapped_positions.push(position);
-            }
-        }
-        events.push(DomainEvent::AbilityDetected {
-            ability_id: ability.id.clone(),
-            resolution: AbilityDetectResolutionDto {
-                subject: AbilityDetectSubjectDto::Terrain,
-                category: "map".to_owned(),
-                radius: u8::MAX,
-                persistent: true,
-                through_walls: true,
-                detected_positions: mapped_positions,
-                detected_entity_ids: Vec::new(),
-            },
-        });
-
-        let mut ground_items = self
-            .items
-            .iter()
-            .filter_map(|item| match item.location {
-                ItemLocation::Ground(position) => {
-                    Some((position.y, position.x, item.id.clone(), position))
-                }
-                _ => None,
-            })
-            .collect::<Vec<_>>();
-        ground_items.sort_by(|left, right| {
-            (left.0, left.1, left.2.as_str()).cmp(&(right.0, right.1, right.2.as_str()))
-        });
-        let item_ids = ground_items
-            .iter()
-            .map(|(_, _, item_id, _)| item_id.clone())
-            .collect::<Vec<_>>();
-        let item_positions = ground_items
-            .into_iter()
-            .map(|(_, _, _, position)| position)
-            .collect::<Vec<_>>();
-        self.mark_item_instances_discovered(&item_ids);
-        changed.extend(item_positions.iter().copied());
-        events.push(DomainEvent::AbilityDetected {
-            ability_id: ability.id.clone(),
-            resolution: AbilityDetectResolutionDto {
-                subject: AbilityDetectSubjectDto::Item,
-                category: "item".to_owned(),
-                radius: u8::MAX,
-                persistent: false,
-                through_walls: true,
-                detected_positions: item_positions,
-                detected_entity_ids: item_ids,
-            },
-        });
+        self.reveal_and_light_floor(&ability.id, events, changed);
 
         let telepathy_resolution = if self.player_has_permanent_telepathy() {
             AbilityEffectResolutionDto::Skipped {
@@ -6449,6 +6474,109 @@ impl Game {
                 target_entity_id: Some(self.player.id.clone()),
                 target_kind_id: Some(self.player.kind_id.clone()),
                 effects: vec![telepathy_resolution],
+            },
+            trace: None,
+        });
+    }
+
+    fn reveal_and_light_floor(
+        &mut self,
+        ability_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let mut mapped_positions = Vec::with_capacity(self.terrain.len());
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let position = Position {
+                    x: i32::from(x),
+                    y: i32::from(y),
+                };
+                let index = self.index(position).expect("floor position must be valid");
+                if !self.explored[index] || !self.glow[index] {
+                    changed.insert(position);
+                }
+                self.explored[index] = true;
+                self.glow[index] = true;
+                mapped_positions.push(position);
+            }
+        }
+        events.push(DomainEvent::AbilityDetected {
+            ability_id: ability_id.to_owned(),
+            resolution: AbilityDetectResolutionDto {
+                subject: AbilityDetectSubjectDto::Terrain,
+                category: "map".to_owned(),
+                radius: u8::MAX,
+                persistent: true,
+                through_walls: true,
+                detected_positions: mapped_positions,
+                detected_entity_ids: Vec::new(),
+            },
+        });
+
+        let mut ground_items = self
+            .items
+            .iter()
+            .filter_map(|item| match item.location {
+                ItemLocation::Ground(position) => {
+                    Some((position.y, position.x, item.id.clone(), position))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        ground_items.sort_by(|left, right| {
+            (left.0, left.1, left.2.as_str()).cmp(&(right.0, right.1, right.2.as_str()))
+        });
+        let item_ids = ground_items
+            .iter()
+            .map(|(_, _, item_id, _)| item_id.clone())
+            .collect::<Vec<_>>();
+        let item_positions = ground_items
+            .into_iter()
+            .map(|(_, _, _, position)| position)
+            .collect::<Vec<_>>();
+        self.mark_item_instances_discovered(&item_ids);
+        changed.extend(item_positions.iter().copied());
+        events.push(DomainEvent::AbilityDetected {
+            ability_id: ability_id.to_owned(),
+            resolution: AbilityDetectResolutionDto {
+                subject: AbilityDetectSubjectDto::Item,
+                category: "item".to_owned(),
+                radius: u8::MAX,
+                persistent: false,
+                through_walls: true,
+                detected_positions: item_positions,
+                detected_entity_ids: item_ids,
+            },
+        });
+    }
+
+    fn resolve_player_call_sunlight_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::CallSunlight { vampire_damage } = ability.effect else {
+            unreachable!("call sunlight executor requires a call sunlight effect");
+        };
+        self.add_virtue(VirtueKindDto::Knowledge, 1);
+        self.add_virtue(VirtueKindDto::Enlightenment, 1);
+        self.reveal_and_light_floor(&ability.id, events, changed);
+        let applied_vampire_damage = if self.player_fails_sunlight_save() {
+            self.apply_player_sunlight_damage(&ability.id, i32::from(vampire_damage), events)
+        } else {
+            0
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::CallSunlight {
+                    effect_index: 0,
+                    vampire_damage: applied_vampire_damage,
+                }],
             },
             trace: None,
         });
@@ -7240,6 +7368,33 @@ impl Game {
             },
         });
     }
+
+    fn resolve_player_adjacent_terrain_creation_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        replacements: Vec<(Position, String)>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::CreateAdjacentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+        } = &ability.effect
+        else {
+            unreachable!("adjacent terrain executor requires an adjacent terrain effect");
+        };
+        let transformed_positions = self.apply_adjacent_terrain_creation(replacements, changed);
+        events.push(DomainEvent::AbilityTerrainTransformed {
+            ability_id: ability.id.clone(),
+            resolution: AbilityTerrainTransformResolutionDto {
+                center: self.player.position,
+                radius: 1,
+                source_terrain_ids: source_terrain_ids.clone(),
+                target_terrain_id: target_terrain_id.clone(),
+                transformed_positions,
+            },
+        });
+    }
 }
 
 impl Game {
@@ -7787,6 +7942,19 @@ impl Game {
                         item_id: item_id.clone(),
                     })
             }
+            AbilityEffectDefinition::ProtectFromCorrosion => {
+                let TargetSelection::Item { item_id } = target else {
+                    return None;
+                };
+                self.items
+                    .iter()
+                    .find(|item| {
+                        item.id == *item_id && self.item_can_receive_corrosion_protection(item)
+                    })
+                    .map(|_| AbilityTargetPlan::Item {
+                        item_id: item_id.clone(),
+                    })
+            }
             AbilityEffectDefinition::Detect { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
@@ -7823,6 +7991,18 @@ impl Game {
                     positions,
                 })
             }
+            AbilityEffectDefinition::CreateAdjacentTerrain {
+                ref source_terrain_ids,
+                ref target_terrain_id,
+            } => (matches!(target, TargetSelection::SelfTarget)
+                && ability
+                    .target
+                    .modes
+                    .contains(&AbilityTargetModeDefinition::SelfTarget))
+            .then(|| AbilityTargetPlan::AdjacentTerrain {
+                replacements: self
+                    .adjacent_terrain_creation_replacements(source_terrain_ids, target_terrain_id),
+            }),
             AbilityEffectDefinition::ApplyStatus { .. }
             | AbilityEffectDefinition::RemoveStatus { .. }
             | AbilityEffectDefinition::Control { .. }
@@ -7850,6 +8030,7 @@ impl Game {
             | AbilityEffectDefinition::CreateStair { .. }
             | AbilityEffectDefinition::SelfKnowledge
             | AbilityEffectDefinition::Clairvoyance { .. }
+            | AbilityEffectDefinition::CallSunlight { .. }
             | AbilityEffectDefinition::Probe
             | AbilityEffectDefinition::CreateDoor { .. }
             | AbilityEffectDefinition::DeviceMastery { .. }

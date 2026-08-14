@@ -216,7 +216,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 100;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 101;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -733,6 +733,7 @@ fn append_starting_item(
         rolled_affixes: Vec::new(),
         enchantments: ItemEnchantmentsDto::default(),
         curse: initial_item_curse(content, &starting_item.item_kind_id),
+        permanent_destruction_immunities: Default::default(),
         activation,
         charges,
         fuel: initial_item_fuel(content, &starting_item.item_kind_id),
@@ -1125,6 +1126,7 @@ impl Game {
                     rolled_affixes: Vec::new(),
                     enchantments: ItemEnchantmentsDto::default(),
                     curse: initial_item_curse(&content, &spawn.kind_id),
+                    permanent_destruction_immunities: Default::default(),
                     activation,
                     charges,
                     fuel: initial_item_fuel(&content, &spawn.kind_id),
@@ -2739,6 +2741,7 @@ impl Game {
             rolled_affixes: Vec::new(),
             enchantments: ItemEnchantmentsDto::default(),
             curse: initial_item_curse(&self.content, kind_id),
+            permanent_destruction_immunities: Default::default(),
             activation,
             charges,
             fuel: initial_item_fuel(&self.content, kind_id),
@@ -5403,6 +5406,7 @@ impl Game {
             rolled_affixes: draft.rolled_affixes,
             enchantments: ItemEnchantmentsDto::default(),
             curse: draft.curse,
+            permanent_destruction_immunities: Default::default(),
             activation: draft.activation,
             charges: draft.charges,
             fuel: draft.fuel,
@@ -6795,6 +6799,20 @@ fn apply_ability_level_scaling(
         }
         (
             AbilityEffectDefinition::ApplyStatus {
+                granted_modifiers, ..
+            },
+            AbilityLevelScalingField::StatusDefense,
+        ) => {
+            granted_modifiers.defense = i32::try_from(scaled_ability_level_value(
+                u64::try_from(granted_modifiers.defense)
+                    .expect("validated status defense must be non-negative"),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled status defense must fit i32");
+        }
+        (
+            AbilityEffectDefinition::ApplyStatus {
                 power: Some(power), ..
             }
             | AbilityEffectDefinition::VisibleApplyStatus {
@@ -7307,6 +7325,11 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             telepathy_duration_dice: *telepathy_duration_dice,
             telepathy_duration_sides: *telepathy_duration_sides,
         },
+        AbilityEffectDefinition::CallSunlight { vampire_damage } => {
+            AbilityEffectSpecDto::CallSunlight {
+                vampire_damage: *vampire_damage,
+            }
+        }
         AbilityEffectDefinition::Probe => AbilityEffectSpecDto::Probe,
         AbilityEffectDefinition::CreateDoor { terrain_id } => AbilityEffectSpecDto::CreateDoor {
             terrain_id: terrain_id.clone(),
@@ -7548,6 +7571,13 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             target_terrain_id: target_terrain_id.clone(),
             radius: *radius,
         },
+        AbilityEffectDefinition::CreateAdjacentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+        } => AbilityEffectSpecDto::CreateAdjacentTerrain {
+            source_terrain_ids: source_terrain_ids.clone(),
+            target_terrain_id: target_terrain_id.clone(),
+        },
         AbilityEffectDefinition::TerrainBeam { operation } => AbilityEffectSpecDto::TerrainBeam {
             operation: match operation {
                 AbilityTerrainBeamOperationDefinition::JamDoors => {
@@ -7786,6 +7816,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             brand: brand.map(weapon_brand_dto),
             resistance: resistance.map(DamageType::from).map(Into::into),
         },
+        AbilityEffectDefinition::ProtectFromCorrosion => AbilityEffectSpecDto::ProtectFromCorrosion,
         AbilityEffectDefinition::RandomChoice {
             roll_sides,
             level_bonus_divisor,

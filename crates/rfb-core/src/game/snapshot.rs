@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::{
     effect::STATUS_ANTI_MAGIC,
     resistance::DamageType,
-    save::position_from_content,
+    save::{item_destruction_element_to_dto, position_from_content},
     state::{ItemInstance, ItemLocation},
     stats::{AttributeKind, CharacterProgress, experience_required_for_level},
 };
@@ -838,6 +838,12 @@ impl Game {
                     fuel: item.fuel,
                     enchantments: item.enchantments,
                     curse: self.visible_item_curse(item),
+                    permanent_destruction_immunities: item
+                        .permanent_destruction_immunities
+                        .iter()
+                        .copied()
+                        .map(item_destruction_element_to_dto)
+                        .collect(),
                 })
             })
             .collect::<Vec<_>>();
@@ -912,6 +918,12 @@ impl Game {
                     inscription: item.inscription.clone(),
                     enchantments: item.enchantments,
                     curse: self.visible_item_curse(item),
+                    permanent_destruction_immunities: item
+                        .permanent_destruction_immunities
+                        .iter()
+                        .copied()
+                        .map(item_destruction_element_to_dto)
+                        .collect(),
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     equipment_slot: self
                         .content
@@ -961,6 +973,12 @@ impl Game {
                     fuel: item.fuel,
                     enchantments: item.enchantments,
                     curse: self.visible_item_curse(item),
+                    permanent_destruction_immunities: item
+                        .permanent_destruction_immunities
+                        .iter()
+                        .copied()
+                        .map(item_destruction_element_to_dto)
+                        .collect(),
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     slot_id: slot_id.clone(),
                     modifiers: self.visible_item_modifiers(item),

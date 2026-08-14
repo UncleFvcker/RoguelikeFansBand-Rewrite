@@ -124,6 +124,7 @@
         "status-intensity",
         "status-duration-ticks",
         "status-duration-sides",
+        "status-defense",
         "status-power",
         "status-melee-damage",
         "control-power",

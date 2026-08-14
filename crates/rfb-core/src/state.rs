@@ -2,7 +2,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use rfb_content::AffixPropertyBundleDefinition;
+use rfb_content::{AffixPropertyBundleDefinition, ItemDestructionElement};
 use rfb_protocol::{
     GoldAppearanceDto, ItemActivationDto, ItemChargesDto, ItemCurseSeverityDto,
     ItemEnchantmentsDto, ItemFuelDto, ItemOriginKindDto, ItemQualityDto, MonsterPackBehaviorDto,
@@ -97,6 +97,7 @@ pub(crate) struct ItemInstance {
     pub(crate) rolled_affixes: Vec<RolledAffixState>,
     pub(crate) enchantments: ItemEnchantmentsDto,
     pub(crate) curse: Option<ItemCurseSeverityDto>,
+    pub(crate) permanent_destruction_immunities: BTreeSet<ItemDestructionElement>,
     pub(crate) activation: Option<ItemActivationDto>,
     pub(crate) charges: Option<ItemChargesDto>,
     pub(crate) fuel: Option<ItemFuelDto>,

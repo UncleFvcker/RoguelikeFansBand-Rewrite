@@ -5,6 +5,7 @@ use super::support::{
     give_inventory_item, replace_terrain,
 };
 use super::*;
+use rfb_protocol::ItemDestructionElementDto;
 
 const HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-death";
 const ARCANE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-arcane";
@@ -152,11 +153,20 @@ fn nature_high_mage_game(seed: u64, level: u16) -> Game {
             "demo.ability.nature-entangle",
             "demo.ability.nature-natures-gate",
             "demo.ability.nature-herbal-healing",
+            "demo.ability.nature-stair-building",
+            "demo.ability.nature-stone-skin",
+            "demo.ability.nature-resistance-true",
+            "demo.ability.nature-forest-creation",
+            "demo.ability.nature-stone-tell",
+            "demo.ability.nature-wall-of-stone",
+            "demo.ability.nature-protect-from-corrosion",
+            "demo.ability.nature-call-sunlight",
         ]
         .into_iter()
         .map(str::to_owned),
     );
     give_inventory_item(&mut game, "test.nature-mastery", "demo.item.nature-mastery");
+    give_inventory_item(&mut game, "test.natures-gifts", "demo.item.natures-gifts");
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
@@ -299,6 +309,7 @@ fn nature_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         "demo.item.beginners-handbook",
         "demo.item.book-of-elements",
         "demo.item.nature-mastery",
+        "demo.item.natures-gifts",
     ] {
         assert!(!carried.contains(excluded));
     }
@@ -310,7 +321,7 @@ fn nature_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 16);
+    assert_eq!(learned.len(), 24);
     assert!(
         learned
             .iter()
@@ -733,6 +744,415 @@ fn nature_herbal_healing_scales_fixed_healing_and_cures_statuses() {
             .map(|status| status.remaining_ticks),
         Some(500)
     );
+}
+
+#[test]
+fn commit32_nature_third_book_projects_and_applies_stone_skin_and_shared_resistance() {
+    for (level, defense) in [(8, 16), (25, 30), (50, 50)] {
+        let projected = nature_high_mage_game(0x4e41_5455_5245_3200 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities;
+        let stone_skin = projected
+            .iter()
+            .find(|ability| ability.id == "demo.ability.nature-stone-skin")
+            .expect("Stone Skin should be projected");
+        assert!(matches!(
+            stone_skin.effects.as_slice(),
+            [AbilityEffectSpecDto::ApplyStatus {
+                duration_ticks: 20,
+                duration_dice: 1,
+                duration_sides: 30,
+                granted_modifiers,
+                ..
+            }] if granted_modifiers.defense == defense
+        ));
+    }
+
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_3250, 50);
+    grant_spell_power(&mut game, 7);
+    let projected = game.snapshot().player.abilities;
+    let stone_skin = projected
+        .iter()
+        .find(|ability| ability.id == "demo.ability.nature-stone-skin")
+        .expect("Stone Skin should remain projected");
+    assert!(matches!(
+        stone_skin.effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 30,
+            duration_sides: 46,
+            granted_modifiers,
+            ..
+        }] if granted_modifiers.defense == 50
+    ));
+    let resistance = projected
+        .iter()
+        .find(|ability| ability.id == "demo.ability.nature-resistance-true")
+        .expect("Resistance True should be projected");
+    assert!(matches!(
+        resistance.effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 30,
+            duration_dice: 1,
+            duration_sides: 30,
+            granted_resistances,
+            ..
+        }] if granted_resistances.len() == 5
+    ));
+
+    for ability_id in [
+        "demo.ability.nature-stone-skin",
+        "demo.ability.nature-resistance-true",
+    ] {
+        game.resolve_player_ability(
+            ability_id,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap_or_else(|error| panic!("{ability_id} should resolve: {error:?}"));
+    }
+    let stone_skin = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.stone-skin")
+        .expect("Stone Skin should create one status");
+    assert!((31..=76).contains(&stone_skin.remaining_ticks));
+    assert_eq!(stone_skin.granted_modifiers.defense, 50);
+    let resistance = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.resistance-true")
+        .expect("Resistance True should create one shared status");
+    assert!((31..=60).contains(&resistance.remaining_ticks));
+    for damage_type in [
+        DamageType::Acid,
+        DamageType::Electricity,
+        DamageType::Fire,
+        DamageType::Cold,
+        DamageType::Poison,
+    ] {
+        assert_eq!(
+            resistance.granted_resistances.get(&damage_type),
+            Some(&ResistanceLevel::Resistant)
+        );
+    }
+}
+
+#[test]
+fn commit32_nature_forest_and_stone_wall_share_adjacent_terrain_rules() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_5445, 50);
+    clear_monsters(&mut game);
+    game.gold_piles.clear();
+    game.floor_connections.clear();
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let expected = game
+        .adjacent_terrain_creation_replacements(
+            &["demo.terrain.floor".to_owned()],
+            "demo.terrain.surface-tree",
+        )
+        .len();
+    let mut changed = BTreeSet::new();
+    game.resolve_player_ability(
+        "demo.ability.nature-forest-creation",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .expect("Forest Creation should resolve");
+    assert_eq!(changed.len(), expected);
+    assert!(expected > 0);
+    assert_eq!(
+        game.terrain
+            .iter()
+            .filter(|terrain| terrain.as_str() == "demo.terrain.surface-tree")
+            .count(),
+        expected
+    );
+
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should retain mana")
+        .current = 100;
+    let expected = game
+        .adjacent_terrain_creation_replacements(
+            &["demo.terrain.floor".to_owned()],
+            "demo.terrain.wall",
+        )
+        .len();
+    let mut changed = BTreeSet::new();
+    game.resolve_player_ability(
+        "demo.ability.nature-wall-of-stone",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .expect("Wall of Stone should resolve");
+    assert_eq!(changed.len(), expected);
+    assert!(expected > 0);
+    assert_eq!(
+        game.terrain
+            .iter()
+            .filter(|terrain| terrain.as_str() == "demo.terrain.wall")
+            .count(),
+        expected
+    );
+}
+
+#[test]
+fn commit32_nature_corrosion_protection_is_permanent_visible_and_location_agnostic() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_4143, 50);
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should retain mana");
+    mana.current = 1_000;
+    mana.maximum = 1_000;
+    give_inventory_item(
+        &mut game,
+        "test.corrosion.inventory",
+        "demo.item.hard-leather-armour",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.corrosion.inventory")
+        .expect("inventory armor should exist")
+        .enchantments
+        .to_armor = -3;
+    let hash_before = game.state_hash();
+    game.resolve_player_ability(
+        "demo.ability.nature-protect-from-corrosion",
+        TargetSelection::Item {
+            item_id: "test.corrosion.inventory".to_owned(),
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("inventory armor should accept corrosion protection");
+    let protected = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.corrosion.inventory")
+        .expect("protected armor should remain");
+    assert_eq!(protected.enchantments.to_armor, 0);
+    assert!(
+        protected
+            .permanent_destruction_immunities
+            .contains(&ItemDestructionElement::Acid)
+    );
+    assert_ne!(game.state_hash(), hash_before);
+    assert_eq!(
+        game.inventory_dto()
+            .into_iter()
+            .find(|item| item.id == "test.corrosion.inventory")
+            .expect("protected armor should be projected")
+            .permanent_destruction_immunities,
+        vec![ItemDestructionElementDto::Acid]
+    );
+
+    let player_position = game.player.position;
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.corrosion.inventory")
+        .expect("protected armor should remain")
+        .location = ItemLocation::Ground(player_position);
+    game.resolve_ground_item_projectile_effects(
+        "test.ability.acid",
+        &[player_position],
+        DamageType::Acid,
+        true,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == "test.corrosion.inventory")
+    );
+
+    give_inventory_item(
+        &mut game,
+        "test.corrosion.equipped",
+        "demo.item.hard-leather-armour",
+    );
+    let equipped = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.corrosion.equipped")
+        .expect("equipped armor should exist");
+    equipped.location = ItemLocation::Equipped {
+        slot_id: "body".to_owned(),
+    };
+    equipped.enchantments.to_armor = -2;
+    equipped.curse = Some(ItemCurseSeverityDto::Normal);
+    game.resolve_player_ability(
+        "demo.ability.nature-protect-from-corrosion",
+        TargetSelection::Item {
+            item_id: "test.corrosion.equipped".to_owned(),
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("equipped armor should accept corrosion protection");
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.corrosion.equipped")
+            .expect("equipped armor should remain")
+            .enchantments
+            .to_armor,
+        -2
+    );
+
+    give_inventory_item(
+        &mut game,
+        "test.corrosion.floor",
+        "demo.item.hard-leather-armour",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.corrosion.floor")
+        .expect("floor armor should exist")
+        .location = ItemLocation::Ground(player_position);
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should retain mana")
+        .current = 100;
+    game.resolve_player_ability(
+        "demo.ability.nature-protect-from-corrosion",
+        TargetSelection::Item {
+            item_id: "test.corrosion.floor".to_owned(),
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("floor armor should accept corrosion protection");
+    assert!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.corrosion.floor")
+            .expect("floor armor should remain")
+            .permanent_destruction_immunities
+            .contains(&ItemDestructionElement::Acid)
+    );
+
+    give_inventory_item(&mut game, "test.corrosion.dagger", "demo.item.dagger");
+    let hash_before_invalid_target = game.state_hash();
+    let draws_before_invalid_target = game.rng_draw_counter();
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.nature-protect-from-corrosion",
+        TargetSelection::Item {
+            item_id: "test.corrosion.dagger".to_owned(),
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("a non-armor target should be rejected without an execution error");
+    assert_eq!(game.state_hash(), hash_before_invalid_target);
+    assert_eq!(game.rng_draw_counter(), draws_before_invalid_target);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::AbilityTargetUnavailable { ability_id }]
+            if ability_id == "demo.ability.nature-protect-from-corrosion"
+    ));
+
+    let mut persisted = Game::new(0x4143_4944);
+    give_inventory_item(
+        &mut persisted,
+        "test.corrosion.persisted",
+        "demo.item.hard-leather-armour",
+    );
+    persisted
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.corrosion.persisted")
+        .expect("persisted armor should exist")
+        .permanent_destruction_immunities
+        .insert(ItemDestructionElement::Acid);
+    let restored = Game::from_save_with_content(persisted.to_save(), persisted.content.clone())
+        .expect("corrosion protection should round-trip");
+    assert_eq!(restored.state_hash(), persisted.state_hash());
+    assert!(
+        restored
+            .items
+            .iter()
+            .find(|item| item.id == "test.corrosion.persisted")
+            .expect("restored armor should remain")
+            .permanent_destruction_immunities
+            .contains(&ItemDestructionElement::Acid)
+    );
+}
+
+#[test]
+fn commit32_nature_call_sunlight_maps_lights_reveals_without_esp_and_burns_vampires() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_5355, 50);
+    clear_monsters(&mut game);
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should retain mana");
+    mana.current = 1_000;
+    mana.maximum = 1_000;
+    for virtue in &mut game.virtues {
+        if matches!(
+            virtue.kind,
+            VirtueKindDto::Knowledge | VirtueKindDto::Enlightenment
+        ) {
+            virtue.value = 0;
+        }
+    }
+    game.explored.fill(false);
+    game.glow.fill(false);
+    give_inventory_item(&mut game, "test.sunlight-item", "demo.item.dagger");
+    let item_position = Position { x: 0, y: 0 };
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.sunlight-item")
+        .expect("sunlight test item should exist")
+        .location = ItemLocation::Ground(item_position);
+    game.player.statuses.push(StatusInstance {
+        kind_id: "test.status.vampire-form".to_owned(),
+        intensity: 1,
+        remaining_ticks: 100,
+        source_id: Some("test.nature".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: Some("demo.race.vampire-lord".to_owned()),
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    let hp_before = game.player.hp;
+    game.resolve_player_ability(
+        "demo.ability.nature-call-sunlight",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Call Sunlight should resolve");
+
+    assert_eq!(game.player.hp, hp_before - 50);
+    assert!(game.explored.iter().all(|explored| *explored));
+    assert!(game.glow.iter().all(|glow| *glow));
+    assert!(game.item_is_discovered("test.sunlight-item"));
+    assert_eq!(game.virtue_current(VirtueKindDto::Knowledge), 1);
+    assert_eq!(game.virtue_current(VirtueKindDto::Enlightenment), 1);
+    assert!(!game.player_has_status_kind(STATUS_TELEPATHY));
 }
 
 #[test]

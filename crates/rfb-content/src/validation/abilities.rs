@@ -329,6 +329,9 @@ pub(super) fn validate_abilities(
                         && (1..=100).contains(telepathy_duration_dice)
                         && (1..=10_000).contains(telepathy_duration_sides)
                 }
+                AbilityEffectDefinition::CallSunlight { vampire_damage } => {
+                    (1..=10_000).contains(vampire_damage)
+                }
                 AbilityEffectDefinition::Probe => true,
                 AbilityEffectDefinition::CreateDoor { terrain_id } => !terrain_id.is_empty(),
                 AbilityEffectDefinition::DeviceMastery {
@@ -662,6 +665,18 @@ pub(super) fn validate_abilities(
                             .iter()
                             .all(|source_id| source_id != target_terrain_id)
                 }
+                AbilityEffectDefinition::CreateAdjacentTerrain {
+                    source_terrain_ids,
+                    target_terrain_id,
+                } => {
+                    !source_terrain_ids.is_empty()
+                        && source_terrain_ids.len() <= 32
+                        && !target_terrain_id.is_empty()
+                        && source_terrain_ids.windows(2).all(|pair| pair[0] != pair[1])
+                        && source_terrain_ids
+                            .iter()
+                            .all(|source_id| source_id != target_terrain_id)
+                }
                 AbilityEffectDefinition::TerrainBeam { .. } => true,
                 AbilityEffectDefinition::ApplyStatus {
                     status_kind_id,
@@ -875,6 +890,7 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::BrandWeapon { affix_id, .. } => {
                     validate_id(affix_id).is_ok()
                 }
+                AbilityEffectDefinition::ProtectFromCorrosion => true,
                 AbilityEffectDefinition::RandomChoice { .. } => false,
                 AbilityEffectDefinition::SniperShot { .. }
                 | AbilityEffectDefinition::MeleeAdjacent
@@ -1067,6 +1083,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::IdentifyItem { .. }
             | AbilityEffectDefinition::IdentifyOrMassIdentify { .. }
             | AbilityEffectDefinition::BrandWeapon { .. }
+            | AbilityEffectDefinition::ProtectFromCorrosion
             | AbilityEffectDefinition::TransmuteItemToGold { .. }
             | AbilityEffectDefinition::DrainItemMagic { .. }
             | AbilityEffectDefinition::RechargeFromPlayer { .. } => item_target_rule,
@@ -1100,6 +1117,8 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::Clairvoyance { .. }
+            | AbilityEffectDefinition::CallSunlight { .. }
+            | AbilityEffectDefinition::CreateAdjacentTerrain { .. }
             | AbilityEffectDefinition::Probe
             | AbilityEffectDefinition::CreateDoor { .. }
             | AbilityEffectDefinition::DeviceMastery { .. }
@@ -1155,6 +1174,7 @@ pub(super) fn validate_abilities(
                                 | AbilityEffectDefinition::VisibleDamage { .. }
                                 | AbilityEffectDefinition::VisibleApplyStatus { .. }
                                 | AbilityEffectDefinition::AreaDamage { .. }
+                                | AbilityEffectDefinition::CallSunlight { .. }
                                 | AbilityEffectDefinition::AggravateMonsters
                                 | AbilityEffectDefinition::Detect { .. }
                                 | AbilityEffectDefinition::NoOp { .. }
@@ -1314,6 +1334,16 @@ pub(super) fn validate_abilities(
             source_terrain_ids,
             target_terrain_id,
             ..
+        } = &ability.effect
+        {
+            for source_terrain_id in source_terrain_ids {
+                require_reference(terrain_ids, source_terrain_id, &ability.id)?;
+            }
+            require_reference(terrain_ids, target_terrain_id, &ability.id)?;
+        }
+        if let AbilityEffectDefinition::CreateAdjacentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
         } = &ability.effect
         {
             for source_terrain_id in source_terrain_ids {

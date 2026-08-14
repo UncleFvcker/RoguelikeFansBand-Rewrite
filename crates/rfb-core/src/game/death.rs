@@ -495,6 +495,7 @@ impl Game {
                 device_recovery_progress: 0,
                 captured_actor: None,
                 curse: initial_item_curse(&self.content, &kind_id),
+                permanent_destruction_immunities: Default::default(),
                 kind_id,
                 quantity: 1,
                 inscription: None,

@@ -117,6 +117,7 @@ pub enum AbilityLevelScalingField {
     StatusIntensity,
     StatusDurationTicks,
     StatusDurationSides,
+    StatusDefense,
     StatusPower,
     StatusMeleeDamage,
     ControlPower,
@@ -420,6 +421,9 @@ pub enum AbilityEffectDefinition {
         telepathy_duration_dice: u8,
         telepathy_duration_sides: u16,
     },
+    CallSunlight {
+        vampire_damage: u16,
+    },
     Probe,
     CreateDoor {
         terrain_id: String,
@@ -598,6 +602,10 @@ pub enum AbilityEffectDefinition {
         target_terrain_id: String,
         radius: u8,
     },
+    CreateAdjacentTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
+    },
     TerrainBeam {
         operation: AbilityTerrainBeamOperationDefinition,
     },
@@ -747,6 +755,7 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         resistance: Option<ActorDamageType>,
     },
+    ProtectFromCorrosion,
     RandomChoice {
         roll_sides: u16,
         #[serde(default)]
@@ -888,6 +897,12 @@ fn ability_level_scaling_base_and_limit(
             AbilityEffectDefinition::ApplyStatus { duration_sides, .. },
             AbilityLevelScalingField::StatusDurationSides,
         ) => Some((u64::from(*duration_sides), 1_000_000)),
+        (
+            AbilityEffectDefinition::ApplyStatus {
+                granted_modifiers, ..
+            },
+            AbilityLevelScalingField::StatusDefense,
+        ) => Some((u64::try_from(granted_modifiers.defense).ok()?, 10_000)),
         (
             AbilityEffectDefinition::ApplyStatus {
                 power: Some(power), ..

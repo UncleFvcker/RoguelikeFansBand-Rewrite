@@ -389,6 +389,7 @@ item-passive-sustain-dexterity = 维持敏捷
 item-passive-sustain-constitution = 维持体质
 item-passive-sustain-charisma = 维持魅力
 item-resistance-label = { $type }抗性：{ $level }
+item-destruction-immunity-label = 免受{ $type }破坏
 item-status-immunity-label = 免疫：{ $status }
 item-slay-label = 斩杀：{ $target }
 item-kill-label = 强力击杀：{ $target }

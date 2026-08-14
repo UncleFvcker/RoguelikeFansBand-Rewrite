@@ -237,7 +237,8 @@
         "realmId": "nature",
         "abilityBookIds": [
           "demo.ability-book.call-of-the-wild",
-          "demo.ability-book.nature-mastery"
+          "demo.ability-book.nature-mastery",
+          "demo.ability-book.natures-gifts"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -256,7 +257,15 @@
           { "abilityId": "demo.ability.nature-ray-of-sunlight", "minimumLevel": 7, "resourceCost": 5, "baseFailurePercent": 30 },
           { "abilityId": "demo.ability.nature-entangle", "minimumLevel": 14, "resourceCost": 10, "baseFailurePercent": 35 },
           { "abilityId": "demo.ability.nature-natures-gate", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 80 },
-          { "abilityId": "demo.ability.nature-herbal-healing", "minimumLevel": 35, "resourceCost": 50, "baseFailurePercent": 80 }
+          { "abilityId": "demo.ability.nature-herbal-healing", "minimumLevel": 35, "resourceCost": 50, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.nature-stair-building", "minimumLevel": 7, "resourceCost": 7, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.nature-stone-skin", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-resistance-true", "minimumLevel": 12, "resourceCost": 15, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.nature-forest-creation", "minimumLevel": 17, "resourceCost": 20, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.nature-stone-tell", "minimumLevel": 33, "resourceCost": 35, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.nature-wall-of-stone", "minimumLevel": 35, "resourceCost": 40, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-protect-from-corrosion", "minimumLevel": 37, "resourceCost": 65, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.nature-call-sunlight", "minimumLevel": 38, "resourceCost": 30, "baseFailurePercent": 80 }
         ]
       }
     ]

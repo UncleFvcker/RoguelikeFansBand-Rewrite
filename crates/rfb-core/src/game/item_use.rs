@@ -855,7 +855,7 @@ impl Game {
         });
     }
 
-    fn adjacent_terrain_creation_replacements(
+    pub(super) fn adjacent_terrain_creation_replacements(
         &self,
         source_terrain_ids: &[String],
         target_terrain_id: &str,
@@ -943,7 +943,23 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
-        let affected_positions = replacements
+        let affected_positions = self.apply_adjacent_terrain_creation(replacements, changed);
+        if !affected_positions.is_empty() {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemCreatedAdjacentTerrain {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            affected_positions,
+        });
+    }
+
+    pub(super) fn apply_adjacent_terrain_creation(
+        &mut self,
+        replacements: Vec<(Position, String)>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Vec<Position> {
+        replacements
             .into_iter()
             .map(|(position, target_terrain_id)| {
                 let index = self
@@ -954,15 +970,7 @@ impl Game {
                 changed.insert(position);
                 position
             })
-            .collect::<Vec<_>>();
-        if !affected_positions.is_empty() {
-            self.mark_item_aware(source_kind_id);
-        }
-        events.push(DomainEvent::ItemCreatedAdjacentTerrain {
-            source_kind_id: source_kind_id.to_owned(),
-            display_name_key: self.item_display_name_key(source_kind_id),
-            affected_positions,
-        });
+            .collect()
     }
 
     fn resolve_item_current_terrain_creation(

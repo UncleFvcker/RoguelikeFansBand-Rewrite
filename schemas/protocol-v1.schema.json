@@ -2560,6 +2560,75 @@
         {
           "type": "object",
           "properties": {
+            "alreadyProtected": {
+              "type": "boolean"
+            },
+            "defenseAfter": {
+              "type": "integer",
+              "format": "int16",
+              "maximum": 32767,
+              "minimum": -32768
+            },
+            "defenseBefore": {
+              "type": "integer",
+              "format": "int16",
+              "maximum": 32767,
+              "minimum": -32768
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "itemKindId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "protect-from-corrosion"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "itemId",
+            "itemKindId",
+            "alreadyProtected",
+            "defenseBefore",
+            "defenseAfter"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "call-sunlight"
+            },
+            "vampireDamage": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "vampireDamage"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "after": {
               "type": "integer",
               "format": "uint8",
@@ -3169,6 +3238,25 @@
             "telepathyDurationTicks",
             "telepathyDurationDice",
             "telepathyDurationSides"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "call-sunlight"
+            },
+            "vampireDamage": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            }
+          },
+          "required": [
+            "type",
+            "vampireDamage"
           ]
         },
         {
@@ -4064,6 +4152,29 @@
         {
           "type": "object",
           "properties": {
+            "sourceTerrainIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "create-adjacent-terrain"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "operation": {
               "$ref": "#/$defs/AbilityTerrainBeamOperationDto"
             },
@@ -4911,6 +5022,18 @@
           "required": [
             "type",
             "affixId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "protect-from-corrosion"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
@@ -6282,6 +6405,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/EquipmentPassiveDto"
+          }
+        },
+        "permanentDestructionImmunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDestructionElementDto"
           }
         },
         "projectileProfile": {
@@ -8461,6 +8590,12 @@
           "format": "uint32",
           "minimum": 0
         },
+        "permanentDestructionImmunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDestructionElementDto"
+          }
+        },
         "quantity": {
           "type": "integer",
           "format": "uint32",
@@ -8652,6 +8787,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/EquipmentPassiveDto"
+          }
+        },
+        "permanentDestructionImmunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDestructionElementDto"
           }
         },
         "projectileProfile": {
@@ -8873,6 +9014,15 @@
         "permanent"
       ]
     },
+    "ItemDestructionElementDto": {
+      "type": "string",
+      "enum": [
+        "acid",
+        "electricity",
+        "fire",
+        "cold"
+      ]
+    },
     "ItemDto": {
       "type": "object",
       "properties": {
@@ -8918,6 +9068,12 @@
         "knowledge": {
           "$ref": "#/$defs/ItemKnowledgeDto",
           "default": "aware"
+        },
+        "permanentDestructionImmunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDestructionElementDto"
+          }
         },
         "position": {
           "$ref": "#/$defs/Position"
@@ -11014,6 +11170,12 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
+        },
+        "permanentDestructionImmunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDestructionElementDto"
+          }
         },
         "quality": {
           "$ref": "#/$defs/ItemQualityDto"

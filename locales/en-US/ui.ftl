@@ -393,6 +393,7 @@ item-passive-sustain-dexterity = Sustain Dexterity
 item-passive-sustain-constitution = Sustain Constitution
 item-passive-sustain-charisma = Sustain Charisma
 item-resistance-label = { $type } resistance: { $level }
+item-destruction-immunity-label = Protected from { $type } destruction
 item-status-immunity-label = Immunity: { $status }
 item-slay-label = Slays { $target }
 item-kill-label = Executes { $target }

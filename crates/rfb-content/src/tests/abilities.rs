@@ -415,6 +415,107 @@ fn nature_second_book_keeps_the_original_spell_table_and_allocation() {
 }
 
 #[test]
+fn commit32_nature_third_book_keeps_the_original_spell_table_and_allocation() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.natures-gifts")
+        .expect("Nature's Gifts should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("nature"));
+    assert_eq!(book.rank, Some(3));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.natures-gifts")
+        .expect("Nature's Gifts item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (45, 30, 15_000, Some("demo.ability-book.natures-gifts"))
+    );
+    assert_eq!(
+        item.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+            ItemDestructionElement::Cold,
+        ])
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Nature's Gifts should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (45, 90, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .map(|shop| shop.category)
+            .collect::<Vec<_>>(),
+        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+    );
+
+    let expected = [
+        ("demo.ability.nature-stair-building", 7, 7, 20, 44),
+        ("demo.ability.nature-stone-skin", 8, 8, 65, 120),
+        ("demo.ability.nature-resistance-true", 12, 15, 75, 60),
+        ("demo.ability.nature-forest-creation", 17, 20, 60, 40),
+        ("demo.ability.nature-stone-tell", 33, 35, 80, 200),
+        ("demo.ability.nature-wall-of-stone", 35, 40, 65, 200),
+        (
+            "demo.ability.nature-protect-from-corrosion",
+            37,
+            65,
+            80,
+            250,
+        ),
+        ("demo.ability.nature-call-sunlight", 38, 30, 80, 300),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+}
+
+#[test]
 fn armageddon_first_book_keeps_the_original_spell_table_and_elemental_scaling() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = artifact.content;

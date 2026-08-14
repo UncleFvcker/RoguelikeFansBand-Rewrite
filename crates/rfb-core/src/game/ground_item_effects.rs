@@ -336,6 +336,9 @@ impl Game {
         item: &ItemInstance,
         element: ItemDestructionElement,
     ) -> bool {
+        if item.permanent_destruction_immunities.contains(&element) {
+            return true;
+        }
         let Some(definition) = self.content.item(&item.kind_id) else {
             return true;
         };

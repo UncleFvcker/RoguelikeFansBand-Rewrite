@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.nature-call-sunlight",
+  "nameKey": "ability-demo-nature-call-sunlight-name",
+  "descriptionKey": "ability-demo-nature-call-sunlight-description",
+  "abilityProgramId": "demo.ability-program.nature-call-sunlight",
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "spellPowerFields": [{ "effectIndex": 0, "field": "final-damage" }],
+  "tags": ["area", "light", "nature", "spell"]
+}

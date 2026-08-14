@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.203";
+pub const PROTOCOL_VERSION: &str = "1.204";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1044,6 +1044,9 @@ pub enum AbilityEffectSpecDto {
         telepathy_duration_dice: u8,
         telepathy_duration_sides: u16,
     },
+    CallSunlight {
+        vampire_damage: u16,
+    },
     Probe,
     CreateDoor {
         terrain_id: String,
@@ -1195,6 +1198,10 @@ pub enum AbilityEffectSpecDto {
         source_terrain_ids: Vec<String>,
         target_terrain_id: String,
         radius: u8,
+    },
+    CreateAdjacentTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
     },
     TerrainBeam {
         operation: AbilityTerrainBeamOperationDto,
@@ -1350,6 +1357,7 @@ pub enum AbilityEffectSpecDto {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         resistance: Option<DamageTypeDto>,
     },
+    ProtectFromCorrosion,
     RandomChoice {
         roll_sides: u16,
         level_bonus_divisor: u16,
@@ -1883,6 +1891,16 @@ pub enum DamageTypeDto {
     Meteor,
     Rocket,
     Telekinesis,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemDestructionElementDto {
+    Acid,
+    Electricity,
+    Fire,
+    Cold,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -2615,6 +2633,18 @@ pub enum AbilityEffectResolutionDto {
         to_hit: ItemEnchantmentComponentResolutionDto,
         to_damage: ItemEnchantmentComponentResolutionDto,
     },
+    ProtectFromCorrosion {
+        effect_index: u8,
+        item_id: String,
+        item_kind_id: String,
+        already_protected: bool,
+        defense_before: i16,
+        defense_after: i16,
+    },
+    CallSunlight {
+        effect_index: u8,
+        vampire_damage: i32,
+    },
     Concentrate {
         effect_index: u8,
         before: u8,
@@ -3132,6 +3162,8 @@ pub struct ItemDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -3386,6 +3418,8 @@ pub struct InventoryItemDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default)]
     pub weight_tenths_pound: u16,
     #[serde(default)]
@@ -3454,6 +3488,8 @@ pub struct EquipmentItemDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default)]
     pub weight_tenths_pound: u16,
     pub slot_id: String,
@@ -3584,6 +3620,8 @@ pub struct ShopStockItemDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     pub quality: ItemQualityDto,
 }
 
@@ -3647,6 +3685,8 @@ pub struct HomeItemDto {
     pub weight_tenths_pound: u16,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fuel: Option<ItemFuelDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3897,6 +3937,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(CellVisualDto);
     push_declaration!(ContentVisualDto);
     push_declaration!(DamageTypeDto);
+    push_declaration!(ItemDestructionElementDto);
     push_declaration!(ResistanceLevelDto);
     push_declaration!(ResistanceDto);
     push_declaration!(SlayTargetDto);
@@ -4334,6 +4375,7 @@ pub struct ItemSaveDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4371,6 +4413,7 @@ pub struct InventoryItemSaveDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4409,6 +4452,7 @@ pub struct EquipmentItemSaveDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4447,6 +4491,7 @@ pub struct CarriedItemSaveDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5117,6 +5162,7 @@ mod tests {
                 quantity: 2,
                 inscription: None,
                 fuel: None,
+                permanent_destruction_immunities: Vec::new(),
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,
             }],
@@ -5140,6 +5186,7 @@ mod tests {
                 can_supply_recharge: false,
                 quantity: 1,
                 inscription: None,
+                permanent_destruction_immunities: Vec::new(),
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,
                 weight_tenths_pound: 5,
@@ -5174,6 +5221,7 @@ mod tests {
                 quantity: 1,
                 inscription: None,
                 fuel: None,
+                permanent_destruction_immunities: Vec::new(),
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,
                 weight_tenths_pound: 5,
