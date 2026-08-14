@@ -271,11 +271,22 @@ pub struct DungeonDefinition {
     pub root_floor_id: String,
     pub guardian_actor_kind_id: String,
     #[serde(default)]
+    pub substitution: Option<DungeonSubstitutionDefinition>,
+    #[serde(default)]
     pub instance_lifecycle: DungeonInstanceLifecycle,
     #[serde(default)]
     pub entrance_guardian: Option<DungeonEntranceGuardianDefinition>,
     #[serde(default)]
     pub entry_requirements: Vec<DungeonEntryRequirementDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DungeonSubstitutionDefinition {
+    pub alternate_dungeon_id: String,
+    #[serde(default)]
+    pub alternate_gate_one_in: Option<u16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

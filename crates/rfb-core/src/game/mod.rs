@@ -216,7 +216,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 100;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 101;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -535,6 +535,7 @@ enum LootSource {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct DungeonState {
+    suppressed: bool,
     guardian_defeated: bool,
     entrance_guardian_defeated: bool,
     next_instance_ordinal: u32,
@@ -542,7 +543,7 @@ struct DungeonState {
     retained_at_turn: Option<u32>,
 }
 
-fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String, DungeonState> {
+fn base_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String, DungeonState> {
     world
         .dungeons
         .iter()
@@ -550,6 +551,7 @@ fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<Stri
             (
                 dungeon.id.clone(),
                 DungeonState {
+                    suppressed: false,
                     guardian_defeated: false,
                     entrance_guardian_defeated: false,
                     next_instance_ordinal: 0,
@@ -559,6 +561,66 @@ fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<Stri
             )
         })
         .collect()
+}
+
+fn dungeon_substitution_uses_alternate(
+    primary: &rfb_content::DungeonDefinition,
+    alternate: &rfb_content::DungeonDefinition,
+    seed: u64,
+) -> bool {
+    let primary_index = u64::from(
+        primary
+            .legacy_index
+            .expect("validated substituted dungeon must retain a legacy index"),
+    );
+    let alternate_index = u64::from(
+        alternate
+            .legacy_index
+            .expect("validated alternate dungeon must retain a legacy index"),
+    );
+    let pair_modulus = primary_index * 48 + alternate_index;
+    let selected = seed % (pair_modulus * 2) >= pair_modulus;
+    selected
+        && primary
+            .substitution
+            .as_ref()
+            .and_then(|substitution| substitution.alternate_gate_one_in)
+            .is_none_or(|one_in| seed % u64::from(one_in) == 0)
+}
+
+fn initial_dungeon_states(
+    world: &rfb_content::WorldDefinition,
+    seed: u64,
+) -> BTreeMap<String, DungeonState> {
+    let mut states = base_dungeon_states(world);
+    for primary in &world.dungeons {
+        let Some(substitution) = &primary.substitution else {
+            continue;
+        };
+        let alternate = world
+            .dungeons
+            .iter()
+            .find(|dungeon| dungeon.id == substitution.alternate_dungeon_id)
+            .expect("validated dungeon substitution must retain its alternate");
+        let suppressed_id = if dungeon_substitution_uses_alternate(primary, alternate, seed) {
+            &primary.id
+        } else {
+            &alternate.id
+        };
+        states
+            .get_mut(suppressed_id)
+            .expect("substituted dungeon state must remain available")
+            .suppressed = true;
+    }
+    states
+}
+
+impl Game {
+    pub(super) fn dungeon_is_active(&self, dungeon_id: &str) -> bool {
+        self.dungeon_states
+            .get(dungeon_id)
+            .is_some_and(|state| !state.suppressed)
+    }
 }
 
 /// The engine's standard humanoid body: the slot roster every player uses
@@ -1188,7 +1250,7 @@ impl Game {
             .as_ref()
             .map(|wilderness| position_from_content(wilderness.start_position));
         let task_states = initial_task_states(world);
-        let dungeon_states = initial_dungeon_states(world);
+        let dungeon_states = initial_dungeon_states(world, seed);
         let (town_states, shop_states) = town::initial_town_and_shop_states(
             world,
             &content,

@@ -1087,10 +1087,10 @@ fn generated_line_of_effect(
 impl Game {
     pub(super) fn actor_kind_is_dungeon_guardian(&self, actor_kind_id: &str) -> bool {
         self.content.world(&self.world_id).is_some_and(|world| {
-            world
-                .dungeons
-                .iter()
-                .any(|dungeon| dungeon.guardian_actor_kind_id == actor_kind_id)
+            world.dungeons.iter().any(|dungeon| {
+                self.dungeon_is_active(&dungeon.id)
+                    && dungeon.guardian_actor_kind_id == actor_kind_id
+            })
         })
     }
 

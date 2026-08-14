@@ -41,8 +41,8 @@ use super::wilderness;
 use super::wilderness::WILDERNESS_FLOOR_ID;
 use super::{
     BodySlot, CampaignState, DungeonState, Game, ItemKnowledgeState, ItemPropertyKnowledgeState,
-    STATE_HASH_SCHEMA_VERSION, TaskState, character_skill_progress, dungeon_instance_id,
-    dungeon_instance_storage_key, floor_dungeon_id, initial_dungeon_states, initial_task_states,
+    STATE_HASH_SCHEMA_VERSION, TaskState, base_dungeon_states, character_skill_progress,
+    dungeon_instance_id, dungeon_instance_storage_key, floor_dungeon_id, initial_task_states,
     load_built_in_content, normalize_player_name, parse_dungeon_instance_ordinal,
     resolve_body_slots, resolve_character_build, task_definition, task_floors, task_objectives,
     tasks::task_initial_state,
@@ -64,7 +64,7 @@ fn restore_dungeon_states(
     saved_states: &[DungeonStateSaveDto],
     allow_missing_states: bool,
 ) -> Result<BTreeMap<String, DungeonState>, CoreError> {
-    let mut states = initial_dungeon_states(world);
+    let mut states = base_dungeon_states(world);
     if allow_missing_states {
         for dungeon in &world.dungeons {
             if dungeon.entrance_guardian.is_some() {
@@ -75,7 +75,7 @@ fn restore_dungeon_states(
             }
         }
     }
-    if saved_states.is_empty() {
+    if saved_states.is_empty() && allow_missing_states {
         return Ok(states);
     }
     let mut restored = BTreeMap::new();
@@ -85,6 +85,7 @@ fn restore_dungeon_states(
                 .insert(
                     saved.dungeon_id.clone(),
                     DungeonState {
+                        suppressed: saved.suppressed,
                         guardian_defeated: saved.guardian_defeated,
                         entrance_guardian_defeated: if allow_missing_states {
                             saved
@@ -1751,6 +1752,7 @@ impl Game {
             .iter()
             .map(|(dungeon_id, state)| DungeonStateSaveDto {
                 dungeon_id: dungeon_id.clone(),
+                suppressed: state.suppressed,
                 guardian_defeated: state.guardian_defeated,
                 entrance_guardian_defeated: Some(state.entrance_guardian_defeated),
                 next_instance_ordinal: state.next_instance_ordinal,

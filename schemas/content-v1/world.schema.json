@@ -132,6 +132,17 @@
         },
         "rootFloorId": {
           "type": "string"
+        },
+        "substitution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DungeonSubstitutionDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -308,6 +319,28 @@
           "type": "object"
         }
       ]
+    },
+    "DungeonSubstitutionDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "alternateDungeonId": {
+          "type": "string"
+        },
+        "alternateGateOneIn": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "alternateDungeonId"
+      ],
+      "type": "object"
     },
     "FloorConnectionKind": {
       "enum": [

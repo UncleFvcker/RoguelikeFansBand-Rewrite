@@ -1215,10 +1215,14 @@ impl Game {
                 WildernessLocationDefinition::Dungeon {
                     position: candidate,
                     dungeon_id,
-                } if position_from_content(*candidate) == position => Some(WildernessLocationDto {
-                    kind: WildernessLocationKindDto::Dungeon,
-                    id: dungeon_id.clone(),
-                }),
+                } if position_from_content(*candidate) == position
+                    && self.dungeon_is_active(dungeon_id) =>
+                {
+                    Some(WildernessLocationDto {
+                        kind: WildernessLocationKindDto::Dungeon,
+                        id: dungeon_id.clone(),
+                    })
+                }
                 _ => None,
             })
             .collect::<Vec<_>>();

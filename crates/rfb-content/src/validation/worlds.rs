@@ -611,6 +611,33 @@ pub(super) fn validate_world(
             }
         }
     }
+    let dungeons_by_id = world
+        .dungeons
+        .iter()
+        .map(|dungeon| (dungeon.id.as_str(), dungeon))
+        .collect::<BTreeMap<_, _>>();
+    let mut substitution_alternates = BTreeSet::new();
+    for dungeon in &world.dungeons {
+        let Some(substitution) = &dungeon.substitution else {
+            continue;
+        };
+        validate_definition_id(&substitution.alternate_dungeon_id, "dungeon")?;
+        let Some(alternate) = dungeons_by_id.get(substitution.alternate_dungeon_id.as_str()) else {
+            return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+        };
+        if dungeon
+            .legacy_index
+            .zip(alternate.legacy_index)
+            .is_none_or(|(primary, alternate)| primary >= alternate)
+            || alternate.substitution.is_some()
+            || substitution
+                .alternate_gate_one_in
+                .is_some_and(|one_in| one_in < 2)
+            || !substitution_alternates.insert(substitution.alternate_dungeon_id.as_str())
+        {
+            return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+        }
+    }
     if let Some(wilderness) = &mut world.wilderness {
         validate_wilderness(&world.id, wilderness, &dungeon_definition_ids, towns)?;
     }
@@ -2777,12 +2804,33 @@ pub(super) fn validate_world(
             }
         }
     }
-    let mut entry_terrain_ids = BTreeSet::new();
+    let mut entry_terrain_owners = BTreeMap::<Option<&str>, Option<&str>>::new();
     for floor in world.procedural_floors.iter().filter(|floor| {
         floor.lifecycle != FloorLifecycle::Town && floor.return_floor_id == world.initial_floor_id
     }) {
-        if !entry_terrain_ids.insert(floor.entry_terrain_id.as_deref()) {
-            return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
+        let entry_terrain_id = floor.entry_terrain_id.as_deref();
+        let dungeon_id = floor.dungeon_id.as_deref();
+        if let Some(existing_dungeon_id) = entry_terrain_owners.get(&entry_terrain_id).copied() {
+            let is_substitution_pair =
+                existing_dungeon_id
+                    .zip(dungeon_id)
+                    .is_some_and(|(left, right)| {
+                        dungeons_by_id
+                            .get(left)
+                            .and_then(|dungeon| dungeon.substitution.as_ref())
+                            .is_some_and(|substitution| substitution.alternate_dungeon_id == right)
+                            || dungeons_by_id
+                                .get(right)
+                                .and_then(|dungeon| dungeon.substitution.as_ref())
+                                .is_some_and(|substitution| {
+                                    substitution.alternate_dungeon_id == left
+                                })
+                    });
+            if !is_substitution_pair {
+                return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
+            }
+        } else {
+            entry_terrain_owners.insert(entry_terrain_id, dungeon_id);
         }
     }
     require_reference(terrain_ids, &world.fill_terrain_id, &world.id)?;

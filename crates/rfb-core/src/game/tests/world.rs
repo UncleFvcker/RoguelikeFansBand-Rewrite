@@ -153,6 +153,178 @@ fn game_with_second_town(seed: u64) -> (Game, Position) {
     )
 }
 
+fn game_with_dungeon_substitution(seed: u64) -> Game {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == DEFAULT_WORLD_ID)
+        .expect("Middle-earth world should remain available");
+    let primary = world
+        .dungeons
+        .iter_mut()
+        .find(|dungeon| dungeon.id == "demo.dungeon.camelot")
+        .expect("Camelot should remain available");
+    primary.legacy_index = Some(31);
+    primary.substitution = Some(rfb_content::DungeonSubstitutionDefinition {
+        alternate_dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
+        alternate_gate_one_in: Some(32),
+    });
+    world
+        .dungeons
+        .iter_mut()
+        .find(|dungeon| dungeon.id == "demo.dungeon.tidal-cave")
+        .expect("Tidal Cave should remain available")
+        .legacy_index = Some(40);
+    let shared_position = world
+        .wilderness
+        .as_ref()
+        .expect("Middle-earth should retain wilderness")
+        .locations
+        .iter()
+        .find_map(|location| match location {
+            rfb_content::WildernessLocationDefinition::Dungeon {
+                position,
+                dungeon_id,
+            } if dungeon_id == "demo.dungeon.camelot" => Some(*position),
+            _ => None,
+        })
+        .expect("Camelot should retain its wilderness location");
+    for location in &mut world
+        .wilderness
+        .as_mut()
+        .expect("Middle-earth should retain wilderness")
+        .locations
+    {
+        if let rfb_content::WildernessLocationDefinition::Dungeon {
+            position,
+            dungeon_id,
+        } = location
+            && dungeon_id == "demo.dungeon.tidal-cave"
+        {
+            *position = shared_position;
+        }
+    }
+    world
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.id == "demo.floor.tidal-cave-depth-15")
+        .expect("Tidal Cave root should remain available")
+        .entry_terrain_id = Some("demo.terrain.camelot-entrance".to_owned());
+
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("substitution test content should remain valid"),
+    ));
+    Game::from_content(seed, catalog, DEFAULT_WORLD_ID)
+        .expect("substitution test game should initialize")
+}
+
+#[test]
+fn p89b_substitute_selection_is_seeded_persisted_and_hashed() {
+    let primary = game_with_dungeon_substitution(0);
+    assert!(primary.dungeon_is_active("demo.dungeon.camelot"));
+    assert!(!primary.dungeon_is_active("demo.dungeon.tidal-cave"));
+    let failed_extra_gate = game_with_dungeon_substitution(1_528);
+    assert!(failed_extra_gate.dungeon_is_active("demo.dungeon.camelot"));
+    assert!(!failed_extra_gate.dungeon_is_active("demo.dungeon.tidal-cave"));
+
+    let mut alternate = game_with_dungeon_substitution(1_536);
+    assert!(!alternate.dungeon_is_active("demo.dungeon.camelot"));
+    assert!(alternate.dungeon_is_active("demo.dungeon.tidal-cave"));
+    let mut opposite_selection = alternate.clone();
+    opposite_selection
+        .dungeon_states
+        .get_mut("demo.dungeon.camelot")
+        .expect("Camelot state")
+        .suppressed = false;
+    opposite_selection
+        .dungeon_states
+        .get_mut("demo.dungeon.tidal-cave")
+        .expect("Tidal Cave state")
+        .suppressed = true;
+    assert_ne!(alternate.state_hash(), opposite_selection.state_hash());
+    let mut suppressed_conquest = alternate.clone();
+    suppressed_conquest
+        .dungeon_states
+        .get_mut("demo.dungeon.camelot")
+        .expect("Camelot state")
+        .guardian_defeated = true;
+    assert_eq!(suppressed_conquest.campaign_counts().0, 0);
+    assert!(suppressed_conquest.validate_loaded_state().is_err());
+    alternate.advance_wilderness_generation();
+    assert!(!alternate.dungeon_is_active("demo.dungeon.camelot"));
+    assert!(alternate.dungeon_is_active("demo.dungeon.tidal-cave"));
+
+    let payload = alternate.to_save();
+    assert!(
+        payload
+            .dungeon_states
+            .iter()
+            .any(|state| { state.dungeon_id == "demo.dungeon.camelot" && state.suppressed })
+    );
+    let restored = Game::from_save_with_content(payload, alternate.content.clone())
+        .expect("substitution state should restore");
+    assert_eq!(restored.state_hash(), alternate.state_hash());
+    assert!(!restored.dungeon_is_active("demo.dungeon.camelot"));
+    assert!(restored.dungeon_is_active("demo.dungeon.tidal-cave"));
+}
+
+#[test]
+fn p89b_shared_entrance_map_and_guardians_use_only_the_active_dungeon() {
+    for (seed, active_dungeon, active_floor, active_guardian, suppressed_guardian) in [
+        (
+            0,
+            "demo.dungeon.camelot",
+            "demo.floor.camelot-depth-20",
+            "demo.actor.arthur-pendragon",
+            "demo.actor.grendel",
+        ),
+        (
+            1_536,
+            "demo.dungeon.tidal-cave",
+            "demo.floor.tidal-cave-depth-15",
+            "demo.actor.grendel",
+            "demo.actor.arthur-pendragon",
+        ),
+    ] {
+        let mut game = game_with_dungeon_substitution(seed);
+        let world_position = Position { x: 7, y: 59 };
+        let cell = game.wilderness_cell_dto(world_position);
+        assert!(
+            cell.locations
+                .iter()
+                .any(|location| location.id == active_dungeon)
+        );
+        assert_eq!(
+            cell.locations
+                .iter()
+                .filter(|location| location.id == "demo.dungeon.camelot"
+                    || location.id == "demo.dungeon.tidal-cave")
+                .count(),
+            1
+        );
+        assert!(game.actor_kind_is_dungeon_guardian(active_guardian));
+        assert!(!game.actor_kind_is_dungeon_guardian(suppressed_guardian));
+
+        game.wilderness_position = Some(world_position);
+        let index = usize::try_from(game.player.position.y).expect("player y should fit usize")
+            * usize::from(game.width)
+            + usize::try_from(game.player.position.x).expect("player x should fit usize");
+        game.terrain[index] = "demo.terrain.camelot-entrance".to_owned();
+        game.traverse_stairs(false)
+            .expect("shared entrance should resolve")
+            .expect("shared entrance should enter its active dungeon");
+        assert_eq!(game.current_floor_id, active_floor);
+    }
+}
+
 #[test]
 fn middle_earth_starts_on_an_outdoor_surface_with_a_working_warrens_entrance() {
     let mut game =
