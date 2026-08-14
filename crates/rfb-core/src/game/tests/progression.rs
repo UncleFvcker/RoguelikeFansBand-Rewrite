@@ -2,7 +2,7 @@
 use super::support::*;
 use super::*;
 use crate::stats::{AttributeSet, experience_required_for_level, modify_attribute_value};
-use rfb_protocol::{AbilitySourceDto, AttributeKindDto, MutationRatingDto};
+use rfb_protocol::{AbilityEffectSpecDto, AbilitySourceDto, AttributeKindDto, MutationRatingDto};
 
 const TEST_RACE_REWARD_BUILD_ID: &str = "test.build.race-rewards";
 const TEST_RACE_REWARD_CASTER_BUILD_ID: &str = "test.build.caster";
@@ -204,6 +204,254 @@ fn birth_race_passives_mutation_overrides_and_class_exclusions_are_resolved() {
 fn race_reward_game(build_id: &str) -> Game {
     Game::from_content_with_build(47, race_reward_catalog(), DEFAULT_WORLD_ID, build_id)
         .expect("test race reward game should create")
+}
+
+fn draconian_reward_game() -> Game {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    let mut build = artifact
+        .content
+        .builds
+        .iter()
+        .find(|build| build.id == "demo.build.high-mage-death")
+        .expect("Death High-Mage build should exist")
+        .clone();
+    build.id = "test.build.draconian-red".to_owned();
+    build.race_id = "rfb-legacy.race.draconian-red".to_owned();
+    artifact.content.builds.push(build);
+    artifact
+        .content
+        .races
+        .iter_mut()
+        .find(|race| race.id == "rfb-legacy.race.draconian-red")
+        .expect("red Draconian race should exist")
+        .tags
+        .push("rfb-compatibility".to_owned());
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("test Draconian content should remain valid"),
+    ));
+    Game::from_content_with_build(3535, catalog, DEFAULT_WORLD_ID, "test.build.draconian-red")
+        .expect("hidden Draconian should be usable by the internal test build")
+}
+
+#[test]
+fn draconian_level_35_reward_revalidates_all_eight_completed_powers() {
+    let mut game = draconian_reward_game();
+    clear_monsters(&mut game);
+    game.apply_unscaled_player_experience(experience_required_for_level(35), &mut Vec::new());
+    let pending = game
+        .snapshot()
+        .player
+        .pending_race_mutation_choice
+        .expect("Draconian power should be pending at level 35");
+    assert_eq!(pending.reward_id, "draconian-power");
+    assert_eq!(
+        pending
+            .candidates
+            .iter()
+            .map(|candidate| candidate.id.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "rfb.mutation.draconian-shield",
+            "rfb.mutation.draconian-magic-res",
+            "rfb.mutation.draconian-strike",
+            "rfb.mutation.draconian-breath",
+            "rfb.mutation.draconian-regen",
+            "rfb.mutation.draconian-kin",
+            "rfb.mutation.draconian-lore",
+            "rfb.mutation.draconian-resistance",
+        ]
+    );
+
+    let base_armor = game.player_derived_stats().armor_class.value;
+    let base_save = game.player_derived_stats().saving_throw_skill.value;
+
+    let mut shield = game.clone();
+    assert!(shield.choose_race_mutation(
+        "draconian-power",
+        "rfb.mutation.draconian-shield",
+        &mut Vec::new(),
+    ));
+    assert_eq!(
+        shield.player_derived_stats().armor_class.value,
+        base_armor + 15
+    );
+
+    let mut magic_resistance = game.clone();
+    assert!(magic_resistance.choose_race_mutation(
+        "draconian-power",
+        "rfb.mutation.draconian-magic-res",
+        &mut Vec::new(),
+    ));
+    assert_eq!(
+        magic_resistance
+            .player_derived_stats()
+            .saving_throw_skill
+            .value,
+        base_save + 22
+    );
+
+    let mut deadly_breath = game.clone();
+    assert!(deadly_breath.choose_race_mutation(
+        "draconian-power",
+        "rfb.mutation.draconian-breath",
+        &mut Vec::new(),
+    ));
+    assert!(
+        deadly_breath
+            .progress
+            .locked_mutation_ids
+            .contains("rfb.mutation.draconian-breath")
+    );
+
+    let mut regeneration = game.clone();
+    assert!(regeneration.choose_race_mutation(
+        "draconian-power",
+        "rfb.mutation.draconian-regen",
+        &mut Vec::new(),
+    ));
+    assert_eq!(regeneration.player_regeneration_rate_percent(), 250);
+
+    let mut lore = game.clone();
+    assert!(lore.choose_race_mutation(
+        "draconian-power",
+        "rfb.mutation.draconian-lore",
+        &mut Vec::new(),
+    ));
+    assert!(lore.player_auto_identifies_items());
+
+    let mut resistance = game.clone();
+    assert!(resistance.choose_race_mutation(
+        "draconian-power",
+        "rfb.mutation.draconian-resistance",
+        &mut Vec::new(),
+    ));
+    assert_eq!(
+        resistance
+            .effective_player_resistances()
+            .level(DamageType::Fire),
+        ResistanceLevel::Strong
+    );
+
+    let mut strike = game.clone();
+    assert!(strike.choose_race_mutation(
+        "draconian-power",
+        "rfb.mutation.draconian-strike",
+        &mut Vec::new(),
+    ));
+    let strike_power = strike
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "rfb.ability.mutation.draconian-strike-red")
+        .expect("red Dragon Strike should be projected");
+    assert_eq!(strike_power.source, AbilitySourceDto::Mutation);
+    assert_eq!(strike_power.resource_cost, 15);
+    assert!(matches!(
+        strike_power.effects.as_slice(),
+        [AbilityEffectSpecDto::MeleeAdjacent]
+    ));
+    strike.player.position = Position { x: 3, y: 3 };
+    replace_terrain(&mut strike, Position { x: 4, y: 3 }, "demo.terrain.floor");
+    strike.push_generated_actor(
+        "test.draconian-strike-target".to_owned(),
+        "demo.actor.warrens-keeper",
+        Position { x: 4, y: 3 },
+    );
+    strike.debug_set_ability_casts_succeed(true);
+    let mut strike_events = Vec::new();
+    strike
+        .resolve_player_ability(
+            "rfb.ability.mutation.draconian-strike-red",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut strike_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Dragon Strike should resolve against an adjacent target");
+    assert!(strike_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityCastSucceeded { resolution }
+            if resolution.resource_cost == 15
+                && resolution.resource_paid + resolution.hp_paid == 15
+    )));
+
+    let mut kin = game;
+    assert!(kin.choose_race_mutation(
+        "draconian-power",
+        "rfb.mutation.draconian-kin",
+        &mut Vec::new(),
+    ));
+    let kin_power = kin
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "rfb.ability.mutation.draconian-kin")
+        .expect("Summon Kin should be projected");
+    assert_eq!(kin_power.source, AbilitySourceDto::Mutation);
+    assert_eq!(kin_power.resource_cost, 30);
+    assert!(matches!(
+        kin_power.effects.as_slice(),
+        [AbilityEffectSpecDto::SummonCategory {
+            category,
+            maximum_level: 35,
+            ..
+        }] if category == "kin-glyph-100"
+    ));
+
+    kin.player.position = Position { x: 3, y: 3 };
+    for y in 1..=5 {
+        for x in 1..=5 {
+            replace_terrain(&mut kin, Position { x, y }, "demo.terrain.floor");
+        }
+    }
+    kin.debug_set_ability_casts_succeed(true);
+    let mut summon_events = Vec::new();
+    kin.resolve_player_ability(
+        "rfb.ability.mutation.draconian-kin",
+        TargetSelection::SelfTarget,
+        &mut summon_events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Summon Kin should resolve");
+    assert!(!kin.entities.is_empty());
+    assert!(kin.entities.iter().all(|entity| {
+        kin.content.actor(&entity.kind_id).is_some_and(|actor| {
+            actor.level <= 35 && actor.tags.iter().any(|tag| tag == "kin-glyph-100")
+        }) && kin.actor_is_player_side(entity)
+    }));
+    assert!(summon_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityCastSucceeded { resolution }
+            if resolution.resource_cost == 30
+                && resolution.resource_paid + resolution.hp_paid == 30
+    )));
+
+    let restored = Game::from_save_with_content(kin.to_save(), kin.content.clone())
+        .expect("chosen Draconian power should survive save and restore");
+    assert!(
+        restored
+            .progress
+            .locked_mutation_ids
+            .contains("rfb.mutation.draconian-kin")
+    );
+    assert!(
+        restored
+            .snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
 }
 
 #[test]

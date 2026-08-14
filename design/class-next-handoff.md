@@ -718,3 +718,25 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `087d9a1edf25f204228c4efdc8f396365684912eb85df06e039ab3c6ba4b515b`、Protocol `1.212`、
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。新增的内容
   矩阵、动态吐息、中文名测试及 source/schema 检查通过；按用户要求未运行或刷新全量 fixture。
+
+## main 当前批次：龙人专项阶段 4、八项 35 级力量
+
+- 权威来源为 RFB `master:src/mut.c`、`master:src/mut_a.c`、`master:src/races_a.c` 和
+  `master:src/spells_s.c`。九个隐藏 Race 在 35 级提供同一组八选一奖励并锁定选择：
+  `draconian-{shield,magic-res,strike,breath,regen,kin,lore,resistance}`；尚未闭合的
+  `draconian-metamorphosis` 不进入候选池，也未改为 active。
+- 龙皮按亚种获得 AC：红/白/蓝为 +15 并附本系光环，水晶为 +10 并附碎片光环，其余为 +25；
+  抗性增加把各亚种本系抗性提升为 strong。龙之打击新增内部 `DraconianStrike` 内容效果：五种基础
+  亚种获得本系品牌，青铜造成混乱，金色造成震慑，水晶使用原版 vorpal 掷骰，阴影使用既有每次攻击
+  最多吸取 50 HP 的吸血路径。内容投影继续降低为既有 `MeleeAdjacent`，不推进公共 Protocol。
+- `rfb.mutation.draconian-kin` 现在绑定 30 级 CHA/30/70“召唤同族”，按玩家等级从
+  `kin-glyph-100` 召唤持久友方并允许群体；逐亚种龙之打击绑定 30 级 DEX/0 失败率及原版消耗
+  15/20/12/7。致命吐息继续复用阶段 3 的动态查询，魔法抗性、再生和远古知识重新纳入聚焦验收。
+- mutation ledger 将龙皮、龙之打击、致命吐息、召唤同族和抗性增加改为 active；连同已有三项共
+  八项均无 blocker，变形继续保留 `mutation-cross-system-query` blocker。九个 Race 仍隐藏，不带
+  `rfb-compatibility` 或 `polymorph-candidate`，本批不开放 New Game。
+- 协调版本为 pack `1.355.0` / hash
+  `6ee346ff1ecf60fe7c2dd62806d65a12dfe6db65b013a2cde828dcd421fdc32d`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。新增内容矩阵、
+  选择/锁定/save、召唤执行、九种打击行为和权威中文测试通过；source lock、schema、格式和相关编译
+  检查通过。按用户要求未运行或刷新全量 fixture。

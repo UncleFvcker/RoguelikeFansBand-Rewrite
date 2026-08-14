@@ -816,6 +816,18 @@ impl Game {
                 changed,
                 removed_entities,
             )?,
+            (
+                AbilityEffectDefinition::DraconianStrike { mode },
+                AbilityTargetPlan::MeleeThenTeleport {
+                    target_entity_id, ..
+                },
+            ) => self.resolve_player_draconian_strike_effect(
+                mode,
+                &target_entity_id,
+                events,
+                changed,
+                removed_entities,
+            )?,
             (AbilityEffectDefinition::PolymorphSelf, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_polymorph_self_effect(&ability, events)
             }
@@ -8779,6 +8791,26 @@ impl Game {
                     teleport_candidates: self.random_teleport_candidates(u16::from(radius)),
                 })
             }
+            AbilityEffectDefinition::DraconianStrike { .. } => {
+                let TargetSelection::Direction { direction } = target else {
+                    return None;
+                };
+                let position = self.position_in_direction(*direction);
+                let target_entity_id = self
+                    .entities
+                    .iter()
+                    .find(|entity| {
+                        entity.hp > 0
+                            && entity.position == position
+                            && !self.actor_is_player_side(entity)
+                    })?
+                    .id
+                    .clone();
+                Some(AbilityTargetPlan::MeleeThenTeleport {
+                    target_entity_id,
+                    teleport_candidates: Vec::new(),
+                })
+            }
             AbilityEffectDefinition::SwapPosition => {
                 self.ability_path(ability, target)
                     .map(|path| AbilityTargetPlan::Projectile {
@@ -9261,6 +9293,25 @@ impl Game {
                 break;
             }
         }
+        Ok(())
+    }
+
+    fn resolve_player_draconian_strike_effect(
+        &mut self,
+        mode: DraconianStrikeModeDefinition,
+        target_entity_id: &str,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let Some(index) = self
+            .entities
+            .iter()
+            .position(|entity| entity.id == target_entity_id && entity.hp > 0)
+        else {
+            return Ok(());
+        };
+        self.resolve_player_draconian_strike(index, mode, events, changed, removed_entities)?;
         Ok(())
     }
 }

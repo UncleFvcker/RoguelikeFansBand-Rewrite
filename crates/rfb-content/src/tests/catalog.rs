@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.354.0");
+    assert_eq!(catalog.pack_version(), "1.355.0");
     assert_eq!(catalog.races().count(), 55);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1919,7 +1919,7 @@ fn hidden_draconian_subraces_match_rfb_profiles_and_breath_bindings() {
         assert_eq!(race.armor_class, passives.0, "{suffix}");
         assert_eq!(race.reflects_bolts_minimum_level, passives.1, "{suffix}");
         assert_eq!(race.body_slots.len(), 15, "{suffix}");
-        assert!(race.level_mutation_rewards.is_empty(), "{suffix}");
+        assert_eq!(race.level_mutation_rewards.len(), 1, "{suffix}");
         assert!(race.tags.iter().any(|tag| tag == "draconian"));
         assert!(!race.tags.iter().any(|tag| tag == "rfb-compatibility"));
         assert!(!race.tags.iter().any(|tag| tag == "polymorph-candidate"));
@@ -2021,6 +2021,217 @@ fn hidden_draconian_subraces_match_rfb_profiles_and_breath_bindings() {
             .race(&format!("rfb-legacy.race.draconian-{suffix}"))
             .is_some_and(|race| race.legacy_index.is_none()))
     );
+}
+
+#[test]
+fn draconian_level_35_power_matrix_matches_rfb_master() {
+    let pack = original_pack_path();
+    let catalog = ContentCatalog::from_artifact(
+        compile_pack_dir(&pack).expect("original pack should compile"),
+    );
+    let mutation_ids = [
+        "rfb.mutation.draconian-shield",
+        "rfb.mutation.draconian-magic-res",
+        "rfb.mutation.draconian-strike",
+        "rfb.mutation.draconian-breath",
+        "rfb.mutation.draconian-regen",
+        "rfb.mutation.draconian-kin",
+        "rfb.mutation.draconian-lore",
+        "rfb.mutation.draconian-resistance",
+    ];
+    let profiles = [
+        (
+            "red",
+            15,
+            Some(ActorDamageType::Fire),
+            ActorDamageType::Fire,
+            15,
+            DraconianStrikeModeDefinition::Fire,
+        ),
+        (
+            "white",
+            15,
+            Some(ActorDamageType::Cold),
+            ActorDamageType::Cold,
+            15,
+            DraconianStrikeModeDefinition::Cold,
+        ),
+        (
+            "blue",
+            15,
+            Some(ActorDamageType::Electricity),
+            ActorDamageType::Electricity,
+            15,
+            DraconianStrikeModeDefinition::Electricity,
+        ),
+        (
+            "black",
+            25,
+            None,
+            ActorDamageType::Acid,
+            15,
+            DraconianStrikeModeDefinition::Acid,
+        ),
+        (
+            "green",
+            25,
+            None,
+            ActorDamageType::Poison,
+            15,
+            DraconianStrikeModeDefinition::Poison,
+        ),
+        (
+            "bronze",
+            25,
+            None,
+            ActorDamageType::Confusion,
+            20,
+            DraconianStrikeModeDefinition::Confusion,
+        ),
+        (
+            "crystal",
+            10,
+            Some(ActorDamageType::Shards),
+            ActorDamageType::Shards,
+            12,
+            DraconianStrikeModeDefinition::Vorpal,
+        ),
+        (
+            "gold",
+            25,
+            None,
+            ActorDamageType::Sound,
+            20,
+            DraconianStrikeModeDefinition::Stun,
+        ),
+        (
+            "shadow",
+            25,
+            None,
+            ActorDamageType::Nether,
+            7,
+            DraconianStrikeModeDefinition::Vampiric,
+        ),
+    ];
+
+    for (suffix, armor_class, aura, resistance, cost, mode) in profiles {
+        let race = catalog
+            .race(&format!("rfb-legacy.race.draconian-{suffix}"))
+            .unwrap_or_else(|| panic!("{suffix}"));
+        let [reward] = race.level_mutation_rewards.as_slice() else {
+            panic!("{suffix} should have one level-35 reward");
+        };
+        assert_eq!(
+            (reward.id.as_str(), reward.minimum_level),
+            ("draconian-power", 35)
+        );
+        let RaceMutationSelectionDefinition::Choice {
+            mutation_ids: actual_ids,
+        } = &reward.selection
+        else {
+            panic!("{suffix} should expose a manual power choice");
+        };
+        assert_eq!(
+            actual_ids.iter().map(String::as_str).collect::<Vec<_>>(),
+            mutation_ids
+        );
+        assert!(
+            !actual_ids
+                .iter()
+                .any(|id| id == "rfb.mutation.draconian-metamorphosis")
+        );
+
+        let shield = &race.mutation_overrides["rfb.mutation.draconian-shield"];
+        assert_eq!(
+            (shield.armor_class, shield.contact_aura),
+            (Some(armor_class), aura)
+        );
+        let resistance_override = &race.mutation_overrides["rfb.mutation.draconian-resistance"];
+        assert_eq!(
+            resistance_override.resistances,
+            Some(BTreeMap::from([
+                (resistance, ActorResistanceLevel::Strong,)
+            ]))
+        );
+        let strike = &race.mutation_overrides["rfb.mutation.draconian-strike"];
+        let activation = strike.activation.as_ref().expect("strike activation");
+        assert_eq!(activation.minimum_level, 30);
+        assert_eq!(
+            activation.governing_attribute,
+            TechniqueAttribute::Dexterity
+        );
+        assert_eq!(
+            (activation.cost, activation.base_failure_percent),
+            (cost, 0)
+        );
+        assert_eq!(
+            activation.ability_id,
+            format!("rfb.ability.mutation.draconian-strike-{suffix}")
+        );
+        assert!(matches!(
+            catalog
+                .ability(&activation.ability_id)
+                .expect("strike ability")
+                .effect,
+            AbilityEffectDefinition::DraconianStrike { mode: actual } if actual == mode
+        ));
+    }
+
+    let kin = catalog
+        .mutation("rfb.mutation.draconian-kin")
+        .expect("Draconian kin mutation")
+        .activation
+        .as_ref()
+        .expect("Draconian kin activation");
+    assert_eq!(kin.minimum_level, 30);
+    assert_eq!(kin.governing_attribute, TechniqueAttribute::Charisma);
+    assert_eq!((kin.cost, kin.base_failure_percent), (30, 70));
+    let AbilityEffectDefinition::SummonCategory {
+        category,
+        maximum_level,
+        count_dice,
+        count_sides,
+        friendly_group_chance_percent,
+        group_count_dice,
+        group_count_sides,
+        group_count_bonus,
+        radius,
+        duration_turns,
+        ..
+    } = &catalog
+        .ability(&kin.ability_id)
+        .expect("Draconian kin ability")
+        .effect
+    else {
+        panic!("Draconian kin should use the shared category summon");
+    };
+    assert_eq!(category, "kin-glyph-100");
+    assert_eq!((*maximum_level, *count_dice, *count_sides), (0, 1, 1));
+    assert_eq!(*friendly_group_chance_percent, 50);
+    assert_eq!(
+        (*group_count_dice, *group_count_sides, *group_count_bonus),
+        (1, 3, 1)
+    );
+    assert_eq!((*radius, *duration_turns), (2, 0));
+
+    let ledger: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(pack.join("legacy-mutation-plan.json")).expect("ledger should read"),
+    )
+    .expect("ledger should parse");
+    let entries = ledger["mutations"].as_array().expect("mutation entries");
+    for id in mutation_ids {
+        let entry = entries
+            .iter()
+            .find(|entry| entry["id"] == id)
+            .unwrap_or_else(|| panic!("{id}"));
+        assert_eq!(entry["status"], "active", "{id}");
+        assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
+    }
+    let metamorphosis = entries
+        .iter()
+        .find(|entry| entry["id"] == "rfb.mutation.draconian-metamorphosis")
+        .expect("metamorphosis ledger entry");
+    assert_eq!(metamorphosis["status"], "blocked");
 }
 
 #[test]
@@ -3034,6 +3245,7 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
         "rfb.mutation.fearless",
         "rfb.mutation.weird-mind",
         "rfb.mutation.draconian-magic-res",
+        "rfb.mutation.draconian-resistance",
         "rfb.mutation.sensitive-eyes",
         "rfb.mutation.no-inhibitions",
         "rfb.mutation.infravision",
@@ -3129,17 +3341,6 @@ fn second_passive_mutation_batch_keeps_resistance_sense_and_levitation_semantics
         assert_eq!(entry["status"], "active", "{id}");
         assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
     }
-    let id = "rfb.mutation.draconian-resistance";
-    let entry = entries
-        .iter()
-        .find(|entry| entry["id"] == id)
-        .unwrap_or_else(|| panic!("{id}"));
-    assert_eq!(entry["status"], "blocked", "{id}");
-    assert_eq!(
-        entry["blockers"],
-        serde_json::json!(["draconian-subrace-identity"]),
-        "{id}"
-    );
 }
 
 #[test]
@@ -3199,6 +3400,7 @@ fn third_passive_mutation_batch_keeps_regeneration_aura_and_light_semantics() {
         "rfb.mutation.fire-aura",
         "rfb.mutation.regen",
         "rfb.mutation.draconian-regen",
+        "rfb.mutation.draconian-shield",
     ] {
         let entry = entries
             .iter()
@@ -3207,15 +3409,6 @@ fn third_passive_mutation_batch_keeps_regeneration_aura_and_light_semantics() {
         assert_eq!(entry["status"], "active", "{id}");
         assert_eq!(entry["blockers"], serde_json::json!([]), "{id}");
     }
-    let shield = entries
-        .iter()
-        .find(|entry| entry["id"] == "rfb.mutation.draconian-shield")
-        .expect("draconian shield ledger entry");
-    assert_eq!(shield["status"], "blocked");
-    assert_eq!(
-        shield["blockers"],
-        serde_json::json!(["draconian-subrace-identity-and-aura-selection"])
-    );
 }
 
 #[test]

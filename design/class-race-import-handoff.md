@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-14
-当前基线：本文所在的 `main` 提交（龙人专项阶段 3）
+当前基线：本文所在的 `main` 提交（龙人专项阶段 4）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,8 +10,8 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.354.0`
-- content hash：`087d9a1edf25f204228c4efdc8f396365684912eb85df06e039ab3c6ba4b515b`
+- demo pack：`1.355.0`
+- content hash：`6ee346ff1ecf60fe7c2dd62806d65a12dfe6db65b013a2cde828dcd421fdc32d`
 - Protocol：`1.212`
 - State Hash Schema：`v104`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
@@ -65,11 +65,14 @@ New Game 当前按以下稳定 ID 开放：
 “职业 × 种族”的重复 Build JSON。玩家外观目前由职业 Build 决定，新增普通种族不复制玩家 Actor 或
 tileset 映射。
 
-龙人专项已完成前三个阶段：修正旧 pack 断言；加入亚种变异覆盖、漂浮、种族 AC、等级反射和职业
-候选过滤模型；再加入红、白、蓝、黑、绿、青铜、水晶、金、阴影九个隐藏 Race、SkillSet 与动态
-喷吐能力。九个 Race 均不带 `rfb-compatibility`，当前 New Game 请求必须拒绝它们。喷吐已按当前 HP、
-亚种公式与等级在箭、束、锥形之间切换，并识别既有 `rfb.mutation.draconian-breath` 的伤害和费用
-强化。后续仍须闭合 35 级龙人力量、出生亚种选择及正式 UI/存档验收，完成前不得添加正式选择标签。
+龙人专项已完成前四个阶段：修正旧 pack 断言；加入亚种变异覆盖、漂浮、种族 AC、等级反射和职业
+候选过滤模型；加入红、白、蓝、黑、绿、青铜、水晶、金、阴影九个隐藏 Race、SkillSet 与动态喷吐；
+再闭合除变形外的八项 35 级力量。隐藏 Race 现在在 35 级提供八选一并永久锁定：龙皮、魔法抗性、
+龙之打击、致命吐息、再生、召唤同族、远古知识和抗性增加。龙皮与抗性增加按出生亚种覆盖，龙之
+打击按亚种执行元素强化、混乱、震慑、撕裂或吸血，召唤同族使用当前等级的龙族分类召唤。
+九个 Race 仍不带 `rfb-compatibility`，当前 New Game 请求必须拒绝它们；`draconian-metamorphosis`
+仍为 blocked 且不进入候选池。后续须单独闭合变形，再实现出生亚种选择及正式 UI/完整生命周期验收，
+完成前不得添加正式选择标签。
 在已跳过龙人的普通静态序列中，下一项仍是 `rfb-legacy.race.golem`（魔像）。
 
 ## 2. 权威来源与不可变规则

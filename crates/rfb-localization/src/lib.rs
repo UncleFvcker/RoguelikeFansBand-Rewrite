@@ -370,6 +370,62 @@ mod tests {
     }
 
     #[test]
+    fn draconian_level_35_activations_use_authoritative_chinese_text() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("ability-rfb-mutation-draconian-kin-name", "召唤同族"),
+            (
+                "ability-rfb-mutation-draconian-kin-description",
+                "召唤与你相关的怪物来协助你。",
+            ),
+            ("ability-rfb-mutation-draconian-strike-name", "龙之打击"),
+            (
+                "ability-rfb-mutation-draconian-strike-red-description",
+                "用带火焰效果的攻击打击相邻的对手。",
+            ),
+            (
+                "ability-rfb-mutation-draconian-strike-white-description",
+                "用带冰霜效果的攻击打击相邻的对手。",
+            ),
+            (
+                "ability-rfb-mutation-draconian-strike-blue-description",
+                "用带电击效果的攻击打击相邻的对手。",
+            ),
+            (
+                "ability-rfb-mutation-draconian-strike-black-description",
+                "用带腐蚀效果的攻击打击相邻的对手。",
+            ),
+            (
+                "ability-rfb-mutation-draconian-strike-green-description",
+                "用带毒素效果的攻击打击相邻的对手。",
+            ),
+            (
+                "ability-rfb-mutation-draconian-strike-gold-description",
+                "用带震慑效果的攻击打击相邻的对手。",
+            ),
+            (
+                "ability-rfb-mutation-draconian-strike-bronze-description",
+                "用带混乱效果的攻击打击相邻的对手。",
+            ),
+            (
+                "ability-rfb-mutation-draconian-strike-crystal-description",
+                "用带撕裂效果的攻击打击相邻的对手。",
+            ),
+            (
+                "ability-rfb-mutation-draconian-strike-shadow-description",
+                "用带吸血效果的攻击打击相邻的对手。",
+            ),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Draconian power text should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn trouble_at_home_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

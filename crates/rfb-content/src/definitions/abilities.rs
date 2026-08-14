@@ -101,6 +101,21 @@ pub enum AbilityDetectSubjectDefinition {
     Curse,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum DraconianStrikeModeDefinition {
+    Fire,
+    Cold,
+    Electricity,
+    Acid,
+    Poison,
+    Stun,
+    Confusion,
+    Vorpal,
+    Vampiric,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
@@ -519,6 +534,9 @@ pub enum AbilityEffectDefinition {
     MeleeThenTeleport {
         radius: u8,
         failure_threshold: u16,
+    },
+    DraconianStrike {
+        mode: DraconianStrikeModeDefinition,
     },
     PolymorphSelf,
     PolymorphTarget,

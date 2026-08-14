@@ -294,6 +294,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::FetchItem { .. }
                     | AbilityEffectDefinition::ConsumeTerrain { .. }
                     | AbilityEffectDefinition::MeleeThenTeleport { .. }
+                    | AbilityEffectDefinition::DraconianStrike { .. }
                     | AbilityEffectDefinition::SwapPosition
                     | AbilityEffectDefinition::TransformTerrain { .. }
                     | AbilityEffectDefinition::TerrainBeam { .. }

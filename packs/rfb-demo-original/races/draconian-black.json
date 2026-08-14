@@ -87,6 +87,47 @@
   "infravision": 2,
   "kinCategory": "kin-glyph-100",
   "lifePercent": 103,
+  "levelMutationRewards": [
+    {
+      "id": "draconian-power",
+      "minimumLevel": 35,
+      "selection": {
+        "type": "choice",
+        "mutationIds": [
+          "rfb.mutation.draconian-shield",
+          "rfb.mutation.draconian-magic-res",
+          "rfb.mutation.draconian-strike",
+          "rfb.mutation.draconian-breath",
+          "rfb.mutation.draconian-regen",
+          "rfb.mutation.draconian-kin",
+          "rfb.mutation.draconian-lore",
+          "rfb.mutation.draconian-resistance"
+        ]
+      }
+    }
+  ],
+  "mutationOverrides": {
+    "rfb.mutation.draconian-shield": {
+      "description": "龙皮：你获得 +25 AC",
+      "armorClass": 25
+    },
+    "rfb.mutation.draconian-strike": {
+      "description": "用带腐蚀效果的攻击打击相邻的对手。",
+      "activation": {
+        "minimumLevel": 30,
+        "governingAttribute": "dexterity",
+        "cost": 15,
+        "baseFailurePercent": 0,
+        "abilityId": "rfb.ability.mutation.draconian-strike-black"
+      }
+    },
+    "rfb.mutation.draconian-resistance": {
+      "description": "你获得额外的酸抗性。",
+      "resistances": {
+        "acid": "strong"
+      }
+    }
+  },
   "modifiers": {
     "strength": 2,
     "intelligence": 1,

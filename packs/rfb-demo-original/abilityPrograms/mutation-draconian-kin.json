@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability-program.mutation.draconian-kin",
+  "input": "self",
+  "steps": [
+    {
+      "type": "summon-category",
+      "category": "kin-glyph-100",
+      "maximumLevel": 0,
+      "countDice": 1,
+      "countSides": 1,
+      "friendlyGroupChancePercent": 50,
+      "groupCountDice": 1,
+      "groupCountSides": 3,
+      "groupCountBonus": 1,
+      "radius": 2,
+      "durationTurns": 0
+    }
+  ]
+}

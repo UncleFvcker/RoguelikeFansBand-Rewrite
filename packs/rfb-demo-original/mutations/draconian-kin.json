@@ -7,5 +7,12 @@
   "rating": "good",
   "sourceIndex": 127,
   "randomWeight": 0,
+  "activation": {
+    "minimumLevel": 30,
+    "governingAttribute": "charisma",
+    "cost": 30,
+    "baseFailurePercent": 70,
+    "abilityId": "rfb.ability.mutation.draconian-kin"
+  },
   "removesOnGain": []
 }

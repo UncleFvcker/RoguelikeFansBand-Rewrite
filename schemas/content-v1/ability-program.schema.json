@@ -1258,6 +1258,23 @@
         {
           "additionalProperties": false,
           "properties": {
+            "mode": {
+              "$ref": "#/$defs/DraconianStrikeModeDefinition"
+            },
+            "type": {
+              "const": "draconian-strike",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "mode"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "type": {
               "const": "polymorph-self",
               "type": "string"
@@ -3196,6 +3213,20 @@
         "resistant",
         "strong",
         "immune"
+      ],
+      "type": "string"
+    },
+    "DraconianStrikeModeDefinition": {
+      "enum": [
+        "fire",
+        "cold",
+        "electricity",
+        "acid",
+        "poison",
+        "stun",
+        "confusion",
+        "vorpal",
+        "vampiric"
       ],
       "type": "string"
     },

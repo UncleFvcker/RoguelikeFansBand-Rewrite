@@ -5452,6 +5452,127 @@ fn draconian_breath_uses_current_hp_maturity_shape_and_deadly_upgrade() {
 }
 
 #[test]
+fn draconian_strike_applies_elemental_stun_confusion_vorpal_and_vampiric_modes() {
+    fn base_game() -> Game {
+        let mut game = Game::new(0);
+        clear_monsters(&mut game);
+        game.progress.level = 35;
+        game.player.hp = 1;
+        game.player.position = Position { x: 3, y: 3 };
+        game.push_generated_actor(
+            "test.draconian-strike-target".to_owned(),
+            "demo.actor.warrens-keeper",
+            Position { x: 4, y: 3 },
+        );
+        game.entities[0].hp = 10_000;
+        game.entities[0].max_hp = 10_000;
+        game
+    }
+
+    fn damage_with(
+        base: &Game,
+        seed: u64,
+        mode: Option<DraconianStrikeModeDefinition>,
+    ) -> (Game, i32, Vec<DomainEvent>) {
+        let mut game = base.clone();
+        game.rng = RfbRng::seeded(seed);
+        let mut events = Vec::new();
+        match mode {
+            Some(mode) => {
+                game.resolve_player_draconian_strike(
+                    0,
+                    mode,
+                    &mut events,
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .expect("Draconian strike should resolve");
+            }
+            None => {
+                game.resolve_player_melee(
+                    0,
+                    false,
+                    &mut events,
+                    &mut BTreeSet::new(),
+                    &mut Vec::new(),
+                )
+                .expect("control melee should resolve");
+            }
+        }
+        let damage = 10_000 - game.entities[0].hp;
+        (game, damage, events)
+    }
+
+    let base = base_game();
+    let hit_seed = (0..10_000)
+        .find(|seed| damage_with(&base, *seed, None).1 > 5)
+        .expect("a deterministic melee hit seed should exist");
+    let (_, normal_damage, _) = damage_with(&base, hit_seed, None);
+    let (_, fire_damage, _) =
+        damage_with(&base, hit_seed, Some(DraconianStrikeModeDefinition::Fire));
+    assert!(fire_damage > normal_damage);
+
+    let (stunned, stun_damage, _) =
+        damage_with(&base, hit_seed, Some(DraconianStrikeModeDefinition::Stun));
+    assert_eq!(stun_damage, normal_damage);
+    assert!(
+        stunned.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_STUN)
+    );
+
+    let confusion_seed = (0..10_000)
+        .find(|seed| {
+            damage_with(&base, *seed, Some(DraconianStrikeModeDefinition::Confusion))
+                .0
+                .entities[0]
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_CONFUSION)
+        })
+        .expect("a deterministic confusion seed should exist");
+    assert!(
+        damage_with(
+            &base,
+            confusion_seed,
+            Some(DraconianStrikeModeDefinition::Confusion),
+        )
+        .2
+        .iter()
+        .any(|event| matches!(event, DomainEvent::ConfusingStrikeApplied { .. }))
+    );
+
+    let vorpal_seed = (0..100_000)
+        .find(|seed| {
+            let normal = damage_with(&base, *seed, None).1;
+            let vorpal = damage_with(&base, *seed, Some(DraconianStrikeModeDefinition::Vorpal)).1;
+            normal > 0 && vorpal > normal
+        })
+        .expect("a deterministic vorpal seed should exist");
+    assert!(
+        damage_with(
+            &base,
+            vorpal_seed,
+            Some(DraconianStrikeModeDefinition::Vorpal),
+        )
+        .1 > damage_with(&base, vorpal_seed, None).1
+    );
+
+    let (vampiric, vampiric_damage, events) = damage_with(
+        &base,
+        hit_seed,
+        Some(DraconianStrikeModeDefinition::Vampiric),
+    );
+    assert!(vampiric_damage > 5);
+    assert!(vampiric.player.hp > 1);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::PlayerVampiricHealed { resolution } if resolution.applied > 0
+    )));
+}
+
+#[test]
 fn formal_dwarf_detection_failure_spills_mana_into_hp_without_revealing() {
     let mut game = Game::new_with_build_race_and_name(
         95,

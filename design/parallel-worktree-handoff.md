@@ -1286,3 +1286,20 @@ git diff --stat
   `087d9a1edf25f204228c4efdc8f396365684912eb85df06e039ab3c6ba4b515b`、Protocol `1.212`、
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。新增内容、
   核心和本地化测试以及 source/schema 检查通过；按用户要求不运行全量 fixture，留待主合并验收。
+
+## 70. main 当前交接（龙人专项阶段 4：八项 35 级力量）
+
+- 种族方向新增并拥有 `rfb.ability.mutation.draconian-kin`、对应 ability program，以及九组
+  `rfb.ability.mutation.draconian-strike-{red,white,blue,black,green,bronze,crystal,gold,shadow}`
+  和对应 ability program；其他方向不得复制这些 ID。本批不新增 item、material、affix、resource、
+  actor 或公共协议 ID。
+- 九个隐藏 Race 现在在 35 级提供除变形外的八项力量选择，并按出生亚种覆盖龙皮 AC/光环、本系
+  strong 抗性与龙之打击类型/消耗。龙之打击内部效果执行元素品牌、混乱、震慑、vorpal 或吸血，
+  DTO 继续投影既有近战效果；召唤同族按玩家等级从 `kin-glyph-100` 召唤持久友方并允许群体。
+- ledger 中龙皮、龙之打击、致命吐息、召唤同族和抗性增加已改为 active，魔法抗性、再生和远古
+  知识重新验收。`rfb.mutation.draconian-metamorphosis` 继续 blocked 且不在当前候选池；九个 Race
+  仍不得加入 `PLAYTEST_RACE_IDS`、New Game 白名单或正式变形候选。
+- 共享协调点为 pack `1.355.0` / content hash
+  `6ee346ff1ecf60fe7c2dd62806d65a12dfe6db65b013a2cde828dcd421fdc32d`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。本批仅运行
+  新增的内容、核心与中文聚焦测试；source/schema/格式/相关编译检查通过，未运行全量 fixture。

@@ -1408,10 +1408,116 @@ impl Game {
         Ok(())
     }
 
+    fn draconian_strike_damage_multiplier(
+        &self,
+        profile: &super::player_stats::ResolvedAttackProfile,
+        target: &Actor,
+        definition: &rfb_content::ActorDefinition,
+        strike_mode: Option<DraconianStrikeModeDefinition>,
+    ) -> i32 {
+        let multiplier = self.player_melee_damage_multiplier(profile, target, definition);
+        let damage_type = match strike_mode {
+            Some(DraconianStrikeModeDefinition::Fire) => DamageType::Fire,
+            Some(DraconianStrikeModeDefinition::Cold) => DamageType::Cold,
+            Some(DraconianStrikeModeDefinition::Electricity) => DamageType::Electricity,
+            Some(DraconianStrikeModeDefinition::Acid) => DamageType::Acid,
+            Some(DraconianStrikeModeDefinition::Poison) => DamageType::Poison,
+            _ => return multiplier,
+        };
+        if target.resistances.level(damage_type) == ResistanceLevel::Immune {
+            multiplier
+        } else if profile.source_item_id.is_some() {
+            multiplier.max(24)
+        } else {
+            multiplier.max(17)
+        }
+    }
+
+    fn resolve_draconian_stunning_strike(
+        &mut self,
+        index: usize,
+        raw_damage: i32,
+        definition: &rfb_content::ActorDefinition,
+    ) {
+        if self.actor_has_status_immunity(index, STATUS_STUN)
+            || definition.tags.iter().any(|tag| tag == "resist-all")
+        {
+            return;
+        }
+        let unique = definition
+            .tags
+            .iter()
+            .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
+        let save_sides = (1 + u64::from(definition.level) / 12)
+            .saturating_mul(u64::from(definition.level))
+            .max(1);
+        if unique
+            && self.rng.bounded(save_sides) + 1
+                > u64::try_from(raw_damage.max(0)).unwrap_or(u64::MAX)
+        {
+            return;
+        }
+        self.apply_actor_melee_status(
+            index,
+            STATUS_STUN,
+            monster_stun_amount(raw_damage),
+            "rfb.mutation.draconian-strike",
+        );
+    }
+
+    fn resolve_draconian_confusing_strike(
+        &mut self,
+        index: usize,
+        definition: &rfb_content::ActorDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let was_ready = self.confusing_strike_ready;
+        self.confusing_strike_ready = true;
+        self.resolve_confusing_strike(index, definition, events);
+        self.confusing_strike_ready = was_ready;
+    }
+
     pub(super) fn resolve_player_melee(
         &mut self,
         index: usize,
         train_weapon: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<PlayerMeleeOutcome, CoreError> {
+        self.resolve_player_melee_with_draconian_strike(
+            index,
+            train_weapon,
+            None,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    pub(super) fn resolve_player_draconian_strike(
+        &mut self,
+        index: usize,
+        mode: DraconianStrikeModeDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<PlayerMeleeOutcome, CoreError> {
+        self.resolve_player_melee_with_draconian_strike(
+            index,
+            false,
+            Some(mode),
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    fn resolve_player_melee_with_draconian_strike(
+        &mut self,
+        index: usize,
+        train_weapon: bool,
+        strike_mode: Option<DraconianStrikeModeDefinition>,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -1453,17 +1559,23 @@ impl Game {
         let mut touched_surviving_target = false;
         let mut allow_criticals = true;
         'profiles: for profile in profiles {
-            let vampiric_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
-                self.items
-                    .iter()
-                    .find(|item| &item.id == item_id)
-                    .is_some_and(|item| {
-                        self.item_passives(item)
-                            .contains(&EquipmentPassive::Vampiric)
-                    })
-            });
-            let damage_multiplier =
-                self.player_melee_damage_multiplier(&profile, &self.entities[index], &definition);
+            let vampiric_weapon =
+                matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
+                    || profile.source_item_id.as_ref().is_some_and(|item_id| {
+                        self.items
+                            .iter()
+                            .find(|item| &item.id == item_id)
+                            .is_some_and(|item| {
+                                self.item_passives(item)
+                                    .contains(&EquipmentPassive::Vampiric)
+                            })
+                    });
+            let damage_multiplier = self.draconian_strike_damage_multiplier(
+                &profile,
+                &self.entities[index],
+                &definition,
+                strike_mode,
+            );
             for _ in 0..profile.attacks {
                 attacks_used = attacks_used.saturating_add(1);
                 self.apply_easy_tiring_fatigue(50);
@@ -1503,7 +1615,16 @@ impl Game {
                         ))
                         .saturating_div(100);
                 }
-                let rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
+                let mut rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
+                if matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vorpal))
+                    && self.rng.bounded(6) == 0
+                {
+                    let mut multiplier = 2;
+                    while self.rng.bounded(4) == 0 {
+                        multiplier += 1;
+                    }
+                    rolled_damage = rolled_damage.saturating_mul(multiplier);
+                }
                 self.check_human_dexterity_sprain(
                     if profile.source_item_id.is_some() {
                         500
@@ -1524,6 +1645,21 @@ impl Game {
                 commit_damage_application(&mut self.entities[index], &application);
                 events.push(profile.hit_event(&target_kind, damage));
                 self.wake_entity_after_damage(index, damage.applied, events);
+                if !application.fatal {
+                    match strike_mode {
+                        Some(DraconianStrikeModeDefinition::Stun) => {
+                            self.resolve_draconian_stunning_strike(
+                                index,
+                                rolled_damage,
+                                &definition,
+                            );
+                        }
+                        Some(DraconianStrikeModeDefinition::Confusion) => {
+                            self.resolve_draconian_confusing_strike(index, &definition, events);
+                        }
+                        _ => {}
+                    }
+                }
                 let mut revenge_stop = false;
                 if !application.fatal
                     && let Some(stop) = self.resolve_monster_revenge_aura(

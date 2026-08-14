@@ -504,6 +504,7 @@ pub(super) fn validate_abilities(
                     radius,
                     failure_threshold,
                 } => (1..=255).contains(radius) && *failure_threshold <= 1_000,
+                AbilityEffectDefinition::DraconianStrike { .. } => true,
                 AbilityEffectDefinition::Recall {
                     delay_dice,
                     delay_sides,
@@ -1049,6 +1050,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::ConeDamage { .. }
                 | AbilityEffectDefinition::BreathDamage { .. }
                 | AbilityEffectDefinition::DraconianBreathDamage { .. }
+                | AbilityEffectDefinition::DraconianStrike { .. }
                 | AbilityEffectDefinition::Rodeo
                 | AbilityEffectDefinition::TerrainBeam { .. }
         ) || matches!(
@@ -1110,6 +1112,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::FetchItem { .. }
             | AbilityEffectDefinition::ConsumeTerrain { .. }
             | AbilityEffectDefinition::MeleeThenTeleport { .. }
+            | AbilityEffectDefinition::DraconianStrike { .. }
             | AbilityEffectDefinition::SwapPosition => projectile_target_rule,
             AbilityEffectDefinition::CreateAmmunition {
                 source_item_tags, ..
