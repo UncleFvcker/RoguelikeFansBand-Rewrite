@@ -5,7 +5,7 @@
 
 更新时间：2026-08-15
 
-当前 main 实现基线：`9d3397869`（木精灵正式 New Game 开放）
+当前 main 实现基线：`7dafd6c6f`（神使正式 New Game 开放）
 
 分支：`codex/class-next`
 
@@ -903,3 +903,22 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 新增聚焦测试共 7 项：内容 1、中文名 1、importer 1、核心 3、Web 1，覆盖静态矩阵、完整侦测、
   等级/消耗、树木通行、临时形态、美德及 save/state-hash/replay。`verify-source`、格式和 diff 检查
   通过；按用户要求未运行全量测试或刷新 fixture。
+
+## main 当前批次：神使正式内容、飞行与看破隐形
+
+- 权威来源为 RFB `master:src/races_a.c`、`master:src/virtue.c` 和 `master:src/py_birth.c`。种族方向
+  继续拥有既有 `rfb-legacy.race.archon` 与 `rfb-legacy.skill-set.race-archon`；本批没有新增内容 ID，
+  飞行、看破隐形、红外、标准身体和出生全部复用现有模型与当前有效种族路径。
+- 神使按原版闭合六维 `+2/0/+4/+1/+2/+3`、生命 103%、基础 HP 22、经验 200%、3 格红外、商店
+  90%、八项技能、飞行、看破隐形、天使身份及初始“正义”。没有主动能力或职业过滤；临时神使形态
+  获得并在解除后失去同一组静态被动。
+- 原作 `p_ptr->align += 200` 没有对应的统一玩家阵营模型。本批明确不增加 `good` 标签、Archon 专用
+  状态或其他局部替代；importer 已映射飞行与看破隐形，并继续用 `calc_bonuses` gap 暴露剩余阵营语句。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数从 32 增至 33；
+  请求继续使用既有 `{ buildId, raceId, playerName, seed }`，不增加协议、玩家 Actor、tileset 或重复 Build。
+- 实现提交为 `7dafd6c6f`（`Import Archon race`）。最终协调点为 pack `1.369.0` / content hash
+  `ca4c7b26e1bf204efefadedd2f116f95f2d4d713aeec543c417947033a68542b`、Protocol `1.221`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。
+- 新增聚焦测试共 6 项：内容 1、中文名 1、importer 1、核心 2、Web 1，覆盖静态矩阵、永久/临时形态
+  的飞行、看破隐形、红外、美德及 save/state-hash 往返。`verify-source`、格式和 diff 检查通过；按用户
+  要求未运行全量测试或刷新 fixture。

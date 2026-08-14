@@ -1,7 +1,7 @@
 # 并行 worktree 通用交接说明
 
 更新时间：2026-08-15
-当前工作批次起点：`main@9d3397869`
+当前工作批次起点：`main@7dafd6c6f`
 
 本说明供新的 Codex 对话接手独立方向时使用。每个写入方向必须使用自己的
 worktree 和分支；`main` 只负责集成、版本与发布收口。
@@ -1440,3 +1440,19 @@ git diff --stat
   `cce98fbd13eb10f345494c1562b72170d511a0f6627371e93068d5405800efb5`、Protocol `1.221`、
   State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
   Web 共 7 项聚焦测试通过，含 save/state-hash/replay；按用户要求未运行全量测试或刷新 fixture。
+
+## 79. main 当前交接（神使正式内容、飞行与看破隐形）
+
+- 种族方向继续拥有 `rfb-legacy.race.archon` 与 `rfb-legacy.skill-set.race-archon`；本批没有新增内容或
+  协议 ID。飞行、看破隐形、红外、标准身体和出生全部复用既有模型，其他方向不得复制这些身份或
+  另建 Archon 专用被动路径。
+- 神使完整行为包括权威属性/生命/HP/经验/红外/商店/技能矩阵、飞行、看破隐形、天使身份、标准
+  身体/出生和初始“正义”。临时神使形态按当前有效种族获得并失去同一组被动；没有主动能力或职业过滤。
+- 原作玩家阵营 `+200` 仍没有统一模型，本批明确不以 `good` 标签或局部状态替代；importer 保留对应
+  `calc_bonuses` gap，后续只有在通用玩家阵营系统形成完整持久化生命周期时才闭合。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 33。没有
+  新增 Protocol、save 或 State Hash 字段，也没有刷新 fixture。
+- 实现提交为 `7dafd6c6f`（`Import Archon race`）。共享协调点为 pack `1.369.0` / content hash
+  `ca4c7b26e1bf204efefadedd2f116f95f2d4d713aeec543c417947033a68542b`、Protocol `1.221`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
+  Web 共 6 项聚焦测试通过，含 save/state-hash；按用户要求未运行全量测试或刷新 fixture。
