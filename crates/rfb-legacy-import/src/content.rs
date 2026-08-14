@@ -427,7 +427,8 @@ struct DemoWildernessDungeonPlan {
     floor_terrain_distribution: Vec<DemoDungeonFloorTerrainPlan>,
     tunnel_percent: Option<u16>,
     guardian: DemoDungeonGuardianPlan,
-    final_object: DemoDungeonObjectPlan,
+    final_object: Option<DemoDungeonObjectPlan>,
+    final_artifact_source_index: Option<u32>,
     final_ego_source_index: Option<u32>,
     substitute_source_index: Option<u32>,
 }
@@ -12416,8 +12417,10 @@ fn validate_demo_wilderness_plans(
                 dungeon.id
             )));
         }
-        if dungeon_flag_number(record, "FINAL_GUARDIAN_") != Some(dungeon.guardian.source_index)
-            || dungeon_final_object(record).as_ref() != Some(&dungeon.final_object)
+        if dungeon.final_object.is_some() == dungeon.final_artifact_source_index.is_some()
+            || dungeon_flag_number(record, "FINAL_GUARDIAN_") != Some(dungeon.guardian.source_index)
+            || dungeon_final_object(record) != dungeon.final_object
+            || dungeon_flag_number(record, "FINAL_ARTIFACT_") != dungeon.final_artifact_source_index
             || dungeon_flag_number(record, "FINAL_EGO_") != dungeon.final_ego_source_index
             || dungeon_flag_number(record, "SUBSTITUTE_") != dungeon.substitute_source_index
         {
@@ -14702,6 +14705,11 @@ mod tests {
         }))
         .expect("dungeon plans without a final ego or substitute should parse");
 
+        assert_eq!(
+            plan.final_object,
+            Some(DemoDungeonObjectPlan { tval: 34, sval: 10 })
+        );
+        assert_eq!(plan.final_artifact_source_index, None);
         assert_eq!(plan.final_ego_source_index, None);
         assert_eq!(plan.substitute_source_index, None);
     }
@@ -14737,8 +14745,9 @@ mod tests {
         assert_eq!(plan.guardian.level, 27);
         assert_eq!(
             plan.final_object,
-            DemoDungeonObjectPlan { tval: 75, sval: 68 }
+            Some(DemoDungeonObjectPlan { tval: 75, sval: 68 })
         );
+        assert_eq!(plan.final_artifact_source_index, None);
         assert_eq!(plan.final_ego_source_index, None);
         assert_eq!(plan.substitute_source_index, None);
     }
@@ -14816,10 +14825,69 @@ mod tests {
         assert_eq!(plan.guardian.level, 20);
         assert_eq!(
             plan.final_object,
-            DemoDungeonObjectPlan { tval: 46, sval: 0 }
+            Some(DemoDungeonObjectPlan { tval: 46, sval: 0 })
         );
+        assert_eq!(plan.final_artifact_source_index, None);
         assert_eq!(plan.final_ego_source_index, Some(266));
         assert_eq!(plan.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p89a_hideout_pair_plan_locks_substitution_guardians_and_rewards() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let hideout = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 31)
+            .expect("Hideout should have an implementation plan");
+        let man_cave = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 40)
+            .expect("Man cave should have an implementation plan");
+
+        assert_eq!(hideout.source_name, "Hideout");
+        assert_eq!(hideout.id, "demo.dungeon.hideout");
+        assert_eq!(hideout.position, DemoWildernessPosition { x: 28, y: 52 });
+        assert_eq!((hideout.minimum_depth, hideout.maximum_depth), (8, 18));
+        assert_eq!(hideout.monster_divisor, 32);
+        assert_eq!(hideout.generation_flags, ["COFFEE"]);
+        assert_eq!(hideout.monster_preferences, ["R_CHAR_p", "THIEF"]);
+        assert_eq!(hideout.tunnel_percent, Some(8));
+        assert_eq!(hideout.guardian.source_index, 1030);
+        assert_eq!(
+            hideout.guardian.source_name,
+            "Meng Huo, the King of Southerings"
+        );
+        assert_eq!(hideout.guardian.chinese_name, "南蛮王孟获");
+        assert_eq!(hideout.guardian.level, 18);
+        assert_eq!(
+            hideout.final_object,
+            Some(DemoDungeonObjectPlan { tval: 40, sval: 0 })
+        );
+        assert_eq!(hideout.final_artifact_source_index, None);
+        assert_eq!(hideout.final_ego_source_index, None);
+        assert_eq!(hideout.substitute_source_index, Some(40));
+
+        assert_eq!(man_cave.source_name, "Man cave");
+        assert_eq!(man_cave.id, "demo.dungeon.man-cave");
+        assert_eq!(man_cave.position, DemoWildernessPosition { x: 28, y: 52 });
+        assert_eq!((man_cave.minimum_depth, man_cave.maximum_depth), (8, 18));
+        assert_eq!(man_cave.monster_divisor, 16);
+        assert_eq!(man_cave.generation_flags, ["COFFEE"]);
+        assert_eq!(man_cave.monster_preferences, ["R_CHAR_p", "THIEF"]);
+        assert_eq!(man_cave.tunnel_percent, Some(8));
+        assert_eq!(man_cave.guardian.source_index, 1275);
+        assert_eq!(man_cave.guardian.source_name, "Untamo the Cruel");
+        assert_eq!(man_cave.guardian.chinese_name, "残酷者温塔莫");
+        assert_eq!(man_cave.guardian.level, 23);
+        assert_eq!(man_cave.final_object, None);
+        assert_eq!(man_cave.final_artifact_source_index, Some(104));
+        assert_eq!(man_cave.final_ego_source_index, None);
+        assert_eq!(man_cave.substitute_source_index, None);
     }
 
     #[test]

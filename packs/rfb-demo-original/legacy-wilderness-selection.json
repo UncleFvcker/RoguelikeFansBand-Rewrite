@@ -185,6 +185,55 @@
       },
       "finalObject": { "tval": 46, "sval": 0 },
       "finalEgoSourceIndex": 266
+    },
+    {
+      "sourceIndex": 31,
+      "sourceName": "Hideout",
+      "id": "demo.dungeon.hideout",
+      "position": { "x": 28, "y": 52 },
+      "minimumDepth": 8,
+      "maximumDepth": 18,
+      "monsterDivisor": 32,
+      "generationFlags": [
+        "COFFEE"
+      ],
+      "monsterPreferences": [
+        "R_CHAR_p",
+        "THIEF"
+      ],
+      "tunnelPercent": 8,
+      "guardian": {
+        "sourceIndex": 1030,
+        "sourceName": "Meng Huo, the King of Southerings",
+        "chineseName": "南蛮王孟获",
+        "level": 18
+      },
+      "finalObject": { "tval": 40, "sval": 0 },
+      "substituteSourceIndex": 40
+    },
+    {
+      "sourceIndex": 40,
+      "sourceName": "Man cave",
+      "id": "demo.dungeon.man-cave",
+      "position": { "x": 28, "y": 52 },
+      "minimumDepth": 8,
+      "maximumDepth": 18,
+      "monsterDivisor": 16,
+      "generationFlags": [
+        "COFFEE"
+      ],
+      "monsterPreferences": [
+        "R_CHAR_p",
+        "THIEF"
+      ],
+      "tunnelPercent": 8,
+      "guardian": {
+        "sourceIndex": 1275,
+        "sourceName": "Untamo the Cruel",
+        "chineseName": "残酷者温塔莫",
+        "level": 23
+      },
+      "finalArtifactSourceIndex": 104
     }
   ]
 }
