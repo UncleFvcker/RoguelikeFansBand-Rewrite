@@ -7521,6 +7521,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_type,
             area_from_level,
             radius,
+            ..
         } => AbilityEffectSpecDto::BoltOrAreaDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,

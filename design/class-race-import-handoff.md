@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-14
-当前基线：本文所在的 `main` 提交（夺心魔批次）
+当前基线：本文所在的 `main` 提交（小恶魔批次）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,14 +10,14 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.351.0`
-- content hash：`e8970160ca2e3d84732228d705014b132f855cb2cabb829abbb82cbfa4f68d7e`
+- demo pack：`1.352.0`
+- content hash：`9fa98c5f1f4499138f5bcc7637a2941998a009d713e8388eead4c3d57843f042`
 - Protocol：`1.212`
 - State Hash Schema：`v104`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v303`，26 个 exact fixture
 - 正式内容：6 个 Class、11 个 Build、54 个 SkillSet、46 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 18 个种族。
+  6 个职业构筑和 19 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -59,6 +59,7 @@ New Game 当前按以下稳定 ID 开放：
 - `rfb-legacy.race.klackon`
 - `rfb-legacy.race.dark-elf`
 - `rfb-legacy.race.mindflayer`
+- `rfb-legacy.race.imp`
 
 种族通过新游戏请求中的独立 `raceId` 覆盖 Build 的默认 Human。不要生成
 “职业 × 种族”的重复 Build JSON。玩家外观目前由职业 Build 决定，新增普通种族不复制玩家 Actor 或
@@ -66,7 +67,7 @@ tileset 映射。
 
 龙人仍不是单一静态种族：`draconian_get_race(psubrace)` 包含多个亚种、不同喷吐/抗性、漂浮和
 35 级龙人天赋选择，必须先规划完整纵切，不能按普通单体 Race 直接开放。在已跳过龙人的静态种族
-序列中，夺心魔之后的下一项是 `rfb-legacy.race.imp`（小恶魔）。开工前仍须重新读取当前 `main`
+序列中，小恶魔之后的下一项是 `rfb-legacy.race.golem`（魔像）。开工前仍须重新读取当前 `main`
 版本、pack lock 和并行 ID 声明，不能把本快照当作永久预约。
 
 ## 2. 权威来源与不可变规则

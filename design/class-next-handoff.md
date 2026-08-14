@@ -671,3 +671,27 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `e8970160ca2e3d84732228d705014b132f855cb2cabb829abbb82cbfa4f68d7e`、Protocol `1.212`、
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。龙人动态
   纵切继续延期；下一静态种族为小恶魔 `rfb-legacy.race.imp`。
+
+## main 当前批次：小恶魔正式内容、火焰箭/火球术与恶魔身份
+
+- 权威来源为 RFB `master:src/races_a.c`、`master:src/spells_h.c`、`master:src/spells3.c` 与
+  `master:src/virtue.c`。正式种族复用 `rfb-legacy.race.imp` 和 `rfb-legacy.skill-set.race-imp`；
+  新增并由种族方向拥有 `rfb.ability.race.imp-fire` 与 `rfb.ability-program.race.imp-fire`。本批不新增
+  或占用 item、material、affix、resource 或 actor ID。
+- 小恶魔按原版闭合六维 `[0,-1,-1,1,2,-1]`、生命 99%、基础 HP 19、经验 90%、商店 120%、
+  八项技能、3 格红外、火焰抗性、Imp kin、Standard 身体、恶魔身份、初始“信仰”和 9 级
+  INT/8/50“火焰箭/火球术”；10 级获得看破隐形，原版没有等级奖励。New Game 通过既有 `raceId`
+  正式开放，玩家 actor 与 tileset 继续由职业 build 决定。
+- 9–29 级能力沿方向发射造成玩家等级 L 点基础伤害的火焰箭，消耗 8；30 级起改为半径 2、中心
+  基础伤害 2L 的火球，消耗增加到 15。`BoltOrAreaDamage.areaDamageMultiplier` 是默认 1 的窄内容
+  字段，在等级缩放后、最终 spell power 前应用，因此 DTO 继续投影当前等级的最终骰数和加值，不需要
+  推进 Protocol。恶魔标签由当前有效种族派生，临时变形会获得并在解除时失去该身份、火抗、红外、
+  等级视隐和种族能力。
+- 聚焦验证覆盖静态内容、倍率边界、8/9/29/30 级能力门槛、伤害形态与费用、成功/失败支付、
+  半径衰减、save/replay、变形切换、恶魔标签、初始美德、导入器标志/能力映射、中英文名称和 Web
+  `raceId`；内容 schema、source lock、协议绑定、TypeScript typecheck、格式及 diff 检查已同步。
+  按要求只运行新增和直接相关测试，未运行或刷新全量 fixture。
+- 协调版本为 pack `1.352.0` / hash
+  `9fa98c5f1f4499138f5bcc7637a2941998a009d713e8388eead4c3d57843f042`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。龙人动态
+  纵切继续延期；下一静态种族为魔像 `rfb-legacy.race.golem`。

@@ -53,6 +53,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.klackon",
     "rfb-legacy.race.dark-elf",
     "rfb-legacy.race.mindflayer",
+    "rfb-legacy.race.imp",
   ]);
 });
 
@@ -221,6 +222,15 @@ test("new character requests preserve the selected formal race", () => {
       "Ilsensine",
     ).raceId,
     "rfb-legacy.race.mindflayer",
+  );
+  assert.equal(
+    createNewSessionRequest(
+      "100",
+      "demo.build.high-mage-death",
+      "rfb-legacy.race.imp",
+      "Azazel",
+    ).raceId,
+    "rfb-legacy.race.imp",
   );
 });
 

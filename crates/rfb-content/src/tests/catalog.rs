@@ -1461,6 +1461,7 @@ fn formal_klackon_matches_rfb_profile_speed_and_acid_spit() {
             damage_type: ActorDamageType::Acid,
             area_from_level: 25,
             radius: 2,
+            ..
         }
     ));
     assert_eq!(ability.level_scaling.len(), 1);
@@ -1671,6 +1672,121 @@ fn formal_mindflayer_matches_rfb_profile_senses_and_mind_blast() {
     assert_eq!(ability.spell_power_fields.len(), 1);
     assert!(
         ability
+            .tags
+            .iter()
+            .any(|tag| tag == "uses-casting-profile-offense")
+    );
+}
+
+#[test]
+fn formal_imp_matches_rfb_profile_demon_identity_and_fire_upgrade() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let imp = catalog
+        .race("rfb-legacy.race.imp")
+        .expect("formal Imp race");
+
+    assert_eq!(
+        [
+            imp.modifiers.strength,
+            imp.modifiers.intelligence,
+            imp.modifiers.wisdom,
+            imp.modifiers.dexterity,
+            imp.modifiers.constitution,
+            imp.modifiers.charisma,
+        ],
+        [0, -1, -1, 1, 2, -1]
+    );
+    assert_eq!(
+        (
+            imp.life_percent,
+            imp.base_hp,
+            imp.experience_percent,
+            imp.shop_adjust_percent,
+            imp.infravision,
+            imp.see_invisible_minimum_level,
+        ),
+        (99, 19, 90, 120, 3, Some(10))
+    );
+    assert_eq!(imp.kin_category.as_deref(), Some("kin-glyph-117"));
+    assert_eq!(
+        imp.resistances.get(&ActorDamageType::Fire),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(imp.abilities.len(), 1);
+    let activation = &imp.abilities[0];
+    assert_eq!(activation.minimum_level, 9);
+    assert_eq!(
+        activation.governing_attribute,
+        TechniqueAttribute::Intelligence
+    );
+    assert_eq!((activation.cost, activation.base_failure_percent), (8, 50));
+    assert_eq!(activation.ability_id, "rfb.ability.race.imp-fire");
+    assert_eq!(
+        activation.cost_scaling,
+        Some(InnatePowerCostScalingDefinition {
+            curve: InnatePowerCostScalingCurveDefinition::Step,
+            start_level: 30,
+            level_interval: 100,
+            amount: 7,
+            divisor: 1,
+            round_up: false,
+            linear_weight: 1,
+            quadratic_weight: 0,
+            cubic_weight: 0,
+        })
+    );
+    for tag in [
+        "demon",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(imp.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&imp.skill_set_id)
+        .expect("formal Imp skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 1),
+            ("demo.skill.disarming", -3),
+            ("demo.skill.melee", 5),
+            ("demo.skill.perception", 10),
+            ("demo.skill.ranged", -3),
+            ("demo.skill.saving-throw", -1),
+            ("demo.skill.search", -1),
+            ("demo.skill.stealth", 1),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.imp-fire")
+        .expect("Imp fire ability");
+    assert!(ability.affects_ground_items);
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::BoltOrAreaDamage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 0,
+            damage_type: ActorDamageType::Fire,
+            area_from_level: 30,
+            area_damage_multiplier: 2,
+            radius: 2,
+        }
+    ));
+    assert_eq!(ability.level_scaling.len(), 1);
+    assert_eq!(ability.spell_power_fields.len(), 1);
+    assert!(
+        !ability
             .tags
             .iter()
             .any(|tag| tag == "uses-casting-profile-offense")

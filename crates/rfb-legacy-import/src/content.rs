@@ -5439,6 +5439,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "detect_treasure_spell" => "rfb.ability.race.detect-treasure",
             "magic_missile_spell" => "rfb.ability.race.magic-missile",
             "mind_blast_spell" => "rfb.ability.race.mind-blast",
+            "imp_fire_spell" => "rfb.ability.race.imp-fire",
             "phase_door_spell" => "rfb.ability.race.phase-door",
             "poison_dart_spell" => "rfb.ability.race.poison-dart",
             "probing_spell" => "rfb.ability.race.probe-monsters",
@@ -6210,6 +6211,9 @@ fn character_skill_set_json(entry: &LegacyCharacterEntry, id: &str) -> serde_jso
 
 fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentImportReport) {
     for flag in &entry.flags {
+        if flag == "RACE_IS_DEMON" && legacy_race_tags(entry).contains(&"demon") {
+            continue;
+        }
         *report.unmapped_race_flags.entry(flag.clone()).or_default() += 1;
     }
     for hook in &entry.hooks {
@@ -6252,6 +6256,14 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    if entry.id == "imp" {
+        return vec![
+            "demon",
+            "legacy-import",
+            "rfb-compatibility",
+            "standard-body",
+        ];
+    }
     if entry.id == "high-elf" {
         return vec![
             "humanoid",
@@ -19924,6 +19936,23 @@ race_t *test_beast_get_race(void)
                 "standard-body",
             ]
         );
+        let imp = LegacyCharacterEntry {
+            id: "imp".to_owned(),
+            flags: vec!["RACE_IS_DEMON".to_owned()],
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&imp),
+            [
+                "demon",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body"
+            ]
+        );
+        let mut report = ContentImportReport::default();
+        character_gap_accounting(&imp, &mut report);
+        assert!(!report.unmapped_race_flags.contains_key("RACE_IS_DEMON"));
     }
 
     #[test]
@@ -19944,6 +19973,7 @@ static power_info _barbarian_get_powers[] =
     { A_DEX, {9, 9, 50, spit_acid_spell}},
     { A_INT, {1, 2, 30, magic_missile_spell}},
     { A_INT, {5, 3, 50, mind_blast_spell}},
+    { A_INT, {9, 8, 50, imp_fire_spell}},
     { A_WIS, {12, 7, 40, mystery_spell}},
     { -1, {-1, -1, -1, NULL} }
 };
@@ -20068,6 +20098,13 @@ race_t *barbarian_get_race(void)
                     base_failure_percent: 50,
                     ability_id: "rfb.ability.race.mind-blast".to_owned(),
                 },
+                LegacyInnatePower {
+                    governing_attribute: "intelligence".to_owned(),
+                    minimum_level: 9,
+                    cost: 8,
+                    base_failure_percent: 50,
+                    ability_id: "rfb.ability.race.imp-fire".to_owned(),
+                },
             ]
         );
         assert!(!barbarian.hooks.iter().any(|hook| hook == "get_powers"));
@@ -20132,7 +20169,11 @@ race_t *barbarian_get_race(void)
             race["abilities"][12]["abilityId"],
             "rfb.ability.race.mind-blast"
         );
-        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(13));
+        assert_eq!(
+            race["abilities"][13]["abilityId"],
+            "rfb.ability.race.imp-fire"
+        );
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(14));
         assert_eq!(race["resistances"]["fear"], "resistant");
         assert!(
             race["tags"]

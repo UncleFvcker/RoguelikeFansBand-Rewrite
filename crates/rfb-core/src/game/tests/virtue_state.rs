@@ -329,6 +329,22 @@ fn formal_races_receive_their_original_race_virtues() {
         ]
     );
 
+    let imp = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.imp",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Imp Archer should create");
+    assert_eq!(
+        &virtue_kinds(&imp)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Faith,
+        ]
+    );
+
     let dunadan = Game::new_with_build_race_and_name(
         43,
         "demo.build.archer",

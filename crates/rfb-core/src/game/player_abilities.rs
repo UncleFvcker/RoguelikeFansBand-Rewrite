@@ -212,6 +212,32 @@ impl Game {
             };
             apply_ability_level_scaling(effect, &scaling, level);
         }
+        fn apply_area_damage_multiplier(effect: &mut AbilityEffectDefinition, level: u16) {
+            match effect {
+                AbilityEffectDefinition::BoltOrAreaDamage {
+                    damage_dice,
+                    damage_bonus,
+                    area_from_level,
+                    area_damage_multiplier,
+                    ..
+                } if level >= *area_from_level => {
+                    *damage_dice = damage_dice.saturating_mul(u16::from(*area_damage_multiplier));
+                    *damage_bonus = damage_bonus.saturating_mul(u16::from(*area_damage_multiplier));
+                }
+                AbilityEffectDefinition::Sequence { effects } => {
+                    for effect in effects {
+                        apply_area_damage_multiplier(effect, level);
+                    }
+                }
+                AbilityEffectDefinition::RandomChoice { branches, .. } => {
+                    for branch in branches {
+                        apply_area_damage_multiplier(&mut branch.effect, level);
+                    }
+                }
+                _ => {}
+            }
+        }
+        apply_area_damage_multiplier(&mut ability.effect, level);
         match &ability.effect {
             AbilityEffectDefinition::DimensionDoor { range } => ability.target.range = *range,
             AbilityEffectDefinition::BeamDamage {

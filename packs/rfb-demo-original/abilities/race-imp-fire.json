@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.race.imp-fire",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-race-imp-fire-description",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.imp-fire",
+  "levelScaling": [
+    {
+      "divisor": 1,
+      "effectIndex": 0,
+      "field": "damage-bonus",
+      "levelOffset": 1,
+      "multiplier": 1
+    }
+  ],
+  "nameKey": "ability-rfb-race-imp-fire-name",
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    }
+  ],
+  "tags": [
+    "damage",
+    "fire",
+    "race"
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

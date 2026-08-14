@@ -380,6 +380,13 @@
         {
           "additionalProperties": false,
           "properties": {
+            "areaDamageMultiplier": {
+              "default": 1,
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
             "areaFromLevel": {
               "format": "uint16",
               "maximum": 65535,

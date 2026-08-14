@@ -85,6 +85,7 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.klackon" => kinds.push(VirtueKindDto::Diligence),
             "rfb-legacy.race.dark-elf" => kinds.push(VirtueKindDto::Enchantment),
             "rfb-legacy.race.mindflayer" => kinds.push(VirtueKindDto::Enlightenment),
+            "rfb-legacy.race.imp" => kinds.push(VirtueKindDto::Faith),
             "rfb-legacy.race.nibelung" => kinds.push(VirtueKindDto::Patience),
             "rfb-legacy.race.gnome" | "rfb-legacy.race.cyclops" => {
                 kinds.push(VirtueKindDto::Knowledge);

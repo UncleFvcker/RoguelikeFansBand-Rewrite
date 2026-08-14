@@ -2310,6 +2310,7 @@ impl Game {
             damage_type,
             area_from_level,
             radius,
+            ..
         } = ability.effect
         else {
             unreachable!("bolt-or-area executor requires a matching effect");

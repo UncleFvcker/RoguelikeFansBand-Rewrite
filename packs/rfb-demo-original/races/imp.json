@@ -1,5 +1,19 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.imp-fire",
+      "minimumLevel": 9,
+      "governingAttribute": "intelligence",
+      "cost": 8,
+      "costScaling": {
+        "startLevel": 30,
+        "levelInterval": 100,
+        "amount": 7
+      },
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 19,
   "bodySlots": [
     {
@@ -67,6 +81,7 @@
   "experiencePercent": 90,
   "formatVersion": 1,
   "id": "rfb-legacy.race.imp",
+  "infravision": 3,
   "kinCategory": "kin-glyph-117",
   "legacyIndex": 22,
   "lifePercent": 99,
@@ -82,9 +97,13 @@
     "fire": "resistant"
   },
   "shopAdjustPercent": 120,
+  "seeInvisibleMinimumLevel": 10,
   "skillSetId": "rfb-legacy.skill-set.race-imp",
   "tags": [
+    "demon",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

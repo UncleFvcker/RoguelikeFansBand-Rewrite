@@ -2901,6 +2901,7 @@ const RACE_DETECT_DOORS_ABILITY_ID: &str = "rfb.ability.race.detect-doors-stairs
 const RACE_DETECT_TREASURE_ABILITY_ID: &str = "rfb.ability.race.detect-treasure";
 const RACE_MAGIC_MISSILE_ABILITY_ID: &str = "rfb.ability.race.magic-missile";
 const RACE_MIND_BLAST_ABILITY_ID: &str = "rfb.ability.race.mind-blast";
+const RACE_IMP_FIRE_ABILITY_ID: &str = "rfb.ability.race.imp-fire";
 const RACE_PHASE_DOOR_ABILITY_ID: &str = "rfb.ability.race.phase-door";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
 const RACE_PROBE_MONSTERS_ABILITY_ID: &str = "rfb.ability.race.probe-monsters";
@@ -5006,6 +5007,296 @@ fn mindflayer_mind_blast_sustains_and_senses_follow_the_effective_race() {
             .abilities
             .iter()
             .all(|ability| ability.id != RACE_MIND_BLAST_ABILITY_ID)
+    );
+}
+
+#[test]
+fn imp_fire_upgrade_and_demon_traits_follow_the_effective_race() {
+    fn cast_imp_fire(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            RACE_IMP_FIRE_ABILITY_ID,
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Imp fire power should resolve");
+        events
+    }
+
+    let mut game = Game::new_with_build_race_and_name(
+        115,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.imp",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Imp High-Mage should create");
+    clear_monsters(&mut game);
+    assert_eq!(game.player_infravision_range(), 3);
+    assert_eq!(game.player_see_invisible_sources(), 0);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Fire),
+        ResistanceLevel::Resistant
+    );
+    assert!(
+        game.character_definitions()
+            .expect("Imp character definitions")
+            .1
+            .tags
+            .iter()
+            .any(|tag| tag == "demon")
+    );
+
+    let level_eight_experience = crate::stats::experience_required_for_level(8);
+    game.apply_unscaled_player_experience(level_eight_experience, &mut Vec::new());
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_IMP_FIRE_ABILITY_ID)
+        .expect("Imp fire power should be projected before it unlocks");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Intelligence)
+    );
+    assert_eq!(locked.minimum_level, 9);
+    assert_eq!((locked.base_resource_cost, locked.resource_cost), (8, 8));
+    assert!(!locked.can_cast);
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(9) - level_eight_experience,
+        &mut Vec::new(),
+    );
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+    let bolt = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_IMP_FIRE_ABILITY_ID)
+        .expect("level-nine Imp fire power");
+    assert!(bolt.can_cast);
+    assert!(matches!(
+        bolt.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrAreaDamage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 8,
+            damage_type: DamageTypeDto::Fire,
+            area_from_level: 30,
+            radius: 2,
+            ..
+        }]
+    ));
+
+    game.player.position = Position { x: 3, y: 3 };
+    for position in [Position { x: 3, y: 3 }, Position { x: 4, y: 3 }] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor(
+        "test.imp-fire-target".to_owned(),
+        "demo.actor.warrens-keeper",
+        Position { x: 4, y: 3 },
+    );
+
+    let failure_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(bolt.failure_percent)
+        })
+        .expect("Imp fire power should have a failing percentile seed");
+    let mut failed = game.clone();
+    failed.rng = RfbRng::seeded(failure_seed);
+    let failed_mana = failed.resources["demo.resource.mana"].current;
+    let failed_events = cast_imp_fire(&mut failed);
+    assert!(matches!(
+        failed_events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert_eq!(
+        failed.resources["demo.resource.mana"].current,
+        failed_mana - 8
+    );
+    assert_eq!(failed.entities[0].hp, 150);
+
+    let mut level_nine = game.clone();
+    level_nine.debug_set_ability_casts_succeed(true);
+    let bolt_events = cast_imp_fire(&mut level_nine);
+    assert_eq!(level_nine.entities[0].hp, 141);
+    assert!(bolt_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityHit { damage, .. }
+            if damage.raw == 9 && damage.applied == 9
+    )));
+    assert!(
+        bolt_events
+            .iter()
+            .all(|event| !matches!(event, DomainEvent::AbilityAreaDamage { .. }))
+    );
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(10)
+            - crate::stats::experience_required_for_level(9),
+        &mut Vec::new(),
+    );
+    assert_eq!(game.player_see_invisible_sources(), 1);
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(29)
+            - crate::stats::experience_required_for_level(10),
+        &mut Vec::new(),
+    );
+    let level_twenty_nine = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_IMP_FIRE_ABILITY_ID)
+        .expect("level-twenty-nine Imp fire power");
+    assert_eq!(level_twenty_nine.resource_cost, 8);
+    assert!(matches!(
+        level_twenty_nine.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrAreaDamage {
+            damage_dice: 1,
+            damage_bonus: 28,
+            ..
+        }]
+    ));
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(30)
+            - crate::stats::experience_required_for_level(29),
+        &mut Vec::new(),
+    );
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+    replace_terrain(&mut game, Position { x: 5, y: 3 }, "demo.terrain.floor");
+    game.push_generated_actor(
+        "test.imp-fire-area-target".to_owned(),
+        "demo.actor.warrens-keeper",
+        Position { x: 5, y: 3 },
+    );
+    let fire_ball = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_IMP_FIRE_ABILITY_ID)
+        .expect("level-thirty Imp fire power");
+    assert_eq!(
+        (fire_ball.base_resource_cost, fire_ball.resource_cost),
+        (8, 15)
+    );
+    assert!(matches!(
+        fire_ball.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrAreaDamage {
+            damage_dice: 2,
+            damage_sides: 1,
+            damage_bonus: 58,
+            area_from_level: 30,
+            radius: 2,
+            ..
+        }]
+    ));
+
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Imp fire-ball setup should reload");
+    game.debug_set_ability_casts_succeed(true);
+    restored.debug_set_ability_casts_succeed(true);
+    let mana_before = game.resources["demo.resource.mana"].current;
+    let events = cast_imp_fire(&mut game);
+    let restored_events = cast_imp_fire(&mut restored);
+    assert_eq!(restored_events, events);
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        game.resources["demo.resource.mana"].current,
+        mana_before - 15
+    );
+    assert_eq!(
+        game.entities
+            .iter()
+            .find(|entity| entity.id == "test.imp-fire-target")
+            .expect("fire-ball center target")
+            .hp,
+        90
+    );
+    assert_eq!(
+        game.entities
+            .iter()
+            .find(|entity| entity.id == "test.imp-fire-area-target")
+            .expect("fire-ball radius target")
+            .hp,
+        120
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityAreaDamage { resolution, .. }
+            if resolution.radius == 2 && resolution.base_raw_damage == 60
+    )));
+
+    let mut human = Game::new_with_build_race_and_name(
+        116,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human Warrior should create");
+    human.progress.level = 30;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.imp-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.imp".to_owned());
+    human.player.statuses.push(form);
+    assert_eq!(human.player_infravision_range(), 3);
+    assert_eq!(human.player_see_invisible_sources(), 1);
+    assert_eq!(
+        human.effective_player_resistances().level(DamageType::Fire),
+        ResistanceLevel::Resistant
+    );
+    assert!(
+        human
+            .character_definitions()
+            .expect("polymorphed character definitions")
+            .1
+            .tags
+            .iter()
+            .any(|tag| tag == "demon")
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == RACE_IMP_FIRE_ABILITY_ID)
+    );
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(human.player_infravision_range(), 0);
+    assert_eq!(human.player_see_invisible_sources(), 0);
+    assert_eq!(
+        human.effective_player_resistances().level(DamageType::Fire),
+        ResistanceLevel::Normal
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_IMP_FIRE_ABILITY_ID)
     );
 }
 

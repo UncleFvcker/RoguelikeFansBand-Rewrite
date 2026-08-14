@@ -261,6 +261,7 @@ pub(super) fn validate_abilities(
                     damage_sides,
                     damage_bonus,
                     area_from_level,
+                    area_damage_multiplier,
                     radius,
                     ..
                 } => {
@@ -268,6 +269,7 @@ pub(super) fn validate_abilities(
                         && (1..=10_000).contains(damage_sides)
                         && *damage_bonus <= 10_000
                         && (1..=100).contains(area_from_level)
+                        && (1..=16).contains(area_damage_multiplier)
                         && (1..=16).contains(radius)
                 }
                 AbilityEffectDefinition::ConeDamage {

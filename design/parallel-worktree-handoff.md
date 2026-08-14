@@ -1250,3 +1250,20 @@ git diff --stat
   fixture）。仅新增和直接相关内容、导入器、核心、美德、Web、schema、source、协议、类型及格式
   检查通过；未运行或刷新全量 fixture。龙人动态纵切继续延期，下一静态种族为
   `rfb-legacy.race.imp`（小恶魔）。
+
+## 68. main 当前交接（小恶魔、火焰箭/火球术与恶魔身份）
+
+- 种族方向继续拥有既有 `rfb-legacy.race.imp` 与 `rfb-legacy.skill-set.race-imp`；本批新增并拥有
+  `rfb.ability.race.imp-fire` 和 `rfb.ability-program.race.imp-fire`，其他方向不得复制这些身份。
+- Race 内容表达 9 级 INT/8/50“火焰箭/火球术”、3 格红外、火抗、10 级看破隐形、恶魔身份、
+  初始“信仰”与正式选择标签。能力在 30 级由 L 点单体火焰箭切换为半径 2、中心 2L 点火球，费用
+  由 8 增加到 15；临时变形按当前有效种族获得并失去全部被动和能力。
+- `BoltOrAreaDamage` 新增默认 1 的 `areaDamageMultiplier`，只在 area 等级阈值后、最终 spell power
+  前作用于伤害骰和固定加值；公共 DTO 继续投影缩放后的最终值，Protocol、State Hash Schema、save
+  与 active fixture 均不变。
+- 本批不新增或占用 item、material、affix、resource 或 actor ID。共享协调点为 pack `1.352.0` /
+  content hash `9fa98c5f1f4499138f5bcc7637a2941998a009d713e8388eead4c3d57843f042`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。新增和直接
+  相关内容、倍率校验、导入器、核心、美德、本地化、Web、schema、source、协议、类型及格式检查
+  通过；未运行或刷新全量 fixture。龙人动态纵切继续延期，下一静态种族为
+  `rfb-legacy.race.golem`（魔像）。

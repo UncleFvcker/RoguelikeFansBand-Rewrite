@@ -330,6 +330,22 @@ mod tests {
     }
 
     #[test]
+    fn imp_content_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("race-legacy-imp-name", "小恶魔"),
+            ("ability-rfb-race-imp-fire-name", "火焰箭/火球术"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Imp content name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn trouble_at_home_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

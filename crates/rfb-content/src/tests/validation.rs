@@ -46,6 +46,31 @@ fn semantic_versions_are_checked_strictly() {
 }
 
 #[test]
+fn bolt_or_area_damage_multiplier_is_bounded() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    for invalid_multiplier in [0, 17] {
+        let mut invalid = artifact.content.clone();
+        let ability = invalid
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "rfb.ability.race.imp-fire")
+            .expect("Imp fire ability should exist");
+        let AbilityEffectDefinition::BoltOrAreaDamage {
+            area_damage_multiplier,
+            ..
+        } = &mut ability.effect
+        else {
+            panic!("Imp fire ability should use bolt-or-area damage");
+        };
+        *area_damage_multiplier = invalid_multiplier;
+        assert!(matches!(
+            validate_and_normalize(&mut invalid),
+            Err(ContentError::InvalidAbility(id)) if id == "rfb.ability.race.imp-fire"
+        ));
+    }
+}
+
+#[test]
 fn class_and_race_level_resistance_thresholds_are_strict() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let mut duplicate = artifact.content.clone();

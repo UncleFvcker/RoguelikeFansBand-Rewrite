@@ -384,6 +384,8 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
         area_from_level: u16,
+        #[serde(default = "default_area_damage_multiplier")]
+        area_damage_multiplier: u8,
         radius: u8,
     },
     ConeDamage {
@@ -800,6 +802,10 @@ pub enum AbilityEffectDefinition {
     Sequence {
         effects: Vec<AbilityEffectDefinition>,
     },
+}
+
+const fn default_area_damage_multiplier() -> u8 {
+    1
 }
 
 const fn default_ability_effect_repeat() -> u8 {
