@@ -45,8 +45,8 @@ fn warrior_birth_rolls_five_to_nine_rations_after_gold() {
 }
 
 #[test]
-fn hidden_golem_birth_replaces_rations_with_a_full_nothing_staff_and_keeps_torches() {
-    let game = hidden_golem_game(366);
+fn formal_golem_birth_replaces_rations_with_a_full_nothing_staff_and_keeps_torches() {
+    let game = golem_game(366);
     assert!(
         game.items.iter().all(|item| item.kind_id != RATION_KIND_ID),
         "Golem birth should not create ordinary rations"
@@ -529,7 +529,7 @@ fn digestion_uses_world_tick_and_current_scheduler_speed() {
 
 #[test]
 fn golem_slow_digestion_and_food_magic_follow_construct_metabolism() {
-    let mut digestion = hidden_golem_game(360);
+    let mut digestion = golem_game(360);
     digestion.nutrition = 9_000;
     digestion.world_tick = 50;
     digestion.process_hunger(&mut Vec::new());
@@ -540,7 +540,7 @@ fn golem_slow_digestion_and_food_magic_follow_construct_metabolism() {
     digestion.process_hunger(&mut Vec::new());
     assert_eq!(digestion.nutrition, 14_900);
 
-    let mut mushroom = hidden_golem_game(361);
+    let mut mushroom = golem_game(361);
     clear_monsters(&mut mushroom);
     mushroom.nutrition = 9_000;
     mushroom.player.hp = 1;
@@ -567,7 +567,7 @@ fn golem_slow_digestion_and_food_magic_follow_construct_metabolism() {
                 .is_some_and(|amount| amount == "25")
     }));
 
-    let mut waybread = hidden_golem_game(362);
+    let mut waybread = golem_game(362);
     clear_monsters(&mut waybread);
     waybread.nutrition = 9_000;
     waybread.player.hp = 1;
@@ -630,7 +630,7 @@ fn golem_absorbs_inventory_and_floor_devices_without_consuming_them() {
             .absorbable
     );
 
-    let mut game = hidden_golem_game(363);
+    let mut game = golem_game(363);
     clear_monsters(&mut game);
     game.nutrition = 1_000;
     give_inventory_item(
@@ -705,13 +705,20 @@ fn golem_absorbs_inventory_and_floor_devices_without_consuming_them() {
             .expect("projected floor device")
             .absorbable
     );
-    dispatch_next(
+    game.nutrition = rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 100;
+    let capped = dispatch_next(
         &mut game,
         GameCommand::AbsorbDevice {
             item_id: "test.item.golem-device.floor".to_owned(),
         },
     );
-    assert_eq!(game.nutrition, 11_000);
+    assert!(capped.events.iter().any(|event| {
+        event.kind == "item.device-absorbed"
+            && event.args.get("nutritionAfter").is_some_and(|nutrition| {
+                nutrition == &rfb_protocol::PLAYER_NUTRITION_MAXIMUM.to_string()
+            })
+    }));
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 100);
     assert_eq!(
         game.items
             .iter()
@@ -724,8 +731,42 @@ fn golem_absorbs_inventory_and_floor_devices_without_consuming_them() {
 }
 
 #[test]
+fn golem_device_absorption_round_trips_and_replays_deterministically() {
+    let mut game = golem_game(369);
+    clear_monsters(&mut game);
+    game.nutrition = 1_000;
+    give_inventory_item(
+        &mut game,
+        "test.item.golem-device.replay",
+        "demo.item.detect-objects-staff",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.golem-device.replay")
+        .and_then(|item| item.charges.as_mut())
+        .expect("replay device charges")
+        .current = 2;
+
+    let hash_before = game.state_hash();
+    let mut replay = game.clone();
+    let command = GameCommand::AbsorbDevice {
+        item_id: "test.item.golem-device.replay".to_owned(),
+    };
+    let update = dispatch_next(&mut game, command.clone());
+    let replay_update = dispatch_next(&mut replay, command);
+    assert_eq!(replay_update.events, update.events);
+    assert_ne!(game.state_hash(), hash_before);
+    assert_eq!(replay.state_hash(), game.state_hash());
+
+    let saved = game.to_save();
+    let restored = Game::from_save(saved.clone()).expect("absorbed Golem device should restore");
+    assert_eq!(restored.to_save(), saved);
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
 fn empty_device_absorption_spends_a_turn_without_changing_energy_or_food() {
-    let mut game = hidden_golem_game(364);
+    let mut game = golem_game(364);
     clear_monsters(&mut game);
     game.nutrition = 9_000;
     give_inventory_item(

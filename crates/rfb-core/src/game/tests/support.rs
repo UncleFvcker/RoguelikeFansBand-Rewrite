@@ -120,48 +120,14 @@ pub(crate) fn test_caster_game(seed: u64) -> Game {
         .expect("test caster should create")
 }
 
-pub(super) fn hidden_golem_catalog() -> Arc<rfb_content::ContentCatalog> {
-    static CONTENT: OnceLock<Arc<rfb_content::ContentCatalog>> = OnceLock::new();
-    CONTENT
-        .get_or_init(|| {
-            let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                .parent()
-                .and_then(std::path::Path::parent)
-                .expect("core crate should be inside the workspace")
-                .join("packs/rfb-demo-original");
-            let mut artifact =
-                rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
-            artifact
-                .content
-                .races
-                .iter_mut()
-                .find(|race| race.id == "rfb-legacy.race.golem")
-                .expect("hidden Golem race")
-                .tags
-                .push("rfb-compatibility".to_owned());
-            artifact
-                .content
-                .builds
-                .iter_mut()
-                .find(|build| build.id == "demo.build.warrior")
-                .expect("Warrior build")
-                .race_id = "rfb-legacy.race.golem".to_owned();
-            Arc::new(rfb_content::ContentCatalog::from_artifact(
-                rfb_content::encode_content(artifact.content)
-                    .expect("hidden Golem test content should encode"),
-            ))
-        })
-        .clone()
-}
-
-pub(super) fn hidden_golem_game(seed: u64) -> Game {
-    Game::from_content_with_build(
+pub(super) fn golem_game(seed: u64) -> Game {
+    Game::new_with_build_race_and_name(
         seed,
-        hidden_golem_catalog(),
-        DEFAULT_WORLD_ID,
         "demo.build.warrior",
+        "rfb-legacy.race.golem",
+        Game::DEFAULT_PLAYER_NAME,
     )
-    .expect("hidden Golem should create in focused test content")
+    .expect("formal Golem should create")
 }
 
 pub(crate) fn divine_caster_game(seed: u64) -> Game {

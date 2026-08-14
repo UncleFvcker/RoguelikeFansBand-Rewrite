@@ -6265,6 +6265,8 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             "device-eater",
             "legacy-import",
             "nonliving",
+            "polymorph-candidate",
+            "rfb-compatibility",
             "slow-digestion",
         ];
     }
@@ -19985,6 +19987,8 @@ race_t *test_beast_get_race(void)
                 "device-eater",
                 "legacy-import",
                 "nonliving",
+                "polymorph-candidate",
+                "rfb-compatibility",
                 "slow-digestion",
             ]
         );

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use super::support::hidden_golem_game;
+use super::support::golem_game;
 use super::*;
 
 fn virtue_kinds(game: &Game) -> Vec<VirtueKindDto> {
@@ -390,8 +390,8 @@ fn formal_races_receive_their_original_race_virtues() {
 }
 
 #[test]
-fn hidden_golem_receives_the_authoritative_justice_virtue() {
-    let golem = hidden_golem_game(367);
+fn formal_golem_receives_the_authoritative_justice_virtue() {
+    let golem = golem_game(367);
     assert_eq!(
         &virtue_kinds(&golem)[..3],
         [

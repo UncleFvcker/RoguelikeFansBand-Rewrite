@@ -228,16 +228,9 @@ fn species_contribution(stat: &DerivedStat, race_id: &str) -> i32 {
 }
 
 #[test]
-fn race_level_stat_scaling_preserves_klackon_and_enables_hidden_golem_intrinsics() {
-    let golem_catalog = hidden_golem_catalog();
-    for level in [1, 3, 5, 9, 10, 15, 16, 31, 32, 34, 35, 48, 50] {
-        let mut golem = Game::from_content_with_build(
-            358,
-            golem_catalog.clone(),
-            DEFAULT_WORLD_ID,
-            "demo.build.warrior",
-        )
-        .expect("hidden Golem should create in focused test content");
+fn race_level_stat_scaling_preserves_klackon_and_enables_formal_golem_intrinsics() {
+    for level in [1, 3, 5, 9, 10, 15, 16, 31, 32, 34, 35, 47, 48, 50] {
+        let mut golem = golem_game(358);
         if level > 1 {
             golem.apply_unscaled_player_experience(
                 experience_required_for_level(level),
@@ -292,6 +285,83 @@ fn race_level_stat_scaling_preserves_klackon_and_enables_hidden_golem_intrinsics
             "Klackon speed at level {level}"
         );
     }
+}
+
+#[test]
+fn formal_golem_creation_and_temporary_form_apply_and_remove_intrinsics_and_stone_skin() {
+    let golem = golem_game(359);
+    assert_eq!(
+        golem.build.as_ref().expect("formal build identity").race_id,
+        "rfb-legacy.race.golem"
+    );
+    assert!(golem.snapshot().player.abilities.iter().any(|ability| {
+        ability.id == "rfb.ability.race.golem-stone-skin"
+            && ability.source == AbilitySourceDto::Race
+    }));
+
+    let mut human = Game::new_with_build_race_and_name(
+        359,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human warrior should create");
+    human.progress.level = 20;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.golem-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.golem".to_owned());
+    human.player.statuses.push(form);
+
+    let stats = human.player_derived_stats();
+    assert_eq!(
+        species_contribution(&stats.armor_class, "rfb-legacy.race.golem"),
+        18
+    );
+    assert_eq!(
+        species_contribution(&stats.speed, "rfb-legacy.race.golem"),
+        -1
+    );
+    assert_eq!(
+        human
+            .effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Resistant
+    );
+    assert!(human.player_status_immunities().contains(STATUS_PARALYSIS));
+    assert!(human.player_status_immunities().contains(STATUS_STUN));
+    assert!(human.player_see_invisible_sources() >= 1);
+    assert!(
+        human.snapshot().player.abilities.iter().any(|ability| {
+            ability.id == "rfb.ability.race.golem-stone-skin" && ability.can_cast
+        })
+    );
+
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    let stats = human.player_derived_stats();
+    assert_eq!(
+        species_contribution(&stats.armor_class, "rfb-legacy.race.golem"),
+        0
+    );
+    assert_eq!(
+        human
+            .effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Normal
+    );
+    assert!(!human.player_status_immunities().contains(STATUS_PARALYSIS));
+    assert!(!human.player_status_immunities().contains(STATUS_STUN));
+    assert_eq!(human.player_see_invisible_sources(), 0);
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| { ability.id != "rfb.ability.race.golem-stone-skin" })
+    );
 }
 
 #[test]

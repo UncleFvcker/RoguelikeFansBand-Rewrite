@@ -52,6 +52,7 @@ export const PLAYTEST_RACE_IDS = [
   "rfb-legacy.race.draconian-crystal",
   "rfb-legacy.race.draconian-gold",
   "rfb-legacy.race.draconian-shadow",
+  "rfb-legacy.race.golem",
 ] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";

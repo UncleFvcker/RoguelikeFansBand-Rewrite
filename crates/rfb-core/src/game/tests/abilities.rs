@@ -2912,8 +2912,8 @@ const RACE_STONE_TO_MUD_ABILITY_ID: &str = "rfb.ability.race.stone-to-mud";
 const RACE_THROW_BOULDER_ABILITY_ID: &str = "rfb.ability.race.throw-boulder";
 
 #[test]
-fn hidden_golem_stone_skin_unlocks_at_twenty_without_spell_power_scaling() {
-    let mut game = hidden_golem_game(365);
+fn formal_golem_stone_skin_unlocks_at_twenty_without_spell_power_scaling() {
+    let mut game = golem_game(365);
     clear_monsters(&mut game);
     game.progress.level = 19;
     let locked = game
@@ -2952,8 +2952,40 @@ fn hidden_golem_stone_skin_unlocks_at_twenty_without_spell_power_scaling() {
         }] if granted_modifiers.defense == 26
     ));
 
+    let failure_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(available.failure_percent)
+        })
+        .expect("Golem Stone Skin should have a failing percentile seed");
+    let mut failed = game.clone();
+    failed.rng = RfbRng::seeded(failure_seed);
+    let failed_hp = failed.player.hp;
+    let failed_armor = failed.player_derived_stats().armor_class.value;
+    let mut failed_events = Vec::new();
+    failed
+        .resolve_player_ability(
+            RACE_GOLEM_STONE_SKIN_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut failed_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("failed Golem Stone Skin should resolve");
+    assert!(matches!(
+        failed_events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert_eq!(failed.player.hp, failed_hp - 20);
+    assert_eq!(
+        failed.player_derived_stats().armor_class.value,
+        failed_armor
+    );
+    assert!(!failed.player_has_status_kind("rfb.status.stone-skin"));
+
     game.debug_set_ability_casts_succeed(true);
     let hp_before = game.player.hp;
+    let armor_before = game.player_derived_stats().armor_class.value;
     game.resolve_player_ability(
         RACE_GOLEM_STONE_SKIN_ABILITY_ID,
         TargetSelection::SelfTarget,
@@ -2971,6 +3003,10 @@ fn hidden_golem_stone_skin_unlocks_at_twenty_without_spell_power_scaling() {
         .expect("Golem Stone Skin status");
     assert!((21..=50).contains(&stone_skin.remaining_ticks));
     assert_eq!(stone_skin.granted_modifiers.defense, 26);
+    assert_eq!(
+        game.player_derived_stats().armor_class.value,
+        armor_before + 26
+    );
 
     game.progress.level = 50;
     let level_fifty = game

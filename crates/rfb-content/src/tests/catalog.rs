@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.360.0");
+    assert_eq!(catalog.pack_version(), "1.361.0");
     assert_eq!(catalog.races().count(), 55);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1475,12 +1475,12 @@ fn formal_klackon_matches_rfb_profile_speed_and_acid_spit() {
 }
 
 #[test]
-fn hidden_golem_has_authoritative_level_scaled_intrinsics() {
+fn formal_golem_has_authoritative_level_scaled_intrinsics() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let golem = catalog
         .race("rfb-legacy.race.golem")
-        .expect("hidden Golem race");
+        .expect("formal Golem race");
 
     assert_eq!(golem.armor_class, 10);
     assert_eq!(golem.infravision, 4);
@@ -1509,16 +1509,16 @@ fn hidden_golem_has_authoritative_level_scaled_intrinsics() {
         golem.status_immunities,
         ["rfb.status.paralysis", "rfb.status.stun"]
     );
-    assert!(!golem.tags.iter().any(|tag| tag == "rfb-compatibility"));
+    assert!(golem.tags.iter().any(|tag| tag == "rfb-compatibility"));
 }
 
 #[test]
-fn hidden_golem_declares_construct_metabolism_tags() {
+fn formal_golem_declares_construct_metabolism_tags() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let golem = catalog
         .race("rfb-legacy.race.golem")
-        .expect("hidden Golem race");
+        .expect("formal Golem race");
 
     assert_eq!(golem.food_nutrition_divisor, 20);
     for tag in ["device-eater", "nonliving", "slow-digestion"] {
@@ -1527,12 +1527,12 @@ fn hidden_golem_declares_construct_metabolism_tags() {
 }
 
 #[test]
-fn hidden_golem_completes_the_authoritative_profile_stone_skin_and_birth_staff() {
+fn formal_golem_completes_the_authoritative_profile_stone_skin_and_birth_staff() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let golem = catalog
         .race("rfb-legacy.race.golem")
-        .expect("hidden Golem race");
+        .expect("formal Golem race");
 
     assert_eq!(
         [
@@ -1555,7 +1555,7 @@ fn hidden_golem_completes_the_authoritative_profile_stone_skin_and_birth_staff()
         ),
         (105, 23, 185, 4, 120)
     );
-    assert!(!golem.tags.iter().any(|tag| tag == "rfb-compatibility"));
+    assert!(golem.tags.iter().any(|tag| tag == "rfb-compatibility"));
     let [activation] = golem.abilities.as_slice() else {
         panic!("Golem should have one racial power");
     };

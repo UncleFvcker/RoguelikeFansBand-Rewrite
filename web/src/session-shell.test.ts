@@ -63,6 +63,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.draconian-crystal",
     "rfb-legacy.race.draconian-gold",
     "rfb-legacy.race.draconian-shadow",
+    "rfb-legacy.race.golem",
   ]);
 });
 
@@ -85,7 +86,7 @@ test("the New Game form groups all nine formal Draconian subraces", () => {
     "rfb-legacy.race.draconian-gold",
     "rfb-legacy.race.draconian-shadow",
   ];
-  assert.deepEqual(PLAYTEST_RACE_IDS.slice(-9), draconianRaceIds);
+  assert.deepEqual(PLAYTEST_RACE_IDS.slice(-10, -1), draconianRaceIds);
 
   const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const groupStart = indexHtml.indexOf(
@@ -108,6 +109,22 @@ test("the New Game form groups all nine formal Draconian subraces", () => {
   );
   assert.match(english, /^session-race-group-draconian = Draconians$/m);
   assert.match(chinese, /^session-race-group-draconian = 龙人分支$/m);
+});
+
+test("New Game exposes and submits Golem with the device absorption action", () => {
+  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.golem");
+  assert.equal(
+    createNewSessionRequest(
+      "368",
+      "demo.build.warrior",
+      "rfb-legacy.race.golem",
+      "Talos",
+    ).raceId,
+    "rfb-legacy.race.golem",
+  );
+  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(indexHtml, /<option value="rfb-legacy\.race\.golem"/);
+  assert.match(indexHtml, /<button id="inventory-absorb"/);
 });
 
 test("new character requests preserve the selected formal race", () => {
