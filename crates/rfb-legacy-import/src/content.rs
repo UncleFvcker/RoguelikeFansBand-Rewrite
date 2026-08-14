@@ -423,10 +423,20 @@ struct DemoWildernessDungeonPlan {
     monster_divisor: u16,
     generation_flags: Vec<String>,
     monster_preferences: Vec<String>,
+    #[serde(default)]
+    floor_terrain_distribution: Vec<DemoDungeonFloorTerrainPlan>,
+    tunnel_percent: Option<u16>,
     guardian: DemoDungeonGuardianPlan,
     final_object: DemoDungeonObjectPlan,
     final_ego_source_index: Option<u32>,
     substitute_source_index: Option<u32>,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoDungeonFloorTerrainPlan {
+    source_tag: String,
+    percent: u16,
 }
 
 #[derive(Debug, Deserialize)]
@@ -470,6 +480,8 @@ struct LegacyDungeonRecord {
     maximum_depth: Option<u16>,
     flags: Vec<String>,
     monster_preferences: Vec<String>,
+    floor_terrain_distribution: Vec<DemoDungeonFloorTerrainPlan>,
+    tunnel_percent: Option<u16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1562,6 +1574,54 @@ fn parse_dungeon_records(
                 line_number,
                 "W.maximumDepth",
                 fields.get(1).copied(),
+            )?);
+        } else if let Some(value) = line.strip_prefix("L:") {
+            let index = current.ok_or_else(|| {
+                content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "L",
+                    value,
+                    "floor terrain appears before a dungeon record",
+                )
+            })?;
+            let fields = parse_fields(D_INFO_SOURCE, line_number, "L", value, 7)?;
+            let record = records
+                .get_mut(&index)
+                .expect("current dungeon record must exist");
+            if !record.floor_terrain_distribution.is_empty() || record.tunnel_percent.is_some() {
+                return Err(content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "L",
+                    value,
+                    "duplicate dungeon floor terrain",
+                ));
+            }
+            for offset in [0, 2, 4] {
+                record
+                    .floor_terrain_distribution
+                    .push(DemoDungeonFloorTerrainPlan {
+                        source_tag: required_field(
+                            D_INFO_SOURCE,
+                            line_number,
+                            "L.sourceTag",
+                            fields.get(offset).copied(),
+                        )?
+                        .to_owned(),
+                        percent: parse_number(
+                            D_INFO_SOURCE,
+                            line_number,
+                            "L.percent",
+                            fields.get(offset + 1).copied(),
+                        )?,
+                    });
+            }
+            record.tunnel_percent = Some(parse_number(
+                D_INFO_SOURCE,
+                line_number,
+                "L.tunnelPercent",
+                fields.get(6).copied(),
             )?);
         } else if let Some(value) = line.strip_prefix("F:") {
             let index = current.ok_or_else(|| {
@@ -12347,6 +12407,15 @@ fn validate_demo_wilderness_plans(
                 dungeon.id
             )));
         }
+        if (!dungeon.floor_terrain_distribution.is_empty()
+            && dungeon.floor_terrain_distribution != record.floor_terrain_distribution)
+            || (dungeon.tunnel_percent.is_some() && dungeon.tunnel_percent != record.tunnel_percent)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "planned dungeon {} floor terrain drifted",
+                dungeon.id
+            )));
+        }
         if dungeon_flag_number(record, "FINAL_GUARDIAN_") != Some(dungeon.guardian.source_index)
             || dungeon_final_object(record).as_ref() != Some(&dungeon.final_object)
             || dungeon_flag_number(record, "FINAL_EGO_") != dungeon.final_ego_source_index
@@ -14643,6 +14712,13 @@ mod tests {
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
+        assert!(
+            selection
+                .dungeons
+                .iter()
+                .all(|dungeon| dungeon.source_index != 21),
+            "Icky cave should remain planned but inactive"
+        );
         let plan = selection
             .dungeon_plans
             .iter()
@@ -14671,6 +14747,82 @@ mod tests {
             DemoDungeonObjectPlan { tval: 75, sval: 68 }
         );
         assert_eq!(plan.final_ego_source_index, None);
+        assert_eq!(plan.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p88a_icky_cave_plan_locks_identity_floor_ecology_guardian_and_reward() {
+        let source = parse_dungeon_records(
+            "N:21:Icky cave\nP:29:17\nW:10:20:1:3\n\
+             L:SWAMP:20:GRASS:60:SHALLOW_WATER:20:8\n\
+             F:FINAL_GUARDIAN_909 | FINAL_OBJECT_46_0 | FINAL_EGO_266\n\
+             F:MONSTER_DIV_32 | COFFEE\nM:R_CHAR_ijM\n",
+        )
+        .expect("Icky cave source record should parse");
+        let source = &source[&21];
+        assert_eq!(source.tunnel_percent, Some(8));
+        assert_eq!(
+            source.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "SWAMP".to_owned(),
+                    percent: 20,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GRASS".to_owned(),
+                    percent: 60,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "SHALLOW_WATER".to_owned(),
+                    percent: 20,
+                },
+            ]
+        );
+
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let plan = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 21)
+            .expect("Icky cave should have an implementation plan");
+
+        assert_eq!(plan.source_name, "Icky cave");
+        assert_eq!(plan.id, "demo.dungeon.icky-cave");
+        assert_eq!(plan.position, DemoWildernessPosition { x: 17, y: 29 });
+        assert_eq!((plan.minimum_depth, plan.maximum_depth), (10, 20));
+        assert_eq!(plan.monster_divisor, 32);
+        assert_eq!(plan.generation_flags, ["COFFEE"]);
+        assert_eq!(plan.monster_preferences, ["R_CHAR_ijM"]);
+        assert_eq!(
+            plan.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "SWAMP".to_owned(),
+                    percent: 20,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GRASS".to_owned(),
+                    percent: 60,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "SHALLOW_WATER".to_owned(),
+                    percent: 20,
+                },
+            ]
+        );
+        assert_eq!(plan.tunnel_percent, Some(8));
+        assert_eq!(plan.guardian.source_index, 909);
+        assert_eq!(plan.guardian.source_name, "The Icky Queen");
+        assert_eq!(plan.guardian.chinese_name, "黏糊恶心女王");
+        assert_eq!(plan.guardian.level, 20);
+        assert_eq!(
+            plan.final_object,
+            DemoDungeonObjectPlan { tval: 46, sval: 0 }
+        );
+        assert_eq!(plan.final_ego_source_index, Some(266));
         assert_eq!(plan.substitute_source_index, None);
     }
 

@@ -151,6 +151,35 @@
         "level": 27
       },
       "finalObject": { "tval": 75, "sval": 68 }
+    },
+    {
+      "sourceIndex": 21,
+      "sourceName": "Icky cave",
+      "id": "demo.dungeon.icky-cave",
+      "position": { "x": 17, "y": 29 },
+      "minimumDepth": 10,
+      "maximumDepth": 20,
+      "monsterDivisor": 32,
+      "generationFlags": [
+        "COFFEE"
+      ],
+      "monsterPreferences": [
+        "R_CHAR_ijM"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "SWAMP", "percent": 20 },
+        { "sourceTag": "GRASS", "percent": 60 },
+        { "sourceTag": "SHALLOW_WATER", "percent": 20 }
+      ],
+      "tunnelPercent": 8,
+      "guardian": {
+        "sourceIndex": 909,
+        "sourceName": "The Icky Queen",
+        "chineseName": "黏糊恶心女王",
+        "level": 20
+      },
+      "finalObject": { "tval": 46, "sval": 0 },
+      "finalEgoSourceIndex": 266
     }
   ]
 }
