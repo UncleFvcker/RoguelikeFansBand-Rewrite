@@ -306,6 +306,37 @@ fn race_speed_growth_is_bounded() {
     ));
 }
 
+#[test]
+fn race_level_see_invisible_and_spell_capacity_are_bounded() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    for invalid in [0, 101] {
+        let mut content = artifact.content.clone();
+        let dark_elf = content
+            .races
+            .iter_mut()
+            .find(|race| race.id == "rfb-legacy.race.dark-elf")
+            .expect("Dark-Elf race should exist");
+        dark_elf.see_invisible_minimum_level = Some(invalid);
+        assert!(matches!(
+            validate_and_normalize(&mut content),
+            Err(ContentError::InvalidCharacterSource(id)) if id == "rfb-legacy.race.dark-elf"
+        ));
+    }
+    for invalid in [-21, 21] {
+        let mut content = artifact.content.clone();
+        let dark_elf = content
+            .races
+            .iter_mut()
+            .find(|race| race.id == "rfb-legacy.race.dark-elf")
+            .expect("Dark-Elf race should exist");
+        dark_elf.spell_capacity_bonus = invalid;
+        assert!(matches!(
+            validate_and_normalize(&mut content),
+            Err(ContentError::InvalidCharacterSource(id)) if id == "rfb-legacy.race.dark-elf"
+        ));
+    }
+}
+
 fn human_level_mutation_rewards(
     content: &mut CompiledContentV1,
 ) -> &mut Vec<RaceLevelMutationRewardDefinition> {

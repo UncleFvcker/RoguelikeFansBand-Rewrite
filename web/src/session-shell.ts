@@ -40,6 +40,7 @@ export const PLAYTEST_RACE_IDS = [
   "rfb-legacy.race.cyclops",
   "rfb-legacy.race.yeek",
   "rfb-legacy.race.klackon",
+  "rfb-legacy.race.dark-elf",
 ] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";

@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.magic-missile",
+      "minimumLevel": 1,
+      "governingAttribute": "intelligence",
+      "cost": 2,
+      "baseFailurePercent": 30
+    }
+  ],
   "baseHp": 18,
   "bodySlots": [
     {
@@ -67,6 +76,7 @@
   "experiencePercent": 155,
   "formatVersion": 1,
   "id": "rfb-legacy.race.dark-elf",
+  "infravision": 5,
   "kinCategory": "kin-glyph-104",
   "legacyIndex": 19,
   "lifePercent": 97,
@@ -83,9 +93,14 @@
     "dark": "resistant"
   },
   "shopAdjustPercent": 120,
+  "seeInvisibleMinimumLevel": 20,
   "skillSetId": "rfb-legacy.skill-set.race-dark-elf",
+  "spellCapacityBonus": 3,
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

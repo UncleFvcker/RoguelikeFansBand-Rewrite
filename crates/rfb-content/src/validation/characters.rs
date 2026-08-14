@@ -205,8 +205,12 @@ pub(super) fn validate_characters(
         validate_definition_text(&race.id, &race.name_key, &race.description_key)?;
         if !(50..=200).contains(&race.shop_adjust_percent)
             || !(0..=64).contains(&race.infravision)
+            || race
+                .see_invisible_minimum_level
+                .is_some_and(|level| !(1..=100).contains(&level))
             || !(-1_000..=1_000).contains(&race.regeneration_rate_modifier_percent)
             || !(-100..=100).contains(&race.speed_per_ten_levels)
+            || !(-20..=20).contains(&race.spell_capacity_bonus)
             || !level_resistances_are_valid(&mut race.level_resistances)
         {
             return Err(ContentError::InvalidCharacterSource(race.id.clone()));

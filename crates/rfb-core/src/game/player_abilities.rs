@@ -496,7 +496,14 @@ impl Game {
                 maximum.saturating_mul(excess) / encumbrance.penalty_weight_tenths_pound,
             );
         }
-        maximum.saturating_mul(u32::from(profile.capacity_percent)) / 100
+        let racial_capacity_percent = self
+            .character_definitions()
+            .map_or(0, |(_, race, _, _)| race.spell_capacity_bonus)
+            .saturating_mul(5);
+        let capacity_percent = i32::from(profile.capacity_percent)
+            .saturating_add(racial_capacity_percent)
+            .max(0);
+        maximum.saturating_mul(u32::try_from(capacity_percent).unwrap_or(u32::MAX)) / 100
     }
 
     fn mutation_attribute_kind(attribute: TechniqueAttribute) -> AttributeKind {

@@ -734,9 +734,12 @@ impl Game {
                         .contains(&EquipmentPassive::SeeInvisible)
             })
             .count();
-        let race_source = self
-            .character_definitions()
-            .is_some_and(|(_, race, _, _)| race.see_invisible);
+        let race_source = self.character_definitions().is_some_and(|(_, race, _, _)| {
+            race.see_invisible
+                || race
+                    .see_invisible_minimum_level
+                    .is_some_and(|minimum_level| self.progress.level >= minimum_level)
+        });
         equipment_sources
             + usize::from(race_source)
             + usize::from(self.player.statuses.iter().any(|status| {

@@ -209,6 +209,11 @@ impl Game {
         } else {
             unreachable!("at least one validated ability source must be available")
         };
+        let uses_casting_profile_offense = source == AbilitySourceDto::Learned
+            || ability
+                .tags
+                .iter()
+                .any(|tag| tag == "uses-casting-profile-offense");
         let innate_power = matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race);
         let innate_activation = match source {
             AbilitySourceDto::Mutation => mutation_activation.as_ref(),
@@ -248,16 +253,12 @@ impl Game {
             }
         };
         Self::apply_player_level_scaling(&mut ability, self.progress.level);
-        if source == AbilitySourceDto::Learned {
-            Self::apply_casting_profile_effect_scaling(
-                casting_profile
-                    .as_ref()
-                    .expect("learned ability source requires a casting profile"),
-                &mut ability,
-                self.progress.level,
-            );
+        if uses_casting_profile_offense && let Some(profile) = casting_profile.as_ref() {
+            Self::apply_casting_profile_effect_scaling(profile, &mut ability, self.progress.level);
         }
-        if !innate_power && let Some(profile) = casting_profile.as_ref() {
+        if (!innate_power || uses_casting_profile_offense)
+            && let Some(profile) = casting_profile.as_ref()
+        {
             Self::apply_casting_profile_damage_bonus(profile, &mut ability, self.progress.level);
         }
         Self::apply_player_spell_power(&mut ability, self.effective_player_spell_power_bonus());

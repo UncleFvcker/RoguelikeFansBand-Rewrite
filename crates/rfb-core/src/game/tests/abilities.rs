@@ -2899,6 +2899,7 @@ const RACE_BERSERK_ABILITY_ID: &str = "rfb.ability.race.berserk";
 const RACE_CREATE_FOOD_ABILITY_ID: &str = "rfb.ability.race.create-food";
 const RACE_DETECT_DOORS_ABILITY_ID: &str = "rfb.ability.race.detect-doors-stairs-traps";
 const RACE_DETECT_TREASURE_ABILITY_ID: &str = "rfb.ability.race.detect-treasure";
+const RACE_MAGIC_MISSILE_ABILITY_ID: &str = "rfb.ability.race.magic-missile";
 const RACE_PHASE_DOOR_ABILITY_ID: &str = "rfb.ability.race.phase-door";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
 const RACE_PROBE_MONSTERS_ABILITY_ID: &str = "rfb.ability.race.probe-monsters";
@@ -4572,6 +4573,224 @@ fn klackon_acid_spit_and_speed_growth_follow_the_effective_race() {
             .abilities
             .iter()
             .all(|ability| ability.id != RACE_SPIT_ACID_ABILITY_ID)
+    );
+}
+
+#[test]
+fn dark_elf_magic_missile_capacity_and_sight_follow_the_effective_race() {
+    fn cast_magic_missile(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            RACE_MAGIC_MISSILE_ABILITY_ID,
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Dark-Elf magic missile should resolve");
+        events
+    }
+
+    let mut game = Game::new_with_build_race_and_name(
+        109,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.dark-elf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Dark-Elf High-Mage should create");
+    clear_monsters(&mut game);
+    assert_eq!(game.player_infravision_range(), 5);
+    assert_eq!(game.player_see_invisible_sources(), 0);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Dark),
+        ResistanceLevel::Resistant
+    );
+    let human_mana = Game::new_with_build_race_and_name(
+        109,
+        "demo.build.high-mage-death",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human High-Mage should create")
+    .resources["demo.resource.mana"]
+        .maximum;
+    assert!(game.resources["demo.resource.mana"].maximum > human_mana);
+
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_MAGIC_MISSILE_ABILITY_ID)
+        .expect("Dark-Elf magic missile should be projected");
+    assert_eq!(projected.source, AbilitySourceDto::Race);
+    assert_eq!(
+        projected.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Intelligence)
+    );
+    assert_eq!(projected.minimum_level, 1);
+    assert_eq!(
+        (projected.base_resource_cost, projected.resource_cost),
+        (2, 2)
+    );
+    assert!(projected.can_cast);
+    assert!(matches!(
+        projected.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrBeamDamage {
+            damage_dice: 3,
+            damage_sides: 4,
+            damage_bonus: 5,
+            damage_type: DamageTypeDto::Physical,
+            beam_chance_percent: 1,
+            ..
+        }]
+    ));
+
+    game.player.position = Position { x: 3, y: 3 };
+    for position in [Position { x: 3, y: 3 }, Position { x: 4, y: 3 }] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor(
+        "test.dark-elf-missile-target".to_owned(),
+        "demo.actor.warrens-keeper",
+        Position { x: 4, y: 3 },
+    );
+    let maximum_mana = game.resources["demo.resource.mana"].maximum;
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana")
+        .current = maximum_mana;
+
+    let failure_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(projected.failure_percent)
+        })
+        .expect("Dark-Elf magic missile should have a failing percentile seed");
+    let mut failed = game.clone();
+    failed.rng = RfbRng::seeded(failure_seed);
+    let failed_mana = failed.resources["demo.resource.mana"].current;
+    let failed_events = cast_magic_missile(&mut failed);
+    assert!(matches!(
+        failed_events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert_eq!(
+        failed.resources["demo.resource.mana"].current,
+        failed_mana - 2
+    );
+    assert_eq!(failed.entities[0].hp, 150);
+
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Dark-Elf magic-missile setup should reload");
+    game.debug_set_ability_casts_succeed(true);
+    restored.debug_set_ability_casts_succeed(true);
+    let events = cast_magic_missile(&mut game);
+    let restored_events = cast_magic_missile(&mut restored);
+    assert_eq!(restored_events, events);
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert!(game.entities[0].hp < 150);
+
+    game.progress.level = 19;
+    assert_eq!(game.player_see_invisible_sources(), 0);
+    game.progress.level = 20;
+    assert_eq!(game.player_see_invisible_sources(), 1);
+
+    let mut high_mage_fifty = game.clone();
+    high_mage_fifty.progress.level = 50;
+    let high_mage_missile = high_mage_fifty
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_MAGIC_MISSILE_ABILITY_ID)
+        .expect("level-fifty Dark-Elf High-Mage magic missile");
+    assert!(matches!(
+        high_mage_missile.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrBeamDamage {
+            damage_dice: 12,
+            damage_bonus: 15,
+            beam_chance_percent: 50,
+            ..
+        }]
+    ));
+
+    let mut warrior = Game::new_with_build_race_and_name(
+        110,
+        "demo.build.warrior",
+        "rfb-legacy.race.dark-elf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Dark-Elf Warrior should create");
+    warrior.progress.level = 50;
+    let warrior_missile = warrior
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_MAGIC_MISSILE_ABILITY_ID)
+        .expect("level-fifty Dark-Elf Warrior magic missile");
+    assert!(matches!(
+        warrior_missile.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrBeamDamage {
+            damage_dice: 12,
+            damage_bonus: 0,
+            beam_chance_percent: 15,
+            ..
+        }]
+    ));
+
+    let mut human = Game::new_with_build_race_and_name(
+        111,
+        "demo.build.high-mage-death",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human High-Mage should create");
+    human.progress.level = 20;
+    human.refresh_player_resource_maxima();
+    let human_mana = human.resources["demo.resource.mana"].maximum;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.dark-elf-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.dark-elf".to_owned());
+    human.player.statuses.push(form);
+    human.refresh_player_resource_maxima();
+    assert_eq!(human.player_infravision_range(), 5);
+    assert_eq!(human.player_see_invisible_sources(), 1);
+    assert!(human.resources["demo.resource.mana"].maximum > human_mana);
+    assert_eq!(
+        human.effective_player_resistances().level(DamageType::Dark),
+        ResistanceLevel::Resistant
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == RACE_MAGIC_MISSILE_ABILITY_ID)
+    );
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    human.refresh_player_resource_maxima();
+    assert_eq!(human.player_infravision_range(), 0);
+    assert_eq!(human.player_see_invisible_sources(), 0);
+    assert_eq!(human.resources["demo.resource.mana"].maximum, human_mana);
+    assert_eq!(
+        human.effective_player_resistances().level(DamageType::Dark),
+        ResistanceLevel::Normal
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_MAGIC_MISSILE_ABILITY_ID)
     );
 }
 

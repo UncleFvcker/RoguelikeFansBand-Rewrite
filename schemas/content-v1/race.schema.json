@@ -735,6 +735,16 @@
       "description": "Whether this race contributes one intrinsic see-invisible source.",
       "type": "boolean"
     },
+    "seeInvisibleMinimumLevel": {
+      "description": "Character level at which this effective race begins contributing one\nintrinsic see-invisible source.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "shopAdjustPercent": {
       "default": 110,
       "description": "Percentage applied by shopkeepers before charisma and greed. RFB's\nneutral human factor is 100; unspecified races use the 110 default.",
@@ -749,6 +759,12 @@
     "speedPerTenLevels": {
       "default": 0,
       "description": "Additive speed gained for each ten character levels while this is the\ncurrently effective race.",
+      "format": "int32",
+      "type": "integer"
+    },
+    "spellCapacityBonus": {
+      "default": 0,
+      "description": "RFB `spell_cap` bonus in twentieths of the caster's base mana pool.",
       "format": "int32",
       "type": "integer"
     },

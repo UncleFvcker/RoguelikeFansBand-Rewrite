@@ -297,6 +297,22 @@ fn formal_races_receive_their_original_race_virtues() {
         ]
     );
 
+    let dark_elf = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.dark-elf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Dark-Elf Archer should create");
+    assert_eq!(
+        &virtue_kinds(&dark_elf)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Enchantment,
+        ]
+    );
+
     let dunadan = Game::new_with_build_race_and_name(
         43,
         "demo.build.archer",

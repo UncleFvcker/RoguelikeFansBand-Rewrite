@@ -347,6 +347,11 @@ impl Game {
                 } else {
                     AbilitySourceDto::Learned
                 };
+                let uses_casting_profile_offense = source == AbilitySourceDto::Learned
+                    || ability
+                        .tags
+                        .iter()
+                        .any(|tag| tag == "uses-casting-profile-offense");
                 let mut effective_ability = match source {
                     AbilitySourceDto::Learned => self.effective_casting_ability(
                         casting_profile.expect("book ability requires casting profile"),
@@ -358,14 +363,16 @@ impl Game {
                 };
                 Self::apply_player_level_scaling(&mut effective_ability, self.progress.level);
                 if let Some(profile) = casting_profile {
-                    if source == AbilitySourceDto::Learned {
+                    if uses_casting_profile_offense {
                         Self::apply_casting_profile_effect_scaling(
                             profile,
                             &mut effective_ability,
                             self.progress.level,
                         );
                     }
-                    if !matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race) {
+                    if !matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race)
+                        || uses_casting_profile_offense
+                    {
                         Self::apply_casting_profile_damage_bonus(
                             profile,
                             &mut effective_ability,

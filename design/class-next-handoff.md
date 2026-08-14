@@ -625,3 +625,26 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `28dae5ec2e1c29156610621c25e249ea7a940be965ffa1e26323d61313e711b1`、Protocol `1.212`、
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。未运行或
   刷新全量 fixture；下一正式种族为黑暗精灵 `rfb-legacy.race.dark-elf`。
+
+## main 当前批次：黑暗精灵正式内容、魔法飞弹与法术容量
+
+- 权威来源为 RFB `master:src/races_a.c`、`master:src/spells_m.c`、`master:src/do-spell.c`、
+  `master:src/spells3.c` 与 `master:src/virtue.c`。正式种族复用 `rfb-legacy.race.dark-elf` 和
+  `rfb-legacy.skill-set.race-dark-elf`；新增并由种族方向拥有 `rfb.ability.race.magic-missile` 与
+  `rfb.ability-program.race.magic-missile`。本批不新增 item、material、affix、resource 或 actor ID。
+- 黑暗精灵按原版闭合六维 `[-1,3,2,2,-2,3]`、生命 97%、基础 HP 18、经验 155%、商店 120%、
+  八项技能、5 格红外、黑暗抗性、Dark-Elf kin、Standard 身体、初始“神秘”和 1 级 INT/2/30
+  “魔法飞弹”；20 级获得看破隐形，法术容量 `spell_cap += 3`，原版没有等级奖励。New Game 通过
+  既有 `raceId` 正式开放，玩家 actor 与 tileset 继续由职业 build 决定。
+- 魔法飞弹使用 `3 + (level - 1) / 5` 个 d4、最终 spell power 与职业法术伤害加值。普通职业的
+  beam 概率为 `max(0, level / 2 - 10)`，High-Mage 为玩家等级；种族能力通过窄内容标签复用既有
+  施法攻击缩放，其他先天能力仍不读取施法职业加值。种族 `spellCapacityBonus` 以二十分之一为单位，
+  与职业 `spell_cap` 加法合并后一次应用，并跟随当前有效种族。
+- 聚焦验证覆盖静态内容、字段边界、魔法飞弹失败支付与成功执行、1/50 级伤害和 beam 概率、
+  19/20 级看破隐形、法术容量、save/replay、变形切换、初始美德、导入器和 Web `raceId`；内容
+  schema 与 source lock 已同步。Web 148 项测试在限制测试范围的指示前已经通过；其后按要求停止
+  完整 Rust 回归，不运行或刷新全量 fixture。
+- 协调版本为 pack `1.350.0` / hash
+  `3db290a0ff990486082f7710691d0050d5176fa3464a50f93e8d17a02355a494`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。下一普通
+  顺序项为龙人；其动态亚种、喷吐/抗性、漂浮和 35 级天赋应作为完整纵切单独规划。

@@ -1215,3 +1215,21 @@ git diff --stat
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。聚焦内容、
   导入器、核心、美德、Web、schema、source 验证、格式和 diff 检查均在本批完成；未运行或刷新全量
   fixture。下一正式种族是 `rfb-legacy.race.dark-elf`（黑暗精灵）。
+
+## 66. main 当前交接（黑暗精灵、魔法飞弹与法术容量）
+
+- 种族方向继续拥有既有 `rfb-legacy.race.dark-elf` 与
+  `rfb-legacy.skill-set.race-dark-elf`；本批新增并拥有 `rfb.ability.race.magic-missile` 和
+  `rfb.ability-program.race.magic-missile`，其他方向不得复制这些身份。
+- Ability Program 表达原版 `magic_missile_spell` 的等级伤害骰与 bolt/beam 投射；Race 内容表达
+  1 级 INT/2/30 能力、黑暗抗性、20 级看破隐形、`spell_cap += 3` 与正式选择标签；初始美德按
+  权威中文名记为“神秘”（`Enchantment`）。普通职业的 beam 概率使用 `max(0, level / 2 - 10)`，
+  High-Mage 使用玩家等级，并复用既有职业法术伤害与 spell power 路径。
+- 默认空值的 `RaceDefinition.seeInvisibleMinimumLevel` 与默认 0 的 `spellCapacityBonus` 均按当前有效
+  种族派生，不保存重复状态；职业与种族 `spell_cap` 加法合并后一次应用。临时变形因此会获得并在
+  解除时失去黑暗抗性、红外、等级视隐、法术容量与魔法飞弹。
+- 本批不新增 item、material、affix、resource 或 actor ID。共享协调点为 pack `1.350.0` / content
+  hash `3db290a0ff990486082f7710691d0050d5176fa3464a50f93e8d17a02355a494`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。新增和直接
+  相关内容、导入器、核心、美德、Web、schema、source 与协议检查通过；按用户要求停止完整 Rust
+  回归，未运行或刷新全量 fixture。下一普通顺序项为龙人，必须先规划动态亚种与 35 级天赋纵切。

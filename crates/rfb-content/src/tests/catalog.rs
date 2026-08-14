@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.349.0");
+    assert_eq!(catalog.pack_version(), "1.350.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1464,6 +1464,109 @@ fn formal_klackon_matches_rfb_profile_speed_and_acid_spit() {
         }
     ));
     assert_eq!(ability.level_scaling.len(), 1);
+}
+
+#[test]
+fn formal_dark_elf_matches_rfb_profile_passives_and_magic_missile() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let dark_elf = catalog
+        .race("rfb-legacy.race.dark-elf")
+        .expect("formal Dark-Elf race");
+
+    assert_eq!(
+        [
+            dark_elf.modifiers.strength,
+            dark_elf.modifiers.intelligence,
+            dark_elf.modifiers.wisdom,
+            dark_elf.modifiers.dexterity,
+            dark_elf.modifiers.constitution,
+            dark_elf.modifiers.charisma,
+        ],
+        [-1, 3, 2, 2, -2, 3]
+    );
+    assert_eq!(
+        (
+            dark_elf.life_percent,
+            dark_elf.base_hp,
+            dark_elf.experience_percent,
+            dark_elf.shop_adjust_percent,
+            dark_elf.infravision,
+            dark_elf.see_invisible_minimum_level,
+            dark_elf.spell_capacity_bonus,
+        ),
+        (97, 18, 155, 120, 5, Some(20), 3)
+    );
+    assert_eq!(dark_elf.kin_category.as_deref(), Some("kin-glyph-104"));
+    assert_eq!(
+        dark_elf.resistances.get(&ActorDamageType::Dark),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(dark_elf.level_mutation_rewards.is_empty());
+    assert_eq!(dark_elf.abilities.len(), 1);
+    let activation = &dark_elf.abilities[0];
+    assert_eq!(activation.minimum_level, 1);
+    assert_eq!(
+        activation.governing_attribute,
+        TechniqueAttribute::Intelligence
+    );
+    assert_eq!(activation.cost, 2);
+    assert_eq!(activation.base_failure_percent, 30);
+    assert_eq!(activation.ability_id, "rfb.ability.race.magic-missile");
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(dark_elf.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&dark_elf.skill_set_id)
+        .expect("formal Dark-Elf skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 7),
+            ("demo.skill.disarming", 5),
+            ("demo.skill.melee", -5),
+            ("demo.skill.perception", 12),
+            ("demo.skill.ranged", 6),
+            ("demo.skill.saving-throw", 12),
+            ("demo.skill.search", 8),
+            ("demo.skill.stealth", 3),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.magic-missile")
+        .expect("Dark-Elf magic missile ability");
+    assert!(ability.affects_ground_items);
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::BoltOrBeamDamage {
+            damage_dice: 3,
+            damage_sides: 4,
+            damage_bonus: 0,
+            damage_type: ActorDamageType::Physical,
+            beam_chance_percent: 0,
+            beam_chance_modifier: 0,
+        }
+    ));
+    assert_eq!(ability.level_scaling.len(), 2);
+    assert_eq!(ability.spell_power_fields.len(), 1);
+    assert!(
+        ability
+            .tags
+            .iter()
+            .any(|tag| tag == "uses-casting-profile-offense")
+    );
 }
 
 #[test]

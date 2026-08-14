@@ -107,6 +107,10 @@ pub struct RaceDefinition {
     /// Whether this race contributes one intrinsic see-invisible source.
     #[serde(default, skip_serializing_if = "is_false")]
     pub see_invisible: bool,
+    /// Character level at which this effective race begins contributing one
+    /// intrinsic see-invisible source.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub see_invisible_minimum_level: Option<u16>,
     /// Attributes this race innately prevents from being reduced.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub attribute_sustains: BTreeSet<ItemAttributeDefinition>,
@@ -117,6 +121,9 @@ pub struct RaceDefinition {
     /// currently effective race.
     #[serde(default)]
     pub speed_per_ten_levels: i32,
+    /// RFB `spell_cap` bonus in twentieths of the caster's base mana pool.
+    #[serde(default)]
+    pub spell_capacity_bonus: i32,
     pub skill_set_id: String,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
