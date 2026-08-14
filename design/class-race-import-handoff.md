@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-15
-当前实现基线：`2ecec68cd`（僵尸正式 New Game 开放；本次文档提交只做交接封板）
+当前实现基线：`be87dc1b2`（骷髅正式 New Game 开放；本次文档提交只做交接封板）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,14 +10,14 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.366.0`
-- content hash：`795d9e95d5285636b4a0273eb438f15d86f8ca6c4a7fb6ade99310ee094b9f2c`
+- demo pack：`1.367.0`
+- content hash：`a5d56b9c5e0f6c2fece100b5b117e363d0be4a78bab82f94927d5c48c3a8310d`
 - Protocol：`1.221`
 - State Hash Schema：`v104`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v303`，26 个 exact fixture
 - 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 30 个种族。
+  6 个职业构筑和 31 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -91,8 +91,9 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
 魔像专项也已封板：`rfb-legacy.race.golem` 现带正式选择标签并进入同一 `raceId` 请求与 Web 原生
 种族选择器。它继续使用标准玩家 Actor/tileset，不增加职业过滤或“职业 × 种族”Build。
 僵尸 `rfb-legacy.race.zombie` 已在后续 main 基线上正式开放：复用魔像的缓慢消化、1/20 食物营养、
-装置吸收与满充能空手法杖路径，新增通用 `night-start` 出生标签和独立“恢复生命”能力。下一普通静态
-种族为 `rfb-legacy.race.skeleton`（骷髅）。
+装置吸收与满充能空手法杖路径，新增通用 `night-start` 出生标签和独立“恢复生命”能力。骷髅
+`rfb-legacy.race.skeleton` 也已正式开放，复用同一亡灵底座，并在既有物品使用事务中闭合普通食物
+漏到脚下、特殊食物消失及药水泼洒规则。
 
 ### 龙人专项最终证据
 
@@ -134,6 +135,23 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
 - 只运行了本批新增聚焦测试：内容 1 项、本地化 1 项、导入器 1 项、核心 5 项、Web 1 项，均通过；
   核心覆盖成功/失败支付、变形获得/失去、食物与装置代谢、夜间出生及 save/state-hash/replay。
   `verify-source`、Rust format 和 diff 检查通过。按用户要求未运行全量测试，也未刷新 fixture。
+
+### 骷髅导入最终证据
+
+- 实现提交：`be87dc1b2`（`Import Skeleton race`）。最终协调点为 pack `1.367.0` / content hash
+  `a5d56b9c5e0f6c2fece100b5b117e363d0be4a78bab82f94927d5c48c3a8310d`；Protocol `1.221`、
+  State Hash Schema v104、save v2 和 `contract-v303` fixture baseline 均未改变。正式 New Game 种族数
+  从 30 增至 31。
+- 骷髅闭合六维、生命/HP/经验/红外/商店/技能矩阵，碎片与毒抗、10 级寒冷抗性、看破隐形、生命力
+  保护、非生命/亡灵身份、缓慢消化、装置吸收、夜间出生、无普通口粮、满充能空手法杖、30 级
+  “恢复生命”和初始“非生”。
+- 普通食物先执行治疗/恢复等魔法，再从骷髅下颚漏到结算后的脚下且不提供营养；蘑菇和精灵行粮在
+  效果后消失，同样不提供营养。药水先执行饮用效果，再在当前玩家位置复用已有 `shatter_effect`
+  路径；没有为药水另建推测性效果。临时骷髅形态按同一当前有效种族判定获得并失去这些规则。
+- 只运行了本批新增聚焦测试：内容 1 项、本地化 1 项、导入器 1 项、核心 6 项、Web 1 项，均通过；
+  核心覆盖食物分类与附加效果、药水破碎、等级被动、恢复生命、临时形态、夜间出生以及
+  save/state-hash/replay。`verify-source`、Rust format 和 diff 检查通过。按用户要求未运行全量测试，
+  也未刷新 fixture。
 
 ## 2. 权威来源与不可变规则
 

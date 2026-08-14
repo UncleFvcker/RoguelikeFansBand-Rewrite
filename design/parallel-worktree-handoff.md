@@ -1,7 +1,7 @@
 # 并行 worktree 通用交接说明
 
 更新时间：2026-08-15
-当前工作批次起点：`main@2ecec68cd`
+当前工作批次起点：`main@be87dc1b2`
 
 本说明供新的 Codex 对话接手独立方向时使用。每个写入方向必须使用自己的
 worktree 和分支；`main` 只负责集成、版本与发布收口。
@@ -1409,3 +1409,19 @@ git diff --stat
   State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
   Web 共 9 项聚焦测试通过，含 save/state-hash/replay；按用户要求未运行全量测试或刷新 fixture。
 - 下一普通静态种族为 `rfb-legacy.race.skeleton`（骷髅）。
+
+## 77. main 当前交接（骷髅正式内容、食物漏落与药水泼洒）
+
+- 种族方向继续拥有 `rfb-legacy.race.skeleton` 与 `rfb-legacy.skill-set.race-skeleton`；本批没有新增
+  内容或协议 ID。恢复生命、空手法杖、缓慢消化、装置吸收、非生命/亡灵身份和夜间出生全部复用
+  现有路径，其他方向不得复制这些身份或另建第二套亡灵代谢事务。
+- 骷髅完整行为包括碎片/毒抗、10 级寒冷抗性、看破隐形、生命力保护、30 级“恢复生命”、夜间出生、
+  无普通口粮、满充能空手法杖和初始“非生”。`rfb-compatibility`、Web option 与
+  `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 31。
+- 既有物品使用事务现在按当前有效种族处理骷髅：普通食物在魔法效果结算后掉到当前脚下，蘑菇和
+  精灵行粮在效果后消失，所有这些均不提供营养；药水在饮用效果后复用内容已有的 `shatter_effect`
+  于当前玩家位置泼洒。临时骷髅形态也走同一规则，未增加 Protocol、save 或 State Hash 字段。
+- 实现提交为 `be87dc1b2`（`Import Skeleton race`）。共享协调点为 pack `1.367.0` / content hash
+  `a5d56b9c5e0f6c2fece100b5b117e363d0be4a78bab82f94927d5c48c3a8310d`、Protocol `1.221`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
+  Web 共 10 项聚焦测试通过，含 save/state-hash/replay；按用户要求未运行全量测试或刷新 fixture。

@@ -5,7 +5,7 @@
 
 更新时间：2026-08-15
 
-当前 main 实现基线：`2ecec68cd`（僵尸正式 New Game 开放）
+当前 main 实现基线：`be87dc1b2`（骷髅正式 New Game 开放）
 
 分支：`codex/class-next`
 
@@ -859,3 +859,26 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   生命力加法、等级抗性、变形生命周期、代谢/吸收、出生物品、美德、夜间出生及
   save/state-hash/replay。`verify-source`、格式和 diff 检查通过；按用户要求未运行全量测试或刷新
   fixture。下一普通静态种族为 `rfb-legacy.race.skeleton`（骷髅）。
+
+## main 当前批次：骷髅正式内容、食物漏落与药水泼洒
+
+- 权威来源为 RFB `master:src/races_k.c`、`master:src/cmd6.c`、`master:src/spells_m.c`、
+  `master:src/birth.c` 和 `master:src/virtue.c`。种族方向继续拥有既有
+  `rfb-legacy.race.skeleton` 与 `rfb-legacy.skill-set.race-skeleton`；没有新增内容 ID，恢复生命、
+  出生空手法杖、缓慢消化、装置吸收和夜间出生全部复用僵尸/魔像批次既有身份与路径。
+- 骷髅按原版闭合六维 `0/+1/-2/0/+1/+1`、生命 100%、基础 HP 21、经验 115%、2 格红外、商店
+  125%、碎片/毒抗、10 级寒冷抗性、看破隐形、1 级生命力保护、非生命/亡灵身份及初始“非生”。
+  30 级感知能力“恢复生命”消耗 30、基础失败率 70%；出生不生成普通口粮，保留标准火把和 21/21
+  满充能空手法杖。
+- 物品使用继续只有一条事务：当前有效种族为骷髅时，普通食物先结算魔法效果，再把一个物品实例落到
+  结算后玩家脚下且营养为零；带 `mushroom` 标签的蘑菇和 `ApplyElvishWaybread` 精灵行粮在效果后正常
+  消耗。药水正常消耗并执行饮用效果，随后在当前玩家位置调用已有 `shatter_effect`；未定义破碎效果的
+  药水不推测额外效果。临时骷髅形态复用同一判定，解除后恢复普通进食。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数从 30 增至 31；
+  请求继续使用既有 `{ buildId, raceId, playerName, seed }`，不增加协议、玩家 Actor、tileset 或重复 Build。
+- 实现提交为 `be87dc1b2`（`Import Skeleton race`）。最终协调点为 pack `1.367.0` / content hash
+  `a5d56b9c5e0f6c2fece100b5b117e363d0be4a78bab82f94927d5c48c3a8310d`、Protocol `1.221`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。
+- 新增聚焦测试共 10 项：内容 1、中文名 1、importer 1、核心 6、Web 1，覆盖静态矩阵、食物与药水
+  规则、能力、等级抗性、变形生命周期、出生物品、美德、夜间出生及 save/state-hash/replay。
+  `verify-source`、格式和 diff 检查通过；按用户要求未运行全量测试或刷新 fixture。
