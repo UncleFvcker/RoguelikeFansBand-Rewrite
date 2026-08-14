@@ -332,11 +332,13 @@ impl Game {
         }
     }
 
-    fn drain_patron_attribute(&mut self, attribute: AttributeKind, amount: u8, permanent: bool) {
-        if self
-            .player_equipment_passives()
-            .contains(&attribute_sustain_passive(attribute))
-        {
+    pub(super) fn drain_patron_attribute(
+        &mut self,
+        attribute: AttributeKind,
+        amount: u8,
+        permanent: bool,
+    ) {
+        if self.player_sustains_attribute(attribute) {
             return;
         }
         let previous_max_hp = self.effective_player_max_hp();

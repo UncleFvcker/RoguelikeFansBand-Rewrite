@@ -2116,11 +2116,8 @@ impl Game {
         }
     }
 
-    fn resolve_monster_attribute_drain(&mut self, attribute: AttributeKind) {
-        if self
-            .player_equipment_passives()
-            .contains(&attribute_sustain_passive(attribute))
-        {
+    pub(super) fn resolve_monster_attribute_drain(&mut self, attribute: AttributeKind) {
+        if self.player_sustains_attribute(attribute) {
             return;
         }
         let previous_max_hp = self.effective_player_max_hp();

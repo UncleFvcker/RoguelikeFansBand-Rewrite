@@ -2060,10 +2060,7 @@ impl Game {
         attribute: AttributeKind,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        if self
-            .player_equipment_passives()
-            .contains(&attribute_sustain_passive(attribute))
-        {
+        if self.player_sustains_attribute(attribute) {
             let value = self.progress.attributes.value(attribute);
             self.mark_item_aware(source_kind_id);
             events.push(DomainEvent::ItemAttributeChanged {

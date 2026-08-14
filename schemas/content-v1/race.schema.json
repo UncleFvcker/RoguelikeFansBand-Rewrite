@@ -27,6 +27,17 @@
       ],
       "type": "object"
     },
+    "ItemAttributeDefinition": {
+      "enum": [
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma"
+      ],
+      "type": "string"
+    },
     "RaceLevelMutationRewardDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -219,6 +230,14 @@
   "properties": {
     "$schema": {
       "type": "string"
+    },
+    "attributeSustains": {
+      "description": "Attributes this race innately prevents from being reduced.",
+      "items": {
+        "$ref": "#/$defs/ItemAttributeDefinition"
+      },
+      "type": "array",
+      "uniqueItems": true
     },
     "baseHp": {
       "default": 0,

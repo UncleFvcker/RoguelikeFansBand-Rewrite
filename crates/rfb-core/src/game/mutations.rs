@@ -470,10 +470,7 @@ impl Game {
                     ];
                     let attribute = ATTRIBUTES[usize::try_from(self.rng.bounded(6))
                         .expect("wasting attribute index must fit usize")];
-                    if !self
-                        .player_equipment_passives()
-                        .contains(&attribute_sustain_passive(attribute))
-                    {
+                    if !self.player_sustains_attribute(attribute) {
                         let amount = u8::try_from(self.rng.bounded(6) + 7)
                             .expect("wasting drain amount must fit u8");
                         let permanent = self.rng.bounded(6) == 0;

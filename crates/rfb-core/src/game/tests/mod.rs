@@ -34,6 +34,7 @@ mod persistence;
 mod pet_upkeep;
 mod prayer_study;
 mod progression;
+mod race_attribute_sustains;
 mod riding;
 mod riding_bond;
 mod snapshots;

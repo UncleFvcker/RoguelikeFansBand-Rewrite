@@ -656,6 +656,16 @@ impl Game {
             .collect()
     }
 
+    pub(super) fn player_sustains_attribute(&self, attribute: AttributeKind) -> bool {
+        self.player_equipment_passives()
+            .contains(&attribute_sustain_passive(attribute))
+            || self.character_definitions().is_some_and(|(_, race, _, _)| {
+                race.attribute_sustains
+                    .iter()
+                    .any(|sustain| Self::item_attribute_kind(sustain) == attribute)
+            })
+    }
+
     pub(super) fn player_hold_life_sources(&self) -> usize {
         self.items
             .iter()

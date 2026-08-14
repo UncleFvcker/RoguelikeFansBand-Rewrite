@@ -303,11 +303,8 @@ impl Game {
         self.apply_eldritch_status(STATUS_HALLUCINATION, duration, source_kind_id);
     }
 
-    fn drain_eldritch_attribute(&mut self, attribute: AttributeKind) -> bool {
-        if self
-            .player_equipment_passives()
-            .contains(&attribute_sustain_passive(attribute))
-        {
+    pub(super) fn drain_eldritch_attribute(&mut self, attribute: AttributeKind) -> bool {
+        if self.player_sustains_attribute(attribute) {
             return false;
         }
         let previous_max_hp = self.effective_player_max_hp();

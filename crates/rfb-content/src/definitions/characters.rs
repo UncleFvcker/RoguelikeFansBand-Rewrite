@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 #[cfg(feature = "schemas")]
 use schemars::JsonSchema;
@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     AbilityLevelScalingDefinition, ActorDamageType, ActorResistanceLevel, AmmunitionTypeDefinition,
-    StatModifiers, default_percent,
+    ItemAttributeDefinition, StatModifiers, default_percent,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -107,6 +107,9 @@ pub struct RaceDefinition {
     /// Whether this race contributes one intrinsic see-invisible source.
     #[serde(default, skip_serializing_if = "is_false")]
     pub see_invisible: bool,
+    /// Attributes this race innately prevents from being reduced.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub attribute_sustains: BTreeSet<ItemAttributeDefinition>,
     pub skill_set_id: String,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
