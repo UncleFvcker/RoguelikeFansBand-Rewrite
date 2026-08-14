@@ -2654,7 +2654,14 @@ fn formal_kobold_poison_dart_is_a_fixed_level_poison_bolt_without_ammunition() {
     )
     .expect("Kobold warrior should create");
     clear_monsters(&mut game);
-    game.progress.level = 11;
+    assert_eq!(game.player_infravision_range(), 3);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Resistant
+    );
+    let level_eleven_experience = crate::stats::experience_required_for_level(11);
+    game.apply_unscaled_player_experience(level_eleven_experience, &mut Vec::new());
     let locked = game
         .snapshot()
         .player
@@ -2671,7 +2678,10 @@ fn formal_kobold_poison_dart_is_a_fixed_level_poison_bolt_without_ammunition() {
     assert_eq!(locked.base_resource_cost, 8);
     assert!(!locked.can_cast);
 
-    game.progress.level = 12;
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(12) - level_eleven_experience,
+        &mut Vec::new(),
+    );
     game.debug_set_ability_casts_succeed(true);
     game.player.position = Position { x: 3, y: 3 };
     for position in [
@@ -2681,13 +2691,18 @@ fn formal_kobold_poison_dart_is_a_fixed_level_poison_bolt_without_ammunition() {
     ] {
         replace_terrain(&mut game, position, "demo.terrain.floor");
     }
+    let target = game
+        .content
+        .actor("demo.actor.hill-orc")
+        .expect("Hill Orc target should exist")
+        .clone();
     for (id, x) in [("test.actor.near", 4), ("test.actor.far", 5)] {
         game.entities.push(actor_from_runtime_spawn(
             id,
-            "demo.actor.gloom-weaver",
+            &target.id,
             Position { x, y: 3 },
-            100,
-            100,
+            target.max_hp,
+            target.speed,
             100,
             true,
         ));
@@ -2695,24 +2710,156 @@ fn formal_kobold_poison_dart_is_a_fixed_level_poison_bolt_without_ammunition() {
     let hp_before = game.player.hp;
     let serial_before = game.next_item_instance_serial;
     let draws_before = game.rng_draw_counter();
+    let mut replay = game.clone();
+    let mut resistant = game.clone();
+    resistant.entities[0]
+        .resistances
+        .set(DamageType::Poison, ResistanceLevel::Resistant);
     let mut events = Vec::new();
 
-    game.resolve_player_ability(
-        RACE_POISON_DART_ABILITY_ID,
-        TargetSelection::Direction {
-            direction: Direction::East,
-        },
-        &mut events,
-        &mut BTreeSet::new(),
-        &mut Vec::new(),
-    )
-    .expect("Kobold Poison Dart should resolve");
+    for cast in [&mut game, &mut replay, &mut resistant] {
+        cast.resolve_player_ability(
+            RACE_POISON_DART_ABILITY_ID,
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Kobold Poison Dart should resolve");
+        events.clear();
+    }
 
     assert_eq!(game.player.hp, hp_before - 8);
-    assert_eq!(game.entities[0].hp, 88);
-    assert_eq!(game.entities[1].hp, 100);
+    assert_eq!(game.entities[0].hp, target.max_hp - 12);
+    assert_eq!(game.entities[1].hp, target.max_hp);
     assert_eq!(game.next_item_instance_serial, serial_before);
     assert_eq!(game.rng_draw_counter(), draws_before + 2);
+    assert_eq!(game.state_hash(), replay.state_hash());
+    assert!(resistant.entities[0].hp > game.entities[0].hp);
+    assert_eq!(resistant.next_item_instance_serial, serial_before);
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Kobold Poison Dart save should restore");
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn formal_kobold_poison_dart_failure_spills_sp_into_hp_without_projecting() {
+    let mut game = Game::new_with_build_race_and_name(
+        92,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.kobold",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Kobold High-Mage should create");
+    clear_monsters(&mut game);
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(12),
+        &mut Vec::new(),
+    );
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana")
+        .current = 3;
+    let failure_percent = game
+        .snapshot()
+        .player
+        .abilities
+        .iter()
+        .find(|ability| ability.id == RACE_POISON_DART_ABILITY_ID)
+        .expect("Kobold Poison Dart should be projected")
+        .failure_percent;
+    let seed = (0..4_096)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(failure_percent)
+        })
+        .expect("Kobold Poison Dart should have a reachable failure roll");
+    game.rng = RfbRng::seeded(seed);
+    let hp_before = game.player.hp;
+    let tick_before = game.world_tick;
+    let serial_before = game.next_item_instance_serial;
+
+    dispatch_next(
+        &mut game,
+        GameCommand::CastAbility {
+            ability_id: RACE_POISON_DART_ABILITY_ID.to_owned(),
+            target: TargetSelection::Direction {
+                direction: Direction::East,
+            },
+        },
+    );
+
+    assert_eq!(game.world_tick, tick_before + 10);
+    assert_eq!(game.resources["demo.resource.mana"].current, 0);
+    assert_eq!(game.player.hp, hp_before - 5);
+    assert_eq!(game.next_item_instance_serial, serial_before);
+}
+
+#[test]
+fn kobold_intrinsics_follow_the_effective_race() {
+    let mut game = Game::new_with_build_race_and_name(
+        93,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human Warrior should create");
+    game.progress.level = 12;
+    assert_eq!(game.player_infravision_range(), 0);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Normal
+    );
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_POISON_DART_ABILITY_ID)
+    );
+
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.kobold-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.kobold".to_owned());
+    game.player.statuses.push(form);
+    assert_eq!(game.player_infravision_range(), 3);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Resistant
+    );
+    let ability = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_POISON_DART_ABILITY_ID)
+        .expect("temporary Kobold form should grant Poison Dart");
+    assert_eq!(ability.source, AbilitySourceDto::Race);
+    assert_eq!(
+        ability.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Dexterity)
+    );
+
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(game.player_infravision_range(), 0);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Normal
+    );
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_POISON_DART_ABILITY_ID)
+    );
 }
 
 #[test]

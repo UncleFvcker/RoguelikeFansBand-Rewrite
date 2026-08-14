@@ -1022,3 +1022,20 @@ git diff --stat
   `a0d86072c1d0fdd278b5a0feac9546a79b99c736a0e264f51297bc6675f0c683`、Protocol `1.204`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量
   fixture，留待合并验收。
+
+## 55. main 当前交接（狗头人正式内容、新游戏 UI 与验收）
+
+- 种族方向拥有既有 `rfb-legacy.race.kobold`，并新增、拥有
+  `rfb.ability.race.poison-dart` 与 `rfb.ability-program.race.poison-dart`。毒镖是无限携带的
+  种族能力，不建立 dart/ammo 物品；其他方向不得重复建立这些身份。
+- 狗头人已按 RFB master 闭合六维、生命 98%、基础 HP 19、经验 90%、商店 120%、八项技能、
+  3 格红外、毒抗、Kobold kin、Standard 身体、初始“荣誉”和 12 级 DEX/8/50“毒镖”。原版
+  没有等级奖励；种族描述中的带毒武器偏好不是被动品牌。
+- New Game 通过既有 `raceId` 正式开放“狗头人”；玩家 actor 与 tileset 仍由职业 build 决定。
+  毒镖复用共享 bolt、反射和抗性链，以 `0d0 + level` 精确表达原版实际施放伤害，不生成或
+  消耗弹药。门槛、支付、毒抗、固定伤害、首目标停止、save/replay、变形切换与前端入口均由
+  新增或直接相关聚焦测试覆盖。
+- 协调点为 pack `1.338.0` / content hash
+  `1e4ac419da5c5a8a3c7aea75fc4758d2d87dfeac197bcaed7b8d5ab62064d353`、Protocol `1.204`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量
+  fixture，留待合并验收。

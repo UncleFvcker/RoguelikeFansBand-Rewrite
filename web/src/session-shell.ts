@@ -30,6 +30,7 @@ export const PLAYTEST_RACE_IDS = [
   "rfb-legacy.race.dunadan",
   "rfb-legacy.race.barbarian",
   "rfb-legacy.race.hobbit",
+  "rfb-legacy.race.kobold",
 ] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
