@@ -1983,13 +1983,14 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
-        for damage_type in [DamageType::Fire, DamageType::Electricity] {
+        for damage_type in [DamageType::Fire, DamageType::Electricity, DamageType::Cold] {
             let level = self
                 .content
                 .mutations()
                 .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
                 .filter(|mutation| mutation.contact_aura.map(DamageType::from) == Some(damage_type))
-                .count();
+                .count()
+                + usize::from(self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE));
             if level == 0 {
                 continue;
             }

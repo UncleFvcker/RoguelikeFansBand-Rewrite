@@ -165,6 +165,7 @@
     { "sourceIndex": 500, "sourceName": "[Book of Common Prayer]", "sourceId": "book-of-common-prayer", "itemId": "demo.item.book-of-common-prayer", "status": "active", "contract": "class-high-mage-life-first-book" },
     { "sourceIndex": 501, "sourceName": "[High Mass]", "sourceId": "high-mass", "itemId": "demo.item.high-mass", "status": "active", "contract": "class-high-mage-life-second-book" },
     { "sourceIndex": 502, "sourceName": "[Book of the Unicorn]", "sourceId": "book-of-the-unicorn", "itemId": "demo.item.book-of-the-unicorn", "status": "active", "contract": "class-high-mage-life-third-book" },
+    { "sourceIndex": 503, "sourceName": "[Blessings of the Grail]", "sourceId": "blessings-of-the-grail", "itemId": "demo.item.blessings-of-the-grail", "status": "active", "contract": "class-high-mage-life-fourth-book" },
     { "sourceIndex": 504, "sourceName": "[Beginner's Handbook]", "sourceId": "beginners-handbook", "itemId": "demo.item.beginners-handbook", "status": "active", "contract": "class-high-mage-sorcery-first-book" },
     { "sourceIndex": 505, "sourceName": "[Master Sorcerer's Handbook]", "sourceId": "master-sorcerers-handbook", "itemId": "demo.item.master-sorcerers-handbook", "status": "active", "contract": "class-high-mage-sorcery-second-book" },
     { "sourceIndex": 506, "sourceName": "[Pattern Sorcery]", "sourceId": "pattern-sorcery", "itemId": "demo.item.pattern-sorcery", "status": "active", "contract": "class-high-mage-sorcery-third-book" },

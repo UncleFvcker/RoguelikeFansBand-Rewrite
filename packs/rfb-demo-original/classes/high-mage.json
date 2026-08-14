@@ -282,7 +282,8 @@
         "abilityBookIds": [
           "demo.ability-book.book-of-common-prayer",
           "demo.ability-book.high-mass",
-          "demo.ability-book.book-of-the-unicorn"
+          "demo.ability-book.book-of-the-unicorn",
+          "demo.ability-book.blessings-of-the-grail"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -309,7 +310,15 @@
           { "abilityId": "demo.ability.life-cure-mutation", "minimumLevel": 32, "resourceCost": 30, "baseFailurePercent": 60 },
           { "abilityId": "demo.ability.life-word-of-recall", "minimumLevel": 33, "resourceCost": 40, "baseFailurePercent": 60 },
           { "abilityId": "demo.ability.life-transcendence", "minimumLevel": 35, "resourceCost": 35, "baseFailurePercent": 60 },
-          { "abilityId": "demo.ability.life-warding-true", "minimumLevel": 40, "resourceCost": 70, "baseFailurePercent": 70 }
+          { "abilityId": "demo.ability.life-warding-true", "minimumLevel": 40, "resourceCost": 70, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.life-sterilization", "minimumLevel": 5, "resourceCost": 9, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-detection", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-annihilate-undead", "minimumLevel": 30, "resourceCost": 50, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-clairvoyance", "minimumLevel": 40, "resourceCost": 80, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-restoration", "minimumLevel": 42, "resourceCost": 75, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-healing-true", "minimumLevel": 45, "resourceCost": 40, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-holy-vision", "minimumLevel": 47, "resourceCost": 90, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.life-ultimate-resistance", "minimumLevel": 49, "resourceCost": 90, "baseFailurePercent": 70 }
         ]
       }
     ]

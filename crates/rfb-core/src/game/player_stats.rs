@@ -535,13 +535,14 @@ impl Game {
     }
 
     pub(super) fn player_reflects_bolts(&self) -> bool {
-        self.items.iter().any(|item| {
+        self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
+            || self.items.iter().any(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
                 && self
                     .content
                     .item(&item.kind_id)
                     .is_some_and(|definition| definition.reflects_bolts)
-        })
+            })
     }
 
     pub(super) fn player_incoming_damage_percent(&self) -> u8 {
@@ -684,6 +685,17 @@ impl Game {
                 .iter()
                 .filter_map(|status| temporary_sustain_passive(&status.kind_id)),
         );
+        if self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE) {
+            passives.extend([
+                EquipmentPassive::HoldLife,
+                EquipmentPassive::SustainStrength,
+                EquipmentPassive::SustainIntelligence,
+                EquipmentPassive::SustainWisdom,
+                EquipmentPassive::SustainDexterity,
+                EquipmentPassive::SustainConstitution,
+                EquipmentPassive::SustainCharisma,
+            ]);
+        }
         passives
     }
 
@@ -709,7 +721,12 @@ impl Game {
                 self.player
                     .statuses
                     .iter()
-                    .any(|status| status.kind_id == STATUS_HOLD_LIFE),
+                    .any(|status| {
+                        matches!(
+                            status.kind_id.as_str(),
+                            STATUS_HOLD_LIFE | STATUS_ULTIMATE_RESISTANCE
+                        )
+                    }),
             )
     }
 
@@ -729,7 +746,10 @@ impl Game {
         equipment_sources
             + usize::from(race_source)
             + usize::from(self.player.statuses.iter().any(|status| {
-                status.kind_id == STATUS_SIGHT || status.kind_id == STATUS_SEE_INVISIBLE
+                matches!(
+                    status.kind_id.as_str(),
+                    STATUS_SIGHT | STATUS_SEE_INVISIBLE | STATUS_ULTIMATE_RESISTANCE
+                )
             }))
     }
 
@@ -765,13 +785,16 @@ impl Game {
 
     pub(super) fn player_levitates(&self) -> bool {
         self.player_has_status_kind(STATUS_LEVITATION)
+            || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
             || self.content.mutations().any(|mutation| {
                 mutation.levitation && self.progress.active_mutation_ids.contains(&mutation.id)
             })
     }
 
     pub(super) fn player_has_telepathy(&self) -> bool {
-        self.player_has_status_kind(STATUS_TELEPATHY) || self.player_has_permanent_telepathy()
+        self.player_has_status_kind(STATUS_TELEPATHY)
+            || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
+            || self.player_has_permanent_telepathy()
     }
 
     pub(super) fn player_has_permanent_telepathy(&self) -> bool {
@@ -791,7 +814,9 @@ impl Game {
             .fold(race_modifier, |total, mutation| {
                 total.saturating_add(mutation.regeneration_rate_modifier_percent)
             });
-        let timed_regeneration = if self.player_has_status_kind(STATUS_REGENERATION) {
+        let timed_regeneration = if self.player_has_status_kind(STATUS_REGENERATION)
+            || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
+        {
             100
         } else {
             0
@@ -803,6 +828,10 @@ impl Game {
                 .max(0),
         )
         .expect("non-negative regeneration rate must fit u64")
+    }
+
+    pub(super) fn player_slow_digestion(&self) -> bool {
+        self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
     }
 
     pub(super) fn player_mutation_light_radius(&self) -> i32 {

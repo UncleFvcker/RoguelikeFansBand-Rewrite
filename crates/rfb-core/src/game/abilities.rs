@@ -4766,9 +4766,16 @@ impl Game {
         ability: &AbilityDefinition,
         events: &mut Vec<DomainEvent>,
     ) {
-        let AbilityEffectDefinition::RestoreVitality { life_force } = ability.effect else {
+        let AbilityEffectDefinition::RestoreVitality {
+            life_force,
+            restore_attributes,
+        } = ability.effect
+        else {
             unreachable!("vitality executor requires a restore vitality effect");
         };
+        if restore_attributes {
+            self.restore_all_player_attributes();
+        }
         let experience = apply_experience_restoration(&mut self.progress);
         let life_force =
             self.restore_player_life_force(LifeForceRestorationRequest::at_least(life_force));
@@ -7125,17 +7132,21 @@ impl Game {
             telepathy_duration_ticks,
             telepathy_duration_dice,
             telepathy_duration_sides,
+            grants_virtues,
+            grants_telepathy,
         } = ability.effect
         else {
             unreachable!("clairvoyance executor requires a clairvoyance effect");
         };
 
-        self.add_virtue(VirtueKindDto::Knowledge, 1);
-        self.add_virtue(VirtueKindDto::Enlightenment, 1);
+        if grants_virtues {
+            self.add_virtue(VirtueKindDto::Knowledge, 1);
+            self.add_virtue(VirtueKindDto::Enlightenment, 1);
+        }
 
         self.reveal_and_light_floor(&ability.id, events, changed);
 
-        let telepathy_resolution = if self.player_has_permanent_telepathy() {
+        let telepathy_resolution = if !grants_telepathy || self.player_has_permanent_telepathy() {
             AbilityEffectResolutionDto::Skipped {
                 effect_index: 0,
                 reason: AbilityEffectSkipReasonDto::Ineligible,
@@ -7937,6 +7948,8 @@ impl Game {
             radius,
             target_category,
             fatigue,
+            unlife_change_on_success,
+            chance_change_on_success,
         } = &ability.effect
         else {
             unreachable!("genocide executor requires a genocide effect");
@@ -8015,6 +8028,10 @@ impl Game {
             changed,
             removed_entities,
         );
+        if !resolution.removed_entity_ids.is_empty() {
+            self.add_virtue(VirtueKindDto::Unlife, i16::from(*unlife_change_on_success));
+            self.add_virtue(VirtueKindDto::Chance, i16::from(*chance_change_on_success));
+        }
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
             resolution: AbilityEffectsResolutionDto {

@@ -2413,6 +2413,7 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
         (LIFE_BOOK_TVAL, LIFE_FIRST_BOOK_SVAL) => Some(LIFE_FIRST_BOOK_ID),
         (LIFE_BOOK_TVAL, LIFE_SECOND_BOOK_SVAL) => Some(LIFE_SECOND_BOOK_ID),
         (LIFE_BOOK_TVAL, LIFE_THIRD_BOOK_SVAL) => Some(LIFE_THIRD_BOOK_ID),
+        (LIFE_BOOK_TVAL, LIFE_FOURTH_BOOK_SVAL) => Some(LIFE_FOURTH_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_FIRST_BOOK_SVAL) => Some(DEATH_FIRST_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_SECOND_BOOK_SVAL) => Some(DEATH_SECOND_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_THIRD_BOOK_SVAL) => Some(DEATH_THIRD_BOOK_ID),
@@ -9490,6 +9491,8 @@ const LIFE_SECOND_BOOK_SVAL: u16 = 1;
 const LIFE_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.life-high-mass";
 const LIFE_THIRD_BOOK_SVAL: u16 = 2;
 const LIFE_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.life-book-of-the-unicorn";
+const LIFE_FOURTH_BOOK_SVAL: u16 = 3;
+const LIFE_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.life-blessings-of-the-grail";
 const DEATH_REALM_INDEX: u8 = 4;
 const DEATH_BOOK_TVAL: u16 = 94;
 const DEATH_FIRST_BOOK_SVAL: u16 = 0;
@@ -20146,9 +20149,18 @@ F:BRAND_VAMP | HOLD_LIFE
             player_ability_book_for_item(&life_third_book),
             Some(LIFE_THIRD_BOOK_ID)
         );
+        let life_fourth_book = LegacyItemEntry {
+            tval: LIFE_BOOK_TVAL,
+            sval: LIFE_FOURTH_BOOK_SVAL,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(
+            player_ability_book_for_item(&life_fourth_book),
+            Some(LIFE_FOURTH_BOOK_ID)
+        );
         let unsupported_life_book = LegacyItemEntry {
             tval: LIFE_BOOK_TVAL,
-            sval: 3,
+            sval: 4,
             ..LegacyItemEntry::default()
         };
         assert_eq!(player_ability_book_for_item(&unsupported_life_book), None);

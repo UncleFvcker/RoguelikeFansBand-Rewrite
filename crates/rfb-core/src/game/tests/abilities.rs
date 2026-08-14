@@ -2150,6 +2150,8 @@ fn genocide_erases_without_rewards_or_corpses_and_uniques_resist() {
         radius: 0,
         target_category: None,
         fatigue: true,
+        unlife_change_on_success: 0,
+        chance_change_on_success: 0,
     };
     game.resolve_player_genocide_effect(
         &ability,

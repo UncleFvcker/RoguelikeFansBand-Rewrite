@@ -29,9 +29,9 @@ use crate::{
         STATUS_SUSTAIN_CHARISMA, STATUS_SUSTAIN_CONSTITUTION, STATUS_SUSTAIN_DEXTERITY,
         STATUS_SUSTAIN_INTELLIGENCE, STATUS_SUSTAIN_STRENGTH, STATUS_SUSTAIN_WISDOM,
         STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TRANSCENDENCE, STATUS_TSUYOSHI,
-        STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
-        StatusApplication, StatusChange, StatusInstance, StatusStacking, apply_effect,
-        apply_status, resolve_damage,
+        STATUS_ULTIMATE_RESISTANCE, STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE,
+        STATUS_WRAITHFORM, StatusApplication, StatusChange, StatusInstance, StatusStacking,
+        apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
     event::{
@@ -7573,6 +7573,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             telepathy_duration_ticks,
             telepathy_duration_dice,
             telepathy_duration_sides,
+            ..
         } => AbilityEffectSpecDto::Clairvoyance {
             telepathy_duration_ticks: *telepathy_duration_ticks,
             telepathy_duration_dice: *telepathy_duration_dice,
@@ -7953,6 +7954,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             radius,
             target_category,
             fatigue,
+            ..
         } => AbilityEffectSpecDto::Genocide {
             scope: ability_genocide_scope_dto(*scope),
             power: *power,
@@ -7977,7 +7979,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
                 }
             }
         }
-        AbilityEffectDefinition::RestoreVitality { life_force } => {
+        AbilityEffectDefinition::RestoreVitality { life_force, .. } => {
             AbilityEffectSpecDto::RestoreVitality {
                 life_force: *life_force,
             }

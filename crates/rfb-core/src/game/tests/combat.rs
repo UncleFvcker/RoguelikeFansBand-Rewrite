@@ -457,6 +457,38 @@ fn mutation_contact_auras_retaliate_only_against_unresisted_contact_attacks() {
 }
 
 #[test]
+fn ultimate_resistance_reuses_fire_electricity_and_cold_contact_auras() {
+    let harmless = MeleeBlowEffectDefinition::Damage {
+        chance_percent: None,
+        damage_dice: 0,
+        damage_sides: 0,
+        damage_type: rfb_content::ActorDamageType::Physical,
+        armor_mitigated: true,
+        vampiric: false,
+    };
+    let mut game = monster_effect_game(0, harmless);
+    game.player.statuses.push(
+        monster_combat::melee_status(STATUS_ULTIMATE_RESISTANCE, 10, "test.ultimate-resistance")
+            .status,
+    );
+    game.entities[0].hp = 1_000;
+    game.entities[0].max_hp = 1_000;
+    let mut events = Vec::new();
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("contact attack should resolve Ultimate Resistance auras");
+    assert_eq!(
+        events
+            .iter()
+            .filter_map(|event| match event {
+                DomainEvent::MutationAuraHit { damage, .. } => Some(damage.damage_type),
+                _ => None,
+            })
+            .collect::<Vec<_>>(),
+        [DamageType::Fire, DamageType::Electricity, DamageType::Cold]
+    );
+}
+
+#[test]
 fn effectless_beg_always_succeeds_without_damage_contact_or_rng() {
     let mut game = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
         actor.attack = 1;

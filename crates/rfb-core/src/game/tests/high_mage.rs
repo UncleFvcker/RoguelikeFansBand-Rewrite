@@ -217,6 +217,14 @@ fn life_high_mage_game(seed: u64, level: u16) -> Game {
             "demo.ability.life-word-of-recall",
             "demo.ability.life-transcendence",
             "demo.ability.life-warding-true",
+            "demo.ability.life-sterilization",
+            "demo.ability.life-detection",
+            "demo.ability.life-annihilate-undead",
+            "demo.ability.life-clairvoyance",
+            "demo.ability.life-restoration",
+            "demo.ability.life-healing-true",
+            "demo.ability.life-holy-vision",
+            "demo.ability.life-ultimate-resistance",
         ]
         .into_iter()
         .map(str::to_owned),
@@ -227,11 +235,16 @@ fn life_high_mage_game(seed: u64, level: u16) -> Game {
         "test.book-of-the-unicorn",
         "demo.item.book-of-the-unicorn",
     );
+    give_inventory_item(
+        &mut game,
+        "test.blessings-of-the-grail",
+        "demo.item.blessings-of-the-grail",
+    );
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
         .expect("Life High-Mage should have mana")
-        .current = 100;
+        .current = 1_000;
     game.debug_ability_casts_succeed = true;
     game
 }
@@ -381,6 +394,7 @@ fn life_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         "demo.item.call-of-the-wild",
         "demo.item.high-mass",
         "demo.item.book-of-the-unicorn",
+        "demo.item.blessings-of-the-grail",
     ] {
         assert!(!carried.contains(excluded));
     }
@@ -392,7 +406,7 @@ fn life_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 24);
+    assert_eq!(learned.len(), 32);
     assert!(
         learned
             .iter()
@@ -1249,6 +1263,355 @@ fn life_warding_true_creates_the_current_and_eight_adjacent_glyphs_atomically() 
             .into_iter()
             .all(|position| game.terrain_at(position) == "demo.terrain.warding-glyph")
     );
+}
+
+#[test]
+fn life_fourth_book_projects_original_power_and_duration_formulas() {
+    let game = life_high_mage_game(0x4c49_4645_4734_5000, 50);
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert!(matches!(
+        projected["demo.ability.life-annihilate-undead"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Genocide {
+            power: 100,
+            radius: 20,
+            target_category: Some(category),
+            fatigue: true,
+            ..
+        }] if category == "undead"
+    ));
+    assert!(matches!(
+        projected["demo.ability.life-ultimate-resistance"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 25,
+            duration_dice: 1,
+            duration_sides: 25,
+            granted_modifiers,
+            ..
+        }] if granted_modifiers.defense == 100 && granted_modifiers.speed == 10
+    ));
+
+    let mut empowered = life_high_mage_game(0x4c49_4645_4734_5007, 50);
+    grant_spell_power(&mut empowered, 7);
+    let projected = empowered.snapshot().player.abilities;
+    assert!(matches!(
+        projected
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-annihilate-undead")
+            .expect("Annihilate Undead should project")
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Genocide { power: 153, .. }]
+    ));
+    assert!(matches!(
+        projected
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-ultimate-resistance")
+            .expect("Ultimate Resistance should project")
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 38,
+            duration_sides: 38,
+            ..
+        }]
+    ));
+}
+
+#[test]
+fn life_fourth_book_sterilization_and_clairvoyance_match_rng_and_side_effect_boundaries() {
+    let mut game = life_high_mage_game(0x4c49_4645_4734_434c, 50);
+    game.player.hp = 100;
+    let draws_before = game.rng_draw_counter();
+    game.resolve_player_ability(
+        "demo.ability.life-sterilization",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Sterilization should resolve");
+    assert!(game.reproduction_suppressed);
+    assert_eq!(game.player.hp, 100);
+    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+
+    game.explored.fill(false);
+    game.glow.fill(false);
+    give_inventory_item(&mut game, "test.life-clairvoyance-item", "demo.item.dagger");
+    let item_position = Position { x: 0, y: 0 };
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.life-clairvoyance-item")
+        .expect("Clairvoyance test item should exist")
+        .location = ItemLocation::Ground(item_position);
+    let knowledge_before = game.virtue_current(VirtueKindDto::Knowledge);
+    let enlightenment_before = game.virtue_current(VirtueKindDto::Enlightenment);
+    let draws_before = game.rng_draw_counter();
+    game.resolve_player_ability(
+        "demo.ability.life-clairvoyance",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Life Clairvoyance should resolve");
+    assert!(game.explored.iter().all(|explored| *explored));
+    assert!(game.glow.iter().all(|glow| *glow));
+    assert!(game.item_is_discovered("test.life-clairvoyance-item"));
+    assert!(!game.player_has_status_kind(STATUS_TELEPATHY));
+    assert_eq!(
+        game.virtue_current(VirtueKindDto::Knowledge),
+        knowledge_before
+    );
+    assert_eq!(
+        game.virtue_current(VirtueKindDto::Enlightenment),
+        enlightenment_before
+    );
+    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+}
+
+#[test]
+fn life_fourth_book_annihilate_undead_filters_targets_and_changes_virtues_on_success() {
+    let mut game = life_high_mage_game(0x4c49_4645_4734_414e, 50);
+    clear_monsters(&mut game);
+    let undead_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    let living_position = Position {
+        x: game.player.position.x,
+        y: game.player.position.y + 1,
+    };
+    replace_terrain(&mut game, undead_position, "demo.terrain.floor");
+    replace_terrain(&mut game, living_position, "demo.terrain.floor");
+    game.entities.push(actor_from_runtime_spawn(
+        "test.annihilate-undead",
+        "demo.actor.zombified-kobold",
+        undead_position,
+        27,
+        110,
+        100,
+        true,
+    ));
+    game.entities.push(actor_from_runtime_spawn(
+        "test.annihilate-living",
+        "demo.actor.large-kobold",
+        living_position,
+        20,
+        110,
+        100,
+        true,
+    ));
+    game.virtues[0] = VirtueDto {
+        kind: VirtueKindDto::Unlife,
+        value: 0,
+    };
+    game.virtues[1] = VirtueDto {
+        kind: VirtueKindDto::Chance,
+        value: 0,
+    };
+    let seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            let _ = rng.bounded(100);
+            let _ = rng.bounded(3);
+            rng.bounded(100) >= 7
+        })
+        .expect("a bounded seed should annihilate a level-seven undead");
+    game.rng = RfbRng::seeded(seed);
+
+    let mut removed = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.life-annihilate-undead",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut removed,
+    )
+    .expect("Annihilate Undead should resolve");
+    assert_eq!(removed, ["test.annihilate-undead"]);
+    assert!(
+        game.entities
+            .iter()
+            .any(|entity| entity.id == "test.annihilate-living")
+    );
+    assert_eq!(game.virtue_current(VirtueKindDto::Unlife), -2);
+    assert_eq!(game.virtue_current(VirtueKindDto::Chance), -1);
+}
+
+#[test]
+fn life_fourth_book_restoration_and_true_healing_restore_the_original_state_sets() {
+    let mut game = life_high_mage_game(0x4c49_4645_4734_4845, 50);
+    game.progress.attributes = AttributeSet {
+        strength: 1,
+        intelligence: 1,
+        wisdom: 1,
+        dexterity: 1,
+        constitution: 1,
+        charisma: 1,
+    };
+    game.progress.maximum_attributes = AttributeSet {
+        strength: 18,
+        intelligence: 18,
+        wisdom: 18,
+        dexterity: 18,
+        constitution: 18,
+        charisma: 18,
+    };
+    game.progress.experience = 100;
+    game.progress.maximum_experience = 1_000;
+    game.progress.life_force = 100;
+    game.ability_progress
+        .get_mut("demo.ability.life-restoration")
+        .expect("Restoration progress should exist")
+        .cast_count = 1;
+    game.resolve_player_ability(
+        "demo.ability.life-restoration",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Restoration should resolve");
+    assert_eq!(game.progress.attributes, game.progress.maximum_attributes);
+    assert_eq!(game.progress.experience, 1_000);
+    assert_eq!(game.progress.life_force, 1_000);
+
+    for status_kind_id in [STATUS_STUN, STATUS_BLEEDING] {
+        game.player.statuses.push(StatusInstance {
+            kind_id: status_kind_id.to_owned(),
+            intensity: 1,
+            remaining_ticks: 100,
+            source_id: Some("test.life-healing-true".to_owned()),
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        });
+    }
+    game.player.hp = 1;
+    game.resolve_player_ability(
+        "demo.ability.life-healing-true",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Healing True should resolve");
+    assert_eq!(game.player.hp, game.effective_player_max_hp());
+    assert!(!game.player_has_status_kind(STATUS_STUN));
+    assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+}
+
+#[test]
+fn life_fourth_book_ultimate_resistance_feeds_shared_player_passive_pipelines() {
+    let mut game = life_high_mage_game(0x4c49_4645_4734_5552, 50);
+    let before = game.player_derived_stats();
+    game.resolve_player_ability(
+        "demo.ability.life-ultimate-resistance",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Ultimate Resistance should resolve");
+    let status = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_ULTIMATE_RESISTANCE)
+        .expect("Ultimate Resistance should create one shared status");
+    assert!((26..=50).contains(&status.remaining_ticks));
+    for damage_type in [
+        DamageType::Light,
+        DamageType::Dark,
+        DamageType::Blindness,
+        DamageType::Fear,
+        DamageType::Confusion,
+        DamageType::Nether,
+        DamageType::Nexus,
+        DamageType::Sound,
+        DamageType::Shards,
+        DamageType::Chaos,
+        DamageType::Disenchant,
+        DamageType::Time,
+    ] {
+        assert_eq!(
+            status.granted_resistances.get(&damage_type),
+            Some(&ResistanceLevel::Resistant)
+        );
+    }
+    let after = game.player_derived_stats();
+    assert_eq!(after.defense.value, before.defense.value + 100);
+    assert_eq!(after.speed.value, before.speed.value + 10);
+    for damage_type in [
+        DamageType::Acid,
+        DamageType::Electricity,
+        DamageType::Fire,
+        DamageType::Cold,
+        DamageType::Poison,
+    ] {
+        assert_eq!(
+            game.effective_player_resistances().level(damage_type),
+            ResistanceLevel::Strong
+        );
+    }
+    for damage_type in [
+        DamageType::Light,
+        DamageType::Dark,
+        DamageType::Blindness,
+        DamageType::Confusion,
+        DamageType::Nether,
+        DamageType::Nexus,
+        DamageType::Sound,
+        DamageType::Shards,
+        DamageType::Chaos,
+        DamageType::Disenchant,
+        DamageType::Time,
+    ] {
+        assert_eq!(
+            game.effective_player_resistances().level(damage_type),
+            ResistanceLevel::Resistant,
+            "{damage_type:?} should receive Ultimate Resistance"
+        );
+    }
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Fear),
+        ResistanceLevel::Normal,
+        "the granted resistance should cancel the High-Mage's human-int fear vulnerability"
+    );
+    for attribute in [
+        AttributeKind::Strength,
+        AttributeKind::Intelligence,
+        AttributeKind::Wisdom,
+        AttributeKind::Dexterity,
+        AttributeKind::Constitution,
+        AttributeKind::Charisma,
+    ] {
+        assert!(game.player_sustains_attribute(attribute));
+    }
+    assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+    assert!(game.player_hold_life_sources() > 0);
+    assert!(game.player_see_invisible_sources() > 0);
+    assert!(game.player_levitates());
+    assert!(game.player_has_telepathy());
+    assert!(game.player_reflects_bolts());
+    assert!(game.player_slow_digestion());
+    assert_eq!(game.player_regeneration_rate_percent(), 200);
+    assert!(game.player_light_radius().is_some_and(|radius| radius >= 1));
 }
 
 #[test]

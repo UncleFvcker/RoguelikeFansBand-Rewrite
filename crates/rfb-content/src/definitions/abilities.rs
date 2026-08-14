@@ -421,6 +421,10 @@ pub enum AbilityEffectDefinition {
         telepathy_duration_ticks: u16,
         telepathy_duration_dice: u8,
         telepathy_duration_sides: u16,
+        #[serde(default = "default_true")]
+        grants_virtues: bool,
+        #[serde(default = "default_true")]
+        grants_telepathy: bool,
     },
     CallSunlight {
         vampire_damage: u16,
@@ -674,6 +678,10 @@ pub enum AbilityEffectDefinition {
         target_category: Option<String>,
         #[serde(default = "default_true")]
         fatigue: bool,
+        #[serde(default)]
+        unlife_change_on_success: i8,
+        #[serde(default)]
+        chance_change_on_success: i8,
     },
     IdentifyItem {
         full_identify_power: u16,
@@ -689,6 +697,8 @@ pub enum AbilityEffectDefinition {
     },
     RestoreVitality {
         life_force: u16,
+        #[serde(default)]
+        restore_attributes: bool,
     },
     AnimateDead {
         actor_kind_id: String,

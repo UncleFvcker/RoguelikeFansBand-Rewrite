@@ -205,7 +205,16 @@ impl Game {
             .and_then(|item| item.fuel)
             .filter(|fuel| fuel.current > 0 && fuel.light_radius > 0)
             .map_or(0, |fuel| i32::from(fuel.light_radius));
-        let radius = equipment.max(self.player_mutation_light_radius());
+        let status = self
+            .player
+            .statuses
+            .iter()
+            .map(|status| status.granted_equipment_bonuses.light_radius)
+            .max()
+            .unwrap_or_default();
+        let radius = equipment
+            .max(self.player_mutation_light_radius())
+            .max(status);
         (radius > 0).then_some(radius)
     }
 }

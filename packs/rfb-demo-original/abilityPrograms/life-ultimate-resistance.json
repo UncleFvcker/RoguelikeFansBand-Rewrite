@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.life-ultimate-resistance",
+  "input": "self",
+  "steps": [
+    {
+      "type": "apply-status",
+      "statusKindId": "rfb.status.ultimate-resistance",
+      "intensity": 1,
+      "durationTicks": 0,
+      "durationDice": 1,
+      "durationSides": 0,
+      "stacking": "keep-strongest",
+      "grantedResistances": {
+        "acid": "strong",
+        "electricity": "strong",
+        "fire": "strong",
+        "cold": "strong",
+        "poison": "strong",
+        "light": "resistant",
+        "dark": "resistant",
+        "blindness": "resistant",
+        "fear": "resistant",
+        "confusion": "resistant",
+        "nether": "resistant",
+        "nexus": "resistant",
+        "sound": "resistant",
+        "shards": "resistant",
+        "chaos": "resistant",
+        "disenchant": "resistant",
+        "time": "resistant"
+      },
+      "grantedModifiers": { "defense": 100, "speed": 10 },
+      "grantedEquipmentBonuses": { "lightRadius": 1 },
+      "grantedStatusImmunities": ["rfb.status.paralysis"]
+    }
+  ]
+}

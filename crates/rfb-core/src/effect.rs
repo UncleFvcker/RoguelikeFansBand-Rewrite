@@ -50,6 +50,7 @@ pub const STATUS_SUSTAIN_DEXTERITY: &str = "rfb.status.sustain-dexterity";
 pub const STATUS_SUSTAIN_CONSTITUTION: &str = "rfb.status.sustain-constitution";
 pub const STATUS_SUSTAIN_CHARISMA: &str = "rfb.status.sustain-charisma";
 pub const STATUS_TRANSCENDENCE: &str = "rfb.status.transcendence";
+pub const STATUS_ULTIMATE_RESISTANCE: &str = "rfb.status.ultimate-resistance";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {

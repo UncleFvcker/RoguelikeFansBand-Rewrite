@@ -1779,6 +1779,12 @@
       "maxDepth": 90
     },
     {
+      "itemKindId": "demo.item.blessings-of-the-grail",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 80
+    },
+    {
       "itemKindId": "demo.item.call-of-the-wild",
       "weight": 100,
       "quantity": 1,

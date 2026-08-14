@@ -643,6 +643,215 @@ fn life_third_book_keeps_the_original_identity_allocation_and_spell_table() {
 }
 
 #[test]
+fn life_fourth_book_completes_the_original_realm_and_acquisition() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.blessings-of-the-grail")
+        .expect("Blessings of the Grail should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("life"));
+    assert_eq!(book.rank, Some(4));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.blessings-of-the-grail")
+        .expect("Blessings of the Grail item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (
+            80,
+            30,
+            100_000,
+            Some("demo.ability-book.blessings-of-the-grail")
+        )
+    );
+    assert_eq!(
+        item.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+            ItemDestructionElement::Cold,
+        ])
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Blessings of the Grail should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (80, u16::MAX, 33)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .map(|shop| shop.category)
+            .collect::<Vec<_>>(),
+        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+    );
+
+    let expected = [
+        ("demo.ability.life-sterilization", 5, 9, 40, 40),
+        ("demo.ability.life-detection", 20, 20, 40, 50),
+        ("demo.ability.life-annihilate-undead", 30, 50, 60, 115),
+        ("demo.ability.life-clairvoyance", 40, 80, 60, 225),
+        ("demo.ability.life-restoration", 42, 75, 60, 115),
+        ("demo.ability.life-healing-true", 45, 40, 60, 100),
+        ("demo.ability.life-holy-vision", 47, 90, 70, 250),
+        ("demo.ability.life-ultimate-resistance", 49, 90, 70, 250),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-sterilization")
+            .expect("Sterilization should compile")
+            .effect,
+        AbilityEffectDefinition::SuppressMonsterReproduction {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 0,
+        }
+    ));
+    assert!(matches!(
+        &content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-annihilate-undead")
+            .expect("Annihilate Undead should compile")
+            .effect,
+        AbilityEffectDefinition::Genocide {
+            scope: AbilityGenocideScopeDefinition::Nearby,
+            power: 50,
+            radius: 20,
+            target_category: Some(category),
+            fatigue: true,
+            unlife_change_on_success: -2,
+            chance_change_on_success: -1,
+        } if category == "undead"
+    ));
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-clairvoyance")
+            .expect("Clairvoyance should compile")
+            .effect,
+        AbilityEffectDefinition::Clairvoyance {
+            telepathy_duration_ticks: 0,
+            telepathy_duration_dice: 0,
+            telepathy_duration_sides: 0,
+            grants_virtues: false,
+            grants_telepathy: false,
+        }
+    ));
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-restoration")
+            .expect("Restoration should compile")
+            .effect,
+        AbilityEffectDefinition::RestoreVitality {
+            life_force: 1_000,
+            restore_attributes: true,
+        }
+    ));
+    let ultimate = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.life-ultimate-resistance")
+        .expect("Ultimate Resistance should compile");
+    assert!(matches!(
+        &ultimate.effect,
+        AbilityEffectDefinition::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 0,
+            duration_dice: 1,
+            duration_sides: 0,
+            granted_resistances,
+            granted_modifiers,
+            granted_equipment_bonuses,
+            granted_status_immunities,
+            ..
+        } if status_kind_id == "rfb.status.ultimate-resistance"
+            && granted_resistances.len() == 17
+            && granted_modifiers.defense == 100
+            && granted_modifiers.speed == 10
+            && granted_equipment_bonuses.light_radius == 1
+            && granted_status_immunities.contains("rfb.status.paralysis")
+    ));
+    assert_eq!(ultimate.level_scaling.len(), 2);
+    assert_eq!(ultimate.spell_power_fields.len(), 2);
+
+    let life_books = content
+        .ability_books
+        .iter()
+        .filter(|book| book.realm_id.as_deref() == Some("life"))
+        .collect::<Vec<_>>();
+    assert_eq!(life_books.len(), 4);
+    let ability_ids = life_books
+        .iter()
+        .flat_map(|book| &book.ability_ids)
+        .collect::<BTreeSet<_>>();
+    assert_eq!(ability_ids.len(), 32);
+    assert!(ability_ids.iter().all(|id| {
+        content
+            .abilities
+            .iter()
+            .find(|ability| &ability.id == *id)
+            .is_some_and(|ability| {
+                ability
+                    .effect
+                    .ordered_effects()
+                    .iter()
+                    .all(|effect| !matches!(effect, AbilityEffectDefinition::NoOp { .. }))
+            })
+    }));
+}
+
+#[test]
 fn nature_first_book_keeps_the_original_spell_table_and_allocation() {
     let content = compile_pack_dir(&original_pack_path())
         .expect("original pack should compile")
@@ -2102,6 +2311,7 @@ fn arcane_fourth_book_completes_the_original_realm_and_acquisition() {
             telepathy_duration_ticks: 25,
             telepathy_duration_dice: 1,
             telepathy_duration_sides: 30,
+            ..
         }
     ));
 }

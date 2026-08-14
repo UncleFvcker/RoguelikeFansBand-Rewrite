@@ -3141,7 +3141,7 @@ impl Game {
         noticed
     }
 
-    fn restore_all_player_attributes(&mut self) -> bool {
+    pub(super) fn restore_all_player_attributes(&mut self) -> bool {
         let previous_max_hp = self.effective_player_max_hp();
         let previous_resource_maxima = self.player_resource_maxima();
         let mut restored = false;

@@ -324,10 +324,16 @@ pub(super) fn validate_abilities(
                     telepathy_duration_ticks,
                     telepathy_duration_dice,
                     telepathy_duration_sides,
+                    grants_telepathy,
+                    ..
                 } => {
                     *telepathy_duration_ticks <= 10_000
-                        && (1..=100).contains(telepathy_duration_dice)
-                        && (1..=10_000).contains(telepathy_duration_sides)
+                        && ((*grants_telepathy
+                            && (1..=100).contains(telepathy_duration_dice)
+                            && (1..=10_000).contains(telepathy_duration_sides))
+                            || (!*grants_telepathy
+                                && *telepathy_duration_dice == 0
+                                && *telepathy_duration_sides == 0))
                 }
                 AbilityEffectDefinition::CallSunlight { vampire_damage } => {
                     (1..=10_000).contains(vampire_damage)
@@ -476,8 +482,8 @@ pub(super) fn validate_abilities(
                     damage_sides,
                     damage_bonus,
                 } => {
-                    (1..=100).contains(damage_dice)
-                        && (1..=10_000).contains(damage_sides)
+                    ((*damage_dice == 0 && *damage_sides == 0)
+                        || ((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides)))
                         && *damage_bonus <= 10_000
                 }
                 AbilityEffectDefinition::MeleeThenTeleport {
@@ -716,7 +722,12 @@ pub(super) fn validate_abilities(
                         && *duration_ticks <= 1_000_000
                         && *duration_dice <= 100
                         && ((*duration_dice == 0 && *duration_sides == 0)
-                            || (*duration_dice > 0 && (1..=1_000_000).contains(duration_sides)))
+                            || (*duration_dice > 0
+                                && ((1..=1_000_000).contains(duration_sides)
+                                    || (*duration_sides == 0
+                                        && has_level_scaling(
+                                            AbilityLevelScalingField::StatusDurationSides,
+                                        )))))
                         && power.is_none_or(|power| {
                             (1..=1_000).contains(&power)
                                 || (power == 0
@@ -813,7 +824,7 @@ pub(super) fn validate_abilities(
                         && !upgraded_name_key.is_empty()
                         && !upgraded_description_key.is_empty()
                 }
-                AbilityEffectDefinition::RestoreVitality { life_force } => {
+                AbilityEffectDefinition::RestoreVitality { life_force, .. } => {
                     (1..=1_000).contains(life_force)
                 }
                 AbilityEffectDefinition::AnimateDead {

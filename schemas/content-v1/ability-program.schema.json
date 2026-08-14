@@ -623,6 +623,14 @@
         {
           "additionalProperties": false,
           "properties": {
+            "grantsTelepathy": {
+              "default": true,
+              "type": "boolean"
+            },
+            "grantsVirtues": {
+              "default": true,
+              "type": "boolean"
+            },
             "telepathyDurationDice": {
               "format": "uint8",
               "maximum": 255,
@@ -2177,6 +2185,13 @@
         {
           "additionalProperties": false,
           "properties": {
+            "chanceChangeOnSuccess": {
+              "default": 0,
+              "format": "int8",
+              "maximum": 127,
+              "minimum": -128,
+              "type": "integer"
+            },
             "fatigue": {
               "default": true,
               "type": "boolean"
@@ -2207,6 +2222,13 @@
             "type": {
               "const": "genocide",
               "type": "string"
+            },
+            "unlifeChangeOnSuccess": {
+              "default": 0,
+              "format": "int8",
+              "maximum": 127,
+              "minimum": -128,
+              "type": "integer"
             }
           },
           "required": [
@@ -2279,6 +2301,10 @@
               "maximum": 65535,
               "minimum": 0,
               "type": "integer"
+            },
+            "restoreAttributes": {
+              "default": false,
+              "type": "boolean"
             },
             "type": {
               "const": "restore-vitality",
