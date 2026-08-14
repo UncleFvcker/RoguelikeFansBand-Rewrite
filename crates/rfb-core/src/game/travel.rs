@@ -91,7 +91,9 @@ impl Game {
                 .position(|entity| entity.id == mount_id)
                 .is_some_and(|mount_index| self.actor_can_enter_position(mount_index, position));
         }
-        terrain.walkable || self.player_can_pass_walls()
+        terrain.walkable
+            || self.player_can_pass_walls()
+            || self.player_can_cross_tree_terrain(terrain)
     }
 }
 

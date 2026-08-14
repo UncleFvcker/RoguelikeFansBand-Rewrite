@@ -793,6 +793,9 @@ impl Game {
         &self,
         terrain: &rfb_content::TerrainDefinition,
     ) -> bool {
+        if self.player_can_cross_tree_terrain(terrain) {
+            return true;
+        }
         if self.riding_actor_id.is_none()
             && self.player_levitates()
             && terrain.movement_modes.contains(&ActorMovementMode::Fly)
@@ -803,6 +806,17 @@ impl Game {
             return true;
         }
         movement::actor_can_cross_terrain(self.active_traveler_definition(), terrain)
+    }
+
+    pub(super) fn player_can_cross_tree_terrain(
+        &self,
+        terrain: &rfb_content::TerrainDefinition,
+    ) -> bool {
+        self.riding_actor_id.is_none()
+            && terrain.tags.iter().any(|tag| tag == "tree")
+            && self
+                .character_definitions()
+                .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "forest-adapted"))
     }
 
     fn player_can_enter_world_cell(&self, position: Position) -> bool {

@@ -89,6 +89,7 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.golem" => kinds.push(VirtueKindDto::Justice),
             "rfb-legacy.race.skeleton" => kinds.push(VirtueKindDto::Unlife),
             "rfb-legacy.race.zombie" => kinds.push(VirtueKindDto::Unlife),
+            "rfb-legacy.race.wood-elf" => kinds.push(VirtueKindDto::Nature),
             "rfb-legacy.race.draconian-red"
             | "rfb-legacy.race.draconian-white"
             | "rfb-legacy.race.draconian-blue"

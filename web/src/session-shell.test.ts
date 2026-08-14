@@ -64,6 +64,9 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.draconian-gold",
     "rfb-legacy.race.draconian-shadow",
     "rfb-legacy.race.golem",
+    "rfb-legacy.race.zombie",
+    "rfb-legacy.race.skeleton",
+    "rfb-legacy.race.wood-elf",
   ]);
 });
 
@@ -86,7 +89,11 @@ test("the New Game form groups all nine formal Draconian subraces", () => {
     "rfb-legacy.race.draconian-gold",
     "rfb-legacy.race.draconian-shadow",
   ];
-  assert.deepEqual(PLAYTEST_RACE_IDS.slice(-10, -1), draconianRaceIds);
+  const draconianStart = PLAYTEST_RACE_IDS.indexOf("rfb-legacy.race.draconian-red");
+  assert.deepEqual(
+    PLAYTEST_RACE_IDS.slice(draconianStart, draconianStart + draconianRaceIds.length),
+    draconianRaceIds,
+  );
 
   const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const groupStart = indexHtml.indexOf(
@@ -144,7 +151,7 @@ test("New Game exposes and submits Zombie with the device absorption action", ()
 });
 
 test("New Game exposes and submits Skeleton with the device absorption action", () => {
-  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.skeleton");
+  assert.ok(PLAYTEST_RACE_IDS.includes("rfb-legacy.race.skeleton"));
   assert.equal(
     createNewSessionRequest(
       "378",
@@ -157,6 +164,21 @@ test("New Game exposes and submits Skeleton with the device absorption action", 
   const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(indexHtml, /<option value="rfb-legacy\.race\.skeleton"/);
   assert.match(indexHtml, /<button id="inventory-absorb"/);
+});
+
+test("New Game exposes and submits Wood Elf", () => {
+  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.wood-elf");
+  assert.equal(
+    createNewSessionRequest(
+      "385",
+      "demo.build.warrior",
+      "rfb-legacy.race.wood-elf",
+      "Legolas",
+    ).raceId,
+    "rfb-legacy.race.wood-elf",
+  );
+  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(indexHtml, /<option value="rfb-legacy\.race\.wood-elf"/);
 });
 
 test("new character requests preserve the selected formal race", () => {

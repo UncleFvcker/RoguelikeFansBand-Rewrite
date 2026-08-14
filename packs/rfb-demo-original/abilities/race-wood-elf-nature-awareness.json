@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.wood-elf-nature-awareness",
+  "nameKey": "ability-rfb-race-wood-elf-nature-awareness-name",
+  "descriptionKey": "ability-rfb-race-wood-elf-nature-awareness-description",
+  "abilityProgramId": "demo.ability-program.nature-awareness",
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": ["detection", "nature", "race"]
+}

@@ -2913,6 +2913,125 @@ const RACE_SCARE_MONSTER_ABILITY_ID: &str = "rfb.ability.race.scare-monster";
 const RACE_SPIT_ACID_ABILITY_ID: &str = "rfb.ability.race.spit-acid";
 const RACE_STONE_TO_MUD_ABILITY_ID: &str = "rfb.ability.race.stone-to-mud";
 const RACE_THROW_BOULDER_ABILITY_ID: &str = "rfb.ability.race.throw-boulder";
+const RACE_WOOD_ELF_NATURE_AWARENESS_ABILITY_ID: &str =
+    "rfb.ability.race.wood-elf-nature-awareness";
+
+#[test]
+fn formal_wood_elf_nature_awareness_unlocks_at_twenty_and_reuses_full_detection() {
+    let mut game = wood_elf_game(385);
+    clear_monsters(&mut game);
+    game.progress.level = 19;
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_WOOD_ELF_NATURE_AWARENESS_ABILITY_ID)
+        .expect("Wood-Elf Nature Awareness should be projected before it unlocks");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Wisdom)
+    );
+    assert_eq!(locked.minimum_level, 20);
+    assert_eq!((locked.base_resource_cost, locked.resource_cost), (15, 15));
+    assert!(!locked.can_cast);
+
+    game.progress.level = 20;
+    game.progress.max_level = 20;
+    game.refresh_character_skills();
+    game.player.hp = game.effective_player_max_hp();
+    let available = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_WOOD_ELF_NATURE_AWARENESS_ABILITY_ID)
+        .expect("level-twenty Wood-Elf Nature Awareness");
+    assert!(available.can_cast);
+    assert!(available.failure_percent >= 50);
+    assert_eq!(available.effects.len(), 6);
+    assert!(
+        available
+            .effects
+            .iter()
+            .all(|effect| matches!(effect, AbilityEffectSpecDto::Detect { radius: 30, .. }))
+    );
+
+    game.debug_set_ability_casts_succeed(true);
+    game.player.position = Position { x: 3, y: 3 };
+    let trap = Position { x: 4, y: 3 };
+    let door = Position { x: 5, y: 3 };
+    let stairs_down = Position { x: 6, y: 3 };
+    let stairs_up = Position { x: 7, y: 3 };
+    let monster = Position { x: 3, y: 4 };
+    for (position, terrain_id) in [
+        (game.player.position, "demo.terrain.floor"),
+        (trap, "demo.terrain.created-trap"),
+        (door, "demo.terrain.door-secret"),
+        (stairs_down, "demo.terrain.stairs-down"),
+        (stairs_up, "demo.terrain.stairs-up"),
+        (monster, "demo.terrain.floor"),
+    ] {
+        replace_terrain(&mut game, position, terrain_id);
+    }
+    for position in [trap, door, stairs_down, stairs_up] {
+        let index = game.index(position).expect("detection target should exist");
+        game.explored[index] = false;
+        game.revealed_terrain.remove(&position);
+    }
+    game.push_generated_actor(
+        "test.wood-elf-detection".to_owned(),
+        "demo.actor.sheep",
+        monster,
+    );
+
+    let hp_before = game.player.hp;
+    let mut replay = game.clone();
+    for cast in [&mut game, &mut replay] {
+        let mut events = Vec::new();
+        cast.resolve_player_ability(
+            RACE_WOOD_ELF_NATURE_AWARENESS_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Wood-Elf Nature Awareness should resolve");
+
+        let detections = events
+            .iter()
+            .filter_map(|event| match event {
+                DomainEvent::AbilityDetected { resolution, .. } => Some(resolution),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(detections.len(), 6);
+        for category in ["map", "trap", "door", "stairs-down", "stairs-up"] {
+            assert!(
+                detections
+                    .iter()
+                    .any(|detection| detection.category == category)
+            );
+        }
+        assert!(detections.iter().any(|detection| {
+            detection.category == "normal-monster"
+                && detection
+                    .detected_entity_ids
+                    .iter()
+                    .any(|id| id == "test.wood-elf-detection")
+        }));
+        assert!(cast.revealed_terrain.contains(&trap));
+        assert!(cast.revealed_terrain.contains(&door));
+        assert!(cast.explored[cast.index(stairs_down).expect("stairs should exist")]);
+        assert!(cast.explored[cast.index(stairs_up).expect("stairs should exist")]);
+    }
+    assert_eq!(game.player.hp, hp_before - 15);
+    assert_eq!(game.state_hash(), replay.state_hash());
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Wood-Elf detection knowledge should restore");
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
 
 #[test]
 fn formal_golem_stone_skin_unlocks_at_twenty_without_spell_power_scaling() {

@@ -150,6 +150,16 @@ pub(super) fn skeleton_game(seed: u64) -> Game {
     .expect("formal Skeleton should create")
 }
 
+pub(super) fn wood_elf_game(seed: u64) -> Game {
+    Game::new_with_build_race_and_name(
+        seed,
+        "demo.build.warrior",
+        "rfb-legacy.race.wood-elf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal Wood-Elf should create")
+}
+
 pub(crate) fn divine_caster_game(seed: u64) -> Game {
     static CONTENT: OnceLock<Arc<rfb_content::ContentCatalog>> = OnceLock::new();
     let content = CONTENT

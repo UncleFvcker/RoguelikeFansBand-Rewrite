@@ -547,6 +547,90 @@ fn formal_skeleton_creation_and_temporary_form_apply_and_remove_intrinsics() {
 }
 
 #[test]
+fn formal_wood_elf_and_temporary_form_cross_trees_without_delay() {
+    let start = Position { x: 48, y: 16 };
+    let target = Position { x: 49, y: 16 };
+
+    let mut wood_elf = wood_elf_game(386);
+    clear_monsters(&mut wood_elf);
+    replace_terrain(&mut wood_elf, start, "demo.terrain.floor");
+    replace_terrain(&mut wood_elf, target, "demo.terrain.surface-tree");
+    wood_elf.player.position = start;
+    let gain = energy_gain(derived_speed(&wood_elf.player_derived_stats().speed));
+    let expected_ticks = u32::try_from(STANDARD_ACTION_COST.saturating_add(gain - 1) / gain)
+        .expect("Wood-Elf movement ticks should fit u32");
+    let tick_before = wood_elf.world_tick;
+    dispatch_next(
+        &mut wood_elf,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(wood_elf.player.position, target);
+    assert_eq!(wood_elf.world_tick - tick_before, expected_ticks);
+
+    let mut human = Game::new_with_build_race_and_name(
+        386,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human warrior should create");
+    clear_monsters(&mut human);
+    replace_terrain(&mut human, start, "demo.terrain.floor");
+    replace_terrain(&mut human, target, "demo.terrain.surface-tree");
+    human.player.position = start;
+    dispatch_next(
+        &mut human,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(human.player.position, start);
+
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.wood-elf-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.wood-elf".to_owned());
+    human.player.statuses.push(form);
+    dispatch_next(
+        &mut human,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(human.player.position, target);
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == "rfb.ability.race.wood-elf-nature-awareness")
+    );
+
+    human.player.position = start;
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    dispatch_next(
+        &mut human,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(human.player.position, start);
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != "rfb.ability.race.wood-elf-nature-awareness")
+    );
+}
+
+#[test]
 fn draconian_subraces_are_available_to_formal_character_creation() {
     for suffix in [
         "red", "white", "blue", "black", "green", "bronze", "crystal", "gold", "shadow",

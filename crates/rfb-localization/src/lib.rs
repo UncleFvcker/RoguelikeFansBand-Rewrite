@@ -555,6 +555,25 @@ mod tests {
     }
 
     #[test]
+    fn wood_elf_content_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("race-legacy-wood-elf-name", "木精灵"),
+            (
+                "ability-rfb-race-wood-elf-nature-awareness-name",
+                "自然感知",
+            ),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Wood-Elf content name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

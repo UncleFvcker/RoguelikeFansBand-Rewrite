@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.367.0");
+    assert_eq!(catalog.pack_version(), "1.368.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1871,6 +1871,94 @@ fn formal_skeleton_completes_the_authoritative_profile_and_restore_life_power() 
     assert_eq!(starting_item.quantity, 1);
     assert!(!starting_item.equipped);
     assert!(starting_item.fully_charged);
+}
+
+#[test]
+fn formal_wood_elf_completes_the_authoritative_profile_and_nature_awareness_power() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let wood_elf = catalog
+        .race("rfb-legacy.race.wood-elf")
+        .expect("formal Wood-Elf race");
+
+    assert_eq!(
+        [
+            wood_elf.modifiers.strength,
+            wood_elf.modifiers.intelligence,
+            wood_elf.modifiers.wisdom,
+            wood_elf.modifiers.dexterity,
+            wood_elf.modifiers.constitution,
+            wood_elf.modifiers.charisma,
+        ],
+        [-1, 1, 2, 1, -1, 1]
+    );
+    assert_eq!(
+        (
+            wood_elf.life_percent,
+            wood_elf.base_hp,
+            wood_elf.experience_percent,
+            wood_elf.infravision,
+            wood_elf.shop_adjust_percent,
+        ),
+        (97, 16, 125, 3, 95)
+    );
+    for tag in [
+        "forest-adapted",
+        "humanoid",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(
+            wood_elf.tags.iter().any(|candidate| candidate == tag),
+            "{tag}"
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&wood_elf.skill_set_id)
+        .expect("formal Wood-Elf skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [5, 4, 4, 3, 8, 12, -5, 12]
+    );
+
+    let [activation] = wood_elf.abilities.as_slice() else {
+        panic!("Wood-Elf should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.wood-elf-nature-awareness",
+            20,
+            TechniqueAttribute::Wisdom,
+            15,
+            50,
+        )
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Wood-Elf Nature Awareness ability");
+    assert!(ability.tags.iter().any(|tag| tag == "nature"));
+    assert!(wood_elf.starting_items.is_empty());
 }
 
 #[test]

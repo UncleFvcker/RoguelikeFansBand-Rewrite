@@ -2479,7 +2479,15 @@ impl Game {
                         self.player_can_enter_local_wilderness(target).map_or_else(
                             || {
                                 self.index(target).is_none()
-                                    || (!self.is_walkable(target) && !self.player_can_pass_walls())
+                                    || (!self.is_walkable(target)
+                                        && !self.player_can_pass_walls()
+                                        && !self.index(target).is_some_and(|index| {
+                                            self.content.terrain(&self.terrain[index]).is_some_and(
+                                                |terrain| {
+                                                    self.player_can_cross_tree_terrain(terrain)
+                                                },
+                                            )
+                                        }))
                             },
                             |can_enter| !can_enter,
                         )

@@ -5664,6 +5664,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "detect_treasure_spell" => "rfb.ability.race.detect-treasure",
             "magic_missile_spell" => "rfb.ability.race.magic-missile",
             "mind_blast_spell" => "rfb.ability.race.mind-blast",
+            "nature_awareness_spell" => "rfb.ability.race.wood-elf-nature-awareness",
             "imp_fire_spell" => "rfb.ability.race.imp-fire",
             "phase_door_spell" => "rfb.ability.race.phase-door",
             "poison_dart_spell" => "rfb.ability.race.poison-dart",
@@ -6494,6 +6495,16 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    if entry.id == "wood-elf" {
+        return vec![
+            "forest-adapted",
+            "humanoid",
+            "legacy-import",
+            "polymorph-candidate",
+            "rfb-compatibility",
+            "standard-body",
+        ];
+    }
     if entry.id == "golem" {
         return vec![
             "device-eater",
@@ -21398,6 +21409,51 @@ static power_info _skeleton_get_powers[] =
         assert!(skeleton.hooks.is_empty());
         let mut report = ContentImportReport::default();
         character_gap_accounting(&skeleton, &mut report);
+        assert!(report.unmapped_race_flags.is_empty());
+        assert!(report.race_hook_gaps.is_empty());
+    }
+
+    #[test]
+    fn wood_elf_race_tags_and_nature_awareness_power_are_mapped() {
+        const SOURCE: &str = r#"
+static power_info _wood_elf_get_powers[] =
+{
+    { A_WIS, {20, 15, 50, nature_awareness_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+"#;
+        let mut wood_elf = LegacyCharacterEntry {
+            id: "wood-elf".to_owned(),
+            get_powers_fn: Some("_wood_elf_get_powers".to_owned()),
+            hooks: vec!["get_powers".to_owned()],
+            ..LegacyCharacterEntry::default()
+        };
+
+        parse_race_powers(SOURCE, &mut wood_elf);
+        assert_eq!(
+            legacy_race_tags(&wood_elf),
+            [
+                "forest-adapted",
+                "humanoid",
+                "legacy-import",
+                "polymorph-candidate",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
+        assert_eq!(
+            wood_elf.abilities,
+            [LegacyInnatePower {
+                governing_attribute: "wisdom".to_owned(),
+                minimum_level: 20,
+                cost: 15,
+                base_failure_percent: 50,
+                ability_id: "rfb.ability.race.wood-elf-nature-awareness".to_owned(),
+            }]
+        );
+        assert!(wood_elf.hooks.is_empty());
+        let mut report = ContentImportReport::default();
+        character_gap_accounting(&wood_elf, &mut report);
         assert!(report.unmapped_race_flags.is_empty());
         assert!(report.race_hook_gaps.is_empty());
     }

@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.wood-elf-nature-awareness",
+      "minimumLevel": 20,
+      "governingAttribute": "wisdom",
+      "cost": 15,
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 16,
   "bodySlots": [
     {
@@ -67,6 +76,7 @@
   "experiencePercent": 125,
   "formatVersion": 1,
   "id": "rfb-legacy.race.wood-elf",
+  "infravision": 3,
   "kinCategory": "kin-glyph-104",
   "legacyIndex": 60,
   "lifePercent": 97,
@@ -82,7 +92,11 @@
   "shopAdjustPercent": 95,
   "skillSetId": "rfb-legacy.skill-set.race-wood-elf",
   "tags": [
+    "forest-adapted",
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }
