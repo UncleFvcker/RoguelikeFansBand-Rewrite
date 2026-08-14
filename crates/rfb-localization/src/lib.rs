@@ -574,6 +574,17 @@ mod tests {
     }
 
     #[test]
+    fn archon_content_uses_the_authoritative_chinese_name() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        assert_eq!(
+            localizer
+                .format_exact(Locale::ZhCn, "race-legacy-archon-name", None)
+                .expect("Archon name should format"),
+            "神使"
+        );
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

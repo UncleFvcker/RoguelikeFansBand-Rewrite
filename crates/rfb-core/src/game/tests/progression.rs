@@ -631,6 +631,46 @@ fn formal_wood_elf_and_temporary_form_cross_trees_without_delay() {
 }
 
 #[test]
+fn formal_archon_and_temporary_form_apply_and_remove_static_passives() {
+    let archon = archon_game(388);
+    assert!(archon.player_levitates());
+    assert!(archon.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly));
+    assert_eq!(archon.player_see_invisible_sources(), 1);
+    assert_eq!(archon.player_infravision_range(), 3);
+    let restored = Game::from_save_with_content(archon.to_save(), archon.content.clone())
+        .expect("Archon should round-trip");
+    assert_eq!(restored.state_hash(), archon.state_hash());
+
+    let mut human = Game::new_with_build_race_and_name(
+        388,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human warrior should create");
+    assert!(!human.player_levitates());
+    assert_eq!(human.player_see_invisible_sources(), 0);
+
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.archon-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.archon".to_owned());
+    human.player.statuses.push(form);
+    assert!(human.player_levitates());
+    assert!(human.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly));
+    assert_eq!(human.player_see_invisible_sources(), 1);
+    assert_eq!(human.player_infravision_range(), 3);
+
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert!(!human.player_levitates());
+    assert!(!human.active_traveler_has_mode(rfb_content::ActorMovementMode::Fly));
+    assert_eq!(human.player_see_invisible_sources(), 0);
+    assert_eq!(human.player_infravision_range(), 0);
+}
+
+#[test]
 fn draconian_subraces_are_available_to_formal_character_creation() {
     for suffix in [
         "red", "white", "blue", "black", "green", "bronze", "crystal", "gold", "shadow",

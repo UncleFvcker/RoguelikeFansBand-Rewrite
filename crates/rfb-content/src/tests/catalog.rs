@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.368.0");
+    assert_eq!(catalog.pack_version(), "1.369.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1959,6 +1959,70 @@ fn formal_wood_elf_completes_the_authoritative_profile_and_nature_awareness_powe
         .expect("Wood-Elf Nature Awareness ability");
     assert!(ability.tags.iter().any(|tag| tag == "nature"));
     assert!(wood_elf.starting_items.is_empty());
+}
+
+#[test]
+fn formal_archon_completes_the_authoritative_profile_and_static_passives() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let archon = catalog
+        .race("rfb-legacy.race.archon")
+        .expect("formal Archon race");
+
+    assert_eq!(
+        [
+            archon.modifiers.strength,
+            archon.modifiers.intelligence,
+            archon.modifiers.wisdom,
+            archon.modifiers.dexterity,
+            archon.modifiers.constitution,
+            archon.modifiers.charisma,
+        ],
+        [2, 0, 4, 1, 2, 3]
+    );
+    assert_eq!(
+        (
+            archon.life_percent,
+            archon.base_hp,
+            archon.experience_percent,
+            archon.infravision,
+            archon.shop_adjust_percent,
+        ),
+        (103, 22, 200, 3, 90)
+    );
+    assert!(archon.levitation);
+    assert!(archon.see_invisible);
+    assert_eq!(archon.body_slots.len(), 15);
+    for tag in ["angel", "rfb-compatibility", "standard-body"] {
+        assert!(
+            archon.tags.iter().any(|candidate| candidate == tag),
+            "{tag}"
+        );
+    }
+    assert!(!archon.tags.iter().any(|tag| tag == "good"));
+
+    let skills = catalog
+        .skill_set(&archon.skill_set_id)
+        .expect("formal Archon skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [0, 8, 8, 2, 2, 11, 10, 7]
+    );
+    assert!(archon.abilities.is_empty());
+    assert!(archon.starting_items.is_empty());
 }
 
 #[test]

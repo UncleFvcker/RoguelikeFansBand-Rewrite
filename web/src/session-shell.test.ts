@@ -67,6 +67,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.zombie",
     "rfb-legacy.race.skeleton",
     "rfb-legacy.race.wood-elf",
+    "rfb-legacy.race.archon",
   ]);
 });
 
@@ -167,7 +168,7 @@ test("New Game exposes and submits Skeleton with the device absorption action", 
 });
 
 test("New Game exposes and submits Wood Elf", () => {
-  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.wood-elf");
+  assert.ok(PLAYTEST_RACE_IDS.includes("rfb-legacy.race.wood-elf"));
   assert.equal(
     createNewSessionRequest(
       "385",
@@ -179,6 +180,21 @@ test("New Game exposes and submits Wood Elf", () => {
   );
   const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(indexHtml, /<option value="rfb-legacy\.race\.wood-elf"/);
+});
+
+test("New Game exposes and submits Archon", () => {
+  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.archon");
+  assert.equal(
+    createNewSessionRequest(
+      "387",
+      "demo.build.warrior",
+      "rfb-legacy.race.archon",
+      "Raphael",
+    ).raceId,
+    "rfb-legacy.race.archon",
+  );
+  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(indexHtml, /<option value="rfb-legacy\.race\.archon"/);
 });
 
 test("new character requests preserve the selected formal race", () => {

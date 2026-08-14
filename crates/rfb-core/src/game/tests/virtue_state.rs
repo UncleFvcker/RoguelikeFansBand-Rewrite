@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use super::support::{golem_game, skeleton_game, wood_elf_game, zombie_game};
+use super::support::{archon_game, golem_game, skeleton_game, wood_elf_game, zombie_game};
 use super::*;
 
 fn virtue_kinds(game: &Game) -> Vec<VirtueKindDto> {
@@ -437,6 +437,19 @@ fn formal_wood_elf_receives_the_authoritative_nature_virtue() {
             VirtueKindDto::Valour,
             VirtueKindDto::Honour,
             VirtueKindDto::Nature,
+        ]
+    );
+}
+
+#[test]
+fn formal_archon_receives_the_authoritative_justice_virtue() {
+    let archon = archon_game(387);
+    assert_eq!(
+        &virtue_kinds(&archon)[..3],
+        [
+            VirtueKindDto::Valour,
+            VirtueKindDto::Honour,
+            VirtueKindDto::Justice,
         ]
     );
 }

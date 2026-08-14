@@ -868,6 +868,7 @@ pub struct LegacyCharacterEntry {
     /// `res_add` family statements.
     pub level_resistances: Vec<(u16, String, String)>,
     pub free_act: bool,
+    pub levitation: bool,
     pub see_invisible: bool,
     pub see_invisible_minimum_level: Option<u16>,
     pub telepathy_minimum_level: Option<u16>,
@@ -901,6 +902,7 @@ impl Default for LegacyCharacterEntry {
             resistances: Vec::new(),
             level_resistances: Vec::new(),
             free_act: false,
+            levitation: false,
             see_invisible: false,
             see_invisible_minimum_level: None,
             telepathy_minimum_level: None,
@@ -5450,6 +5452,24 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
     )
 }
 
+pub fn parse_calc_bonuses_levitation(text: &str, hook: &str) -> bool {
+    let Some(body) = find_function_body(text, hook) else {
+        return false;
+    };
+    let mut depth = 0_i32;
+    body.lines().any(|raw_line| {
+        let line = raw_line.trim();
+        let depth_at_start = depth;
+        depth += i32::try_from(line.matches('{').count()).unwrap_or(0);
+        depth -= i32::try_from(line.matches('}').count()).unwrap_or(0);
+        depth_at_start == 1
+            && line
+                .chars()
+                .filter(|character| !character.is_whitespace())
+                .eq("p_ptr->levitation=TRUE;".chars())
+    })
+}
+
 /// Finds `personality_ptr _get_X_personality(...)` definitions.
 pub fn extract_personality_blocks(text: &str) -> Vec<(String, String)> {
     let mut blocks = Vec::new();
@@ -6495,6 +6515,15 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    if entry.id == "archon" {
+        return vec![
+            "angel",
+            "legacy-import",
+            "polymorph-candidate",
+            "rfb-compatibility",
+            "standard-body",
+        ];
+    }
     if entry.id == "wood-elf" {
         return vec![
             "forest-adapted",
@@ -6630,6 +6659,9 @@ fn race_json(
     }
     if entry.free_act {
         value["statusImmunities"] = serde_json::json!(["rfb.status.paralysis"]);
+    }
+    if entry.levitation {
+        value["levitation"] = serde_json::json!(true);
     }
     if entry.see_invisible {
         value["seeInvisible"] = serde_json::json!(true);
@@ -12644,6 +12676,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                 entry.speed_per_ten_levels = speed_per_ten_levels;
                 entry.regeneration_rate_modifier_percent = regeneration_rate_modifier_percent;
                 entry.spell_capacity_bonus = spell_capacity_bonus;
+                entry.levitation = parse_calc_bonuses_levitation(text, &hook);
             }
             parse_race_powers(text, &mut entry);
             if seen_character_ids.insert(format!("race:{}", entry.id)) {
@@ -13481,6 +13514,7 @@ fn legacy_races_by_id(
                 entry.speed_per_ten_levels = speed_per_ten_levels;
                 entry.regeneration_rate_modifier_percent = regeneration_rate_modifier_percent;
                 entry.spell_capacity_bonus = spell_capacity_bonus;
+                entry.levitation = parse_calc_bonuses_levitation(text, &hook);
             }
             parse_race_powers(text, &mut entry);
             races.entry(entry.id.clone()).or_insert(entry);
@@ -21456,6 +21490,42 @@ static power_info _wood_elf_get_powers[] =
         character_gap_accounting(&wood_elf, &mut report);
         assert!(report.unmapped_race_flags.is_empty());
         assert!(report.race_hook_gaps.is_empty());
+    }
+
+    #[test]
+    fn archon_passives_are_mapped_while_alignment_stays_a_gap() {
+        const SOURCE: &str = r#"
+static void _archon_calc_bonuses(void)
+{
+    p_ptr->levitation = TRUE;
+    p_ptr->see_inv++;
+    p_ptr->align += 200;
+}
+"#;
+        let mut archon = LegacyCharacterEntry {
+            id: "archon".to_owned(),
+            calc_bonuses_fn: Some("_archon_calc_bonuses".to_owned()),
+            hooks: vec!["calc_bonuses".to_owned()],
+            ..LegacyCharacterEntry::default()
+        };
+        archon.levitation = parse_calc_bonuses_levitation(SOURCE, "_archon_calc_bonuses");
+        archon.see_invisible = parse_calc_bonuses_defenses(SOURCE, "_archon_calc_bonuses").3;
+
+        let mut report = ContentImportReport::default();
+        let race = race_json(&archon, &[], &mut report);
+        assert_eq!(
+            legacy_race_tags(&archon),
+            [
+                "angel",
+                "legacy-import",
+                "polymorph-candidate",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
+        assert_eq!(race["levitation"], true);
+        assert_eq!(race["seeInvisible"], true);
+        assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
     }
 
     #[test]

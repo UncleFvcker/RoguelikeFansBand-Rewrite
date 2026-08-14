@@ -67,6 +67,7 @@
   "experiencePercent": 200,
   "formatVersion": 1,
   "id": "rfb-legacy.race.archon",
+  "infravision": 3,
   "kinCategory": "kin-glyph-65",
   "legacyIndex": 31,
   "lifePercent": 103,
@@ -77,11 +78,16 @@
     "strength": 2,
     "wisdom": 4
   },
+  "levitation": true,
   "nameKey": "race-legacy-archon-name",
+  "seeInvisible": true,
   "shopAdjustPercent": 90,
   "skillSetId": "rfb-legacy.skill-set.race-archon",
   "tags": [
+    "angel",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }
