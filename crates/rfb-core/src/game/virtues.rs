@@ -75,7 +75,9 @@ pub(super) fn initial_virtues(
                 kinds.push(VirtueKindDto::Individualism);
             }
             "demo.race.vampire-lord" => kinds.push(VirtueKindDto::Unlife),
-            "rfb-legacy.race.half-orc" => kinds.push(VirtueKindDto::Valour),
+            "rfb-legacy.race.barbarian" | "rfb-legacy.race.half-orc" => {
+                kinds.push(VirtueKindDto::Valour);
+            }
             "rfb-legacy.race.high-elf" => kinds.push(VirtueKindDto::Vitality),
             _ => {}
         }

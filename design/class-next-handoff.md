@@ -383,3 +383,19 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `bf30576bef5c777b778d085de8e69e240a163a151901c6fa6b91d623fd444f6f`、Protocol `1.202`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。按用户要求只运行新增和直接
   相关测试，不刷新全量 fixture。
+
+## main 当前批次：野蛮人 Commit 2 正式内容
+
+- 不新增内容 ID；正式种族继续使用 `rfb-legacy.race.barbarian`，主动能力使用 Commit 1 已预留的
+  `rfb.ability.race.berserk`。属性、生命 103%、基础 HP 22、经验 135%、商店 120%、八项技能、
+  一层恐惧抗性与 8 级 STR/10/30 狂暴均按 RFB master 锁定。
+- 野蛮人在 30 级使用 `barbarian-talent`，候选与 Human、半兽人、登丹人当前 20 项已闭环半神
+  天赋一致；保留 `polymorph-candidate`，并加入 `humanoid`、`standard-body`、
+  `rfb-compatibility`。初始美德为“勇猛”。
+- importer 只读取字面量 `power_info` 行；已知 `berserk_spell` 映射到稳定 ability ID，未知或
+  非字面量能力继续进入 `race_hook_gaps`，不会生成占位能力。`RES_FEAR` 现在进入正式 resistance
+  投影。英文说明恢复 RFB 历史权威文本，中文继续使用 master 原文。
+- 协调版本为 pack `1.336.0` / hash
+  `fecd2a3598b99e61a66e07c76376e0e6c79da2e1702d6dafa2ce63ca0859cb8f`、Protocol `1.202`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。New Game 列表与前端入口留给
+  Commit 3；本批只运行新增和直接相关测试。

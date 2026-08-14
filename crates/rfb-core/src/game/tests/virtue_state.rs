@@ -73,6 +73,22 @@ fn rfb_virtue_initialization_keeps_class_race_and_realm_order_then_fills_unique_
 
 #[test]
 fn formal_races_receive_their_original_race_virtues() {
+    let barbarian = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.barbarian",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Barbarian Archer should create");
+    assert_eq!(
+        &virtue_kinds(&barbarian)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Valour,
+        ]
+    );
+
     let half_orc = Game::new_with_build_race_and_name(
         43,
         "demo.build.archer",

@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.335.0");
+    assert_eq!(catalog.pack_version(), "1.336.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -414,6 +414,92 @@ fn formal_half_orc_matches_rfb_profile_and_talent_pool() {
         .expect("Half-Orc talent");
     assert_eq!(half_orc_talent.minimum_level, 30);
     assert_eq!(half_orc_talent.selection, human_talent.selection);
+}
+
+#[test]
+fn formal_barbarian_matches_rfb_profile_power_and_talent_pool() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let barbarian = catalog
+        .race("rfb-legacy.race.barbarian")
+        .expect("formal Barbarian race");
+
+    assert_eq!(
+        [
+            barbarian.modifiers.strength,
+            barbarian.modifiers.intelligence,
+            barbarian.modifiers.wisdom,
+            barbarian.modifiers.dexterity,
+            barbarian.modifiers.constitution,
+            barbarian.modifiers.charisma,
+        ],
+        [3, -2, -1, 1, 2, 2]
+    );
+    assert_eq!(barbarian.life_percent, 103);
+    assert_eq!(barbarian.base_hp, 22);
+    assert_eq!(barbarian.experience_percent, 135);
+    assert_eq!(barbarian.shop_adjust_percent, 120);
+    assert_eq!(barbarian.infravision, 0);
+    assert_eq!(
+        barbarian.resistances.get(&ActorDamageType::Fear),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        barbarian.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 8,
+            governing_attribute: TechniqueAttribute::Strength,
+            cost: 10,
+            cost_scaling: None,
+            base_failure_percent: 30,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.berserk".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(barbarian.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&barbarian.skill_set_id)
+        .expect("formal Barbarian skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -7),
+            ("demo.skill.disarming", -2),
+            ("demo.skill.melee", 12),
+            ("demo.skill.perception", 7),
+            ("demo.skill.ranged", 6),
+            ("demo.skill.saving-throw", 2),
+            ("demo.skill.search", 1),
+            ("demo.skill.stealth", -1),
+        ]
+    );
+
+    let talent = barbarian
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "barbarian-talent")
+        .expect("Barbarian talent");
+    let human_talent = catalog
+        .race("demo.race.rfb-human")
+        .expect("formal Human race")
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "human-talent")
+        .expect("Human talent");
+    assert_eq!(talent.minimum_level, 30);
+    assert_eq!(talent.selection, human_talent.selection);
 }
 
 #[test]

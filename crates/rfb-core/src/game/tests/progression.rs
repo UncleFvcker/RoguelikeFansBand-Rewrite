@@ -1507,6 +1507,57 @@ fn half_orc_infravision_and_level_thirty_talent_are_authoritative() {
 }
 
 #[test]
+fn barbarian_fear_power_and_level_thirty_talent_are_authoritative() {
+    let mut game = Game::new_with_build_race_and_name(
+        86,
+        "demo.build.warrior",
+        "rfb-legacy.race.barbarian",
+        "Conan",
+    )
+    .expect("formal Barbarian should create");
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Fear),
+        ResistanceLevel::Resistant
+    );
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "rfb.ability.race.berserk")
+        .expect("Barbarian should project Berserk");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(locked.minimum_level, 8);
+    assert!(!locked.can_cast);
+
+    game.progress.level = 8;
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "rfb.ability.race.berserk")
+            .expect("Barbarian Berserk should remain projected")
+            .can_cast
+    );
+    game.progress.level = 29;
+    assert!(
+        game.snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
+    game.progress.level = 30;
+    let pending = game
+        .snapshot()
+        .player
+        .pending_race_mutation_choice
+        .expect("Barbarian should choose a level 30 talent");
+    assert_eq!(pending.reward_id, "barbarian-talent");
+    assert_eq!(pending.candidates.len(), 20);
+}
+
+#[test]
 fn selected_formal_race_overrides_the_build_default_and_round_trips() {
     let content = race_reward_catalog();
     let game = Game::from_content_internal(

@@ -977,3 +977,17 @@ git diff --stat
   挂到野蛮人正式种族内容，也未开放 New Game。共享协调点为 pack `1.335.0` / hash
   `bf30576bef5c777b778d085de8e69e240a163a151901c6fa6b91d623fd444f6f`、Protocol `1.202`、
   State Hash Schema v100、save v1、active baseline `contract-v303`；不刷新全量 fixture。
+
+## 52. main 当前交接（野蛮人 Commit 2：正式内容）
+
+- 本批不新增 ID；`rfb-legacy.race.barbarian` 已正式拥有
+  `rfb.ability.race.berserk`。其他方向不得另建野蛮人 race、talent 或 berserk ability 身份。
+- RFB master 的静态数值、技能、一层恐惧抗性、8 级种族狂暴、30 级
+  `barbarian-talent`、Standard 身体、Human kin、polymorph candidate 和初始“勇猛”均已闭合。
+  天赋候选复用当前 20 项已实现半神天赋，不引入七项尚未闭环天赋的占位效果。
+- importer 只接受字面量 `power_info` 表；`berserk_spell` 映射既有稳定 ability ID，未知能力按
+  `race_hook_gaps` 继续审计而不生成占位内容。`RES_FEAR` 已加入静态种族抗性导入。
+- 共享协调点为 pack `1.336.0` / content hash
+  `fecd2a3598b99e61a66e07c76376e0e6c79da2e1702d6dafa2ce63ca0859cb8f`、Protocol `1.202`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。前端 New Game 入口尚未加入，
+  留给 Commit 3；不刷新全量 fixture。

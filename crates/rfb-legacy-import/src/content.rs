@@ -761,6 +761,15 @@ pub struct LegacyBodyTemplate {
     pub slots: Vec<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LegacyInnatePower {
+    pub governing_attribute: String,
+    pub minimum_level: u16,
+    pub cost: u32,
+    pub base_failure_percent: u8,
+    pub ability_id: String,
+}
+
 /// A race or personality extracted from the legacy C sources. `dynamic`
 /// marks blocks whose scalar fields are computed (rank-scaled monster
 /// races); those cannot be represented as static content.
@@ -783,6 +792,8 @@ pub struct LegacyCharacterEntry {
     /// Right-hand symbol of `me.calc_bonuses = _fn;` when present, so the
     /// hook body can be mined for its static defensive surface.
     pub calc_bonuses_fn: Option<String>,
+    pub get_powers_fn: Option<String>,
+    pub abilities: Vec<LegacyInnatePower>,
     /// Damage-type/tier pairs recovered from top-level `res_add` family
     /// statements in the calc_bonuses hook.
     pub resistances: Vec<(String, String)>,
@@ -810,6 +821,8 @@ impl Default for LegacyCharacterEntry {
             hooks: Vec::new(),
             dynamic: false,
             calc_bonuses_fn: None,
+            get_powers_fn: None,
+            abilities: Vec::new(),
             resistances: Vec::new(),
             free_act: false,
             see_invisible: false,
@@ -4006,9 +4019,9 @@ fn attribute_flag_is_mapped(flag: &str) -> bool {
 }
 
 /// Object-flag resistance suffixes shared by base items, egos, artifacts
-/// and race hooks, mapped to the content damage-type vocabulary. FEAR and
-/// BLIND have no damage type and stay in the gap reports.
-const DEFENSIVE_RESISTANCE_TYPES: [(&str, &str); 15] = [
+/// and race hooks, mapped to the content damage-type vocabulary. BLIND has no
+/// damage type and stays in the gap reports.
+const DEFENSIVE_RESISTANCE_TYPES: [(&str, &str); 16] = [
     ("ACID", "acid"),
     ("ELEC", "electricity"),
     ("FIRE", "fire"),
@@ -4024,6 +4037,7 @@ const DEFENSIVE_RESISTANCE_TYPES: [(&str, &str); 15] = [
     ("CHAOS", "chaos"),
     ("DISEN", "disenchant"),
     ("TIME", "time"),
+    ("FEAR", "fear"),
 ];
 
 fn defensive_resistance_type(token: &str) -> Option<&'static str> {
@@ -4886,6 +4900,20 @@ fn find_function_body<'a>(text: &'a str, name: &str) -> Option<&'a str> {
     None
 }
 
+fn find_power_info_body<'a>(text: &'a str, name: &str) -> Option<&'a str> {
+    for (position, _) in text.match_indices(name) {
+        let line_start = text[..position].rfind('\n').map_or(0, |index| index + 1);
+        let line_end = text[position..]
+            .find('\n')
+            .map_or(text.len(), |index| position + index);
+        let line = &text[line_start..line_end];
+        if line.contains("power_info") && line.contains("[]") {
+            return function_block(text, position);
+        }
+    }
+    None
+}
+
 /// Extracts the statically expressible defensive surface from a race's
 /// calc_bonuses hook: top-level `res_add` family calls, `free_act++`,
 /// `see_inv++`, unconditional attribute sustains and literal `pspeed`
@@ -5158,12 +5186,93 @@ pub fn parse_character_block(name: &str, body: &str) -> LegacyCharacterEntry {
                     {
                         entry.calc_bonuses_fn = Some(rhs.to_owned());
                     }
+                    if other == "get_powers"
+                        && !rhs.is_empty()
+                        && rhs.bytes().all(|byte| {
+                            byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_'
+                        })
+                    {
+                        entry.get_powers_fn = Some(rhs.to_owned());
+                    }
                     entry.hooks.push(other.to_owned());
                 }
             }
         }
     }
     entry
+}
+
+fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
+    let Some(table_name) = entry.get_powers_fn.as_deref() else {
+        return;
+    };
+    let Some(body) = find_power_info_body(text, table_name) else {
+        return;
+    };
+    let mut saw_literal_table = false;
+    let mut powers = Vec::new();
+    let mut gaps = Vec::new();
+    for raw_line in body.lines() {
+        let line = raw_line.trim();
+        if !line.starts_with('{') || !line.contains(',') {
+            continue;
+        }
+        let tokens = line
+            .split(|character: char| {
+                character.is_ascii_whitespace() || matches!(character, '{' | '}' | ',')
+            })
+            .filter(|token| !token.is_empty())
+            .collect::<Vec<_>>();
+        saw_literal_table = true;
+        if tokens.first() == Some(&"-1") || tokens.last() == Some(&"NULL") {
+            continue;
+        }
+        if tokens.len() != 5 {
+            gaps.push("get_powers:non-literal".to_owned());
+            continue;
+        }
+        let [attribute, level, cost, failure, spell] =
+            [tokens[0], tokens[1], tokens[2], tokens[3], tokens[4]];
+        let governing_attribute = match attribute {
+            "A_STR" => "strength",
+            "A_INT" => "intelligence",
+            "A_WIS" => "wisdom",
+            "A_DEX" => "dexterity",
+            "A_CON" => "constitution",
+            "A_CHR" => "charisma",
+            _ => {
+                gaps.push(format!("get_powers:{spell}"));
+                continue;
+            }
+        };
+        let (Ok(minimum_level), Ok(cost), Ok(base_failure_percent)) =
+            (level.parse(), cost.parse(), failure.parse())
+        else {
+            gaps.push(format!("get_powers:{spell}"));
+            continue;
+        };
+        let ability_id = match spell {
+            "berserk_spell" => "rfb.ability.race.berserk",
+            _ => {
+                gaps.push(format!("get_powers:{spell}"));
+                continue;
+            }
+        };
+        powers.push(LegacyInnatePower {
+            governing_attribute: governing_attribute.to_owned(),
+            minimum_level,
+            cost,
+            base_failure_percent,
+            ability_id: ability_id.to_owned(),
+        });
+    }
+    if saw_literal_table {
+        entry.hooks.retain(|hook| hook != "get_powers");
+        entry.abilities = powers;
+        gaps.sort();
+        gaps.dedup();
+        entry.hooks.extend(gaps);
+    }
 }
 
 /// Parses the selectable class registry by joining numeric `CLASS_*`
@@ -5959,7 +6068,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             "standard-body",
         ];
     }
-    if entry.id == "dunadan" {
+    if matches!(entry.id.as_str(), "barbarian" | "dunadan") {
         return vec![
             "humanoid",
             "legacy-import",
@@ -6015,6 +6124,21 @@ fn race_json(
     }
     if !entry.attribute_sustains.is_empty() {
         value["attributeSustains"] = serde_json::json!(entry.attribute_sustains);
+    }
+    if !entry.abilities.is_empty() {
+        value["abilities"] = serde_json::json!(
+            entry
+                .abilities
+                .iter()
+                .map(|power| serde_json::json!({
+                    "minimumLevel": power.minimum_level,
+                    "governingAttribute": power.governing_attribute,
+                    "cost": power.cost,
+                    "baseFailurePercent": power.base_failure_percent,
+                    "abilityId": power.ability_id,
+                }))
+                .collect::<Vec<_>>()
+        );
     }
     character_gap_accounting(entry, report);
     value
@@ -11923,6 +12047,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                 entry.attribute_sustains = attribute_sustains;
                 entry.speed = speed;
             }
+            parse_race_powers(text, &mut entry);
             if seen_character_ids.insert(format!("race:{}", entry.id)) {
                 characters.races.push(entry);
             }
@@ -12696,6 +12821,7 @@ fn legacy_races_by_id(
                 entry.attribute_sustains = attribute_sustains;
                 entry.speed = speed;
             }
+            parse_race_powers(text, &mut entry);
             races.entry(entry.id.clone()).or_insert(entry);
         }
     }
@@ -18940,6 +19066,77 @@ race_t *test_beast_get_race(void)
                 "standard-body",
             ]
         );
+    }
+
+    #[test]
+    fn literal_race_power_tables_map_known_spells_and_report_unknown_ones() {
+        const SOURCE: &str = r#"
+static power_info _barbarian_get_powers[] =
+{
+    { A_STR, {8, 10, 30, berserk_spell}},
+    { A_WIS, {12, 7, 40, mystery_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+static void _barbarian_calc_bonuses(void)
+{
+    res_add(RES_FEAR);
+}
+race_t *barbarian_get_race(void)
+{
+    static race_t me = {0};
+    if (!init)
+    {
+        me.name = "野蛮人";
+        me.calc_bonuses = _barbarian_calc_bonuses;
+        me.get_powers = _barbarian_get_powers;
+        init = TRUE;
+    }
+    return &me;
+}
+"#;
+        let (name, body) = extract_race_blocks(SOURCE)
+            .into_iter()
+            .next()
+            .expect("synthetic Barbarian should parse");
+        let mut barbarian = parse_character_block(&name, &body);
+        let (resistances, _, _, _, _) =
+            parse_calc_bonuses_defenses(SOURCE, "_barbarian_calc_bonuses");
+        barbarian.resistances = resistances;
+        parse_race_powers(SOURCE, &mut barbarian);
+
+        assert_eq!(
+            barbarian.abilities,
+            [LegacyInnatePower {
+                governing_attribute: "strength".to_owned(),
+                minimum_level: 8,
+                cost: 10,
+                base_failure_percent: 30,
+                ability_id: "rfb.ability.race.berserk".to_owned(),
+            }]
+        );
+        assert!(!barbarian.hooks.iter().any(|hook| hook == "get_powers"));
+        assert!(
+            barbarian
+                .hooks
+                .iter()
+                .any(|hook| hook == "get_powers:mystery_spell")
+        );
+
+        let mut report = ContentImportReport::default();
+        let race = race_json(&barbarian, &[], &mut report);
+        assert_eq!(
+            race["abilities"][0]["abilityId"],
+            "rfb.ability.race.berserk"
+        );
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(1));
+        assert_eq!(race["resistances"]["fear"], "resistant");
+        assert!(
+            race["tags"]
+                .as_array()
+                .is_some_and(|tags| tags.iter().any(|tag| tag == "rfb-compatibility"))
+        );
+        assert_eq!(report.race_hook_gaps["get_powers:mystery_spell"], 1);
+        assert!(!report.race_hook_gaps.contains_key("get_powers"));
     }
 
     #[test]

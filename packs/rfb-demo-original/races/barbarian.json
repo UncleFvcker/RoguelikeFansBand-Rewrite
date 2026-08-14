@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.berserk",
+      "minimumLevel": 8,
+      "governingAttribute": "strength",
+      "cost": 10,
+      "baseFailurePercent": 30
+    }
+  ],
   "baseHp": 22,
   "bodySlots": [
     {
@@ -69,6 +78,37 @@
   "id": "rfb-legacy.race.barbarian",
   "kinCategory": "kin-glyph-112",
   "legacyIndex": 10,
+  "levelMutationRewards": [
+    {
+      "id": "barbarian-talent",
+      "minimumLevel": 30,
+      "selection": {
+        "type": "choice",
+        "mutationIds": [
+          "rfb.mutation.fast-learner",
+          "rfb.mutation.weapon-skills",
+          "rfb.mutation.subtle-casting",
+          "rfb.mutation.peerless-sniper",
+          "rfb.mutation.unyielding",
+          "rfb.mutation.untouchable",
+          "rfb.mutation.loremaster",
+          "rfb.mutation.arcane-mastery",
+          "rfb.mutation.evasion",
+          "rfb.mutation.potion-chugger",
+          "rfb.mutation.one-with-magic",
+          "rfb.mutation.peerless-tracker",
+          "rfb.mutation.infernal-deal",
+          "rfb.mutation.fell-sorcery",
+          "rfb.mutation.sacred-vitality",
+          "rfb.mutation.cult-of-personality",
+          "rfb.mutation.fleet-of-foot",
+          "rfb.mutation.demonic-grasp",
+          "rfb.mutation.weird-mind",
+          "rfb.mutation.fantastic-frenzy"
+        ]
+      }
+    }
+  ],
   "lifePercent": 103,
   "modifiers": {
     "charisma": 2,
@@ -79,10 +119,16 @@
     "wisdom": -1
   },
   "nameKey": "race-legacy-barbarian-name",
+  "resistances": {
+    "fear": "resistant"
+  },
   "shopAdjustPercent": 120,
   "skillSetId": "rfb-legacy.skill-set.race-barbarian",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }
