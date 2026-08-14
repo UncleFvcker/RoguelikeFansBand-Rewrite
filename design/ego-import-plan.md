@@ -20,6 +20,8 @@
 | 当前 importer 的 `ego-inexpressible` | 31 |
 | 当前 importer 未实现的 ego activation | 13 |
 | demo pack 正式 affix | 15 |
+| 权威中文名 | 160 |
+| 中文名 unresolved | 0 |
 | Craft 类型兼容 ego | 122 |
 | Craft 标准选择可达 ego（rarity > 0） | 121 |
 
@@ -141,7 +143,7 @@ importer 从 source index/flags 生成对应内容。
 
 每个批次完成后单独提交；未通过本批聚焦测试时不接入玩家可达入口。
 
-### E0：权威审计与契约基线
+### E0：权威审计与契约基线（已完成）
 
 - importer 读取 `e_info.txt` 与 `ego_name_zh.inc`，建立 160 条逐 index 审计；
 - 报告类型、rarity、动态分支、activation、未映射 flags 和中文 unresolved；
@@ -149,6 +151,18 @@ importer 从 source index/flags 生成对应内容。
 - 不新增正式 affix，不改变游戏行为。
 
 提交目标：`test: audit authoritative ego catalog`
+
+E0 已增加只读命令：
+
+```powershell
+cargo run -q -p rfb-legacy-import -- audit-egos D:/codex/Frogcomposband
+```
+
+命令通过 Git 对象读取 `master`，输出逐 source index 的英文名、中文名、类型、等级、最高等级、
+rarity、标准可选性、Craft 类型、当前 importer 可表达性、物化输入、flags、未映射 flags 和 activation。
+对审计提交 `efd63661302866038f58d8cd2553b23e6af3bf9d` 的实跑结果为 160 条全部有权威中文名、
+122 条 Craft 类型、121 条 Craft 标准可选、38 条非 Craft、129 条当前 importer 可表达、31 条不可
+表达和 13 条 activation。该批没有新增正式 affix，也没有改变游戏行为。
 
 ### E1：RFB ego 身份与选择核
 

@@ -29,6 +29,7 @@ const F_INFO_SOURCE: &str = "lib/edit/f_info.txt";
 const R_INFO_SOURCE: &str = "lib/edit/r_info.txt";
 const K_INFO_SOURCE: &str = "lib/edit/k_info.txt";
 const E_INFO_SOURCE: &str = "lib/edit/e_info.txt";
+const E_NAME_ZH_SOURCE: &str = "src/ego_name_zh.inc";
 const A_INFO_SOURCE: &str = "lib/edit/a_info.txt";
 const K_NAME_ZH_SOURCE: &str = "src/kind_name_zh.inc";
 const B_INFO_SOURCE: &str = "lib/edit/b_info.txt";
@@ -123,6 +124,47 @@ pub struct DemoMonsterAuditReport {
     excluded_count: usize,
     guardian_count: usize,
     entries: Vec<DemoMonsterAuditEntry>,
+}
+
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct EgoAuditReport {
+    schema_version: u16,
+    source_ref: &'static str,
+    source_commit: String,
+    record_count: usize,
+    chinese_name_count: usize,
+    unresolved_chinese_name_count: usize,
+    craft_type_count: usize,
+    craft_selectable_count: usize,
+    non_craft_type_count: usize,
+    current_importer_expressible_count: usize,
+    current_importer_inexpressible_count: usize,
+    activation_count: usize,
+    type_counts: BTreeMap<String, usize>,
+    unmapped_flag_occurrences: BTreeMap<String, usize>,
+    entries: Vec<EgoAuditEntry>,
+}
+
+#[derive(Debug, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct EgoAuditEntry {
+    source_index: u32,
+    english_name: String,
+    chinese_name: Option<String>,
+    suggested_id: String,
+    types: Vec<String>,
+    level: u16,
+    max_level: Option<u16>,
+    rarity: u16,
+    standard_selectable: bool,
+    craft_type: bool,
+    current_importer_expressible: bool,
+    materialization_components: Vec<String>,
+    flags: Vec<String>,
+    unmapped_flags: Vec<String>,
+    not_applicable_flags: Vec<String>,
+    has_activation: bool,
 }
 
 #[derive(Debug, Serialize, PartialEq, Eq)]
@@ -737,6 +779,7 @@ pub struct LegacyEgoEntry {
     pub slots: Vec<String>,
     pub level: u16,
     pub max_level: Option<u16>,
+    pub rarity: u16,
     pub max_to_hit: i32,
     pub max_to_damage: i32,
     pub max_to_armor: i32,
@@ -3889,10 +3932,10 @@ pub fn parse_e_info(text: &str) -> Result<Vec<LegacyEgoEntry>, LegacyImportError
                     parts.get(1).copied(),
                 )?);
             }
-            let _: i64 = parse_number(
+            entry.rarity = parse_number(
                 E_INFO_SOURCE,
                 line_number,
-                "W.rating",
+                "W.rarity",
                 parts.get(2).copied(),
             )?;
         } else if let Some(rest) = line.strip_prefix("C:") {
@@ -4566,6 +4609,25 @@ fn ego_json(
         value["resistsProjectionDestruction"] = serde_json::json!(true);
     }
     value
+}
+
+fn ego_json_has_substance(value: &serde_json::Value) -> bool {
+    [
+        "modifiers",
+        "equipmentBonuses",
+        "resistances",
+        "statusImmunities",
+        "slays",
+        "brands",
+        "passives",
+        "elementalDestructionVulnerabilities",
+        "elementalDestructionImmunities",
+        "resistsProjectionDestruction",
+        "resistsMonsterDestruction",
+        "rollGroups",
+    ]
+    .iter()
+    .any(|field| value.get(field).is_some())
 }
 
 fn ego_roll_recipe_consumes(entry: &LegacyEgoEntry, flag: &str) -> bool {
@@ -11284,19 +11346,7 @@ fn convert_content_from(
         // Egos whose entire power set lives in unmappable flags produce no
         // substance at all, which the affix contract rejects; skip them but
         // keep their flags visible in the gap report above.
-        if value.get("modifiers").is_none()
-            && value.get("equipmentBonuses").is_none()
-            && value.get("resistances").is_none()
-            && value.get("statusImmunities").is_none()
-            && value.get("slays").is_none()
-            && value.get("brands").is_none()
-            && value.get("passives").is_none()
-            && value.get("elementalDestructionVulnerabilities").is_none()
-            && value.get("elementalDestructionImmunities").is_none()
-            && value.get("resistsProjectionDestruction").is_none()
-            && value.get("resistsMonsterDestruction").is_none()
-            && value.get("rollGroups").is_none()
-        {
+        if !ego_json_has_substance(&value) {
             *report
                 .skip_reasons
                 .entry("ego-inexpressible".to_owned())
@@ -14436,6 +14486,169 @@ fn parse_chinese_name_table(
         )));
     }
     Ok(names)
+}
+
+const CRAFT_EGO_TYPES: &[&str] = &[
+    "WEAPON",
+    "DIGGER",
+    "AMMO",
+    "BOW",
+    "HARP",
+    "BODY_ARMOR",
+    "DRAGON_ARMOR",
+    "SHIELD",
+    "CROWN",
+    "HELMET",
+    "CLOAK",
+    "GLOVES",
+    "BOOTS",
+    "ROBE",
+];
+
+fn add_occurrences(total: &mut BTreeMap<String, usize>, additions: &BTreeMap<String, usize>) {
+    for (key, count) in additions {
+        *total.entry(key.clone()).or_default() += count;
+    }
+}
+
+fn audit_ego_sources(
+    source_commit: String,
+    egos: &[LegacyEgoEntry],
+    chinese_names: &[Option<String>],
+) -> Result<EgoAuditReport, LegacyImportError> {
+    if egos.is_empty() || egos.windows(2).any(|pair| pair[0].index >= pair[1].index) {
+        return Err(LegacyImportError::InvalidEgoAudit(
+            "e_info records must be non-empty and strictly ordered by source index".to_owned(),
+        ));
+    }
+    let maximum_index = egos
+        .last()
+        .expect("non-empty ego audit was checked above")
+        .index as usize;
+    if chinese_names.len() <= maximum_index {
+        return Err(LegacyImportError::InvalidEgoAudit(format!(
+            "{E_NAME_ZH_SOURCE} ends before ego source index {maximum_index}"
+        )));
+    }
+
+    let mut type_counts = BTreeMap::new();
+    let mut unmapped_flag_occurrences = BTreeMap::new();
+    let mut seen_ids = BTreeMap::new();
+    let mut entries = Vec::with_capacity(egos.len());
+    for ego in egos {
+        for ego_type in &ego.slots {
+            *type_counts.entry(ego_type.clone()).or_default() += 1;
+        }
+
+        let mut suggested_id = kebab(ego.name.trim_start_matches("of "));
+        if suggested_id.is_empty() {
+            suggested_id = format!("ego-{}", ego.index);
+        }
+        let duplicates = seen_ids.entry(suggested_id.clone()).or_insert(0_u32);
+        if *duplicates > 0 {
+            suggested_id = format!("{suggested_id}-{}", ego.index);
+        }
+        *duplicates += 1;
+
+        let mut import_report = ContentImportReport::default();
+        let value = ego_json(ego, &suggested_id, &mut import_report);
+        add_occurrences(
+            &mut unmapped_flag_occurrences,
+            &import_report.unmapped_ego_flags,
+        );
+        let mut materialization_components = Vec::new();
+        if ego.max_to_hit != 0 || ego.max_to_damage != 0 || ego.max_to_armor != 0 {
+            materialization_components.push("combat-maxima".to_owned());
+        }
+        if ego.max_pval != 0 {
+            materialization_components.push("pval-maximum".to_owned());
+        }
+        if !ego.flags.is_empty() {
+            materialization_components.push("source-flags".to_owned());
+        }
+        if value.get("rollGroups").is_some() {
+            materialization_components.push("importer-roll-recipe".to_owned());
+        }
+        if ego.has_activation {
+            materialization_components.push("activation".to_owned());
+        }
+        let craft_type = ego
+            .slots
+            .iter()
+            .any(|ego_type| CRAFT_EGO_TYPES.contains(&ego_type.as_str()));
+        entries.push(EgoAuditEntry {
+            source_index: ego.index,
+            english_name: ego.name.clone(),
+            chinese_name: chinese_names[ego.index as usize]
+                .as_deref()
+                .filter(|name| !name.is_empty())
+                .map(str::to_owned),
+            suggested_id: format!("rfb-legacy.affix.{suggested_id}"),
+            types: ego.slots.clone(),
+            level: ego.level,
+            max_level: ego.max_level,
+            rarity: ego.rarity,
+            standard_selectable: ego.rarity > 0,
+            craft_type,
+            current_importer_expressible: ego_json_has_substance(&value),
+            materialization_components,
+            flags: ego.flags.clone(),
+            unmapped_flags: import_report.unmapped_ego_flags.into_keys().collect(),
+            not_applicable_flags: import_report
+                .not_applicable_item_flags
+                .into_keys()
+                .collect(),
+            has_activation: ego.has_activation,
+        });
+    }
+
+    let chinese_name_count = entries
+        .iter()
+        .filter(|entry| entry.chinese_name.is_some())
+        .count();
+    let craft_type_count = entries.iter().filter(|entry| entry.craft_type).count();
+    let craft_selectable_count = entries
+        .iter()
+        .filter(|entry| entry.craft_type && entry.standard_selectable)
+        .count();
+    let current_importer_expressible_count = entries
+        .iter()
+        .filter(|entry| entry.current_importer_expressible)
+        .count();
+    let activation_count = entries.iter().filter(|entry| entry.has_activation).count();
+    Ok(EgoAuditReport {
+        schema_version: 1,
+        source_ref: LEGACY_CONTENT_REFERENCE,
+        source_commit,
+        record_count: entries.len(),
+        chinese_name_count,
+        unresolved_chinese_name_count: entries.len() - chinese_name_count,
+        craft_type_count,
+        craft_selectable_count,
+        non_craft_type_count: entries.len() - craft_type_count,
+        current_importer_expressible_count,
+        current_importer_inexpressible_count: entries.len() - current_importer_expressible_count,
+        activation_count,
+        type_counts,
+        unmapped_flag_occurrences,
+        entries,
+    })
+}
+
+/// Audits all authoritative ego records and Chinese display names from the
+/// legacy master ref without changing the formal content pack.
+pub fn audit_egos(source: &Path) -> Result<EgoAuditReport, LegacyImportError> {
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let egos = parse_e_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        E_INFO_SOURCE,
+    )?)?;
+    let chinese_names = parse_chinese_name_table(
+        &read_legacy_object_at(source, &source_commit, E_NAME_ZH_SOURCE)?,
+        E_NAME_ZH_SOURCE,
+    )?;
+    audit_ego_sources(source_commit, &egos, &chinese_names)
 }
 
 fn singular_chinese_kind_name(template: &str) -> String {
@@ -19921,6 +20134,8 @@ F:BRAND_VAMP | HOLD_LIFE
         let egos = parse_e_info(SYNTHETIC_E_INFO).expect("synthetic egos should parse");
         assert_eq!(egos.len(), 6);
         assert_eq!(egos[0].max_level, Some(35));
+        assert_eq!(egos[0].rarity, 2);
+        assert_eq!(egos[1].rarity, 4);
         let outcome = convert_content(
             &[],
             &[],
@@ -20043,6 +20258,67 @@ F:BRAND_VAMP | HOLD_LIFE
         );
         assert!(!outcome.report.unmapped_ego_flags.contains_key("BRAND_VAMP"));
         assert!(!outcome.report.unmapped_ego_flags.contains_key("HOLD_LIFE"));
+    }
+
+    #[test]
+    fn ego_audit_aligns_names_and_reports_craft_and_import_gaps() {
+        const SYNTHETIC_E_INFO: &str = "N:1:of Testing
+T:WEAPON
+W:0:*:2
+C:8:6:0:0
+
+N:2:of Reflection
+T:CLOAK
+W:20:*:0
+F:REFLECT
+
+N:3:of Ringing
+T:RING
+W:10:*:4
+C:0:0:0:2
+F:SPEED
+E:BERSERK:50:100
+
+N:4:of Warding
+T:BODY_ARMOR | SHIELD
+W:30:60:8
+F:RES_FIRE
+";
+        const SYNTHETIC_NAMES: &str = r#"
+static cptr _ego_name_zh[] =
+{
+    NULL,
+    "测试之",
+    NULL,
+    "鸣响之",
+    "守护之",
+};
+"#;
+        let egos = parse_e_info(SYNTHETIC_E_INFO).expect("synthetic egos should parse");
+        let names = parse_chinese_name_table(SYNTHETIC_NAMES, E_NAME_ZH_SOURCE)
+            .expect("synthetic ego names should parse");
+        let report = audit_ego_sources("test-commit".to_owned(), &egos, &names)
+            .expect("synthetic ego audit should succeed");
+
+        assert_eq!(report.record_count, 4);
+        assert_eq!(report.chinese_name_count, 3);
+        assert_eq!(report.unresolved_chinese_name_count, 1);
+        assert_eq!(report.craft_type_count, 3);
+        assert_eq!(report.craft_selectable_count, 2);
+        assert_eq!(report.non_craft_type_count, 1);
+        assert_eq!(report.current_importer_expressible_count, 3);
+        assert_eq!(report.current_importer_inexpressible_count, 1);
+        assert_eq!(report.activation_count, 1);
+        assert_eq!(report.type_counts["SHIELD"], 1);
+        assert_eq!(report.unmapped_flag_occurrences["REFLECT"], 1);
+        assert_eq!(report.entries[0].chinese_name.as_deref(), Some("测试之"));
+        assert_eq!(report.entries[1].chinese_name, None);
+        assert_eq!(report.entries[1].rarity, 0);
+        assert!(!report.entries[1].standard_selectable);
+        assert!(report.entries[1].craft_type);
+        assert!(!report.entries[1].current_importer_expressible);
+        assert_eq!(report.entries[1].unmapped_flags, ["REFLECT"]);
+        assert!(report.entries[2].has_activation);
     }
 
     #[test]
