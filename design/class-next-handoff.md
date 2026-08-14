@@ -943,3 +943,29 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 新增聚焦测试共 7 项：内容 1、中文名 1、importer 1、核心 3、Web 1，覆盖静态矩阵、等级速度、
   永久/临时被动、能力等级/目标边界、资源支付、美德及 save/state-hash 往返。`verify-source`、schema、
   Rust check/format 和 diff 检查通过；按用户要求未运行全量测试或刷新 fixture。
+
+## main 当前批次：屁精正式内容、吞噬血肉与蘑菇增益
+
+- 权威来源为 RFB `master:src/races_k.c`、`master:src/cmd6.c`、`master:src/shop.c`、
+  `master:src/virtue.c` 和 `master:src/py_birth.c`。种族方向继续拥有既有
+  `rfb-legacy.race.snotling` 与 `rfb-legacy.skill-set.race-snotling`，新增并拥有
+  `rfb.ability.race.devour-flesh` 和 `rfb.ability-program.race.devour-flesh`；本批不新增 item、material、
+  affix、resource 或 actor ID。
+- 屁精按原版闭合六维 `-2/-2/-2/-2/-2/-5`、生命 85%、基础 HP 10、经验 45%、2 格红外、商店
+  125%、八项技能、标准身体/出生与初始“荣誉”。出生额外生成固定种类、随机数量 1–3 的
+  `demo.item.fast-recovery-mushroom`，不是随机蘑菇种类；标准口粮和火把保持不变。
+- 1 级魅力能力“吞噬血肉”消耗 0、基础失败率 0%，可在混乱时使用。确认后饱食度设为 14999、重度
+  流血增加 100，并承受最大 HP 的三分之一伤害。新 `DevourFlesh` 效果只负责该原子结算和协议投影；
+  前端取消确认时不发送命令，已确认施放继续走既有 replay 命令流。
+- 当前有效种族为屁精时，任何蘑菇先执行自身效果，再共享一次 `L + randint1(L)` RNG 为玩家施加
+  加速、石肤、英雄和巨力。临时屁精形态复用同一规则；普通种族不获得增益。蘑菇店拒绝正式或临时
+  屁精形态的购买请求。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数从 34 增至 35；
+  请求继续使用既有 `{ buildId, raceId, playerName, seed }`，不增加玩家 Actor、tileset 或重复 Build。
+- 实现提交为 `c8ca8e4d0`（`Import Snotling race`）。最终协调点为 pack `1.371.0` / content hash
+  `c1eb19e4f44cc33dea8ba18ffa6ea266162723266cdc8bb27c2aa5517b791a36`、Protocol `1.222`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。
+- 新增聚焦测试共 10 项：内容 1、中文名 1、importer 1、核心 5、Web 2，覆盖静态矩阵、出生数量、
+  吞噬血肉的确认/混乱/饱食/流血/自伤、蘑菇四重增益与共享 RNG、临时形态、蘑菇店、美德及
+  save/state-hash/replay。source lock、schema、Protocol bindings、Web typecheck、Rust check/format 和
+  diff 检查通过；按用户要求未运行全量测试或刷新 fixture。

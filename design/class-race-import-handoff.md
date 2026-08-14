@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-15
-当前实现基线：`638bab21c`（小妖精正式 New Game 开放；本次文档提交只做交接封板）
+当前实现基线：`c8ca8e4d0`（屁精正式 New Game 开放；本次文档提交只做交接封板）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,14 +10,14 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.370.0`
-- content hash：`6923cb3c4cf41abd17e2ab03046b38dc0a027027b08a58c1ea648ec83fd510d5`
-- Protocol：`1.221`
+- demo pack：`1.371.0`
+- content hash：`c1eb19e4f44cc33dea8ba18ffa6ea266162723266cdc8bb27c2aa5517b791a36`
+- Protocol：`1.222`
 - State Hash Schema：`v104`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v303`，26 个 exact fixture
 - 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 34 个种族。
+  6 个职业构筑和 35 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -76,6 +76,7 @@ New Game 当前按以下稳定 ID 开放：
 - `rfb-legacy.race.wood-elf`
 - `rfb-legacy.race.archon`
 - `rfb-legacy.race.sprite`
+- `rfb-legacy.race.snotling`
 
 种族通过新游戏请求中的独立 `raceId` 覆盖 Build 的默认 Human。不要生成
 “职业 × 种族”的重复 Build JSON。玩家外观目前由职业 Build 决定，新增普通种族不复制玩家 Actor 或
@@ -107,6 +108,11 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
 小妖精 `rfb-legacy.race.sprite` 已正式开放：飞行、光抗和每 10 级速度 +1 复用既有当前有效种族
 派生；12 级智力能力“睡眠粉”在 24 级及以下复用邻近睡眠，25 级起复用视野内状态结算。内容层只
 新增内部动态步骤，等级结算后投影为既有协议效果，不增加新命令、Protocol、save 或 State Hash 字段。
+屁精 `rfb-legacy.race.snotling` 已正式开放：1 级魅力能力“吞噬血肉”在前端确认后把饱食度设为上限
+减一、增加 100 重度流血并承受最大 HP 三分之一伤害，且按原版可在混乱时使用。当前有效种族为屁精
+时，任何蘑菇在普通效果之后共享一次 `L + randint1(L)` 持续时间，获得加速、石肤、英雄与巨力；
+出生额外生成固定种类的 1–3 个“快速恢复蘑菇”，并保留标准口粮和火把。正式或临时屁精形态均被
+蘑菇店拒绝购买。
 
 ### 龙人专项最终证据
 
@@ -215,6 +221,27 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
   均通过，覆盖静态矩阵、9/10/19/20 级速度、永久/临时被动、11/12 与 24/25 级能力边界、资源支付、
   目标集合、美德及 save/state-hash 往返。`verify-source`、schema、Rust check/format 和 diff 检查通过；
   按用户要求未运行全量测试，也未刷新 fixture。
+
+### 屁精导入最终证据
+
+- 实现提交：`c8ca8e4d0`（`Import Snotling race`）。最终协调点为 pack `1.371.0` / content hash
+  `c1eb19e4f44cc33dea8ba18ffa6ea266162723266cdc8bb27c2aa5517b791a36`；Protocol `1.222`、
+  State Hash Schema v104、save v2 和 `contract-v303` fixture baseline 均未改变。正式 New Game 种族数
+  从 34 增至 35，ability 数从 1832 增至 1833。
+- 屁精闭合六维 `-2/-2/-2/-2/-2/-5`、生命 85%、基础 HP 10、经验 45%、2 格红外、商店 125%、
+  八项技能、标准身体/出生及初始“荣誉”。出生不是随机蘑菇种类，而是按原版生成 1–3 个
+  `demo.item.fast-recovery-mushroom`，同时保留标准口粮和火把。
+- 新增并由种族方向拥有 `rfb.ability.race.devour-flesh` 和
+  `rfb.ability-program.race.devour-flesh`。1 级魅力能力“吞噬血肉”消耗 0、基础失败率 0%，使用专用
+  `DevourFlesh` 投影表达饱食、流血和基于最大 HP 的自伤；`usable-while-confused` 只放宽该能力的混乱
+  限制。前端使用原版确认文案，取消时不提交命令，replay 仍只记录已确认的施放。
+- 当前有效屁精形态使用任何带 `mushroom` 标签的物品时，在普通物品效果后用一次 RNG 为加速、石肤、
+  英雄和巨力应用相同持续时间；临时形态获得、解除后失去该规则。蘑菇店同时拒绝正式出生种族和
+  临时屁精形态的购买请求。
+- 只运行了本批新增聚焦测试：内容 1、本地化 1、importer 1、核心 5、Web 2，均通过，覆盖静态矩阵、
+  出生数量、能力投影/混乱/饱食/流血/自伤/确认、蘑菇四重增益与共享 RNG、临时形态、蘑菇店、美德及
+  save/state-hash/replay。`verify-source`、schema、Protocol bindings、Web typecheck、Rust
+  check/format 和 diff 检查通过；按用户要求未运行全量测试，也未刷新 fixture。
 
 ## 2. 权威来源与不可变规则
 

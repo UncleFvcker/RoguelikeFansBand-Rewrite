@@ -1472,3 +1472,22 @@ git diff --stat
   State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
   Web 共 7 项聚焦测试通过，含 save/state-hash；schema/source lock/格式检查通过。按用户要求未运行
   全量测试或刷新 fixture。
+
+## 81. main 当前交接（屁精正式内容、吞噬血肉与蘑菇增益）
+
+- 种族方向继续拥有 `rfb-legacy.race.snotling` 与 `rfb-legacy.skill-set.race-snotling`，并新增、拥有
+  `rfb.ability.race.devour-flesh` 和 `rfb.ability-program.race.devour-flesh`。其他方向不得复制或改名
+  这些身份；出生蘑菇复用既有 `demo.item.fast-recovery-mushroom`。
+- 通用能力投影新增 `DevourFlesh`，Protocol 因此推进到 `1.222`；它只表达把营养设为 14999、增加
+  100 流血和承受最大 HP 三分之一伤害的同一事务。`usable-while-confused` 只允许明确标记的能力绕过
+  混乱限制；前端确认取消不提交命令。没有新增权威状态、save 字段或 State Hash 输入。
+- 屁精完整行为包括权威属性/生命/HP/经验/红外/商店/技能矩阵、标准身体/出生、初始“荣誉”、1 级
+  “吞噬血肉”、出生 1–3 个快速恢复蘑菇，以及任何蘑菇在普通效果后共享一次 RNG 施加加速、石肤、
+  英雄和巨力。蘑菇增益使用当前有效种族；蘑菇店拒绝同时检查当前有效种族和出生种族，以阻止变形
+  绕过商店限制。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 35。
+- 实现提交为 `c8ca8e4d0`（`Import Snotling race`）。共享协调点为 pack `1.371.0` / content hash
+  `c1eb19e4f44cc33dea8ba18ffa6ea266162723266cdc8bb27c2aa5517b791a36`、Protocol `1.222`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
+  Web 共 10 项聚焦测试通过，含 save/state-hash/replay；schema/source lock、bindings、typecheck、
+  格式和 diff 检查通过。按用户要求未运行全量测试或刷新 fixture。
