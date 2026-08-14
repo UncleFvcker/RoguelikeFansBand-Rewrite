@@ -1044,8 +1044,42 @@ pub(crate) fn valid_ability_level_scaling(
                 && scaling
                     .maximum
                     .is_none_or(|maximum| (base..=limit).contains(&maximum))
-                && scaling_fields.insert((scaling.effect_index, scaling.field))
+                && scaling_fields.insert((
+                    scaling.effect_index,
+                    scaling.field,
+                    scaling.level_offset,
+                ))
                 && scaled.is_some_and(|value| value <= limit)
+        })
+        && level_scaling.iter().all(|scaling| {
+            let matching = level_scaling
+                .iter()
+                .filter(|candidate| {
+                    candidate.effect_index == scaling.effect_index
+                        && candidate.field == scaling.field
+                })
+                .collect::<Vec<_>>();
+            if matching.len() == 1 {
+                return true;
+            }
+            let effect = &effect.ordered_effects()[usize::from(scaling.effect_index)];
+            let Some((base, limit)) = ability_level_scaling_base_and_limit(effect, scaling.field)
+            else {
+                return false;
+            };
+            matching.iter().all(|candidate| {
+                candidate.curve == AbilityLevelScalingCurveDefinition::Linear
+                    && candidate.maximum.is_none()
+            }) && matching
+                .iter()
+                .try_fold(base, |total, candidate| {
+                    let addition = 100_u64
+                        .saturating_sub(u64::from(candidate.level_offset))
+                        .saturating_mul(u64::from(candidate.multiplier))
+                        .checked_div(u64::from(candidate.divisor))?;
+                    total.checked_add(addition)
+                })
+                .is_some_and(|value| value <= limit)
         })
 }
 
@@ -1218,6 +1252,10 @@ pub struct AbilityDefinition {
     pub affects_ground_items: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub level_scaling: Vec<AbilityLevelScalingDefinition>,
+    /// Adds the selected effective attribute's RFB saving-throw adjustment to
+    /// a direct status effect's level-scaled power.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub status_power_attribute: Option<ItemAttributeDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub spell_power_fields: Vec<AbilitySpellPowerDefinition>,
     #[serde(skip)]

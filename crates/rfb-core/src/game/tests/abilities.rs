@@ -2902,6 +2902,7 @@ const RACE_DETECT_TREASURE_ABILITY_ID: &str = "rfb.ability.race.detect-treasure"
 const RACE_PHASE_DOOR_ABILITY_ID: &str = "rfb.ability.race.phase-door";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
 const RACE_PROBE_MONSTERS_ABILITY_ID: &str = "rfb.ability.race.probe-monsters";
+const RACE_SCARE_MONSTER_ABILITY_ID: &str = "rfb.ability.race.scare-monster";
 const RACE_STONE_TO_MUD_ABILITY_ID: &str = "rfb.ability.race.stone-to-mud";
 const RACE_THROW_BOULDER_ABILITY_ID: &str = "rfb.ability.race.throw-boulder";
 
@@ -4053,6 +4054,267 @@ fn cyclops_throw_boulder_scales_stuns_and_round_trips_deterministically() {
             .abilities
             .iter()
             .all(|ability| ability.id != RACE_THROW_BOULDER_ABILITY_ID)
+    );
+}
+
+#[test]
+fn yeek_scare_monster_and_level_acid_immunity_follow_the_effective_race() {
+    fn cast_scare(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            RACE_SCARE_MONSTER_ABILITY_ID,
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Yeek scare should resolve");
+        events
+    }
+
+    let mut game = Game::new_with_build_race_and_name(
+        105,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.yeek",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Yeek High-Mage should create");
+    clear_monsters(&mut game);
+    assert_eq!(game.player_infravision_range(), 2);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Acid),
+        ResistanceLevel::Resistant
+    );
+
+    let level_fourteen_experience = crate::stats::experience_required_for_level(14);
+    game.apply_unscaled_player_experience(level_fourteen_experience, &mut Vec::new());
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_SCARE_MONSTER_ABILITY_ID)
+        .expect("Yeek scare should be projected before it unlocks");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Wisdom)
+    );
+    assert_eq!(locked.minimum_level, 15);
+    assert_eq!((locked.base_resource_cost, locked.resource_cost), (15, 15));
+    assert!(!locked.can_cast);
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(15) - level_fourteen_experience,
+        &mut Vec::new(),
+    );
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+    let expected_power = u16::try_from(
+        20_i32
+            .saturating_add(crate::stats::original_save_adjustment(
+                game.effective_player_attributes()
+                    .index(AttributeKind::Charisma),
+            ))
+            .max(1),
+    )
+    .expect("level-fifteen fear power should fit");
+    let available = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_SCARE_MONSTER_ABILITY_ID)
+        .expect("Yeek scare should remain projected");
+    assert!(available.can_cast);
+    assert!(matches!(
+        available.effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 1,
+            duration_dice: 3,
+            duration_sides: 7,
+            power: Some(power),
+            ..
+        }] if status_kind_id == STATUS_FEAR && *power == expected_power
+    ));
+
+    let mut level_fifty = game.clone();
+    level_fifty.progress.level = 50;
+    let level_fifty = level_fifty
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_SCARE_MONSTER_ABILITY_ID)
+        .expect("level-fifty Yeek scare");
+    let expected_level_fifty_power = expected_power.saturating_add(45);
+    assert!(matches!(
+        level_fifty.effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_sides: 25,
+            power: Some(power),
+            ..
+        }] if *power == expected_level_fifty_power
+    ));
+
+    game.progress.level = 19;
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Acid),
+        ResistanceLevel::Resistant
+    );
+    game.progress.level = 20;
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Acid),
+        ResistanceLevel::Immune
+    );
+    game.progress.level = 15;
+
+    game.player.position = Position { x: 3, y: 3 };
+    for position in [Position { x: 3, y: 3 }, Position { x: 4, y: 3 }] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor(
+        "test.yeek-scare-target".to_owned(),
+        "demo.actor.sheep",
+        Position { x: 4, y: 3 },
+    );
+
+    let failure_percent = available.failure_percent;
+    let failure_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(failure_percent)
+        })
+        .expect("Yeek scare should have a failing percentile seed");
+    let mut failed = game.clone();
+    failed.rng = RfbRng::seeded(failure_seed);
+    let failed_mana = failed.resources["demo.resource.mana"].current;
+    let failed_events = cast_scare(&mut failed);
+    assert!(matches!(
+        failed_events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert_eq!(
+        failed.resources["demo.resource.mana"].current,
+        failed_mana - 15
+    );
+    assert!(
+        failed.entities[0]
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != STATUS_FEAR)
+    );
+
+    let success_seed = (0..1_000)
+        .find(|seed| {
+            let mut candidate = game.clone();
+            candidate.rng = RfbRng::seeded(*seed);
+            candidate.debug_set_ability_casts_succeed(true);
+            cast_scare(&mut candidate);
+            candidate.entities[0]
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_FEAR)
+        })
+        .expect("Yeek scare should have a successful fear seed");
+    game.rng = RfbRng::seeded(success_seed);
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Yeek scare setup should reload");
+    game.debug_set_ability_casts_succeed(true);
+    restored.debug_set_ability_casts_succeed(true);
+    let mana_before = game.resources["demo.resource.mana"].current;
+    let events = cast_scare(&mut game);
+    let restored_events = cast_scare(&mut restored);
+    assert_eq!(restored_events, events);
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        game.resources["demo.resource.mana"].current,
+        mana_before - 15
+    );
+    let fear = game.entities[0]
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_FEAR)
+        .expect("successful scare should frighten the target");
+    assert!((4..=22).contains(&fear.remaining_ticks));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::ApplyStatus {
+                power: Some(power),
+                change: AbilityStatusChangeDto::Added,
+                ..
+            }] if *power == expected_power)
+    )));
+
+    let mut immune = game.clone();
+    clear_monsters(&mut immune);
+    immune.push_generated_actor(
+        "test.yeek-immune-target".to_owned(),
+        "demo.actor.metal-babble",
+        Position { x: 4, y: 3 },
+    );
+    immune.rng = RfbRng::seeded(7);
+    immune.debug_set_ability_casts_succeed(true);
+    let draws_before = immune.rng_draw_counter();
+    let immune_events = cast_scare(&mut immune);
+    assert_eq!(immune.rng_draw_counter(), draws_before + 1);
+    assert!(immune_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::ApplyStatus {
+                change: AbilityStatusChangeDto::Immune,
+                ..
+            }])
+    )));
+
+    let mut human = Game::new_with_build_race_and_name(
+        106,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human Warrior should create");
+    human.progress.level = 20;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.yeek-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.yeek".to_owned());
+    human.player.statuses.push(form);
+    assert_eq!(human.player_infravision_range(), 2);
+    assert_eq!(
+        human.effective_player_resistances().level(DamageType::Acid),
+        ResistanceLevel::Immune
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == RACE_SCARE_MONSTER_ABILITY_ID)
+    );
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(human.player_infravision_range(), 0);
+    assert_eq!(
+        human.effective_player_resistances().level(DamageType::Acid),
+        ResistanceLevel::Normal
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_SCARE_MONSTER_ABILITY_ID)
     );
 }
 

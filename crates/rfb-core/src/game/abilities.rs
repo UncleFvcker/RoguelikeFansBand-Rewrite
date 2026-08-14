@@ -261,6 +261,7 @@ impl Game {
             Self::apply_casting_profile_damage_bonus(profile, &mut ability, self.progress.level);
         }
         Self::apply_player_spell_power(&mut ability, self.effective_player_spell_power_bonus());
+        self.apply_player_status_power_attribute(&mut ability);
         let unavailable_reason = match source {
             AbilitySourceDto::Mutation | AbilitySourceDto::Race => {
                 let activation =
@@ -3335,6 +3336,20 @@ impl Game {
                             .content
                             .actor(&target_kind_id)
                             .map(|definition| definition.level);
+                        let target_resistances = self.entities[target_index].resistances.clone();
+                        let mut target_immunities = BTreeSet::new();
+                        if let Some(definition) =
+                            self.actor_runtime_definition(&self.entities[target_index])
+                        {
+                            target_immunities.extend(definition.status_immunities.iter().cloned());
+                            if definition.tags.iter().any(|tag| tag == "resist-all") {
+                                target_immunities.insert(status_kind_id.clone());
+                            }
+                        }
+                        for status in &self.entities[target_index].statuses {
+                            target_immunities
+                                .extend(status.granted_status_immunities.iter().cloned());
+                        }
                         self.entities[target_index].alerted = true;
                         changed.insert(self.entities[target_index].position);
                         apply_ability_status_effect(
@@ -3358,7 +3373,7 @@ impl Game {
                             *grants_wall_passage,
                             *incoming_damage_percent,
                             target_level,
-                            None,
+                            Some((&target_resistances, &target_immunities)),
                             &mut self.rng,
                         )
                     }

@@ -1,0 +1,42 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.scare-monster",
+  "nameKey": "ability-rfb-race-scare-monster-name",
+  "descriptionKey": "ability-rfb-race-scare-monster-description",
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 18,
+    "requiresLineOfEffect": true
+  },
+  "abilityProgramId": "rfb.ability-program.race.scare-monster",
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "status-duration-sides",
+      "levelOffset": 2,
+      "multiplier": 1,
+      "divisor": 2
+    },
+    {
+      "effectIndex": 0,
+      "field": "status-power",
+      "multiplier": 1,
+      "divisor": 1
+    },
+    {
+      "effectIndex": 0,
+      "field": "status-power",
+      "levelOffset": 40,
+      "multiplier": 1,
+      "divisor": 1
+    }
+  ],
+  "statusPowerAttribute": "charisma",
+  "tags": [
+    "fear",
+    "race"
+  ]
+}

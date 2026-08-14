@@ -46,7 +46,7 @@ fn semantic_versions_are_checked_strictly() {
 }
 
 #[test]
-fn class_level_resistance_thresholds_are_strict() {
+fn class_and_race_level_resistance_thresholds_are_strict() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let mut duplicate = artifact.content.clone();
     let paladin = duplicate
@@ -74,6 +74,20 @@ fn class_level_resistance_thresholds_are_strict() {
     assert!(matches!(
         validate_and_normalize(&mut empty),
         Err(ContentError::InvalidCharacterSource(id)) if id == "demo.class.paladin"
+    ));
+
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut duplicate = artifact.content;
+    let yeek = duplicate
+        .races
+        .iter_mut()
+        .find(|race| race.id == "rfb-legacy.race.yeek")
+        .expect("Yeek race should exist");
+    yeek.level_resistances
+        .push(yeek.level_resistances[0].clone());
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "rfb-legacy.race.yeek"
     ));
 }
 

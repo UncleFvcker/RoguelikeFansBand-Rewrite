@@ -810,6 +810,9 @@ pub struct LegacyCharacterEntry {
     /// Damage-type/tier pairs recovered from top-level `res_add` family
     /// statements in the calc_bonuses hook.
     pub resistances: Vec<(String, String)>,
+    /// Character-level thresholds recovered from literal conditional
+    /// `res_add` family statements.
+    pub level_resistances: Vec<(u16, String, String)>,
     pub free_act: bool,
     pub see_invisible: bool,
     pub attribute_sustains: Vec<String>,
@@ -838,6 +841,7 @@ impl Default for LegacyCharacterEntry {
             get_powers_fn: None,
             abilities: Vec::new(),
             resistances: Vec::new(),
+            level_resistances: Vec::new(),
             free_act: false,
             see_invisible: false,
             attribute_sustains: Vec::new(),
@@ -4989,11 +4993,18 @@ fn find_power_info_body<'a>(text: &'a str, name: &str) -> Option<&'a str> {
 }
 
 /// Extracts the statically expressible defensive surface from a race's
-/// calc_bonuses hook: top-level `res_add` family calls, `free_act++`,
-/// `see_inv++`, unconditional attribute sustains and literal `pspeed`
-/// and regeneration adjustments. Conditional (level-gated) and computed
-/// statements are ignored and remain accounted as hook gaps.
-pub type CalcBonusesDefenses = (Vec<(String, String)>, bool, bool, Vec<String>, i32, i32);
+/// calc_bonuses hook: top-level `res_add` family calls, literal level-gated
+/// resistance calls, `free_act++`, `see_inv++`, unconditional attribute
+/// sustains and literal `pspeed` and regeneration adjustments.
+pub type CalcBonusesDefenses = (
+    Vec<(String, String)>,
+    Vec<(u16, String, String)>,
+    bool,
+    bool,
+    Vec<String>,
+    i32,
+    i32,
+);
 
 pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefenses {
     fn literal_adjustment(line: &str, prefix: &str) -> Option<i32> {
@@ -5015,10 +5026,11 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
         defensive_resistance_type(token.strip_prefix("RES_")?)
     }
     let Some(body) = find_function_body(text, hook) else {
-        return (Vec::new(), false, false, Vec::new(), 0, 0);
+        return (Vec::new(), Vec::new(), false, false, Vec::new(), 0, 0);
     };
     let mut adds: BTreeMap<&'static str, i32> = BTreeMap::new();
     let mut immune: BTreeSet<&'static str> = BTreeSet::new();
+    let mut level_resistances = Vec::new();
     let mut free_act = false;
     let mut see_invisible = false;
     let mut attribute_sustains = BTreeSet::new();
@@ -5026,8 +5038,9 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
     let mut speed = 0_i32;
     let mut depth = 0_i32;
     let mut suppressed = false;
+    let mut pending_minimum_level = None;
     for raw_line in body.lines() {
-        let line = raw_line.trim();
+        let mut line = raw_line.trim();
         let depth_at_start = depth;
         depth += i32::try_from(line.matches('{').count()).unwrap_or(0);
         depth -= i32::try_from(line.matches('}').count()).unwrap_or(0);
@@ -5042,6 +5055,33 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
             // statement, however many lines it spans.
             if line.ends_with(';') || line.contains('{') {
                 suppressed = false;
+            }
+            continue;
+        }
+        let mut minimum_level = pending_minimum_level.take();
+        if let Some(rest) = line.strip_prefix("if (p_ptr->lev >= ")
+            && let Some(close) = rest.find(')')
+            && let Ok(parsed) = rest[..close].trim().parse::<u16>()
+        {
+            minimum_level = Some(parsed);
+            line = rest[close + 1..].trim();
+            if line.is_empty() {
+                pending_minimum_level = minimum_level;
+                continue;
+            }
+        }
+        if let Some(minimum_level) = minimum_level {
+            let (rest, level) = if let Some(rest) = line.strip_prefix("res_add_immune(") {
+                (rest, "immune")
+            } else if let Some(rest) = line.strip_prefix("res_add_vuln(") {
+                (rest, "vulnerable")
+            } else if let Some(rest) = line.strip_prefix("res_add(") {
+                (rest, "resistant")
+            } else {
+                continue;
+            };
+            if let Some(damage_type) = resistance_token(rest) {
+                level_resistances.push((minimum_level, damage_type.to_owned(), level.to_owned()));
             }
             continue;
         }
@@ -5113,8 +5153,11 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
         };
         resistances.push((damage_type.to_owned(), level.to_owned()));
     }
+    level_resistances.sort();
+    level_resistances.dedup();
     (
         resistances,
+        level_resistances,
         free_act,
         see_invisible,
         attribute_sustains.into_iter().collect(),
@@ -5338,6 +5381,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "phase_door_spell" => "rfb.ability.race.phase-door",
             "poison_dart_spell" => "rfb.ability.race.poison-dart",
             "probing_spell" => "rfb.ability.race.probe-monsters",
+            "scare_monster_spell" => "rfb.ability.race.scare-monster",
             "stone_to_mud_spell" => "rfb.ability.race.stone-to-mud",
             "throw_boulder_spell" => "rfb.ability.race.throw-boulder",
             _ => {
@@ -6168,6 +6212,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             | "hobbit"
             | "kobold"
             | "nibelung"
+            | "yeek"
     ) {
         return vec![
             "humanoid",
@@ -6214,6 +6259,24 @@ fn race_json(
                 .iter()
                 .map(|(damage_type, level)| (damage_type.clone(), serde_json::json!(level)))
                 .collect(),
+        );
+    }
+    if !entry.level_resistances.is_empty() {
+        let mut thresholds: BTreeMap<u16, BTreeMap<String, String>> = BTreeMap::new();
+        for (minimum_level, damage_type, level) in &entry.level_resistances {
+            thresholds
+                .entry(*minimum_level)
+                .or_default()
+                .insert(damage_type.clone(), level.clone());
+        }
+        value["levelResistances"] = serde_json::json!(
+            thresholds
+                .into_iter()
+                .map(|(minimum_level, resistances)| serde_json::json!({
+                    "minimumLevel": minimum_level,
+                    "resistances": resistances,
+                }))
+                .collect::<Vec<_>>()
         );
     }
     if entry.free_act {
@@ -8284,6 +8347,7 @@ fn monster_flag_is_mapped(flag: &str) -> bool {
         "RES_ALL"
             | "RES_TELE"
             | "NO_CONF"
+            | "NO_FEAR"
             | "NO_STUN"
             | "NEVER_MOVE"
             | "NEVER_BLOW"
@@ -8614,6 +8678,7 @@ fn monster_json(
     }
     let status_immunities = [
         ("NO_CONF", "rfb.status.confusion"),
+        ("NO_FEAR", "rfb.status.fear"),
         ("NO_STUN", "rfb.status.stun"),
     ]
     .into_iter()
@@ -12181,6 +12246,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
             if let Some(hook) = entry.calc_bonuses_fn.clone() {
                 let (
                     resistances,
+                    level_resistances,
                     free_act,
                     see_invisible,
                     attribute_sustains,
@@ -12188,6 +12254,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                     regeneration_rate_modifier_percent,
                 ) = parse_calc_bonuses_defenses(text, &hook);
                 entry.resistances = resistances;
+                entry.level_resistances = level_resistances;
                 entry.free_act = free_act;
                 entry.see_invisible = see_invisible;
                 entry.attribute_sustains = attribute_sustains;
@@ -12969,6 +13036,7 @@ fn legacy_races_by_id(
             if let Some(hook) = entry.calc_bonuses_fn.clone() {
                 let (
                     resistances,
+                    level_resistances,
                     free_act,
                     see_invisible,
                     attribute_sustains,
@@ -12976,6 +13044,7 @@ fn legacy_races_by_id(
                     regeneration_rate_modifier_percent,
                 ) = parse_calc_bonuses_defenses(text, &hook);
                 entry.resistances = resistances;
+                entry.level_resistances = level_resistances;
                 entry.free_act = free_act;
                 entry.see_invisible = see_invisible;
                 entry.attribute_sustains = attribute_sustains;
@@ -17354,7 +17423,7 @@ G:L:w\n\
 I:110:8d8:20:20:10:10\n\
 W:20:2:20:9:10:40\n\
 B:HIT:HURT(1d6)\n\
-F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF | NO_STUN\n\
+F:UNDEAD | DRAGON | RES_ALL | RES_TELE | NO_CONF | NO_FEAR | NO_STUN\n\
 S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LOUSE | S_CYBER | S_CAT\n";
         let monsters = parse_r_info(SUMMONER_R_INFO).expect("synthetic summoner should parse");
         assert_eq!(monsters.len(), 1);
@@ -17396,13 +17465,19 @@ S:1_IN_3 | S_KIN | S_UNDEAD | S_MONSTER(1d1) | S_ANT | S_SPIDER | S_HYDRA | S_LO
         );
         assert_eq!(
             caller["statusImmunities"],
-            serde_json::json!(["rfb.status.confusion", "rfb.status.stun"])
+            serde_json::json!(["rfb.status.confusion", "rfb.status.fear", "rfb.status.stun"])
         );
         assert!(
             !outcome
                 .report
                 .unmapped_monster_flags
                 .contains_key("NO_CONF")
+        );
+        assert!(
+            !outcome
+                .report
+                .unmapped_monster_flags
+                .contains_key("NO_FEAR")
         );
         assert!(
             !outcome
@@ -19447,11 +19522,12 @@ race_t *test_beast_get_race(void)
         assert_eq!(folk.hooks, ["calc_bonuses"]);
         assert_eq!(folk.calc_bonuses_fn.as_deref(), Some("_test_calc_bonuses"));
 
-        // The hook body yields only its top-level static statements: doubled
-        // res_add stacks to strong, comments and level-gated branches are
+        // The hook body yields its top-level static statements plus literal
+        // one-line resistance thresholds; other conditional passives remain
         // ignored, and only literal speed and regeneration adjustments count.
         let (
             resistances,
+            level_resistances,
             free_act,
             see_invisible,
             attribute_sustains,
@@ -19471,12 +19547,20 @@ race_t *test_beast_get_race(void)
         assert_eq!(attribute_sustains, ["constitution"]);
         assert_eq!(speed, 3);
         assert_eq!(regeneration_rate_modifier_percent, 100);
-        let (_, _, conditional_see_invisible, conditional_sustains, _, _) =
+        assert_eq!(
+            level_resistances,
+            [
+                (10, "poison".to_owned(), "resistant".to_owned()),
+                (45, "cold".to_owned(), "resistant".to_owned()),
+            ]
+        );
+        let (_, _, _, conditional_see_invisible, conditional_sustains, _, _) =
             parse_calc_bonuses_defenses(SYNTHETIC_SOURCE, "_conditional_calc_bonuses");
         assert!(!conditional_see_invisible);
         assert!(conditional_sustains.is_empty());
         let mut folk = folk;
         folk.resistances = resistances;
+        folk.level_resistances = level_resistances;
         folk.free_act = free_act;
         folk.see_invisible = see_invisible;
         folk.attribute_sustains = attribute_sustains;
@@ -19505,6 +19589,11 @@ race_t *test_beast_get_race(void)
         assert_eq!(race["resistances"]["fire"], "strong");
         assert_eq!(race["resistances"]["acid"], "immune");
         assert_eq!(race["resistances"]["light"], "vulnerable");
+        assert_eq!(race["levelResistances"][0]["minimumLevel"], 10);
+        assert_eq!(
+            race["levelResistances"][0]["resistances"]["poison"],
+            "resistant"
+        );
         assert_eq!(race["statusImmunities"][0], "rfb.status.paralysis");
         assert_eq!(race["seeInvisible"], true);
         assert_eq!(
@@ -19658,6 +19747,19 @@ race_t *test_beast_get_race(void)
                 "standard-body",
             ]
         );
+        let yeek = LegacyCharacterEntry {
+            id: "yeek".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&yeek),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
     }
 
     #[test]
@@ -19674,6 +19776,7 @@ static power_info _barbarian_get_powers[] =
     { A_INT, {15, 10, 60, probing_spell}},
     { A_STR, {20, 10, 70, stone_to_mud_spell}},
     { A_STR, {20, 0, 50, throw_boulder_spell}},
+    { A_WIS, {15, 15, 50, scare_monster_spell}},
     { A_WIS, {12, 7, 40, mystery_spell}},
     { -1, {-1, -1, -1, NULL} }
 };
@@ -19699,7 +19802,7 @@ race_t *barbarian_get_race(void)
             .next()
             .expect("synthetic Barbarian should parse");
         let mut barbarian = parse_character_block(&name, &body);
-        let (resistances, _, _, _, _, _) =
+        let (resistances, _, _, _, _, _, _) =
             parse_calc_bonuses_defenses(SOURCE, "_barbarian_calc_bonuses");
         barbarian.resistances = resistances;
         parse_race_powers(SOURCE, &mut barbarian);
@@ -19770,6 +19873,13 @@ race_t *barbarian_get_race(void)
                     base_failure_percent: 50,
                     ability_id: "rfb.ability.race.throw-boulder".to_owned(),
                 },
+                LegacyInnatePower {
+                    governing_attribute: "wisdom".to_owned(),
+                    minimum_level: 15,
+                    cost: 15,
+                    base_failure_percent: 50,
+                    ability_id: "rfb.ability.race.scare-monster".to_owned(),
+                },
             ]
         );
         assert!(!barbarian.hooks.iter().any(|hook| hook == "get_powers"));
@@ -19818,7 +19928,11 @@ race_t *barbarian_get_race(void)
             race["abilities"][8]["abilityId"],
             "rfb.ability.race.throw-boulder"
         );
-        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(9));
+        assert_eq!(
+            race["abilities"][9]["abilityId"],
+            "rfb.ability.race.scare-monster"
+        );
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(10));
         assert_eq!(race["resistances"]["fear"], "resistant");
         assert!(
             race["tags"]

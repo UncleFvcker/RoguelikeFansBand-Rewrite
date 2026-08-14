@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.scare-monster",
+      "minimumLevel": 15,
+      "governingAttribute": "wisdom",
+      "cost": 15,
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 14,
   "bodySlots": [
     {
@@ -67,9 +76,18 @@
   "experiencePercent": 70,
   "formatVersion": 1,
   "id": "rfb-legacy.race.yeek",
+  "infravision": 2,
   "kinCategory": "kin-glyph-121",
   "legacyIndex": 15,
   "lifePercent": 92,
+  "levelResistances": [
+    {
+      "minimumLevel": 20,
+      "resistances": {
+        "acid": "immune"
+      }
+    }
+  ],
   "modifiers": {
     "charisma": -4,
     "constitution": -2,
@@ -85,7 +103,10 @@
   "shopAdjustPercent": 105,
   "skillSetId": "rfb-legacy.skill-set.race-yeek",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

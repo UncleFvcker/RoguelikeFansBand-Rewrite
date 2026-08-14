@@ -163,6 +163,136 @@
       ],
       "type": "string"
     },
+    "LevelResistanceDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "minimumLevel": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "resistances": {
+          "additionalProperties": false,
+          "properties": {
+            "acid": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "blindness": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "chaos": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "cold": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "confusion": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "curse": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "dark": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "disenchant": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "disintegrate": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "electricity": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "fear": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "fire": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "force": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "gravity": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "hell-fire": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "holy-fire": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "ice": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "inertia": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "light": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "mana": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "meteor": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "nether": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "nexus": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "nuke": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "physical": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "plasma": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "poison": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "psi": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "rock": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "rocket": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "shards": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "sound": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "storm": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "telekinesis": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "time": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "water": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "minimumLevel",
+        "resistances"
+      ],
+      "type": "object"
+    },
     "RaceLevelMutationRewardDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -442,6 +572,13 @@
       "description": "Level-gated race mutations. Completion is represented by the chosen\nmutation being present in the character's locked mutation set.",
       "items": {
         "$ref": "#/$defs/RaceLevelMutationRewardDefinition"
+      },
+      "type": "array"
+    },
+    "levelResistances": {
+      "description": "Intrinsic resistance tiers gained at a character-level threshold while\nthis is the currently effective race.",
+      "items": {
+        "$ref": "#/$defs/LevelResistanceDefinition"
       },
       "type": "array"
     },

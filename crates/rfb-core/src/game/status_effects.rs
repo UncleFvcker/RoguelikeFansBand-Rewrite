@@ -55,16 +55,6 @@ pub(super) fn apply_ability_status_effect(
     defenses: Option<(&ResistanceProfile, &BTreeSet<String>)>,
     rng: &mut RfbRng,
 ) -> AbilityEffectResolutionDto {
-    let requested_duration_ticks = if duration_sides == 0 {
-        duration_ticks
-    } else {
-        (0..duration_dice).fold(duration_ticks, |total, _| {
-            total.saturating_add(
-                u32::try_from(rng.bounded(u64::from(duration_sides)) + 1)
-                    .expect("status duration roll must fit u32"),
-            )
-        })
-    };
     let granted_resistances_dto = granted_resistances
         .iter()
         .map(|(damage_type, level)| ResistanceDto {
@@ -84,7 +74,7 @@ pub(super) fn apply_ability_status_effect(
             effect_index,
             status_kind_id: status_kind_id.to_owned(),
             intensity,
-            requested_duration_ticks,
+            requested_duration_ticks: duration_ticks,
             applied_duration_ticks: 0,
             stacking: ability_status_stacking_dto(stacking),
             resistance_type: resistance_type.map(DamageType::from).map(Into::into),
@@ -101,6 +91,16 @@ pub(super) fn apply_ability_status_effect(
             change: AbilityStatusChangeDto::Immune,
         };
     }
+    let requested_duration_ticks = if duration_sides == 0 {
+        duration_ticks
+    } else {
+        (0..duration_dice).fold(duration_ticks, |total, _| {
+            total.saturating_add(
+                u32::try_from(rng.bounded(u64::from(duration_sides)) + 1)
+                    .expect("status duration roll must fit u32"),
+            )
+        })
+    };
     let (resolved_target_level, power_roll, target_roll) =
         if let (Some(power), Some(target_level)) = (power, target_level) {
             let target_roll = u32::try_from(rng.bounded(u64::from(target_level.max(1))) + 1)

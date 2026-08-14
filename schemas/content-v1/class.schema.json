@@ -496,7 +496,7 @@
       ],
       "type": "object"
     },
-    "ClassLevelResistanceDefinition": {
+    "LevelResistanceDefinition": {
       "additionalProperties": false,
       "properties": {
         "minimumLevel": {
@@ -951,7 +951,7 @@
     "levelResistances": {
       "description": "Intrinsic resistance tiers gained when the character reaches a class\nlevel threshold.",
       "items": {
-        "$ref": "#/$defs/ClassLevelResistanceDefinition"
+        "$ref": "#/$defs/LevelResistanceDefinition"
       },
       "type": "array"
     },

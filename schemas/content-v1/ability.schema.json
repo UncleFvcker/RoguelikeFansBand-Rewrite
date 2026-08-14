@@ -191,6 +191,17 @@
         "self"
       ],
       "type": "string"
+    },
+    "ItemAttributeDefinition": {
+      "enum": [
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma"
+      ],
+      "type": "string"
     }
   },
   "$id": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
@@ -233,6 +244,16 @@
         "$ref": "#/$defs/AbilitySpellPowerDefinition"
       },
       "type": "array"
+    },
+    "statusPowerAttribute": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ItemAttributeDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "tags": {
       "items": {

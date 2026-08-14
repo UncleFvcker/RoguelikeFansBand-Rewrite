@@ -574,3 +574,30 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `ed59d59d22b47cc3695b727fb64eff5ffe3fa7d6058560bd17f87b4c9525b40c`、Protocol `1.212`、
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。本批已随
   本节共同提交；下一正式种族为伊克人 `rfb-legacy.race.yeek`。
+
+## main 当前批次：伊克人正式内容、恐吓怪物与等级酸免疫
+
+- 权威来源为 RFB `master:src/races_k.c`、`master:src/spells_s.c`、`master:src/spells2.c`、
+  `master:src/gf.c`、`master:src/fear.c` 与 `master:src/virtue.c`。正式种族复用
+  `rfb-legacy.race.yeek` 和 `rfb-legacy.skill-set.race-yeek`；新增并由种族方向拥有
+  `rfb.ability.race.scare-monster` 与 `rfb.ability-program.race.scare-monster`。本批不新增或占用
+  item、material、affix、resource 或 actor ID。
+- 伊克人按原版闭合六维 `[-2,1,-2,1,-2,-4]`、生命 92%、基础 HP 14、经验 70%、商店 105%、
+  八项技能、2 格红外、酸抗性、Yeek kin、Standard 身体、初始“牺牲”和 15 级 WIS/15/50
+  “恐吓怪物”；20 级时酸抗性提升为酸免疫，原版没有等级奖励。New Game 通过既有 `raceId`
+  正式开放，玩家 actor 与 tileset 继续由职业 build 决定。
+- “恐吓怪物”沿方向命中首个怪物，玩家威力使用原版分段等级公式并加入魅力豁免修正，目标使用怪物
+  等级进行对抗；成功后的持续时间为 `3d(playerLevel / 2) + 1`。通用状态投射已接入 Actor 状态免疫
+  与 `resist-all`，免疫目标不会额外消耗持续时间或对抗 RNG。原版状态投射的
+  `PROJECT_REFLECTABLE` 尚未由共享能力系统建模；这与既有“迷惑怪物”等同类能力的当前边界一致，
+  本批没有为伊克人建立专用反射分支。
+- 内容模型把原 Class 专用的等级抗性定义提升为 Race/Class 共用，并让当前有效种族参与抗性派生；
+  临时变形因此会获得并在解除时失去伊克人的红外、酸免疫和恐吓能力。导入器现在识别角色
+  `calc_bonuses` 中按等级调用的 `res_add`/`res_add_immune`/`res_add_vuln`，并导入怪物 `NO_FEAR`
+  状态免疫。
+- 聚焦验证覆盖静态内容、等级抗性校验、能力门槛/支付/威力/持续时间、目标恐惧豁免与免疫、
+  save/replay、变形切换、初始美德、导入器和 Web `raceId`；内容 schema 与 source lock 已同步。
+  协调版本为 pack `1.348.0` / hash
+  `ea02a2ca6032c1243523c5d667c933f325294ecdb38faed3f831cd705d36f433`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。未运行或
+  刷新全量 fixture；下一正式种族为克拉克人 `rfb-legacy.race.klackon`。

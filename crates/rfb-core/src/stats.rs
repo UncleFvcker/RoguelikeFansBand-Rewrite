@@ -133,6 +133,16 @@ const ORIGINAL_STRENGTH_DIGGING_BONUS: [u16; 38] = [
     65, 70, 75, 80, 85, 90, 95, 100, 100, 100,
 ];
 
+const ORIGINAL_SAVE_ADJUSTMENT: [i32; 38] = [
+    -25, -15, -10, -7, -6, -5, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+    12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
+];
+
+#[must_use]
+pub fn original_save_adjustment(attribute_index: u8) -> i32 {
+    ORIGINAL_SAVE_ADJUSTMENT[usize::from(attribute_index.min(PRE_VICTORY_ATTRIBUTE_INDEX_CAP))]
+}
+
 #[must_use]
 pub fn carry_capacity_tenths_pound(strength: u16) -> u32 {
     let index = stat_index(strength).min(PRE_VICTORY_ATTRIBUTE_INDEX_CAP);

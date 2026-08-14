@@ -1018,6 +1018,11 @@ pub(super) fn validate_abilities(
             valid_ability_level_scaling(&ability.effect, &ability.level_scaling);
         let valid_spell_power =
             valid_ability_spell_power(&ability.effect, &ability.spell_power_fields);
+        let valid_status_power_attribute = ability.status_power_attribute.is_none()
+            || matches!(
+                &ability.effect,
+                AbilityEffectDefinition::ApplyStatus { power: Some(_), .. }
+            );
         let self_targeted = ability
             .target
             .modes
@@ -1255,6 +1260,7 @@ pub(super) fn validate_abilities(
             || !valid_effect
             || !valid_level_scaling
             || !valid_spell_power
+            || !valid_status_power_attribute
             || !directional_target
             || (ability.affects_ground_items && !effect_can_affect_ground_items(&ability.effect))
         {

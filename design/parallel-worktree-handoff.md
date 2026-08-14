@@ -1181,3 +1181,20 @@ git diff --stat
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。聚焦内容、
   导入器、本地化、核心、Web、生成器与格式检查均通过；本批已随本节共同提交。下一正式种族是
   `rfb-legacy.race.yeek`。
+
+## 64. main 当前交接（伊克人、恐吓怪物与等级酸免疫）
+
+- 种族方向继续拥有既有 `rfb-legacy.race.yeek` 与 `rfb-legacy.skill-set.race-yeek`，并新增、拥有
+  `rfb.ability.race.scare-monster` 和 `rfb.ability-program.race.scare-monster`；其他方向不得复制
+  这些身份。本批不新增或占用 item、material、affix、resource 或 actor ID。
+- 伊克人按 RFB master 闭合完整静态资料、2 格红外、酸抗性、初始“牺牲”和 15 级 WIS/15/50
+  “恐吓怪物”；20 级时酸抗性提升为酸免疫，原版没有等级奖励。能力使用方向投射，对首个怪物按
+  原版玩家等级分段公式与魅力豁免修正进行恐惧检定，成功持续 `3d(playerLevel / 2) + 1`。
+- 内容模型新增可同时供 Race/Class 使用的等级抗性定义，按当前有效种族派生，因此临时变形会获得并
+  在解除时失去酸免疫与种族能力。通用状态投射现在读取目标 Actor 的状态免疫和 `resist-all`；共享
+  状态投射仍未建模原版 `PROJECT_REFLECTABLE`，与既有“迷惑怪物”等能力的当前边界一致。
+- 共享协调点为 pack `1.348.0` / content hash
+  `ea02a2ca6032c1243523c5d667c933f325294ecdb38faed3f831cd705d36f433`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。聚焦内容、
+  导入器、核心、美德、Web、schema、source 验证、格式和 diff 检查均在本批完成；未运行或刷新全量
+  fixture。下一正式种族是 `rfb-legacy.race.klackon`（克拉克人）。

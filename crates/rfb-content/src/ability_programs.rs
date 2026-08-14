@@ -58,6 +58,8 @@ pub(super) struct SourceAbilityDefinition {
     affects_ground_items: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     level_scaling: Vec<AbilityLevelScalingDefinition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    status_power_attribute: Option<super::ItemAttributeDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     spell_power_fields: Vec<AbilitySpellPowerDefinition>,
     tags: Vec<String>,
@@ -453,6 +455,7 @@ impl SourceAbilityDefinition {
             effect: program.effect,
             affects_ground_items: self.affects_ground_items,
             level_scaling: self.level_scaling,
+            status_power_attribute: self.status_power_attribute,
             spell_power_fields: self.spell_power_fields,
             spell_power_bonus: 0,
             player,
@@ -497,6 +500,7 @@ mod tests {
             ability_program_id: ability_program_id.to_owned(),
             affects_ground_items: false,
             level_scaling: Vec::new(),
+            status_power_attribute: None,
             spell_power_fields: Vec::new(),
             tags: vec!["test".to_owned()],
         }

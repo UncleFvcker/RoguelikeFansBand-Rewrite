@@ -5,10 +5,11 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::{
     AbilityBookDefinition, AbilityDefinition, ActorDefinition, ActorRole, BUILD_SCHEMA,
     CLASS_SCHEMA, CharacterBuildDefinition, ClassDefinition, ContentError,
-    InnatePowerCostScalingCurveDefinition, ItemDefinition, MutationDefinition, PERSONALITY_SCHEMA,
-    PersonalityDefinition, RACE_SCHEMA, RaceDefinition, RaceMutationSelectionDefinition,
-    SKILL_SCHEMA, SKILL_SET_SCHEMA, SkillDefinition, SkillKind, SkillSetDefinition,
-    StartingItemDefinition, StatModifiers, TerrainDefinition, valid_ability_level_scaling,
+    InnatePowerCostScalingCurveDefinition, ItemDefinition, LevelResistanceDefinition,
+    MutationDefinition, PERSONALITY_SCHEMA, PersonalityDefinition, RACE_SCHEMA, RaceDefinition,
+    RaceMutationSelectionDefinition, SKILL_SCHEMA, SKILL_SET_SCHEMA, SkillDefinition, SkillKind,
+    SkillSetDefinition, StartingItemDefinition, StatModifiers, TerrainDefinition,
+    valid_ability_level_scaling,
 };
 
 use super::shared::{
@@ -38,6 +39,19 @@ pub(super) struct CharacterValidationRefs<'a> {
     pub(super) ability_resources: &'a BTreeMap<String, String>,
     pub(super) abilities: &'a [AbilityDefinition],
     pub(super) mutations: &'a [MutationDefinition],
+}
+
+fn level_resistances_are_valid(entries: &mut Vec<LevelResistanceDefinition>) -> bool {
+    entries.sort_by_key(|entry| entry.minimum_level);
+    entries.len() <= 32
+        && entries.iter().all(|entry| {
+            (1..=100).contains(&entry.minimum_level)
+                && !entry.resistances.is_empty()
+                && entry.resistances.len() <= 32
+        })
+        && entries
+            .windows(2)
+            .all(|pair| pair[0].minimum_level != pair[1].minimum_level)
 }
 
 pub(super) fn validate_characters(
@@ -192,6 +206,7 @@ pub(super) fn validate_characters(
         if !(50..=200).contains(&race.shop_adjust_percent)
             || !(0..=64).contains(&race.infravision)
             || !(-1_000..=1_000).contains(&race.regeneration_rate_modifier_percent)
+            || !level_resistances_are_valid(&mut race.level_resistances)
         {
             return Err(ContentError::InvalidCharacterSource(race.id.clone()));
         }
@@ -455,21 +470,9 @@ pub(super) fn validate_characters(
         class
             .abilities
             .sort_by(|left, right| left.ability_id.cmp(&right.ability_id));
-        class
-            .level_resistances
-            .sort_by_key(|entry| entry.minimum_level);
         if !(-100..=100).contains(&class.ammunition_breakage_factor_modifier)
             || class.projectile_critical_chance_bonus_percent_per_level > 10
-            || class.level_resistances.len() > 32
-            || class.level_resistances.iter().any(|entry| {
-                !(1..=100).contains(&entry.minimum_level)
-                    || entry.resistances.is_empty()
-                    || entry.resistances.len() > 32
-            })
-            || class
-                .level_resistances
-                .windows(2)
-                .any(|entries| entries[0].minimum_level == entries[1].minimum_level)
+            || !level_resistances_are_valid(&mut class.level_resistances)
             || class.pet_upkeep_divisor == 0
         {
             return Err(ContentError::InvalidCharacterSource(class.id.clone()));

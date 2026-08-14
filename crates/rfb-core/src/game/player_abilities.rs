@@ -222,6 +222,27 @@ impl Game {
         }
     }
 
+    pub(super) fn apply_player_status_power_attribute(&self, ability: &mut AbilityDefinition) {
+        let Some(attribute) = ability.status_power_attribute else {
+            return;
+        };
+        let AbilityEffectDefinition::ApplyStatus {
+            power: Some(power), ..
+        } = &mut ability.effect
+        else {
+            unreachable!("validated status-power attribute requires a direct powered status");
+        };
+        let attribute_index = self
+            .effective_player_attributes()
+            .index(Self::item_attribute_kind(&attribute));
+        *power = u16::try_from(
+            i32::from(*power)
+                .saturating_add(crate::stats::original_save_adjustment(attribute_index))
+                .max(1),
+        )
+        .expect("adjusted player status power must fit u16");
+    }
+
     pub(super) fn apply_player_spell_power(ability: &mut AbilityDefinition, bonus: i32) {
         ability.spell_power_bonus = bonus;
         for definition in ability.spell_power_fields.clone() {

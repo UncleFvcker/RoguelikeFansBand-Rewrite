@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-14
-当前基线：`main@1defe3183`
+当前基线：本文所在的 `main` 提交（伊克人批次）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,14 +10,14 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.347.0`
-- content hash：`ed59d59d22b47cc3695b727fb64eff5ffe3fa7d6058560bd17f87b4c9525b40c`
+- demo pack：`1.348.0`
+- content hash：`ea02a2ca6032c1243523c5d667c933f325294ecdb38faed3f831cd705d36f433`
 - Protocol：`1.212`
 - State Hash Schema：`v104`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v303`，26 个 exact fixture
 - 正式内容：6 个 Class、11 个 Build、54 个 SkillSet、46 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 14 个种族。
+  6 个职业构筑和 15 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -55,12 +55,13 @@ New Game 当前按以下稳定 ID 开放：
 - `rfb-legacy.race.half-troll`
 - `rfb-legacy.race.half-titan`
 - `rfb-legacy.race.cyclops`
+- `rfb-legacy.race.yeek`
 
 种族通过新游戏请求中的独立 `raceId` 覆盖 Build 的默认 Human。不要生成
 “职业 × 种族”的重复 Build JSON。玩家外观目前由职业 Build 决定，新增普通种族不复制玩家 Actor 或
 tileset 映射。
 
-按 RFB `master` 的普通种族顺序，下一项是 `rfb-legacy.race.yeek`（伊克人）。开工前仍须重新读取
+按 RFB `master` 的普通种族顺序，下一项是 `rfb-legacy.race.klackon`（克拉克人）。开工前仍须重新读取
 当前 `main` 版本、pack lock 和并行 ID 声明，不能把本快照当作永久预约。
 
 ## 2. 权威来源与不可变规则

@@ -449,6 +449,17 @@ impl Game {
                     ResistanceLevel::from(*level),
                 );
             }
+            for entry in &race.level_resistances {
+                if self.progress.level < entry.minimum_level {
+                    continue;
+                }
+                for (damage_type, level) in &entry.resistances {
+                    record(
+                        DamageType::from(*damage_type),
+                        ResistanceLevel::from(*level),
+                    );
+                }
+            }
             for entry in &class.level_resistances {
                 if self.progress.level < entry.minimum_level {
                     continue;

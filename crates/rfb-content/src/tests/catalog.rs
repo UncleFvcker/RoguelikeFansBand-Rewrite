@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.347.0");
+    assert_eq!(catalog.pack_version(), "1.348.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1248,6 +1248,110 @@ fn formal_cyclops_matches_rfb_profile_and_throw_boulder_power() {
     assert_eq!(scaling.quadratic_weight, 1);
     assert_eq!(scaling.cubic_weight, 2);
     assert_eq!(scaling.multiplier, 250);
+}
+
+#[test]
+fn formal_yeek_matches_rfb_profile_acid_growth_and_scare_power() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let yeek = catalog
+        .race("rfb-legacy.race.yeek")
+        .expect("formal Yeek race");
+
+    assert_eq!(
+        [
+            yeek.modifiers.strength,
+            yeek.modifiers.intelligence,
+            yeek.modifiers.wisdom,
+            yeek.modifiers.dexterity,
+            yeek.modifiers.constitution,
+            yeek.modifiers.charisma,
+        ],
+        [-2, 1, -2, 1, -2, -4]
+    );
+    assert_eq!(
+        (
+            yeek.life_percent,
+            yeek.base_hp,
+            yeek.experience_percent,
+            yeek.shop_adjust_percent,
+            yeek.infravision,
+        ),
+        (92, 14, 70, 105, 2)
+    );
+    assert_eq!(yeek.kin_category.as_deref(), Some("kin-glyph-121"));
+    assert_eq!(
+        yeek.resistances.get(&ActorDamageType::Acid),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(yeek.level_resistances.len(), 1);
+    assert_eq!(yeek.level_resistances[0].minimum_level, 20);
+    assert_eq!(
+        yeek.level_resistances[0]
+            .resistances
+            .get(&ActorDamageType::Acid),
+        Some(&ActorResistanceLevel::Immune)
+    );
+    assert!(yeek.level_mutation_rewards.is_empty());
+    assert_eq!(yeek.abilities.len(), 1);
+    let activation = &yeek.abilities[0];
+    assert_eq!(activation.minimum_level, 15);
+    assert_eq!(activation.governing_attribute, TechniqueAttribute::Wisdom);
+    assert_eq!(activation.cost, 15);
+    assert_eq!(activation.base_failure_percent, 50);
+    assert_eq!(activation.ability_id, "rfb.ability.race.scare-monster");
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(yeek.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&yeek.skill_set_id)
+        .expect("formal Yeek skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 3),
+            ("demo.skill.disarming", 2),
+            ("demo.skill.melee", -5),
+            ("demo.skill.perception", 15),
+            ("demo.skill.ranged", -3),
+            ("demo.skill.saving-throw", 6),
+            ("demo.skill.search", 5),
+            ("demo.skill.stealth", 3),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.scare-monster")
+        .expect("Yeek scare ability");
+    assert_eq!(
+        ability.status_power_attribute,
+        Some(ItemAttributeDefinition::Charisma)
+    );
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::ApplyStatus {
+            ref status_kind_id,
+            intensity: 1,
+            duration_ticks: 1,
+            duration_dice: 3,
+            duration_sides: 1,
+            stacking: AbilityStatusStackingDefinition::Extend,
+            power: Some(5),
+            ..
+        } if status_kind_id == "rfb.status.fear"
+    ));
+    assert_eq!(ability.level_scaling.len(), 3);
 }
 
 #[test]

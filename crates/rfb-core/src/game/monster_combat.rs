@@ -189,24 +189,18 @@ impl Game {
         if sources == 0 {
             return false;
         }
-        const CHARISMA_SAVE_ADJUSTMENT: [i32; 38] = [
-            -25, -15, -10, -7, -6, -5, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
-            9, 10, 12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
-        ];
         let mut player_level = i32::from(self.progress.level);
         player_level = if player_level <= 40 {
             player_level.saturating_add(5)
         } else {
             45_i32.saturating_add(player_level.saturating_sub(40).saturating_mul(2))
         };
-        let charisma_index = usize::from(
-            self.effective_player_attributes()
-                .index(AttributeKind::Charisma),
-        )
-        .min(CHARISMA_SAVE_ADJUSTMENT.len() - 1);
+        let charisma_index = self
+            .effective_player_attributes()
+            .index(AttributeKind::Charisma);
         let player_power = u64::try_from(
             player_level
-                .saturating_add(CHARISMA_SAVE_ADJUSTMENT[charisma_index])
+                .saturating_add(crate::stats::original_save_adjustment(charisma_index))
                 .max(1),
         )
         .unwrap_or(1);
@@ -2149,17 +2143,13 @@ impl Game {
             return false;
         }
 
-        const ORIGINAL_SAVE_ADJUSTMENT: [i32; 38] = [
-            -25, -15, -10, -7, -6, -5, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
-            9, 10, 12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
-        ];
-        let wisdom_index = usize::from(
-            self.effective_player_attributes()
-                .index(AttributeKind::Wisdom),
-        )
-        .min(ORIGINAL_SAVE_ADJUSTMENT.len() - 1);
+        let wisdom_index = self
+            .effective_player_attributes()
+            .index(AttributeKind::Wisdom);
         let player_power = i64::from(self.progress.level)
-            .saturating_add(i64::from(ORIGINAL_SAVE_ADJUSTMENT[wisdom_index]))
+            .saturating_add(i64::from(crate::stats::original_save_adjustment(
+                wisdom_index,
+            )))
             .max(1) as u64;
         let monster_power = u64::from(if definition.tags.iter().any(|tag| tag == "unique") {
             definition.level.saturating_add(definition.level / 5)

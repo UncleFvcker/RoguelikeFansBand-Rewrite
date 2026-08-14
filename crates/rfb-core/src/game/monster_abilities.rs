@@ -109,24 +109,18 @@ impl Game {
         entity: &mut Actor,
         definition: &rfb_content::ActorDefinition,
     ) {
-        const CHARISMA_SAVE_ADJUSTMENT: [i32; 38] = [
-            -25, -15, -10, -7, -6, -5, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
-            9, 10, 12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
-        ];
         if self.actor_is_player_side(&self.entities[source_index])
             || !self.player_has_cult_of_personality()
             || self.rng.bounded(2) != 0
         {
             return;
         }
-        let charisma_index = usize::from(
-            self.effective_player_attributes()
-                .index(AttributeKind::Charisma),
-        )
-        .min(CHARISMA_SAVE_ADJUSTMENT.len() - 1);
+        let charisma_index = self
+            .effective_player_attributes()
+            .index(AttributeKind::Charisma);
         let player_power = u64::try_from(
             i32::from(self.progress.level)
-                .saturating_add(CHARISMA_SAVE_ADJUSTMENT[charisma_index])
+                .saturating_add(crate::stats::original_save_adjustment(charisma_index))
                 .max(1),
         )
         .unwrap_or(1);

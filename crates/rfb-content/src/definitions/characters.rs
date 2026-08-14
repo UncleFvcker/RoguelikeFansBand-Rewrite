@@ -123,6 +123,10 @@ pub struct RaceDefinition {
     /// Intrinsic resistance tiers every member of this race carries.
     #[serde(default)]
     pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
+    /// Intrinsic resistance tiers gained at a character-level threshold while
+    /// this is the currently effective race.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub level_resistances: Vec<LevelResistanceDefinition>,
     /// Status kind ids members of this race are innately immune to.
     #[serde(default)]
     pub status_immunities: Vec<String>,
@@ -234,7 +238,7 @@ pub struct ClassDefinition {
     /// Intrinsic resistance tiers gained when the character reaches a class
     /// level threshold.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub level_resistances: Vec<ClassLevelResistanceDefinition>,
+    pub level_resistances: Vec<LevelResistanceDefinition>,
     /// Percentage-point change to RFB's shooter breakage factor.
     #[serde(default)]
     pub ammunition_breakage_factor_modifier: i16,
@@ -315,7 +319,7 @@ pub struct RidingProficiencyDefinition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct ClassLevelResistanceDefinition {
+pub struct LevelResistanceDefinition {
     pub minimum_level: u16,
     pub resistances: BTreeMap<ActorDamageType, ActorResistanceLevel>,
 }
