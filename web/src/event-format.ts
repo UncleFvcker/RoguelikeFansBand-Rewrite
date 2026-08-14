@@ -771,13 +771,24 @@ export function createPresentationFormatter(
           reason: shopTransactionReason(event.args.reason),
         });
       case "facility-identify-completed":
-        return localization.format("facility-identify-completed", {
+      case "facility-research-completed":
+        return localization.format(event.messageKey as MessageKey, {
           target: visibleItemNameForKind(event.args.target),
           cost: event.args.cost ?? "?",
           balance: event.args.balance ?? "?",
         });
       case "facility-identify-unavailable":
         return localization.format("facility-identify-unavailable", {
+          reason: facilityServiceReason(event.args.reason),
+        });
+      case "facility-identify-all-completed":
+        return localization.format("facility-identify-all-completed", {
+          count: event.args.count ?? "?",
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-identify-all-unavailable":
+        return localization.format("facility-identify-all-unavailable", {
           reason: facilityServiceReason(event.args.reason),
         });
       case "facility-rename-completed":

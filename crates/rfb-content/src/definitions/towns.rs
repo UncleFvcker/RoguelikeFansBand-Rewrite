@@ -43,6 +43,12 @@ pub struct TownFacilityDefinition {
     #[serde(default)]
     pub identify_item_cost: Option<u32>,
     #[serde(default)]
+    pub research_item_cost: Option<u32>,
+    #[serde(default)]
+    pub identify_all_items_cost: Option<u32>,
+    #[serde(default)]
+    pub overview_message_key: Option<String>,
+    #[serde(default)]
     pub legal_name_change_cost: Option<u32>,
     pub entrance_position: ContentPosition,
     pub entrance_terrain_id: String,
@@ -54,6 +60,7 @@ pub struct TownFacilityDefinition {
 pub enum TownFacilityCategory {
     Home,
     QuestGiver,
+    Service,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

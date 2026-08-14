@@ -788,3 +788,8 @@ spell power 与实际原始 power 的源码差异；天使斗篷复用通用状�
 `EquipmentPassiveDto` 增加漂浮、警告、减缓消化和九类定向 ESP。它们统一来自已装备物品的
 正式词缀投影；没有新增命令或持久字段，State Hash Schema 保持 v104，save header/payload
 schema 保持 v2。
+
+协议 1.222 / P104 为城镇设施增加 `ResearchItemAtFacility` 与
+`IdentifyAllAtFacility` 命令，并在 `TaskServiceDto` 投影研究费用、全部鉴定费用和城镇纵览
+消息键。研究复用完整鉴定事务，全部鉴定复用随身物品鉴定事务；城镇纵览仅显示投影文本，不提交
+核心命令。没有新增持久状态，State Hash Schema 保持 v104，save header/payload schema 保持 v2。

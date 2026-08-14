@@ -16,6 +16,7 @@ const WHITE_HORSE_INN_ID: &str = "demo.shop.outpost-white-horse";
 const HOME_ID: &str = "demo.town-facility.outpost-home";
 const ANAMBAR_HOME_ID: &str = "demo.town-facility.anambar-home";
 const ANAMBAR_INN_ID: &str = "demo.shop.anambar-inn";
+const ANAMBAR_LIBRARY_ID: &str = "demo.town-facility.anambar-library";
 const OUTPOST_COUNT_ID: &str = "demo.town-facility.outpost-count";
 
 fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
@@ -48,6 +49,28 @@ fn anambar_inn_game(seed: u64) -> Game {
     game.player.position = Position { x: 45, y: 15 };
     game.mark_shop_visited_at_player().unwrap();
     assert!(projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).player_at_entrance);
+    game
+}
+
+fn anambar_library_game(seed: u64) -> Game {
+    let mut game =
+        Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth game should start");
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 26, y: 39 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    game.player.position = Position { x: 43, y: 7 };
+    assert!(
+        game.snapshot()
+            .task_services
+            .iter()
+            .any(|service| service.id == ANAMBAR_LIBRARY_ID && service.player_at_entrance)
+    );
     game
 }
 
@@ -501,6 +524,135 @@ fn outpost_count_legal_name_change_is_validated_saved_and_projected() {
 }
 
 #[test]
+fn p104c_anambar_library_identifies_researches_and_identifies_all_without_time_or_rng() {
+    let mut single = anambar_library_game(104);
+    let service = single
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_LIBRARY_ID)
+        .expect("library service should be projected");
+    assert_eq!(service.identify_item_cost, Some(50));
+    assert_eq!(service.research_item_cost, Some(1_300));
+    assert_eq!(service.identify_all_items_cost, Some(350));
+    assert_eq!(
+        service.overview_message_key.as_deref(),
+        Some("town-facility-demo-anambar-library-overview")
+    );
+    assert!(service.tasks.is_empty());
+    let item_id = single
+        .items
+        .iter()
+        .find(|item| item.location == ItemLocation::Inventory)
+        .expect("warrior should carry an item")
+        .id
+        .clone();
+    single.item_property_knowledge.remove(&item_id);
+    single.gold = 50;
+    let tick = single.world_tick;
+    let draws = single.rng_draw_counter();
+    let identified = dispatch_next(
+        &mut single,
+        GameCommand::IdentifyAtFacility {
+            facility_id: ANAMBAR_LIBRARY_ID.to_owned(),
+            item_id: item_id.clone(),
+        },
+    );
+    assert_eq!(single.gold, 0);
+    assert!(single.item_property_knowledge[&item_id].appraised);
+    assert!(!single.item_property_knowledge[&item_id].identified);
+    assert_eq!(single.world_tick, tick);
+    assert_eq!(single.rng_draw_counter(), draws);
+    assert_eq!(
+        identified.events[0].message_key,
+        "facility-identify-completed"
+    );
+
+    let mut research = anambar_library_game(105);
+    let item_id = research
+        .items
+        .iter()
+        .find(|item| item.location == ItemLocation::Inventory)
+        .expect("warrior should carry an item")
+        .id
+        .clone();
+    let knowledge = research
+        .item_property_knowledge
+        .entry(item_id.clone())
+        .or_default();
+    knowledge.appraised = true;
+    knowledge.identified = false;
+    knowledge.known_affix_ids.clear();
+    research.gold = 1_300;
+    let tick = research.world_tick;
+    let draws = research.rng_draw_counter();
+    let researched = dispatch_next(
+        &mut research,
+        GameCommand::ResearchItemAtFacility {
+            facility_id: ANAMBAR_LIBRARY_ID.to_owned(),
+            item_id: item_id.clone(),
+        },
+    );
+    assert_eq!(research.gold, 0);
+    assert!(research.item_property_knowledge[&item_id].identified);
+    assert_eq!(research.world_tick, tick);
+    assert_eq!(research.rng_draw_counter(), draws);
+    assert_eq!(
+        researched.events[0].message_key,
+        "facility-research-completed"
+    );
+
+    let mut all = anambar_library_game(106);
+    let carried_ids = all
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        })
+        .map(|item| item.id.clone())
+        .collect::<Vec<_>>();
+    for item_id in &carried_ids {
+        all.item_property_knowledge.remove(item_id);
+    }
+    all.gold = 350;
+    let tick = all.world_tick;
+    let draws = all.rng_draw_counter();
+    let identified_all = dispatch_next(
+        &mut all,
+        GameCommand::IdentifyAllAtFacility {
+            facility_id: ANAMBAR_LIBRARY_ID.to_owned(),
+        },
+    );
+    assert_eq!(all.gold, 0);
+    assert!(carried_ids.iter().all(|item_id| {
+        all.item_property_knowledge
+            .get(item_id)
+            .is_some_and(|knowledge| knowledge.appraised)
+    }));
+    assert_eq!(all.world_tick, tick);
+    assert_eq!(all.rng_draw_counter(), draws);
+    assert_eq!(identified_all.events[0].kind, "facility.identified-all");
+    assert_eq!(
+        identified_all.events[0].args["count"],
+        carried_ids.len().to_string()
+    );
+
+    all.gold = 350;
+    let rejected = dispatch_next(
+        &mut all,
+        GameCommand::IdentifyAllAtFacility {
+            facility_id: ANAMBAR_LIBRARY_ID.to_owned(),
+        },
+    );
+    assert_eq!(all.gold, 350);
+    assert_eq!(rejected.events[0].kind, "facility.identify-all-unavailable");
+    assert_eq!(rejected.events[0].args["reason"], "nothing-to-identify");
+}
+
+#[test]
 fn outpost_temple_has_walkable_space_on_both_sides_and_to_the_south() {
     let game = Game::new_with_build(42, "demo.build.warrior").expect("Warrens game should start");
 
@@ -642,7 +794,7 @@ fn anambar_home_uses_the_outpost_home_inventory() {
     assert_eq!(game.home_states.len(), 1);
     assert!(game.home_states.contains_key(HOME_ID));
     let town_snapshot = game.snapshot();
-    assert_eq!(town_snapshot.shops.len(), 9);
+    assert_eq!(town_snapshot.shops.len(), 10);
     assert!(
         town_snapshot
             .shops

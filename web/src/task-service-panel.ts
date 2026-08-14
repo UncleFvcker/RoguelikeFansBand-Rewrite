@@ -7,6 +7,7 @@ import type {
   GameEventDto,
   GameSnapshot,
   GameUpdate,
+  ItemIdentificationDto,
   TaskServiceDto,
   TaskStatusDto,
   TaskStatusKindDto,
@@ -35,6 +36,7 @@ export class TaskServicePanel {
   #service: TaskServiceDto | undefined;
   #dismissedServiceId: string | undefined;
   #feedback: GameEventDto | undefined;
+  #overviewVisible = false;
   #installed = false;
 
   constructor(options: {
@@ -73,7 +75,10 @@ export class TaskServicePanel {
 
   render(state: GameSnapshot | GameUpdate): void {
     const event = lastTaskServiceEvent(state);
-    if (event) this.#feedback = event;
+    if (event) {
+      this.#feedback = event;
+      this.#overviewVisible = false;
+    }
     const service = state.taskServices.find((candidate) => candidate.playerAtEntrance);
     if (!service) {
       this.reset();
@@ -81,7 +86,10 @@ export class TaskServicePanel {
     }
     const changed = this.#service?.id !== service.id;
     this.#service = service;
-    if (changed) this.#feedback = undefined;
+    if (changed) {
+      this.#feedback = undefined;
+      this.#overviewVisible = false;
+    }
     this.#renderPanel();
     if (!this.#dom.dialog.open && this.#dismissedServiceId !== service.id) {
       this.#beforeOpen();
@@ -102,6 +110,7 @@ export class TaskServicePanel {
     this.#service = undefined;
     this.#dismissedServiceId = undefined;
     this.#feedback = undefined;
+    this.#overviewVisible = false;
     if (this.#dom.dialog.open) this.#dom.dialog.close();
   }
 
@@ -121,15 +130,26 @@ export class TaskServicePanel {
     if (facilityButton && service && !facilityButton.disabled && !this.#state.busy) {
       this.#feedback = undefined;
       const action = facilityButton.dataset.facilityAction;
-      if (action === "identify") {
-        const select = this.#dom.list.querySelector<HTMLSelectElement>("[data-identify-item]");
+      this.#overviewVisible = false;
+      if (action === "identify" || action === "research") {
+        const select = this.#dom.list.querySelector<HTMLSelectElement>(
+          `[data-facility-item-action="${action}"]`,
+        );
         if (select?.value) {
           void this.#dispatch({
-            type: "identify-at-facility",
+            type: action === "identify" ? "identify-at-facility" : "research-item-at-facility",
             facilityId: service.id,
             itemId: select.value,
           });
         }
+      } else if (action === "identify-all") {
+        void this.#dispatch({
+          type: "identify-all-at-facility",
+          facilityId: service.id,
+        });
+      } else if (action === "overview") {
+        this.#overviewVisible = true;
+        this.#renderPanel();
       } else if (action === "rename") {
         const input = this.#dom.list.querySelector<HTMLInputElement>("[data-player-name]");
         if (input) {
@@ -162,10 +182,14 @@ export class TaskServicePanel {
       owner: this.#localization.format(service.ownerNameKey),
     });
     this.#renderTasks();
-    this.#dom.feedback.textContent = this.#feedback ? this.#formatEvent(this.#feedback) : "";
+    this.#dom.feedback.textContent = this.#feedback
+      ? this.#formatEvent(this.#feedback)
+      : this.#overviewVisible && service.overviewMessageKey
+        ? this.#localization.format(service.overviewMessageKey)
+        : "";
     this.#dom.feedback.dataset.kind = this.#feedback?.kind.endsWith("unavailable")
       ? "error"
-      : this.#feedback
+      : this.#feedback || this.#overviewVisible
         ? "success"
         : "none";
   }
@@ -188,13 +212,18 @@ export class TaskServicePanel {
     const service = this.#service;
     if (!service) return;
     const document = this.#dom.list.ownerDocument;
-    if (service.identifyItemCost !== undefined && service.identifyItemCost !== null) {
+    const renderItemAction = (
+      action: "identify" | "research",
+      cost: number | null | undefined,
+      full: boolean,
+    ): void => {
+      if (cost === undefined || cost === null) return;
       const row = document.createElement("li");
       row.className = "task-service-row";
       const select = document.createElement("select");
-      select.dataset.identifyItem = "true";
+      select.dataset.facilityItemAction = action;
       const items = [...this.#state.inventory, ...this.#state.equipment]
-        .filter((item) => item.identification !== "identified");
+        .filter((item) => facilityIdentificationCandidate(item.identification, full));
       for (const item of items) {
         const option = document.createElement("option");
         option.value = item.id;
@@ -204,12 +233,44 @@ export class TaskServicePanel {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "primary-button task-service-action";
-      button.dataset.facilityAction = "identify";
+      button.dataset.facilityAction = action;
       button.disabled = this.#state.busy || items.length === 0;
-      button.textContent = this.#localization.format("action-facility-identify", {
-        cost: service.identifyItemCost,
-      });
+      button.textContent = this.#localization.format(
+        action === "identify" ? "action-facility-identify" : "action-facility-research",
+        {
+          cost,
+        },
+      );
       row.append(select, button);
+      this.#dom.list.append(row);
+    };
+    renderItemAction("identify", service.identifyItemCost, false);
+    renderItemAction("research", service.researchItemCost, true);
+    if (service.identifyAllItemsCost !== undefined && service.identifyAllItemsCost !== null) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-button task-service-action";
+      button.dataset.facilityAction = "identify-all";
+      button.disabled = this.#state.busy || ![...this.#state.inventory, ...this.#state.equipment]
+        .some((item) => facilityIdentificationCandidate(item.identification, false));
+      button.textContent = this.#localization.format("action-facility-identify-all", {
+        cost: service.identifyAllItemsCost,
+      });
+      row.append(button);
+      this.#dom.list.append(row);
+    }
+    if (service.overviewMessageKey) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "task-service-action";
+      button.dataset.facilityAction = "overview";
+      button.disabled = this.#state.busy;
+      button.textContent = this.#localization.format("action-facility-overview");
+      row.append(button);
       this.#dom.list.append(row);
     }
     if (service.legalNameChangeCost !== undefined && service.legalNameChangeCost !== null) {
@@ -301,6 +362,8 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "task.reward-claim-unavailable" ||
       event?.kind === "facility.identify-unavailable" ||
       event?.kind === "facility.identified" ||
+      event?.kind === "facility.identify-all-unavailable" ||
+      event?.kind === "facility.identified-all" ||
       event?.kind === "facility.rename-unavailable" ||
       event?.kind === "facility.renamed"
     ) {
@@ -308,6 +371,13 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
     }
   }
   return undefined;
+}
+
+export function facilityIdentificationCandidate(
+  identification: ItemIdentificationDto,
+  full: boolean,
+): boolean {
+  return full ? identification !== "identified" : identification === "unexamined";
 }
 
 function createTaskServiceDom(document: Document): TaskServiceDom {

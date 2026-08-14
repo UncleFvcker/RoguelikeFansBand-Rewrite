@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.221";
+pub const PROTOCOL_VERSION: &str = "1.222";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
 
@@ -242,6 +242,13 @@ pub enum GameCommand {
     IdentifyAtFacility {
         facility_id: String,
         item_id: String,
+    },
+    ResearchItemAtFacility {
+        facility_id: String,
+        item_id: String,
+    },
+    IdentifyAllAtFacility {
+        facility_id: String,
     },
     RenameAtFacility {
         facility_id: String,
@@ -3907,6 +3914,12 @@ pub struct TaskServiceDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub identify_item_cost: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub research_item_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub identify_all_items_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub overview_message_key: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub legal_name_change_cost: Option<u32>,
     #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
@@ -5102,6 +5115,13 @@ mod tests {
             GameCommand::IdentifyAtFacility {
                 facility_id: "demo.town-facility.outpost-count".to_owned(),
                 item_id: "generated.item.1".to_owned(),
+            },
+            GameCommand::ResearchItemAtFacility {
+                facility_id: "demo.town-facility.anambar-library".to_owned(),
+                item_id: "generated.item.1".to_owned(),
+            },
+            GameCommand::IdentifyAllAtFacility {
+                facility_id: "demo.town-facility.anambar-library".to_owned(),
             },
             GameCommand::RenameAtFacility {
                 facility_id: "demo.town-facility.outpost-count".to_owned(),

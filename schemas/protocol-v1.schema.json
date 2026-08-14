@@ -8119,6 +8119,42 @@
             "facilityId": {
               "type": "string"
             },
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "research-item-at-facility"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "identify-all-at-facility"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
             "name": {
               "type": "string"
             },
@@ -12631,6 +12667,14 @@
         "id": {
           "type": "string"
         },
+        "identifyAllItemsCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
         "identifyItemCost": {
           "type": [
             "integer",
@@ -12650,11 +12694,25 @@
         "nameKey": {
           "type": "string"
         },
+        "overviewMessageKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "ownerNameKey": {
           "type": "string"
         },
         "playerAtEntrance": {
           "type": "boolean"
+        },
+        "researchItemCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
         },
         "tasks": {
           "type": "array",

@@ -69,6 +69,14 @@ pub(crate) struct FacilityIdentifyOutcome {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct FacilityIdentifyAllOutcome {
+    pub(crate) facility_id: String,
+    pub(crate) identified_count: usize,
+    pub(crate) cost: u32,
+    pub(crate) gold_balance: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FacilityRenameOutcome {
     pub(crate) facility_id: String,
     pub(crate) previous_name: String,
@@ -1110,6 +1118,30 @@ impl Game {
         let Some(cost) = facility.identify_item_cost else {
             return Err("service-unavailable");
         };
+        self.identify_item_at_facility(facility_id, item_id, cost, false)
+    }
+
+    pub(super) fn research_item_at_facility(
+        &mut self,
+        facility_id: &str,
+        item_id: &str,
+    ) -> Result<FacilityIdentifyOutcome, &'static str> {
+        let Some(facility) = self.content.town_facility(facility_id) else {
+            return Err("unknown-facility");
+        };
+        let Some(cost) = facility.research_item_cost else {
+            return Err("service-unavailable");
+        };
+        self.identify_item_at_facility(facility_id, item_id, cost, true)
+    }
+
+    fn identify_item_at_facility(
+        &mut self,
+        facility_id: &str,
+        item_id: &str,
+        cost: u32,
+        full: bool,
+    ) -> Result<FacilityIdentifyOutcome, &'static str> {
         if !self.town_facility_accessible(facility_id) {
             return Err("facility-unreachable");
         }
@@ -1123,18 +1155,18 @@ impl Game {
         }) else {
             return Err("item-unavailable");
         };
-        if self
+        let already_identified = self
             .item_property_knowledge
             .get(&item.id)
-            .is_some_and(|knowledge| knowledge.appraised || knowledge.identified)
-        {
+            .is_some_and(|knowledge| knowledge.identified || (!full && knowledge.appraised));
+        if already_identified {
             return Err("already-identified");
         }
         if self.gold < cost {
             return Err("insufficient-gold");
         }
 
-        let outcome = self.identify_item_instance(item_id, ItemIdentificationRequest::new(false));
+        let outcome = self.identify_item_instance(item_id, ItemIdentificationRequest::new(full));
         debug_assert!(outcome.changed);
         self.gold -= cost;
         Ok(FacilityIdentifyOutcome {
@@ -1147,6 +1179,48 @@ impl Game {
                 full: outcome.full,
                 changed: outcome.changed,
             },
+        })
+    }
+
+    pub(super) fn identify_all_at_facility(
+        &mut self,
+        facility_id: &str,
+    ) -> Result<FacilityIdentifyAllOutcome, &'static str> {
+        let Some(facility) = self.content.town_facility(facility_id) else {
+            return Err("unknown-facility");
+        };
+        let Some(cost) = facility.identify_all_items_cost else {
+            return Err("service-unavailable");
+        };
+        if !self.town_facility_accessible(facility_id) {
+            return Err("facility-unreachable");
+        }
+        let has_unexamined_item = self.items.iter().any(|item| {
+            item.quantity > 0
+                && matches!(
+                    item.location,
+                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                )
+                && !self
+                    .item_property_knowledge
+                    .get(&item.id)
+                    .is_some_and(|knowledge| knowledge.appraised || knowledge.identified)
+        });
+        if !has_unexamined_item {
+            return Err("nothing-to-identify");
+        }
+        if self.gold < cost {
+            return Err("insufficient-gold");
+        }
+
+        let identified_count = self.identify_carried_items();
+        debug_assert!(identified_count > 0);
+        self.gold -= cost;
+        Ok(FacilityIdentifyAllOutcome {
+            facility_id: facility_id.to_owned(),
+            identified_count,
+            cost,
+            gold_balance: self.gold,
         })
     }
 

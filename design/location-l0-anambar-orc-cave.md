@@ -2,7 +2,7 @@
 
 ## Selection boundary
 
-`legacy-wilderness-selection.json` schema 4 separates active locations from
+`legacy-wilderness-selection.json` schema 5 separates active locations from
 their authoritative town and dungeon plans. Outpost, Anambar, Warrens, and
 Orc Cave are active.
 
@@ -17,10 +17,12 @@ The town plan and planned dungeon bind the route to the authoritative RFB
 - guardian 1185, `Othrod, Lord of the Orcs` / `半兽人之王奥斯罗德`, level 32;
 - final object `(tval 45, sval 0)`, final ego 206, and substitute dungeon 36.
 
-The Anambar town plan locks the standard feature symbols 1–9 to the eight
-standard shops plus shared Home, and locks the inn owner, access rule, prices,
-commands, and five source actions. L2 activates the town with supported stock;
-the plan remains the source-drift check for those imported facts.
+The Anambar town plan locks standard feature symbols 0–9 to the nine standard
+shops plus shared Home, and locks both the inn and library owners, prices,
+commands, and source actions. L2 activates the town with supported stock; P104
+adds the shroomery and the library's research, identification, identify-all,
+and town-overview services. The plan remains the source-drift check for those
+imported facts.
 
 ## Machine-checked completion
 
@@ -32,11 +34,15 @@ content stays available for its proper locations. Dungeon 3 now owns its 15–32
 floor chain, global allocation policy, depth-compatible loot, guardian lifecycle,
 and final Ring + ego 206 reward.
 Anambar shop stock is no longer a gap: L2 exposes only item kinds whose current
-runtime behavior is complete. Home has no stock and shares the Outpost storage.
+runtime behavior is complete, and P104 gives its shroomery the same supported
+mushroom stock as Outpost. Home has no stock and shares the Outpost storage.
 The inn uses the existing shop transaction path for food and drink, so its
-entrance is functional. Lodging, rumors, town teleport, and reputation remain
-deferred until those services have authoritative runtime state; unsupported
-casino, bank, police, and quest-building entrances are not drawn.
+entrance is functional. The library uses explicit facility commands for normal
+identification, full research, and identify-all; town overview is projected as
+localized client information and consumes no turn. Lodging, rumors, town
+teleport, and reputation remain deferred until those services have authoritative
+runtime state; unsupported casino, bank, police, and quest-building entrances
+are not drawn.
 
 The focused `sync-demo-wilderness` command validates every imported fact against
 the authoritative `master` objects before rewriting the world, preserves authored
@@ -46,5 +52,6 @@ fails the sync instead of silently changing the playable route.
 ## Version boundary
 
 L0 itself changed importer metadata only. L2 activates Anambar in pack 1.224.0.
-Contract-v260 activates Orc Cave in pack 1.251.0; Protocol 1.171 and State Hash
-Schema v86 remain unchanged.
+Contract-v260 activates Orc Cave in pack 1.251.0. P104 updates Anambar in pack
+1.368.0 and Protocol 1.222; State Hash Schema remains v104 and save schema remains
+v2.

@@ -19,8 +19,8 @@ use rfb_protocol::{
 use crate::{
     effect::DamageOutcome,
     game::town::{
-        FacilityIdentifyOutcome, FacilityRenameOutcome, InnStayOutcome, InnTravelOutcome,
-        ShopTransactionOutcome,
+        FacilityIdentifyAllOutcome, FacilityIdentifyOutcome, FacilityRenameOutcome, InnStayOutcome,
+        InnTravelOutcome, ShopTransactionOutcome,
     },
 };
 
@@ -638,6 +638,13 @@ pub(crate) enum DomainEvent {
     },
     FacilityItemIdentified {
         outcome: FacilityIdentifyOutcome,
+    },
+    FacilityIdentifyAllUnavailable {
+        facility_id: String,
+        reason: String,
+    },
+    FacilityItemsIdentified {
+        outcome: FacilityIdentifyAllOutcome,
     },
     FacilityRenameUnavailable {
         facility_id: String,
@@ -2932,18 +2939,46 @@ impl DomainEvent {
                     ("reason", reason.clone()),
                 ],
             ),
-            Self::FacilityItemIdentified { outcome } => dto_with_outcome(
-                "facility.identified",
-                "facility-identify-completed",
+            Self::FacilityItemIdentified { outcome } => {
+                let message_key = if outcome.resolution.full {
+                    "facility-research-completed"
+                } else {
+                    "facility-identify-completed"
+                };
+                dto_with_outcome(
+                    "facility.identified",
+                    message_key,
+                    [
+                        ("facility", outcome.facility_id.clone()),
+                        ("target", outcome.resolution.item_kind_id.clone()),
+                        ("cost", outcome.cost.to_string()),
+                        ("balance", outcome.gold_balance.to_string()),
+                    ],
+                    GameEventOutcomeDto::ItemIdentify {
+                        resolution: outcome.resolution.clone(),
+                    },
+                )
+            }
+            Self::FacilityIdentifyAllUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "facility.identify-all-unavailable",
+                "facility-identify-all-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::FacilityItemsIdentified { outcome } => dto(
+                "facility.identified-all",
+                "facility-identify-all-completed",
                 [
                     ("facility", outcome.facility_id.clone()),
-                    ("target", outcome.resolution.item_kind_id.clone()),
+                    ("count", outcome.identified_count.to_string()),
                     ("cost", outcome.cost.to_string()),
                     ("balance", outcome.gold_balance.to_string()),
                 ],
-                GameEventOutcomeDto::ItemIdentify {
-                    resolution: outcome.resolution.clone(),
-                },
             ),
             Self::FacilityRenameUnavailable {
                 facility_id,

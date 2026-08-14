@@ -420,7 +420,8 @@ struct DemoWildernessTownPlan {
     position: DemoWildernessPosition,
     source_file: String,
     standard_facilities: Vec<DemoTownFacilityPlan>,
-    inn: DemoTownInnPlan,
+    inn: DemoTownBuildingPlan,
+    library: DemoTownBuildingPlan,
 }
 
 #[derive(Debug, Deserialize)]
@@ -432,18 +433,19 @@ struct DemoTownFacilityPlan {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct DemoTownInnPlan {
+struct DemoTownBuildingPlan {
     building_index: u16,
     name: String,
     owner_name: String,
     owner_race: String,
-    access: String,
-    services: Vec<DemoTownInnServicePlan>,
+    #[serde(default)]
+    access: Option<String>,
+    services: Vec<DemoTownBuildingServicePlan>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct DemoTownInnServicePlan {
+struct DemoTownBuildingServicePlan {
     action_index: u16,
     name: String,
     minimum_cost: u32,
@@ -13009,45 +13011,48 @@ fn validate_demo_wilderness_plans(
             }
         }
 
-        let inn = &town.inn;
-        let inn_name = format!(
-            "B:{}:N:{}:{}:{}",
-            inn.building_index, inn.name, inn.owner_name, inn.owner_race
-        );
-        if !town_source.lines().any(|line| line.trim() == inn_name) {
-            return Err(invalid_wilderness_selection(format!(
-                "town plan {} inn identity drifted",
-                town.id
-            )));
-        }
-        let mut action_indexes = BTreeSet::new();
-        for service in &inn.services {
-            let service_line = format!(
-                "B:{}:A:{}:{}:{}:{}:{}:{}:{}",
-                inn.building_index,
-                service.action_index,
-                service.name,
-                service.minimum_cost,
-                service.maximum_cost,
-                service.command,
-                service.action_id,
-                service.restriction
+        for building in [&town.inn, &town.library] {
+            let building_name = format!(
+                "B:{}:N:{}:{}:{}",
+                building.building_index, building.name, building.owner_name, building.owner_race
             );
-            if !action_indexes.insert(service.action_index)
-                || !town_source.lines().any(|line| line.trim() == service_line)
-            {
+            if !town_source.lines().any(|line| line.trim() == building_name) {
                 return Err(invalid_wilderness_selection(format!(
-                    "town plan {} inn service {} is absent or duplicated",
-                    town.id, service.action_index
+                    "town plan {} building {} identity drifted",
+                    town.id, building.building_index
                 )));
             }
-        }
-        let access_line = format!("B:{}:R:*:{}", inn.building_index, inn.access);
-        if !town_source.lines().any(|line| line.trim() == access_line) {
-            return Err(invalid_wilderness_selection(format!(
-                "town plan {} inn access drifted",
-                town.id
-            )));
+            let mut action_indexes = BTreeSet::new();
+            for service in &building.services {
+                let service_line = format!(
+                    "B:{}:A:{}:{}:{}:{}:{}:{}:{}",
+                    building.building_index,
+                    service.action_index,
+                    service.name,
+                    service.minimum_cost,
+                    service.maximum_cost,
+                    service.command,
+                    service.action_id,
+                    service.restriction
+                );
+                if !action_indexes.insert(service.action_index)
+                    || !town_source.lines().any(|line| line.trim() == service_line)
+                {
+                    return Err(invalid_wilderness_selection(format!(
+                        "town plan {} building {} service {} is absent or duplicated",
+                        town.id, building.building_index, service.action_index
+                    )));
+                }
+            }
+            if let Some(access) = &building.access {
+                let access_line = format!("B:{}:R:*:{}", building.building_index, access);
+                if !town_source.lines().any(|line| line.trim() == access_line) {
+                    return Err(invalid_wilderness_selection(format!(
+                        "town plan {} building {} access drifted",
+                        town.id, building.building_index
+                    )));
+                }
+            }
         }
     }
 
@@ -13193,14 +13198,14 @@ pub fn sync_demo_wilderness(
         ));
     }
     let selection: DemoWildernessSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
-    if selection.schema_version != 4
+    if selection.schema_version != 5
         || selection.towns.is_empty()
         || selection.dungeons.is_empty()
         || selection.town_plans.is_empty()
         || selection.dungeon_plans.is_empty()
     {
         return Err(LegacyImportError::InvalidDemoWildernessSelection(
-            "selection must use schemaVersion 4 and contain active towns, town plans, active dungeons, and dungeon plans"
+            "selection must use schemaVersion 5 and contain active towns, town plans, active dungeons, and dungeon plans"
                 .to_owned(),
         ));
     }
@@ -24309,6 +24314,54 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             Some(DemoDungeonObjectPlan { tval: 55, sval: 0 })
         );
         assert_eq!(volcano.final_ego_source_index, Some(560));
+    }
+
+    #[test]
+    fn p104a_anambar_plan_locks_library_services_and_shroomery() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 5);
+        let anambar = selection
+            .town_plans
+            .iter()
+            .find(|plan| plan.id == "demo.town.anambar")
+            .expect("Anambar should have an implementation plan");
+        assert!(
+            anambar
+                .standard_facilities
+                .iter()
+                .any(|facility| { facility.symbol == '0' && facility.source_tag == "SHROOMERY" })
+        );
+        assert_eq!(anambar.library.building_index, 0);
+        assert_eq!(anambar.library.name, "图书馆");
+        assert_eq!(anambar.library.owner_name, "托妮卡");
+        assert_eq!(anambar.library.owner_race, "人类");
+        assert_eq!(anambar.library.access, None);
+        assert_eq!(anambar.library.services.len(), 4);
+        assert_eq!(
+            anambar
+                .library
+                .services
+                .iter()
+                .map(|service| (
+                    service.action_index,
+                    service.name.as_str(),
+                    service.minimum_cost,
+                    service.maximum_cost,
+                    service.command,
+                    service.action_id,
+                    service.restriction,
+                ))
+                .collect::<Vec<_>>(),
+            [
+                (0, "研究物品", 1_300, 1_300, 'a', 1, 0),
+                (1, "城镇纵览", 0, 0, 'h', 2, 0),
+                (2, "鉴定单件物品", 50, 50, 'i', 44, 0),
+                (3, "鉴定所有物品", 350, 350, 'p', 26, 0),
+            ]
+        );
     }
 
     #[test]

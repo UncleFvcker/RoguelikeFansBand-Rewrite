@@ -1535,7 +1535,12 @@ impl Game {
         town.facility_ids
             .iter()
             .filter_map(|facility_id| self.content.town_facility(facility_id))
-            .filter(|facility| facility.category == TownFacilityCategory::QuestGiver)
+            .filter(|facility| {
+                matches!(
+                    facility.category,
+                    TownFacilityCategory::QuestGiver | TownFacilityCategory::Service
+                )
+            })
             .map(|facility| {
                 let entrance_position = self
                     .town_local_to_active_position(
@@ -1584,6 +1589,9 @@ impl Game {
                     entrance_terrain_id: facility.entrance_terrain_id.clone(),
                     player_at_entrance,
                     identify_item_cost: facility.identify_item_cost,
+                    research_item_cost: facility.research_item_cost,
+                    identify_all_items_cost: facility.identify_all_items_cost,
+                    overview_message_key: facility.overview_message_key.clone(),
                     legal_name_change_cost: facility.legal_name_change_cost,
                     tasks,
                 }

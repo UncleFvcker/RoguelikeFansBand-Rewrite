@@ -6,7 +6,8 @@
   "descriptionKey": "town-demo-anambar-description",
   "floorId": "demo.floor.anambar",
   "facilityIds": [
-    "demo.town-facility.anambar-home"
+    "demo.town-facility.anambar-home",
+    "demo.town-facility.anambar-library"
   ],
   "shopIds": [
     "demo.shop.anambar-alchemist",
@@ -16,6 +17,7 @@
     "demo.shop.anambar-general-store",
     "demo.shop.anambar-inn",
     "demo.shop.anambar-magic-shop",
+    "demo.shop.anambar-shroomery",
     "demo.shop.anambar-temple",
     "demo.shop.anambar-weaponsmith"
   ]

@@ -9659,7 +9659,7 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         .find(|town| town.id == "demo.town.anambar")
         .expect("fixture should contain Anambar");
     assert_eq!(anambar.floor_id, "demo.floor.anambar");
-    assert_eq!(anambar.shop_ids.len(), 9);
+    assert_eq!(anambar.shop_ids.len(), 10);
     let anambar_floor = world
         .procedural_floors
         .iter()
@@ -13477,4 +13477,80 @@ fn p103c_volcano_binds_lava_ecology_guardians_layers_and_reward() {
         .find(|table| table.id == "demo.loot-table.volcano-final-reward")
         .expect("Volcano reward should exist");
     assert_eq!(reward.entries[0].item_kind_id, "demo.item.mana-storm-staff");
+}
+
+#[test]
+fn p104b_anambar_library_and_shroomery_are_fully_bound() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let town = artifact
+        .content
+        .towns
+        .iter()
+        .find(|town| town.id == "demo.town.anambar")
+        .expect("Anambar should exist");
+    assert!(
+        town.facility_ids
+            .contains(&"demo.town-facility.anambar-library".to_owned())
+    );
+    assert!(
+        town.shop_ids
+            .contains(&"demo.shop.anambar-shroomery".to_owned())
+    );
+
+    let library = artifact
+        .content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.anambar-library")
+        .expect("Anambar library should exist");
+    assert_eq!(library.category, TownFacilityCategory::Service);
+    assert_eq!(
+        library.owner_name_key.as_deref(),
+        Some("town-facility-demo-anambar-library-owner-name")
+    );
+    assert_eq!(library.identify_item_cost, Some(50));
+    assert_eq!(library.research_item_cost, Some(1_300));
+    assert_eq!(library.identify_all_items_cost, Some(350));
+    assert_eq!(
+        library.overview_message_key.as_deref(),
+        Some("town-facility-demo-anambar-library-overview")
+    );
+    assert_eq!(library.entrance_position, ContentPosition { x: 16, y: 1 });
+
+    let shroomery = artifact
+        .content
+        .shops
+        .iter()
+        .find(|shop| shop.id == "demo.shop.anambar-shroomery")
+        .expect("Anambar shroomery should exist");
+    assert_eq!(shroomery.category, ShopCategory::Shroomery);
+    assert_eq!(shroomery.entrance_position, ContentPosition { x: 4, y: 9 });
+    assert_eq!(shroomery.stock.len(), 5);
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == town.floor_id)
+        .expect("Anambar floor should exist");
+    let inline = floor
+        .inline_map
+        .as_ref()
+        .expect("Anambar should use a fixed map");
+    for (terrain_id, position) in [
+        ("demo.terrain.library-entrance", library.entrance_position),
+        (
+            "demo.terrain.shroomery-entrance",
+            shroomery.entrance_position,
+        ),
+    ] {
+        assert!(inline.terrain_overrides.iter().any(|override_| {
+            override_.terrain_id == terrain_id && override_.positions == [position]
+        }));
+    }
 }

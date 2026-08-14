@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "worldId": "demo.world.middle-earth",
   "towns": [
     {
@@ -93,6 +93,7 @@
       "position": { "x": 26, "y": 39 },
       "sourceFile": "lib/edit/t_ana.txt",
       "standardFacilities": [
+        { "symbol": "0", "sourceTag": "SHROOMERY" },
         { "symbol": "1", "sourceTag": "GENERAL_STORE" },
         { "symbol": "2", "sourceTag": "ARMOURY" },
         { "symbol": "3", "sourceTag": "WEAPON_SMITHS" },
@@ -115,6 +116,18 @@
           { "actionIndex": 2, "name": "打听传闻", "minimumCost": 10, "maximumCost": 10, "command": "u", "actionId": 19, "restriction": 0 },
           { "actionIndex": 3, "name": "传送到其他城镇", "minimumCost": 500, "maximumCost": 500, "command": "m", "actionId": 42, "restriction": 0 },
           { "actionIndex": 4, "name": "询问你的声望", "minimumCost": 1, "maximumCost": 1, "command": "a", "actionId": 55, "restriction": 0 }
+        ]
+      },
+      "library": {
+        "buildingIndex": 0,
+        "name": "图书馆",
+        "ownerName": "托妮卡",
+        "ownerRace": "人类",
+        "services": [
+          { "actionIndex": 0, "name": "研究物品", "minimumCost": 1300, "maximumCost": 1300, "command": "a", "actionId": 1, "restriction": 0 },
+          { "actionIndex": 1, "name": "城镇纵览", "minimumCost": 0, "maximumCost": 0, "command": "h", "actionId": 2, "restriction": 0 },
+          { "actionIndex": 2, "name": "鉴定单件物品", "minimumCost": 50, "maximumCost": 50, "command": "i", "actionId": 44, "restriction": 0 },
+          { "actionIndex": 3, "name": "鉴定所有物品", "minimumCost": 350, "maximumCost": 350, "command": "p", "actionId": 26, "restriction": 0 }
         ]
       }
     }

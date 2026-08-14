@@ -25,7 +25,8 @@
     "TownFacilityCategory": {
       "enum": [
         "home",
-        "quest-giver"
+        "quest-giver",
+        "service"
       ],
       "type": "string"
     }
@@ -58,6 +59,15 @@
     "id": {
       "type": "string"
     },
+    "identifyAllItemsCost": {
+      "default": null,
+      "format": "uint32",
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "identifyItemCost": {
       "default": null,
       "format": "uint32",
@@ -79,10 +89,26 @@
     "nameKey": {
       "type": "string"
     },
+    "overviewMessageKey": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
     "ownerNameKey": {
       "default": null,
       "type": [
         "string",
+        "null"
+      ]
+    },
+    "researchItemCost": {
+      "default": null,
+      "format": "uint32",
+      "minimum": 0,
+      "type": [
+        "integer",
         "null"
       ]
     },

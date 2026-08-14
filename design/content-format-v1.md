@@ -722,3 +722,8 @@ content hash 为 `e0e6820f83989f8790a455d6af5656ec833341e03ef84b2005652c898c47e5
 `melee-adjacent` 步骤，供“大屠杀”复用普通近战 resolver。新增正式内容 ID 仅为无双追踪者
 和奇妙狂乱的两对 ability/program；content hash 为
 `b27d385635fe09ef107ca2dd4e7fe6475d58e7e3320893e899246920779f5cb2`。
+
+包 1.368.0 / P104 为 `TownFacilityDefinition` 增加可选的研究费用、全部鉴定费用与城镇纵览
+消息键，并增加只承载明确设施服务的 `service` 类别。Anambar 新增图书馆与蘑菇店；图书馆费用
+及“托妮卡”、蘑菇店“马丁”等中文名均锁定 RFB `master`，蘑菇库存复用 Outpost 已支持的五种
+物品。content hash 为 `990e57bb72cc98469da7a3a6950ac15db9ae051d7e396fd3f85f7a9628fada2a`。

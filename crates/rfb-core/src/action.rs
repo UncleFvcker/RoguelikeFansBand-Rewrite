@@ -122,6 +122,13 @@ pub(crate) enum GameAction {
         facility_id: String,
         item_id: String,
     },
+    ResearchItemAtFacility {
+        facility_id: String,
+        item_id: String,
+    },
+    IdentifyAllAtFacility {
+        facility_id: String,
+    },
     RenameAtFacility {
         facility_id: String,
         name: String,
@@ -217,6 +224,8 @@ impl GameAction {
             | Self::Retire
             | Self::SellToShop { .. }
             | Self::IdentifyAtFacility { .. }
+            | Self::ResearchItemAtFacility { .. }
+            | Self::IdentifyAllAtFacility { .. }
             | Self::RenameAtFacility { .. }
             | Self::StayAtInn { .. }
             | Self::TravelFromInn { .. }
@@ -376,6 +385,16 @@ impl From<GameCommand> for GameAction {
                 facility_id,
                 item_id,
             },
+            GameCommand::ResearchItemAtFacility {
+                facility_id,
+                item_id,
+            } => Self::ResearchItemAtFacility {
+                facility_id,
+                item_id,
+            },
+            GameCommand::IdentifyAllAtFacility { facility_id } => {
+                Self::IdentifyAllAtFacility { facility_id }
+            }
             GameCommand::RenameAtFacility { facility_id, name } => {
                 Self::RenameAtFacility { facility_id, name }
             }

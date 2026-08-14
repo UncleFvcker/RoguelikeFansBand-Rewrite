@@ -1742,6 +1742,8 @@ impl Game {
                     | GameAction::DismissPets
                     | GameAction::EnterWorldMap { .. }
                     | GameAction::IdentifyAtFacility { .. }
+                    | GameAction::ResearchItemAtFacility { .. }
+                    | GameAction::IdentifyAllAtFacility { .. }
                     | GameAction::IncreaseAttribute { .. }
                     | GameAction::ChooseRaceMutation { .. }
                     | GameAction::LeaveWorldMap
@@ -1938,6 +1940,26 @@ impl Game {
                     reason: reason.to_owned(),
                 }),
             },
+            GameAction::ResearchItemAtFacility {
+                facility_id,
+                item_id,
+            } => match self.research_item_at_facility(&facility_id, &item_id) {
+                Ok(outcome) => events.push(DomainEvent::FacilityItemIdentified { outcome }),
+                Err(reason) => events.push(DomainEvent::FacilityIdentifyUnavailable {
+                    facility_id,
+                    item_id,
+                    reason: reason.to_owned(),
+                }),
+            },
+            GameAction::IdentifyAllAtFacility { facility_id } => {
+                match self.identify_all_at_facility(&facility_id) {
+                    Ok(outcome) => events.push(DomainEvent::FacilityItemsIdentified { outcome }),
+                    Err(reason) => events.push(DomainEvent::FacilityIdentifyAllUnavailable {
+                        facility_id,
+                        reason: reason.to_owned(),
+                    }),
+                }
+            }
             GameAction::RenameAtFacility { facility_id, name } => {
                 match self.rename_at_facility(&facility_id, &name) {
                     Ok(outcome) => events.push(DomainEvent::FacilityPlayerRenamed { outcome }),
