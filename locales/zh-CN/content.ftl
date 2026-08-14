@@ -3579,6 +3579,8 @@ terrain-demo-tidal-cave-entrance-name = 潮汐洞穴入口
 terrain-demo-tidal-cave-entrance-description = 一个通往潮汐洞穴的湿滑入口。
 terrain-demo-icky-cave-entrance-name = 黏液洞穴入口
 terrain-demo-icky-cave-entrance-description = 恶心洞穴的入口
+terrain-demo-hideout-entrance-name = 藏身处入口
+terrain-demo-hideout-entrance-description = 一个通向叛军藏身处的阴暗入口
 
 
 floor-demo-outpost-sewer-name = 下水道

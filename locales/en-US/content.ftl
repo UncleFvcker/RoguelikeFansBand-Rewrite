@@ -3575,6 +3575,8 @@ terrain-demo-tidal-cave-entrance-name = entrance to Tidal Cave
 terrain-demo-tidal-cave-entrance-description = A slippery entrance leads to a tidal cave.
 terrain-demo-icky-cave-entrance-name = entrance to Icky Cave
 terrain-demo-icky-cave-entrance-description = The entrance to the Icky caves.
+terrain-demo-hideout-entrance-name = entrance to the Hideout
+terrain-demo-hideout-entrance-description = A shady entrance to a rebel hideout.
 
 
 floor-demo-outpost-sewer-name = The Sewer

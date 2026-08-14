@@ -7666,6 +7666,57 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
 }
 
 #[test]
+fn p89c_outpost_has_a_distinct_public_hideout_entrance() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let entrance = artifact
+        .content
+        .terrain
+        .iter()
+        .find(|terrain| terrain.id == "demo.terrain.hideout-entrance")
+        .expect("Hideout entrance terrain should compile");
+    assert_eq!(entrance.glyph, "<");
+    assert!(entrance.tags.iter().any(|tag| tag == "stairs-down"));
+
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should remain available");
+    let hideout_entrance = world
+        .terrain_overrides
+        .iter()
+        .find(|terrain| terrain.terrain_id == entrance.id)
+        .expect("Outpost should place the public Hideout entrance");
+    assert_eq!(
+        hideout_entrance.positions,
+        [ContentPosition { x: 93, y: 29 }]
+    );
+    assert_eq!(
+        world
+            .terrain_overrides
+            .iter()
+            .find(|terrain| terrain.terrain_id == "demo.terrain.stairs-down")
+            .expect("Warrens entrance should remain available")
+            .positions,
+        [ContentPosition { x: 74, y: 16 }]
+    );
+    let task_floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.thieves-hideout")
+        .expect("Thieves' Hideout task floor should remain available");
+    assert_eq!(
+        task_floor.task_id.as_deref(),
+        Some("demo.task.thieves-hideout")
+    );
+    assert_ne!(
+        task_floor.entry_terrain_id.as_deref(),
+        Some(entrance.id.as_str())
+    );
+}
+
+#[test]
 fn thieves_hideout_uses_the_original_fixed_map_and_formation_contract() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let world = artifact

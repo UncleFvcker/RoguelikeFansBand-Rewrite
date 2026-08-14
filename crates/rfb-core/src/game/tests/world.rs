@@ -182,20 +182,7 @@ fn game_with_dungeon_substitution(seed: u64) -> Game {
         .find(|dungeon| dungeon.id == "demo.dungeon.tidal-cave")
         .expect("Tidal Cave should remain available")
         .legacy_index = Some(40);
-    let shared_position = world
-        .wilderness
-        .as_ref()
-        .expect("Middle-earth should retain wilderness")
-        .locations
-        .iter()
-        .find_map(|location| match location {
-            rfb_content::WildernessLocationDefinition::Dungeon {
-                position,
-                dungeon_id,
-            } if dungeon_id == "demo.dungeon.camelot" => Some(*position),
-            _ => None,
-        })
-        .expect("Camelot should retain its wilderness location");
+    let shared_position = rfb_content::ContentPosition { x: 28, y: 52 };
     for location in &mut world
         .wilderness
         .as_mut()
@@ -206,17 +193,25 @@ fn game_with_dungeon_substitution(seed: u64) -> Game {
             position,
             dungeon_id,
         } = location
-            && dungeon_id == "demo.dungeon.tidal-cave"
+            && matches!(
+                dungeon_id.as_str(),
+                "demo.dungeon.camelot" | "demo.dungeon.tidal-cave"
+            )
         {
             *position = shared_position;
         }
     }
-    world
-        .procedural_floors
-        .iter_mut()
-        .find(|floor| floor.id == "demo.floor.tidal-cave-depth-15")
-        .expect("Tidal Cave root should remain available")
-        .entry_terrain_id = Some("demo.terrain.camelot-entrance".to_owned());
+    for floor_id in [
+        "demo.floor.camelot-depth-20",
+        "demo.floor.tidal-cave-depth-15",
+    ] {
+        world
+            .procedural_floors
+            .iter_mut()
+            .find(|floor| floor.id == floor_id)
+            .expect("substituted dungeon root should remain available")
+            .entry_terrain_id = Some("demo.terrain.hideout-entrance".to_owned());
+    }
 
     let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content)
@@ -277,7 +272,7 @@ fn p89b_substitute_selection_is_seeded_persisted_and_hashed() {
 }
 
 #[test]
-fn p89b_shared_entrance_map_and_guardians_use_only_the_active_dungeon() {
+fn p89c_outpost_shared_entrance_routes_only_to_the_active_dungeon() {
     for (seed, active_dungeon, active_floor, active_guardian, suppressed_guardian) in [
         (
             0,
@@ -295,7 +290,7 @@ fn p89b_shared_entrance_map_and_guardians_use_only_the_active_dungeon() {
         ),
     ] {
         let mut game = game_with_dungeon_substitution(seed);
-        let world_position = Position { x: 7, y: 59 };
+        let world_position = Position { x: 28, y: 52 };
         let cell = game.wilderness_cell_dto(world_position);
         assert!(
             cell.locations
@@ -310,14 +305,24 @@ fn p89b_shared_entrance_map_and_guardians_use_only_the_active_dungeon() {
                 .count(),
             1
         );
+        assert!(
+            cell.locations
+                .iter()
+                .any(|location| location.id == "demo.town.outpost")
+        );
+        assert!(
+            cell.locations
+                .iter()
+                .any(|location| location.id == "demo.dungeon.warrens")
+        );
         assert!(game.actor_kind_is_dungeon_guardian(active_guardian));
         assert!(!game.actor_kind_is_dungeon_guardian(suppressed_guardian));
 
-        game.wilderness_position = Some(world_position);
-        let index = usize::try_from(game.player.position.y).expect("player y should fit usize")
-            * usize::from(game.width)
-            + usize::try_from(game.player.position.x).expect("player x should fit usize");
-        game.terrain[index] = "demo.terrain.camelot-entrance".to_owned();
+        game.player.position = Position { x: 93, y: 29 };
+        assert_eq!(
+            game.terrain_at(game.player.position),
+            "demo.terrain.hideout-entrance"
+        );
         game.traverse_stairs(false)
             .expect("shared entrance should resolve")
             .expect("shared entrance should enter its active dungeon");

@@ -693,6 +693,10 @@
     {
       "terrainId": "demo.terrain.stairs-down",
       "positions": [{ "x": 74, "y": 16 }]
+    },
+    {
+      "terrainId": "demo.terrain.hideout-entrance",
+      "positions": [{ "x": 93, "y": 29 }]
     }
   ],
   "player": {
