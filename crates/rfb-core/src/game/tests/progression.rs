@@ -1197,7 +1197,15 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
         Game::DEFAULT_PLAYER_NAME,
     )
     .expect("formal Barbarian should create");
+    let hobbit = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        "rfb-legacy.race.hobbit",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal Hobbit should create");
     assert_eq!(barbarian.player.kind_id, human.player.kind_id);
+    assert_eq!(hobbit.player.kind_id, human.player.kind_id);
 
     let human_attributes = human.effective_player_attributes();
     let half_orc_attributes = half_orc.effective_player_attributes();
@@ -1251,6 +1259,22 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
     }
     assert!(barbarian.effective_player_max_hp() > human.effective_player_max_hp());
 
+    let hobbit_attributes = hobbit.effective_player_attributes();
+    for (attribute, bonus) in [
+        (AttributeKind::Strength, -2),
+        (AttributeKind::Intelligence, 1),
+        (AttributeKind::Wisdom, 1),
+        (AttributeKind::Dexterity, 3),
+        (AttributeKind::Constitution, 2),
+        (AttributeKind::Charisma, 1),
+    ] {
+        assert_eq!(
+            i16::from(hobbit_attributes.index(attribute)),
+            i16::from(human_attributes.index(attribute)) + bonus
+        );
+    }
+    assert!(hobbit.effective_player_max_hp() < human.effective_player_max_hp());
+
     let human_skills = human.effective_player_skill_progress();
     let half_orc_skills = half_orc.effective_player_skill_progress();
     assert_eq!(
@@ -1279,6 +1303,19 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
         barbarian_skills["demo.skill.device"].current + 7,
         human_skills["demo.skill.device"].current
     );
+    let hobbit_skills = hobbit.effective_player_skill_progress();
+    assert_eq!(
+        hobbit_skills["demo.skill.melee"].current + 10,
+        human_skills["demo.skill.melee"].current
+    );
+    assert_eq!(
+        hobbit_skills["demo.skill.ranged"].current,
+        human_skills["demo.skill.ranged"].current + 10
+    );
+    assert_eq!(
+        hobbit_skills["demo.skill.perception"].current,
+        human_skills["demo.skill.perception"].current + 5
+    );
 
     let shop_factor = |game: &Game| {
         game.snapshot()
@@ -1291,6 +1328,14 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
     };
     assert!(shop_factor(&half_orc) > shop_factor(&human));
     assert!(shop_factor(&barbarian) > shop_factor(&human));
+    assert_eq!(
+        hobbit
+            .content
+            .race("rfb-legacy.race.hobbit")
+            .expect("formal Hobbit race")
+            .shop_adjust_percent,
+        100
+    );
 
     let mut human_experience = human.clone();
     let mut half_orc_experience = half_orc.clone();
@@ -1310,6 +1355,10 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
     let mut barbarian_experience = barbarian.clone();
     barbarian_experience.apply_player_experience(100, &mut Vec::new());
     assert_eq!(barbarian_experience.progress.experience, 135);
+
+    let mut hobbit_experience = hobbit.clone();
+    hobbit_experience.apply_player_experience(100, &mut Vec::new());
+    assert_eq!(hobbit_experience.progress.experience, 120);
 
     let default = Game::new_with_build(83, "demo.build.warrior")
         .expect("Warrior build should retain its Human default");

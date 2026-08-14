@@ -412,3 +412,18 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 协调版本为 pack `1.336.0` / hash
   `fecd2a3598b99e61a66e07c76376e0e6c79da2e1702d6dafa2ce63ca0859cb8f`、Protocol `1.203`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。
+
+## main 当前批次：霍比特人正式内容、新游戏 UI 与验收
+
+- 正式种族复用 `rfb-legacy.race.hobbit`；新增能力身份
+  `rfb.ability.race.create-food` 与程序身份 `rfb.ability-program.race.create-food`。能力只引用
+  既有 `demo.item.ration-of-food`，不新增或占用 item、material、affix、resource ID。
+- RFB master 的属性、生命 92%、基础 HP 14、经验 120%、商店 100%、八项技能、4 格红外、
+  Hobbit kin、Standard 身体、初始“节制”和 15 级 INT/10/50“制造食物”均已闭合。霍比特人
+  没有等级奖励或额外抗性；`lootTables/hobbit.json` 仍只用于怪物掉落主题。
+- New Game 正式列表加入“霍比特人”，沿用既有 `raceId`；玩家 actor 和三套 tileset 继续由
+  职业 build 决定。能力面板复用既有“先天”来源、检定属性、门槛、消耗和当前失败率投影。
+- 制造食物的成功/失败支付、普通 `Acquire` 口粮、合法近地落点、堆叠/RNG、save/replay 与
+  临时变形切换均有直接或共享聚焦测试。协调版本为 pack `1.337.0` / hash
+  `a0d86072c1d0fdd278b5a0feac9546a79b99c736a0e264f51297bc6675f0c683`、Protocol `1.204`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。未运行或刷新全量 fixture。

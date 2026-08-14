@@ -2563,6 +2563,7 @@ fn natural_regeneration_and_rest_restore_warrior_health() {
 const MUTATION_CONTRACT_ABILITY_ID: &str = "demo.ability.mutation-contract";
 const MUTATION_CONTRACT_ID: &str = "rfb.mutation.spit-acid";
 const RACE_BERSERK_ABILITY_ID: &str = "rfb.ability.race.berserk";
+const RACE_CREATE_FOOD_ABILITY_ID: &str = "rfb.ability.race.create-food";
 
 #[test]
 fn race_ability_follows_the_effective_race_and_projects_its_source() {
@@ -2824,6 +2825,213 @@ fn formal_barbarian_berserk_spills_sp_into_hp_pays_on_failure_and_rejects_zero_b
         events.as_slice(),
         [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == "insufficient-resource"
     ));
+}
+
+fn formal_hobbit_high_mage(seed: u64, level: u16) -> Game {
+    let mut game = Game::new_with_build_race_and_name(
+        seed,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.hobbit",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Hobbit High-Mage should create");
+    clear_monsters(&mut game);
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(level),
+        &mut Vec::new(),
+    );
+    game
+}
+
+#[test]
+fn formal_hobbit_create_food_projects_and_round_trips_an_acquired_ration() {
+    let locked = formal_hobbit_high_mage(87, 14)
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_CREATE_FOOD_ABILITY_ID)
+        .expect("Hobbit Create Food should be projected before it unlocks");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Intelligence)
+    );
+    assert_eq!(locked.minimum_level, 15);
+    assert_eq!(locked.base_resource_cost, 10);
+    assert_eq!(locked.failure_percent, 100);
+    assert!(!locked.can_cast);
+
+    let mut game = formal_hobbit_high_mage(87, 15);
+    let available = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_CREATE_FOOD_ABILITY_ID)
+        .expect("Hobbit Create Food should remain projected");
+    assert!(available.can_cast);
+    assert!(available.failure_percent < 100);
+    game.debug_set_ability_casts_succeed(true);
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana")
+        .current = 3;
+    let mut replay = game.clone();
+    let hp_before = game.player.hp;
+    let tick_before = game.world_tick;
+    let serial_before = game.next_item_instance_serial;
+    for cast in [&mut game, &mut replay] {
+        dispatch_next(
+            cast,
+            GameCommand::CastAbility {
+                ability_id: RACE_CREATE_FOOD_ABILITY_ID.to_owned(),
+                target: TargetSelection::SelfTarget,
+            },
+        );
+    }
+    assert_eq!(game.state_hash(), replay.state_hash());
+    assert_eq!(game.world_tick, tick_before + 10);
+    assert_eq!(game.resources["demo.resource.mana"].current, 0);
+    assert_eq!(game.player.hp, hp_before - 7);
+    assert_eq!(game.next_item_instance_serial, serial_before + 1);
+
+    let created = game
+        .items
+        .iter()
+        .find(|item| {
+            item.kind_id == "demo.item.ration-of-food"
+                && item.origin_kind == Some(ItemOriginKindDto::Acquire)
+        })
+        .expect("Create Food should produce an acquired ration");
+    let created_id = created.id.clone();
+    assert_eq!(created.quantity, 1);
+    assert_eq!(created.quality, rfb_protocol::ItemQualityDto::Ordinary);
+    assert!(created.affix_ids.is_empty());
+    assert!(created.curse.is_none());
+    let ItemLocation::Ground(position) = created.location else {
+        panic!("created ration should land on the ground");
+    };
+    assert!(game.is_walkable(position));
+    assert!(rfb_distance(position, game.player.position) <= 3);
+
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Hobbit Create Food save should restore");
+    let restored_item = restored
+        .items
+        .iter()
+        .find(|item| item.id == created_id)
+        .expect("created ration should survive the save round trip");
+    assert_eq!(restored_item.kind_id, "demo.item.ration-of-food");
+    assert_eq!(restored_item.quantity, 1);
+    assert_eq!(restored_item.origin_kind, Some(ItemOriginKindDto::Acquire));
+    assert_eq!(
+        restored_item.quality,
+        rfb_protocol::ItemQualityDto::Ordinary
+    );
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn formal_hobbit_create_food_failure_pays_and_creates_nothing() {
+    let mut game = formal_hobbit_high_mage(88, 15);
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana")
+        .current = 3;
+    let failure_percent = game
+        .snapshot()
+        .player
+        .abilities
+        .iter()
+        .find(|ability| ability.id == RACE_CREATE_FOOD_ABILITY_ID)
+        .expect("Hobbit Create Food should be projected")
+        .failure_percent;
+    let seed = (0..4_096)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(failure_percent)
+        })
+        .expect("Hobbit Create Food should have a reachable failure roll");
+    game.rng = RfbRng::seeded(seed);
+    let acquired_before = game
+        .items
+        .iter()
+        .filter(|item| item.origin_kind == Some(ItemOriginKindDto::Acquire))
+        .count();
+    let serial_before = game.next_item_instance_serial;
+    let hp_before = game.player.hp;
+    let tick_before = game.world_tick;
+
+    dispatch_next(
+        &mut game,
+        GameCommand::CastAbility {
+            ability_id: RACE_CREATE_FOOD_ABILITY_ID.to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+
+    assert_eq!(game.world_tick, tick_before + 10);
+    assert_eq!(game.resources["demo.resource.mana"].current, 0);
+    assert_eq!(game.player.hp, hp_before - 7);
+    assert_eq!(game.next_item_instance_serial, serial_before);
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.origin_kind == Some(ItemOriginKindDto::Acquire))
+            .count(),
+        acquired_before
+    );
+}
+
+#[test]
+fn hobbit_intrinsics_follow_the_effective_race() {
+    let mut game = Game::new_with_build_race_and_name(
+        89,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human Warrior should create");
+    game.progress.level = 15;
+    assert_eq!(game.player_infravision_range(), 0);
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_CREATE_FOOD_ABILITY_ID)
+    );
+
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.hobbit-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.hobbit".to_owned());
+    game.player.statuses.push(form);
+    assert_eq!(game.player_infravision_range(), 4);
+    let ability = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_CREATE_FOOD_ABILITY_ID)
+        .expect("temporary Hobbit form should grant Create Food");
+    assert_eq!(ability.source, AbilitySourceDto::Race);
+    assert_eq!(
+        ability.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Intelligence)
+    );
+
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(game.player_infravision_range(), 0);
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_CREATE_FOOD_ABILITY_ID)
+    );
 }
 
 fn mutation_ability_catalog(
