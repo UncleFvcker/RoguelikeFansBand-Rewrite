@@ -497,7 +497,22 @@ impl Game {
                 status.kind_id == STATUS_INVULNERABILITY && status.remaining_ticks <= 1
             });
         let player_damage_percent = self.player_incoming_damage_percent();
-        let player_tick = process_actor_status_tick(&mut self.player, false, player_damage_percent);
+        let transcendence = self.player_has_status_kind(STATUS_TRANSCENDENCE);
+        let mut mana = self.resources.get_mut("demo.resource.mana");
+        let player_tick = process_actor_status_tick_with(
+            &mut self.player,
+            false,
+            player_damage_percent,
+            |player, damage, fatality_policy| {
+                commit_final_player_damage(
+                    player,
+                    mana.as_deref_mut(),
+                    transcendence,
+                    damage,
+                    fatality_policy,
+                )
+            },
+        );
         let player_status_expired = !player_tick.expired.is_empty();
         let tsuyoshi_expired = player_tick
             .expired

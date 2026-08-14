@@ -824,6 +824,67 @@
         {
           "type": "object",
           "properties": {
+            "durationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "statusKindIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "sustain-attributes"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "durationTicks",
+            "statusKindIds"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "harmfulOnly": {
+              "type": "boolean"
+            },
+            "removedMutationId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "cure-mutation"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "harmfulOnly"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "effectIndex": {
               "type": "integer",
               "format": "uint8",
@@ -4989,6 +5050,36 @@
         {
           "type": "object",
           "properties": {
+            "durationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "sustain-attributes"
+            }
+          },
+          "required": [
+            "type",
+            "durationTicks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "cure-mutation"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "amount": {
               "type": "integer",
               "format": "uint32",
@@ -5076,6 +5167,13 @@
             "type": {
               "type": "string",
               "const": "visible-damage"
+            },
+            "unlifeChangeOnHit": {
+              "type": "integer",
+              "format": "int8",
+              "default": 0,
+              "maximum": 127,
+              "minimum": -128
             }
           },
           "required": [

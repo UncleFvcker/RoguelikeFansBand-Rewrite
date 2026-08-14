@@ -22,11 +22,14 @@ use crate::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_ANTI_MAGIC,
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
         STATUS_CONFUSION, STATUS_DEVICE_MASTERY, STATUS_FEAR, STATUS_GIANT_STRENGTH,
-        STATUS_HALLUCINATION, STATUS_HASTE, STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY,
-        STATUS_LEVITATION, STATUS_NO_AIR, STATUS_PARALYSIS, STATUS_PLAYER_POLYMORPH, STATUS_POISON,
-        STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT,
-        STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE,
-        STATUS_TSUYOSHI, STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
+        STATUS_HALLUCINATION, STATUS_HASTE, STATUS_HOLD_LIFE, STATUS_INVENTORY_PROTECTION,
+        STATUS_INVULNERABILITY, STATUS_LEVITATION, STATUS_NO_AIR, STATUS_PARALYSIS,
+        STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION,
+        STATUS_SEE_INVISIBLE, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
+        STATUS_SUSTAIN_CHARISMA, STATUS_SUSTAIN_CONSTITUTION, STATUS_SUSTAIN_DEXTERITY,
+        STATUS_SUSTAIN_INTELLIGENCE, STATUS_SUSTAIN_STRENGTH, STATUS_SUSTAIN_WISDOM,
+        STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TRANSCENDENCE, STATUS_TSUYOSHI,
+        STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
         StatusApplication, StatusChange, StatusInstance, StatusStacking, apply_effect,
         apply_status, resolve_damage,
     },
@@ -170,8 +173,8 @@ use capabilities::{
     apply_healing, apply_resource_restoration, apply_status_application, apply_status_removal,
 };
 use damage::{
-    FatalityPolicy, commit_damage_application, plan_damage_application, process_actor_status_tick,
-    scale_damage_outcome,
+    FatalityPolicy, commit_damage_application, commit_final_player_damage, plan_damage_application,
+    process_actor_status_tick, process_actor_status_tick_with, scale_damage_outcome,
 };
 use environment_combat::PlayerTrapOutcome;
 use floor::{
@@ -3113,7 +3116,16 @@ impl Game {
                 .saturating_div(100),
         )
         .unwrap_or(i32::MAX);
-        self.player.hp = self.player.hp.saturating_sub(fatigue_damage);
+        let fatigue_damage = self
+            .apply_final_player_damage(
+                resolve_damage(
+                    DamagePacket::new(fatigue_damage, DamageType::Physical),
+                    ResistanceLevel::Normal,
+                ),
+                FatalityPolicy::BelowZero,
+            )
+            .damage
+            .applied;
         GenocideResolution {
             removed_entity_ids,
             resisted_entity_ids,
@@ -6851,7 +6863,8 @@ fn apply_ability_level_scaling(
         }
         (
             AbilityEffectDefinition::ApplyStatus { duration_ticks, .. }
-            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. },
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. }
+            | AbilityEffectDefinition::SustainAttributes { duration_ticks },
             AbilityLevelScalingField::StatusDurationTicks,
         ) => {
             *duration_ticks = u32::try_from(scaled_ability_level_value(
@@ -7080,7 +7093,8 @@ fn apply_ability_spell_power(
         }
         (
             AbilityEffectDefinition::ApplyStatus { duration_ticks, .. }
-            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. },
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. }
+            | AbilityEffectDefinition::SustainAttributes { duration_ticks },
             AbilitySpellPowerField::StatusDurationTicks,
         ) => {
             *duration_ticks = u32::try_from(scaled(u64::from(*duration_ticks)))
@@ -7835,6 +7849,12 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::TurnUndead { power } => {
             AbilityEffectSpecDto::TurnUndead { power: *power }
         }
+        AbilityEffectDefinition::SustainAttributes { duration_ticks } => {
+            AbilityEffectSpecDto::SustainAttributes {
+                duration_ticks: *duration_ticks,
+            }
+        }
+        AbilityEffectDefinition::CureMutation => AbilityEffectSpecDto::CureMutation,
         AbilityEffectDefinition::ReduceStatus {
             status_kind_id,
             amount,
@@ -7853,12 +7873,14 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_bonus,
             damage_type,
             target_category,
+            unlife_change_on_hit,
         } => AbilityEffectSpecDto::VisibleDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
             target_category: target_category.clone(),
+            unlife_change_on_hit: *unlife_change_on_hit,
             final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::VisibleApplyStatus {

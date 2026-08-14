@@ -1054,6 +1054,12 @@ impl Game {
             (AbilityEffectDefinition::TurnUndead { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_turn_undead_effect(&ability, events, changed);
             }
+            (AbilityEffectDefinition::SustainAttributes { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_sustain_attributes_effect(&ability, events)
+            }
+            (AbilityEffectDefinition::CureMutation, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_cure_mutation_effect(&ability, events);
+            }
             (
                 AbilityEffectDefinition::CreateCurrentTerrain { .. },
                 AbilityTargetPlan::SelfTarget,
@@ -1994,8 +2000,8 @@ impl Game {
             DamagePacket::new(raw_damage, DamageType::Light),
             ResistanceLevel::Normal,
         );
-        let application = plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-        commit_damage_application(&mut self.player, &application);
+        let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+        let damage = application.damage;
         let center = self.player.position;
         events.push(DomainEvent::AbilityHit {
             ability_id: ability_id.to_owned(),
@@ -2418,9 +2424,8 @@ impl Game {
                 target.armor_class.value,
                 resistance,
             ));
-            let application =
-                plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-            commit_damage_application(&mut self.player, &application);
+            let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+            let damage = application.damage;
             events.push(DomainEvent::BoltReflected {
                 reflector_kind_id: reflector_kind_id.clone(),
                 source_kind_id: source_kind_id.to_owned(),
@@ -2599,6 +2604,7 @@ impl Game {
             damage_bonus,
             damage_type,
             target_category,
+            unlife_change_on_hit,
         } = &ability.effect
         else {
             unreachable!("visible damage executor requires a visible damage effect");
@@ -2614,7 +2620,7 @@ impl Game {
             u64::try_from(base_raw_damage).expect("visible damage must be non-negative"),
         ))
         .expect("spell-powered visible damage must fit i32");
-        self.resolve_player_visible_damage_with_base(
+        let affected = self.resolve_player_visible_damage_with_base(
             &ability.id,
             DamageType::from(*damage_type),
             target_category.as_deref(),
@@ -2622,7 +2628,11 @@ impl Game {
             events,
             changed,
             removed_entities,
-        )
+        )?;
+        if affected > 0 && *unlife_change_on_hit != 0 {
+            self.add_virtue(VirtueKindDto::Unlife, i16::from(*unlife_change_on_hit));
+        }
+        Ok(())
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2635,7 +2645,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
-    ) -> Result<(), CoreError> {
+    ) -> Result<usize, CoreError> {
         let target_ids = self
             .entities
             .iter()
@@ -2650,6 +2660,7 @@ impl Game {
             })
             .map(|entity| entity.id.clone())
             .collect::<Vec<_>>();
+        let target_count = target_ids.len();
         let affected_positions = target_ids
             .iter()
             .filter_map(|id| self.entities.iter().find(|entity| &entity.id == id))
@@ -2689,7 +2700,7 @@ impl Game {
                 removed_entities,
             )?;
         }
-        Ok(())
+        Ok(target_count)
     }
 
     pub(super) fn resolve_player_death_ray_effect(
@@ -3267,7 +3278,17 @@ impl Game {
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
                     | AbilityEffectDefinition::AggravateMonsters
                     | AbilityEffectDefinition::CallSunlight { .. }
+                    | AbilityEffectDefinition::CreateCurrentTerrain { .. }
                     | AbilityEffectDefinition::NoOp { .. } => AbilityTargetPlan::SelfTarget,
+                    AbilityEffectDefinition::CreateAdjacentTerrain {
+                        source_terrain_ids,
+                        target_terrain_id,
+                    } => AbilityTargetPlan::AdjacentTerrain {
+                        replacements: self.adjacent_terrain_creation_replacements(
+                            source_terrain_ids,
+                            target_terrain_id,
+                        ),
+                    },
                     _ => unreachable!("validated self sequence must remain self-targeted"),
                 };
                 self.resolve_player_ability_effect(step, plan, events, changed, removed_entities)?;
@@ -4170,6 +4191,96 @@ impl Game {
         if affected {
             self.add_virtue(VirtueKindDto::Unlife, -1);
         }
+    }
+
+    fn resolve_player_sustain_attributes_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::SustainAttributes { duration_ticks } = ability.effect else {
+            unreachable!("attribute sustain executor requires its matching effect");
+        };
+        let mut remaining = self.progress.level / 7;
+        let mut selected = Vec::new();
+        for (denominator, status_kind_id) in [
+            (7, STATUS_HOLD_LIFE),
+            (6, STATUS_SUSTAIN_CONSTITUTION),
+            (5, STATUS_SUSTAIN_STRENGTH),
+            (4, STATUS_SUSTAIN_INTELLIGENCE),
+            (3, STATUS_SUSTAIN_DEXTERITY),
+            (2, STATUS_SUSTAIN_WISDOM),
+        ] {
+            if self.rng.bounded(denominator) < u64::from(remaining) {
+                selected.push(status_kind_id);
+                remaining = remaining.saturating_sub(1);
+            }
+        }
+        if remaining > 0 {
+            selected.push(STATUS_SUSTAIN_CHARISMA);
+        }
+        for status_kind_id in &selected {
+            let _ = apply_ability_status_effect(
+                &mut self.player,
+                &ability.id,
+                0,
+                status_kind_id,
+                1,
+                duration_ticks,
+                0,
+                0,
+                AbilityStatusStackingDefinition::KeepStrongest,
+                None,
+                None,
+                &BTreeMap::new(),
+                &BTreeSet::new(),
+                &StatModifiers::default(),
+                &EquipmentBonuses::default(),
+                &BTreeSet::new(),
+                None,
+                false,
+                100,
+                None,
+                None,
+                &mut self.rng,
+            );
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::SustainAttributes {
+                    effect_index: 0,
+                    duration_ticks,
+                    status_kind_ids: selected.into_iter().map(str::to_owned).collect(),
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_cure_mutation_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let denominator = u64::from((100 / self.progress.level.max(1)).max(1));
+        let harmful_only = self.rng.bounded(denominator) == 0;
+        let removed_mutation_id = self.cure_random_mutation(harmful_only, events);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::CureMutation {
+                    effect_index: 0,
+                    harmful_only,
+                    removed_mutation_id,
+                }],
+            },
+            trace: None,
+        });
     }
 
     fn resolve_player_create_current_terrain_effect(
@@ -6043,9 +6154,8 @@ impl Game {
                     self.effective_player_resistances()
                         .level(DamageType::Physical),
                 ));
-                let application =
-                    plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-                commit_damage_application(&mut self.player, &application);
+                let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+                let damage = application.damage;
                 match &source {
                     EarthquakeSource::Ability(ability_id) => {
                         events.push(DomainEvent::AbilityHit {
@@ -6241,7 +6351,16 @@ impl Game {
         let damage = self
             .roll_damage(damage_dice, damage_sides)
             .saturating_add(i32::from(damage_bonus));
-        self.player.hp = self.player.hp.saturating_sub(damage);
+        let damage = self
+            .apply_final_player_damage(
+                resolve_damage(
+                    DamagePacket::new(damage, DamageType::Physical),
+                    ResistanceLevel::Normal,
+                ),
+                FatalityPolicy::BelowZero,
+            )
+            .damage
+            .applied;
         let already_suppressed = self.reproduction_suppressed;
         self.reproduction_suppressed = true;
         events.push(DomainEvent::AbilityEffectsResolved {
@@ -6410,10 +6529,14 @@ impl Game {
             if self.rng.bounded(6) == 0 {
                 let dice = u16::try_from(self.rng.bounded(10) + 1)
                     .expect("polymorph life-loss dice must fit u16");
-                self.player.hp = self
-                    .player
-                    .hp
-                    .saturating_sub(self.roll_damage(dice, self.progress.level.max(1)));
+                let damage = resolve_damage(
+                    DamagePacket::new(
+                        self.roll_damage(dice, self.progress.level.max(1)),
+                        DamageType::Physical,
+                    ),
+                    ResistanceLevel::Normal,
+                );
+                self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
                 power -= 10;
             }
         }
@@ -8719,6 +8842,8 @@ impl Game {
             | AbilityEffectDefinition::RemoveEquippedCurses { .. }
             | AbilityEffectDefinition::BeginFasting
             | AbilityEffectDefinition::TurnUndead { .. }
+            | AbilityEffectDefinition::SustainAttributes { .. }
+            | AbilityEffectDefinition::CureMutation
             | AbilityEffectDefinition::CreateCurrentTerrain { .. }
             | AbilityEffectDefinition::NatureGate { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }

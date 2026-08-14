@@ -428,6 +428,186 @@ fn life_second_book_keeps_the_original_identity_allocation_and_spell_table() {
 }
 
 #[test]
+fn life_third_book_keeps_the_original_identity_allocation_and_spell_table() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.book-of-the-unicorn")
+        .expect("Book of the Unicorn should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("life"));
+    assert_eq!(book.rank, Some(3));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.book-of-the-unicorn")
+        .expect("Book of the Unicorn item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (
+            45,
+            30,
+            15_000,
+            Some("demo.ability-book.book-of-the-unicorn")
+        )
+    );
+    assert_eq!(
+        item.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+            ItemDestructionElement::Cold,
+        ])
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Book of the Unicorn should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (45, 90, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .map(|shop| shop.category)
+            .collect::<Vec<_>>(),
+        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+    );
+
+    let expected = [
+        ("demo.ability.life-dispel-curse", 20, 20, 40, 75),
+        ("demo.ability.life-perception", 24, 24, 60, 150),
+        ("demo.ability.life-dispel-undead", 30, 30, 50, 75),
+        ("demo.ability.life-sustain-attributes", 31, 30, 50, 75),
+        ("demo.ability.life-cure-mutation", 32, 30, 60, 75),
+        ("demo.ability.life-word-of-recall", 33, 40, 60, 115),
+        ("demo.ability.life-transcendence", 35, 35, 60, 125),
+        ("demo.ability.life-warding-true", 40, 70, 70, 150),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    let dispel = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.life-dispel-undead")
+        .expect("Dispel Undead should compile");
+    assert!(matches!(
+        dispel.effect,
+        AbilityEffectDefinition::VisibleDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            unlife_change_on_hit: -2,
+            ..
+        }
+    ));
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-dispel-curse")
+            .expect("Dispel Curse should compile")
+            .effect,
+        AbilityEffectDefinition::RemoveEquippedCurses {
+            include_heavy: true
+        }
+    ));
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-perception")
+            .expect("Perception should compile")
+            .effect,
+        AbilityEffectDefinition::IdentifyItem {
+            full_identify_power: 0,
+            full_identify_roll_sides: 0
+        }
+    ));
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-word-of-recall")
+            .expect("Word of Recall should compile")
+            .effect,
+        AbilityEffectDefinition::Recall {
+            delay_dice: 1,
+            delay_sides: 20,
+            delay_bonus: 15
+        }
+    ));
+    assert!(matches!(
+        &content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-warding-true")
+            .expect("Warding True should compile")
+            .effect,
+        AbilityEffectDefinition::Sequence { effects }
+            if matches!(effects.as_slice(), [
+                AbilityEffectDefinition::CreateCurrentTerrain { .. },
+                AbilityEffectDefinition::CreateAdjacentTerrain { .. }
+            ])
+    ));
+    for id in [
+        "demo.ability.life-dispel-undead",
+        "demo.ability.life-sustain-attributes",
+        "demo.ability.life-transcendence",
+    ] {
+        assert_eq!(
+            content
+                .abilities
+                .iter()
+                .find(|ability| ability.id == id)
+                .expect("scaled Life ability should compile")
+                .spell_power_fields
+                .len(),
+            1
+        );
+    }
+}
+
+#[test]
 fn nature_first_book_keeps_the_original_spell_table_and_allocation() {
     let content = compile_pack_dir(&original_pack_path())
         .expect("original pack should compile")

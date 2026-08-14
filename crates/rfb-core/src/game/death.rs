@@ -316,8 +316,8 @@ impl Game {
                         |damage| damage.damage,
                     ));
                     let application =
-                        plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-                    commit_damage_application(&mut self.player, &application);
+                        self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+                    let damage = application.damage;
                     if !application.fatal
                         && let Some(bomb_damage) = bomb_damage
                     {

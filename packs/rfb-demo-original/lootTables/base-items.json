@@ -1760,6 +1760,13 @@
       "maxDepth": 50
     },
     {
+      "itemKindId": "demo.item.book-of-the-unicorn",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45,
+      "maxDepth": 90
+    },
+    {
       "itemKindId": "demo.item.call-of-the-wild",
       "weight": 100,
       "quantity": 1,

@@ -209,11 +209,24 @@ fn life_high_mage_game(seed: u64, level: u16) -> Game {
             "demo.ability.life-turn-undead",
             "demo.ability.life-healing",
             "demo.ability.life-glyph-of-warding",
+            "demo.ability.life-dispel-curse",
+            "demo.ability.life-perception",
+            "demo.ability.life-dispel-undead",
+            "demo.ability.life-sustain-attributes",
+            "demo.ability.life-cure-mutation",
+            "demo.ability.life-word-of-recall",
+            "demo.ability.life-transcendence",
+            "demo.ability.life-warding-true",
         ]
         .into_iter()
         .map(str::to_owned),
     );
     give_inventory_item(&mut game, "test.high-mass", "demo.item.high-mass");
+    give_inventory_item(
+        &mut game,
+        "test.book-of-the-unicorn",
+        "demo.item.book-of-the-unicorn",
+    );
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
@@ -367,6 +380,7 @@ fn life_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         "demo.item.book-of-elements",
         "demo.item.call-of-the-wild",
         "demo.item.high-mass",
+        "demo.item.book-of-the-unicorn",
     ] {
         assert!(!carried.contains(excluded));
     }
@@ -378,7 +392,7 @@ fn life_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 8);
+    assert_eq!(learned.len(), 24);
     assert!(
         learned
             .iter()
@@ -954,6 +968,287 @@ fn life_turn_undead_uses_level_power_and_only_changes_unlife_after_success() {
             .as_slice(),
         [AbilityEffectSpecDto::TurnUndead { power: 50 }]
     ));
+}
+
+#[test]
+fn life_third_book_projects_and_resolves_dispel_undead_without_a_damage_roll() {
+    let mut game = life_high_mage_game(0x4c49_4645_554e_4444, 50);
+    clear_monsters(&mut game);
+    let undead_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    let living_position = Position {
+        x: game.player.position.x,
+        y: game.player.position.y + 1,
+    };
+    replace_terrain(&mut game, undead_position, "demo.terrain.floor");
+    replace_terrain(&mut game, living_position, "demo.terrain.floor");
+    game.entities.push(actor_from_runtime_spawn(
+        "test.dispel-undead",
+        "demo.actor.zombified-kobold",
+        undead_position,
+        1_000,
+        110,
+        100,
+        true,
+    ));
+    game.entities.push(actor_from_runtime_spawn(
+        "test.dispel-living",
+        "demo.actor.large-kobold",
+        living_position,
+        1_000,
+        110,
+        100,
+        true,
+    ));
+    game.virtues[0] = VirtueDto {
+        kind: VirtueKindDto::Unlife,
+        value: 0,
+    };
+
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "demo.ability.life-dispel-undead")
+        .expect("Dispel Undead should project");
+    assert!(matches!(
+        projected.effects.as_slice(),
+        [AbilityEffectSpecDto::VisibleDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 165,
+            target_category: Some(category),
+            unlife_change_on_hit: -2,
+            ..
+        }] if category == "undead"
+    ));
+    let draws_before = game.rng_draw_counter();
+    game.resolve_player_ability(
+        "demo.ability.life-dispel-undead",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Dispel Undead should resolve");
+    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+    assert_eq!(game.entities[0].hp, 835);
+    assert_eq!(game.entities[1].hp, 1_000);
+    assert_eq!(game.virtue_current(VirtueKindDto::Unlife), -2);
+}
+
+#[test]
+fn life_sustain_attributes_uses_the_original_order_and_one_shared_duration() {
+    let mut game = life_high_mage_game(0x4c49_4645_5355_5354, 50);
+    let draws_before = game.rng_draw_counter();
+    game.resolve_player_ability(
+        "demo.ability.life-sustain-attributes",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Sustain Attributes should resolve");
+    assert_eq!(
+        game.rng_draw_counter(),
+        draws_before + 7,
+        "one cast roll and the original six ordered sustain rolls are required"
+    );
+    let statuses = [
+        STATUS_HOLD_LIFE,
+        STATUS_SUSTAIN_CONSTITUTION,
+        STATUS_SUSTAIN_STRENGTH,
+        STATUS_SUSTAIN_INTELLIGENCE,
+        STATUS_SUSTAIN_DEXTERITY,
+        STATUS_SUSTAIN_WISDOM,
+        STATUS_SUSTAIN_CHARISMA,
+    ];
+    for kind_id in statuses {
+        assert_eq!(
+            game.player
+                .statuses
+                .iter()
+                .find(|status| status.kind_id == kind_id)
+                .map(|status| status.remaining_ticks),
+            Some(50),
+            "{kind_id} should share the spell-powered level duration"
+        );
+    }
+    assert_eq!(game.player_hold_life_sources(), 1);
+    assert!(
+        [
+            EquipmentPassive::SustainStrength,
+            EquipmentPassive::SustainIntelligence,
+            EquipmentPassive::SustainWisdom,
+            EquipmentPassive::SustainDexterity,
+            EquipmentPassive::SustainConstitution,
+            EquipmentPassive::SustainCharisma,
+        ]
+        .into_iter()
+        .all(|passive| game.player_equipment_passives().contains(&passive))
+    );
+}
+
+#[test]
+fn life_cure_mutation_prefers_harmful_mutations_and_preserves_locked_mutations() {
+    let mut game = life_high_mage_game(0x4c49_4645_4355_5245, 50);
+    game.progress.active_mutation_ids = BTreeSet::from([
+        "rfb.mutation.bad-luck".to_owned(),
+        "rfb.mutation.astral-guide".to_owned(),
+    ]);
+    game.progress.locked_mutation_ids = BTreeSet::from(["rfb.mutation.astral-guide".to_owned()]);
+    let seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            let _ = rng.bounded(100);
+            rng.bounded(2) == 0
+        })
+        .expect("a deterministic harmful-only cure seed should exist");
+    game.rng = RfbRng::seeded(seed);
+    let draws_before = game.rng_draw_counter();
+    game.resolve_player_ability(
+        "demo.ability.life-cure-mutation",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Mutation should resolve");
+    assert_eq!(game.rng_draw_counter(), draws_before + 3);
+    assert!(
+        !game
+            .progress
+            .active_mutation_ids
+            .contains("rfb.mutation.bad-luck")
+    );
+    assert!(
+        game.progress
+            .active_mutation_ids
+            .contains("rfb.mutation.astral-guide")
+    );
+    assert!(
+        game.progress
+            .locked_mutation_ids
+            .contains("rfb.mutation.astral-guide")
+    );
+}
+
+#[test]
+fn life_transcendence_absorbs_direct_and_status_damage_with_mana_first() {
+    let mut game = life_high_mage_game(0x4c49_4645_5452_414e, 50);
+    game.resolve_player_ability(
+        "demo.ability.life-transcendence",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Transcendence should resolve");
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_TRANSCENDENCE)
+            .map(|status| status.remaining_ticks),
+        Some(5)
+    );
+
+    game.player.hp = 100;
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 6;
+    let application = game.apply_final_player_damage(
+        DamageOutcome {
+            raw: 10,
+            armor_reduction: 0,
+            requested: 10,
+            applied: 10,
+            resistance_delta: 0,
+            damage_type: DamageType::Physical,
+            resistance: ResistanceLevel::Normal,
+        },
+        FatalityPolicy::BelowZero,
+    );
+    assert_eq!(application.damage.applied, 4);
+    assert_eq!(game.player.hp, 96);
+    assert_eq!(game.resources["demo.resource.mana"].current, 0);
+
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 20;
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 1,
+        remaining_ticks: 1_000,
+        source_id: Some("test.transcendence-poison".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    let hp_before = game.player.hp;
+    game.process_status_tick(
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+        false,
+    )
+    .expect("status damage should use the final player damage entry");
+    assert_eq!(game.player.hp, hp_before);
+    assert!(game.resources["demo.resource.mana"].current < 20);
+}
+
+#[test]
+fn life_warding_true_creates_the_current_and_eight_adjacent_glyphs_atomically() {
+    let mut game = life_high_mage_game(0x4c49_4645_5741_5244, 50);
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 1_000;
+    clear_monsters(&mut game);
+    let center = game.player.position;
+    game.floor_connections.clear();
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let positions = (-1..=1)
+        .flat_map(|dy| {
+            (-1..=1).map(move |dx| Position {
+                x: center.x + dx,
+                y: center.y + dy,
+            })
+        })
+        .collect::<Vec<_>>();
+    game.items.retain(|item| {
+        !matches!(item.location, ItemLocation::Ground(position) if positions.contains(&position))
+    });
+    game.gold_piles
+        .retain(|pile| !positions.contains(&pile.position));
+    let adjacent = game.adjacent_terrain_creation_replacements(
+        &["demo.terrain.floor".to_owned()],
+        "demo.terrain.warding-glyph",
+    );
+    assert_eq!(adjacent.len(), 8);
+    game.resolve_player_ability(
+        "demo.ability.life-warding-true",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Warding True should resolve");
+    assert!(
+        positions
+            .into_iter()
+            .all(|position| game.terrain_at(position) == "demo.terrain.warding-glyph")
+    );
 }
 
 #[test]

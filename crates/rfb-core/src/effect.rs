@@ -42,6 +42,14 @@ pub const STATUS_WRAITHFORM: &str = "rfb.status.wraithform";
 pub const STATUS_REGENERATION: &str = "rfb.status.regeneration";
 pub const STATUS_LEVITATION: &str = "rfb.status.levitation";
 pub const STATUS_NO_AIR: &str = "rfb.status.no-air";
+pub const STATUS_HOLD_LIFE: &str = "rfb.status.hold-life";
+pub const STATUS_SUSTAIN_STRENGTH: &str = "rfb.status.sustain-strength";
+pub const STATUS_SUSTAIN_INTELLIGENCE: &str = "rfb.status.sustain-intelligence";
+pub const STATUS_SUSTAIN_WISDOM: &str = "rfb.status.sustain-wisdom";
+pub const STATUS_SUSTAIN_DEXTERITY: &str = "rfb.status.sustain-dexterity";
+pub const STATUS_SUSTAIN_CONSTITUTION: &str = "rfb.status.sustain-constitution";
+pub const STATUS_SUSTAIN_CHARISMA: &str = "rfb.status.sustain-charisma";
+pub const STATUS_TRANSCENDENCE: &str = "rfb.status.transcendence";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {

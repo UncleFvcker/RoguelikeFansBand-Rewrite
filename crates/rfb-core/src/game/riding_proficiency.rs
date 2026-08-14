@@ -432,9 +432,8 @@ impl Game {
             ),
             ResistanceLevel::Normal,
         );
-        let application =
-            plan_damage_application(&self.player, fall_damage, FatalityPolicy::BelowZero);
-        commit_damage_application(&mut self.player, &application);
+        let application = self.apply_final_player_damage(fall_damage, FatalityPolicy::BelowZero);
+        let fall_damage = application.damage;
         changed.insert(origin);
 
         let Some(destination) = destination else {

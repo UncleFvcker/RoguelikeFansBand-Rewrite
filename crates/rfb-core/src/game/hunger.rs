@@ -150,9 +150,8 @@ impl Game {
                 DamagePacket::new(amount, DamageType::Physical),
                 ResistanceLevel::Normal,
             );
-            let application =
-                plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-            commit_damage_application(&mut self.player, &application);
+            let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+            let damage = application.damage;
             events.push(DomainEvent::PlayerDamagedByStarvation { damage });
             if application.fatal {
                 events.push(DomainEvent::PlayerDiedFromStarvation { damage });

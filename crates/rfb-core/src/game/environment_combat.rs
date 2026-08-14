@@ -121,8 +121,8 @@ impl Game {
             self.effective_player_resistances()
                 .level(trap.damage_type.into()),
         ));
-        let application = plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-        commit_damage_application(&mut self.player, &application);
+        let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+        let damage = application.damage;
         Some(PlayerTrapOutcome::Triggered {
             source_kind_id,
             damage,

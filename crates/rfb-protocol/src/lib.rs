@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.207";
+pub const PROTOCOL_VERSION: &str = "1.208";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1344,6 +1344,10 @@ pub enum AbilityEffectSpecDto {
     TurnUndead {
         power: u16,
     },
+    SustainAttributes {
+        duration_ticks: u32,
+    },
+    CureMutation,
     ReduceStatus {
         status_kind_id: String,
         amount: u32,
@@ -1360,6 +1364,8 @@ pub enum AbilityEffectSpecDto {
         damage_type: DamageTypeDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target_category: Option<String>,
+        #[serde(default)]
+        unlife_change_on_hit: i8,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         final_damage_spell_power_bonus: Option<i32>,
     },
@@ -2339,6 +2345,17 @@ pub enum AbilityEffectResolutionDto {
         effect_index: u8,
         nutrition_before: u16,
         nutrition_after: u16,
+    },
+    SustainAttributes {
+        effect_index: u8,
+        duration_ticks: u32,
+        status_kind_ids: Vec<String>,
+    },
+    CureMutation {
+        effect_index: u8,
+        harmful_only: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        removed_mutation_id: Option<String>,
     },
     CreateCurrentTerrain {
         effect_index: u8,

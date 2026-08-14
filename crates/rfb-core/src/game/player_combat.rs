@@ -1764,9 +1764,8 @@ impl Game {
                 if damage.applied <= 0 {
                     continue;
                 }
-                let application =
-                    plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-                commit_damage_application(&mut self.player, &application);
+                let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+                let damage = application.damage;
                 events.push(DomainEvent::MonsterMeleeHit {
                     source_kind_id: definition.id.clone(),
                     method_id: None,

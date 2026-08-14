@@ -712,6 +712,10 @@ pub enum AbilityEffectDefinition {
     TurnUndead {
         power: u16,
     },
+    SustainAttributes {
+        duration_ticks: u32,
+    },
+    CureMutation,
     ReduceStatus {
         status_kind_id: String,
         amount: u32,
@@ -730,6 +734,8 @@ pub enum AbilityEffectDefinition {
         damage_type: ActorDamageType,
         #[serde(default)]
         target_category: Option<String>,
+        #[serde(default)]
+        unlife_change_on_hit: i8,
     },
     VisibleApplyStatus {
         status_kind_id: String,
@@ -903,7 +909,8 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*intensity), 1_000)),
         (
             AbilityEffectDefinition::ApplyStatus { duration_ticks, .. }
-            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. },
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. }
+            | AbilityEffectDefinition::SustainAttributes { duration_ticks },
             AbilityLevelScalingField::StatusDurationTicks,
         ) => Some((u64::from(*duration_ticks), 1_000_000)),
         (
@@ -1107,6 +1114,7 @@ pub(crate) fn valid_ability_spell_power(
                     effect,
                     AbilityEffectDefinition::ApplyStatus { .. }
                         | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                        | AbilityEffectDefinition::SustainAttributes { .. }
                 ),
                 AbilitySpellPowerField::StatusDurationSides => {
                     matches!(effect, AbilityEffectDefinition::ApplyStatus { .. })

@@ -164,6 +164,7 @@
     { "sourceIndex": 466, "sourceName": "Mead of Poetry:Bright Orange", "sourceId": "mead-of-poetry-bright-orange", "itemId": "demo.item.muse-tonic", "status": "active", "contract": "contract-v141-potion-poetic-inspiration" },
     { "sourceIndex": 500, "sourceName": "[Book of Common Prayer]", "sourceId": "book-of-common-prayer", "itemId": "demo.item.book-of-common-prayer", "status": "active", "contract": "class-high-mage-life-first-book" },
     { "sourceIndex": 501, "sourceName": "[High Mass]", "sourceId": "high-mass", "itemId": "demo.item.high-mass", "status": "active", "contract": "class-high-mage-life-second-book" },
+    { "sourceIndex": 502, "sourceName": "[Book of the Unicorn]", "sourceId": "book-of-the-unicorn", "itemId": "demo.item.book-of-the-unicorn", "status": "active", "contract": "class-high-mage-life-third-book" },
     { "sourceIndex": 504, "sourceName": "[Beginner's Handbook]", "sourceId": "beginners-handbook", "itemId": "demo.item.beginners-handbook", "status": "active", "contract": "class-high-mage-sorcery-first-book" },
     { "sourceIndex": 505, "sourceName": "[Master Sorcerer's Handbook]", "sourceId": "master-sorcerers-handbook", "itemId": "demo.item.master-sorcerers-handbook", "status": "active", "contract": "class-high-mage-sorcery-second-book" },
     { "sourceIndex": 506, "sourceName": "[Pattern Sorcery]", "sourceId": "pattern-sorcery", "itemId": "demo.item.pattern-sorcery", "status": "active", "contract": "class-high-mage-sorcery-third-book" },

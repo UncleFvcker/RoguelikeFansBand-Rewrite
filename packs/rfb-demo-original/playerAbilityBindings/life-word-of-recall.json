@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json","formatVersion":1,"abilityId":"demo.ability.life-word-of-recall","minimumLevel":33,"resourceId":"demo.resource.mana","resourceCost":40,"baseFailurePercent":60,"firstSuccessExperience":115}

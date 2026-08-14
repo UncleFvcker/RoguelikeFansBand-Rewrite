@@ -249,6 +249,8 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::RemoveEquippedCurses { .. }
                     | AbilityEffectDefinition::BeginFasting
                     | AbilityEffectDefinition::TurnUndead { .. }
+                    | AbilityEffectDefinition::SustainAttributes { .. }
+                    | AbilityEffectDefinition::CureMutation
                     | AbilityEffectDefinition::MeleeAdjacent
                     | AbilityEffectDefinition::ProbeMonsters
                     | AbilityEffectDefinition::Concentrate
@@ -362,6 +364,8 @@ fn ability_program_step_is_composable(
                 | AbilityEffectDefinition::Detect { .. }
                 | AbilityEffectDefinition::VisibleDamage { .. }
                 | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                | AbilityEffectDefinition::CreateAdjacentTerrain { .. }
+                | AbilityEffectDefinition::CreateCurrentTerrain { .. }
                 | AbilityEffectDefinition::NoOp { .. }
         ),
         AbilityProgramInputDefinition::CastTarget => matches!(

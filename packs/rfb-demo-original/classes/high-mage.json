@@ -281,7 +281,8 @@
         "realmId": "life",
         "abilityBookIds": [
           "demo.ability-book.book-of-common-prayer",
-          "demo.ability-book.high-mass"
+          "demo.ability-book.high-mass",
+          "demo.ability-book.book-of-the-unicorn"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -300,7 +301,15 @@
           { "abilityId": "demo.ability.life-sense-surroundings", "minimumLevel": 19, "resourceCost": 17, "baseFailurePercent": 40 },
           { "abilityId": "demo.ability.life-turn-undead", "minimumLevel": 21, "resourceCost": 19, "baseFailurePercent": 40 },
           { "abilityId": "demo.ability.life-healing", "minimumLevel": 25, "resourceCost": 25, "baseFailurePercent": 45 },
-          { "abilityId": "demo.ability.life-glyph-of-warding", "minimumLevel": 30, "resourceCost": 50, "baseFailurePercent": 55 }
+          { "abilityId": "demo.ability.life-glyph-of-warding", "minimumLevel": 30, "resourceCost": 50, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.life-dispel-curse", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-perception", "minimumLevel": 24, "resourceCost": 24, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-dispel-undead", "minimumLevel": 30, "resourceCost": 30, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.life-sustain-attributes", "minimumLevel": 31, "resourceCost": 30, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.life-cure-mutation", "minimumLevel": 32, "resourceCost": 30, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-word-of-recall", "minimumLevel": 33, "resourceCost": 40, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-transcendence", "minimumLevel": 35, "resourceCost": 35, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-warding-true", "minimumLevel": 40, "resourceCost": 70, "baseFailurePercent": 70 }
         ]
       }
     ]

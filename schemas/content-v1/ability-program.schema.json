@@ -2432,6 +2432,38 @@
         {
           "additionalProperties": false,
           "properties": {
+            "durationTicks": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "sustain-attributes",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationTicks"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "cure-mutation",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "amount": {
               "format": "uint32",
               "minimum": 0,
@@ -2517,6 +2549,13 @@
             "type": {
               "const": "visible-damage",
               "type": "string"
+            },
+            "unlifeChangeOnHit": {
+              "default": 0,
+              "format": "int8",
+              "maximum": 127,
+              "minimum": -128,
+              "type": "integer"
             }
           },
           "required": [

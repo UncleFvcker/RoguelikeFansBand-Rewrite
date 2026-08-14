@@ -684,8 +684,14 @@ pub(super) fn validate_abilities(
                 }
                 AbilityEffectDefinition::TerrainBeam { .. } => true,
                 AbilityEffectDefinition::RemoveEquippedCurses { .. }
-                | AbilityEffectDefinition::BeginFasting => true,
+                | AbilityEffectDefinition::BeginFasting
+                | AbilityEffectDefinition::CureMutation => true,
                 AbilityEffectDefinition::TurnUndead { power } => *power <= 1_000,
+                AbilityEffectDefinition::SustainAttributes { duration_ticks } => {
+                    (*duration_ticks > 0
+                        || has_level_scaling(AbilityLevelScalingField::StatusDurationTicks))
+                        && *duration_ticks <= 1_000_000
+                }
                 AbilityEffectDefinition::ApplyStatus {
                     status_kind_id,
                     intensity,
@@ -704,7 +710,9 @@ pub(super) fn validate_abilities(
                 } => {
                     validate_id(status_kind_id).is_ok()
                         && (1..=1_000).contains(intensity)
-                        && (*duration_ticks > 0 || *duration_dice > 0)
+                        && (*duration_ticks > 0
+                            || *duration_dice > 0
+                            || has_level_scaling(AbilityLevelScalingField::StatusDurationTicks))
                         && *duration_ticks <= 1_000_000
                         && *duration_dice <= 100
                         && ((*duration_dice == 0 && *duration_sides == 0)
@@ -845,14 +853,18 @@ pub(super) fn validate_abilities(
                     damage_sides,
                     damage_bonus,
                     target_category,
+                    unlife_change_on_hit,
                     ..
                 } => {
-                    (1..=100).contains(damage_dice)
-                        && (1..=10_000).contains(damage_sides)
+                    ((*damage_dice == 0 && *damage_sides == 0)
+                        || ((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides)))
                         && *damage_bonus <= 10_000
                         && target_category
                             .as_ref()
                             .is_none_or(|category| actor_tag_values.contains(category))
+                        && (-125..=125).contains(unlife_change_on_hit)
+                        && (*unlife_change_on_hit == 0
+                            || target_category.as_deref() == Some("undead"))
                 }
                 AbilityEffectDefinition::VisibleApplyStatus {
                     status_kind_id,
@@ -1132,6 +1144,8 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::RemoveEquippedCurses { .. }
             | AbilityEffectDefinition::BeginFasting
             | AbilityEffectDefinition::TurnUndead { .. }
+            | AbilityEffectDefinition::SustainAttributes { .. }
+            | AbilityEffectDefinition::CureMutation
             | AbilityEffectDefinition::Probe
             | AbilityEffectDefinition::CreateDoor { .. }
             | AbilityEffectDefinition::DeviceMastery { .. }
@@ -1190,6 +1204,8 @@ pub(super) fn validate_abilities(
                                 | AbilityEffectDefinition::CallSunlight { .. }
                                 | AbilityEffectDefinition::AggravateMonsters
                                 | AbilityEffectDefinition::Detect { .. }
+                                | AbilityEffectDefinition::CreateAdjacentTerrain { .. }
+                                | AbilityEffectDefinition::CreateCurrentTerrain { .. }
                                 | AbilityEffectDefinition::NoOp { .. }
                         )
                     }))
