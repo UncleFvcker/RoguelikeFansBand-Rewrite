@@ -2032,3 +2032,206 @@ fn p86d_camelot_entrance_recall_conquest_and_reward_round_trip() {
     assert_eq!(restored.wilderness_position, Some(Position { x: 7, y: 59 }));
     assert_eq!(surface.campaign.status, CampaignStatusDto::Active);
 }
+
+#[test]
+fn p87d_tidal_cave_entrance_recall_conquest_and_reward_round_trip() {
+    let mut game =
+        Game::new_with_build(431, "demo.build.warrior").expect("Middle-earth should create");
+    game.player
+        .resistances
+        .set(DamageType::Physical, ResistanceLevel::Immune);
+
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 47, y: 53 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.wilderness_position, Some(Position { x: 47, y: 53 }));
+    assert_eq!(
+        game.terrain
+            .iter()
+            .filter(|terrain| terrain.as_str() == "demo.terrain.tidal-cave-entrance")
+            .count(),
+        1
+    );
+    place_player_on_terrain(&mut game, "demo.terrain.tidal-cave-entrance");
+
+    for depth in 15..=20 {
+        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            update.floor_id,
+            format!("demo.floor.tidal-cave-depth-{depth}")
+        );
+        assert_eq!(update.campaign.status, CampaignStatusDto::Active);
+        if depth < 20 {
+            game.entities.clear();
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        }
+    }
+
+    let mid_depth_hash = game.state_hash();
+    game = Game::from_save(game.to_save()).expect("Tidal Cave depth 20 should round-trip");
+    assert_eq!(game.state_hash(), mid_depth_hash);
+    game.entities.clear();
+    game.recall = Some(RecallStateDto {
+        dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
+        floor_id: "demo.floor.tidal-cave-depth-20".to_owned(),
+        remaining_turns: Some(1),
+    });
+    let recalled = dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(recalled.floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.wilderness_position, Some(Position { x: 47, y: 53 }));
+    assert!(
+        recalled
+            .events
+            .iter()
+            .any(|event| event.kind == "item.recall-triggered")
+    );
+
+    place_player_on_terrain(&mut game, "demo.terrain.tidal-cave-entrance");
+    for depth in 15..=27 {
+        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            update.floor_id,
+            format!("demo.floor.tidal-cave-depth-{depth}")
+        );
+        assert_eq!(update.campaign.status, CampaignStatusDto::Active);
+        if depth < 27 {
+            game.entities.clear();
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        }
+    }
+
+    let guardian_index = game
+        .entities
+        .iter()
+        .position(|entity| entity.id == "demo.guardian.tidal-cave.1")
+        .expect("Tidal Cave depth 27 should spawn Grendel");
+    assert_eq!(game.entities[guardian_index].kind_id, "demo.actor.grendel");
+    let guardian_position = game.entities[guardian_index].position;
+    let reward_count_before = game
+        .items
+        .iter()
+        .filter(|item| item.kind_id == "demo.item.giant-strength-potion")
+        .count();
+    game.entities[guardian_index].hp = 1;
+    game.entities[guardian_index].statuses = vec![StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 3,
+        remaining_ticks: 1,
+        source_id: Some(game.player.id.clone()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    }];
+
+    let conquered = dispatch_next(&mut game, GameCommand::Wait);
+    assert!(
+        conquered
+            .events
+            .iter()
+            .any(|event| event.kind == "dungeon.guardian-defeated")
+    );
+    assert!(
+        conquered
+            .events
+            .iter()
+            .all(|event| event.kind != "campaign.victorious")
+    );
+    assert_eq!(conquered.campaign.status, CampaignStatusDto::Active);
+    assert_eq!(conquered.campaign.conquered_dungeons, 1);
+    assert_eq!(conquered.campaign.score, 10_000);
+    assert!(game.dungeon_states["demo.dungeon.tidal-cave"].guardian_defeated);
+    let reward = game
+        .items
+        .iter()
+        .filter(|item| item.kind_id == "demo.item.giant-strength-potion")
+        .find(|item| item.location == ItemLocation::Ground(guardian_position))
+        .expect("Grendel should drop the fixed Potion of Giant Strength");
+    assert_eq!(reward.quality, ItemQualityDto::Ordinary);
+    assert!(reward.affix_ids.is_empty());
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.giant-strength-potion")
+            .count(),
+        reward_count_before + 1
+    );
+
+    game.entities.clear();
+    let after_conquest = dispatch_next(&mut game, GameCommand::Wait);
+    assert!(
+        after_conquest
+            .events
+            .iter()
+            .all(|event| event.kind != "dungeon.guardian-defeated")
+    );
+    assert_eq!(after_conquest.campaign.conquered_dungeons, 1);
+    assert_eq!(after_conquest.campaign.score, 10_000);
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.giant-strength-potion")
+            .count(),
+        reward_count_before + 1
+    );
+
+    let conquered_hash = game.state_hash();
+    let mut restored =
+        Game::from_save(game.to_save()).expect("Tidal Cave conquest should round-trip");
+    assert_eq!(restored.state_hash(), conquered_hash);
+    assert!(restored.dungeon_states["demo.dungeon.tidal-cave"].guardian_defeated);
+    assert_eq!(
+        restored
+            .defeated_limited_actor_counts
+            .get("demo.actor.grendel"),
+        Some(&1)
+    );
+    let final_floor = restored
+        .content
+        .world(&restored.world_id)
+        .expect("Middle-earth should remain available")
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.tidal-cave-depth-27")
+        .expect("Tidal Cave final floor should remain available")
+        .clone();
+    let dungeon_instance_id = restored.current_dungeon_instance_id.clone();
+    let regenerated = restored
+        .generate_procedural_floor(&final_floor, dungeon_instance_id)
+        .expect("conquered Tidal Cave final floor should regenerate");
+    assert!(
+        regenerated
+            .entities
+            .iter()
+            .all(|entity| entity.kind_id != "demo.actor.grendel")
+    );
+
+    for expected_depth in (15..=26).rev() {
+        place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
+        let update = dispatch_next(&mut restored, GameCommand::TraverseStairs);
+        assert_eq!(
+            update.floor_id,
+            format!("demo.floor.tidal-cave-depth-{expected_depth}")
+        );
+        restored.entities.clear();
+    }
+    place_player_on_terrain(&mut restored, "demo.terrain.stairs-up");
+    let surface = dispatch_next(&mut restored, GameCommand::TraverseStairs);
+    assert_eq!(surface.floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(
+        restored.wilderness_position,
+        Some(Position { x: 47, y: 53 })
+    );
+    assert_eq!(surface.campaign.status, CampaignStatusDto::Active);
+}

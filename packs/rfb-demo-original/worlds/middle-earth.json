@@ -237,6 +237,14 @@
           "x": 7,
           "y": 59
         }
+      },
+      {
+        "dungeonId": "demo.dungeon.tidal-cave",
+        "kind": "dungeon",
+        "position": {
+          "x": 47,
+          "y": 53
+        }
       }
     ],
     "rows": [
@@ -3461,7 +3469,7 @@
         "stairs": { "up": { "minimum": 1, "maximum": 2 } }
       },
       "finalFloor": true,
-      "guardian": { "instanceId": "demo.guardian.tidal-cave.1", "actorKindId": "demo.actor.grendel" },
+      "guardian": { "instanceId": "demo.guardian.tidal-cave.1", "actorKindId": "demo.actor.grendel", "rewardLootTableId": "demo.loot-table.tidal-cave-final-reward" },
       "depth": 27,
       "width": 96,
       "height": 33,

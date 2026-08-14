@@ -3760,6 +3760,66 @@ fn p87c_tidal_cave_binds_depths_water_features_river_and_guardian() {
 }
 
 #[test]
+fn p87d_tidal_cave_binds_wilderness_entrance_and_fixed_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+
+    assert!(
+        world
+            .wilderness
+            .as_ref()
+            .expect("Middle-earth should retain wilderness")
+            .locations
+            .iter()
+            .any(|location| matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 47, y: 53 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.tidal-cave"
+            ))
+    );
+
+    let final_floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.tidal-cave-depth-27")
+        .expect("Tidal Cave depth 27 should exist");
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("Tidal Cave depth 27 should contain Grendel");
+    assert_eq!(guardian.instance_id, "demo.guardian.tidal-cave.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.grendel");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.tidal-cave-final-reward")
+    );
+
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.tidal-cave-final-reward")
+        .expect("Grendel should have a fixed reward table");
+    assert_eq!(reward.rolls, 1);
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(
+        reward.entries[0].item_kind_id,
+        "demo.item.giant-strength-potion"
+    );
+    assert_eq!(reward.entries[0].quantity, 1);
+    assert_eq!(reward.quality_weights.len(), 1);
+    assert_eq!(reward.quality_weights[0].quality, ItemQuality::Ordinary);
+    assert_eq!(reward.affix_weights.len(), 1);
+    assert_eq!(reward.affix_weights[0].affix_id, None);
+}
+
+#[test]
 fn p86c_camelot_binds_depths_ecology_layout_and_mirror_shield_reward() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = &artifact.content;

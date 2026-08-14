@@ -28,6 +28,11 @@
       "sourceIndex": 2,
       "sourceName": "Camelot",
       "id": "demo.dungeon.camelot"
+    },
+    {
+      "sourceIndex": 33,
+      "sourceName": "Tidal cave",
+      "id": "demo.dungeon.tidal-cave"
     }
   ],
   "townPlans": [
