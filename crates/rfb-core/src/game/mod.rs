@@ -71,16 +71,17 @@ use rfb_content::{
     ClassAbilityDefinition, ContentCatalog, DungeonInstanceLifecycle, EncounterEntryDefinition,
     EncounterTableDefinition, EquipmentBonuses, EquipmentPassive, FloorLifecycle,
     InnatePowerDefinition, ItemAttributeDefinition, ItemCurseSeverityDefinition,
-    ItemCurseTargetDefinition, ItemDestructionElement, ItemEnchantmentRollDefinition,
-    ItemShatterEffectDefinition, ItemSummonLevelSourceDefinition, ItemSummonSelectorDefinition,
-    ItemUseEffectDefinition, MeleeBlowEffectDefinition, MonsterDropKindDefinition,
-    MonsterPackBehavior, MutationPeriodicEffectDefinition, PlayerAbilityDefinition,
-    ProceduralLayoutMode, ProceduralMazeDefinition, ProceduralPitDefinition,
-    ProceduralRoomGeometryDefinition, ProceduralRoomPlacement, ProceduralRoomShape,
-    ProceduralStreamerCandidateDefinition, RaceDefinition, RidingWeaponKindDefinition, SkillKind,
-    SlayLevel, SlayTarget, SniperShotModeDefinition, StartingItemDefinition, StatModifiers,
-    TaskObjectiveKind, TechniqueAttribute, TerrainDiggingResolution, TerrainFeatureEntryDefinition,
-    ThemeVaultCandidateDefinition, WeaponBrand, affix_is_compatible_with_item,
+    ItemCurseTargetDefinition, ItemDestructionElement, ItemDeviceGenerationDefinition,
+    ItemEnchantmentRollDefinition, ItemShatterEffectDefinition, ItemSummonLevelSourceDefinition,
+    ItemSummonSelectorDefinition, ItemUseEffectDefinition, MeleeBlowEffectDefinition,
+    MonsterDropKindDefinition, MonsterPackBehavior, MutationPeriodicEffectDefinition,
+    PlayerAbilityDefinition, ProceduralLayoutMode, ProceduralMazeDefinition,
+    ProceduralPitDefinition, ProceduralRoomGeometryDefinition, ProceduralRoomPlacement,
+    ProceduralRoomShape, ProceduralStreamerCandidateDefinition, RaceDefinition,
+    RidingWeaponKindDefinition, SkillKind, SlayLevel, SlayTarget, SniperShotModeDefinition,
+    StartingItemDefinition, StatModifiers, TaskObjectiveKind, TechniqueAttribute,
+    TerrainDiggingResolution, TerrainFeatureEntryDefinition, ThemeVaultCandidateDefinition,
+    WeaponBrand, affix_is_compatible_with_item,
 };
 use rfb_protocol::{
     AbilityAreaDamageResolutionDto, AbilityBanishTargetDto, AbilityBeamDamageResolutionDto,
@@ -220,7 +221,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 103;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 104;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -566,6 +567,7 @@ enum LootSource {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct DungeonState {
+    suppressed: bool,
     guardian_defeated: bool,
     entrance_guardian_defeated: bool,
     next_instance_ordinal: u32,
@@ -573,7 +575,7 @@ struct DungeonState {
     retained_at_turn: Option<u32>,
 }
 
-fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String, DungeonState> {
+fn base_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String, DungeonState> {
     world
         .dungeons
         .iter()
@@ -581,6 +583,7 @@ fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<Stri
             (
                 dungeon.id.clone(),
                 DungeonState {
+                    suppressed: false,
                     guardian_defeated: false,
                     entrance_guardian_defeated: false,
                     next_instance_ordinal: 0,
@@ -590,6 +593,66 @@ fn initial_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<Stri
             )
         })
         .collect()
+}
+
+fn dungeon_substitution_uses_alternate(
+    primary: &rfb_content::DungeonDefinition,
+    alternate: &rfb_content::DungeonDefinition,
+    seed: u64,
+) -> bool {
+    let primary_index = u64::from(
+        primary
+            .legacy_index
+            .expect("validated substituted dungeon must retain a legacy index"),
+    );
+    let alternate_index = u64::from(
+        alternate
+            .legacy_index
+            .expect("validated alternate dungeon must retain a legacy index"),
+    );
+    let pair_modulus = primary_index * 48 + alternate_index;
+    let selected = seed % (pair_modulus * 2) >= pair_modulus;
+    selected
+        && primary
+            .substitution
+            .as_ref()
+            .and_then(|substitution| substitution.alternate_gate_one_in)
+            .is_none_or(|one_in| seed.is_multiple_of(u64::from(one_in)))
+}
+
+fn initial_dungeon_states(
+    world: &rfb_content::WorldDefinition,
+    seed: u64,
+) -> BTreeMap<String, DungeonState> {
+    let mut states = base_dungeon_states(world);
+    for primary in &world.dungeons {
+        let Some(substitution) = &primary.substitution else {
+            continue;
+        };
+        let alternate = world
+            .dungeons
+            .iter()
+            .find(|dungeon| dungeon.id == substitution.alternate_dungeon_id)
+            .expect("validated dungeon substitution must retain its alternate");
+        let suppressed_id = if dungeon_substitution_uses_alternate(primary, alternate, seed) {
+            &primary.id
+        } else {
+            &alternate.id
+        };
+        states
+            .get_mut(suppressed_id)
+            .expect("substituted dungeon state must remain available")
+            .suppressed = true;
+    }
+    states
+}
+
+impl Game {
+    pub(super) fn dungeon_is_active(&self, dungeon_id: &str) -> bool {
+        self.dungeon_states
+            .get(dungeon_id)
+            .is_some_and(|state| !state.suppressed)
+    }
 }
 
 /// The engine's standard humanoid body: the slot roster every player uses
@@ -742,7 +805,7 @@ fn append_starting_item(
         .checked_add(1)
         .ok_or(CoreError::ItemIdExhausted)?;
     let (activation, charges) =
-        initial_item_runtime_state(content, rng, &starting_item.item_kind_id, 1);
+        initial_item_runtime_state(content, rng, &starting_item.item_kind_id, &[], 1);
     let quantity = starting_item
         .maximum_quantity
         .map_or(starting_item.quantity, |maximum| {
@@ -822,16 +885,32 @@ fn initial_item_curse(content: &ContentCatalog, kind_id: &str) -> Option<ItemCur
         .map(item_curse_severity_dto)
 }
 
+pub(crate) fn item_device_generation<'a>(
+    content: &'a ContentCatalog,
+    kind_id: &str,
+    affix_ids: &[String],
+) -> Option<&'a ItemDeviceGenerationDefinition> {
+    let definition = content.item(kind_id)?;
+    definition.device_generation.as_ref().or_else(|| {
+        affix_ids.iter().find_map(|affix_id| {
+            content
+                .affix(affix_id)
+                .and_then(|affix| affix.device_generation.as_ref())
+        })
+    })
+}
+
 fn initial_item_runtime_state(
     content: &ContentCatalog,
     rng: &mut RfbRng,
     kind_id: &str,
+    affix_ids: &[String],
     depth: u16,
 ) -> (Option<ItemActivationDto>, Option<ItemChargesDto>) {
-    let Some(definition) = content.item(kind_id) else {
+    if content.item(kind_id).is_none() {
         return (None, None);
-    };
-    let Some(generation) = &definition.device_generation else {
+    }
+    let Some(generation) = item_device_generation(content, kind_id, affix_ids) else {
         return (None, initial_item_charges(content, kind_id));
     };
     let power = depth.clamp(1, 100);
@@ -1172,8 +1251,13 @@ impl Game {
             .items
             .iter()
             .map(|spawn| {
-                let (activation, charges) =
-                    initial_item_runtime_state(&content, &mut rng, &spawn.kind_id, 1);
+                let (activation, charges) = initial_item_runtime_state(
+                    &content,
+                    &mut rng,
+                    &spawn.kind_id,
+                    &spawn.affix_ids,
+                    1,
+                );
                 ItemInstance {
                     id: spawn.instance_id.clone(),
                     kind_id: spawn.kind_id.clone(),
@@ -1252,7 +1336,7 @@ impl Game {
             .as_ref()
             .map(|wilderness| position_from_content(wilderness.start_position));
         let task_states = initial_task_states(world);
-        let dungeon_states = initial_dungeon_states(world);
+        let dungeon_states = initial_dungeon_states(world, seed);
         let (town_states, shop_states) = town::initial_town_and_shop_states(
             world,
             &content,
@@ -2868,7 +2952,7 @@ impl Game {
             return Err(CoreError::UnknownItem(kind_id.to_owned()));
         }
         let (activation, charges) =
-            initial_item_runtime_state(&self.content, &mut self.rng, kind_id, depth);
+            initial_item_runtime_state(&self.content, &mut self.rng, kind_id, &[], depth);
         self.items.push(ItemInstance {
             id: id.to_owned(),
             kind_id: kind_id.to_owned(),
@@ -4266,14 +4350,13 @@ impl Game {
             ))
         })?;
         if item.location != ItemLocation::Inventory
-            && !(matches!(item.location, ItemLocation::Equipped { .. }) && definition.capture_ball)
+            && !(matches!(item.location, ItemLocation::Equipped { .. })
+                && (definition.capture_ball || item.activation.is_some()))
         {
             return Ok(None);
         }
         if let Some(activation) = &item.activation
-            && definition
-                .device_generation
-                .as_ref()
+            && item_device_generation(&self.content, &item.kind_id, &item.affix_ids)
                 .and_then(|generation| {
                     generation
                         .activations
@@ -4296,14 +4379,14 @@ impl Game {
     ) -> Option<(&ItemUseEffectDefinition, Option<&AbilityTargetDefinition>)> {
         let item = self.items.iter().find(|item| {
             item.id == source_item_id
-                && item.location == ItemLocation::Inventory
+                && (item.location == ItemLocation::Inventory
+                    || (matches!(item.location, ItemLocation::Equipped { .. })
+                        && item.activation.is_some()))
                 && item.quantity > 0
         })?;
         let definition = self.content.item(&item.kind_id)?;
         if let Some(activation) = &item.activation {
-            let profile = definition
-                .device_generation
-                .as_ref()?
+            let profile = item_device_generation(&self.content, &item.kind_id, &item.affix_ids)?
                 .activations
                 .iter()
                 .find(|candidate| candidate.id == activation.profile_id)?;
@@ -5017,7 +5100,7 @@ impl Game {
             .expect("living actor definition must remain available")
             .clone();
         let table_id = actor_definition.loot_table_id.clone();
-        let guardian_reward_table_id = self
+        let guardian_reward = self
             .content
             .world(&self.world_id)
             .and_then(|world| {
@@ -5028,7 +5111,12 @@ impl Game {
             })
             .and_then(|floor| floor.guardian.as_ref())
             .filter(|guardian| guardian.instance_id == actor.id)
-            .and_then(|guardian| guardian.reward_loot_table_id.clone());
+            .map(|guardian| {
+                (
+                    guardian.reward_loot_table_id.clone(),
+                    guardian.reward_artifact_item_kind_id.clone(),
+                )
+            });
         let floor_id = self.current_floor_id.clone();
         let depth = self.floor_depth(&floor_id);
         let mut generated = Vec::new();
@@ -5146,18 +5234,40 @@ impl Game {
                 );
             }
         }
-        if let Some(table_id) = guardian_reward_table_id {
-            generated.extend(self.generate_loot_instances(
-                &LootContext {
-                    table_id,
-                    floor_id: floor_id.clone(),
-                    depth,
-                    source: LootSource::MonsterDeath {
-                        actor_id: actor.id.clone(),
-                    },
+        if let Some((reward_table_id, reward_artifact_kind_id)) = guardian_reward {
+            let artifact_reward = reward_artifact_kind_id.is_some();
+            let context = reward_table_id.map(|table_id| LootContext {
+                table_id,
+                floor_id: floor_id.clone(),
+                depth,
+                source: LootSource::MonsterDeath {
+                    actor_id: actor.id.clone(),
                 },
-                ItemLocation::Ground(actor.position),
-            )?);
+            });
+            if let Some(kind_id) = reward_artifact_kind_id
+                && !self.generated_artifact_ids.contains(&kind_id)
+            {
+                let context = context
+                    .as_ref()
+                    .expect("validated artifact guardian reward must retain a fallback table");
+                let draft = self.fixed_artifact_draft(context, kind_id);
+                generated.push(
+                    self.commit_generated_item_draft(draft, ItemLocation::Ground(actor.position))?,
+                );
+            } else if let Some(context) = context {
+                let mode = if artifact_reward {
+                    ItemGenerationMode::Artifact
+                } else {
+                    ItemGenerationMode::Ordinary
+                };
+                generated.extend(self.generate_loot_instances_internal(
+                    &context,
+                    ItemLocation::Ground(actor.position),
+                    true,
+                    None,
+                    mode,
+                )?);
+            }
         }
         Ok((generated, gold))
     }
@@ -5394,7 +5504,13 @@ impl Game {
             } else {
                 ItemQualityDto::Ordinary
             };
-            let affix_ids = if quality_allows_natural_affix(table.quality_policy, quality) {
+            let affix_is_required = table
+                .affix_weights
+                .iter()
+                .all(|entry| entry.affix_id.is_some());
+            let affix_ids = if affix_is_required
+                || quality_allows_natural_affix(table.quality_policy, quality)
+            {
                 rolled_affix_id.flatten().iter().cloned().collect()
             } else {
                 Vec::new()
@@ -5404,6 +5520,7 @@ impl Game {
                 &self.content,
                 &mut self.rng,
                 &entry.item_kind_id,
+                &affix_ids,
                 generation_depth,
             );
             generated.push(GeneratedItemDraft {
@@ -5518,7 +5635,7 @@ impl Game {
         kind_id: String,
     ) -> GeneratedItemDraft {
         let (activation, charges) =
-            initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, context.depth);
+            initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, &[], context.depth);
         GeneratedItemDraft {
             quantity: 1,
             origin_kind: match &context.source {

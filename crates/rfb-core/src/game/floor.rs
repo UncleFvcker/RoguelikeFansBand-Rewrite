@@ -180,7 +180,7 @@ fn dungeon_entry_requirements_met(
             }
             DungeonEntryRequirementDefinition::DungeonConquered { dungeon_id } => dungeon_states
                 .get(dungeon_id)
-                .is_some_and(|state| state.guardian_defeated),
+                .is_some_and(|state| !state.suppressed && state.guardian_defeated),
             DungeonEntryRequirementDefinition::CarriedItem {
                 item_kind_id,
                 quantity,
@@ -200,8 +200,10 @@ fn dungeon_entry_requirements_met(
         })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn stair_transition_target(
     world: &WorldDefinition,
+    dungeon_states: &BTreeMap<String, DungeonState>,
     current_floor_id: &str,
     terrain_id: &str,
     terrain: &TerrainDefinition,
@@ -231,6 +233,11 @@ fn stair_transition_target(
             .find(|floor| {
                 floor.return_floor_id == world.initial_floor_id
                     && floor.entry_terrain_id.as_deref() == Some(terrain_id)
+                    && floor.dungeon_id.as_ref().is_none_or(|dungeon_id| {
+                        dungeon_states
+                            .get(dungeon_id)
+                            .is_some_and(|state| !state.suppressed)
+                    })
             })
             .map(|target| FloorTransitionTarget {
                 floor_id: target.id.clone(),
@@ -368,12 +375,13 @@ fn recall_destination_for_current_floor(
 
 impl Game {
     pub(super) fn dungeon_entry_requirements_met(&self, dungeon: &DungeonDefinition) -> bool {
-        dungeon_entry_requirements_met(
-            dungeon,
-            &self.task_states,
-            &self.dungeon_states,
-            &self.items,
-        )
+        self.dungeon_is_active(&dungeon.id)
+            && dungeon_entry_requirements_met(
+                dungeon,
+                &self.task_states,
+                &self.dungeon_states,
+                &self.items,
+            )
     }
 
     pub(super) fn teleport_level_targets(
@@ -879,6 +887,7 @@ impl Game {
             .unwrap_or(&self.current_floor_id);
         let Some(target) = stair_transition_target(
             world,
+            &self.dungeon_states,
             source_floor_id,
             &terrain_id,
             terrain,

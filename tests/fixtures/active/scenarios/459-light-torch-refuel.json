@@ -53,7 +53,7 @@
       "turn": 2,
       "worldTick": 15,
       "lastCommandSeq": 2,
-      "rngDrawCounter": 179,
+      "rngDrawCounter": 185,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1456,6 +1456,7 @@
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1498,6 +1499,7 @@
           "displayNameKey": "item-demo-wooden-torch-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "fuel": {
             "kind": "torch",
@@ -1530,6 +1532,7 @@
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1567,6 +1570,7 @@
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1675,7 +1679,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 187,
+      "nextItemInstanceSerial": 197,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1683,7 +1687,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c218c7721d22d933ddf1d37b40209fe7a8b755693cf67730c948efbd54ae4ab9"
+      "stateHash": "f11900b53f9158666ded4d4bb361a053359c4d06870b2837cf62d92c793c90a7"
     },
     "events": [
       {
@@ -1707,6 +1711,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "c218c7721d22d933ddf1d37b40209fe7a8b755693cf67730c948efbd54ae4ab9"
+    "saveRoundTripStateHash": "f11900b53f9158666ded4d4bb361a053359c4d06870b2837cf62d92c793c90a7"
   }
 }

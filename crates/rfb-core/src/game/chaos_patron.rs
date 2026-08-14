@@ -760,8 +760,14 @@ impl Game {
             .resistances
             .insert(extra_resistance, ActorResistanceLevel::Resistant);
         let id = self.allocate_item_instance_id()?;
-        let (activation, charges) =
-            initial_item_runtime_state(&self.content, &mut self.rng, kind_id, 1);
+        let affix_id = CHAOS_AFFIX_ID.to_owned();
+        let (activation, charges) = initial_item_runtime_state(
+            &self.content,
+            &mut self.rng,
+            kind_id,
+            std::slice::from_ref(&affix_id),
+            1,
+        );
         self.items.push(ItemInstance {
             id,
             kind_id: kind_id.to_owned(),
@@ -772,7 +778,7 @@ impl Game {
             damage_dice_override: None,
             discount_percent: 0,
             quality: ItemQualityDto::Exceptional,
-            affix_ids: vec![CHAOS_AFFIX_ID.to_owned()],
+            affix_ids: vec![affix_id],
             rolled_affixes: vec![RolledAffixState {
                 affix_id: CHAOS_AFFIX_ID.to_owned(),
                 properties,

@@ -401,7 +401,7 @@ fn campaign_victory_reached(
         campaign.victory_dungeon_ids.iter().all(|dungeon_id| {
             dungeon_states
                 .get(dungeon_id)
-                .is_some_and(|state| state.guardian_defeated)
+                .is_some_and(|state| !state.suppressed && state.guardian_defeated)
         })
     })
 }
@@ -412,7 +412,7 @@ fn campaign_counts(
 ) -> (u32, u32) {
     let conquered = dungeon_states
         .values()
-        .filter(|state| state.guardian_defeated)
+        .filter(|state| !state.suppressed && state.guardian_defeated)
         .count()
         .try_into()
         .unwrap_or(u32::MAX);
@@ -551,7 +551,7 @@ pub(super) fn reward_item(
         })
         .collect();
     let (activation, mut charges) =
-        initial_item_runtime_state(content, rng, &entry.item_kind_id, 1);
+        initial_item_runtime_state(content, rng, &entry.item_kind_id, &entry.affix_ids, 1);
     if let Some(charges) = &mut charges {
         charges.current = charges.maximum;
     }

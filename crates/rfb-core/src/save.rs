@@ -5,6 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::{
     effect::StatusInstance,
     error::CoreError,
+    game::item_device_generation,
     resistance::{DamageType, ResistanceLevel, ResistanceProfile},
     state::{
         Actor, BASE_ACTOR_POWER_PER_MILLE, CapturedActor, FloorConnectionState, FloorRegionState,
@@ -16,8 +17,8 @@ use crate::{
 use rfb_content::{
     AbilityTargetModeDefinition, ActorDamageType, ActorResistanceLevel,
     AffixPropertyBundleDefinition, ContentCatalog, ContentPosition, EquipmentBonuses,
-    EquipmentPassive, ItemDestructionElement, ItemFuelKindDefinition, SlayLevel, SlayTarget,
-    StatModifiers, WeaponBrand,
+    EquipmentPassive, ItemDestructionElement, ItemDeviceGenerationDefinition,
+    ItemFuelKindDefinition, SlayLevel, SlayTarget, StatModifiers, WeaponBrand,
 };
 use rfb_protocol::{
     ActorSaveDto, CapturedActorSaveDto, CarriedItemSaveDto, DamageTypeDto, EquipmentBonusesDto,
@@ -334,6 +335,7 @@ pub(crate) fn item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
+        item_device_generation(content, &item.kind_id, &item.affix_ids),
         item.activation.as_ref(),
         item.charges,
         fuel,
@@ -386,6 +388,7 @@ pub(crate) fn inventory_item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
+        item_device_generation(content, &item.kind_id, &item.affix_ids),
         item.activation.as_ref(),
         item.charges,
         fuel,
@@ -443,6 +446,7 @@ pub(crate) fn equipment_item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
+        item_device_generation(content, &item.kind_id, &item.affix_ids),
         item.activation.as_ref(),
         item.charges,
         fuel,
@@ -497,6 +501,7 @@ pub(crate) fn carried_item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
+        item_device_generation(content, &item.kind_id, &item.affix_ids),
         item.activation.as_ref(),
         item.charges,
         fuel,
@@ -583,6 +588,7 @@ fn captured_actor_to_save(value: &CapturedActor) -> CapturedActorSaveDto {
 
 fn validate_item_runtime_state(
     definition: &rfb_content::ItemDefinition,
+    device_generation: Option<&ItemDeviceGenerationDefinition>,
     activation: Option<&ItemActivationDto>,
     charges: Option<ItemChargesDto>,
     fuel: Option<ItemFuelDto>,
@@ -593,7 +599,7 @@ fn validate_item_runtime_state(
         .use_action
         .as_ref()
         .and_then(|action| action.charges);
-    let valid = if let Some(generation) = &definition.device_generation {
+    let valid = if let Some(generation) = device_generation {
         match (activation, charges) {
             (Some(activation), Some(charges)) => generation
                 .activations
@@ -641,10 +647,7 @@ fn validate_item_runtime_state(
         }
     };
     let valid_recovery_progress = match (
-        definition
-            .device_generation
-            .as_ref()
-            .and_then(|generation| generation.recovery),
+        device_generation.and_then(|generation| generation.recovery),
         charges,
     ) {
         (Some(_), Some(charges)) => {

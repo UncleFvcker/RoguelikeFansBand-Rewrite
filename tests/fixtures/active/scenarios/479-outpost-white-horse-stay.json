@@ -29,7 +29,7 @@
       "turn": 1,
       "worldTick": 50000,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 179,
+      "rngDrawCounter": 185,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -279,7 +279,7 @@
           },
           "stock": [
             {
-              "id": "generated.item.182",
+              "id": "generated.item.192",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 2,
@@ -289,40 +289,40 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.183",
+              "id": "generated.item.193",
               "kindId": "demo.item.hard-biscuit",
               "displayNameKey": "item-demo-hard-biscuit-name",
-              "quantity": 5,
+              "quantity": 1,
               "maximumQuantity": 0,
               "unitPrice": 1,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.184",
+              "id": "generated.item.194",
               "kindId": "demo.item.strip-of-venison",
               "displayNameKey": "item-demo-strip-of-venison-name",
-              "quantity": 3,
+              "quantity": 4,
               "maximumQuantity": 0,
               "unitPrice": 2,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.185",
+              "id": "generated.item.195",
               "kindId": "demo.item.water-potion",
               "displayNameKey": "item-demo-water-potion-name",
-              "quantity": 4,
+              "quantity": 3,
               "maximumQuantity": 0,
               "unitPrice": 1,
               "weightTenthsPound": 4,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.186",
+              "id": "generated.item.196",
               "kindId": "demo.item.apple-juice",
               "displayNameKey": "item-demo-apple-juice-name",
-              "quantity": 1,
+              "quantity": 2,
               "maximumQuantity": 0,
               "unitPrice": 1,
               "weightTenthsPound": 4,
@@ -1502,6 +1502,7 @@
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1544,6 +1545,7 @@
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1581,6 +1583,7 @@
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1683,7 +1686,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 187,
+      "nextItemInstanceSerial": 197,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1691,7 +1694,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "5656c39636993027392280df075d04f589edae350b10a789c8abbe57063bf52c"
+      "stateHash": "1efa3b30b89acefcf06c24c5cc263f4727bd58a80fd064900a8f85575fd7a415"
     },
     "events": [
       {

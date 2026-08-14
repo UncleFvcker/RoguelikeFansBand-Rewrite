@@ -111,7 +111,7 @@ fn reduce_disenchanted_component(rng: &mut RfbRng, value: i16) -> i16 {
 }
 
 impl Game {
-    fn scale_monster_damage(&self, source_entity_id: &str, damage: i32) -> i32 {
+    pub(super) fn scale_monster_damage(&self, source_entity_id: &str, damage: i32) -> i32 {
         let power_per_mille = self
             .entities
             .iter()
@@ -553,6 +553,7 @@ impl Game {
         let damage = self.apply_evasion_to_monster_ability_damage(ability_id, damage);
         let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
         let damage = application.damage;
+        self.damage_player_inventory(source_kind_id, damage_type, false, damage.applied, events);
         if application.fatal {
             events.push(DomainEvent::PlayerDied {
                 source_kind_id: source_kind_id.to_owned(),
@@ -1503,6 +1504,7 @@ impl Game {
                     effect,
                     MeleeBlowEffectDefinition::Damage { vampiric: true, .. }
                 ) && !self.player_is_nonliving();
+                let mut inventory_damage_type = None;
                 let damage = match effect {
                     MeleeBlowEffectDefinition::Damage {
                         damage_dice,
@@ -1523,6 +1525,7 @@ impl Game {
                             None
                         } else {
                             let damage_type = DamageType::from(*damage_type);
+                            inventory_damage_type = Some(damage_type);
                             let resistance = self.effective_player_resistances().level(damage_type);
                             Some(self.reduce_player_damage(if *armor_mitigated {
                                 resolve_armored_damage(raw, damage_type, armor_class, resistance)
@@ -1893,6 +1896,15 @@ impl Game {
                 let quake_center = self.entities[index].position;
                 let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
                 let damage = application.damage;
+                if let Some(damage_type) = inventory_damage_type {
+                    self.damage_player_inventory(
+                        &kind_id,
+                        damage_type,
+                        true,
+                        damage.applied,
+                        events,
+                    );
+                }
                 events.push(DomainEvent::MonsterMeleeHit {
                     source_kind_id: kind_id.clone(),
                     method_id: blow.method_id.clone(),

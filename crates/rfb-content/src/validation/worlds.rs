@@ -611,6 +611,33 @@ pub(super) fn validate_world(
             }
         }
     }
+    let dungeons_by_id = world
+        .dungeons
+        .iter()
+        .map(|dungeon| (dungeon.id.as_str(), dungeon))
+        .collect::<BTreeMap<_, _>>();
+    let mut substitution_alternates = BTreeSet::new();
+    for dungeon in &world.dungeons {
+        let Some(substitution) = &dungeon.substitution else {
+            continue;
+        };
+        validate_definition_id(&substitution.alternate_dungeon_id, "dungeon")?;
+        let Some(alternate) = dungeons_by_id.get(substitution.alternate_dungeon_id.as_str()) else {
+            return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+        };
+        if dungeon
+            .legacy_index
+            .zip(alternate.legacy_index)
+            .is_none_or(|(primary, alternate)| primary >= alternate)
+            || alternate.substitution.is_some()
+            || substitution
+                .alternate_gate_one_in
+                .is_some_and(|one_in| one_in < 2)
+            || !substitution_alternates.insert(substitution.alternate_dungeon_id.as_str())
+        {
+            return Err(ContentError::InvalidProceduralFloor(dungeon.id.clone()));
+        }
+    }
     if let Some(wilderness) = &mut world.wilderness {
         validate_wilderness(&world.id, wilderness, &dungeon_definition_ids, towns)?;
     }
@@ -1386,14 +1413,22 @@ pub(super) fn validate_world(
                     }
                 }
                 let validate_hydrology_terrain =
-                    |deep_terrain_id: &str, shallow_terrain_id: &str| {
+                    |deep_terrain_id: &str,
+                     shallow_terrain_id: &str,
+                     allow_rubble_floor_boundary: bool| {
                         require_reference(terrain_ids, deep_terrain_id, &procedural.id)?;
                         require_reference(terrain_ids, shallow_terrain_id, &procedural.id)?;
+                        let rubble_floor_boundary = allow_rubble_floor_boundary
+                            && shallow_terrain_id == procedural.floor_terrain_id
+                            && terrain_tags
+                                .get(deep_terrain_id)
+                                .is_some_and(|tags| tags.contains("rubble"));
                         if deep_terrain_id == shallow_terrain_id
                             || terrain_walkability.get(deep_terrain_id) != Some(&false)
                             || terrain_walkability.get(shallow_terrain_id) != Some(&true)
-                            || [deep_terrain_id, shallow_terrain_id]
-                                .contains(&procedural.floor_terrain_id.as_str())
+                            || (!rubble_floor_boundary
+                                && [deep_terrain_id, shallow_terrain_id]
+                                    .contains(&procedural.floor_terrain_id.as_str()))
                             || [deep_terrain_id, shallow_terrain_id]
                                 .contains(&procedural.wall_terrain_id.as_str())
                             || layout.cavern.as_ref().is_some_and(|cavern| {
@@ -1421,6 +1456,7 @@ pub(super) fn validate_world(
                         validate_hydrology_terrain(
                             &lake.deep_terrain_id,
                             &lake.shallow_terrain_id,
+                            true,
                         )?;
                         if !(24..=interior_area).contains(&area_tiles)
                             || deep_area_tiles < 4
@@ -1441,6 +1477,7 @@ pub(super) fn validate_world(
                         validate_hydrology_terrain(
                             &river.deep_terrain_id,
                             &river.shallow_terrain_id,
+                            false,
                         )?;
                         let center_x = procedural.width / 2;
                         let center_y = procedural.height / 2;
@@ -1453,7 +1490,11 @@ pub(super) fn validate_world(
                                     .max(procedural.height.saturating_sub(2 + center_y))
                                 + 1,
                         );
-                        if !(maximum_centerline_tiles..=interior_area).contains(&area_tiles) {
+                        if !(maximum_centerline_tiles..=interior_area).contains(&area_tiles)
+                            || river
+                                .chance_one_in
+                                .is_some_and(|chance| !(1..=10_000).contains(&chance))
+                        {
                             return Err(ContentError::InvalidProceduralFloor(
                                 procedural.id.clone(),
                             ));
@@ -1724,7 +1765,7 @@ pub(super) fn validate_world(
                 let table = terrain_feature_tables
                     .get(table_id)
                     .expect("validated terrain feature table must remain available");
-                if !(1..=8).contains(&placements)
+                if !(1..=320).contains(&placements)
                     || placements > table.rolls
                     || eligible_terrain_feature_entries.is_empty()
                 {
@@ -1825,14 +1866,16 @@ pub(super) fn validate_world(
                 ActorRole::Monster,
                 &procedural.id,
             )?;
-            if actor_levels
-                .get(&guardian.actor_kind_id)
-                .is_none_or(|level| *level > u32::from(procedural.depth))
-            {
-                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
-            }
             if let Some(table_id) = &guardian.reward_loot_table_id {
                 require_reference(loot_table_ids, table_id, &procedural.id)?;
+            }
+            if let Some(item_kind_id) = &guardian.reward_artifact_item_kind_id {
+                let artifact = items.iter().find(|item| item.id == *item_kind_id);
+                if guardian.reward_loot_table_id.is_none()
+                    || artifact.is_none_or(|item| item.artifact_generation.is_none())
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
             }
         }
         if terrain_walkability
@@ -2667,6 +2710,9 @@ pub(super) fn validate_world(
                     .connections
                     .iter()
                     .filter_map(|connection| {
+                        if !matches!(connection.kind, FloorConnectionKind::Stairs) {
+                            return None;
+                        }
                         let target = members
                             .iter()
                             .find(|candidate| candidate.id == connection.target_floor_id)?;
@@ -2694,6 +2740,9 @@ pub(super) fn validate_world(
                     .connections
                     .iter()
                     .filter_map(|connection| {
+                        if !matches!(connection.kind, FloorConnectionKind::Stairs) {
+                            return None;
+                        }
                         let target = members
                             .iter()
                             .find(|candidate| candidate.id == connection.target_floor_id)?;
@@ -2773,12 +2822,33 @@ pub(super) fn validate_world(
             }
         }
     }
-    let mut entry_terrain_ids = BTreeSet::new();
+    let mut entry_terrain_owners = BTreeMap::<Option<&str>, Option<&str>>::new();
     for floor in world.procedural_floors.iter().filter(|floor| {
         floor.lifecycle != FloorLifecycle::Town && floor.return_floor_id == world.initial_floor_id
     }) {
-        if !entry_terrain_ids.insert(floor.entry_terrain_id.as_deref()) {
-            return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
+        let entry_terrain_id = floor.entry_terrain_id.as_deref();
+        let dungeon_id = floor.dungeon_id.as_deref();
+        if let Some(existing_dungeon_id) = entry_terrain_owners.get(&entry_terrain_id).copied() {
+            let is_substitution_pair =
+                existing_dungeon_id
+                    .zip(dungeon_id)
+                    .is_some_and(|(left, right)| {
+                        dungeons_by_id
+                            .get(left)
+                            .and_then(|dungeon| dungeon.substitution.as_ref())
+                            .is_some_and(|substitution| substitution.alternate_dungeon_id == right)
+                            || dungeons_by_id
+                                .get(right)
+                                .and_then(|dungeon| dungeon.substitution.as_ref())
+                                .is_some_and(|substitution| {
+                                    substitution.alternate_dungeon_id == left
+                                })
+                    });
+            if !is_substitution_pair {
+                return Err(ContentError::InvalidProceduralFloor(floor.id.clone()));
+            }
+        } else {
+            entry_terrain_owners.insert(entry_terrain_id, dungeon_id);
         }
     }
     require_reference(terrain_ids, &world.fill_terrain_id, &world.id)?;

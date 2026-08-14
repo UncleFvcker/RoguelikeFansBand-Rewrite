@@ -151,7 +151,7 @@ mod tests {
     fn fixture() -> (SaveHeaderV1, SavePayloadV1) {
         let header = SaveHeaderV1 {
             format: "rfb-save".to_owned(),
-            save_schema_version: 1,
+            save_schema_version: SAVE_HEADER_SCHEMA_VERSION,
             game_version: "0.1.0".to_owned(),
             protocol_version: PROTOCOL_VERSION.to_owned(),
             slot_name: "测试存档".to_owned(),
@@ -168,7 +168,7 @@ mod tests {
             payload_encoding: "messagepack".to_owned(),
         };
         let payload = SavePayloadV1 {
-            schema_version: 1,
+            schema_version: rfb_protocol::SAVE_PAYLOAD_SCHEMA_VERSION,
             revision: 0,
             turn: 0,
             world_tick: 0,

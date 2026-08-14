@@ -30,7 +30,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 179,
+      "rngDrawCounter": 185,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1433,6 +1433,7 @@
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1475,6 +1476,7 @@
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1512,6 +1514,7 @@
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1614,7 +1617,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 187,
+      "nextItemInstanceSerial": 197,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "retired",
@@ -1624,7 +1627,7 @@
         "victoryTurn": 0,
         "retiredTurn": 1
       },
-      "stateHash": "9893dd6fa8c703655b11d095a73d9f837fc341c06368538be15788d032f8bb68"
+      "stateHash": "83e0616678bc0066c0f714469c803c3d9ac386b1ca149e8ab0bdf7547ebe81b3"
     },
     "events": [
       {
@@ -1639,9 +1642,9 @@
       {
         "step": 2,
         "kind": "campaign-ended",
-        "stateHash": "9893dd6fa8c703655b11d095a73d9f837fc341c06368538be15788d032f8bb68"
+        "stateHash": "83e0616678bc0066c0f714469c803c3d9ac386b1ca149e8ab0bdf7547ebe81b3"
       }
     ],
-    "saveRoundTripStateHash": "9893dd6fa8c703655b11d095a73d9f837fc341c06368538be15788d032f8bb68"
+    "saveRoundTripStateHash": "83e0616678bc0066c0f714469c803c3d9ac386b1ca149e8ab0bdf7547ebe81b3"
   }
 }

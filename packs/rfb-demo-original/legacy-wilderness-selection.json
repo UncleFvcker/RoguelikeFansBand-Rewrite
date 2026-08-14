@@ -23,6 +23,21 @@
       "sourceIndex": 3,
       "sourceName": "Orc cave",
       "id": "demo.dungeon.orc-cave"
+    },
+    {
+      "sourceIndex": 2,
+      "sourceName": "Camelot",
+      "id": "demo.dungeon.camelot"
+    },
+    {
+      "sourceIndex": 33,
+      "sourceName": "Tidal cave",
+      "id": "demo.dungeon.tidal-cave"
+    },
+    {
+      "sourceIndex": 21,
+      "sourceName": "Icky cave",
+      "id": "demo.dungeon.icky-cave"
     }
   ],
   "townPlans": [
@@ -91,6 +106,172 @@
       "finalObject": { "tval": 45, "sval": 0 },
       "finalEgoSourceIndex": 206,
       "substituteSourceIndex": 36
+    },
+    {
+      "sourceIndex": 36,
+      "sourceName": "Troll cave",
+      "id": "demo.dungeon.troll-cave",
+      "position": { "x": 30, "y": 45 },
+      "minimumDepth": 18,
+      "maximumDepth": 36,
+      "monsterDivisor": 12,
+      "generationFlags": [
+        "ALL_SHAFTS",
+        "CAVE",
+        "WATER_RIVER",
+        "CAVERN",
+        "LAKE_WATER",
+        "LAKE_RUBBLE",
+        "DESTROY",
+        "BIG"
+      ],
+      "monsterPreferences": [
+        "R_CHAR_hpTO",
+        "ANIMAL",
+        "TROLL"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "DIRT", "percent": 70 },
+        { "sourceTag": "GRASS", "percent": 30 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 14,
+      "guardian": {
+        "sourceIndex": 1304,
+        "sourceName": "Spulga, the Troll Priestess",
+        "chineseName": "巨魔女祭司斯普尔加",
+        "level": 40
+      },
+      "finalObject": { "tval": 37, "sval": 13 },
+      "finalEgoSourceIndex": 72
+    },
+    {
+      "sourceIndex": 2,
+      "sourceName": "Camelot",
+      "id": "demo.dungeon.camelot",
+      "position": { "x": 7, "y": 59 },
+      "minimumDepth": 20,
+      "maximumDepth": 35,
+      "monsterDivisor": 32,
+      "generationFlags": [
+        "COFFEE"
+      ],
+      "monsterPreferences": [
+        "KNIGHT",
+        "R_CHAR_pHgd"
+      ],
+      "guardian": {
+        "sourceIndex": 1111,
+        "sourceName": "Arthur Pendragon",
+        "chineseName": "亚瑟·潘德拉贡",
+        "level": 32
+      },
+      "finalObject": { "tval": 34, "sval": 10 }
+    },
+    {
+      "sourceIndex": 33,
+      "sourceName": "Tidal cave",
+      "id": "demo.dungeon.tidal-cave",
+      "position": { "x": 47, "y": 53 },
+      "minimumDepth": 15,
+      "maximumDepth": 27,
+      "monsterDivisor": 16,
+      "generationFlags": [
+        "CAVE",
+        "WATER_RIVER",
+        "LAKE_WATER",
+        "CAVERN"
+      ],
+      "monsterPreferences": [
+        "CAN_SWIM",
+        "WILD_SHORE",
+        "AQUATIC"
+      ],
+      "guardian": {
+        "sourceIndex": 431,
+        "sourceName": "Grendel",
+        "chineseName": "格伦戴尔",
+        "level": 27
+      },
+      "finalObject": { "tval": 75, "sval": 68 }
+    },
+    {
+      "sourceIndex": 21,
+      "sourceName": "Icky cave",
+      "id": "demo.dungeon.icky-cave",
+      "position": { "x": 17, "y": 29 },
+      "minimumDepth": 10,
+      "maximumDepth": 20,
+      "monsterDivisor": 32,
+      "generationFlags": [
+        "COFFEE"
+      ],
+      "monsterPreferences": [
+        "R_CHAR_ijM"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "SWAMP", "percent": 20 },
+        { "sourceTag": "GRASS", "percent": 60 },
+        { "sourceTag": "SHALLOW_WATER", "percent": 20 }
+      ],
+      "tunnelPercent": 8,
+      "guardian": {
+        "sourceIndex": 909,
+        "sourceName": "The Icky Queen",
+        "chineseName": "黏糊恶心女王",
+        "level": 20
+      },
+      "finalObject": { "tval": 46, "sval": 0 },
+      "finalEgoSourceIndex": 266
+    },
+    {
+      "sourceIndex": 31,
+      "sourceName": "Hideout",
+      "id": "demo.dungeon.hideout",
+      "position": { "x": 28, "y": 52 },
+      "minimumDepth": 8,
+      "maximumDepth": 18,
+      "monsterDivisor": 32,
+      "generationFlags": [
+        "COFFEE"
+      ],
+      "monsterPreferences": [
+        "R_CHAR_p",
+        "THIEF"
+      ],
+      "tunnelPercent": 8,
+      "guardian": {
+        "sourceIndex": 1030,
+        "sourceName": "Meng Huo, the King of Southerings",
+        "chineseName": "南蛮王孟获",
+        "level": 18
+      },
+      "finalObject": { "tval": 40, "sval": 0 },
+      "substituteSourceIndex": 40
+    },
+    {
+      "sourceIndex": 40,
+      "sourceName": "Man cave",
+      "id": "demo.dungeon.man-cave",
+      "position": { "x": 28, "y": 52 },
+      "minimumDepth": 8,
+      "maximumDepth": 18,
+      "monsterDivisor": 16,
+      "generationFlags": [
+        "COFFEE"
+      ],
+      "monsterPreferences": [
+        "R_CHAR_p",
+        "THIEF"
+      ],
+      "tunnelPercent": 8,
+      "guardian": {
+        "sourceIndex": 1275,
+        "sourceName": "Untamo the Cruel",
+        "chineseName": "残酷者温塔莫",
+        "level": 23
+      },
+      "finalArtifactSourceIndex": 104
     }
   ]
 }

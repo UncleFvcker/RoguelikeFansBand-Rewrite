@@ -49,7 +49,7 @@
       "turn": 1,
       "worldTick": 9,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 178,
+      "rngDrawCounter": 185,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1185,7 +1185,7 @@
           "energyNeed": 19
         }
       ],
-      "groundItemCount": 2,
+      "groundItemCount": 3,
       "inventoryStackCount": 5,
       "equipmentCount": 3,
       "inventory": [
@@ -1360,6 +1360,7 @@
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1402,6 +1403,7 @@
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1439,6 +1441,7 @@
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1495,6 +1498,10 @@
           "discovered": true
         },
         {
+          "itemId": "generated.item.187",
+          "discovered": true
+        },
+        {
           "itemId": "generated.item.2",
           "discovered": true
         },
@@ -1529,7 +1536,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 182,
+      "nextItemInstanceSerial": 188,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1537,7 +1544,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ad0b434c2ed15e73750ca67019dd2b9086b0b96a2648566c724cd13f5260b163"
+      "stateHash": "85e4a64f848c47c0a837c6ae0fabbfed901454285cc7bc8c574470fbed22134e"
     },
     "events": [
       {
@@ -1572,8 +1579,8 @@
         }
       },
       {
-        "kind": "combat.projectile-ammo-broken",
-        "messageKey": "projectile-ammo-broken",
+        "kind": "combat.projectile-ammo-recovered",
+        "messageKey": "projectile-ammo-recovered",
         "args": {
           "target": "demo.item.arrow"
         }

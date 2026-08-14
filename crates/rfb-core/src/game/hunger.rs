@@ -57,7 +57,7 @@ impl Game {
         if !self.fasting
             || !self.world_tick.is_multiple_of(WORLD_PROCESS_INTERVAL_TICKS)
             || self.rng.bounded(7) != 0
-            || self.rng.bounded(u64::from(NUTRITION_HUNGRY)) + 1 <= u64::from(self.nutrition)
+            || self.rng.bounded(u64::from(NUTRITION_HUNGRY)) < u64::from(self.nutrition)
         {
             return;
         }

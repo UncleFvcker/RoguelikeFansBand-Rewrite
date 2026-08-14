@@ -285,7 +285,7 @@ pub(super) fn skill_check_game(seed: u64, build_id: &str) -> Game {
 
 pub(super) fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
     let (activation, charges) =
-        initial_item_runtime_state(&game.content, &mut game.rng, kind_id, 1);
+        initial_item_runtime_state(&game.content, &mut game.rng, kind_id, &[], 1);
     game.items.push(ItemInstance {
         id: id.to_owned(),
         kind_id: kind_id.to_owned(),

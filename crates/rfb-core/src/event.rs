@@ -240,6 +240,11 @@ pub(crate) enum DomainEvent {
         quantity: u32,
         position: Position,
     },
+    InventoryItemDestroyedByDamage {
+        source_kind_id: String,
+        target_kind_id: String,
+        quantity: u32,
+    },
     AbilityHit {
         ability_id: String,
         target_kind_id: String,
@@ -1897,6 +1902,19 @@ impl DomainEvent {
                     ("quantity", quantity.to_string()),
                     ("x", position.x.to_string()),
                     ("y", position.y.to_string()),
+                ],
+            ),
+            Self::InventoryItemDestroyedByDamage {
+                source_kind_id,
+                target_kind_id,
+                quantity,
+            } => dto(
+                "inventory.item-destroyed",
+                "inventory-item-destroyed-by-damage",
+                [
+                    ("source", source_kind_id),
+                    ("target", target_kind_id),
+                    ("quantity", quantity.to_string()),
                 ],
             ),
             Self::AbilityHit {

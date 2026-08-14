@@ -732,3 +732,9 @@ State Hash Schema v103；save 容器保持 v1，旧开发存档不兼容。
 并允许视野伤害在实际命中亡灵后更新 Unlife。`transcendence` 复用既有临时状态容器，
 在统一的最终玩家伤害入口按 1:1 先消耗法力、再扣除剩余生命；结界序列复用脚下与相邻
 地形事务。没有增加新的持久字段，State Hash Schema 保持 v103，save 容器保持 v1。
+
+协议 1.211 / P89E 为 `EquipmentItemDto` 增加 `usable`、可选 `charges` 和可选
+`activation`，使已装备的固定神器可沿用现有 `UseItem` 命令与装置充能状态执行激活。
+同时为 `DungeonStateSaveDto` 增加必填 `suppressed`，持久化共享入口地牢的替代选择；该状态
+及合并后的状态增量进入 State Hash Schema v104，save header/payload schema 升至 v2，
+二进制容器格式仍为 v1；不为缺少新字段的旧开发存档提供兼容默认值。

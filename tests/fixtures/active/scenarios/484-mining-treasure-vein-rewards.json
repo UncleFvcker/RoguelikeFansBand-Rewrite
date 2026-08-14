@@ -52,7 +52,7 @@
       "turn": 2,
       "worldTick": 20,
       "lastCommandSeq": 2,
-      "rngDrawCounter": 175,
+      "rngDrawCounter": 182,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1386,6 +1386,7 @@
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1428,6 +1429,7 @@
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1465,6 +1467,7 @@
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1512,6 +1515,7 @@
           "displayNameKey": "item-demo-orcish-pick-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "tool",
@@ -1602,7 +1606,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 190,
+      "nextItemInstanceSerial": 195,
       "nextGoldPileSerial": 1,
       "terrainInteractions": [
         {
@@ -1623,7 +1627,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "3e5935d2250fdfd6dc6c063b90b646734394dac62544abf3da43fc8cd802e49e"
+      "stateHash": "45b4a1a19d0865a5c20384d87357427df444eddbdfa7bf0175a6599249e3eaca"
     },
     "events": [
       {
@@ -1644,6 +1648,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "3e5935d2250fdfd6dc6c063b90b646734394dac62544abf3da43fc8cd802e49e"
+    "saveRoundTripStateHash": "45b4a1a19d0865a5c20384d87357427df444eddbdfa7bf0175a6599249e3eaca"
   }
 }

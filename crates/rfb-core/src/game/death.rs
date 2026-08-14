@@ -318,6 +318,30 @@ impl Game {
                     let application =
                         self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
                     let damage = application.damage;
+                    if bomb {
+                        self.damage_player_inventory(
+                            &actor.kind_id,
+                            DamageType::Shards,
+                            false,
+                            damage.applied,
+                            events,
+                        );
+                        self.damage_player_inventory(
+                            &actor.kind_id,
+                            DamageType::Sound,
+                            false,
+                            damage.applied,
+                            events,
+                        );
+                    } else {
+                        self.damage_player_inventory(
+                            &actor.kind_id,
+                            damage_type,
+                            false,
+                            damage.applied,
+                            events,
+                        );
+                    }
                     if !application.fatal
                         && let Some(bomb_damage) = bomb_damage
                     {
@@ -486,7 +510,7 @@ impl Game {
         };
         let corpse = if let Some(kind_id) = corpse_kind_id {
             let (activation, charges) =
-                initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, 1);
+                initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, &[], 1);
             Some(ItemInstance {
                 id: self.allocate_item_instance_id()?,
                 activation,
@@ -736,7 +760,9 @@ impl Game {
                     })
                 })
             });
-        if let Some((dungeon_id, floor_id, target_kind_id)) = defeated_guardian {
+        if let Some((dungeon_id, floor_id, target_kind_id)) = defeated_guardian
+            && self.dungeon_is_active(&dungeon_id)
+        {
             let state = self
                 .dungeon_states
                 .get_mut(&dungeon_id)
@@ -779,7 +805,8 @@ impl Game {
         let defeated_entrance_guardian = self.content.world(&self.world_id).and_then(|world| {
             world.dungeons.iter().find_map(|dungeon| {
                 dungeon.entrance_guardian.as_ref().and_then(|guardian| {
-                    (self.current_floor_id == world.initial_floor_id
+                    (self.dungeon_is_active(&dungeon.id)
+                        && self.current_floor_id == world.initial_floor_id
                         && guardian.instance_id == removed.id)
                         .then(|| (dungeon.id.clone(), guardian.actor_kind_id.clone()))
                 })

@@ -1071,6 +1071,10 @@
       ],
       "default": null
     },
+    "reflectsBolts": {
+      "default": false,
+      "type": "boolean"
+    },
     "resistances": {
       "additionalProperties": false,
       "default": {},

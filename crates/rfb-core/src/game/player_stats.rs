@@ -534,6 +534,16 @@ impl Game {
             .any(|status| status.grants_wall_passage)
     }
 
+    pub(super) fn player_reflects_bolts(&self) -> bool {
+        self.items.iter().any(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+                && self
+                    .content
+                    .item(&item.kind_id)
+                    .is_some_and(|definition| definition.reflects_bolts)
+        })
+    }
+
     pub(super) fn player_incoming_damage_percent(&self) -> u8 {
         self.player
             .statuses

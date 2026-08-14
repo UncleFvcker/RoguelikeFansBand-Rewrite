@@ -1143,3 +1143,22 @@ git diff --stat
   `7930a9ba2980097431e039479334265842cb54bd143e279efde2c93fd47da96b`、Protocol `1.204`、State Hash
   Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量 fixture，
   留待合并验收。
+
+## 62. main 当前交接（Nature/Life 物品与怪物/地牢增量整合）
+
+- `codex/items-next` 的 7 个增量提交已通过 merge commit `30fccbae6` 接入 main；Nature 全四册与
+  Life 前三册复用统一的物品生成、堆叠和落点路径。`codex/monsters-next` 的源 tip 为
+  `baf320ff6`，接入 Mirror Shield、Camelot、Tidal Cave、Icky Cave、Hideout/Man cave 互斥选择、
+  Troll Cave/Olog 奖励、元素库存损坏和箭袋保护。
+- 伤害路径保留 Life Transcendence 的最终玩家伤害提交，再以实际承受伤害触发怪物增量的库存
+  损坏；没有建立第二套伤害结算。互斥地牢选择新增必填的 `DungeonStateSaveDto.suppressed`，因此
+  存档头与载荷 schema 同步升到 v2；外层二进制容器格式仍为 v1，项目也不兼容旧开发存档。
+- 读档验收发现并修正了一处真实验证错误：合法的 `GuardLeader` 怪物群首领曾被
+  `monster_packs_are_valid` 拒绝。其余编译/测试问题均为新增必填字段后的手写测试构造或确定性
+  断言过期，包括 `PlayerSaveDto.pending_ability_direction`、
+  `EquipmentItemDto.permanentDestructionImmunities`、新书店库存和初始地牢选择导致的 RNG 位移。
+- 共享协调点为 pack `1.346.0` / content hash
+  `ffa579c5d8810be3bd1c8c35220a9bb8fff58ad5f6b96d5f821110e03cf38020`、Protocol `1.211`、
+  State Hash Schema v104、save v2。共同初始化 RNG 改变后已按规则刷新并验证 26 个 active fixtures；
+  Rust workspace 728 项 core、246 项 content 及其余 crate 测试、Clippy、生成器、source/content
+  验证，以及 Web 148 项测试、typecheck 和生产 UI build 均通过。

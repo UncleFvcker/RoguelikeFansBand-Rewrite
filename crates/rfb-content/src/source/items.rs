@@ -108,6 +108,8 @@ pub(crate) struct SourceItemDefinition {
     #[serde(default)]
     passives: BTreeSet<EquipmentPassive>,
     #[serde(default)]
+    reflects_bolts: bool,
+    #[serde(default)]
     elemental_destruction_vulnerabilities: BTreeSet<crate::ItemDestructionElement>,
     #[serde(default)]
     elemental_destruction_immunities: BTreeSet<crate::ItemDestructionElement>,
@@ -286,6 +288,7 @@ impl SourceItemDefinition {
             slays: self.slays,
             brands: self.brands,
             passives: self.passives,
+            reflects_bolts: self.reflects_bolts,
             elemental_destruction_vulnerabilities: self.elemental_destruction_vulnerabilities,
             elemental_destruction_immunities: self.elemental_destruction_immunities,
             resists_projection_destruction: self.resists_projection_destruction,

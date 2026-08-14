@@ -35,7 +35,7 @@
       "turn": 2,
       "worldTick": 10,
       "lastCommandSeq": 2,
-      "rngDrawCounter": 176,
+      "rngDrawCounter": 183,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1403,6 +1403,7 @@
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1445,6 +1446,7 @@
           "displayNameKey": "item-demo-swift-treads-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 20,
           "slotId": "feet",
@@ -1471,6 +1473,7 @@
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1508,6 +1511,7 @@
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1612,7 +1616,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 186,
+      "nextItemInstanceSerial": 192,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1620,7 +1624,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "afc4b4e42800e63d382eafb7665e2770e842d218814d982e65594f6b7f143af9"
+      "stateHash": "6d48a03c06c6ac16aa00c532c6149a613eb90e765be0948ccf397ef3ab6c2114"
     },
     "events": [
       {
@@ -1637,6 +1641,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "afc4b4e42800e63d382eafb7665e2770e842d218814d982e65594f6b7f143af9"
+    "saveRoundTripStateHash": "6d48a03c06c6ac16aa00c532c6149a613eb90e765be0948ccf397ef3ab6c2114"
   }
 }

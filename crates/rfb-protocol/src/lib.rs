@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.210";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
+pub const PROTOCOL_VERSION: &str = "1.211";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -3546,6 +3546,12 @@ pub struct EquipmentItemDto {
     pub captured_actor: Option<CapturedActorDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub use_target_spec: Option<TargetSpecDto>,
+    #[serde(default)]
+    pub usable: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub charges: Option<ItemChargesDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<ItemActivationDto>,
     pub quantity: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inscription: Option<String>,
@@ -4670,6 +4676,7 @@ pub struct TaskStateSaveDto {
 #[serde(rename_all = "camelCase")]
 pub struct DungeonStateSaveDto {
     pub dungeon_id: String,
+    pub suppressed: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub guardian_defeated: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5290,6 +5297,9 @@ mod tests {
                 capture_ball: false,
                 captured_actor: None,
                 use_target_spec: None,
+                usable: false,
+                charges: None,
+                activation: None,
                 quantity: 1,
                 inscription: None,
                 fuel: None,

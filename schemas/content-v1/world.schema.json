@@ -132,6 +132,17 @@
         },
         "rootFloorId": {
           "type": "string"
+        },
+        "substitution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DungeonSubstitutionDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -246,6 +257,13 @@
         "instanceId": {
           "type": "string"
         },
+        "rewardArtifactItemKindId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "rewardLootTableId": {
           "default": null,
           "type": [
@@ -308,6 +326,28 @@
           "type": "object"
         }
       ]
+    },
+    "DungeonSubstitutionDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "alternateDungeonId": {
+          "type": "string"
+        },
+        "alternateGateOneIn": {
+          "default": null,
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "alternateDungeonId"
+      ],
+      "type": "object"
     },
     "FloorConnectionKind": {
       "enum": [
@@ -1537,6 +1577,15 @@
     "ProceduralRiverDefinition": {
       "additionalProperties": false,
       "properties": {
+        "chanceOneIn": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "deepTerrainId": {
           "type": "string"
         },

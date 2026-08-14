@@ -2215,16 +2215,18 @@ impl Game {
         let activation = self.items[index].activation.clone();
         let (profile_id, difficulty, cost, effect, plan) =
             if let Some(activation) = activation.as_ref() {
-                let profile = definition
-                    .device_generation
-                    .as_ref()
-                    .and_then(|generation| {
-                        generation
-                            .activations
-                            .iter()
-                            .find(|candidate| candidate.id == activation.profile_id)
-                    })
-                    .expect("validated dynamic item activation profile must remain available");
+                let profile = item_device_generation(
+                    &self.content,
+                    &self.items[index].kind_id,
+                    &self.items[index].affix_ids,
+                )
+                .and_then(|generation| {
+                    generation
+                        .activations
+                        .iter()
+                        .find(|candidate| candidate.id == activation.profile_id)
+                })
+                .expect("validated dynamic item activation profile must remain available");
                 let Some(plan) = self.item_use_plan(
                     item_id,
                     &profile.effect,

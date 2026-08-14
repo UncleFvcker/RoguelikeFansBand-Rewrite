@@ -93,6 +93,7 @@ message-combat-monster-death-explosion-slew = { $source }'s death explosion kill
 message-monster-terrain-destroyed = { $source } destroys { $terrain }.
 message-monster-item-destroyed = { $source } destroys { $target } x{ $quantity }.
 message-ability-ground-item-destroyed = { $source } destroys { $target } x{ $quantity }.
+message-inventory-item-destroyed-by-damage = { $source } destroys { $target } x{ $quantity } in your inventory.
 message-monster-item-picked-up = { $source } picks up { $target } x{ $quantity }.
 message-monster-gold-theft-prevented = You protect your gold from { $source }.
 message-monster-item-theft-prevented = You protect your pack from { $source }.

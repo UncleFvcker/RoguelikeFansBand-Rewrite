@@ -31,7 +31,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 190,
+      "rngDrawCounter": 197,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -300,8 +300,8 @@
         }
       ],
       "playerPosition": {
-        "x": 42,
-        "y": 24
+        "x": 54,
+        "y": 8
       },
       "playerHp": 56,
       "playerMaxHp": 56,
@@ -1358,6 +1358,7 @@
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1400,6 +1401,7 @@
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1437,6 +1439,7 @@
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1538,7 +1541,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 186,
+      "nextItemInstanceSerial": 191,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1546,7 +1549,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8880db8608c8073f4a91d8b929b977437076d0b0745106c59920302918e4e987"
+      "stateHash": "ed57457cdea93b520bef4ea90a1c7e26b3ffea43d664df428de9ee92c96227ff"
     },
     "events": [
       {
@@ -1556,8 +1559,8 @@
           "fromX": "44",
           "fromY": "16",
           "source": "demo.item.flicker-scroll",
-          "toX": "42",
-          "toY": "24"
+          "toX": "54",
+          "toY": "8"
         },
         "outcome": {
           "type": "ability-teleport",
@@ -1567,13 +1570,13 @@
               "y": 16
             },
             "to": {
-              "x": 42,
-              "y": 24
+              "x": 54,
+              "y": 8
             }
           }
         }
       }
     ],
-    "saveRoundTripStateHash": "8880db8608c8073f4a91d8b929b977437076d0b0745106c59920302918e4e987"
+    "saveRoundTripStateHash": "ed57457cdea93b520bef4ea90a1c7e26b3ffea43d664df428de9ee92c96227ff"
   }
 }

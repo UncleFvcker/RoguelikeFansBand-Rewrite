@@ -176,6 +176,17 @@ pub struct AffixDefinition {
     /// Protects instances from `KILL_ITEM`; used by Endurance ammunition.
     #[serde(default)]
     pub resists_monster_destruction: bool,
+    /// Protects ammunition assigned to this equipped quiver from inventory damage.
+    #[serde(default)]
+    pub protects_quiver_ammunition: bool,
+    /// Optional activation contributed by this affix. The generated activation
+    /// and charges are materialized on the item instance like an intrinsic
+    /// device activation.
+    #[serde(default)]
+    pub device_generation: Option<ItemDeviceGenerationDefinition>,
+    /// Keeps a fixed reward affix without promoting the item above ordinary quality.
+    #[serde(default)]
+    pub preserves_ordinary_quality: bool,
     /// Generation-time weighted rolls. Results are materialized into the
     /// item instance and never recomputed while loading a save.
     #[serde(default)]
@@ -873,6 +884,9 @@ pub struct ItemDefinition {
     /// Passive capabilities granted while this item is equipped.
     #[serde(default)]
     pub passives: BTreeSet<EquipmentPassive>,
+    /// Whether this equipped item reflects incoming single-target bolts.
+    #[serde(default)]
+    pub reflects_bolts: bool,
     /// RFB object elements that can destroy this base kind on the ground.
     #[serde(default)]
     pub elemental_destruction_vulnerabilities: BTreeSet<ItemDestructionElement>,
@@ -912,6 +926,7 @@ pub fn affix_is_compatible_with_item(
             Some("gloves") => &["gloves"],
             Some("boots") => &["boots"],
             Some("light") => &["lite"],
+            Some("quiver") => &["quiver"],
             Some("ring") => &["ring"],
             Some("amulet") => &["amulet"],
             _ => return false,

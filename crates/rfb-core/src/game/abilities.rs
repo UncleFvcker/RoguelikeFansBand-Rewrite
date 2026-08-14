@@ -2369,15 +2369,66 @@ impl Game {
         }
 
         let origin = self.entities[reflector_index].position;
+        let path = self.reflected_bolt_path(origin, self.player.position);
+        let can_hit_player = self.rng.bounded(2) != 0;
+        self.resolve_reflected_bolt(
+            reflector_kind_id,
+            source_kind_id,
+            raw_damage,
+            damage_type,
+            affects_ground_items,
+            origin,
+            path,
+            can_hit_player,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        Ok(true)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn try_reflect_monster_bolt(
+        &mut self,
+        source_kind_id: &str,
+        source_position: Position,
+        raw_damage: i32,
+        damage_type: DamageType,
+        affects_ground_items: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
+        if !self.player_reflects_bolts() || self.rng.bounded(4) == 0 {
+            return Ok(false);
+        }
+
+        let origin = self.player.position;
+        let path = self.reflected_bolt_path(origin, source_position);
+        self.resolve_reflected_bolt(
+            self.player.kind_id.clone(),
+            source_kind_id,
+            raw_damage,
+            damage_type,
+            affects_ground_items,
+            origin,
+            path,
+            false,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        Ok(true)
+    }
+
+    fn reflected_bolt_path(&mut self, origin: Position, source: Position) -> Vec<Position> {
         let range = self.width.max(self.height);
         let mut reflected_path = None;
         for _ in 0..10 {
-            let y = self.player.position.y
-                + i32::try_from(self.rng.bounded(5)).expect("bounded draw fits i32")
-                - 2;
-            let x = self.player.position.x
-                + i32::try_from(self.rng.bounded(5)).expect("bounded draw fits i32")
-                - 2;
+            let y =
+                source.y + i32::try_from(self.rng.bounded(5)).expect("bounded draw fits i32") - 2;
+            let x =
+                source.x + i32::try_from(self.rng.bounded(5)).expect("bounded draw fits i32") - 2;
             let destination = Position { x, y };
             let Some(path) = projectile_path_between(origin, destination, range) else {
                 continue;
@@ -2390,10 +2441,26 @@ impl Game {
                 break;
             }
         }
-        let path = reflected_path
-            .or_else(|| projectile_path_between(origin, self.player.position, range))
-            .expect("an incoming bolt must retain a reverse reflection path");
-        let can_hit_player = self.rng.bounded(2) != 0;
+        reflected_path
+            .or_else(|| projectile_path_between(origin, source, range))
+            .expect("an incoming bolt must retain a reverse reflection path")
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_reflected_bolt(
+        &mut self,
+        reflector_kind_id: String,
+        source_kind_id: &str,
+        raw_damage: i32,
+        damage_type: DamageType,
+        affects_ground_items: bool,
+        origin: Position,
+        path: Vec<Position>,
+        can_hit_player: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         let mut impact = origin;
         let mut landing = origin;
         let mut traversed = Vec::new();
@@ -2466,7 +2533,7 @@ impl Game {
                     damage,
                 });
             }
-            return Ok(true);
+            return Ok(());
         }
 
         if let Some(index) = hit_actor_index {
@@ -2512,7 +2579,7 @@ impl Game {
                     removed_entities,
                 )?;
             }
-            return Ok(true);
+            return Ok(());
         }
 
         events.push(DomainEvent::BoltReflected {
@@ -2521,7 +2588,7 @@ impl Game {
             outcome: BoltReflectionOutcome::Landed,
             trace,
         });
-        Ok(true)
+        Ok(())
     }
 
     pub(super) fn resolve_player_cone_damage_effect(

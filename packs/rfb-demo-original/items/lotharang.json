@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.lotharang",
+  "nameKey": "item-demo-lotharang-name",
+  "descriptionKey": "item-demo-lotharang-description",
+  "elementalDestructionVulnerabilities": ["acid", "fire"],
+  "glyph": "/",
+  "generationLevel": 10,
+  "weightTenthsPound": 170,
+  "maxStack": 1,
+  "baseValue": 21000,
+  "equipmentSlot": "weapon",
+  "weaponProficiencyBaseItemId": "demo.item.battle-axe",
+  "artifactGeneration": {
+    "sourceIndex": 104,
+    "baseItemKindId": "demo.item.battle-axe",
+    "rarityOneIn": 5,
+    "instant": false
+  },
+  "modifiers": { "strength": 1, "dexterity": 1 },
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 9,
+    "toDamage": 8,
+    "damageDice": 2,
+    "damageSides": 9
+  },
+  "slays": { "orc": "slay", "troll": "slay" },
+  "deviceGeneration": {
+    "recovery": { "intervalTicks": 40, "energyPerMille": 1000 },
+    "activations": [
+      {
+        "id": "demo.item-activation.lotharang-heal",
+        "nameKey": "item-activation-demo-lotharang-heal-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 10,
+        "charges": { "minimum": 1, "maximum": 1, "cost": 1 },
+        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+        "effectProgramId": "demo.effect.lotharang-heal"
+      }
+    ]
+  },
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "tags": ["artifact", "equipment", "weapon"]
+}

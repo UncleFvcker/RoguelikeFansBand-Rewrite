@@ -423,10 +423,21 @@ struct DemoWildernessDungeonPlan {
     monster_divisor: u16,
     generation_flags: Vec<String>,
     monster_preferences: Vec<String>,
+    #[serde(default)]
+    floor_terrain_distribution: Vec<DemoDungeonFloorTerrainPlan>,
+    tunnel_percent: Option<u16>,
     guardian: DemoDungeonGuardianPlan,
-    final_object: DemoDungeonObjectPlan,
-    final_ego_source_index: u32,
-    substitute_source_index: u32,
+    final_object: Option<DemoDungeonObjectPlan>,
+    final_artifact_source_index: Option<u32>,
+    final_ego_source_index: Option<u32>,
+    substitute_source_index: Option<u32>,
+}
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoDungeonFloorTerrainPlan {
+    source_tag: String,
+    percent: u16,
 }
 
 #[derive(Debug, Deserialize)]
@@ -470,6 +481,8 @@ struct LegacyDungeonRecord {
     maximum_depth: Option<u16>,
     flags: Vec<String>,
     monster_preferences: Vec<String>,
+    floor_terrain_distribution: Vec<DemoDungeonFloorTerrainPlan>,
+    tunnel_percent: Option<u16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1581,6 +1594,54 @@ fn parse_dungeon_records(
                 line_number,
                 "W.maximumDepth",
                 fields.get(1).copied(),
+            )?);
+        } else if let Some(value) = line.strip_prefix("L:") {
+            let index = current.ok_or_else(|| {
+                content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "L",
+                    value,
+                    "floor terrain appears before a dungeon record",
+                )
+            })?;
+            let fields = parse_fields(D_INFO_SOURCE, line_number, "L", value, 7)?;
+            let record = records
+                .get_mut(&index)
+                .expect("current dungeon record must exist");
+            if !record.floor_terrain_distribution.is_empty() || record.tunnel_percent.is_some() {
+                return Err(content_parse_error(
+                    D_INFO_SOURCE,
+                    line_number,
+                    "L",
+                    value,
+                    "duplicate dungeon floor terrain",
+                ));
+            }
+            for offset in [0, 2, 4] {
+                record
+                    .floor_terrain_distribution
+                    .push(DemoDungeonFloorTerrainPlan {
+                        source_tag: required_field(
+                            D_INFO_SOURCE,
+                            line_number,
+                            "L.sourceTag",
+                            fields.get(offset).copied(),
+                        )?
+                        .to_owned(),
+                        percent: parse_number(
+                            D_INFO_SOURCE,
+                            line_number,
+                            "L.percent",
+                            fields.get(offset + 1).copied(),
+                        )?,
+                    });
+            }
+            record.tunnel_percent = Some(parse_number(
+                D_INFO_SOURCE,
+                line_number,
+                "L.tunnelPercent",
+                fields.get(6).copied(),
             )?);
         } else if let Some(value) = line.strip_prefix("F:") {
             let index = current.ok_or_else(|| {
@@ -3594,9 +3655,13 @@ fn item_json_with_terrain(
     apply_defensive_fold(&mut value, &fold);
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
+    if entry.flags.iter().any(|flag| flag == "REFLECT") {
+        value["reflectsBolts"] = serde_json::json!(true);
+    }
     apply_item_destruction_properties(&mut value, entry.tval, &entry.flags);
     for flag in &entry.flags {
-        if matches!(flag.as_str(), "NO_REMOVE" | "RIDING") || item_destruction_flag_is_mapped(flag)
+        if matches!(flag.as_str(), "NO_REMOVE" | "RIDING" | "REFLECT")
+            || item_destruction_flag_is_mapped(flag)
         {
             continue;
         }
@@ -4928,10 +4993,9 @@ fn find_power_info_body<'a>(text: &'a str, name: &str) -> Option<&'a str> {
 /// `see_inv++`, unconditional attribute sustains and literal `pspeed`
 /// and regeneration adjustments. Conditional (level-gated) and computed
 /// statements are ignored and remain accounted as hook gaps.
-pub fn parse_calc_bonuses_defenses(
-    text: &str,
-    hook: &str,
-) -> (Vec<(String, String)>, bool, bool, Vec<String>, i32, i32) {
+pub type CalcBonusesDefenses = (Vec<(String, String)>, bool, bool, Vec<String>, i32, i32);
+
+pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefenses {
     fn literal_adjustment(line: &str, prefix: &str) -> Option<i32> {
         let rest = line.strip_prefix(prefix)?.trim_start();
         let (sign, tail) = rest
@@ -12609,10 +12673,21 @@ fn validate_demo_wilderness_plans(
                 dungeon.id
             )));
         }
-        if dungeon_flag_number(record, "FINAL_GUARDIAN_") != Some(dungeon.guardian.source_index)
-            || dungeon_final_object(record).as_ref() != Some(&dungeon.final_object)
-            || dungeon_flag_number(record, "FINAL_EGO_") != Some(dungeon.final_ego_source_index)
-            || dungeon_flag_number(record, "SUBSTITUTE_") != Some(dungeon.substitute_source_index)
+        if (!dungeon.floor_terrain_distribution.is_empty()
+            && dungeon.floor_terrain_distribution != record.floor_terrain_distribution)
+            || (dungeon.tunnel_percent.is_some() && dungeon.tunnel_percent != record.tunnel_percent)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "planned dungeon {} floor terrain drifted",
+                dungeon.id
+            )));
+        }
+        if dungeon.final_object.is_some() == dungeon.final_artifact_source_index.is_some()
+            || dungeon_flag_number(record, "FINAL_GUARDIAN_") != Some(dungeon.guardian.source_index)
+            || dungeon_final_object(record) != dungeon.final_object
+            || dungeon_flag_number(record, "FINAL_ARTIFACT_") != dungeon.final_artifact_source_index
+            || dungeon_flag_number(record, "FINAL_EGO_") != dungeon.final_ego_source_index
+            || dungeon_flag_number(record, "SUBSTITUTE_") != dungeon.substitute_source_index
         {
             return Err(invalid_wilderness_selection(format!(
                 "planned dungeon {} guardian or final reward drifted",
@@ -12792,13 +12867,9 @@ pub fn sync_demo_wilderness(
         }));
     }
     for planned in &selection.dungeon_plans {
-        if !selection.dungeons.iter().any(|selected| {
-            selected.source_index == planned.source_index && selected.id == planned.id
-        }) || planned.position.x >= wilderness.width
-            || planned.position.y >= wilderness.height
-        {
+        if planned.position.x >= wilderness.width || planned.position.y >= wilderness.height {
             return Err(invalid_wilderness_selection(format!(
-                "inactive or out-of-bounds dungeon plan {}",
+                "out-of-bounds dungeon plan {}",
                 planned.id
             )));
         }
@@ -14886,6 +14957,291 @@ mod tests {
                 .len(),
             15
         );
+    }
+
+    #[test]
+    fn dungeon_plan_reward_additions_are_optional() {
+        let plan: DemoWildernessDungeonPlan = serde_json::from_value(serde_json::json!({
+            "sourceIndex": 2,
+            "sourceName": "Camelot",
+            "id": "demo.dungeon.camelot",
+            "position": { "x": 7, "y": 59 },
+            "minimumDepth": 20,
+            "maximumDepth": 35,
+            "monsterDivisor": 32,
+            "generationFlags": ["COFFEE"],
+            "monsterPreferences": ["KNIGHT", "R_CHAR_pHgd"],
+            "guardian": {
+                "sourceIndex": 1111,
+                "sourceName": "Arthur Pendragon",
+                "chineseName": "亚瑟·潘德拉贡",
+                "level": 32
+            },
+            "finalObject": { "tval": 34, "sval": 10 }
+        }))
+        .expect("dungeon plans without a final ego or substitute should parse");
+
+        assert_eq!(
+            plan.final_object,
+            Some(DemoDungeonObjectPlan { tval: 34, sval: 10 })
+        );
+        assert_eq!(plan.final_artifact_source_index, None);
+        assert_eq!(plan.final_ego_source_index, None);
+        assert_eq!(plan.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p87a_tidal_cave_plan_locks_identity_ecology_guardian_and_reward() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let plan = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 33)
+            .expect("Tidal cave should have an implementation plan");
+
+        assert_eq!(plan.source_name, "Tidal cave");
+        assert_eq!(plan.id, "demo.dungeon.tidal-cave");
+        assert_eq!(plan.position, DemoWildernessPosition { x: 47, y: 53 });
+        assert_eq!((plan.minimum_depth, plan.maximum_depth), (15, 27));
+        assert_eq!(plan.monster_divisor, 16);
+        assert_eq!(
+            plan.generation_flags,
+            ["CAVE", "WATER_RIVER", "LAKE_WATER", "CAVERN"]
+        );
+        assert_eq!(
+            plan.monster_preferences,
+            ["CAN_SWIM", "WILD_SHORE", "AQUATIC"]
+        );
+        assert_eq!(plan.guardian.source_index, 431);
+        assert_eq!(plan.guardian.source_name, "Grendel");
+        assert_eq!(plan.guardian.chinese_name, "格伦戴尔");
+        assert_eq!(plan.guardian.level, 27);
+        assert_eq!(
+            plan.final_object,
+            Some(DemoDungeonObjectPlan { tval: 75, sval: 68 })
+        );
+        assert_eq!(plan.final_artifact_source_index, None);
+        assert_eq!(plan.final_ego_source_index, None);
+        assert_eq!(plan.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p88a_icky_cave_plan_locks_identity_floor_ecology_guardian_and_reward() {
+        let source = parse_dungeon_records(
+            "N:21:Icky cave\nP:29:17\nW:10:20:1:3\n\
+             L:SWAMP:20:GRASS:60:SHALLOW_WATER:20:8\n\
+             F:FINAL_GUARDIAN_909 | FINAL_OBJECT_46_0 | FINAL_EGO_266\n\
+             F:MONSTER_DIV_32 | COFFEE\nM:R_CHAR_ijM\n",
+        )
+        .expect("Icky cave source record should parse");
+        let source = &source[&21];
+        assert_eq!(source.tunnel_percent, Some(8));
+        assert_eq!(
+            source.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "SWAMP".to_owned(),
+                    percent: 20,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GRASS".to_owned(),
+                    percent: 60,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "SHALLOW_WATER".to_owned(),
+                    percent: 20,
+                },
+            ]
+        );
+
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert!(selection.dungeons.iter().any(|dungeon| {
+            dungeon.source_index == 21 && dungeon.id == "demo.dungeon.icky-cave"
+        }));
+        let plan = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 21)
+            .expect("Icky cave should have an implementation plan");
+
+        assert_eq!(plan.source_name, "Icky cave");
+        assert_eq!(plan.id, "demo.dungeon.icky-cave");
+        assert_eq!(plan.position, DemoWildernessPosition { x: 17, y: 29 });
+        assert_eq!((plan.minimum_depth, plan.maximum_depth), (10, 20));
+        assert_eq!(plan.monster_divisor, 32);
+        assert_eq!(plan.generation_flags, ["COFFEE"]);
+        assert_eq!(plan.monster_preferences, ["R_CHAR_ijM"]);
+        assert_eq!(
+            plan.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "SWAMP".to_owned(),
+                    percent: 20,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GRASS".to_owned(),
+                    percent: 60,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "SHALLOW_WATER".to_owned(),
+                    percent: 20,
+                },
+            ]
+        );
+        assert_eq!(plan.tunnel_percent, Some(8));
+        assert_eq!(plan.guardian.source_index, 909);
+        assert_eq!(plan.guardian.source_name, "The Icky Queen");
+        assert_eq!(plan.guardian.chinese_name, "黏糊恶心女王");
+        assert_eq!(plan.guardian.level, 20);
+        assert_eq!(
+            plan.final_object,
+            Some(DemoDungeonObjectPlan { tval: 46, sval: 0 })
+        );
+        assert_eq!(plan.final_artifact_source_index, None);
+        assert_eq!(plan.final_ego_source_index, Some(266));
+        assert_eq!(plan.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p89a_hideout_pair_plan_locks_substitution_guardians_and_rewards() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let hideout = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 31)
+            .expect("Hideout should have an implementation plan");
+        let man_cave = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 40)
+            .expect("Man cave should have an implementation plan");
+
+        assert_eq!(hideout.source_name, "Hideout");
+        assert_eq!(hideout.id, "demo.dungeon.hideout");
+        assert_eq!(hideout.position, DemoWildernessPosition { x: 28, y: 52 });
+        assert_eq!((hideout.minimum_depth, hideout.maximum_depth), (8, 18));
+        assert_eq!(hideout.monster_divisor, 32);
+        assert_eq!(hideout.generation_flags, ["COFFEE"]);
+        assert_eq!(hideout.monster_preferences, ["R_CHAR_p", "THIEF"]);
+        assert_eq!(hideout.tunnel_percent, Some(8));
+        assert_eq!(hideout.guardian.source_index, 1030);
+        assert_eq!(
+            hideout.guardian.source_name,
+            "Meng Huo, the King of Southerings"
+        );
+        assert_eq!(hideout.guardian.chinese_name, "南蛮王孟获");
+        assert_eq!(hideout.guardian.level, 18);
+        assert_eq!(
+            hideout.final_object,
+            Some(DemoDungeonObjectPlan { tval: 40, sval: 0 })
+        );
+        assert_eq!(hideout.final_artifact_source_index, None);
+        assert_eq!(hideout.final_ego_source_index, None);
+        assert_eq!(hideout.substitute_source_index, Some(40));
+
+        assert_eq!(man_cave.source_name, "Man cave");
+        assert_eq!(man_cave.id, "demo.dungeon.man-cave");
+        assert_eq!(man_cave.position, DemoWildernessPosition { x: 28, y: 52 });
+        assert_eq!((man_cave.minimum_depth, man_cave.maximum_depth), (8, 18));
+        assert_eq!(man_cave.monster_divisor, 16);
+        assert_eq!(man_cave.generation_flags, ["COFFEE"]);
+        assert_eq!(man_cave.monster_preferences, ["R_CHAR_p", "THIEF"]);
+        assert_eq!(man_cave.tunnel_percent, Some(8));
+        assert_eq!(man_cave.guardian.source_index, 1275);
+        assert_eq!(man_cave.guardian.source_name, "Untamo the Cruel");
+        assert_eq!(man_cave.guardian.chinese_name, "残酷者温塔莫");
+        assert_eq!(man_cave.guardian.level, 23);
+        assert_eq!(man_cave.final_object, None);
+        assert_eq!(man_cave.final_artifact_source_index, Some(104));
+        assert_eq!(man_cave.final_ego_source_index, None);
+        assert_eq!(man_cave.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p90a_troll_cave_plan_locks_shared_entrance_ecology_guardian_and_reward() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let orc_cave = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 3)
+            .expect("Orc cave should have an implementation plan");
+        let troll_cave = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 36)
+            .expect("Troll cave should have an implementation plan");
+
+        assert_eq!(troll_cave.source_name, "Troll cave");
+        assert_eq!(troll_cave.id, "demo.dungeon.troll-cave");
+        assert_eq!(troll_cave.position, DemoWildernessPosition { x: 30, y: 45 });
+        assert_eq!(troll_cave.position, orc_cave.position);
+        assert_eq!(orc_cave.substitute_source_index, Some(36));
+        assert_eq!(
+            (troll_cave.minimum_depth, troll_cave.maximum_depth),
+            (18, 36)
+        );
+        assert_eq!(troll_cave.monster_divisor, 12);
+        assert_eq!(
+            troll_cave.generation_flags,
+            [
+                "ALL_SHAFTS",
+                "CAVE",
+                "WATER_RIVER",
+                "CAVERN",
+                "LAKE_WATER",
+                "LAKE_RUBBLE",
+                "DESTROY",
+                "BIG",
+            ]
+        );
+        assert_eq!(
+            troll_cave.monster_preferences,
+            ["R_CHAR_hpTO", "ANIMAL", "TROLL"]
+        );
+        assert_eq!(
+            troll_cave.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "DIRT".to_owned(),
+                    percent: 70,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GRASS".to_owned(),
+                    percent: 30,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+            ]
+        );
+        assert_eq!(troll_cave.tunnel_percent, Some(14));
+        assert_eq!(troll_cave.guardian.source_index, 1304);
+        assert_eq!(
+            troll_cave.guardian.source_name,
+            "Spulga, the Troll Priestess"
+        );
+        assert_eq!(troll_cave.guardian.chinese_name, "巨魔女祭司斯普尔加");
+        assert_eq!(troll_cave.guardian.level, 40);
+        assert_eq!(
+            troll_cave.final_object,
+            Some(DemoDungeonObjectPlan { tval: 37, sval: 13 })
+        );
+        assert_eq!(troll_cave.final_artifact_source_index, None);
+        assert_eq!(troll_cave.final_ego_source_index, Some(72));
+        assert_eq!(troll_cave.substitute_source_index, None);
     }
 
     #[test]
@@ -18614,11 +18970,11 @@ A:1/1
 
         assert_eq!(report.source_items_total, 4);
         assert_eq!(report.active_source_items, 2);
-        assert_eq!(report.mechanics_ready_source_items, 0);
-        assert_eq!(report.blocked_source_items, 2);
+        assert_eq!(report.mechanics_ready_source_items, 1);
+        assert_eq!(report.blocked_source_items, 1);
         assert_eq!(report.mapped_formal_items, 3);
         assert_eq!(report.original_formal_items, 1);
-        assert_eq!(report.blocker_counts["book-system"], 1);
+        assert!(!report.blocker_counts.contains_key("book-system"));
         assert_eq!(report.blocker_counts["potion-shatter-effect"], 1);
         assert_eq!(report.original_item_ids, ["demo.item.original"]);
         assert_eq!(report.p3_plan.formal_items_delta, 2);
@@ -18743,6 +19099,25 @@ A:1/1
             item_destruction_immunities(&["IGNORE_ACID".to_owned(), "IGNORE_COLD".to_owned()]),
             ["acid", "cold"]
         );
+    }
+
+    #[test]
+    fn mirror_shield_maps_reflection_without_an_import_gap() {
+        let item = parse_k_info(
+            "N:239:& Mirror Shield~\nG:[:B\nI:34:10:0\nW:70:0:0:100:10000\nA:70/8\nP:10:1d1:0:0:10\nF:IGNORE_ACID | REFLECT | RES_LITE\n",
+        )
+        .expect("Mirror Shield source should parse")
+        .pop()
+        .expect("Mirror Shield source should contain one item");
+        let value = demo_item_json(&item, "mirror-shield", &LauncherAmmoIndex::default())
+            .expect("Mirror Shield should be directly importable");
+
+        assert_eq!(value["id"], "demo.item.mirror-shield");
+        assert_eq!(value["equipmentSlot"], "shield");
+        assert_eq!(value["modifiers"]["defense"], 20);
+        assert_eq!(value["reflectsBolts"], true);
+        assert_eq!(value["resistances"]["light"], "resistant");
+        assert_eq!(value["elementalDestructionImmunities"][0], "acid");
     }
 
     #[test]

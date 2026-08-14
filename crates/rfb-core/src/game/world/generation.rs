@@ -702,6 +702,7 @@ impl Game {
             &self.content,
             &mut self.rng,
             &spawn.kind_id,
+            &spawn.affix_ids,
             definition.depth,
         );
         ItemInstance {
@@ -1288,6 +1289,9 @@ impl Game {
             .layout
             .as_ref()
             .and_then(|layout| layout.river.as_ref())
+            && river
+                .chance_one_in
+                .is_none_or(|chance| self.rng.bounded(u64::from(chance)) == 0)
         {
             self.generate_river(
                 definition,
@@ -1652,7 +1656,12 @@ impl Game {
         if maze_only {
             occupied.insert(fixed_trap_position);
         }
-        occupied.extend(terrain_features.iter().map(|feature| feature.position));
+        occupied.extend(terrain_features.iter().filter_map(|feature| {
+            self.content
+                .terrain(&feature.terrain_id)
+                .is_some_and(|terrain| !terrain.walkable)
+                .then_some(feature.position)
+        }));
         if let Some(pit) = &pit_placement {
             let total_width = pit.definition.inner_width + 6;
             let total_height = pit.definition.inner_height + 6;
@@ -2458,6 +2467,7 @@ impl Game {
                 &self.content,
                 &mut self.rng,
                 &entry.item_kind_id,
+                &[],
                 definition.depth,
             );
             items.push(ItemInstance {
@@ -2496,6 +2506,7 @@ impl Game {
                         &self.content,
                         &mut self.rng,
                         &kind_id,
+                        &[],
                         definition.depth,
                     );
                     let fuel = initial_item_fuel(&self.content, &kind_id);

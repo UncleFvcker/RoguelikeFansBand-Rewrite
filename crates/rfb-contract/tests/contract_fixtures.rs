@@ -237,7 +237,8 @@ fn equipment_precondition_relocates_and_identifies_an_existing_item() {
                 "quantity": 1,
                 "slotId": "right-ring",
                 "quality": "fine",
-                "affixIds": ["demo.affix.regeneration"]
+                "affixIds": ["demo.affix.regeneration"],
+                "permanentDestructionImmunities": []
             }]
         }),
         json!([]),

@@ -14,6 +14,129 @@ fn artifact_loot_context(depth: u16) -> LootContext {
 }
 
 #[test]
+fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
+    let mut game =
+        Game::new_with_build(90, "demo.build.warrior").expect("Olog-hai reward game should create");
+    clear_monsters(&mut game);
+    let mut rewards = game
+        .generate_loot_instances(
+            &LootContext {
+                table_id: "demo.loot-table.troll-cave-final-reward".to_owned(),
+                floor_id: "demo.floor.troll-cave-depth-36".to_owned(),
+                depth: 36,
+                source: LootSource::FloorRoom {
+                    room_id: "demo.guardian.troll-cave.1".to_owned(),
+                    spawn_id: "demo.guardian.troll-cave.reward".to_owned(),
+                },
+            },
+            ItemLocation::Inventory,
+        )
+        .expect("Troll cave reward should generate");
+    let reward = rewards
+        .pop()
+        .expect("Troll cave reward should contain one armour");
+    assert!(rewards.is_empty());
+    assert_eq!(reward.kind_id, "demo.item.metal-lamellar-armour");
+    assert_eq!(reward.quality, ItemQualityDto::Fine);
+    assert_eq!(reward.affix_ids, ["rfb-legacy.affix.olog-hai"]);
+    assert_eq!(reward.rolled_affixes.len(), 1);
+    let activation = reward
+        .activation
+        .as_ref()
+        .expect("Olog-hai reward should materialize its activation");
+    assert_eq!(
+        activation.profile_id,
+        "demo.item-activation.olog-hai-berserk"
+    );
+    assert_eq!(activation.device_check_difficulty, 10);
+    assert_eq!(activation.power, 36);
+    assert_eq!(
+        reward.charges,
+        Some(ItemChargesDto {
+            current: 1,
+            maximum: 1
+        })
+    );
+
+    let item_id = reward.id.clone();
+    game.items.push(reward);
+    let max_hp = game.player_derived_stats().max_hp.value;
+    game.player.hp = (max_hp - 30).max(1);
+    let hp_before = game.player.hp;
+    game.world_tick = 0;
+    let activation_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < 5
+        })
+        .expect("an automatic device success seed should exist");
+    game.rng = RfbRng::seeded(activation_seed);
+
+    let activated = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: item_id.clone(),
+            target: Some(TargetSelection::SelfTarget),
+        },
+    );
+    assert!(
+        activated
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-berserk-strength-applied")
+    );
+    assert!(
+        activated
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-heal")
+    );
+    assert_eq!(game.player.hp, (hp_before + 30).min(max_hp));
+    let berserk = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_BERSERK)
+        .expect("Olog-hai activation should apply Berserk");
+    assert!((26..=50).contains(&berserk.remaining_ticks));
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == item_id)
+            .and_then(|item| item.charges)
+            .expect("Olog-hai reward should retain charges")
+            .current,
+        0
+    );
+
+    let hash = game.state_hash();
+    let mut restored = Game::from_save(game.to_save()).expect("Olog-hai reward should restore");
+    assert_eq!(restored.state_hash(), hash);
+    for _ in 0..5 {
+        if restored
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .and_then(|item| item.charges)
+            .is_some_and(|charges| charges.current == 1)
+        {
+            break;
+        }
+        dispatch_next(&mut restored, GameCommand::Wait);
+    }
+    assert_eq!(
+        restored
+            .items
+            .iter()
+            .find(|item| item.id == item_id)
+            .and_then(|item| item.charges)
+            .expect("Olog-hai reward should recover its charge")
+            .current,
+        1
+    );
+}
+
+#[test]
 fn booze_applies_original_confusion_hallucination_and_blackout_ranges() {
     let mut saw_hallucination = false;
     let mut saw_clear_head = false;
@@ -2116,6 +2239,7 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
 
     let mut multiple = Game::new(509);
     clear_monsters(&mut multiple);
+    multiple.rng = RfbRng::seeded(509);
     give_inventory_item(
         &mut multiple,
         "test.item.star-acquirement.1",

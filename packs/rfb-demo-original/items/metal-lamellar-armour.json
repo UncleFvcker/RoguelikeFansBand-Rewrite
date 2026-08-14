@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1150,
+  "descriptionKey": "item-demo-metal-lamellar-armour-description",
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -3
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 45,
+  "glyph": "[",
+  "id": "demo.item.metal-lamellar-armour",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 23
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-metal-lamellar-armour-name",
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 340
+}

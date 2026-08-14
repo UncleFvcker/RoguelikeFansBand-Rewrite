@@ -965,6 +965,12 @@
       "minDepth": 10
     },
     {
+      "itemKindId": "demo.item.metal-lamellar-armour",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45
+    },
+    {
       "itemKindId": "demo.item.might-tonic",
       "weight": 16,
       "quantity": 1,
@@ -975,6 +981,12 @@
       "weight": 33,
       "quantity": 1,
       "minDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.mirror-shield",
+      "weight": 12,
+      "quantity": 1,
+      "minDepth": 70
     },
     {
       "itemKindId": "demo.item.mithril-arrow",

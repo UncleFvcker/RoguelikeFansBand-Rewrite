@@ -372,12 +372,13 @@ impl Game {
         let world_tick = self.world_tick;
         let content = &self.content;
         for item in &mut self.items {
-            if item.location != ItemLocation::Inventory {
+            if !matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            ) {
                 continue;
             }
-            let Some(recovery) = content
-                .item(&item.kind_id)
-                .and_then(|definition| definition.device_generation.as_ref())
+            let Some(recovery) = item_device_generation(content, &item.kind_id, &item.affix_ids)
                 .and_then(|generation| generation.recovery)
             else {
                 continue;

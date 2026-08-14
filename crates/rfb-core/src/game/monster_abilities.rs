@@ -1885,19 +1885,70 @@ impl Game {
                     );
                 }
                 let floor_id = self.current_floor_id.clone();
-                let effects = self.resolve_monster_hostile_effects(
-                    &source_entity_id,
-                    source_kind_id,
-                    &plan.ability,
-                    target,
-                    events,
-                    changed,
-                );
-                if plan
-                    .ability
-                    .tags
-                    .iter()
-                    .any(|tag| tag == MONSTER_CHICKEN_TAG)
+                let mut reflected = false;
+                let effects = if target.is_player()
+                    && let AbilityEffectDefinition::Damage {
+                        damage_dice,
+                        damage_sides,
+                        damage_bonus,
+                        damage_type,
+                    } = &plan.ability.effect
+                {
+                    let (raw_damage, prepared_damage, damage_type) = self
+                        .roll_monster_player_damage(
+                            &plan.ability,
+                            *damage_dice,
+                            *damage_sides,
+                            *damage_bonus,
+                            *damage_type,
+                        );
+                    let reflected_damage = self.scale_monster_damage(&source_entity_id, raw_damage);
+                    let source_position = self.entities[source_index].position;
+                    reflected = self
+                        .try_reflect_monster_bolt(
+                            source_kind_id,
+                            source_position,
+                            reflected_damage,
+                            damage_type,
+                            plan.ability.affects_ground_items,
+                            events,
+                            changed,
+                            removed_entities,
+                        )
+                        .expect("reflected monster bolt must resolve");
+                    if reflected {
+                        vec![AbilityEffectResolutionDto::Skipped {
+                            effect_index: 0,
+                            reason: AbilityEffectSkipReasonDto::Ineligible,
+                        }]
+                    } else {
+                        vec![self.resolve_monster_damage_to_player(
+                            &source_entity_id,
+                            source_kind_id,
+                            &plan.ability.id,
+                            0,
+                            raw_damage,
+                            prepared_damage,
+                            damage_type,
+                            events,
+                        )]
+                    }
+                } else {
+                    self.resolve_monster_hostile_effects(
+                        &source_entity_id,
+                        source_kind_id,
+                        &plan.ability,
+                        target,
+                        events,
+                        changed,
+                    )
+                };
+                if !reflected
+                    && plan
+                        .ability
+                        .tags
+                        .iter()
+                        .any(|tag| tag == MONSTER_CHICKEN_TAG)
                 {
                     self.resolve_monster_chicken_riders(
                         source_index,
@@ -2771,6 +2822,30 @@ impl Game {
         succeeded
     }
 
+    fn roll_monster_player_damage(
+        &mut self,
+        ability: &AbilityDefinition,
+        damage_dice: u16,
+        damage_sides: u16,
+        damage_bonus: u16,
+        damage_type: ActorDamageType,
+    ) -> (i32, i32, DamageType) {
+        let raw_damage = self
+            .roll_damage(damage_dice, damage_sides)
+            .saturating_add(i32::from(damage_bonus))
+            .max(0);
+        let damage_type = DamageType::from(damage_type);
+        let target = self.player_derived_stats();
+        let prepared = if damage_type == DamageType::Physical
+            && !ability.tags.iter().any(|tag| tag == MONSTER_CHICKEN_TAG)
+        {
+            apply_melee_armor_reduction(raw_damage, target.armor_class.value)
+        } else {
+            raw_damage
+        };
+        (raw_damage, prepared, damage_type)
+    }
+
     pub(super) fn resolve_monster_player_effects(
         &mut self,
         source_entity_id: &str,
@@ -2798,19 +2873,13 @@ impl Game {
                     damage_bonus,
                     damage_type,
                 } => {
-                    let raw_damage = self
-                        .roll_damage(*damage_dice, *damage_sides)
-                        .saturating_add(i32::from(*damage_bonus))
-                        .max(0);
-                    let damage_type = DamageType::from(*damage_type);
-                    let target = self.player_derived_stats();
-                    let prepared = if damage_type == DamageType::Physical
-                        && !ability.tags.iter().any(|tag| tag == MONSTER_CHICKEN_TAG)
-                    {
-                        apply_melee_armor_reduction(raw_damage, target.armor_class.value)
-                    } else {
-                        raw_damage
-                    };
+                    let (raw_damage, prepared, damage_type) = self.roll_monster_player_damage(
+                        ability,
+                        *damage_dice,
+                        *damage_sides,
+                        *damage_bonus,
+                        *damage_type,
+                    );
                     self.resolve_monster_damage_to_player(
                         source_entity_id,
                         source_kind_id,

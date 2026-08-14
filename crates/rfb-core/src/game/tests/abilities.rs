@@ -1773,6 +1773,201 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
 }
 
 #[test]
+fn p86e_mirror_shield_reflects_monster_bolts_once_with_exact_three_of_four_gate() {
+    let make_game = |seed| {
+        let mut game = Game::new(seed);
+        clear_monsters(&mut game);
+        for cell in &mut game.terrain {
+            *cell = "demo.terrain.wall".to_owned();
+        }
+        game.player.position = Position { x: 3, y: 3 };
+        game.player.hp = 100;
+        for x in 3..=5 {
+            replace_terrain(&mut game, Position { x, y: 3 }, "demo.terrain.floor");
+        }
+        let definition = game
+            .content
+            .actor("demo.actor.buzzy-beetle")
+            .expect("reflecting source monster should exist")
+            .clone();
+        game.entities.push(actor_from_runtime_spawn(
+            "test.actor.bolt-source",
+            &definition.id,
+            Position { x: 5, y: 3 },
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        ));
+        give_inventory_item(
+            &mut game,
+            "test.item.mirror-shield",
+            "demo.item.mirror-shield",
+        );
+        game.items
+            .last_mut()
+            .expect("Mirror Shield should be granted")
+            .location = ItemLocation::Equipped {
+            slot_id: "left-hand".to_owned(),
+        };
+        game
+    };
+    let cast_bolt = |game: &mut Game| {
+        let mut ability = game
+            .content
+            .ability("rfb-legacy.ability.bolt-physical-1d4")
+            .expect("single-target bolt should exist")
+            .clone();
+        ability.effect = AbilityEffectDefinition::Damage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 4,
+            damage_type: ActorDamageType::Fire,
+        };
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("player should be a valid bolt target");
+        assert!(matches!(
+            plan.target,
+            MonsterAbilityTargetPlan::Projectile { .. }
+        ));
+        let mut events = Vec::new();
+        game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.buzzy-beetle",
+            &plan,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        );
+        events
+    };
+
+    let mut equipment_check = make_game(0);
+    assert!(equipment_check.player_reflects_bolts());
+    equipment_check
+        .items
+        .last_mut()
+        .expect("Mirror Shield should remain present")
+        .location = ItemLocation::Inventory;
+    assert!(!equipment_check.player_reflects_bolts());
+
+    let mut reflected_rolls = 0;
+    for gate_roll in 0..4 {
+        let seed = (0..10_000)
+            .find(|seed| {
+                let mut rng = RfbRng::seeded(*seed);
+                assert_eq!(rng.bounded(1), 0, "1d1 damage must consume one draw");
+                rng.bounded(4) == gate_roll
+            })
+            .expect("each reflection gate result should have a deterministic seed");
+        let mut game = make_game(0);
+        game.rng = RfbRng::seeded(seed);
+        let events = cast_bolt(&mut game);
+        let reflections = events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::BoltReflected { .. }))
+            .count();
+        if gate_roll == 0 {
+            assert_eq!(reflections, 0);
+            assert!(game.player.hp < 100);
+        } else {
+            reflected_rolls += 1;
+            assert_eq!(reflections, 1, "one projectile may reflect only once");
+            assert_eq!(game.player.hp, 100);
+        }
+    }
+    assert_eq!(reflected_rolls, 3);
+}
+
+#[test]
+fn mirror_shield_does_not_reflect_beams_balls_or_breaths() {
+    let effects = [
+        AbilityEffectDefinition::BeamDamage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 4,
+            damage_type: ActorDamageType::Fire,
+            maximum_range: None,
+        },
+        AbilityEffectDefinition::AreaDamage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 4,
+            damage_type: ActorDamageType::Fire,
+            radius: 1,
+            target_category: None,
+        },
+        AbilityEffectDefinition::BreathDamage {
+            hp_percent: 100,
+            max_damage: 5,
+            damage_type: ActorDamageType::Fire,
+            radius: 1,
+        },
+    ];
+
+    for effect in effects {
+        let mut game = Game::new(0);
+        clear_monsters(&mut game);
+        game.player.position = Position { x: 3, y: 3 };
+        game.player.hp = 100;
+        for x in 3..=5 {
+            replace_terrain(&mut game, Position { x, y: 3 }, "demo.terrain.floor");
+        }
+        let definition = game
+            .content
+            .actor("demo.actor.cinder-adept")
+            .expect("monster caster should exist")
+            .clone();
+        game.entities.push(actor_from_runtime_spawn(
+            "test.actor.bolt-source",
+            &definition.id,
+            Position { x: 5, y: 3 },
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        ));
+        give_inventory_item(
+            &mut game,
+            "test.item.mirror-shield",
+            "demo.item.mirror-shield",
+        );
+        game.items
+            .last_mut()
+            .expect("Mirror Shield should be granted")
+            .location = ItemLocation::Equipped {
+            slot_id: "left-hand".to_owned(),
+        };
+        let mut ability = game
+            .content
+            .ability("rfb-legacy.ability.bolt-physical-1d4")
+            .expect("projectile ability should exist")
+            .clone();
+        ability.effect = effect;
+        let plan = game
+            .monster_ability_target_plan(0, ability, 1)
+            .expect("player should be a valid target");
+        let mut events = Vec::new();
+        game.resolve_monster_ability_plan(
+            0,
+            "demo.actor.cinder-adept",
+            &plan,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        );
+
+        assert!(game.player.hp < 100);
+        assert!(
+            !events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::BoltReflected { .. }))
+        );
+    }
+}
+
+#[test]
 fn reflecting_monsters_redirect_only_single_target_bolts() {
     let make_game = |seed| {
         let mut game = Game::new(seed);
@@ -4207,7 +4402,7 @@ fn create_item_ability_places_an_acquired_item_and_merges_repeated_casts() {
                     ..
                 }] if item_kind_id == "demo.item.ration-of-food"
                     && *effect_position == position
-                    && destination_item_ids == &[created_id.clone()]
+                    && destination_item_ids == std::slice::from_ref(&created_id)
             )
     )));
 
@@ -5476,6 +5671,8 @@ fn blink_other_moves_the_target_within_ten_tiles_using_one_destination_draw() {
 fn level_based_jump_damage_uses_no_damage_rng_then_blinks() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);
+    game.items
+        .retain(|item| item.location != ItemLocation::Inventory);
     for cell in game.terrain.iter_mut() {
         *cell = "demo.terrain.wall".to_owned();
     }
@@ -6694,6 +6891,7 @@ fn raise_dead_is_deterministic_and_enforces_faction_group_and_unique_rules() {
 #[test]
 fn vampiric_transformation_overlays_race_but_preserves_body_slots() {
     let mut game = prepare_death_caster(17, 35, "demo.ability.death-vampiric-transformation");
+    game.apply_player_experience(0, &mut Vec::new());
     game.refresh_character_skills();
     game.refresh_player_resource_maxima();
     let body_slots = game.body_slots.clone();

@@ -819,7 +819,8 @@ pub(super) fn validate_items(
                 || !item.status_immunities.is_empty()
                 || !item.slays.is_empty()
                 || !item.brands.is_empty()
-                || !item.passives.is_empty())
+                || !item.passives.is_empty()
+                || item.reflects_bolts)
         {
             return Err(ContentError::InvalidItemModifiers(item.id.clone()));
         }
@@ -1112,10 +1113,13 @@ pub(super) fn validate_items(
                         activation.min_depth <= depth && depth <= activation.max_depth
                     })
                 });
+            let fixed_artifact_activation = item.equipment_slot.is_some()
+                && item.artifact_generation.is_some()
+                && item.tags.iter().any(|tag| tag == "artifact");
             if item.use_action.is_some()
-                || item.equipment_slot.is_some()
+                || (item.equipment_slot.is_some() && !fixed_artifact_activation)
                 || item.max_stack != 1
-                || !item.tags.iter().any(|tag| tag == "device")
+                || (!fixed_artifact_activation && !item.tags.iter().any(|tag| tag == "device"))
                 || generation.recovery.is_some_and(|recovery| {
                     !(1..=10_000).contains(&recovery.interval_ticks)
                         || !(1..=1_000).contains(&recovery.energy_per_mille)

@@ -85,16 +85,17 @@ pub(super) fn commit_final_player_damage(
     mut damage: DamageOutcome,
     fatality_policy: FatalityPolicy,
 ) -> DamageApplicationPlan {
-    if transcendence && damage.applied > 0 {
-        if let Some(mana) = mana {
-            let absorbed = mana
-                .current
-                .min(u32::try_from(damage.applied).unwrap_or(u32::MAX));
-            mana.current -= absorbed;
-            damage.applied = damage
-                .applied
-                .saturating_sub(i32::try_from(absorbed).unwrap_or(i32::MAX));
-        }
+    if transcendence
+        && damage.applied > 0
+        && let Some(mana) = mana
+    {
+        let absorbed = mana
+            .current
+            .min(u32::try_from(damage.applied).unwrap_or(u32::MAX));
+        mana.current -= absorbed;
+        damage.applied = damage
+            .applied
+            .saturating_sub(i32::try_from(absorbed).unwrap_or(i32::MAX));
     }
     let application = plan_damage_application(player, damage, fatality_policy);
     commit_damage_application(player, &application);

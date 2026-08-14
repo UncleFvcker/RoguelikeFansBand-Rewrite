@@ -389,15 +389,20 @@ export class InventoryPanel {
         this.#appendInscription(details, item.inscription);
         this.#appendItemFuel(details, item);
         this.#appendKnownDetails(details, item);
-        if (item.captureBall && item.useTargetSpec) {
+        if (item.usable || item.activation || (item.captureBall && item.useTargetSpec)) {
           const activate = document.createElement("button");
           activate.type = "button";
           activate.className = "equipment-activate";
           activate.textContent = this.#localization.format("action-equipment-activate");
-          activate.disabled = this.#state.busy;
+          activate.disabled = this.#state.busy || (Boolean(item.activation) && !item.usable);
           activate.addEventListener("click", () => {
-            if (!item.useTargetSpec) return;
-            this.#startTargeting(item.useTargetSpec, { type: "item", itemId: item.id });
+            if (item.useTargetSpec?.modes.includes("self")) {
+              void this.#dispatch({ type: "use-item", itemId: item.id, target: { type: "self" } });
+            } else if (item.useTargetSpec) {
+              this.#startTargeting(item.useTargetSpec, { type: "item", itemId: item.id });
+            } else {
+              void this.#dispatch({ type: "use-item", itemId: item.id });
+            }
           });
           row.append(activate);
         }

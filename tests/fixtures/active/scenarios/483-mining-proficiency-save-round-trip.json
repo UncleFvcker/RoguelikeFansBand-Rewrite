@@ -27,7 +27,7 @@
       "revision": 0,
       "turn": 0,
       "lastCommandSeq": 0,
-      "rngDrawCounter": 187,
+      "rngDrawCounter": 195,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -1361,6 +1361,7 @@
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1403,6 +1404,7 @@
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1440,6 +1442,7 @@
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1534,7 +1537,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 187,
+      "nextItemInstanceSerial": 203,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1542,8 +1545,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d22377b05df872f2b97d59b78314d29abe6036e93d1153dfbd4bf16d90a97cb5"
+      "stateHash": "09ac40a629601c453a887391032aca784be15cb1a297b4093a0ee0fe4e5302e7"
     },
-    "saveRoundTripStateHash": "d22377b05df872f2b97d59b78314d29abe6036e93d1153dfbd4bf16d90a97cb5"
+    "saveRoundTripStateHash": "09ac40a629601c453a887391032aca784be15cb1a297b4093a0ee0fe4e5302e7"
   }
 }

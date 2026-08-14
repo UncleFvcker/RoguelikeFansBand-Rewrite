@@ -1795,6 +1795,9 @@ impl Game {
             else {
                 continue;
             };
+            if !self.dungeon_is_active(dungeon_id) {
+                continue;
+            }
             let dungeon_world_position = position_from_content(*position);
             if wilderness_has_town(wilderness, dungeon_world_position) {
                 continue;

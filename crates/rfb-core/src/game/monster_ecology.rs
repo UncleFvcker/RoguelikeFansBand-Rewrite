@@ -543,7 +543,7 @@ impl Game {
                             || allocation.max_depth >= u16::try_from(level).unwrap_or(u16::MAX))
                         && !definition.friendly
                         && !actor_is_unique(definition)
-                        && !actor_is_guardian(definition)
+                        && !self.actor_kind_is_dungeon_guardian(&definition.id)
                         && !allocation.multiplies
                         && !definition.tags.iter().any(|tag| tag == "chameleon")
                         && !explodes
@@ -958,10 +958,6 @@ fn actor_is_unique(definition: &ActorDefinition) -> bool {
         .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
 }
 
-fn actor_is_guardian(definition: &ActorDefinition) -> bool {
-    definition.tags.iter().any(|tag| tag == "guardian")
-}
-
 fn habitat_tag(habitat: ActorHabitat) -> Option<&'static str> {
     match habitat {
         ActorHabitat::All => None,
@@ -1086,6 +1082,15 @@ fn generated_line_of_effect(
 }
 
 impl Game {
+    pub(super) fn actor_kind_is_dungeon_guardian(&self, actor_kind_id: &str) -> bool {
+        self.content.world(&self.world_id).is_some_and(|world| {
+            world.dungeons.iter().any(|dungeon| {
+                self.dungeon_is_active(&dungeon.id)
+                    && dungeon.guardian_actor_kind_id == actor_kind_id
+            })
+        })
+    }
+
     fn select_surface_allocated_monster(
         &mut self,
         level: u16,
@@ -1102,7 +1107,7 @@ impl Game {
                     return false;
                 };
                 definition.role == ActorRole::Monster
-                    && !actor_is_guardian(definition)
+                    && !self.actor_kind_is_dungeon_guardian(&definition.id)
                     && definition.level <= u32::from(level)
                     && (allocation.max_depth == 0 || allocation.max_depth >= level)
                     && (!actor_is_unique(definition)
@@ -1179,6 +1184,8 @@ impl Game {
         let group_policy = GlobalMonsterAllocationDefinition {
             preferred_glyphs: Vec::new(),
             preferred_tags: Vec::new(),
+            preferred_movement_modes: Vec::new(),
+            preferred_habitats: Vec::new(),
             special_div: 64,
             ambient_chance_one_in: 1,
         };
@@ -1443,6 +1450,14 @@ impl Game {
                 .preferred_tags
                 .iter()
                 .any(|tag| definition.tags.contains(tag))
+            || policy
+                .preferred_movement_modes
+                .iter()
+                .any(|mode| definition.movement.modes.contains(mode))
+            || policy
+                .preferred_habitats
+                .iter()
+                .any(|habitat| allocation.habitats.contains(habitat))
         {
             return base;
         }
@@ -1505,7 +1520,7 @@ impl Game {
                 };
                 if definition.role != ActorRole::Monster
                     || allocation.wild_only
-                    || actor_is_guardian(definition)
+                    || self.actor_kind_is_dungeon_guardian(&definition.id)
                     || definition.level > u32::from(selection_level)
                     || (allocation.max_depth != 0 && allocation.max_depth < selection_level)
                     || (allocation.force_depth && definition.level > u32::from(floor_depth))

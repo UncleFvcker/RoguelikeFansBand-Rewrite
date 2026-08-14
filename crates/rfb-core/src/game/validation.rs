@@ -8,7 +8,7 @@ use crate::{
     state::{Actor, FloorConnectionState, FloorRegionState, ItemInstance, ItemLocation},
 };
 use rfb_content::{AffixPropertyBundleDefinition, ContentCatalog};
-use rfb_protocol::{MonsterPackBehaviorDto, MonsterPackRoleDto, Position};
+use rfb_protocol::{MonsterPackRoleDto, Position};
 
 use super::Game;
 use super::gold::{MAX_PLAYER_GOLD, derive_next_gold_pile_serial, generated_gold_serial};
@@ -86,10 +86,10 @@ pub(super) fn monster_packs_are_valid(entities: &[Actor]) -> bool {
         let leaders = members
             .iter()
             .filter(|entity| {
-                entity.pack.as_ref().is_some_and(|pack| {
-                    pack.role == MonsterPackRoleDto::Leader
-                        && pack.behavior != MonsterPackBehaviorDto::GuardLeader
-                })
+                entity
+                    .pack
+                    .as_ref()
+                    .is_some_and(|pack| pack.role == MonsterPackRoleDto::Leader)
             })
             .copied()
             .collect::<Vec<_>>();
@@ -591,7 +591,8 @@ impl Game {
         let current_dungeon_id = floor_dungeon_id(world, &self.current_floor_id);
         match (&current_dungeon_id, &self.current_dungeon_instance_id) {
             (Some(dungeon_id), Some(instance_id))
-                if parse_dungeon_instance_ordinal(instance_id, dungeon_id).is_some() => {}
+                if self.dungeon_is_active(dungeon_id)
+                    && parse_dungeon_instance_ordinal(instance_id, dungeon_id).is_some() => {}
             (None, None) => {}
             _ => {
                 return Err(CoreError::InvalidSave(
@@ -600,11 +601,12 @@ impl Game {
             }
         }
         if let Some(recall) = &self.recall {
-            let destination_is_valid = world.procedural_floors.iter().any(|floor| {
-                floor.id == recall.floor_id
-                    && floor.lifecycle == FloorLifecycle::Dungeon
-                    && floor.dungeon_id.as_deref() == Some(recall.dungeon_id.as_str())
-            });
+            let destination_is_valid = self.dungeon_is_active(&recall.dungeon_id)
+                && world.procedural_floors.iter().any(|floor| {
+                    floor.id == recall.floor_id
+                        && floor.lifecycle == FloorLifecycle::Dungeon
+                        && floor.dungeon_id.as_deref() == Some(recall.dungeon_id.as_str())
+                });
             let pending_is_valid = recall
                 .remaining_turns
                 .is_none_or(|turns| (1..=2_000).contains(&turns));
@@ -617,8 +619,13 @@ impl Game {
             }
         }
         for floor in self.stored_floors.values() {
-            let expected_instance = floor_dungeon_id(world, &floor.id).is_some();
-            if expected_instance != floor.dungeon_instance_id.is_some() {
+            let dungeon_id = floor_dungeon_id(world, &floor.id);
+            let expected_instance = dungeon_id.is_some();
+            if expected_instance != floor.dungeon_instance_id.is_some()
+                || dungeon_id
+                    .as_deref()
+                    .is_some_and(|dungeon_id| !self.dungeon_is_active(dungeon_id))
+            {
                 return Err(CoreError::InvalidSave(
                     "stored floor dungeon instance identity is invalid",
                 ));
@@ -799,6 +806,12 @@ impl Game {
                 && definition.equipment_slot.is_some()
                 && item.quantity == 1)
                 || definition.tags.iter().any(|tag| tag == "ammunition");
+            let affixes_preserve_ordinary_quality = !item.affix_ids.is_empty()
+                && item.affix_ids.iter().all(|affix_id| {
+                    self.content
+                        .affix(affix_id)
+                        .is_some_and(|affix| affix.preserves_ordinary_quality)
+                });
             let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
                 && item
                     .affix_ids
@@ -806,7 +819,9 @@ impl Game {
                     .all(|affix_id| self.content.affix(affix_id).is_some())
                 && rolled_affixes_are_valid(item)
                 && (item.affix_ids.is_empty()
-                    || (supports_quality && item.quality != ItemQualityDto::Ordinary))
+                    || (supports_quality
+                        && (item.quality != ItemQualityDto::Ordinary
+                            || affixes_preserve_ordinary_quality)))
                 && (item.quality == ItemQualityDto::Ordinary || supports_quality)
                 && item_creation_state_is_valid(item, definition);
             let common_valid = instance_ids.insert(item.id.clone()) && item.quantity != 0;
@@ -1031,6 +1046,12 @@ impl Game {
                     && definition.equipment_slot.is_some()
                     && item.quantity == 1)
                     || definition.tags.iter().any(|tag| tag == "ammunition");
+                let affixes_preserve_ordinary_quality = !item.affix_ids.is_empty()
+                    && item.affix_ids.iter().all(|affix_id| {
+                        self.content
+                            .affix(affix_id)
+                            .is_some_and(|affix| affix.preserves_ordinary_quality)
+                    });
                 let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
                     && item
                         .affix_ids
@@ -1038,7 +1059,9 @@ impl Game {
                         .all(|affix_id| self.content.affix(affix_id).is_some())
                     && rolled_affixes_are_valid(item)
                     && (item.affix_ids.is_empty()
-                        || (supports_quality && item.quality != ItemQualityDto::Ordinary))
+                        || (supports_quality
+                            && (item.quality != ItemQualityDto::Ordinary
+                                || affixes_preserve_ordinary_quality)))
                     && (item.quality == ItemQualityDto::Ordinary || supports_quality)
                     && item_creation_state_is_valid(item, definition);
                 let location_is_valid = match &item.location {
@@ -1163,13 +1186,46 @@ impl Game {
                 return Err(CoreError::InvalidSave("task state is invalid"));
             }
         }
-        let expected_dungeons = initial_dungeon_states(world);
-        if self.dungeon_states.len() != expected_dungeons.len() {
+        let expected_dungeons = base_dungeon_states(world);
+        if self.dungeon_states.len() != expected_dungeons.len()
+            || self
+                .dungeon_states
+                .keys()
+                .any(|dungeon_id| !expected_dungeons.contains_key(dungeon_id))
+        {
             return Err(CoreError::InvalidSave("dungeon state set is invalid"));
         }
+        let mut substituted_dungeon_ids = BTreeSet::new();
+        for primary in &world.dungeons {
+            let Some(substitution) = &primary.substitution else {
+                continue;
+            };
+            let primary_state = &self.dungeon_states[&primary.id];
+            let alternate_state = &self.dungeon_states[&substitution.alternate_dungeon_id];
+            if primary_state.suppressed == alternate_state.suppressed {
+                return Err(CoreError::InvalidSave(
+                    "dungeon substitution state is invalid",
+                ));
+            }
+            substituted_dungeon_ids.insert(primary.id.as_str());
+            substituted_dungeon_ids.insert(substitution.alternate_dungeon_id.as_str());
+        }
         for (dungeon_id, state) in &self.dungeon_states {
-            if !expected_dungeons.contains_key(dungeon_id) {
-                return Err(CoreError::InvalidSave("dungeon state ID is invalid"));
+            if state.suppressed && !substituted_dungeon_ids.contains(dungeon_id.as_str()) {
+                return Err(CoreError::InvalidSave(
+                    "dungeon substitution state is invalid",
+                ));
+            }
+            if state.suppressed
+                && (state.guardian_defeated
+                    || state.entrance_guardian_defeated
+                    || state.next_instance_ordinal != 0
+                    || state.retained_instance_id.is_some()
+                    || state.retained_at_turn.is_some())
+            {
+                return Err(CoreError::InvalidSave(
+                    "suppressed dungeon state is invalid",
+                ));
             }
             let dungeon = world
                 .dungeons

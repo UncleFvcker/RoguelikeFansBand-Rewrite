@@ -36,7 +36,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 364,
+      "rngDrawCounter": 311,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -339,28 +339,28 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 108,
+            "potential": 98,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 118,
+            "potential": 138,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 98,
+            "potential": 128,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 128,
+            "potential": 88,
             "effective": 15,
             "index": 12
           },
@@ -1474,6 +1474,7 @@
           "displayNameKey": "item-demo-chain-mail-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 220,
           "slotId": "body",
@@ -1516,6 +1517,7 @@
           "displayNameKey": "item-demo-broad-sword-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 150,
           "slotId": "right-hand",
@@ -1553,6 +1555,7 @@
           "displayNameKey": "item-demo-short-bow-name",
           "knowledge": "aware",
           "captureBall": false,
+          "usable": false,
           "quantity": 1,
           "weightTenthsPound": 30,
           "slotId": "shooting",
@@ -1666,7 +1669,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 185,
+      "nextItemInstanceSerial": 193,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1674,7 +1677,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b9732d3fbf0ec09945dbe2d25cf90e78d117d4028e06d4ff01b7a2535fc04799"
+      "stateHash": "b228400f6b08bc6649355ba257fa04ca8c6f53985a71115f7a29d048c39d33f1"
     },
     "events": [
       {
@@ -1686,6 +1689,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "b9732d3fbf0ec09945dbe2d25cf90e78d117d4028e06d4ff01b7a2535fc04799"
+    "saveRoundTripStateHash": "b228400f6b08bc6649355ba257fa04ca8c6f53985a71115f7a29d048c39d33f1"
   }
 }

@@ -3631,6 +3631,1013 @@ fn orc_cave_o7_binds_othrod_depths_ecology_and_final_reward() {
 }
 
 #[test]
+fn p87b_tidal_cave_policy_preserves_the_three_way_legacy_ecology_preference() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let policy = artifact
+        .content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.tidal-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Tidal Cave should use global allocation");
+
+    assert!(policy.preferred_glyphs.is_empty());
+    assert!(policy.preferred_tags.is_empty());
+    assert_eq!(
+        policy.preferred_movement_modes,
+        [ActorMovementMode::Aquatic, ActorMovementMode::Swim]
+    );
+    assert_eq!(policy.preferred_habitats, [ActorHabitat::Shore]);
+    assert_eq!(policy.special_div, 16);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+}
+
+#[test]
+fn p87c_tidal_cave_binds_depths_water_features_river_and_guardian() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.tidal-cave")
+        .expect("Tidal Cave should be active");
+    assert_eq!(dungeon.legacy_index, Some(33));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.tidal-cave-depth-15");
+    assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.grendel");
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.tidal-cave"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 13);
+    assert_eq!(floors.first().map(|floor| floor.depth), Some(15));
+    assert_eq!(floors.last().map(|floor| floor.depth), Some(27));
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.tidal-cave-entrance")
+    );
+
+    for floor in &floors {
+        assert_eq!(
+            floor.encounter_table_id.as_deref(),
+            Some("demo.encounter-table.tidal-cave")
+        );
+        assert_eq!(
+            floor.terrain_feature_table_id.as_deref(),
+            Some("demo.terrain-feature-table.tidal-cave")
+        );
+        let budget = floor.generation_budget.as_ref().expect("generation budget");
+        assert_eq!(budget.feature_placements, Some(96));
+        assert_eq!(budget.river_area_tiles, Some(160));
+        let layout = floor.layout.as_ref().expect("Tidal Cave layout");
+        assert!(layout.lake.is_none());
+        assert!(layout.cavern.is_none());
+        assert_eq!(
+            layout
+                .rooms
+                .as_ref()
+                .expect("room geometry")
+                .shapes
+                .iter()
+                .map(|shape| (shape.shape, shape.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([
+                (ProceduralRoomShape::Rectangle, 1),
+                (ProceduralRoomShape::Cavern, 9),
+            ])
+        );
+        let river = layout.river.as_ref().expect("water river");
+        assert_eq!(river.deep_terrain_id, "demo.terrain.surface-water-deep");
+        assert_eq!(
+            river.shallow_terrain_id,
+            "demo.terrain.surface-water-shallow"
+        );
+        assert_eq!(river.chance_one_in, Some(7));
+        assert_eq!(
+            layout
+                .streamers
+                .iter()
+                .map(|streamer| (streamer.terrain_id.as_str(), streamer.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([
+                ("demo.terrain.magma-vein", 2),
+                ("demo.terrain.quartz-vein", 3),
+            ])
+        );
+    }
+
+    let final_floor = floors.last().expect("depth 27 should exist");
+    assert!(final_floor.final_floor);
+    let guardian = final_floor.guardian.as_ref().expect("Grendel guardian");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.grendel");
+
+    let feature_table = content
+        .terrain_feature_tables
+        .iter()
+        .find(|table| table.id == "demo.terrain-feature-table.tidal-cave")
+        .expect("Tidal Cave terrain feature table");
+    assert_eq!(feature_table.rolls, 96);
+    assert_eq!(feature_table.entries.len(), 1);
+    assert_eq!(
+        feature_table.entries[0].terrain_id,
+        "demo.terrain.surface-water-shallow"
+    );
+    assert_eq!(
+        feature_table.entries[0].placement,
+        TerrainFeaturePlacement::Room
+    );
+}
+
+#[test]
+fn p90c_troll_cave_binds_substitution_ecology_terrain_shafts_and_guardian() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.troll-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Troll cave should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["O", "T", "h", "p"]);
+    assert_eq!(policy.preferred_tags, ["animal", "troll"]);
+    assert_eq!(policy.special_div, 12);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let orc_cave = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.orc-cave")
+        .expect("Orc Cave should exist");
+    assert_eq!(
+        orc_cave.substitution,
+        Some(DungeonSubstitutionDefinition {
+            alternate_dungeon_id: "demo.dungeon.troll-cave".to_owned(),
+            alternate_gate_one_in: None,
+        })
+    );
+    let troll_cave = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.troll-cave")
+        .expect("Troll cave should exist");
+    assert_eq!(troll_cave.legacy_index, Some(36));
+    assert_eq!(troll_cave.root_floor_id, "demo.floor.troll-cave-depth-18");
+    assert_eq!(
+        troll_cave.guardian_actor_kind_id,
+        "demo.actor.spulga-the-troll-priestess"
+    );
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.troll-cave"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 19);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (18..=36).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.orc-cave-entrance")
+    );
+    assert_eq!(
+        floors[0].entry_connection_id.as_deref(),
+        Some("demo.connection.troll-cave-depth-18-stairs-up")
+    );
+    assert!(floors.iter().all(|floor| {
+        floor.floor_terrain_id == "demo.terrain.dirt"
+            && floor.terrain_feature_table_id.as_deref()
+                == Some("demo.terrain-feature-table.troll-cave")
+            && floor
+                .layout
+                .as_ref()
+                .and_then(|layout| layout.rooms.as_ref())
+                .is_some_and(|rooms| {
+                    rooms.shapes.iter().any(|candidate| {
+                        candidate.shape == ProceduralRoomShape::Cavern && candidate.weight == 9
+                    })
+                })
+    }));
+    assert!(floors.iter().all(|floor| {
+        floor.wall_terrain_id == "demo.terrain.wall"
+            && floor.layout.as_ref().is_some_and(|layout| {
+                layout.streamers.iter().any(|streamer| {
+                    streamer.terrain_id == "demo.terrain.mountain-wall" && streamer.weight == 3
+                })
+            })
+    }));
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| {
+                floor.layout.as_ref().is_some_and(|layout| {
+                    layout.lake.as_ref().is_some_and(|lake| {
+                        lake.deep_terrain_id == "demo.terrain.surface-water-deep"
+                    })
+                })
+            })
+            .count(),
+        2
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| {
+                floor.layout.as_ref().is_some_and(|layout| {
+                    layout.lake.as_ref().is_some_and(|lake| {
+                        lake.deep_terrain_id == "demo.terrain.rubble"
+                            && lake.shallow_terrain_id == "demo.terrain.dirt"
+                    })
+                })
+            })
+            .count(),
+        1
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| floor
+                .layout
+                .as_ref()
+                .is_some_and(|layout| layout.river.is_some()))
+            .count(),
+        18
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| {
+                floor
+                    .layout
+                    .as_ref()
+                    .is_some_and(|layout| layout.destroyed.is_some())
+            })
+            .count(),
+        3
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .flat_map(|floor| &floor.connections)
+            .filter(|connection| connection.kind == FloorConnectionKind::Shaft)
+            .count(),
+        34
+    );
+
+    let feature_table = content
+        .terrain_feature_tables
+        .iter()
+        .find(|table| table.id == "demo.terrain-feature-table.troll-cave")
+        .expect("Troll cave terrain mix");
+    assert_eq!(feature_table.rolls, 240);
+    assert_eq!(feature_table.entries.len(), 1);
+    assert_eq!(
+        feature_table.entries[0].terrain_id,
+        "demo.terrain.surface-grass"
+    );
+
+    let final_floor = floors.last().expect("depth 36 should exist");
+    assert!(final_floor.final_floor);
+    let guardian = final_floor.guardian.as_ref().expect("Spulga guardian");
+    assert_eq!(guardian.instance_id, "demo.guardian.troll-cave.1");
+    assert_eq!(
+        guardian.actor_kind_id,
+        "demo.actor.spulga-the-troll-priestess"
+    );
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.troll-cave-final-reward")
+    );
+}
+
+#[test]
+fn p89d_hideout_binds_depths_ecology_guardian_and_am_quest_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.hideout")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Hideout should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["p"]);
+    assert_eq!(policy.preferred_tags, ["thief"]);
+    assert_eq!(policy.special_div, 32);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.hideout")
+        .expect("Hideout content should exist");
+    assert_eq!(dungeon.legacy_index, Some(31));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.hideout-depth-8");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.meng-huo-the-king-of-southerings"
+    );
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 28, y: 52 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.hideout"
+            )
+        })
+    }));
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.hideout"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 11);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (8..=18).collect::<Vec<_>>()
+    );
+    assert_eq!((floors[0].width, floors[0].height), (66, 22));
+    assert!(
+        floors[1..]
+            .iter()
+            .all(|floor| (floor.width, floor.height) == (96, 33))
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.hideout-entrance")
+    );
+    for floor in &floors {
+        assert_eq!(floor.floor_terrain_id, "demo.terrain.floor");
+        assert_eq!(floor.closed_door_terrain_id, "demo.terrain.door-secret");
+        let layout = floor.layout.as_ref().expect("Hideout layout");
+        assert_eq!(
+            layout
+                .rooms
+                .as_ref()
+                .expect("Hideout room geometry")
+                .shapes
+                .iter()
+                .map(|shape| (shape.shape, shape.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([(ProceduralRoomShape::Rectangle, 1)])
+        );
+        assert_eq!(
+            layout
+                .streamers
+                .iter()
+                .map(|streamer| (streamer.terrain_id.as_str(), streamer.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([
+                ("demo.terrain.magma-vein", 1),
+                ("demo.terrain.quartz-vein", 1),
+            ])
+        );
+    }
+
+    let guardian = floors
+        .last()
+        .and_then(|floor| floor.guardian.as_ref())
+        .expect("Meng Huo should guard depth 18");
+    assert_eq!(guardian.instance_id, "demo.guardian.hideout.1");
+    assert_eq!(
+        guardian.actor_kind_id,
+        "demo.actor.meng-huo-the-king-of-southerings"
+    );
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.hideout-final-reward")
+    );
+    assert_eq!(
+        floors
+            .iter()
+            .filter(|floor| floor.guardian.is_some())
+            .count(),
+        1
+    );
+
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.hideout-final-reward")
+        .expect("Hideout should have a final reward table");
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.amulet");
+    assert_eq!(reward.quality_weights[0].quality, ItemQuality::Fine);
+    assert_eq!(
+        reward.affix_weights[0].affix_id.as_deref(),
+        Some("rfb-legacy.affix.amulet-am-quest")
+    );
+    let affix = content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.amulet-am-quest")
+        .expect("AM_QUEST amulet mapping should exist");
+    let amulet = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.amulet")
+        .expect("base amulet should exist");
+    assert!(affix_is_compatible_with_item(affix, amulet, 18));
+    assert_eq!(affix.roll_groups.len(), 1);
+    assert_eq!(affix.roll_groups[0].rolls, 3);
+    assert!(
+        affix.roll_groups[0]
+            .candidates
+            .iter()
+            .all(|candidate| candidate.properties != AffixPropertyBundleDefinition::default())
+    );
+
+    let hideout_exclusives = content
+        .actors
+        .iter()
+        .filter(|actor| {
+            actor
+                .allocation
+                .as_ref()
+                .is_some_and(|allocation| allocation.legacy_dungeon_indices == [31])
+        })
+        .map(|actor| actor.id.as_str())
+        .collect::<BTreeSet<_>>();
+    assert_eq!(
+        hideout_exclusives,
+        BTreeSet::from([
+            "demo.actor.dailai-dongzhu-captain-of-southerings",
+            "demo.actor.king-duosi-the-chief-of-southerings",
+            "demo.actor.king-mulu-the-chief-of-southerings",
+            "demo.actor.lady-zhurong-the-avatar-of-flame-spirit",
+            "demo.actor.meng-huo-the-king-of-southerings",
+            "demo.actor.meng-you-the-brother-of-meng-huo",
+            "demo.actor.wutugu-the-chief-of-southerings",
+        ])
+    );
+}
+
+#[test]
+fn p89e_man_cave_binds_substitution_depths_guardian_and_lotharang() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.man-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Man cave should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["p"]);
+    assert_eq!(policy.preferred_tags, ["thief"]);
+    assert_eq!(policy.special_div, 16);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let hideout = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.hideout")
+        .expect("Hideout should exist");
+    assert_eq!(
+        hideout.substitution,
+        Some(DungeonSubstitutionDefinition {
+            alternate_dungeon_id: "demo.dungeon.man-cave".to_owned(),
+            alternate_gate_one_in: Some(32),
+        })
+    );
+    let man_cave = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.man-cave")
+        .expect("Man cave should exist");
+    assert_eq!(man_cave.legacy_index, Some(40));
+    assert_eq!(man_cave.root_floor_id, "demo.floor.man-cave-depth-8");
+    assert_eq!(
+        man_cave.guardian_actor_kind_id,
+        "demo.actor.untamo-the-cruel"
+    );
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.man-cave"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 11);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (8..=18).collect::<Vec<_>>()
+    );
+    assert_eq!((floors[0].width, floors[0].height), (66, 22));
+    assert!(
+        floors[1..]
+            .iter()
+            .all(|floor| (floor.width, floor.height) == (96, 33))
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert!(floors.iter().all(|floor| {
+        floor
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.rooms.as_ref())
+            .is_some_and(|rooms| {
+                rooms.shapes
+                    == [ProceduralRoomShapeCandidateDefinition {
+                        shape: ProceduralRoomShape::Rectangle,
+                        weight: 1,
+                    }]
+            })
+    }));
+    let guardian = floors
+        .last()
+        .and_then(|floor| floor.guardian.as_ref())
+        .expect("Untamo should guard Man cave depth 18");
+    assert_eq!(guardian.instance_id, "demo.guardian.man-cave.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.untamo-the-cruel");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.man-cave-final-replacement")
+    );
+    assert_eq!(
+        guardian.reward_artifact_item_kind_id.as_deref(),
+        Some("demo.item.lotharang")
+    );
+
+    let lotharang = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.lotharang")
+        .expect("Lotharang should exist");
+    assert_eq!(lotharang.generation_level, 10);
+    assert_eq!(lotharang.weight_tenths_pound, 170);
+    assert_eq!(lotharang.base_value, 21_000);
+    assert_eq!(lotharang.modifiers.strength, 1);
+    assert_eq!(lotharang.modifiers.dexterity, 1);
+    assert_eq!(
+        lotharang.artifact_generation,
+        Some(ArtifactGenerationDefinition {
+            source_index: 104,
+            base_item_kind_id: "demo.item.battle-axe".to_owned(),
+            rarity_one_in: 5,
+            instant: false,
+        })
+    );
+    let melee = lotharang.melee_profile.as_ref().expect("Lotharang melee");
+    assert_eq!((melee.damage_dice, melee.damage_sides), (2, 9));
+    assert_eq!((melee.to_hit, melee.to_damage), (9, 8));
+    assert_eq!(
+        lotharang.slays.get(&SlayTarget::Orc),
+        Some(&SlayLevel::Slay)
+    );
+    assert_eq!(
+        lotharang.slays.get(&SlayTarget::Troll),
+        Some(&SlayLevel::Slay)
+    );
+    let generation = lotharang
+        .device_generation
+        .as_ref()
+        .expect("Lotharang should retain its activation");
+    assert_eq!(
+        generation.recovery,
+        Some(ItemDeviceRecoveryDefinition {
+            interval_ticks: 40,
+            energy_per_mille: 1_000,
+        })
+    );
+    assert!(matches!(
+        generation.activations.as_slice(),
+        [ItemDeviceActivationDefinition {
+            device_check_difficulty: 10,
+            charges: ItemDeviceChargeRangeDefinition {
+                minimum: 1,
+                maximum: 1,
+                cost: 1,
+            },
+            effect: ItemUseEffectDefinition::Heal { amount: 30 },
+            ..
+        }]
+    ));
+}
+
+#[test]
+fn p88c_icky_cave_binds_ecology_terrain_mix_depths_and_guardian() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.icky-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Icky Cave should use global allocation");
+    assert_eq!(
+        policy
+            .preferred_glyphs
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>(),
+        ["M", "i", "j"].into_iter().collect()
+    );
+    assert!(policy.preferred_tags.is_empty());
+    assert!(policy.preferred_movement_modes.is_empty());
+    assert!(policy.preferred_habitats.is_empty());
+    assert_eq!(policy.special_div, 32);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.icky-cave")
+        .expect("Icky Cave content should exist");
+    assert_eq!(dungeon.legacy_index, Some(21));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.icky-cave-depth-10");
+    assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.the-icky-queen");
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.icky-cave"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 11);
+    assert_eq!(
+        (floors[0].depth, floors[0].width, floors[0].height),
+        (10, 66, 22)
+    );
+    assert!(
+        floors[1..]
+            .iter()
+            .all(|floor| (floor.width, floor.height) == (96, 33))
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.icky-cave-entrance")
+    );
+
+    for floor in &floors {
+        assert_eq!(floor.floor_terrain_id, "demo.terrain.surface-grass");
+        assert_eq!(
+            floor.encounter_table_id.as_deref(),
+            Some("demo.encounter-table.icky-cave")
+        );
+        assert_eq!(
+            floor.terrain_feature_table_id.as_deref(),
+            Some("demo.terrain-feature-table.icky-cave")
+        );
+        let budget = floor.generation_budget.as_ref().expect("generation budget");
+        assert_eq!(budget.room_area_tiles, Some(800));
+        assert_eq!(
+            budget.feature_placements,
+            Some(if floor.depth == 10 { 186 } else { 320 })
+        );
+        let layout = floor.layout.as_ref().expect("Icky Cave layout");
+        assert_eq!(
+            layout
+                .rooms
+                .as_ref()
+                .expect("room geometry")
+                .shapes
+                .iter()
+                .map(|shape| (shape.shape, shape.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([
+                (ProceduralRoomShape::Rectangle, 1),
+                (ProceduralRoomShape::Cavern, 9),
+            ])
+        );
+        assert_eq!(
+            layout
+                .streamers
+                .iter()
+                .map(|streamer| (streamer.terrain_id.as_str(), streamer.weight))
+                .collect::<BTreeMap<_, _>>(),
+            BTreeMap::from([
+                ("demo.terrain.magma-vein", 1),
+                ("demo.terrain.quartz-vein", 1),
+            ])
+        );
+    }
+
+    let final_floor = floors.last().expect("depth 20 should exist");
+    assert!(final_floor.final_floor);
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("The Icky Queen guardian");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.the-icky-queen");
+
+    let feature_table = content
+        .terrain_feature_tables
+        .iter()
+        .find(|table| table.id == "demo.terrain-feature-table.icky-cave")
+        .expect("Icky Cave terrain feature table");
+    assert_eq!(feature_table.rolls, 320);
+    assert_eq!(
+        feature_table
+            .entries
+            .iter()
+            .map(|entry| (entry.terrain_id.as_str(), entry.weight, entry.placement))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([
+            (
+                "demo.terrain.surface-swamp",
+                1,
+                TerrainFeaturePlacement::Room,
+            ),
+            (
+                "demo.terrain.surface-water-shallow",
+                1,
+                TerrainFeaturePlacement::Room,
+            ),
+        ])
+    );
+}
+
+#[test]
+fn p88d_icky_cave_binds_wilderness_entrance_and_protection_quiver_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+
+    assert!(
+        world
+            .wilderness
+            .as_ref()
+            .expect("Middle-earth should retain wilderness")
+            .locations
+            .iter()
+            .any(|location| matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 17, y: 29 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.icky-cave"
+            ))
+    );
+
+    let final_floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.icky-cave-depth-20")
+        .expect("Icky Cave depth 20 should exist");
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("Icky Cave depth 20 should contain The Icky Queen");
+    assert_eq!(guardian.instance_id, "demo.guardian.icky-cave.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.the-icky-queen");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.icky-cave-final-reward")
+    );
+
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.icky-cave-final-reward")
+        .expect("The Icky Queen should have a fixed reward table");
+    assert_eq!(reward.rolls, 1);
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.quiver");
+    assert_eq!(reward.entries[0].quantity, 1);
+    assert_eq!(reward.quality_weights.len(), 1);
+    assert_eq!(reward.quality_weights[0].quality, ItemQuality::Ordinary);
+    assert_eq!(reward.affix_weights.len(), 1);
+    assert_eq!(
+        reward.affix_weights[0].affix_id.as_deref(),
+        Some("rfb-legacy.affix.quiver-protection")
+    );
+}
+
+#[test]
+fn p87d_tidal_cave_binds_wilderness_entrance_and_fixed_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+
+    assert!(
+        world
+            .wilderness
+            .as_ref()
+            .expect("Middle-earth should retain wilderness")
+            .locations
+            .iter()
+            .any(|location| matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 47, y: 53 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.tidal-cave"
+            ))
+    );
+
+    let final_floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.tidal-cave-depth-27")
+        .expect("Tidal Cave depth 27 should exist");
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("Tidal Cave depth 27 should contain Grendel");
+    assert_eq!(guardian.instance_id, "demo.guardian.tidal-cave.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.grendel");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.tidal-cave-final-reward")
+    );
+
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.tidal-cave-final-reward")
+        .expect("Grendel should have a fixed reward table");
+    assert_eq!(reward.rolls, 1);
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(
+        reward.entries[0].item_kind_id,
+        "demo.item.giant-strength-potion"
+    );
+    assert_eq!(reward.entries[0].quantity, 1);
+    assert_eq!(reward.quality_weights.len(), 1);
+    assert_eq!(reward.quality_weights[0].quality, ItemQuality::Ordinary);
+    assert_eq!(reward.affix_weights.len(), 1);
+    assert_eq!(reward.affix_weights[0].affix_id, None);
+}
+
+#[test]
+fn p86c_camelot_binds_depths_ecology_layout_and_mirror_shield_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.camelot")
+        .expect("Camelot should be active");
+    assert_eq!(dungeon.legacy_index, Some(2));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.camelot-depth-20");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.arthur-pendragon"
+    );
+    assert!(
+        world
+            .wilderness
+            .as_ref()
+            .expect("Middle-earth should retain wilderness")
+            .locations
+            .iter()
+            .any(|location| matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 7, y: 59 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.camelot"
+            ))
+    );
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.camelot"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 16);
+    assert_eq!(floors.first().map(|floor| floor.depth), Some(20));
+    assert_eq!(floors.last().map(|floor| floor.depth), Some(35));
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.camelot-entrance")
+    );
+    for floor in &floors {
+        assert_eq!((floor.width, floor.height), (96, 33));
+        assert_eq!(floor.wall_terrain_id, "demo.terrain.wall");
+        assert_eq!(floor.closed_door_terrain_id, "demo.terrain.door-secret");
+        assert_eq!(floor.trap_terrain_id, "demo.terrain.warren-snare");
+        let layout = floor.layout.as_ref().expect("Camelot should use a layout");
+        let rooms = layout
+            .rooms
+            .as_ref()
+            .expect("Camelot should generate rooms");
+        assert_eq!(rooms.shapes.len(), 1);
+        assert_eq!(rooms.shapes[0].shape, ProceduralRoomShape::Rectangle);
+        assert_eq!(
+            layout
+                .streamers
+                .iter()
+                .map(|streamer| streamer.terrain_id.as_str())
+                .collect::<BTreeSet<_>>(),
+            ["demo.terrain.magma-vein", "demo.terrain.quartz-vein"]
+                .into_iter()
+                .collect()
+        );
+    }
+
+    let final_floor = floors.last().expect("Camelot should have a final floor");
+    assert!(final_floor.final_floor);
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("depth 35 should contain Arthur");
+    assert_eq!(guardian.instance_id, "demo.guardian.camelot.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.arthur-pendragon");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.camelot-final-reward")
+    );
+
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.camelot")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Camelot should use global allocation");
+    assert_eq!(policy.special_div, 32);
+    assert_eq!(policy.ambient_chance_one_in, 160);
+    assert_eq!(
+        policy
+            .preferred_tags
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>(),
+        ["knight"].into_iter().collect()
+    );
+    assert_eq!(
+        policy
+            .preferred_glyphs
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>(),
+        ["p", "H", "g", "d"].into_iter().collect()
+    );
+
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.camelot-final-reward")
+        .expect("Arthur should have a fixed reward table");
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.mirror-shield");
+    assert_eq!(reward.affix_weights[0].affix_id, None);
+}
+
+#[test]
 fn p40_chameleon_retains_the_authoritative_form_change_marker() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let chameleon = artifact
@@ -6976,12 +7983,36 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
                 town_id: "demo.town.outpost".to_owned(),
             },
             WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 7, y: 59 },
+                dungeon_id: "demo.dungeon.camelot".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 17, y: 29 },
+                dungeon_id: "demo.dungeon.icky-cave".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 28, y: 52 },
+                dungeon_id: "demo.dungeon.hideout".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 28, y: 52 },
+                dungeon_id: "demo.dungeon.man-cave".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
                 position: ContentPosition { x: 28, y: 52 },
                 dungeon_id: "demo.dungeon.warrens".to_owned(),
             },
             WildernessLocationDefinition::Dungeon {
                 position: ContentPosition { x: 30, y: 45 },
                 dungeon_id: "demo.dungeon.orc-cave".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 30, y: 45 },
+                dungeon_id: "demo.dungeon.troll-cave".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 47, y: 53 },
+                dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
             },
         ]
     );
@@ -7149,6 +8180,57 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         validate_and_normalize(&mut malformed_wilderness),
         Err(ContentError::InvalidWilderness(_))
     ));
+}
+
+#[test]
+fn p89c_outpost_has_a_distinct_public_hideout_entrance() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let entrance = artifact
+        .content
+        .terrain
+        .iter()
+        .find(|terrain| terrain.id == "demo.terrain.hideout-entrance")
+        .expect("Hideout entrance terrain should compile");
+    assert_eq!(entrance.glyph, "<");
+    assert!(entrance.tags.iter().any(|tag| tag == "stairs-down"));
+
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should remain available");
+    let hideout_entrance = world
+        .terrain_overrides
+        .iter()
+        .find(|terrain| terrain.terrain_id == entrance.id)
+        .expect("Outpost should place the public Hideout entrance");
+    assert_eq!(
+        hideout_entrance.positions,
+        [ContentPosition { x: 93, y: 29 }]
+    );
+    assert_eq!(
+        world
+            .terrain_overrides
+            .iter()
+            .find(|terrain| terrain.terrain_id == "demo.terrain.stairs-down")
+            .expect("Warrens entrance should remain available")
+            .positions,
+        [ContentPosition { x: 74, y: 16 }]
+    );
+    let task_floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.thieves-hideout")
+        .expect("Thieves' Hideout task floor should remain available");
+    assert_eq!(
+        task_floor.task_id.as_deref(),
+        Some("demo.task.thieves-hideout")
+    );
+    assert_ne!(
+        task_floor.entry_terrain_id.as_deref(),
+        Some(entrance.id.as_str())
+    );
 }
 
 #[test]
@@ -8210,7 +9292,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 328);
+    assert_eq!(base_items.entries.len(), 330);
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -8258,7 +9340,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 304);
+    assert_eq!(active_source_items.len(), 306);
 
     let source_items_without_allocations =
         BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
@@ -8272,7 +9354,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 294);
+    assert_eq!(expected_item_ids.len(), 296);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
