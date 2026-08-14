@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.detect-doors-stairs-traps",
+  "nameKey": "ability-rfb-race-detect-doors-stairs-traps-name",
+  "descriptionKey": "ability-rfb-race-detect-doors-stairs-traps-description",
+  "abilityProgramId": "demo.ability-program.arcane-detect-doors-traps",
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "tags": ["detection", "race"]
+}

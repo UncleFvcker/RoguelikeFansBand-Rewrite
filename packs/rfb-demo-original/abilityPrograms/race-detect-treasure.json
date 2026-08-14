@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability-program.race.detect-treasure",
+  "input": "self",
+  "steps": [
+    { "type": "detect", "subject": "terrain", "category": "treasure", "radius": 30, "persistent": true, "throughWalls": true }
+  ]
+}

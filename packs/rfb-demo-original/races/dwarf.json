@@ -1,5 +1,21 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.detect-doors-stairs-traps",
+      "minimumLevel": 5,
+      "governingAttribute": "wisdom",
+      "cost": 5,
+      "baseFailurePercent": 50
+    },
+    {
+      "abilityId": "rfb.ability.race.detect-treasure",
+      "minimumLevel": 10,
+      "governingAttribute": "charisma",
+      "cost": 5,
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 22,
   "bodySlots": [
     {
@@ -67,6 +83,7 @@
   "experiencePercent": 135,
   "formatVersion": 1,
   "id": "rfb-legacy.race.dwarf",
+  "infravision": 5,
   "kinCategory": "kin-glyph-104",
   "legacyIndex": 5,
   "lifePercent": 103,
@@ -79,10 +96,16 @@
     "wisdom": 2
   },
   "nameKey": "race-legacy-dwarf-name",
+  "resistances": {
+    "blindness": "resistant"
+  },
   "shopAdjustPercent": 115,
   "skillSetId": "rfb-legacy.skill-set.race-dwarf",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

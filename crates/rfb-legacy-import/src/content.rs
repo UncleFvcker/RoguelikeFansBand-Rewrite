@@ -5254,6 +5254,8 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
         let ability_id = match spell {
             "berserk_spell" => "rfb.ability.race.berserk",
             "create_food_spell" => "rfb.ability.race.create-food",
+            "detect_doors_stairs_traps_spell" => "rfb.ability.race.detect-doors-stairs-traps",
+            "detect_treasure_spell" => "rfb.ability.race.detect-treasure",
             "poison_dart_spell" => "rfb.ability.race.poison-dart",
             _ => {
                 gaps.push(format!("get_powers:{spell}"));
@@ -6072,7 +6074,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
     }
     if matches!(
         entry.id.as_str(),
-        "barbarian" | "dunadan" | "hobbit" | "kobold"
+        "barbarian" | "dunadan" | "dwarf" | "hobbit" | "kobold"
     ) {
         return vec![
             "humanoid",
@@ -19097,6 +19099,19 @@ race_t *test_beast_get_race(void)
                 "standard-body",
             ]
         );
+        let dwarf = LegacyCharacterEntry {
+            id: "dwarf".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&dwarf),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
     }
 
     #[test]
@@ -19106,6 +19121,8 @@ static power_info _barbarian_get_powers[] =
 {
     { A_STR, {8, 10, 30, berserk_spell}},
     { A_INT, {15, 10, 50, create_food_spell}},
+    { A_WIS, {5, 5, 50, detect_doors_stairs_traps_spell}},
+    { A_CHR, {10, 5, 50, detect_treasure_spell}},
     { A_DEX, {12, 8, 50, poison_dart_spell}},
     { A_WIS, {12, 7, 40, mystery_spell}},
     { -1, {-1, -1, -1, NULL} }
@@ -19155,6 +19172,20 @@ race_t *barbarian_get_race(void)
                     ability_id: "rfb.ability.race.create-food".to_owned(),
                 },
                 LegacyInnatePower {
+                    governing_attribute: "wisdom".to_owned(),
+                    minimum_level: 5,
+                    cost: 5,
+                    base_failure_percent: 50,
+                    ability_id: "rfb.ability.race.detect-doors-stairs-traps".to_owned(),
+                },
+                LegacyInnatePower {
+                    governing_attribute: "charisma".to_owned(),
+                    minimum_level: 10,
+                    cost: 5,
+                    base_failure_percent: 50,
+                    ability_id: "rfb.ability.race.detect-treasure".to_owned(),
+                },
+                LegacyInnatePower {
                     governing_attribute: "dexterity".to_owned(),
                     minimum_level: 12,
                     cost: 8,
@@ -19183,9 +19214,17 @@ race_t *barbarian_get_race(void)
         );
         assert_eq!(
             race["abilities"][2]["abilityId"],
+            "rfb.ability.race.detect-doors-stairs-traps"
+        );
+        assert_eq!(
+            race["abilities"][3]["abilityId"],
+            "rfb.ability.race.detect-treasure"
+        );
+        assert_eq!(
+            race["abilities"][4]["abilityId"],
             "rfb.ability.race.poison-dart"
         );
-        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(3));
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(5));
         assert_eq!(race["resistances"]["fear"], "resistant");
         assert!(
             race["tags"]

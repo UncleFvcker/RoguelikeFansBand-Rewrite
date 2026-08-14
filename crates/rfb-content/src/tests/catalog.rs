@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.338.0");
+    assert_eq!(catalog.pack_version(), "1.339.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -593,6 +593,126 @@ fn formal_kobold_matches_rfb_profile_and_poison_dart_power() {
             beam_chance_percent: 0,
             ..
         }
+    ));
+}
+
+#[test]
+fn formal_dwarf_matches_rfb_profile_and_detection_powers() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let dwarf = catalog
+        .race("rfb-legacy.race.dwarf")
+        .expect("formal Dwarf race");
+
+    assert_eq!(
+        [
+            dwarf.modifiers.strength,
+            dwarf.modifiers.intelligence,
+            dwarf.modifiers.wisdom,
+            dwarf.modifiers.dexterity,
+            dwarf.modifiers.constitution,
+            dwarf.modifiers.charisma,
+        ],
+        [2, -2, 2, -2, 2, 1]
+    );
+    assert_eq!(dwarf.life_percent, 103);
+    assert_eq!(dwarf.base_hp, 22);
+    assert_eq!(dwarf.experience_percent, 135);
+    assert_eq!(dwarf.shop_adjust_percent, 115);
+    assert_eq!(dwarf.infravision, 5);
+    assert_eq!(dwarf.kin_category.as_deref(), Some("kin-glyph-104"));
+    assert_eq!(
+        dwarf.resistances.get(&ActorDamageType::Blindness),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(dwarf.level_mutation_rewards.is_empty());
+    assert_eq!(
+        dwarf.abilities,
+        [
+            InnatePowerDefinition {
+                minimum_level: 5,
+                governing_attribute: TechniqueAttribute::Wisdom,
+                cost: 5,
+                cost_scaling: None,
+                base_failure_percent: 50,
+                minimum_failure_percent: None,
+                ability_id: "rfb.ability.race.detect-doors-stairs-traps".to_owned(),
+            },
+            InnatePowerDefinition {
+                minimum_level: 10,
+                governing_attribute: TechniqueAttribute::Charisma,
+                cost: 5,
+                cost_scaling: None,
+                base_failure_percent: 50,
+                minimum_failure_percent: None,
+                ability_id: "rfb.ability.race.detect-treasure".to_owned(),
+            },
+        ]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(dwarf.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&dwarf.skill_set_id)
+        .expect("formal Dwarf skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 5),
+            ("demo.skill.disarming", 2),
+            ("demo.skill.melee", 15),
+            ("demo.skill.perception", 10),
+            ("demo.skill.saving-throw", 6),
+            ("demo.skill.search", 7),
+            ("demo.skill.stealth", -1),
+        ]
+    );
+
+    let doors = catalog
+        .ability("rfb.ability.race.detect-doors-stairs-traps")
+        .expect("Dwarf door and trap detection ability");
+    let door_effects = doors.effect.ordered_effects();
+    assert_eq!(door_effects.len(), 4);
+    for (effect, expected_category) in
+        door_effects
+            .iter()
+            .zip(["trap", "door", "stairs-down", "stairs-up"])
+    {
+        assert!(matches!(
+            effect,
+            AbilityEffectDefinition::Detect {
+                subject: AbilityDetectSubjectDefinition::Terrain,
+                category,
+                radius: 30,
+                persistent: true,
+                through_walls: true,
+            } if category == expected_category
+        ));
+    }
+
+    let treasure = catalog
+        .ability("rfb.ability.race.detect-treasure")
+        .expect("Dwarf treasure detection ability");
+    assert!(matches!(
+        treasure.effect,
+        AbilityEffectDefinition::Detect {
+            subject: AbilityDetectSubjectDefinition::Terrain,
+            ref category,
+            radius: 30,
+            persistent: true,
+            through_walls: true,
+        } if category == "treasure"
     ));
 }
 

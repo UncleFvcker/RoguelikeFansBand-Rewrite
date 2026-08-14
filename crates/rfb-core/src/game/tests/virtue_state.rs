@@ -153,6 +153,22 @@ fn formal_races_receive_their_original_race_virtues() {
         ]
     );
 
+    let dwarf = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.dwarf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Dwarf Archer should create");
+    assert_eq!(
+        &virtue_kinds(&dwarf)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Diligence,
+        ]
+    );
+
     let dunadan = Game::new_with_build_race_and_name(
         43,
         "demo.build.archer",

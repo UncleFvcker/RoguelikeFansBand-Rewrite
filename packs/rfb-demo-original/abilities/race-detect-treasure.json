@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.detect-treasure",
+  "nameKey": "ability-rfb-race-detect-treasure-name",
+  "descriptionKey": "ability-rfb-race-detect-treasure-description",
+  "abilityProgramId": "rfb.ability-program.race.detect-treasure",
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "tags": ["detection", "race"]
+}

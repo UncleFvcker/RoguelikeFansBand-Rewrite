@@ -81,6 +81,7 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.high-elf" => kinds.push(VirtueKindDto::Vitality),
             "rfb-legacy.race.hobbit" => kinds.push(VirtueKindDto::Temperance),
             "rfb-legacy.race.kobold" => kinds.push(VirtueKindDto::Honour),
+            "rfb-legacy.race.dwarf" => kinds.push(VirtueKindDto::Diligence),
             _ => {}
         }
 
