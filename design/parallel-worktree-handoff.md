@@ -1039,3 +1039,22 @@ git diff --stat
   `1e4ac419da5c5a8a3c7aea75fc4758d2d87dfeac197bcaed7b8d5ab62064d353`、Protocol `1.204`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量
   fixture，留待合并验收。
+
+## 56. main 当前交接（矮人正式内容、新游戏 UI 与验收）
+
+- 种族方向拥有既有 `rfb-legacy.race.dwarf`，并新增、拥有
+  `rfb.ability.race.detect-doors-stairs-traps`、`rfb.ability.race.detect-treasure` 与
+  `rfb.ability-program.race.detect-treasure`。门/陷阱侦测共享既有
+  `demo.ability-program.arcane-detect-doors-traps`；其他方向不得重复建立这些身份。本批不占用
+  item、material、affix、resource 或玩家 actor ID。
+- 矮人已按 RFB master 闭合六维、生命 103%、基础 HP 22、经验 135%、商店 115%、八项技能、
+  5 格红外、失明抗性、Dwarf kin、Standard 身体、初始“勤勉”和两项原版侦测能力；原版没有
+  等级奖励。临时形态使用有效种族被动和能力，但等级奖励继续取角色出生种族。
+- “侦测门与陷阱”覆盖半径 30 内的陷阱、门和上下楼梯；“侦测宝藏”严格只侦测宝藏矿脉，
+  包括隐藏岩浆/石英富矿，不包含散落金币。New Game 通过既有 `raceId` 正式开放“矮人”，
+  玩家 actor 与 tileset 继续由职业 build 决定。
+- 门槛、能力投影、成功/失败与 SP→HP 支付、隔墙侦测、散落金币排除、save/replay、变形切换
+  和 Web 入口均由新增或直接相关聚焦测试覆盖。协调点为 pack `1.339.0` / content hash
+  `0a04d780fa04c221a43fba292e9ce33826c93fa1fc02943f8f5928ef52f90e74`、Protocol `1.204`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量
+  fixture，留待合并验收。

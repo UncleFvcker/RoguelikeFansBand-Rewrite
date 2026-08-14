@@ -2564,6 +2564,8 @@ const MUTATION_CONTRACT_ABILITY_ID: &str = "demo.ability.mutation-contract";
 const MUTATION_CONTRACT_ID: &str = "rfb.mutation.spit-acid";
 const RACE_BERSERK_ABILITY_ID: &str = "rfb.ability.race.berserk";
 const RACE_CREATE_FOOD_ABILITY_ID: &str = "rfb.ability.race.create-food";
+const RACE_DETECT_DOORS_ABILITY_ID: &str = "rfb.ability.race.detect-doors-stairs-traps";
+const RACE_DETECT_TREASURE_ABILITY_ID: &str = "rfb.ability.race.detect-treasure";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
 
 #[test]
@@ -2859,6 +2861,376 @@ fn kobold_intrinsics_follow_the_effective_race() {
             .abilities
             .iter()
             .all(|ability| ability.id != RACE_POISON_DART_ABILITY_ID)
+    );
+}
+
+#[test]
+fn formal_dwarf_detection_powers_reveal_original_terrain_categories_only() {
+    let mut game = Game::new_with_build_race_and_name(
+        94,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.dwarf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Dwarf High-Mage should create");
+    clear_monsters(&mut game);
+    assert_eq!(game.player_infravision_range(), 5);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Blindness),
+        ResistanceLevel::Resistant
+    );
+
+    let level_four_experience = crate::stats::experience_required_for_level(4);
+    game.apply_unscaled_player_experience(level_four_experience, &mut Vec::new());
+    let snapshot = game.snapshot();
+    let doors = snapshot
+        .player
+        .abilities
+        .iter()
+        .find(|ability| ability.id == RACE_DETECT_DOORS_ABILITY_ID)
+        .expect("Dwarf door detection should be projected before it unlocks");
+    assert_eq!(doors.source, AbilitySourceDto::Race);
+    assert_eq!(
+        doors.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Wisdom)
+    );
+    assert_eq!(doors.minimum_level, 5);
+    assert_eq!(doors.base_resource_cost, 5);
+    assert!(!doors.can_cast);
+    let treasure = snapshot
+        .player
+        .abilities
+        .iter()
+        .find(|ability| ability.id == RACE_DETECT_TREASURE_ABILITY_ID)
+        .expect("Dwarf treasure detection should be projected before it unlocks");
+    assert_eq!(treasure.source, AbilitySourceDto::Race);
+    assert_eq!(
+        treasure.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Charisma)
+    );
+    assert_eq!(treasure.minimum_level, 10);
+    assert_eq!(treasure.base_resource_cost, 5);
+    assert!(!treasure.can_cast);
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(5) - level_four_experience,
+        &mut Vec::new(),
+    );
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+    let snapshot = game.snapshot();
+    assert!(
+        snapshot
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == RACE_DETECT_DOORS_ABILITY_ID)
+            .expect("Dwarf door detection should remain projected")
+            .can_cast
+    );
+    assert!(
+        !snapshot
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == RACE_DETECT_TREASURE_ABILITY_ID)
+            .expect("Dwarf treasure detection should remain projected")
+            .can_cast
+    );
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(9)
+            - crate::stats::experience_required_for_level(5),
+        &mut Vec::new(),
+    );
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should retain mana");
+    mana.current = mana.maximum;
+    assert!(
+        !game
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == RACE_DETECT_TREASURE_ABILITY_ID)
+            .expect("Dwarf treasure detection should remain projected")
+            .can_cast
+    );
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(10)
+            - crate::stats::experience_required_for_level(9),
+        &mut Vec::new(),
+    );
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should retain mana");
+    mana.current = mana.maximum;
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == RACE_DETECT_TREASURE_ABILITY_ID)
+            .expect("Dwarf treasure detection should unlock at level ten")
+            .can_cast
+    );
+
+    game.debug_set_ability_casts_succeed(true);
+    game.player.position = Position { x: 3, y: 3 };
+    let player = game.player.position;
+    let blocker = Position { x: 4, y: 3 };
+    let trap = Position { x: 5, y: 3 };
+    let door = Position { x: 6, y: 3 };
+    let stairs_down = Position { x: 7, y: 3 };
+    let stairs_up = Position { x: 8, y: 3 };
+    let magma = Position { x: 5, y: 4 };
+    let quartz = Position { x: 6, y: 4 };
+    let gold_blocker = Position { x: 4, y: 2 };
+    let gold = Position { x: 5, y: 2 };
+    for (position, terrain_id) in [
+        (player, "demo.terrain.floor"),
+        (blocker, "demo.terrain.wall"),
+        (trap, "demo.terrain.created-trap"),
+        (door, "demo.terrain.door-secret"),
+        (stairs_down, "demo.terrain.stairs-down"),
+        (stairs_up, "demo.terrain.stairs-up"),
+        (magma, "demo.terrain.magma-hidden-treasure"),
+        (quartz, "demo.terrain.quartz-hidden-treasure"),
+        (gold_blocker, "demo.terrain.wall"),
+        (gold, "demo.terrain.floor"),
+    ] {
+        replace_terrain(&mut game, position, terrain_id);
+    }
+    for position in [trap, door, stairs_down, stairs_up, magma, quartz] {
+        let index = game.index(position).expect("detection target should exist");
+        game.explored[index] = false;
+        game.revealed_terrain.remove(&position);
+    }
+    game.gold_piles = vec![GoldPile {
+        id: "generated.gold.1".to_owned(),
+        position: gold,
+        amount: 25,
+        appearance: GoldAppearanceDto::Gold,
+        discovered: false,
+    }];
+    game.next_gold_pile_serial = 2;
+    let mana_before = game.resources["demo.resource.mana"].current;
+    let mut replay = game.clone();
+
+    for cast in [&mut game, &mut replay] {
+        cast.resolve_player_ability(
+            RACE_DETECT_DOORS_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Dwarf door detection should resolve");
+        assert!(cast.revealed_terrain.contains(&trap));
+        assert!(cast.revealed_terrain.contains(&door));
+        assert!(cast.explored[cast.index(stairs_down).expect("stairs should exist")]);
+        assert!(cast.explored[cast.index(stairs_up).expect("stairs should exist")]);
+        assert!(!cast.revealed_terrain.contains(&magma));
+        assert!(!cast.revealed_terrain.contains(&quartz));
+
+        cast.resolve_player_ability(
+            RACE_DETECT_TREASURE_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Dwarf treasure detection should resolve");
+        assert!(cast.revealed_terrain.contains(&magma));
+        assert!(cast.revealed_terrain.contains(&quartz));
+        assert!(!cast.gold_piles[0].discovered);
+    }
+
+    assert_eq!(
+        game.resources["demo.resource.mana"].current,
+        mana_before - 10
+    );
+    assert_eq!(game.state_hash(), replay.state_hash());
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Dwarf detection knowledge should restore");
+    for position in [trap, door, magma, quartz] {
+        assert!(restored.revealed_terrain.contains(&position));
+    }
+    assert!(
+        restored.explored[restored
+            .index(stairs_down)
+            .expect("restored stairs should exist")]
+    );
+    assert!(
+        restored.explored[restored
+            .index(stairs_up)
+            .expect("restored stairs should exist")]
+    );
+    assert!(!restored.gold_piles[0].discovered);
+}
+
+#[test]
+fn formal_dwarf_detection_failure_spills_mana_into_hp_without_revealing() {
+    let mut game = Game::new_with_build_race_and_name(
+        95,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.dwarf",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Dwarf High-Mage should create");
+    clear_monsters(&mut game);
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(10),
+        &mut Vec::new(),
+    );
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana")
+        .current = 3;
+    let blocker = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    let treasure = Position {
+        x: game.player.position.x + 2,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, blocker, "demo.terrain.wall");
+    replace_terrain(&mut game, treasure, "demo.terrain.quartz-hidden-treasure");
+    let treasure_index = game.index(treasure).expect("treasure should exist");
+    game.explored[treasure_index] = false;
+    game.revealed_terrain.remove(&treasure);
+    game.gold_piles = vec![GoldPile {
+        id: "generated.gold.1".to_owned(),
+        position: treasure,
+        amount: 25,
+        appearance: GoldAppearanceDto::Gold,
+        discovered: false,
+    }];
+    game.next_gold_pile_serial = 2;
+    let failure_percent = game
+        .snapshot()
+        .player
+        .abilities
+        .iter()
+        .find(|ability| ability.id == RACE_DETECT_TREASURE_ABILITY_ID)
+        .expect("Dwarf treasure detection should be projected")
+        .failure_percent;
+    let seed = (0..4_096)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(failure_percent)
+        })
+        .expect("Dwarf treasure detection should have a reachable failure roll");
+    game.rng = RfbRng::seeded(seed);
+    let hp_before = game.player.hp;
+    let tick_before = game.world_tick;
+
+    dispatch_next(
+        &mut game,
+        GameCommand::CastAbility {
+            ability_id: RACE_DETECT_TREASURE_ABILITY_ID.to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+
+    assert_eq!(game.world_tick, tick_before + 10);
+    assert_eq!(game.resources["demo.resource.mana"].current, 0);
+    assert_eq!(game.player.hp, hp_before - 2);
+    assert!(!game.explored[treasure_index]);
+    assert!(!game.revealed_terrain.contains(&treasure));
+    assert!(!game.gold_piles[0].discovered);
+}
+
+#[test]
+fn dwarf_intrinsics_follow_the_effective_race_without_replacing_birth_rewards() {
+    let mut game = Game::new_with_build_race_and_name(
+        96,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human Warrior should create");
+    game.progress.level = 20;
+    assert_eq!(game.player_infravision_range(), 0);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Blindness),
+        ResistanceLevel::Normal
+    );
+    let pending_before = game
+        .snapshot()
+        .player
+        .pending_race_mutation_choice
+        .expect("birth Human should retain its level twenty reward");
+    assert_eq!(pending_before.reward_id, "human-talent");
+
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.dwarf-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.dwarf".to_owned());
+    game.player.statuses.push(form);
+    assert_eq!(game.player_infravision_range(), 5);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Blindness),
+        ResistanceLevel::Resistant
+    );
+    let snapshot = game.snapshot();
+    for (ability_id, attribute) in [
+        (
+            RACE_DETECT_DOORS_ABILITY_ID,
+            rfb_protocol::AttributeKindDto::Wisdom,
+        ),
+        (
+            RACE_DETECT_TREASURE_ABILITY_ID,
+            rfb_protocol::AttributeKindDto::Charisma,
+        ),
+    ] {
+        let ability = snapshot
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == ability_id)
+            .expect("temporary Dwarf form should grant both detection powers");
+        assert_eq!(ability.source, AbilitySourceDto::Race);
+        assert_eq!(ability.governing_attribute, Some(attribute));
+    }
+    assert_eq!(
+        snapshot
+            .player
+            .pending_race_mutation_choice
+            .expect("effective race must not replace birth-race rewards")
+            .reward_id,
+        "human-talent"
+    );
+    assert!(game.progress.locked_mutation_ids.is_empty());
+
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(game.player_infravision_range(), 0);
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Blindness),
+        ResistanceLevel::Normal
+    );
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| !matches!(
+                ability.id.as_str(),
+                RACE_DETECT_DOORS_ABILITY_ID | RACE_DETECT_TREASURE_ABILITY_ID
+            ))
     );
 }
 

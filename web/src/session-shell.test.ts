@@ -2,6 +2,7 @@
 // @ts-nocheck -- Executed directly by Node's built-in TypeScript test runner.
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import {
@@ -41,7 +42,15 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.barbarian",
     "rfb-legacy.race.hobbit",
     "rfb-legacy.race.kobold",
+    "rfb-legacy.race.dwarf",
   ]);
+});
+
+test("the New Game form renders every formal race slice", () => {
+  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  for (const raceId of PLAYTEST_RACE_IDS) {
+    assert.ok(indexHtml.includes(`<option value="${raceId}"`), raceId);
+  }
 });
 
 test("new character requests preserve the selected formal race", () => {
@@ -103,6 +112,15 @@ test("new character requests preserve the selected formal race", () => {
       "Kob",
     ).raceId,
     "rfb-legacy.race.kobold",
+  );
+  assert.equal(
+    createNewSessionRequest(
+      "89",
+      "demo.build.warrior",
+      "rfb-legacy.race.dwarf",
+      "Gimli",
+    ).raceId,
+    "rfb-legacy.race.dwarf",
   );
 });
 
