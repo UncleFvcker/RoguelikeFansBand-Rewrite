@@ -3,7 +3,9 @@
 当前职业与种族导入流程、正式清单和验收规则统一见
 [`class-race-import-handoff.md`](class-race-import-handoff.md)。本文保留各批次的历史实现与版本记录。
 
-更新时间：2026-08-12
+更新时间：2026-08-14
+
+当前 main 实现基线：`25b2bc0b6`（魔像正式 New Game 开放）
 
 分支：`codex/class-next`
 
@@ -801,3 +803,33 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 阶段 3–5 的内容、喷吐、35 级力量、龙形身体、装备、AC、爪/咬、免疫、save/state-hash/replay
   聚焦证据保留在上方对应小节。依用户要求没有累计运行全量测试或刷新 fixture；该工作留给后续主合并
   里程碑验收。职业/种族导入的下一普通静态项为 `rfb-legacy.race.golem`（魔像）。
+
+## main 当前批次：魔像专项最终实现与交接
+
+- 权威来源为 RFB `master:src/races_a.c`、`master:src/spells_s.c`、`master:src/devices.c`、
+  `master:src/cmd6.c` 和 `master:src/dungeon.c`。种族方向继续拥有既有 `rfb-legacy.race.golem` 与
+  `rfb-legacy.skill-set.race-golem`，新增并拥有 `rfb.ability.race.golem-stone-skin`、
+  `demo.item.staff-of-nothing`、`demo.device-activation.nothing` 和 `demo.effect.staff-of-nothing`；石肤术
+  复用既有 `demo.ability-program.nature-stone-skin`，不建立第二个 Program。
+- 魔像按原版闭合六维 `+4/-5/-5/-2/+4/0`、生命 105%、基础 HP 23、经验 185%、4 格红外、商店
+  120%、毒抗、麻痹/震慑免疫、看破隐形、非生命、天然 AC `10 + floor(2L/5)`、速度
+  `-floor(L/16)` 和 35 级生命力保护。没有职业过滤；原版“不适合魔法职业”由属性和技能表达。
+  临时变形按当前有效种族获得并在解除时失去这些被动与种族能力。
+- 构装体代谢使用既有 nutrition 与装置充能状态：正常消化减半，过饱快速消化不变；普通食物只取
+  1/20 营养而保留治疗、解毒等效果。`AbsorbDevice` 从背包或脚下装置消耗
+  `min(单次消耗, 当前充能)` 并增加 5000 营养，不销毁物品；空装置仍消耗一回合。该命令与默认
+  `false` 的 `absorbable` 投影已将 Protocol 推进到 `1.213`，没有新增权威状态或 save 字段。
+- 20 级体质能力“石肤术”消耗 20、基础失败率 50%，持续 `20 + 1d30`，AC 增加
+  `10 + floor(40L/50)` 且不继承法术威力。出生不生成普通口粮，保留标准火把，并获得满充能
+  21/21、单次消耗 1 的“空手法杖”；内容模型新增最窄的 `StartingItemDefinition.fullyCharged`，且
+  校验只允许装置使用。初始美德为“正义”。
+- `rfb-compatibility`、`PLAYTEST_RACE_IDS` 和 Web option 已加入，正式种族数从 28 增至 29；请求继续
+  使用既有 `{ buildId, raceId, playerName, seed }`，不增加玩家 Actor、tileset 或重复 Build。
+- 四阶段提交为 `2e1c74061`、`7e3114a7b`、`5e8fbee5c` 和最终实现点 `25b2bc0b6`
+  （`Expose Golem in New Game`）。最终协调点为 pack `1.361.0` / content hash
+  `48db8bec826fc84f1b4b262ca621721b1ef729d4e78a79c4344914822d01d095`、Protocol `1.213`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。
+- 新增/直接相关的 3 项内容、8 项核心魔像、空装置、中文名、2 项 importer 和 2 项 Web 聚焦测试
+  通过；吸收装置覆盖 save/state-hash/replay。`verify-source`、schema、Rust format、相关 crate
+  `cargo check`、Web typecheck 与协议 binding 检查通过。按用户要求未运行或刷新全量测试与 fixture。
+  下一普通静态种族为 `rfb-legacy.race.skeleton`（骷髅）。

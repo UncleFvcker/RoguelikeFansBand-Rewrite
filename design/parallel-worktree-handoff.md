@@ -1,7 +1,7 @@
 # 并行 worktree 通用交接说明
 
-更新时间：2026-08-12  
-当前工作批次起点：`main@bf7d28958`
+更新时间：2026-08-14
+当前工作批次起点：`main@25b2bc0b6`
 
 本说明供新的 Codex 对话接手独立方向时使用。每个写入方向必须使用自己的
 worktree 和分支；`main` 只负责集成、版本与发布收口。
@@ -1353,3 +1353,26 @@ git diff --stat
   测试记录在 `class-next-handoff.md`，按用户要求没有累计运行全量测试或刷新 fixture。
 - 龙人专项至此封板。普通临时 polymorph 仍不得自动加入九个龙人亚种；职业/种族方向的下一项为
   `rfb-legacy.race.golem`（魔像）。
+
+## 74. main 当前交接（魔像专项最终实现与正式开放）
+
+- 种族方向继续拥有 `rfb-legacy.race.golem`、`rfb-legacy.skill-set.race-golem`，并新增、拥有
+  `rfb.ability.race.golem-stone-skin`、`demo.item.staff-of-nothing`、
+  `demo.device-activation.nothing` 和 `demo.effect.staff-of-nothing`。石肤术复用
+  `demo.ability-program.nature-stone-skin`；其他方向不得复制或改名这些身份。
+- 通用内容/核心边界新增等级种族 AC/速度、`holdLifeMinimumLevel`、食物营养除数、`slow-digestion`、
+  `device-eater` 和出生物品 `fullyCharged`。`AbsorbDevice` 命令及物品 `absorbable` 投影已占用
+  Protocol `1.213`；没有新增权威状态、save 字段或 State Hash 输入。其他方向应复用这些现有路径，
+  不另建构装体进食或装置吸收事务。
+- 魔像完整行为包括天然 AC `10 + floor(2L/5)`、速度 `-floor(L/16)`、35 级生命力保护、构装体被动、
+  1/20 食物营养、背包/脚下/空装置吸收、20 级“石肤术”、出生无口粮及 21/21“空手法杖”、初始
+  “正义”。没有职业过滤；临时变形按当前有效种族获得并失去相关被动和能力。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 29；请求仍
+  使用现有 `raceId`，玩家 Actor/tileset 继续由职业 Build 决定。最终实现提交为 `25b2bc0b6`
+  （`Expose Golem in New Game`），此前三个阶段为 `2e1c74061`、`7e3114a7b`、`5e8fbee5c`。
+- 最终协调点为 pack `1.361.0` / content hash
+  `48db8bec826fc84f1b4b262ca621721b1ef729d4e78a79c4344914822d01d095`、Protocol `1.213`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。魔像内容、
+  核心、中文名、importer、Web 及吸收后的 save/state-hash/replay 聚焦测试通过；source/schema、相关
+  编译、Web typecheck 和协议 binding 检查通过。按用户要求未运行或刷新全量测试与 fixture。
+- 下一普通静态种族为 `rfb-legacy.race.skeleton`（骷髅）。
