@@ -974,7 +974,7 @@ fn p88c_icky_cave_small_floor_uses_the_existing_grass_swamp_water_mix() {
     let shallow_water = terrain_count("demo.terrain.surface-water-shallow");
 
     assert_eq!((generated.width, generated.height), (66, 22));
-    assert_eq!(swamp + shallow_water, 320);
+    assert_eq!(swamp + shallow_water, 186);
     assert!(swamp > 0);
     assert!(shallow_water > 0);
     assert!(terrain_count("demo.terrain.surface-grass") > 0);
@@ -985,6 +985,130 @@ fn p88c_icky_cave_small_floor_uses_the_existing_grass_swamp_water_mix() {
             .iter()
             .any(|actor| actor.kind_id == "demo.actor.the-icky-queen")
     );
+}
+
+#[test]
+fn p88e_icky_cave_all_depths_keep_the_terrain_mix_and_stairs_reachable() {
+    let mut game =
+        Game::new_with_build(880, "demo.build.warrior").expect("Middle-earth should create");
+    let mut definitions = game
+        .content
+        .world(&game.world_id)
+        .expect("Middle-earth should remain available")
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.icky-cave"))
+        .cloned()
+        .collect::<Vec<_>>();
+    definitions.sort_by_key(|floor| floor.depth);
+    assert_eq!(definitions.len(), 11);
+
+    for definition in definitions {
+        let generated = game
+            .generate_procedural_floor(&definition, None)
+            .expect("Icky Cave floor should generate");
+        let route_terrain = generated
+            .terrain
+            .iter()
+            .map(|terrain_id| match terrain_id.as_str() {
+                "demo.terrain.magma-vein" | "demo.terrain.quartz-vein" => {
+                    "demo.terrain.wall".to_owned()
+                }
+                _ => terrain_id.clone(),
+            })
+            .collect::<Vec<_>>();
+        assert!(
+            generated_terrain_is_connected(
+                &route_terrain,
+                generated.width,
+                generated.height,
+                &game.content,
+            ),
+            "depth {} travel network",
+            definition.depth
+        );
+
+        let terrain_count = |terrain_id: &str| {
+            generated
+                .terrain
+                .iter()
+                .filter(|generated_id| generated_id.as_str() == terrain_id)
+                .count()
+        };
+        let swamp = terrain_count("demo.terrain.surface-swamp");
+        let shallow_water = terrain_count("demo.terrain.surface-water-shallow");
+        let expected_features = if definition.depth == 10 { 186 } else { 320 };
+        let minimum_feature = expected_features * 3 / 8;
+        let maximum_feature = expected_features * 5 / 8;
+        assert_eq!(
+            swamp + shallow_water,
+            expected_features,
+            "depth {}",
+            definition.depth
+        );
+        assert!(
+            (minimum_feature..=maximum_feature).contains(&swamp),
+            "depth {}",
+            definition.depth
+        );
+        assert!(
+            (minimum_feature..=maximum_feature).contains(&shallow_water),
+            "depth {}",
+            definition.depth
+        );
+        let grass = terrain_count("demo.terrain.surface-grass");
+        assert!(
+            grass > swamp,
+            "depth {} grass={grass} swamp={swamp} shallow={shallow_water}",
+            definition.depth
+        );
+        assert!(
+            grass > shallow_water,
+            "depth {} grass={grass} swamp={swamp} shallow={shallow_water}",
+            definition.depth
+        );
+        assert_eq!(
+            (generated.width, generated.height),
+            if definition.depth == 10 {
+                (66, 22)
+            } else {
+                (96, 33)
+            }
+        );
+        assert!(
+            (1..=2).contains(
+                &generated
+                    .terrain
+                    .iter()
+                    .filter(|terrain| terrain.as_str() == "demo.terrain.stairs-up")
+                    .count()
+            )
+        );
+        let down_stairs = generated
+            .terrain
+            .iter()
+            .filter(|terrain| terrain.as_str() == "demo.terrain.stairs-down")
+            .count();
+        if definition.depth < 20 {
+            assert!((4..=5).contains(&down_stairs), "depth {}", definition.depth);
+            assert!(
+                generated
+                    .entities
+                    .iter()
+                    .all(|entity| entity.kind_id != "demo.actor.the-icky-queen")
+            );
+        } else {
+            assert_eq!(down_stairs, 0);
+            assert_eq!(
+                generated
+                    .entities
+                    .iter()
+                    .filter(|entity| entity.kind_id == "demo.actor.the-icky-queen")
+                    .count(),
+                1
+            );
+        }
+    }
 }
 
 #[test]

@@ -3795,20 +3795,6 @@ fn p88c_icky_cave_binds_ecology_terrain_mix_depths_and_guardian() {
     assert_eq!(dungeon.legacy_index, Some(21));
     assert_eq!(dungeon.root_floor_id, "demo.floor.icky-cave-depth-10");
     assert_eq!(dungeon.guardian_actor_kind_id, "demo.actor.the-icky-queen");
-    assert!(
-        !world
-            .wilderness
-            .as_ref()
-            .expect("Middle-earth should retain wilderness")
-            .locations
-            .iter()
-            .any(|location| matches!(
-                location,
-                WildernessLocationDefinition::Dungeon { dungeon_id, .. }
-                    if dungeon_id == "demo.dungeon.icky-cave"
-            ))
-    );
-
     let mut floors = world
         .procedural_floors
         .iter()
@@ -3846,7 +3832,10 @@ fn p88c_icky_cave_binds_ecology_terrain_mix_depths_and_guardian() {
         );
         let budget = floor.generation_budget.as_ref().expect("generation budget");
         assert_eq!(budget.room_area_tiles, Some(800));
-        assert_eq!(budget.feature_placements, Some(320));
+        assert_eq!(
+            budget.feature_placements,
+            Some(if floor.depth == 10 { 186 } else { 320 })
+        );
         let layout = floor.layout.as_ref().expect("Icky Cave layout");
         assert_eq!(
             layout
@@ -3882,7 +3871,6 @@ fn p88c_icky_cave_binds_ecology_terrain_mix_depths_and_guardian() {
         .as_ref()
         .expect("The Icky Queen guardian");
     assert_eq!(guardian.actor_kind_id, "demo.actor.the-icky-queen");
-    assert!(guardian.reward_loot_table_id.is_none());
 
     let feature_table = content
         .terrain_feature_tables
@@ -3908,6 +3896,66 @@ fn p88c_icky_cave_binds_ecology_terrain_mix_depths_and_guardian() {
                 TerrainFeaturePlacement::Room,
             ),
         ])
+    );
+}
+
+#[test]
+fn p88d_icky_cave_binds_wilderness_entrance_and_protection_quiver_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+
+    assert!(
+        world
+            .wilderness
+            .as_ref()
+            .expect("Middle-earth should retain wilderness")
+            .locations
+            .iter()
+            .any(|location| matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 17, y: 29 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.icky-cave"
+            ))
+    );
+
+    let final_floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.icky-cave-depth-20")
+        .expect("Icky Cave depth 20 should exist");
+    let guardian = final_floor
+        .guardian
+        .as_ref()
+        .expect("Icky Cave depth 20 should contain The Icky Queen");
+    assert_eq!(guardian.instance_id, "demo.guardian.icky-cave.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.the-icky-queen");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.icky-cave-final-reward")
+    );
+
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.icky-cave-final-reward")
+        .expect("The Icky Queen should have a fixed reward table");
+    assert_eq!(reward.rolls, 1);
+    assert_eq!(reward.entries.len(), 1);
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.quiver");
+    assert_eq!(reward.entries[0].quantity, 1);
+    assert_eq!(reward.quality_weights.len(), 1);
+    assert_eq!(reward.quality_weights[0].quality, ItemQuality::Ordinary);
+    assert_eq!(reward.affix_weights.len(), 1);
+    assert_eq!(
+        reward.affix_weights[0].affix_id.as_deref(),
+        Some("rfb-legacy.affix.quiver-protection")
     );
 }
 

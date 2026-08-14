@@ -245,6 +245,14 @@
           "x": 47,
           "y": 53
         }
+      },
+      {
+        "dungeonId": "demo.dungeon.icky-cave",
+        "kind": "dungeon",
+        "position": {
+          "x": 17,
+          "y": 29
+        }
       }
     ],
     "rows": [
@@ -3505,7 +3513,7 @@
         "actorSlots": 7, "lootPlacements": 8,
         "roomPlacements": 6, "roomAreaTiles": 800,
         "streamerPlacements": 2, "streamerAreaTiles": 32,
-        "featurePlacements": 320
+        "featurePlacements": 186
       },
       "layout": {
         "rooms": {
@@ -3960,7 +3968,7 @@
         "stairs": { "up": { "minimum": 1, "maximum": 2 } }
       },
       "finalFloor": true,
-      "guardian": { "instanceId": "demo.guardian.icky-cave.1", "actorKindId": "demo.actor.the-icky-queen" },
+      "guardian": { "instanceId": "demo.guardian.icky-cave.1", "actorKindId": "demo.actor.the-icky-queen", "rewardLootTableId": "demo.loot-table.icky-cave-final-reward" },
       "depth": 20,
       "width": 96,
       "height": 33,

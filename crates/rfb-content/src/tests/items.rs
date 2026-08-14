@@ -59,6 +59,7 @@ fn p88b_quiver_protection_is_a_distinct_quiver_only_affix() {
         .expect("ordinary shield should exist");
 
     assert!(affix.protects_quiver_ammunition);
+    assert!(affix.preserves_ordinary_quality);
     assert!(affix_is_compatible_with_item(affix, quiver, 20));
     assert!(!affix_is_compatible_with_item(affix, shield, 20));
 }

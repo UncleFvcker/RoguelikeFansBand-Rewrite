@@ -14712,13 +14712,6 @@ mod tests {
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert!(
-            selection
-                .dungeons
-                .iter()
-                .all(|dungeon| dungeon.source_index != 21),
-            "Icky cave should remain planned but inactive"
-        );
         let plan = selection
             .dungeon_plans
             .iter()
@@ -14783,6 +14776,9 @@ mod tests {
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
+        assert!(selection.dungeons.iter().any(|dungeon| {
+            dungeon.source_index == 21 && dungeon.id == "demo.dungeon.icky-cave"
+        }));
         let plan = selection
             .dungeon_plans
             .iter()

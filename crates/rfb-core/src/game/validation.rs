@@ -798,6 +798,12 @@ impl Game {
                 && definition.equipment_slot.is_some()
                 && item.quantity == 1)
                 || definition.tags.iter().any(|tag| tag == "ammunition");
+            let affixes_preserve_ordinary_quality = !item.affix_ids.is_empty()
+                && item.affix_ids.iter().all(|affix_id| {
+                    self.content
+                        .affix(affix_id)
+                        .is_some_and(|affix| affix.preserves_ordinary_quality)
+                });
             let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
                 && item
                     .affix_ids
@@ -805,7 +811,9 @@ impl Game {
                     .all(|affix_id| self.content.affix(affix_id).is_some())
                 && rolled_affixes_are_valid(item)
                 && (item.affix_ids.is_empty()
-                    || (supports_quality && item.quality != ItemQualityDto::Ordinary))
+                    || (supports_quality
+                        && (item.quality != ItemQualityDto::Ordinary
+                            || affixes_preserve_ordinary_quality)))
                 && (item.quality == ItemQualityDto::Ordinary || supports_quality)
                 && item_creation_state_is_valid(item, definition);
             let common_valid = instance_ids.insert(item.id.clone()) && item.quantity != 0;
@@ -1030,6 +1038,12 @@ impl Game {
                     && definition.equipment_slot.is_some()
                     && item.quantity == 1)
                     || definition.tags.iter().any(|tag| tag == "ammunition");
+                let affixes_preserve_ordinary_quality = !item.affix_ids.is_empty()
+                    && item.affix_ids.iter().all(|affix_id| {
+                        self.content
+                            .affix(affix_id)
+                            .is_some_and(|affix| affix.preserves_ordinary_quality)
+                    });
                 let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
                     && item
                         .affix_ids
@@ -1037,7 +1051,9 @@ impl Game {
                         .all(|affix_id| self.content.affix(affix_id).is_some())
                     && rolled_affixes_are_valid(item)
                     && (item.affix_ids.is_empty()
-                        || (supports_quality && item.quality != ItemQualityDto::Ordinary))
+                        || (supports_quality
+                            && (item.quality != ItemQualityDto::Ordinary
+                                || affixes_preserve_ordinary_quality)))
                     && (item.quality == ItemQualityDto::Ordinary || supports_quality)
                     && item_creation_state_is_valid(item, definition);
                 let location_is_valid = match &item.location {

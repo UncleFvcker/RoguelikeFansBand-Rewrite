@@ -596,6 +596,52 @@ fn p88c_icky_cave_glyphs_are_or_preferences_and_queen_is_a_guardian() {
 }
 
 #[test]
+fn p88e_icky_cave_allocation_keeps_location_locks_and_queen_out() {
+    let mut game =
+        Game::new_with_build(888, "demo.build.warrior").expect("Middle-earth should create");
+    game.current_floor_id = "demo.floor.icky-cave-depth-20".to_owned();
+    let policy = game
+        .content
+        .encounter_table("demo.encounter-table.icky-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Icky Cave global allocation policy")
+        .clone();
+
+    let mut restricted_elsewhere = 0;
+    for actor in game.content.actor_definitions() {
+        let Some(allocation) = actor.allocation.as_ref() else {
+            continue;
+        };
+        if !allocation.legacy_dungeon_indices.is_empty()
+            && !allocation.legacy_dungeon_indices.contains(&21)
+        {
+            restricted_elsewhere += 1;
+            assert!(!actor_allocation_matches_legacy_dungeon(
+                allocation,
+                Some(21)
+            ));
+        }
+    }
+    assert!(restricted_elsewhere > 0);
+    assert!(game.actor_kind_is_dungeon_guardian("demo.actor.the-icky-queen"));
+
+    for _ in 0..256 {
+        let selected = game
+            .select_original_allocated_monster(&policy, 20, 20, None, &[], None, None)
+            .expect("Icky Cave should retain ordinary dungeon candidates");
+        let actor = game.content.actor(&selected).expect("selected actor");
+        let allocation = actor.allocation.as_ref().expect("selected allocation");
+        assert!(!allocation.wild_only, "{selected}");
+        assert!(
+            allocation.legacy_dungeon_indices.is_empty()
+                || allocation.legacy_dungeon_indices.contains(&21),
+            "{selected}"
+        );
+        assert_ne!(selected, "demo.actor.the-icky-queen");
+    }
+}
+
+#[test]
 fn p87e_tidal_cave_allocation_keeps_location_locks_and_grendel_out() {
     let mut game =
         Game::new_with_build(87, "demo.build.warrior").expect("Middle-earth should create");

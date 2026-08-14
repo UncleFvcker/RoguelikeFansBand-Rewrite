@@ -6,5 +6,6 @@
   "descriptionKey": "affix-legacy-quiver-protection-description",
   "generationLevel": 1,
   "protectsQuiverAmmunition": true,
+  "preservesOrdinaryQuality": true,
   "tags": ["legacy-import", "quiver"]
 }

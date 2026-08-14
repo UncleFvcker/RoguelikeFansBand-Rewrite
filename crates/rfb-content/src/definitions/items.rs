@@ -179,6 +179,9 @@ pub struct AffixDefinition {
     /// Protects ammunition assigned to this equipped quiver from inventory damage.
     #[serde(default)]
     pub protects_quiver_ammunition: bool,
+    /// Keeps a fixed reward affix without promoting the item above ordinary quality.
+    #[serde(default)]
+    pub preserves_ordinary_quality: bool,
     /// Generation-time weighted rolls. Results are materialized into the
     /// item instance and never recomputed while loading a save.
     #[serde(default)]

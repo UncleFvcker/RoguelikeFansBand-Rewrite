@@ -33,6 +33,11 @@
       "sourceIndex": 33,
       "sourceName": "Tidal cave",
       "id": "demo.dungeon.tidal-cave"
+    },
+    {
+      "sourceIndex": 21,
+      "sourceName": "Icky cave",
+      "id": "demo.dungeon.icky-cave"
     }
   ],
   "townPlans": [

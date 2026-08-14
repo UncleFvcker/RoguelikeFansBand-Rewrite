@@ -5240,7 +5240,13 @@ impl Game {
             } else {
                 ItemQualityDto::Ordinary
             };
-            let affix_ids = if quality_allows_natural_affix(table.quality_policy, quality) {
+            let affix_is_required = table
+                .affix_weights
+                .iter()
+                .all(|entry| entry.affix_id.is_some());
+            let affix_ids = if affix_is_required
+                || quality_allows_natural_affix(table.quality_policy, quality)
+            {
                 rolled_affix_id.flatten().iter().cloned().collect()
             } else {
                 Vec::new()

@@ -1654,7 +1654,12 @@ impl Game {
         if maze_only {
             occupied.insert(fixed_trap_position);
         }
-        occupied.extend(terrain_features.iter().map(|feature| feature.position));
+        occupied.extend(terrain_features.iter().filter_map(|feature| {
+            self.content
+                .terrain(&feature.terrain_id)
+                .is_some_and(|terrain| !terrain.walkable)
+                .then_some(feature.position)
+        }));
         if let Some(pit) = &pit_placement {
             let total_width = pit.definition.inner_width + 6;
             let total_height = pit.definition.inner_height + 6;

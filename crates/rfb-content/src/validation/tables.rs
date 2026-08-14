@@ -190,6 +190,15 @@ pub(super) fn validate_tables(
                     .expect("validated affix reference must remain available")
             })
             .collect::<Vec<_>>();
+        let forces_affix = table
+            .affix_weights
+            .iter()
+            .all(|entry| entry.affix_id.is_some());
+        let can_generate_ordinary = table.quality_policy.is_some()
+            || table
+                .quality_weights
+                .iter()
+                .any(|entry| entry.quality == crate::ItemQuality::Ordinary);
         let entry_accepts_affix = |entry: &crate::LootEntryDefinition, affix: &AffixDefinition| {
             let Some(item) = items.iter().find(|item| item.id == entry.item_kind_id) else {
                 return false;
@@ -198,20 +207,23 @@ pub(super) fn validate_tables(
             generation_depth <= entry.max_depth.min(affix.generation_max_level)
                 && affix_is_compatible_with_item(affix, item, generation_depth)
         };
-        if named_affixes.iter().any(|affix| {
-            !table
-                .entries
+        if (forces_affix
+            && can_generate_ordinary
+            && named_affixes
                 .iter()
-                .any(|entry| entry_accepts_affix(entry, affix))
-        }) || (table
-            .affix_weights
-            .iter()
-            .all(|entry| entry.affix_id.is_some())
-            && table.entries.iter().any(|entry| {
-                !named_affixes
+                .any(|affix| !affix.preserves_ordinary_quality))
+            || named_affixes.iter().any(|affix| {
+                !table
+                    .entries
                     .iter()
-                    .any(|affix| entry_accepts_affix(entry, affix))
-            }))
+                    .any(|entry| entry_accepts_affix(entry, affix))
+            })
+            || (forces_affix
+                && table.entries.iter().any(|entry| {
+                    !named_affixes
+                        .iter()
+                        .any(|affix| entry_accepts_affix(entry, affix))
+                }))
         {
             return Err(ContentError::InvalidLootTable(table.id.clone()));
         }

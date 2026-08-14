@@ -613,6 +613,11 @@
       "type": "array",
       "uniqueItems": true
     },
+    "preservesOrdinaryQuality": {
+      "default": false,
+      "description": "Keeps a fixed reward affix without promoting the item above ordinary quality.",
+      "type": "boolean"
+    },
     "protectsQuiverAmmunition": {
       "default": false,
       "description": "Protects ammunition assigned to this equipped quiver from inventory damage.",

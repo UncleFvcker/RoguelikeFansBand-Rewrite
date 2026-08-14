@@ -635,3 +635,131 @@ fn p88b_protection_boundaries_preserve_other_destruction_rules() {
         1
     );
 }
+
+#[test]
+fn p88e_protection_quiver_does_not_cover_unequipped_fired_or_ground_ammunition() {
+    let mut unequipped = Game::new(0);
+    unequipped.items.clear();
+    p88b_add_item(
+        &mut unequipped,
+        "p88e.unequipped-quiver",
+        "demo.item.quiver",
+        1,
+        ItemLocation::Inventory,
+        &["rfb-legacy.affix.quiver-protection"],
+    );
+    p88b_add_item(
+        &mut unequipped,
+        "p88e.unequipped-arrows",
+        "demo.item.arrow",
+        60,
+        ItemLocation::Inventory,
+        &[],
+    );
+    let draws = unequipped.rng_draw_counter();
+    unequipped.damage_player_inventory("test.acid", DamageType::Acid, false, 1, &mut Vec::new());
+    assert!(unequipped.rng_draw_counter() > draws);
+    assert!(
+        unequipped
+            .items
+            .iter()
+            .find(|item| item.id == "p88e.unequipped-arrows")
+            .is_none_or(|item| item.quantity < 60)
+    );
+
+    let mut fired = Game::new(0);
+    fired.items.clear();
+    p88b_add_item(
+        &mut fired,
+        "p88e.fired-quiver",
+        "demo.item.quiver",
+        1,
+        ItemLocation::Equipped {
+            slot_id: "quiver".to_owned(),
+        },
+        &["rfb-legacy.affix.quiver-protection"],
+    );
+    p88b_add_item(
+        &mut fired,
+        "p88e.fired-arrows",
+        "demo.item.arrow",
+        10,
+        ItemLocation::Inventory,
+        &[],
+    );
+    let ammunition = fired
+        .take_inventory_item("p88e.fired-arrows")
+        .expect("taking ammunition should succeed")
+        .expect("ammunition should exist");
+    let landing = fired.player.position;
+    let mut fired_events = Vec::new();
+    fired.settle_projectile_ammunition(
+        ammunition,
+        landing,
+        true,
+        100,
+        &mut fired_events,
+        &mut BTreeSet::new(),
+    );
+    assert_eq!(
+        fired
+            .items
+            .iter()
+            .find(|item| item.id == "p88e.fired-arrows")
+            .expect("the remaining stack should exist")
+            .quantity,
+        9
+    );
+    assert!(fired_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::ProjectileAmmoBroken { ammo_kind_id }
+            if ammo_kind_id == "demo.item.arrow"
+    )));
+
+    let mut ground = Game::new(0);
+    ground.items.clear();
+    p88b_add_item(
+        &mut ground,
+        "p88e.ground-quiver",
+        "demo.item.quiver",
+        1,
+        ItemLocation::Equipped {
+            slot_id: "quiver".to_owned(),
+        },
+        &["rfb-legacy.affix.quiver-protection"],
+    );
+    let ground_position = ground.player.position;
+    p88b_add_item(
+        &mut ground,
+        "p88e.ground-arrows",
+        "demo.item.arrow",
+        10,
+        ItemLocation::Ground(ground_position),
+        &[],
+    );
+    let mut ground_events = Vec::new();
+    ground.resolve_ground_item_projectile_effects(
+        "test.fire",
+        &[ground_position],
+        DamageType::Fire,
+        true,
+        &mut ground_events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    assert!(
+        ground
+            .items
+            .iter()
+            .all(|item| item.id != "p88e.ground-arrows")
+    );
+    assert!(ground_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::GroundItemDestroyedByAbility {
+            item_id,
+            target_kind_id,
+            quantity: 10,
+            ..
+        } if item_id == "p88e.ground-arrows" && target_kind_id == "demo.item.arrow"
+    )));
+}
