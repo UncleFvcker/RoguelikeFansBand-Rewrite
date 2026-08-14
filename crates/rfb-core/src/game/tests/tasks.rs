@@ -1373,7 +1373,8 @@ fn final_pest_control_kill_reveals_a_magic_stair_without_rng() {
                 && !game.entities.iter().any(|actor| actor.position == position)
                 && !game.items.iter().any(
                     |item| matches!(item.location, ItemLocation::Ground(ground) if ground == position),
-                ))
+                )
+                && !game.gold_piles.iter().any(|pile| pile.position == position))
             .then_some(position)
         })
         .max_by_key(|position| chebyshev_distance(game.player.position, *position))
@@ -1653,11 +1654,26 @@ fn warrens_dungeon_conquest_returns_retires_and_round_trips() {
             .count(),
         1
     );
-    let fine_equipment = guardian_drops
+    let high_quality_equipment = guardian_drops
         .iter()
-        .filter(|item| item.quality == ItemQualityDto::Fine)
+        .filter(|item| {
+            matches!(
+                item.quality,
+                ItemQualityDto::Fine | ItemQualityDto::Exceptional
+            ) || game
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.artifact_generation.is_some())
+        })
         .collect::<Vec<_>>();
-    assert!((1..=2).contains(&fine_equipment.len()));
+    assert!(
+        (1..=2).contains(&high_quality_equipment.len()),
+        "unexpected guardian drops: {:?}",
+        guardian_drops
+            .iter()
+            .map(|item| (&item.kind_id, &item.quality, &item.affix_ids))
+            .collect::<Vec<_>>()
+    );
     let allowed_guardian_drop_kinds = ["demo.loot-table.base-items", "demo.loot-table.warrior"]
         .into_iter()
         .flat_map(|table_id| {
@@ -1669,11 +1685,13 @@ fn warrens_dungeon_conquest_returns_retires_and_round_trips() {
                 .map(|entry| entry.item_kind_id.clone())
         })
         .collect::<BTreeSet<_>>();
-    assert!(
-        fine_equipment
-            .iter()
-            .all(|item| allowed_guardian_drop_kinds.contains(&item.kind_id))
-    );
+    assert!(high_quality_equipment.iter().all(|item| {
+        allowed_guardian_drop_kinds.contains(&item.kind_id)
+            || game
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.artifact_generation.is_some())
+    }));
 
     let victorious_hash = game.state_hash();
     let mut restored = Game::from_save(game.to_save()).expect("victory should round-trip");
@@ -2382,7 +2400,7 @@ fn p88d_icky_cave_entrance_recall_conquest_and_reward_round_trip() {
         reward_count_before + 1
     );
 
-    game.entities.clear();
+    clear_monsters(&mut game);
     let after_conquest = dispatch_next(&mut game, GameCommand::Wait);
     assert!(
         after_conquest

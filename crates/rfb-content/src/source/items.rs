@@ -117,6 +117,8 @@ pub(crate) struct SourceItemDefinition {
     resists_projection_destruction: bool,
     #[serde(default)]
     resists_monster_destruction: bool,
+    #[serde(default)]
+    resists_enchantment: bool,
     tags: Vec<String>,
 }
 
@@ -293,6 +295,7 @@ impl SourceItemDefinition {
             elemental_destruction_immunities: self.elemental_destruction_immunities,
             resists_projection_destruction: self.resists_projection_destruction,
             resists_monster_destruction: self.resists_monster_destruction,
+            resists_enchantment: self.resists_enchantment,
             tags: self.tags,
         })
     }

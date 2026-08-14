@@ -27,7 +27,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 185,
+      "rngDrawCounter": 194,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -923,6 +923,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.rune-sword",
+            "nameKey": "item-demo-rune-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.sabre",
             "nameKey": "item-demo-sabre-name",
             "category": "melee",
@@ -1024,6 +1033,15 @@
           {
             "itemKindId": "demo.item.trident",
             "nameKey": "item-demo-trident-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.trifurcate-spear",
+            "nameKey": "item-demo-trifurcate-spear-name",
             "category": "melee",
             "rank": "beginner",
             "current": 4000,
@@ -1614,7 +1632,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 197,
+      "nextItemInstanceSerial": 203,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1622,7 +1640,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c631318470f9a9e981bfb7a5b0689f21c524e19775bd85d2dfdfc6fc6831a244"
+      "stateHash": "9dbd6c7f687979db580460bd989a1472af188c74063bdd61a7f31024ef114e51"
     },
     "events": [
       {
@@ -1635,7 +1653,7 @@
       {
         "step": 2,
         "kind": "command-sequence",
-        "stateHash": "c631318470f9a9e981bfb7a5b0689f21c524e19775bd85d2dfdfc6fc6831a244"
+        "stateHash": "9dbd6c7f687979db580460bd989a1472af188c74063bdd61a7f31024ef114e51"
       }
     ]
   }

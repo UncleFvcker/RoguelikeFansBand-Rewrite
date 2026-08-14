@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain-feature-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain-feature-table.witch-wood",
+  "rolls": 90,
+  "entries": [
+    { "terrainId": "demo.terrain.surface-flower", "placement": "room", "weight": 1, "minDepth": 25, "maxDepth": 40 },
+    { "terrainId": "demo.terrain.surface-swamp", "placement": "room", "weight": 2, "minDepth": 25, "maxDepth": 40 }
+  ]
+}

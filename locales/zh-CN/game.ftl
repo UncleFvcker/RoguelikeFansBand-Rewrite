@@ -499,6 +499,7 @@ message-skill-check-saving-throw-failure = 你未能抵御来自{ $source }的�
 message-skill-check-stealth-success = 你没有被{ $source }察觉。
 message-skill-check-stealth-failure = { $source }察觉了你。
 message-skill-check-perception-success = 你注意到了附近的一处异常细节。
+message-item-warning-trap = 你的装备开始脉动，警告你前方有陷阱。
 message-skill-check-perception-failure = 你没有察觉到任何异样。
 message-item-use-food = 你吃下了{ $target }，恢复 { $amount } 点饱食度（{ $nutrition } / 15000）。
 message-hunger-state-changed = 你现在处于{ $state }状态。

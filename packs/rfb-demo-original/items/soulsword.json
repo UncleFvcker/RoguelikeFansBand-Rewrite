@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.soulsword",
+  "nameKey": "item-demo-soulsword-name",
+  "descriptionKey": "item-demo-soulsword-description",
+  "elementalDestructionVulnerabilities": ["acid", "fire"],
+  "glyph": "|",
+  "generationLevel": 40,
+  "weightTenthsPound": 130,
+  "maxStack": 1,
+  "baseValue": 111111,
+  "equipmentSlot": "weapon",
+  "weaponProficiencyBaseItemId": "demo.item.scimitar",
+  "artifactGeneration": {
+    "sourceIndex": 89,
+    "baseItemKindId": "demo.item.scimitar",
+    "rarityOneIn": 20,
+    "instant": false,
+    "affixIds": ["rfb-legacy.affix.artifact-extra-res-or-power"]
+  },
+  "modifiers": { "intelligence": 3, "wisdom": 3 },
+  "equipmentBonuses": { "lifePercent": 9 },
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 9,
+    "toDamage": 11,
+    "damageDice": 3,
+    "damageSides": 6
+  },
+  "slays": {
+    "animal": "slay",
+    "evil": "slay",
+    "undead": "slay",
+    "dragon": "slay",
+    "demon": "slay"
+  },
+  "resistances": {
+    "chaos": "resistant",
+    "disenchant": "resistant",
+    "nexus": "resistant",
+    "nether": "resistant"
+  },
+  "passives": ["see-invisible", "hold-life"],
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "tags": ["artifact", "blessed-weapon", "equipment", "weapon"]
+}

@@ -22,7 +22,7 @@
       "revision": 0,
       "turn": 0,
       "lastCommandSeq": 0,
-      "rngDrawCounter": 186,
+      "rngDrawCounter": 195,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -918,6 +918,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.rune-sword",
+            "nameKey": "item-demo-rune-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.sabre",
             "nameKey": "item-demo-sabre-name",
             "category": "melee",
@@ -1019,6 +1028,15 @@
           {
             "itemKindId": "demo.item.trident",
             "nameKey": "item-demo-trident-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.trifurcate-spear",
+            "nameKey": "item-demo-trifurcate-spear-name",
             "category": "melee",
             "rank": "beginner",
             "current": 4000,
@@ -1649,7 +1667,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 200,
+      "nextItemInstanceSerial": 204,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1657,8 +1675,8 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "276458eeecfb01dd32386280e6b3fdabbc5d7cf5289a939d8387dc06fa3c6eb2"
+      "stateHash": "e3c48ed5c2a3b90f3d95aec349598c315cd9bd0b21cdf698f3ca693731916100"
     },
-    "saveRoundTripStateHash": "276458eeecfb01dd32386280e6b3fdabbc5d7cf5289a939d8387dc06fa3c6eb2"
+    "saveRoundTripStateHash": "e3c48ed5c2a3b90f3d95aec349598c315cd9bd0b21cdf698f3ca693731916100"
   }
 }

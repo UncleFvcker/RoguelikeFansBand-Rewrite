@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/encounter-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.encounter-table.witch-wood",
+  "rolls": 4,
+  "globalAllocation": {
+    "preferredGlyphs": ["B", "C"],
+    "preferredTags": ["animal"],
+    "preferredHabitats": ["wood"],
+    "specialDiv": 8,
+    "ambientChanceOneIn": 160
+  },
+  "entries": []
+}

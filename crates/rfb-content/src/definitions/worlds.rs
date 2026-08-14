@@ -360,6 +360,8 @@ pub struct ProceduralFloorDefinition {
     #[serde(default)]
     pub final_floor: bool,
     #[serde(default)]
+    pub forget_after_move: bool,
+    #[serde(default)]
     pub guardian: Option<DungeonGuardianDefinition>,
     #[serde(default)]
     pub theme_id: Option<String>,
@@ -539,6 +541,9 @@ pub struct DungeonGuardianDefinition {
     pub reward_loot_table_id: Option<String>,
     #[serde(default)]
     pub reward_artifact_item_kind_id: Option<String>,
+    #[serde(default)]
+    #[cfg_attr(feature = "schemas", schemars(range(min = 1, max = 4)))]
+    pub reward_first_realm_book_rank: Option<u8>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -819,6 +824,12 @@ pub struct ProceduralLayoutDefinition {
     pub pit: Option<ProceduralPitDefinition>,
     #[serde(default)]
     pub stairs: Option<ProceduralStairLayoutDefinition>,
+    #[serde(default = "default_place_doors")]
+    pub place_doors: bool,
+}
+
+const fn default_place_doors() -> bool {
+    true
 }
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -863,6 +874,18 @@ pub struct ProceduralRiverDefinition {
     pub shallow_terrain_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub chance_one_in: Option<u16>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub alternative: Option<ProceduralRiverAlternativeDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ProceduralRiverAlternativeDefinition {
+    pub deep_terrain_id: String,
+    pub shallow_terrain_id: String,
+    pub chance_numerator: u16,
+    pub chance_denominator: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

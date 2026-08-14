@@ -1148,6 +1148,7 @@ fn stat_modifiers_from_dto(modifiers: StatModifiersDto) -> StatModifiers {
 
 fn equipment_bonuses_to_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
     EquipmentBonusesDto {
+        life_percent: bonuses.life_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -1167,6 +1168,7 @@ fn equipment_bonuses_to_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
 
 fn equipment_bonuses_from_dto(bonuses: EquipmentBonusesDto) -> EquipmentBonuses {
     EquipmentBonuses {
+        life_percent: bonuses.life_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -1205,6 +1207,7 @@ fn affix_property_bundle_out_of_range(properties: &AffixPropertyBundleDefinition
     ]
     .into_iter()
     .any(|value| !(-1_000_000..=1_000_000).contains(&value))
+        || !(-100..=100).contains(&bonuses.life_percent)
         || [
             modifiers.strength,
             modifiers.intelligence,
@@ -1398,6 +1401,18 @@ const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
         EquipmentPassive::SeeInvisible => EquipmentPassiveDto::SeeInvisible,
         EquipmentPassive::Vampiric => EquipmentPassiveDto::Vampiric,
         EquipmentPassive::HoldLife => EquipmentPassiveDto::HoldLife,
+        EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
+        EquipmentPassive::Warning => EquipmentPassiveDto::Warning,
+        EquipmentPassive::SlowDigestion => EquipmentPassiveDto::SlowDigestion,
+        EquipmentPassive::EspAnimal => EquipmentPassiveDto::EspAnimal,
+        EquipmentPassive::EspUndead => EquipmentPassiveDto::EspUndead,
+        EquipmentPassive::EspDemon => EquipmentPassiveDto::EspDemon,
+        EquipmentPassive::EspOrc => EquipmentPassiveDto::EspOrc,
+        EquipmentPassive::EspTroll => EquipmentPassiveDto::EspTroll,
+        EquipmentPassive::EspGiant => EquipmentPassiveDto::EspGiant,
+        EquipmentPassive::EspDragon => EquipmentPassiveDto::EspDragon,
+        EquipmentPassive::EspHuman => EquipmentPassiveDto::EspHuman,
+        EquipmentPassive::EspGood => EquipmentPassiveDto::EspGood,
         EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
         EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
         EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
@@ -1413,6 +1428,18 @@ const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
         EquipmentPassiveDto::SeeInvisible => EquipmentPassive::SeeInvisible,
         EquipmentPassiveDto::Vampiric => EquipmentPassive::Vampiric,
         EquipmentPassiveDto::HoldLife => EquipmentPassive::HoldLife,
+        EquipmentPassiveDto::Levitation => EquipmentPassive::Levitation,
+        EquipmentPassiveDto::Warning => EquipmentPassive::Warning,
+        EquipmentPassiveDto::SlowDigestion => EquipmentPassive::SlowDigestion,
+        EquipmentPassiveDto::EspAnimal => EquipmentPassive::EspAnimal,
+        EquipmentPassiveDto::EspUndead => EquipmentPassive::EspUndead,
+        EquipmentPassiveDto::EspDemon => EquipmentPassive::EspDemon,
+        EquipmentPassiveDto::EspOrc => EquipmentPassive::EspOrc,
+        EquipmentPassiveDto::EspTroll => EquipmentPassive::EspTroll,
+        EquipmentPassiveDto::EspGiant => EquipmentPassive::EspGiant,
+        EquipmentPassiveDto::EspDragon => EquipmentPassive::EspDragon,
+        EquipmentPassiveDto::EspHuman => EquipmentPassive::EspHuman,
+        EquipmentPassiveDto::EspGood => EquipmentPassive::EspGood,
         EquipmentPassiveDto::SustainStrength => EquipmentPassive::SustainStrength,
         EquipmentPassiveDto::SustainIntelligence => EquipmentPassive::SustainIntelligence,
         EquipmentPassiveDto::SustainWisdom => EquipmentPassive::SustainWisdom,

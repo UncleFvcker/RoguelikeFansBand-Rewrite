@@ -1376,3 +1376,19 @@ git diff --stat
   核心、中文名、importer、Web 及吸收后的 save/state-hash/replay 聚焦测试通过；source/schema、相关
   编译、Web typecheck 和协议 binding 检查通过。按用户要求未运行或刷新全量测试与 fixture。
 - 下一普通静态种族为 `rfb-legacy.race.skeleton`（骷髅）。
+
+## 75. main 当前交接（items 与 monster 增量整合）
+
+- `codex/items-next` 的 `869169459` 已通过合并提交 `f199f84f2` 进入 main，带入 Life、Daemon、
+  Crusade 三个法术领域及 ego 导入审计/元数据；`codex/monsters-next` 的 `5a268a14d` 本批继续以
+  双亲合并进入 main，带入 P96–P101 的 13 个地牢、遭遇/掉落/地形表、固定神器与装备被动。
+- 主工作树保留并联合了种族、状态与装备三条被动来源：反射、漂浮、消化减慢、接触光环、照明半径
+  和地面物品影响均只有一条最终判定路径。房间型地面物品生成额外按最终地形过滤不可行走格，修复
+  Castle 暗门上生成物品后真实存档无法恢复的问题；存档校验没有放宽。
+- 最终协调点为 pack `1.365.0` / content hash
+  `0732644f106d5571df518ff0546500cf7b783a910cfdd03c775767eb2e6aa80f`、Protocol `1.221`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`。公共初始化、内容池及 RNG 投影改变后，
+  已按规则刷新并再次验证 26 个 active fixtures，0 waiver。
+- 验收通过：`rfb-core` 830 项、`rfb-content` 287 项、本地化 21 项、其余 Rust workspace 测试、
+  Clippy `-D warnings`、格式、协议/内容生成器、source lock 校验，以及 Web 152 项测试、typecheck 和
+  生产 UI build。`codex/items-next`、`codex/monsters-next` 分支及对应工作树均保留，不做删除。

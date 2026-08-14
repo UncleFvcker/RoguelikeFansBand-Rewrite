@@ -346,6 +346,166 @@ mod tests {
     }
 
     #[test]
+    fn p96bc_wrath_items_and_shared_dungeons_use_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("item-demo-trifurcate-spear-name", "三叉长矛"),
+            ("item-demo-trifurcate-spear-of-wrath-name", "愤怒之三叉长矛"),
+            ("floor-demo-numenor-depth-name", "努曼诺尔"),
+            ("floor-demo-atlantis-depth-name", "亚特兰蒂斯"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Wrath item name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn p97_dragon_lair_and_scale_mail_use_authoritative_chinese_text() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("floor-demo-dragon-lair-depth-name", "龙穴"),
+            (
+                "terrain-demo-dragon-lair-entrance-description",
+                "通向龙穴的巨大隧道",
+            ),
+            ("item-demo-multi-hued-dragon-scale-mail-name", "多彩龙鳞甲"),
+            (
+                "item-demo-multi-hued-dragon-scale-mail-description",
+                "一套因愤怒的能量而悸动的鳞甲；驾驭被困在其中的无尽元素战争需要耗费你所有的精力。",
+            ),
+            (
+                "item-activation-demo-multi-hued-dragon-breath-name",
+                "龙之喷吐",
+            ),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Dragon's Lair text should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn p98_castle_and_feature_terrain_use_authoritative_chinese_text() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("floor-demo-castle-depth-name", "城堡"),
+            ("terrain-demo-castle-entrance-description", "城堡的入口"),
+            ("terrain-demo-curtain-open-name", "拉开的幕帘"),
+            ("terrain-demo-curtain-closed-name", "幕帘"),
+            ("terrain-demo-glass-wall-name", "玻璃墙"),
+            ("actor-demo-anti-paladin-name", "反圣武士"),
+            ("actor-demo-layzark-the-emperor-name", "皇帝雷扎克"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Castle text should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn p99_giants_hall_snow_castle_and_paurnimmen_use_authoritative_chinese_text() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("floor-demo-giants-hall-depth-name", "巨人殿堂"),
+            ("floor-demo-snow-castle-depth-name", "雪之城堡"),
+            (
+                "terrain-demo-giants-hall-entrance-description",
+                "巨人殿堂的入口",
+            ),
+            (
+                "terrain-demo-snow-castle-entrance-description",
+                "雪之城堡的入口",
+            ),
+            ("terrain-demo-slush-name", "泥泞"),
+            ("terrain-demo-ice-floor-name", "滑冰面"),
+            ("terrain-demo-snow-wall-name", "雪墙"),
+            ("terrain-demo-ice-wall-name", "冰墙"),
+            (
+                "item-demo-set-of-gauntlets-paurnimmen-name",
+                "铁护手『保尔尼门』",
+            ),
+            ("item-activation-demo-cold-beam-name", "寒冰射线"),
+            ("actor-demo-utgard-loke-name", "乌特加德-洛基"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("P99 text should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn p100_graveyard_soulsword_and_guardians_use_authoritative_chinese_text() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("floor-demo-graveyard-depth-name", "墓地"),
+            (
+                "terrain-demo-graveyard-entrance-description",
+                "通向地下墓地的地洞",
+            ),
+            ("item-demo-soulsword-name", "『灵魂之剑』"),
+            ("actor-demo-master-lich-name", "巫妖大师"),
+            ("actor-demo-vecna-the-emperor-lich-name", "巫妖之王维克那"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("P100 text should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn p101_witch_wood_oz_guardians_and_third_books_use_authoritative_chinese_text() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("floor-demo-witch-wood-depth-name", "女巫森林"),
+            ("floor-demo-plains-of-oz-depth-name", "奥兹平原"),
+            (
+                "terrain-demo-witch-wood-entrance-description",
+                "通向女巫森林的蜿蜒小径",
+            ),
+            (
+                "terrain-demo-plains-of-oz-entrance-description",
+                "通向神秘奥兹国（Oz）的黄砖路",
+            ),
+            ("terrain-demo-surface-flower-name", "花"),
+            ("terrain-demo-surface-brake-name", "灌木丛"),
+            ("actor-demo-gertrude-name", "格特鲁德"),
+            (
+                "actor-demo-the-wicked-witch-of-the-south-east-name",
+                "东南方坏女巫",
+            ),
+            ("item-demo-book-of-the-unicorn-name", "独角兽之书"),
+            ("item-demo-pattern-sorcery-name", "图案咒术"),
+            ("item-demo-natures-gifts-name", "自然的恩赐"),
+            ("item-demo-black-channels-name", "黑暗通道"),
+            ("item-demo-path-of-destruction-name", "毁灭之路"),
+            ("item-demo-major-arcana-name", "大阿卡纳"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("P101 text should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn golem_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

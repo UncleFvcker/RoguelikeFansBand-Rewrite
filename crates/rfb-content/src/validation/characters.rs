@@ -41,7 +41,7 @@ pub(super) struct CharacterValidationRefs<'a> {
     pub(super) mutations: &'a [MutationDefinition],
 }
 
-fn level_resistances_are_valid(entries: &mut Vec<LevelResistanceDefinition>) -> bool {
+fn level_resistances_are_valid(entries: &mut [LevelResistanceDefinition]) -> bool {
     entries.sort_by_key(|entry| entry.minimum_level);
     entries.len() <= 32
         && entries.iter().all(|entry| {

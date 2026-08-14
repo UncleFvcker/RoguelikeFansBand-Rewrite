@@ -49,7 +49,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 188,
+      "rngDrawCounter": 199,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -945,6 +945,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.rune-sword",
+            "nameKey": "item-demo-rune-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.sabre",
             "nameKey": "item-demo-sabre-name",
             "category": "melee",
@@ -1046,6 +1055,15 @@
           {
             "itemKindId": "demo.item.trident",
             "nameKey": "item-demo-trident-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.trifurcate-spear",
+            "nameKey": "item-demo-trifurcate-spear-name",
             "category": "melee",
             "rank": "beginner",
             "current": 4000,
@@ -1180,7 +1198,7 @@
             "x": 45,
             "y": 16
           },
-          "hp": 84,
+          "hp": 77,
           "speed": 109,
           "energyNeed": 10
         }
@@ -1571,7 +1589,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 188,
+      "nextItemInstanceSerial": 203,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1579,14 +1597,26 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "6444d5361f56b787739f31551d728237a913825be5104756fa01f6dc56568959"
+      "stateHash": "a34fa0f4e0b02c04c5d1f533c9996a68f39b0f7101d6912fb87c23a9a299c059"
     },
     "events": [
       {
-        "kind": "combat.miss",
-        "messageKey": "combat-player-miss",
+        "kind": "combat.hit",
+        "messageKey": "combat-player-hit",
         "args": {
+          "damage": "7",
           "target": "demo.actor.adobe-golem"
+        },
+        "outcome": {
+          "type": "damage",
+          "resolution": {
+            "rawDamage": 7,
+            "armorReduction": 0,
+            "resistanceAdjustment": 0,
+            "finalDamage": 7,
+            "damageType": "physical",
+            "resistance": "normal"
+          }
         }
       }
     ]

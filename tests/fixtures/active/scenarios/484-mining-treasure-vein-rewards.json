@@ -52,7 +52,7 @@
       "turn": 2,
       "worldTick": 20,
       "lastCommandSeq": 2,
-      "rngDrawCounter": 182,
+      "rngDrawCounter": 194,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -948,6 +948,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.rune-sword",
+            "nameKey": "item-demo-rune-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.sabre",
             "nameKey": "item-demo-sabre-name",
             "category": "melee",
@@ -1056,6 +1065,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.trifurcate-spear",
+            "nameKey": "item-demo-trifurcate-spear-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.tulwar",
             "nameKey": "item-demo-tulwar-name",
             "category": "melee",
@@ -1117,15 +1135,15 @@
         },
         "miningProficiency": {
           "diggingPower": 83,
-          "rank": "unskilled",
-          "current": 3999,
+          "rank": "beginner",
+          "current": 4059,
           "maximum": 8000
         },
         "materials": [
           {
             "materialId": "rfb.material.iron-ore",
             "nameKey": "material-iron-ore",
-            "quantity": 0
+            "quantity": 3
           },
           {
             "materialId": "rfb.material.silver-ore",
@@ -1177,6 +1195,18 @@
       "playerBuildId": "demo.build.warrior",
       "entityCount": 0,
       "groundItemCount": 2,
+      "goldPiles": [
+        {
+          "id": "generated.gold.1",
+          "position": {
+            "x": 44,
+            "y": 15
+          },
+          "amount": 66,
+          "appearance": "silver",
+          "discovered": true
+        }
+      ],
       "inventoryStackCount": 6,
       "equipmentCount": 4,
       "inventory": [
@@ -1606,28 +1636,15 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 195,
-      "nextGoldPileSerial": 1,
-      "terrainInteractions": [
-        {
-          "kind": "dig-terrain",
-          "direction": "north",
-          "position": {
-            "x": 44,
-            "y": 15
-          },
-          "terrainId": "demo.terrain.magma-vein",
-          "requiresCheck": true,
-          "available": true
-        }
-      ],
+      "nextItemInstanceSerial": 203,
+      "nextGoldPileSerial": 2,
       "campaign": {
         "status": "active",
         "score": 0,
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "45b4a1a19d0865a5c20384d87357427df444eddbdfa7bf0175a6599249e3eaca"
+      "stateHash": "c13602decbaf7469d38fc2461d60fc113801dbd86870d3f72a088b2b02c98b86"
     },
     "events": [
       {
@@ -1639,15 +1656,24 @@
         }
       },
       {
-        "kind": "terrain.dig-failed",
-        "messageKey": "terrain-dig-failed",
+        "kind": "terrain.found-something",
+        "messageKey": "terrain-found-something",
+        "args": {}
+      },
+      {
+        "kind": "terrain.dug",
+        "messageKey": "terrain-dug",
         "args": {
-          "retryable": "true",
           "x": "44",
           "y": "15"
         }
+      },
+      {
+        "kind": "progress.mining-proficiency-improved",
+        "messageKey": "mining-proficiency-improved",
+        "args": {}
       }
     ],
-    "saveRoundTripStateHash": "45b4a1a19d0865a5c20384d87357427df444eddbdfa7bf0175a6599249e3eaca"
+    "saveRoundTripStateHash": "c13602decbaf7469d38fc2461d60fc113801dbd86870d3f72a088b2b02c98b86"
   }
 }

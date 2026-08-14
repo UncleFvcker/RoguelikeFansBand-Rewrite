@@ -1239,7 +1239,25 @@ impl Game {
             .expect("planned enchantment kind must remain available");
         let artifact = definition.tags.iter().any(|tag| tag == "artifact");
         let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
+        let resists_enchantment =
+            definition.resists_enchantment || definition.tags.iter().any(|tag| tag == "no-enchant");
         let before = item.enchantments;
+
+        if resists_enchantment {
+            let unchanged = |attempts, before| ItemEnchantmentComponentOutcome {
+                attempts,
+                successes: 0,
+                before,
+                after: before,
+            };
+            return ItemEnchantmentOutcome {
+                item_id: item_id.to_owned(),
+                item_kind_id,
+                to_hit: unchanged(request.to_hit_attempts, before.to_hit),
+                to_damage: unchanged(request.to_damage_attempts, before.to_damage),
+                to_armor: unchanged(request.to_armor_attempts, before.to_armor),
+            };
+        }
 
         let to_hit = self.resolve_item_enchantment_component(
             before.to_hit,

@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 185,
+      "rngDrawCounter": 194,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -158,7 +158,17 @@
           },
           "stock": [
             {
-              "id": "generated.item.115",
+              "id": "generated.item.123",
+              "kindId": "demo.item.ration-of-food",
+              "displayNameKey": "item-demo-ration-of-food-name",
+              "quantity": 1,
+              "maximumQuantity": 1,
+              "unitPrice": 3,
+              "weightTenthsPound": 10,
+              "quality": "ordinary"
+            },
+            {
+              "id": "generated.item.124",
               "kindId": "demo.item.piece-of-elvish-waybread",
               "displayNameKey": "item-demo-piece-of-elvish-waybread-name",
               "quantity": 1,
@@ -168,11 +178,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.116",
+              "id": "generated.item.125",
               "kindId": "demo.item.wooden-torch",
               "displayNameKey": "item-demo-wooden-torch-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
+              "quantity": 4,
+              "maximumQuantity": 4,
               "unitPrice": 1,
               "weightTenthsPound": 30,
               "fuel": {
@@ -184,7 +194,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.121",
+              "id": "generated.item.129",
               "kindId": "demo.item.brass-lantern",
               "displayNameKey": "item-demo-brass-lantern-name",
               "quantity": 1,
@@ -200,11 +210,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.122",
+              "id": "generated.item.130",
               "kindId": "demo.item.flask-of-oil",
               "displayNameKey": "item-demo-flask-of-oil-name",
-              "quantity": 4,
-              "maximumQuantity": 4,
+              "quantity": 5,
+              "maximumQuantity": 5,
               "unitPrice": 3,
               "weightTenthsPound": 10,
               "fuel": {
@@ -216,7 +226,7 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.123",
+              "id": "generated.item.131",
               "kindId": "demo.item.fabric-bag",
               "displayNameKey": "item-demo-fabric-bag-name",
               "quantity": 2,
@@ -226,47 +236,47 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.125",
+              "id": "generated.item.133",
               "kindId": "demo.item.hard-biscuit",
               "displayNameKey": "item-demo-hard-biscuit-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 1,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.126",
+              "id": "generated.item.134",
               "kindId": "demo.item.strip-of-venison",
               "displayNameKey": "item-demo-strip-of-venison-name",
-              "quantity": 5,
-              "maximumQuantity": 5,
+              "quantity": 3,
+              "maximumQuantity": 3,
               "unitPrice": 2,
               "weightTenthsPound": 2,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.127",
+              "id": "generated.item.135",
               "kindId": "demo.item.water-potion",
               "displayNameKey": "item-demo-water-potion-name",
-              "quantity": 3,
-              "maximumQuantity": 3,
+              "quantity": 1,
+              "maximumQuantity": 1,
               "unitPrice": 1,
               "weightTenthsPound": 4,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.128",
+              "id": "generated.item.136",
               "kindId": "demo.item.apple-juice",
               "displayNameKey": "item-demo-apple-juice-name",
-              "quantity": 2,
-              "maximumQuantity": 2,
+              "quantity": 4,
+              "maximumQuantity": 4,
               "unitPrice": 1,
               "weightTenthsPound": 4,
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.129",
+              "id": "generated.item.137",
               "kindId": "demo.item.pint-of-fine-ale",
               "displayNameKey": "item-demo-pint-of-fine-ale-name",
               "quantity": 2,
@@ -276,11 +286,11 @@
               "quality": "ordinary"
             },
             {
-              "id": "generated.item.130",
+              "id": "generated.item.138",
               "kindId": "demo.item.pint-of-fine-wine",
               "displayNameKey": "item-demo-pint-of-fine-wine-name",
-              "quantity": 4,
-              "maximumQuantity": 4,
+              "quantity": 2,
+              "maximumQuantity": 2,
               "unitPrice": 2,
               "weightTenthsPound": 10,
               "quality": "ordinary"
@@ -1073,6 +1083,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.rune-sword",
+            "nameKey": "item-demo-rune-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.sabre",
             "nameKey": "item-demo-sabre-name",
             "category": "melee",
@@ -1174,6 +1193,15 @@
           {
             "itemKindId": "demo.item.trident",
             "nameKey": "item-demo-trident-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.trifurcate-spear",
+            "nameKey": "item-demo-trifurcate-spear-name",
             "category": "melee",
             "rank": "beginner",
             "current": 4000,
@@ -1767,7 +1795,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 197,
+      "nextItemInstanceSerial": 204,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1775,7 +1803,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e7fa733f44e7b60581ff3b17cfc0fb6de57f333c3d34b59e1a8bbf5094ee7e05"
+      "stateHash": "58f7b3b7c9b6df635ebc5b6db101edbb9b8a12ecb4ee3267744af1a7404acd4c"
     },
     "events": [
       {

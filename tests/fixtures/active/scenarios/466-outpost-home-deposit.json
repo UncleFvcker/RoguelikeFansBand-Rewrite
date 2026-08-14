@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 185,
+      "rngDrawCounter": 194,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -295,7 +295,7 @@
           "playerAtEntrance": true,
           "storedItems": [
             {
-              "id": "generated.item.197",
+              "id": "generated.item.203",
               "kindId": "demo.item.ration-of-food",
               "displayNameKey": "item-demo-ration-of-food-name",
               "quantity": 1,
@@ -965,6 +965,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.rune-sword",
+            "nameKey": "item-demo-rune-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.sabre",
             "nameKey": "item-demo-sabre-name",
             "category": "melee",
@@ -1066,6 +1075,15 @@
           {
             "itemKindId": "demo.item.trident",
             "nameKey": "item-demo-trident-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.trifurcate-spear",
+            "nameKey": "item-demo-trifurcate-spear-name",
             "category": "melee",
             "rank": "beginner",
             "current": 4000,
@@ -1622,11 +1640,11 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.197",
+          "itemId": "generated.item.2",
           "discovered": true
         },
         {
-          "itemId": "generated.item.2",
+          "itemId": "generated.item.203",
           "discovered": true
         },
         {
@@ -1660,7 +1678,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 198,
+      "nextItemInstanceSerial": 204,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1668,7 +1686,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "8a82f3bf15b26587891f9fe0f5b3eb72ad4820843e89643cb52eb475c44b657a"
+      "stateHash": "f6ebd1f80059503d4ad7499a4c61a1fa6daeb17d68c04d9d5d7d8c5f4fc32094"
     },
     "events": [
       {
@@ -1676,7 +1694,7 @@
         "messageKey": "home-deposit-success",
         "args": {
           "facility": "demo.town-facility.outpost-home",
-          "item": "generated.item.197",
+          "item": "generated.item.203",
           "quantity": "1",
           "target": "demo.item.ration-of-food"
         }

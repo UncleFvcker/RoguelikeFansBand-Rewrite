@@ -35,9 +35,9 @@ export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number
 
 export type StatModifiersDto = { attack: number, defense: number, maxHp: number, strength: number, intelligence: number, wisdom: number, dexterity: number, constitution: number, charisma: number, speed: number, spellPowerBonus: number, devicePowerBonus: number, };
 
-export type EquipmentBonusesDto = { meleeAttacks: number, meleeSkill: number, meleeDamage: number, rangedSkill: number, throwingSkill: number, deviceSkill: number, savingThrowSkill: number, stealthSkill: number, searchSkill: number, perceptionSkill: number, disarmingSkill: number, diggingSkill: number, infravision: number, lightRadius: number, };
+export type EquipmentBonusesDto = { lifePercent?: number, meleeAttacks: number, meleeSkill: number, meleeDamage: number, rangedSkill: number, throwingSkill: number, deviceSkill: number, savingThrowSkill: number, stealthSkill: number, searchSkill: number, perceptionSkill: number, disarmingSkill: number, diggingSkill: number, infravision: number, lightRadius: number, };
 
-export type EquipmentPassiveDto = "regeneration" | "see-invisible" | "vampiric" | "hold-life" | "sustain-strength" | "sustain-intelligence" | "sustain-wisdom" | "sustain-dexterity" | "sustain-constitution" | "sustain-charisma";
+export type EquipmentPassiveDto = "regeneration" | "see-invisible" | "vampiric" | "hold-life" | "levitation" | "warning" | "slow-digestion" | "esp-animal" | "esp-undead" | "esp-demon" | "esp-orc" | "esp-troll" | "esp-giant" | "esp-dragon" | "esp-human" | "esp-good" | "sustain-strength" | "sustain-intelligence" | "sustain-wisdom" | "sustain-dexterity" | "sustain-constitution" | "sustain-charisma";
 
 export type AttributeKindDto = "strength" | "intelligence" | "wisdom" | "dexterity" | "constitution" | "charisma";
 

@@ -233,7 +233,9 @@ pub(crate) fn valid_item_effect(
                     .iter()
                     .all(|source_id| source_id != target_terrain_id)
         }
-        ItemUseEffectDefinition::SetFloorGlow { radius, .. } => (1..=32).contains(radius),
+        ItemUseEffectDefinition::SetFloorGlow { radius, .. } => {
+            (1..=32).contains(radius) || *radius == u8::MAX
+        }
         ItemUseEffectDefinition::AreaDestruction {
             minimum_radius,
             maximum_radius,
@@ -435,10 +437,26 @@ pub(crate) fn valid_item_effect(
             damage_sides,
             damage_bonus,
             ..
+        }
+        | ItemUseEffectDefinition::BeamDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            ..
         } => {
             ((*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0)
                 || ((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides)))
                 && *damage_bonus <= 10_000
+        }
+        ItemUseEffectDefinition::RandomElementConeDamage {
+            damage,
+            damage_types,
+            radius,
+        } => {
+            (1..=1_000_000).contains(damage)
+                && (2..=16).contains(&damage_types.len())
+                && damage_types.iter().copied().collect::<BTreeSet<_>>().len() == damage_types.len()
+                && (1..=8).contains(radius)
         }
         ItemUseEffectDefinition::DispelCategory { category, damage } => {
             actor_tag_values.contains(category) && (1..=1_000_000).contains(damage)
@@ -499,6 +517,8 @@ pub(crate) fn valid_item_effect(
 fn item_effect_is_self_targeted(effect: &ItemUseEffectDefinition) -> bool {
     match effect {
         ItemUseEffectDefinition::Damage { .. }
+        | ItemUseEffectDefinition::BeamDamage { .. }
+        | ItemUseEffectDefinition::RandomElementConeDamage { .. }
         | ItemUseEffectDefinition::IdentifyItem { .. }
         | ItemUseEffectDefinition::EnchantItem { .. }
         | ItemUseEffectDefinition::MundanifyItem
@@ -640,7 +660,12 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::DispelCategory { .. }
                     | ItemUseEffectDefinition::BanishVisible { .. } => self_target,
                     ItemUseEffectDefinition::RechargeFromDevice { .. } => false,
-                    ItemUseEffectDefinition::Damage { .. } => projectile_target,
+                    ItemUseEffectDefinition::Damage { .. }
+                    | ItemUseEffectDefinition::BeamDamage { .. } => projectile_target,
+                    ItemUseEffectDefinition::RandomElementConeDamage { .. } => {
+                        target.modes.as_slice() == [AbilityTargetModeDefinition::Direction]
+                            && projectile_target
+                    }
                     ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. }
                     | ItemUseEffectDefinition::MundanifyItem
@@ -776,6 +801,15 @@ pub(super) fn validate_items(
                 || item.melee_profile.is_some() != *base_melee
                 || item.projectile_profile.is_some() != *base_projectile
                 || item.ammunition_profile.is_some() != *base_ammunition
+                || generation.affix_ids.len() > 8
+                || generation
+                    .affix_ids
+                    .iter()
+                    .any(|affix_id| !affix_ids.contains(affix_id))
+                || generation
+                    .affix_ids
+                    .windows(2)
+                    .any(|pair| pair[0] >= pair[1])
             {
                 return Err(ContentError::InvalidArtifactGeneration(item.id.clone()));
             }
@@ -838,9 +872,8 @@ pub(super) fn validate_items(
                 || profile.to_hit > 1_000_000
                 || profile.to_damage < -1_000_000
                 || profile.to_damage > 1_000_000
-                || profile.damage_dice == 0
+                || (profile.damage_dice == 0) != (profile.damage_sides == 0)
                 || profile.damage_dice > 100
-                || profile.damage_sides == 0
                 || profile.damage_sides > 10_000)
         {
             return Err(ContentError::InvalidAttackProfile(item.id.clone()));
@@ -1118,13 +1151,14 @@ pub(super) fn validate_items(
                         activation.min_depth <= depth && depth <= activation.max_depth
                     })
                 });
-            let fixed_artifact_activation = item.equipment_slot.is_some()
-                && item.artifact_generation.is_some()
-                && item.tags.iter().any(|tag| tag == "artifact");
+            let equipment_activation = item.equipment_slot.is_some()
+                && ((item.artifact_generation.is_some()
+                    && item.tags.iter().any(|tag| tag == "artifact"))
+                    || item.tags.iter().any(|tag| tag == "activatable"));
             if item.use_action.is_some()
-                || (item.equipment_slot.is_some() && !fixed_artifact_activation)
+                || (item.equipment_slot.is_some() && !equipment_activation)
                 || item.max_stack != 1
-                || (!fixed_artifact_activation && !item.tags.iter().any(|tag| tag == "device"))
+                || (!equipment_activation && !item.tags.iter().any(|tag| tag == "device"))
                 || generation.recovery.is_some_and(|recovery| {
                     !(1..=10_000).contains(&recovery.interval_ticks)
                         || !(1..=1_000).contains(&recovery.energy_per_mille)

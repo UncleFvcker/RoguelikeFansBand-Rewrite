@@ -7047,6 +7047,10 @@
           "format": "int32",
           "default": 0
         },
+        "lifePercent": {
+          "type": "integer",
+          "format": "int32"
+        },
         "lightRadius": {
           "type": "integer",
           "format": "int32",
@@ -7329,6 +7333,18 @@
         "see-invisible",
         "vampiric",
         "hold-life",
+        "levitation",
+        "warning",
+        "slow-digestion",
+        "esp-animal",
+        "esp-undead",
+        "esp-demon",
+        "esp-orc",
+        "esp-troll",
+        "esp-giant",
+        "esp-dragon",
+        "esp-human",
+        "esp-good",
         "sustain-strength",
         "sustain-intelligence",
         "sustain-wisdom",

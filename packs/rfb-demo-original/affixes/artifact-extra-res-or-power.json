@@ -1,0 +1,45 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.artifact-extra-res-or-power",
+  "nameKey": "affix-legacy-artifact-extra-res-or-power-name",
+  "descriptionKey": "affix-legacy-artifact-extra-res-or-power-description",
+  "preservesOrdinaryQuality": true,
+  "rollGroups": [
+    {
+      "rolls": 1,
+      "candidates": [
+        { "weight": 15, "properties": { "resistances": { "poison": "resistant" } } },
+        { "weight": 15, "properties": { "resistances": { "light": "resistant" } } },
+        { "weight": 15, "properties": { "resistances": { "dark": "resistant" } } },
+        { "weight": 15, "properties": { "resistances": { "shards": "resistant" } } },
+        { "weight": 15, "properties": { "resistances": { "blindness": "resistant" } } },
+        { "weight": 15, "properties": { "resistances": { "confusion": "resistant" } } },
+        { "weight": 15, "properties": { "resistances": { "sound": "resistant" } } },
+        { "weight": 15, "properties": { "resistances": { "nether": "resistant" } } },
+        { "weight": 15, "properties": { "resistances": { "nexus": "resistant" } } },
+        { "weight": 15, "properties": { "resistances": { "chaos": "resistant" } } },
+        { "weight": 15, "properties": { "resistances": { "disenchant": "resistant" } } },
+        { "weight": 15, "properties": { "resistances": { "fear": "resistant" } } },
+        { "weight": 18, "properties": { "passives": ["levitation"] } },
+        { "weight": 18, "properties": { "equipmentBonuses": { "lightRadius": 1 } } },
+        { "weight": 18, "properties": { "passives": ["see-invisible"] } },
+        { "weight": 18, "properties": { "passives": ["warning"] } },
+        { "weight": 18, "properties": { "passives": ["slow-digestion"] } },
+        { "weight": 18, "properties": { "passives": ["regeneration"] } },
+        { "weight": 18, "properties": { "statusImmunities": ["rfb.status.paralysis"] } },
+        { "weight": 18, "properties": { "passives": ["hold-life"] } },
+        { "weight": 4, "properties": { "passives": ["esp-animal"] } },
+        { "weight": 4, "properties": { "passives": ["esp-undead"] } },
+        { "weight": 4, "properties": { "passives": ["esp-demon"] } },
+        { "weight": 4, "properties": { "passives": ["esp-orc"] } },
+        { "weight": 4, "properties": { "passives": ["esp-troll"] } },
+        { "weight": 4, "properties": { "passives": ["esp-giant"] } },
+        { "weight": 4, "properties": { "passives": ["esp-dragon"] } },
+        { "weight": 4, "properties": { "passives": ["esp-human"] } },
+        { "weight": 4, "properties": { "passives": ["esp-good"] } }
+      ]
+    }
+  ],
+  "tags": ["weapon"]
+}

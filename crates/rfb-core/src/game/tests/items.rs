@@ -137,6 +137,324 @@ fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
 }
 
 #[test]
+fn p97e_multi_hued_dragon_breath_randomizes_five_elements_across_a_cone() {
+    const ITEM_ID: &str = "test.item.multi-hued-dragon-scale-mail.1";
+    let mut base =
+        Game::new_with_build(197, "demo.build.warrior").expect("breath test game should create");
+    clear_monsters(&mut base);
+    base.terrain.fill("demo.terrain.floor".to_owned());
+    base.player.position = Position { x: 10, y: 10 };
+    give_inventory_item(&mut base, ITEM_ID, "demo.item.multi-hued-dragon-scale-mail");
+    base.push_generated_actor(
+        "test.actor.dragon-breath-center".to_owned(),
+        "demo.actor.ancient-multi-hued-dragon",
+        Position { x: 20, y: 10 },
+    );
+    base.push_generated_actor(
+        "test.actor.dragon-breath-lateral".to_owned(),
+        "demo.actor.ancient-multi-hued-dragon",
+        Position { x: 27, y: 11 },
+    );
+
+    let mut observed = BTreeSet::new();
+    for seed in 0..10_000 {
+        let mut game = base.clone();
+        game.rng = RfbRng::seeded(seed);
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: ITEM_ID.to_owned(),
+                target: Some(TargetSelection::Direction {
+                    direction: Direction::East,
+                }),
+            },
+        );
+        let hits = update
+            .events
+            .iter()
+            .filter(|event| event.kind == "item.activation-hit")
+            .filter_map(|event| match event.outcome.as_ref() {
+                Some(GameEventOutcomeDto::Damage { resolution }) => Some(resolution),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        if hits.is_empty() {
+            continue;
+        }
+        assert_eq!(hits.len(), 2);
+        assert!(
+            hits.iter()
+                .all(|damage| damage.damage_type == hits[0].damage_type)
+        );
+        assert_eq!(
+            hits.iter()
+                .map(|damage| damage.raw_damage)
+                .collect::<BTreeSet<_>>(),
+            BTreeSet::from([125, 250])
+        );
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == ITEM_ID)
+                .and_then(|item| item.charges)
+                .expect("activated scale mail should retain charge state")
+                .current,
+            0
+        );
+        observed.insert(hits[0].damage_type);
+        if observed.len() == 5 {
+            break;
+        }
+    }
+    assert_eq!(
+        observed,
+        BTreeSet::from([
+            DamageTypeDto::Acid,
+            DamageTypeDto::Electricity,
+            DamageTypeDto::Fire,
+            DamageTypeDto::Cold,
+            DamageTypeDto::Poison,
+        ])
+    );
+}
+
+#[test]
+fn p99e_paurnimmen_cold_beam_hits_each_actor_before_the_wall() {
+    const ITEM_ID: &str = "test.item.paurnimmen.1";
+    const BLOCKED_ID: &str = "test.actor.paurnimmen-blocked";
+    let mut base =
+        Game::new_with_build(199, "demo.build.warrior").expect("beam test game should create");
+    clear_monsters(&mut base);
+    base.terrain.fill("demo.terrain.floor".to_owned());
+    base.player.position = Position { x: 10, y: 10 };
+    give_inventory_item(&mut base, ITEM_ID, "demo.item.set-of-gauntlets-paurnimmen");
+    for (id, x) in [
+        ("test.actor.paurnimmen-near", 14),
+        ("test.actor.paurnimmen-far", 17),
+        (BLOCKED_ID, 22),
+    ] {
+        base.push_generated_actor(
+            id.to_owned(),
+            "demo.actor.anti-paladin",
+            Position { x, y: 10 },
+        );
+    }
+    let wall = Position { x: 20, y: 10 };
+    let wall_index = base.index(wall).expect("wall position should be in bounds");
+    base.terrain[wall_index] = "demo.terrain.wall".to_owned();
+    let blocked_hp = base
+        .entities
+        .iter()
+        .find(|entity| entity.id == BLOCKED_ID)
+        .expect("blocked actor should exist")
+        .hp;
+
+    let (game, resolutions) = (0..1_000)
+        .find_map(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(seed);
+            let update = dispatch_next(
+                &mut game,
+                GameCommand::UseItem {
+                    item_id: ITEM_ID.to_owned(),
+                    target: Some(TargetSelection::Direction {
+                        direction: Direction::East,
+                    }),
+                },
+            );
+            let resolutions = update
+                .events
+                .iter()
+                .filter(|event| {
+                    matches!(
+                        event.kind.as_str(),
+                        "item.activation-hit" | "item.activation-slew"
+                    )
+                })
+                .filter_map(|event| match event.outcome.as_ref() {
+                    Some(GameEventOutcomeDto::Damage { resolution }) => Some(*resolution),
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            (!resolutions.is_empty()).then_some((game, resolutions))
+        })
+        .expect("one seed should pass Paurnimmen's device check");
+
+    assert_eq!(resolutions.len(), 2);
+    assert!(resolutions.iter().all(|resolution| {
+        resolution.raw_damage == 40 && resolution.damage_type == DamageTypeDto::Cold
+    }));
+    assert_eq!(
+        game.entities
+            .iter()
+            .find(|entity| entity.id == BLOCKED_ID)
+            .expect("the wall should protect the blocked actor")
+            .hp,
+        blocked_hp
+    );
+}
+
+#[test]
+fn p100e_soulsword_rolls_and_persists_one_extra_power_and_increases_life() {
+    let mut game =
+        Game::new_with_build(100, "demo.build.warrior").expect("Soulsword game should create");
+    clear_monsters(&mut game);
+    for item in game.items.iter_mut().filter(
+        |item| matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "right-hand"),
+    ) {
+        item.location = ItemLocation::Inventory;
+    }
+    let base_max_hp = game.player_derived_stats().max_hp.value;
+    let context = LootContext {
+        table_id: "demo.loot-table.graveyard-final-replacement".to_owned(),
+        floor_id: "demo.floor.graveyard-depth-70".to_owned(),
+        depth: 70,
+        source: LootSource::FloorRoom {
+            room_id: "demo.guardian.graveyard.1".to_owned(),
+            spawn_id: "demo.guardian.graveyard.reward".to_owned(),
+        },
+    };
+    game.rng = RfbRng::seeded(100);
+    let draft = game.fixed_item_draft(&context, "demo.item.soulsword".to_owned());
+    assert_eq!(
+        draft.affix_ids,
+        ["rfb-legacy.affix.artifact-extra-res-or-power"]
+    );
+    let [rolled] = draft.rolled_affixes.as_slice() else {
+        panic!("Soulsword should roll exactly one affix bundle");
+    };
+    assert_eq!(
+        rolled.affix_id,
+        "rfb-legacy.affix.artifact-extra-res-or-power"
+    );
+    assert_ne!(rolled.properties, AffixPropertyBundleDefinition::default());
+
+    let rolled_properties = rolled.properties.clone();
+    let item = game
+        .commit_generated_item_draft(
+            draft,
+            ItemLocation::Equipped {
+                slot_id: "right-hand".to_owned(),
+            },
+        )
+        .expect("Soulsword draft should commit");
+    let item_id = item.id.clone();
+    game.item_property_knowledge.insert(
+        item_id.clone(),
+        ItemPropertyKnowledgeState {
+            discovered: true,
+            appraised: true,
+            identified: true,
+            known_affix_ids: BTreeSet::from([
+                "rfb-legacy.affix.artifact-extra-res-or-power".to_owned()
+            ]),
+        },
+    );
+    game.items.push(item);
+    assert_eq!(
+        game.player_derived_stats().max_hp.value,
+        base_max_hp.saturating_mul(109).saturating_div(100)
+    );
+
+    let hash = game.state_hash();
+    let restored = Game::from_save(game.to_save()).expect("Soulsword should restore");
+    assert_eq!(restored.state_hash(), hash);
+    let restored_item = restored
+        .items
+        .iter()
+        .find(|item| item.id == item_id)
+        .expect("restored Soulsword");
+    assert_eq!(
+        restored_item.rolled_affixes[0].properties,
+        rolled_properties
+    );
+    assert!(
+        restored
+            .generated_artifact_ids
+            .contains("demo.item.soulsword")
+    );
+}
+
+#[test]
+fn p100e_soulsword_warning_reveals_and_stops_before_a_hidden_trap() {
+    let mut game =
+        Game::new_with_build(101, "demo.build.warrior").expect("warning game should create");
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let start = game.player.position;
+    for item in game.items.iter_mut().filter(
+        |item| matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "right-hand"),
+    ) {
+        item.location = ItemLocation::Inventory;
+    }
+
+    let warning_seed = (0..10_000)
+        .find(|seed| {
+            let roll = RfbRng::seeded(*seed).bounded(360);
+            (234..252).contains(&roll)
+        })
+        .expect("a warning-property seed should exist");
+    game.rng = RfbRng::seeded(warning_seed);
+    let context = artifact_loot_context(70);
+    let draft = game.fixed_item_draft(&context, "demo.item.soulsword".to_owned());
+    assert!(
+        draft.rolled_affixes[0]
+            .properties
+            .passives
+            .contains(&EquipmentPassive::Warning)
+    );
+    let item = game
+        .commit_generated_item_draft(
+            draft,
+            ItemLocation::Equipped {
+                slot_id: "right-hand".to_owned(),
+            },
+        )
+        .expect("warning Soulsword should commit");
+    game.items.push(item);
+
+    let trap = Position {
+        x: start.x + 1,
+        y: start.y,
+    };
+    replace_terrain(&mut game, trap, "demo.terrain.warren-snare");
+    game.revealed_terrain.remove(&trap);
+    let warning_roll_seed = (0..1_000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(13) != 0)
+        .expect("a warning success seed should exist");
+    game.rng = RfbRng::seeded(warning_roll_seed);
+
+    let warned = dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.player.position, start);
+    assert!(game.revealed_terrain.contains(&trap));
+    assert!(
+        warned
+            .events
+            .iter()
+            .any(|event| event.kind == "item.warning-trap")
+    );
+
+    let moved = dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.player.position, trap);
+    assert!(
+        moved
+            .events
+            .iter()
+            .any(|event| event.kind == "terrain.trap-triggered")
+    );
+}
+
+#[test]
 fn booze_applies_original_confusion_hallucination_and_blackout_ranges() {
     let mut saw_hallucination = false;
     let mut saw_clear_head = false;
@@ -2456,7 +2774,10 @@ fn p3_5_rumour_is_localized_without_core_rng() {
 fn fixed_artifact_selection_uses_source_order_ood_rarity_and_uniqueness() {
     let context = artifact_loot_context(60);
     let mut instant = Game::new(1);
-    instant.rng = RfbRng::seeded(0);
+    let instant_rejection_seed = (0..10_000)
+        .find(|seed| RfbRng::seeded(*seed).bounded(10) != 0)
+        .expect("an instant-artifact gate rejection seed should exist");
+    instant.rng = RfbRng::seeded(instant_rejection_seed);
     assert_eq!(instant.roll_instant_fixed_artifact_kind_id(&context), None);
     assert_eq!(instant.rng_draw_counter(), 1);
 
@@ -2577,7 +2898,7 @@ fn item_generation_modes_keep_drafts_unallocated_until_commit() {
     let kind_id = fixed
         .roll_fixed_artifact_kind_id(&context, Some("demo.item.executioners-sword"), false)
         .expect("Crisdurian should pass its rarity gate");
-    let draft = fixed.fixed_artifact_draft(&context, kind_id);
+    let draft = fixed.fixed_item_draft(&context, kind_id);
     assert_eq!(draft.quality, ItemQualityDto::Ordinary);
     let item = fixed
         .commit_generated_item_draft(draft, ItemLocation::Ground(fixed.player.position))

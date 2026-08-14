@@ -264,6 +264,16 @@
             "null"
           ]
         },
+        "rewardFirstRealmBookRank": {
+          "default": null,
+          "format": "uint8",
+          "maximum": 4,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "rewardLootTableId": {
           "default": null,
           "type": [
@@ -826,6 +836,10 @@
         "floorTerrainId": {
           "type": "string"
         },
+        "forgetAfterMove": {
+          "default": false,
+          "type": "boolean"
+        },
         "generationBudget": {
           "anyOf": [
             {
@@ -1386,6 +1400,10 @@
           ],
           "default": null
         },
+        "placeDoors": {
+          "default": true,
+          "type": "boolean"
+        },
         "river": {
           "anyOf": [
             {
@@ -1574,9 +1592,49 @@
       ],
       "type": "object"
     },
+    "ProceduralRiverAlternativeDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "chanceDenominator": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "chanceNumerator": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "deepTerrainId": {
+          "type": "string"
+        },
+        "shallowTerrainId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "deepTerrainId",
+        "shallowTerrainId",
+        "chanceNumerator",
+        "chanceDenominator"
+      ],
+      "type": "object"
+    },
     "ProceduralRiverDefinition": {
       "additionalProperties": false,
       "properties": {
+        "alternative": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProceduralRiverAlternativeDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "chanceOneIn": {
           "format": "uint16",
           "maximum": 65535,

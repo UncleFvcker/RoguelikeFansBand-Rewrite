@@ -5,6 +5,250 @@ use super::*;
 
 impl Game {
     #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_item_activation_beam_damage(
+        &mut self,
+        source_kind_id: String,
+        profile_id: Option<String>,
+        effect: ItemUseEffectDefinition,
+        plan: ItemUsePlan,
+        device_power_bonus: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let ItemUseEffectDefinition::BeamDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            damage_type,
+        } = effect
+        else {
+            unreachable!("item activation beam executor requires a beam damage effect")
+        };
+        let ItemUsePlan::Projectile { path } = plan else {
+            unreachable!("item activation beam executor requires a projectile plan")
+        };
+        let profile_id = profile_id.expect("dynamic beam activation must carry a profile ID");
+        let damage_type = DamageType::from(damage_type);
+        let (trace, _) =
+            self.trace_projectile_path_with_damage_policy(path, false, Some(damage_type));
+        let affected_positions = trace.traversed.clone();
+        self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
+        self.resolve_ground_item_projectile_effects(
+            &source_kind_id,
+            &affected_positions,
+            damage_type,
+            true,
+            events,
+            changed,
+            removed_entities,
+        );
+        let targets = self.beam_damage_targets(&affected_positions);
+        changed.extend(affected_positions.iter().copied());
+        self.mark_item_aware(&source_kind_id);
+        if targets.is_empty() {
+            events.push(DomainEvent::ItemActivationLanded {
+                source_kind_id,
+                profile_id,
+                trace,
+            });
+            return Ok(());
+        }
+
+        let raw_damage = i32::try_from(device_power_value(
+            u64::try_from(
+                self.roll_damage(damage_dice, damage_sides)
+                    .saturating_add(i32::from(damage_bonus))
+                    .max(0),
+            )
+            .expect("non-negative device beam damage must fit u64"),
+            device_power_bonus,
+        ))
+        .expect("device-powered beam damage must fit i32");
+        for entity_id in targets {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .expect("activation target definition must remain available");
+            let target_kind_id = definition.id.clone();
+            let target_position = self.entities[index].position;
+            let target_stats = self.actor_derived_stats(&self.entities[index], definition, false);
+            let resistance = self.entities[index].resistances.level(damage_type);
+            let damage = resolve_armored_damage(
+                raw_damage,
+                damage_type,
+                target_stats.armor_class.value,
+                resistance,
+            );
+            self.entities[index].alerted = true;
+            let application = plan_damage_application(
+                &self.entities[index],
+                damage,
+                FatalityPolicy::AtOrBelowZero,
+            );
+            commit_damage_application(&mut self.entities[index], &application);
+            changed.insert(target_position);
+            self.wake_entity_after_damage(index, damage.applied, events);
+            if !application.fatal {
+                self.resolve_monster_fear_aura(index, "hurt", true, events);
+            }
+            if application.fatal {
+                self.resolve_actor_death(
+                    index,
+                    DomainEvent::ItemActivationSlew {
+                        source_kind_id: source_kind_id.clone(),
+                        profile_id: profile_id.clone(),
+                        target_kind_id,
+                        damage,
+                        trace: trace.clone(),
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            } else {
+                events.push(DomainEvent::ItemActivationHit {
+                    source_kind_id: source_kind_id.clone(),
+                    profile_id: profile_id.clone(),
+                    target_kind_id,
+                    damage,
+                    trace: trace.clone(),
+                });
+            }
+        }
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_item_random_element_cone_damage(
+        &mut self,
+        source_kind_id: String,
+        profile_id: Option<String>,
+        effect: ItemUseEffectDefinition,
+        plan: ItemUsePlan,
+        device_power_bonus: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let ItemUseEffectDefinition::RandomElementConeDamage {
+            damage,
+            damage_types,
+            radius,
+        } = effect
+        else {
+            unreachable!("item cone executor requires a random elemental cone effect")
+        };
+        let ItemUsePlan::Cone {
+            path,
+            direction,
+            radius: planned_radius,
+        } = plan
+        else {
+            unreachable!("item cone executor requires a cone plan")
+        };
+        debug_assert_eq!(radius, planned_radius);
+        let profile_id = profile_id.expect("dynamic cone activation must carry a profile ID");
+        let choice = usize::try_from(self.rng.bounded(
+            u64::try_from(damage_types.len()).expect("validated damage type count must fit u64"),
+        ))
+        .expect("random damage type index must fit usize");
+        let damage_type = DamageType::from(damage_types[choice]);
+        let (trace, _) =
+            self.trace_projectile_path_with_damage_policy(path, false, Some(damage_type));
+        let (affected_positions, targets) =
+            self.cone_damage_targets(&trace.traversed, direction, radius, damage_type);
+        self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
+        self.resolve_ground_item_projectile_effects(
+            &source_kind_id,
+            &affected_positions,
+            damage_type,
+            true,
+            events,
+            changed,
+            removed_entities,
+        );
+        changed.extend(affected_positions);
+        self.mark_item_aware(&source_kind_id);
+        if targets.is_empty() {
+            events.push(DomainEvent::ItemActivationLanded {
+                source_kind_id,
+                profile_id,
+                trace,
+            });
+            return Ok(());
+        }
+
+        let base_raw_damage =
+            i32::try_from(device_power_value(u64::from(damage), device_power_bonus))
+                .expect("device-powered cone damage must fit i32");
+        for (entity_id, lateral_distance) in targets {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .expect("activation target definition must remain available");
+            let target_kind_id = definition.id.clone();
+            let target_position = self.entities[index].position;
+            let target_stats = self.actor_derived_stats(&self.entities[index], definition, false);
+            let resistance = self.entities[index].resistances.level(damage_type);
+            let damage = resolve_armored_damage(
+                rfb_area_damage(base_raw_damage, lateral_distance),
+                damage_type,
+                target_stats.armor_class.value,
+                resistance,
+            );
+            self.entities[index].alerted = true;
+            let application = plan_damage_application(
+                &self.entities[index],
+                damage,
+                FatalityPolicy::AtOrBelowZero,
+            );
+            commit_damage_application(&mut self.entities[index], &application);
+            changed.insert(target_position);
+            self.wake_entity_after_damage(index, damage.applied, events);
+            if !application.fatal {
+                self.resolve_monster_fear_aura(index, "hurt", true, events);
+            }
+            if application.fatal {
+                self.resolve_actor_death(
+                    index,
+                    DomainEvent::ItemActivationSlew {
+                        source_kind_id: source_kind_id.clone(),
+                        profile_id: profile_id.clone(),
+                        target_kind_id,
+                        damage,
+                        trace: trace.clone(),
+                    },
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            } else {
+                events.push(DomainEvent::ItemActivationHit {
+                    source_kind_id: source_kind_id.clone(),
+                    profile_id: profile_id.clone(),
+                    target_kind_id,
+                    damage,
+                    trace: trace.clone(),
+                });
+            }
+        }
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve_item_activation_damage(
         &mut self,
         source_kind_id: String,

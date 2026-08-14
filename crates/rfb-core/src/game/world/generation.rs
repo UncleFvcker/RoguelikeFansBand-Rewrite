@@ -1293,10 +1293,29 @@ impl Game {
                 .chance_one_in
                 .is_none_or(|chance| self.rng.bounded(u64::from(chance)) == 0)
         {
+            let (deep_terrain_id, shallow_terrain_id) = river
+                .alternative
+                .as_ref()
+                .filter(|alternative| {
+                    self.rng.bounded(u64::from(alternative.chance_denominator))
+                        < u64::from(alternative.chance_numerator)
+                })
+                .map_or(
+                    (
+                        river.deep_terrain_id.as_str(),
+                        river.shallow_terrain_id.as_str(),
+                    ),
+                    |alternative| {
+                        (
+                            alternative.deep_terrain_id.as_str(),
+                            alternative.shallow_terrain_id.as_str(),
+                        )
+                    },
+                );
             self.generate_river(
                 definition,
-                &river.deep_terrain_id,
-                &river.shallow_terrain_id,
+                deep_terrain_id,
+                shallow_terrain_id,
                 lake_origin.unwrap_or(Position {
                     x: i32::from(width / 2),
                     y: i32::from(height / 2),
@@ -1363,10 +1382,16 @@ impl Game {
                     &mut terrain,
                 )
             });
-        let door_position = (!maze_only && !cave_room_layout).then_some(Position {
-            x: (first_center.x + second_center.x) / 2,
-            y: first_center.y,
-        });
+        let door_position = (definition
+            .layout
+            .as_ref()
+            .is_none_or(|layout| layout.place_doors)
+            && !maze_only
+            && !cave_room_layout)
+            .then_some(Position {
+                x: (first_center.x + second_center.x) / 2,
+                y: first_center.y,
+            });
         if let Some(door_position) = door_position {
             set_generated_terrain(
                 &mut terrain,
@@ -1522,7 +1547,7 @@ impl Game {
             stair_reserved.insert(door_position);
         }
         if guardian.is_some() {
-            stair_reserved.insert(if cave_room_layout {
+            stair_reserved.insert(if maze_only || cave_room_layout {
                 second_center
             } else {
                 Position {
@@ -1709,7 +1734,7 @@ impl Game {
             occupied.insert(down_stair_position);
         }
         let guardian_position = guardian.map(|_| {
-            if cave_room_layout {
+            if maze_only || cave_room_layout {
                 second_center
             } else {
                 Position {
@@ -1896,6 +1921,7 @@ impl Game {
                             content_rooms,
                             placement_room_id,
                             &occupied,
+                            None,
                         )
                     };
                     let required_terrain = self
@@ -2297,8 +2323,12 @@ impl Game {
                     allocation.reference_area_tiles,
                 );
                 for ordinal in 0..room_count {
-                    let (room_id, position) =
-                        self.choose_generated_rooms_position(content_rooms, &occupied);
+                    let (room_id, position) = self.choose_generated_rooms_position(
+                        content_rooms,
+                        &terrain,
+                        width,
+                        &occupied,
+                    );
                     occupied.insert(position);
                     items.extend(self.generate_loot_instances(
                         &LootContext {
@@ -2371,6 +2401,7 @@ impl Game {
                             content_rooms,
                             placement_room_id,
                             &occupied,
+                            Some((&terrain, width)),
                         )
                     };
                     occupied.insert(position);
@@ -2390,8 +2421,12 @@ impl Game {
             }
         } else {
             for spawn in &definition.loot_spawns {
-                let position =
-                    self.choose_generated_room_position(&rooms, &spawn.room_id, &occupied);
+                let position = self.choose_generated_room_position(
+                    &rooms,
+                    &spawn.room_id,
+                    &occupied,
+                    Some((&terrain, width)),
+                );
                 occupied.insert(position);
                 items.extend(self.generate_loot_instances(
                     &LootContext {
@@ -3878,7 +3913,7 @@ impl Game {
                 self.roll_weighted_index(&plain_weights)
             };
             let entry = &plain_entries[entry_index];
-            let position = self.choose_generated_room_position(rooms, room_id, occupied);
+            let position = self.choose_generated_room_position(rooms, room_id, occupied, None);
             occupied.insert(position);
             leader_ordinal += 1;
             generated.push(self.generated_actor(
@@ -4112,6 +4147,7 @@ impl Game {
         rooms: &[GeneratedRoom],
         room_id: &str,
         occupied: &BTreeSet<Position>,
+        walkable_terrain: Option<(&[String], u16)>,
     ) -> Position {
         let room = rooms
             .iter()
@@ -4119,7 +4155,15 @@ impl Game {
             .expect("validated procedural room ID must remain available");
         let candidates = (room.y..room.y + room.height)
             .flat_map(|y| (room.x..room.x + room.width).map(move |x| Position { x, y }))
-            .filter(|position| room.contains(*position) && !occupied.contains(position))
+            .filter(|position| {
+                room.contains(*position)
+                    && !occupied.contains(position)
+                    && walkable_terrain.is_none_or(|(terrain, width)| {
+                        self.content
+                            .terrain(&terrain[generated_terrain_index(width, *position)])
+                            .is_some_and(|terrain| terrain.walkable)
+                    })
+            })
             .collect::<Vec<_>>();
         let index = usize::try_from(self.rng.bounded(
             u64::try_from(candidates.len()).expect("generated room candidate count must fit u64"),
@@ -4168,16 +4212,23 @@ impl Game {
     fn choose_generated_rooms_position(
         &mut self,
         rooms: &[GeneratedRoom],
+        terrain: &[String],
+        width: u16,
         occupied: &BTreeSet<Position>,
     ) -> (String, Position) {
+        let content = &self.content;
         let candidates = rooms
             .iter()
             .flat_map(|room| {
                 (room.y..room.y + room.height).flat_map(move |y| {
                     (room.x..room.x + room.width).filter_map(move |x| {
                         let position = Position { x, y };
-                        (room.contains(position) && !occupied.contains(&position))
-                            .then_some((room.id.clone(), position))
+                        (room.contains(position)
+                            && !occupied.contains(&position)
+                            && content
+                                .terrain(&terrain[generated_terrain_index(width, position)])
+                                .is_some_and(|terrain| terrain.walkable))
+                        .then_some((room.id.clone(), position))
                     })
                 })
             })

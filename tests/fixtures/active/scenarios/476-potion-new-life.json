@@ -36,7 +36,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 311,
+      "rngDrawCounter": 302,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -339,42 +339,42 @@
           "strength": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 98,
+            "potential": 128,
             "effective": 17,
             "index": 14
           },
           "intelligence": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 138,
+            "potential": 98,
             "effective": 11,
             "index": 8
           },
           "wisdom": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 128,
+            "potential": 138,
             "effective": 11,
             "index": 8
           },
           "dexterity": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 88,
+            "potential": 118,
             "effective": 15,
             "index": 12
           },
           "constitution": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 118,
+            "potential": 98,
             "effective": 15,
             "index": 12
           },
           "charisma": {
             "natural": 13,
             "maximumNatural": 13,
-            "potential": 138,
+            "potential": 128,
             "effective": 14,
             "index": 11
           }
@@ -932,6 +932,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.rune-sword",
+            "nameKey": "item-demo-rune-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.sabre",
             "nameKey": "item-demo-sabre-name",
             "category": "melee",
@@ -1033,6 +1042,15 @@
           {
             "itemKindId": "demo.item.trident",
             "nameKey": "item-demo-trident-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.trifurcate-spear",
+            "nameKey": "item-demo-trifurcate-spear-name",
             "category": "melee",
             "rank": "beginner",
             "current": 4000,
@@ -1669,7 +1687,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 193,
+      "nextItemInstanceSerial": 205,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1677,7 +1695,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "b228400f6b08bc6649355ba257fa04ca8c6f53985a71115f7a29d048c39d33f1"
+      "stateHash": "c2aa117c65548025ecf76e012d9fbd5b3fb28316a5b7bafc54b2172405ed648f"
     },
     "events": [
       {
@@ -1689,6 +1707,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "b228400f6b08bc6649355ba257fa04ca8c6f53985a71115f7a29d048c39d33f1"
+    "saveRoundTripStateHash": "c2aa117c65548025ecf76e012d9fbd5b3fb28316a5b7bafc54b2172405ed648f"
   }
 }

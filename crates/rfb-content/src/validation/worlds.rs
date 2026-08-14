@@ -107,6 +107,8 @@ pub(super) struct WorldValidationRefs<'a> {
     pub(super) actors: &'a [ActorDefinition],
     pub(super) item_limits: &'a BTreeMap<String, (u32, bool)>,
     pub(super) items: &'a [ItemDefinition],
+    pub(super) ability_books: &'a [AbilityBookDefinition],
+    pub(super) builds: &'a [CharacterBuildDefinition],
     pub(super) affix_ids: &'a BTreeSet<String>,
     pub(super) encounter_tables: &'a BTreeMap<String, EncounterTableDefinition>,
     pub(super) loot_table_ids: &'a BTreeSet<String>,
@@ -519,6 +521,8 @@ pub(super) fn validate_world(
         actors,
         item_limits,
         items,
+        ability_books,
+        builds,
         affix_ids,
         encounter_tables,
         loot_table_ids,
@@ -1222,7 +1226,6 @@ pub(super) fn validate_world(
                     || layout.river.is_some()
                     || layout.destroyed.is_some()
                     || layout.pit.is_some()
-                    || layout.stairs.is_some()
                     || budget.cavern_area_tiles.is_some()
                     || budget.lake_area_tiles.is_some()
                     || budget.lake_deep_area_tiles.is_some()
@@ -1236,7 +1239,6 @@ pub(super) fn validate_world(
                     || feature_budget.is_some()
                     || procedural.vault_id.is_some()
                     || procedural.nest.is_some()
-                    || procedural.guardian.is_some()
                     || !procedural.actor_spawns.is_empty()
                     || !procedural.loot_spawns.is_empty()
                 {
@@ -1479,6 +1481,22 @@ pub(super) fn validate_world(
                             &river.shallow_terrain_id,
                             false,
                         )?;
+                        if let Some(alternative) = &river.alternative {
+                            validate_hydrology_terrain(
+                                &alternative.deep_terrain_id,
+                                &alternative.shallow_terrain_id,
+                                false,
+                            )?;
+                            if alternative.chance_numerator == 0
+                                || alternative.chance_numerator >= alternative.chance_denominator
+                                || alternative.deep_terrain_id == river.deep_terrain_id
+                                || alternative.shallow_terrain_id == river.shallow_terrain_id
+                            {
+                                return Err(ContentError::InvalidProceduralFloor(
+                                    procedural.id.clone(),
+                                ));
+                            }
+                        }
                         let center_x = procedural.width / 2;
                         let center_y = procedural.height / 2;
                         let maximum_centerline_tiles = u32::from(
@@ -1505,7 +1523,8 @@ pub(super) fn validate_world(
                     }
                 }
                 if let (Some(lake), Some(river)) = (&layout.lake, &layout.river)
-                    && (lake.deep_terrain_id != river.deep_terrain_id
+                    && (river.alternative.is_some()
+                        || lake.deep_terrain_id != river.deep_terrain_id
                         || lake.shallow_terrain_id != river.shallow_terrain_id)
                 {
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
@@ -1873,6 +1892,35 @@ pub(super) fn validate_world(
                 let artifact = items.iter().find(|item| item.id == *item_kind_id);
                 if guardian.reward_loot_table_id.is_none()
                     || artifact.is_none_or(|item| item.artifact_generation.is_none())
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
+            }
+            if let Some(rank) = guardian.reward_first_realm_book_rank {
+                let realms = builds
+                    .iter()
+                    .filter_map(|build| build.first_realm_id.as_deref())
+                    .collect::<BTreeSet<_>>();
+                if !(1..=4).contains(&rank)
+                    || guardian.reward_loot_table_id.is_none()
+                    || guardian.reward_artifact_item_kind_id.is_some()
+                    || realms.iter().any(|realm_id| {
+                        items
+                            .iter()
+                            .filter(|item| {
+                                item.ability_book_id
+                                    .as_deref()
+                                    .and_then(|book_id| {
+                                        ability_books.iter().find(|book| book.id == book_id)
+                                    })
+                                    .is_some_and(|book| {
+                                        book.realm_id.as_deref() == Some(*realm_id)
+                                            && book.rank == Some(rank)
+                                    })
+                            })
+                            .count()
+                            != 1
+                    })
                 {
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                 }

@@ -439,6 +439,11 @@
           "format": "int32",
           "type": "integer"
         },
+        "lifePercent": {
+          "description": "Additive adjustment to RFB's equipment life multiplier. `9` means +9% max HP.",
+          "format": "int32",
+          "type": "integer"
+        },
         "lightRadius": {
           "default": 0,
           "format": "int32",
@@ -498,6 +503,18 @@
         "see-invisible",
         "vampiric",
         "hold-life",
+        "levitation",
+        "warning",
+        "slow-digestion",
+        "esp-animal",
+        "esp-undead",
+        "esp-demon",
+        "esp-orc",
+        "esp-troll",
+        "esp-giant",
+        "esp-dragon",
+        "esp-human",
+        "esp-good",
         "sustain-strength",
         "sustain-intelligence",
         "sustain-wisdom",
@@ -2719,6 +2736,77 @@
             "type",
             "damageDice",
             "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageType": {
+              "$ref": "#/$defs/ActorDamageType",
+              "default": "physical"
+            },
+            "type": {
+              "const": "beam-damage",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "damage": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageTypes": {
+              "items": {
+                "$ref": "#/$defs/ActorDamageType"
+              },
+              "type": "array"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "random-element-cone-damage",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damage",
+            "damageTypes",
+            "radius"
           ],
           "type": "object"
         },

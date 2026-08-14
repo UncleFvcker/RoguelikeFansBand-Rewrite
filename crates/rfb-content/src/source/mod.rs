@@ -29,7 +29,7 @@ use crate::{
 pub(crate) use items::SourceItemDefinition;
 #[cfg(test)]
 pub(crate) use items::SourceItemUseActionDefinition;
-const MAX_SOURCE_FILE_LENGTH: usize = 1024 * 1024;
+const MAX_SOURCE_FILE_LENGTH: usize = 2 * 1024 * 1024;
 const MAX_SOURCE_TOTAL_LENGTH: usize = 16 * 1024 * 1024;
 const MAX_SOURCE_FILES: usize = 32_768;
 pub(crate) const SUPPORTED_ROOTS: [&str; 27] = [

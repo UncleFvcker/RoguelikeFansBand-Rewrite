@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.220";
+pub const PROTOCOL_VERSION: &str = "1.221";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
 
@@ -544,6 +544,8 @@ pub struct AbilityBanishTargetDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentBonusesDto {
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub life_percent: i32,
     #[serde(default)]
     pub melee_attacks: i32,
     #[serde(default)]
@@ -588,6 +590,18 @@ pub enum EquipmentPassiveDto {
     SeeInvisible,
     Vampiric,
     HoldLife,
+    Levitation,
+    Warning,
+    SlowDigestion,
+    EspAnimal,
+    EspUndead,
+    EspDemon,
+    EspOrc,
+    EspTroll,
+    EspGiant,
+    EspDragon,
+    EspHuman,
+    EspGood,
     SustainStrength,
     SustainIntelligence,
     SustainWisdom,
@@ -607,13 +621,25 @@ where
             "see-invisible" => Some(Ok(EquipmentPassiveDto::SeeInvisible)),
             "vampiric" => Some(Ok(EquipmentPassiveDto::Vampiric)),
             "hold-life" => Some(Ok(EquipmentPassiveDto::HoldLife)),
+            "levitation" => Some(Ok(EquipmentPassiveDto::Levitation)),
+            "warning" => Some(Ok(EquipmentPassiveDto::Warning)),
+            "slow-digestion" => Some(Ok(EquipmentPassiveDto::SlowDigestion)),
+            "esp-animal" => Some(Ok(EquipmentPassiveDto::EspAnimal)),
+            "esp-undead" => Some(Ok(EquipmentPassiveDto::EspUndead)),
+            "esp-demon" => Some(Ok(EquipmentPassiveDto::EspDemon)),
+            "esp-orc" => Some(Ok(EquipmentPassiveDto::EspOrc)),
+            "esp-troll" => Some(Ok(EquipmentPassiveDto::EspTroll)),
+            "esp-giant" => Some(Ok(EquipmentPassiveDto::EspGiant)),
+            "esp-dragon" => Some(Ok(EquipmentPassiveDto::EspDragon)),
+            "esp-human" => Some(Ok(EquipmentPassiveDto::EspHuman)),
+            "esp-good" => Some(Ok(EquipmentPassiveDto::EspGood)),
             "sustain-strength" => Some(Ok(EquipmentPassiveDto::SustainStrength)),
             "sustain-intelligence" => Some(Ok(EquipmentPassiveDto::SustainIntelligence)),
             "sustain-wisdom" => Some(Ok(EquipmentPassiveDto::SustainWisdom)),
             "sustain-dexterity" => Some(Ok(EquipmentPassiveDto::SustainDexterity)),
             "sustain-constitution" => Some(Ok(EquipmentPassiveDto::SustainConstitution)),
             "sustain-charisma" => Some(Ok(EquipmentPassiveDto::SustainCharisma)),
-            "telepathy" | "levitation" | "blessed" | "easy-spell" | "device-power" => None,
+            "telepathy" | "blessed" | "easy-spell" | "device-power" => None,
             _ => Some(Err(serde::de::Error::custom(format!(
                 "unknown rolled affix passive `{passive}`"
             )))),
@@ -4822,6 +4848,10 @@ pub struct DefeatedActorCountSaveDto {
 }
 
 fn is_zero_u32(value: &u32) -> bool {
+    *value == 0
+}
+
+fn is_zero_i32(value: &i32) -> bool {
     *value == 0
 }
 

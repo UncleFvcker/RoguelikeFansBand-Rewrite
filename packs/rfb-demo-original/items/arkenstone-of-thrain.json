@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.arkenstone-of-thrain",
+  "nameKey": "item-demo-arkenstone-of-thrain-name",
+  "descriptionKey": "item-demo-arkenstone-of-thrain-description",
+  "glyph": "*",
+  "generationLevel": 50,
+  "weightTenthsPound": 20,
+  "maxStack": 1,
+  "baseValue": 100000,
+  "equipmentSlot": "light",
+  "artifactGeneration": {
+    "sourceIndex": 329,
+    "baseItemKindId": "demo.item.arkenstone",
+    "rarityOneIn": 5,
+    "instant": true
+  },
+  "equipmentBonuses": { "lightRadius": 3 },
+  "resistances": { "light": "resistant", "dark": "resistant" },
+  "passives": ["see-invisible", "hold-life"],
+  "deviceGeneration": {
+    "recovery": { "intervalTicks": 1500, "energyPerMille": 1000 },
+    "activations": [
+      {
+        "id": "demo.item-activation.arkenstone-clairvoyance",
+        "nameKey": "item-activation-demo-arkenstone-clairvoyance-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 50,
+        "charges": { "minimum": 1, "maximum": 1, "cost": 1 },
+        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+        "effectProgramId": "demo.effect.arkenstone-clairvoyance"
+      }
+    ]
+  },
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "tags": ["artifact", "equipment", "light-source"]
+}

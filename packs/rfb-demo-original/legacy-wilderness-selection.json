@@ -38,6 +38,51 @@
       "sourceIndex": 21,
       "sourceName": "Icky cave",
       "id": "demo.dungeon.icky-cave"
+    },
+    {
+      "sourceIndex": 4,
+      "sourceName": "Labyrinth",
+      "id": "demo.dungeon.labyrinth"
+    },
+    {
+      "sourceIndex": 14,
+      "sourceName": "Eyrie",
+      "id": "demo.dungeon.eyrie"
+    },
+    {
+      "sourceIndex": 15,
+      "sourceName": "Mine",
+      "id": "demo.dungeon.mine"
+    },
+    {
+      "sourceIndex": 23,
+      "sourceName": "Lonely Mountain",
+      "id": "demo.dungeon.lonely-mountain"
+    },
+    {
+      "sourceIndex": 5,
+      "sourceName": "Dragon's lair",
+      "id": "demo.dungeon.dragon-lair"
+    },
+    {
+      "sourceIndex": 12,
+      "sourceName": "Castle",
+      "id": "demo.dungeon.castle"
+    },
+    {
+      "sourceIndex": 24,
+      "sourceName": "Giant's Hall",
+      "id": "demo.dungeon.giants-hall"
+    },
+    {
+      "sourceIndex": 38,
+      "sourceName": "Snow castle",
+      "id": "demo.dungeon.snow-castle"
+    },
+    {
+      "sourceIndex": 6,
+      "sourceName": "Graveyard",
+      "id": "demo.dungeon.graveyard"
     }
   ],
   "townPlans": [
@@ -169,6 +214,451 @@
       "finalObject": { "tval": 34, "sval": 10 }
     },
     {
+      "sourceIndex": 4,
+      "sourceName": "Labyrinth",
+      "id": "demo.dungeon.labyrinth",
+      "position": { "x": 5, "y": 48 },
+      "minimumDepth": 20,
+      "maximumDepth": 28,
+      "monsterDivisor": 64,
+      "generationFlags": [
+        "MAZE",
+        "SMALLEST",
+        "FORGET"
+      ],
+      "monsterPreferences": [],
+      "floorTerrainDistribution": [
+        { "sourceTag": "FLOOR", "percent": 100 },
+        { "sourceTag": "FLOOR", "percent": 0 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 100,
+      "guardian": {
+        "sourceIndex": 1034,
+        "sourceName": "The Minotaur of the Labyrinth",
+        "chineseName": "迷宫牛头怪",
+        "level": 35
+      },
+      "finalObject": { "tval": 66, "sval": 0 },
+      "finalEgoSourceIndex": 56
+    },
+    {
+      "sourceIndex": 14,
+      "sourceName": "Eyrie",
+      "id": "demo.dungeon.eyrie",
+      "position": { "x": 76, "y": 46 },
+      "minimumDepth": 40,
+      "maximumDepth": 50,
+      "monsterDivisor": 16,
+      "generationFlags": [
+        "WATER_RIVER",
+        "CAVE",
+        "CAVERN",
+        "NO_DOORS",
+        "BIG",
+        "ALL_SHAFTS"
+      ],
+      "monsterPreferences": [
+        "TROLL",
+        "GIANT",
+        "CAN_FLY",
+        "ANIMAL",
+        "WILD_MOUNTAIN",
+        "R_CHAR_OYH"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "GRASS", "percent": 100 },
+        { "sourceTag": "GRASS", "percent": 0 },
+        { "sourceTag": "GRASS", "percent": 0 }
+      ],
+      "tunnelPercent": 0,
+      "initialGuardian": {
+        "sourceIndex": 640,
+        "sourceName": "Jubjub bird",
+        "chineseName": "加布加布鸟",
+        "level": 40
+      },
+      "guardian": {
+        "sourceIndex": 468,
+        "sourceName": "Thorondor",
+        "chineseName": "巨鹰之王索隆多",
+        "level": 55
+      },
+      "finalObject": { "tval": 75, "sval": 63 }
+    },
+    {
+      "sourceIndex": 15,
+      "sourceName": "Mine",
+      "id": "demo.dungeon.mine",
+      "position": { "x": 49, "y": 23 },
+      "minimumDepth": 75,
+      "maximumDepth": 80,
+      "monsterDivisor": 1,
+      "generationFlags": [
+        "WATER_RIVER",
+        "CAVE",
+        "CAVERN",
+        "SMALLEST",
+        "LAVA_RIVER",
+        "DESTROY"
+      ],
+      "monsterPreferences": [
+        "R_CHAR_$"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "FLOOR", "percent": 100 },
+        { "sourceTag": "FLOOR", "percent": 0 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 0,
+      "initialGuardian": {
+        "sourceIndex": 1128,
+        "sourceName": "Elder storm giant",
+        "chineseName": "远古风暴巨人",
+        "level": 56
+      },
+      "guardian": {
+        "sourceIndex": 1250,
+        "sourceName": "Polyphemus, the Blind Cyclops",
+        "chineseName": "瞎眼独眼巨人波吕斐摩斯",
+        "level": 80
+      },
+      "finalObject": { "tval": 75, "sval": 38 }
+    },
+    {
+      "sourceIndex": 23,
+      "sourceName": "Lonely Mountain",
+      "id": "demo.dungeon.lonely-mountain",
+      "position": { "x": 42, "y": 58 },
+      "minimumDepth": 30,
+      "maximumDepth": 40,
+      "monsterDivisor": 10,
+      "generationFlags": [
+        "BIG",
+        "LAVA_RIVER",
+        "CAVERN",
+        "DESTROY",
+        "CAVE",
+        "LAKE_LAVA",
+        "LAKE_TREE",
+        "LAKE_RUBBLE"
+      ],
+      "monsterPreferences": [
+        "DRAGON",
+        "R_CHAR_dD"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "DIRT", "percent": 100 },
+        { "sourceTag": "FLOOR", "percent": 0 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 0,
+      "guardian": {
+        "sourceIndex": 697,
+        "sourceName": "Smaug the Golden",
+        "chineseName": "黄金史矛革",
+        "level": 45
+      },
+      "finalArtifactSourceIndex": 329
+    },
+    {
+      "sourceIndex": 5,
+      "sourceName": "Dragon's lair",
+      "id": "demo.dungeon.dragon-lair",
+      "position": { "x": 74, "y": 28 },
+      "minimumDepth": 60,
+      "maximumDepth": 72,
+      "monsterDivisor": 10,
+      "generationFlags": [
+        "BIG",
+        "LAVA_RIVER",
+        "CAVERN",
+        "DESTROY",
+        "CAVE",
+        "LAKE_LAVA",
+        "LAKE_TREE",
+        "LAKE_RUBBLE"
+      ],
+      "monsterPreferences": [
+        "DRAGON",
+        "R_CHAR_dD"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "DIRT", "percent": 100 },
+        { "sourceTag": "FLOOR", "percent": 0 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 0,
+      "initialGuardian": {
+        "sourceIndex": 675,
+        "sourceName": "Ancient multi-hued dragon",
+        "chineseName": "上古多彩龙",
+        "level": 43
+      },
+      "guardian": {
+        "sourceIndex": 795,
+        "sourceName": "Tiamat, Celestial Dragon of Evil",
+        "chineseName": "邪恶天龙提亚马特",
+        "level": 70
+      },
+      "finalObject": { "tval": 38, "sval": 6 }
+    },
+    {
+      "sourceIndex": 12,
+      "sourceName": "Castle",
+      "id": "demo.dungeon.castle",
+      "position": { "x": 88, "y": 34 },
+      "minimumDepth": 40,
+      "maximumDepth": 65,
+      "monsterDivisor": 16,
+      "generationFlags": [
+        "ARENA",
+        "NO_CAVE",
+        "CURTAIN",
+        "GLASS_ROOM"
+      ],
+      "monsterPreferences": [
+        "DEMON",
+        "R_CHAR_phHg"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "FLOOR", "percent": 100 },
+        { "sourceTag": "FLOOR", "percent": 0 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 100,
+      "initialGuardian": {
+        "sourceIndex": 497,
+        "sourceName": "Anti-paladin",
+        "chineseName": "反圣武士",
+        "level": 33
+      },
+      "guardian": {
+        "sourceIndex": 882,
+        "sourceName": "Layzark, the Emperor",
+        "chineseName": "皇帝雷扎克",
+        "level": 65
+      }
+    },
+    {
+      "sourceIndex": 24,
+      "sourceName": "Giant's Hall",
+      "id": "demo.dungeon.giants-hall",
+      "position": { "x": 63, "y": 44 },
+      "minimumDepth": 30,
+      "maximumDepth": 40,
+      "monsterDivisor": 2,
+      "generationFlags": [
+        "WATER_RIVER",
+        "CAVE",
+        "CAVERN",
+        "NO_DOORS",
+        "BIG"
+      ],
+      "monsterPreferences": [
+        "GIANT"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "GRASS", "percent": 100 },
+        { "sourceTag": "GRASS", "percent": 0 },
+        { "sourceTag": "GRASS", "percent": 0 }
+      ],
+      "tunnelPercent": 0,
+      "guardian": {
+        "sourceIndex": 683,
+        "sourceName": "Utgard-Loke",
+        "chineseName": "乌特加德-洛基",
+        "level": 44
+      },
+      "finalArtifactSourceIndex": 185,
+      "substituteSourceIndex": 38
+    },
+    {
+      "sourceIndex": 38,
+      "sourceName": "Snow castle",
+      "id": "demo.dungeon.snow-castle",
+      "position": { "x": 65, "y": 44 },
+      "minimumDepth": 30,
+      "maximumDepth": 50,
+      "monsterDivisor": 2,
+      "generationFlags": [
+        "ALL_SHAFTS",
+        "WILD_TYPE_13",
+        "NO_CAVE",
+        "NO_DOORS"
+      ],
+      "monsterPreferences": [
+        "GIANT",
+        "WILD_SNOW",
+        "IM_COLD"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "SNOW_FLOOR", "percent": 45 },
+        { "sourceTag": "SLUSH", "percent": 30 },
+        { "sourceTag": "ICE_FLOOR", "percent": 25 }
+      ],
+      "tunnelPercent": 40,
+      "guardian": {
+        "sourceIndex": 683,
+        "sourceName": "Utgard-Loke",
+        "chineseName": "乌特加德-洛基",
+        "level": 44
+      },
+      "finalArtifactSourceIndex": 185
+    },
+    {
+      "sourceIndex": 32,
+      "sourceName": "Battlefield",
+      "id": "demo.dungeon.battlefield",
+      "position": { "x": 75, "y": 57 },
+      "minimumDepth": 30,
+      "maximumDepth": 50,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "ALL_SHAFTS"
+      ],
+      "monsterPreferences": [
+        "GOOD",
+        "EVIL"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "FLOOR", "percent": 50 },
+        { "sourceTag": "DIRT", "percent": 50 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 8,
+      "initialGuardian": {
+        "sourceIndex": 607,
+        "sourceName": "Black wraith",
+        "chineseName": "黑幽灵",
+        "level": 38
+      },
+      "guardian": {
+        "sourceIndex": 738,
+        "sourceName": "Khamul the Easterling",
+        "chineseName": "东方人克哈穆尔",
+        "level": 53
+      },
+      "finalObject": { "tval": 23, "sval": 34 }
+    },
+    {
+      "sourceIndex": 11,
+      "sourceName": "Numenor",
+      "id": "demo.dungeon.numenor",
+      "position": { "x": 30, "y": 27 },
+      "minimumDepth": 55,
+      "maximumDepth": 75,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "LAKE_WATER",
+        "WATER_RIVER",
+        "DESTROY"
+      ],
+      "monsterPreferences": [
+        "CAN_SWIM",
+        "CAN_FLY",
+        "AQUATIC",
+        "WILD_OCEAN"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "FLOOR", "percent": 80 },
+        { "sourceTag": "SHALLOW_WATER", "percent": 20 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 100,
+      "initialGuardian": {
+        "sourceIndex": 740,
+        "sourceName": "Lesser kraken",
+        "chineseName": "次级克拉肯",
+        "level": 54
+      },
+      "guardian": {
+        "sourceIndex": 854,
+        "sourceName": "Jormungand the Midgard Serpent",
+        "chineseName": "尘世巨蟒耶梦加得",
+        "level": 75
+      },
+      "finalArtifactSourceIndex": 107,
+      "substituteSourceIndex": 41
+    },
+    {
+      "sourceIndex": 41,
+      "sourceName": "Atlantis",
+      "id": "demo.dungeon.atlantis",
+      "position": { "x": 30, "y": 27 },
+      "minimumDepth": 55,
+      "maximumDepth": 65,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "LAKE_WATER"
+      ],
+      "monsterPreferences": [
+        "CAN_SWIM",
+        "CAN_FLY",
+        "AQUATIC",
+        "WILD_OCEAN"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "FLOOR", "percent": 60 },
+        { "sourceTag": "DEEP_WATER", "percent": 20 },
+        { "sourceTag": "SHALLOW_WATER", "percent": 20 }
+      ],
+      "tunnelPercent": 40,
+      "initialGuardian": {
+        "sourceIndex": 740,
+        "sourceName": "Lesser kraken",
+        "chineseName": "次级克拉肯",
+        "level": 54
+      },
+      "guardian": {
+        "sourceIndex": 1254,
+        "sourceName": "Kundry, Queen of the Lost Haven",
+        "chineseName": "失落避风港女王昆德丽",
+        "level": 69
+      },
+      "finalArtifactSourceIndex": 107
+    },
+    {
+      "sourceIndex": 6,
+      "sourceName": "Graveyard",
+      "id": "demo.dungeon.graveyard",
+      "position": { "x": 85, "y": 19 },
+      "minimumDepth": 50,
+      "maximumDepth": 70,
+      "monsterDivisor": 4,
+      "generationFlags": [
+        "WATER_RIVER",
+        "DESTROY",
+        "ARENA",
+        "LAKE_WATER",
+        "LAKE_RUBBLE",
+        "ALL_SHAFTS"
+      ],
+      "monsterPreferences": [
+        "UNDEAD",
+        "NONLIVING"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "FLOOR", "percent": 85 },
+        { "sourceTag": "SHALLOW_WATER", "percent": 15 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 30,
+      "initialGuardian": {
+        "sourceIndex": 658,
+        "sourceName": "Master lich",
+        "chineseName": "巫妖大师",
+        "level": 41
+      },
+      "guardian": {
+        "sourceIndex": 804,
+        "sourceName": "Vecna, the Emperor Lich",
+        "chineseName": "巫妖之王维克那",
+        "level": 72
+      },
+      "finalArtifactSourceIndex": 89
+    },
+    {
       "sourceIndex": 33,
       "sourceName": "Tidal cave",
       "id": "demo.dungeon.tidal-cave",
@@ -272,6 +762,55 @@
         "level": 23
       },
       "finalArtifactSourceIndex": 104
+    },
+    {
+      "sourceIndex": 7,
+      "sourceName": "Witch Wood",
+      "id": "demo.dungeon.witch-wood",
+      "position": { "x": 63, "y": 53 },
+      "minimumDepth": 25,
+      "maximumDepth": 40,
+      "monsterDivisor": 8,
+      "generationFlags": ["NO_DOORS", "WATER_RIVER", "WILD_TYPE_7"],
+      "monsterPreferences": ["ANIMAL", "R_CHAR_BC", "WILD_WOOD", "FOREST"],
+      "floorTerrainDistribution": [
+        { "sourceTag": "GRASS", "percent": 85 },
+        { "sourceTag": "FLOWER", "percent": 5 },
+        { "sourceTag": "SWAMP", "percent": 10 }
+      ],
+      "tunnelPercent": 15,
+      "guardian": {
+        "sourceIndex": 1150,
+        "sourceName": "Gertrude",
+        "chineseName": "格特鲁德",
+        "level": 40
+      },
+      "finalObject": { "tval": 90, "sval": 2 },
+      "substituteSourceIndex": 35
+    },
+    {
+      "sourceIndex": 35,
+      "sourceName": "Plains of Oz",
+      "id": "demo.dungeon.plains-of-oz",
+      "position": { "x": 65, "y": 54 },
+      "minimumDepth": 18,
+      "maximumDepth": 36,
+      "monsterDivisor": 1,
+      "generationFlags": ["NO_DOORS", "WATER_RIVER", "COFFEE", "WILD_TYPE_7", "ALL_SHAFTS"],
+      "monsterPreferences": ["AUSSIE"],
+      "floorTerrainDistribution": [
+        { "sourceTag": "GRASS", "percent": 70 },
+        { "sourceTag": "DIRT", "percent": 20 },
+        { "sourceTag": "BRAKE", "percent": 10 }
+      ],
+      "tunnelPercent": 15,
+      "guardian": {
+        "sourceIndex": 1306,
+        "sourceName": "The Wicked Witch of the South-East",
+        "chineseName": "东南方坏女巫",
+        "level": 40
+      },
+      "finalObject": { "tval": 90, "sval": 2 }
     }
   ]
 }

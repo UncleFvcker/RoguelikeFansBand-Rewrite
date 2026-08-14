@@ -31,7 +31,7 @@
       "turn": 1,
       "worldTick": 10,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 197,
+      "rngDrawCounter": 206,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -300,8 +300,8 @@
         }
       ],
       "playerPosition": {
-        "x": 54,
-        "y": 8
+        "x": 34,
+        "y": 14
       },
       "playerHp": 56,
       "playerMaxHp": 56,
@@ -927,6 +927,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.rune-sword",
+            "nameKey": "item-demo-rune-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.sabre",
             "nameKey": "item-demo-sabre-name",
             "category": "melee",
@@ -1028,6 +1037,15 @@
           {
             "itemKindId": "demo.item.trident",
             "nameKey": "item-demo-trident-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.trifurcate-spear",
+            "nameKey": "item-demo-trifurcate-spear-name",
             "category": "melee",
             "rank": "beginner",
             "current": 4000,
@@ -1541,7 +1559,7 @@
           "discovered": true
         }
       ],
-      "nextItemInstanceSerial": 191,
+      "nextItemInstanceSerial": 204,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1549,7 +1567,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "ed57457cdea93b520bef4ea90a1c7e26b3ffea43d664df428de9ee92c96227ff"
+      "stateHash": "05c2b7ee421c88c25463f8c835b89938cf29a599a2db5f0000cf1d3d53efb723"
     },
     "events": [
       {
@@ -1559,8 +1577,8 @@
           "fromX": "44",
           "fromY": "16",
           "source": "demo.item.flicker-scroll",
-          "toX": "54",
-          "toY": "8"
+          "toX": "34",
+          "toY": "14"
         },
         "outcome": {
           "type": "ability-teleport",
@@ -1570,13 +1588,13 @@
               "y": 16
             },
             "to": {
-              "x": 54,
-              "y": 8
+              "x": 34,
+              "y": 14
             }
           }
         }
       }
     ],
-    "saveRoundTripStateHash": "ed57457cdea93b520bef4ea90a1c7e26b3ffea43d664df428de9ee92c96227ff"
+    "saveRoundTripStateHash": "05c2b7ee421c88c25463f8c835b89938cf29a599a2db5f0000cf1d3d53efb723"
   }
 }

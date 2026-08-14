@@ -23,7 +23,7 @@
       "turn": 1,
       "worldTick": 9,
       "lastCommandSeq": 1,
-      "rngDrawCounter": 183,
+      "rngDrawCounter": 192,
       "floorId": "core.floor.wilderness",
       "town": {
         "id": "demo.town.outpost",
@@ -919,6 +919,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.rune-sword",
+            "nameKey": "item-demo-rune-sword-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.sabre",
             "nameKey": "item-demo-sabre-name",
             "category": "melee",
@@ -1020,6 +1029,15 @@
           {
             "itemKindId": "demo.item.trident",
             "nameKey": "item-demo-trident-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
+            "itemKindId": "demo.item.trifurcate-spear",
+            "nameKey": "item-demo-trifurcate-spear-name",
             "category": "melee",
             "rank": "beginner",
             "current": 4000,
@@ -1576,11 +1594,11 @@
           "identified": true
         },
         {
-          "itemId": "generated.item.189",
+          "itemId": "generated.item.2",
           "discovered": true
         },
         {
-          "itemId": "generated.item.2",
+          "itemId": "generated.item.201",
           "discovered": true
         },
         {
@@ -1614,7 +1632,7 @@
           "identified": true
         }
       ],
-      "nextItemInstanceSerial": 190,
+      "nextItemInstanceSerial": 202,
       "nextGoldPileSerial": 1,
       "campaign": {
         "status": "active",
@@ -1622,7 +1640,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "d246c03042265bb052bc54fc9de3235fc9a0839519b0b3151c6111c2a119b189"
+      "stateHash": "2295740f5cfd31de0fbfb917041fe10ef6bd30cb9f37b310af6069f75b3829c6"
     },
     "events": [
       {

@@ -96,7 +96,11 @@ fn effect_program_input_for_step(
 ) -> Option<EffectProgramInputDefinition> {
     match effect {
         ItemUseEffectDefinition::Sequence { .. } => None,
-        ItemUseEffectDefinition::Damage { .. } => Some(EffectProgramInputDefinition::Actor),
+        ItemUseEffectDefinition::Damage { .. }
+        | ItemUseEffectDefinition::BeamDamage { .. }
+        | ItemUseEffectDefinition::RandomElementConeDamage { .. } => {
+            Some(EffectProgramInputDefinition::Actor)
+        }
         ItemUseEffectDefinition::IdentifyItem { .. }
         | ItemUseEffectDefinition::EnchantItem { .. }
         | ItemUseEffectDefinition::MundanifyItem

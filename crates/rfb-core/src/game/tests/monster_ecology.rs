@@ -712,6 +712,140 @@ fn p87e_tidal_cave_allocation_keeps_location_locks_and_grendel_out() {
 }
 
 #[test]
+fn p96c_shared_aquatic_ecology_keeps_wilderness_only_monsters_out() {
+    let mut game =
+        Game::new_with_build(0, "demo.build.warrior").expect("Middle-earth should create");
+    game.current_floor_id = "demo.floor.numenor-depth-55".to_owned();
+    let policy = game
+        .content
+        .encounter_table("demo.encounter-table.numenor-atlantis")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Numenor and Atlantis global allocation policy")
+        .clone();
+    assert!(game.content.actor_definitions().any(|actor| {
+        actor.allocation.as_ref().is_some_and(|allocation| {
+            allocation.wild_only && allocation.habitats.contains(&ActorHabitat::Ocean)
+        })
+    }));
+
+    for _ in 0..256 {
+        let selected = game
+            .select_original_allocated_monster(&policy, 55, 55, None, &[], None, None)
+            .expect("shared aquatic ecology should retain ordinary dungeon candidates");
+        let actor = game.content.actor(&selected).expect("selected actor");
+        let allocation = actor.allocation.as_ref().expect("selected allocation");
+        assert!(!allocation.wild_only, "{selected}");
+        assert!(
+            actor.movement.modes.iter().any(|mode| matches!(
+                mode,
+                ActorMovementMode::Aquatic | ActorMovementMode::Swim | ActorMovementMode::Fly
+            )) || allocation.habitats.contains(&ActorHabitat::Ocean),
+            "{selected}"
+        );
+        assert!(
+            allocation.legacy_dungeon_indices.is_empty()
+                || allocation.legacy_dungeon_indices.contains(&11),
+            "{selected}"
+        );
+    }
+}
+
+#[test]
+fn p97e_dragon_lair_prefers_dragons_and_excludes_guardians_and_wild_only() {
+    let mut game =
+        Game::new_with_build(197, "demo.build.warrior").expect("Middle-earth should create");
+    game.current_floor_id = "demo.floor.dragon-lair-depth-60".to_owned();
+    let policy = game
+        .content
+        .encounter_table("demo.encounter-table.dragon-lair")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Dragon's Lair global allocation policy")
+        .clone();
+    let dragon = game
+        .content
+        .actor("demo.actor.young-red-dragon")
+        .expect("ordinary dragon should exist")
+        .clone();
+    let ogre = game
+        .content
+        .actor("demo.actor.ogre")
+        .expect("ordinary non-dragon should exist")
+        .clone();
+    assert_eq!(game.original_dungeon_weight(&dragon, &policy), 100);
+    assert!((7..=8).contains(&game.original_dungeon_weight(&ogre, &policy)));
+
+    let mut selected_dragons = 0;
+    for _ in 0..256 {
+        let selected = game
+            .select_original_allocated_monster(&policy, 60, 60, None, &[], None, None)
+            .expect("Dragon's Lair should retain ordinary dungeon candidates");
+        let actor = game.content.actor(&selected).expect("selected actor");
+        let allocation = actor.allocation.as_ref().expect("selected allocation");
+        assert!(!allocation.wild_only, "{selected}");
+        assert!(
+            allocation.legacy_dungeon_indices.is_empty()
+                || allocation.legacy_dungeon_indices.contains(&5),
+            "{selected}"
+        );
+        assert_ne!(selected, "demo.actor.tiamat-celestial-dragon-of-evil");
+        if matches!(actor.glyph.as_str(), "d" | "D") || actor.tags.iter().any(|tag| tag == "dragon")
+        {
+            selected_dragons += 1;
+        }
+    }
+    assert!(selected_dragons > 0);
+}
+
+#[test]
+fn p98c_castle_prefers_demons_and_humanoids_and_excludes_its_final_guardian() {
+    let mut game =
+        Game::new_with_build(198, "demo.build.warrior").expect("Middle-earth should create");
+    game.current_floor_id = "demo.floor.castle-depth-40".to_owned();
+    let policy = game
+        .content
+        .encounter_table("demo.encounter-table.castle")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Castle global allocation policy")
+        .clone();
+    let demon = game
+        .content
+        .actor("demo.actor.vrock")
+        .expect("ordinary demon should exist")
+        .clone();
+    let ogre = game
+        .content
+        .actor("demo.actor.ogre")
+        .expect("ordinary non-preferred monster should exist")
+        .clone();
+    assert!(
+        game.original_dungeon_weight(&demon, &policy)
+            > game.original_dungeon_weight(&ogre, &policy)
+    );
+
+    let mut selected_preferred = 0;
+    for _ in 0..256 {
+        let selected = game
+            .select_original_allocated_monster(&policy, 40, 40, None, &[], None, None)
+            .expect("Castle should retain ordinary dungeon candidates");
+        let actor = game.content.actor(&selected).expect("selected actor");
+        let allocation = actor.allocation.as_ref().expect("selected allocation");
+        assert!(!allocation.wild_only, "{selected}");
+        assert!(
+            allocation.legacy_dungeon_indices.is_empty()
+                || allocation.legacy_dungeon_indices.contains(&12),
+            "{selected}"
+        );
+        assert_ne!(selected, "demo.actor.layzark-the-emperor");
+        if matches!(actor.glyph.as_str(), "p" | "h" | "H" | "g")
+            || actor.tags.iter().any(|tag| tag == "demon")
+        {
+            selected_preferred += 1;
+        }
+    }
+    assert!(selected_preferred > 0);
+}
+
+#[test]
 fn warg_friend_count_uses_three_d_three_including_the_leader() {
     let mut game = enter_warrens(4);
     let warg = game

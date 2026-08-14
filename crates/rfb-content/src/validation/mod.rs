@@ -450,6 +450,8 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
                 actors: &content.actors,
                 item_limits: &item_limits,
                 items: &content.items,
+                ability_books: &content.ability_books,
+                builds: &content.builds,
                 affix_ids: &affix_ids,
                 encounter_tables: &encounter_tables_by_id,
                 loot_table_ids: &loot_table_ids,

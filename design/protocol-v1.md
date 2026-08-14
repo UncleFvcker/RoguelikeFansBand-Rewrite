@@ -783,3 +783,8 @@ spell power 与实际原始 power 的源码差异；天使斗篷复用通用状�
 `crusade` 能力投影，分别公开驱逐强度、分解球伤害与数量、神圣干预的两段伤害/控制/治疗参数，
 以及圣战的魅惑强度和十二次召唤尝试。英雄气概、驱除诅咒、末日审判和以眼还眼继续复用既有
 投影；没有新增持久字段，State Hash Schema 保持 v104，save header/payload schema 保持 v2。
+
+协议 1.221 为 `EquipmentBonusesDto` 增加默认 0 的 `lifePercent`，并为
+`EquipmentPassiveDto` 增加漂浮、警告、减缓消化和九类定向 ESP。它们统一来自已装备物品的
+正式词缀投影；没有新增命令或持久字段，State Hash Schema 保持 v104，save header/payload
+schema 保持 v2。

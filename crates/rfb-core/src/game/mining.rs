@@ -457,14 +457,14 @@ mod tests {
     #[test]
     fn mining_artifact_mode_falls_back_once_to_great_when_all_artifacts_are_ineligible() {
         let seed = 17;
-        let generated = [
-            "demo.item.crisdurian".to_owned(),
-            "demo.item.pain".to_owned(),
-            "demo.item.slayer".to_owned(),
-        ];
         let run = || {
             let mut game = Game::new(11);
-            game.generated_artifact_ids.extend(generated.clone());
+            game.generated_artifact_ids.extend(
+                game.content
+                    .item_definitions()
+                    .filter(|item| item.artifact_generation.is_some())
+                    .map(|item| item.id.clone()),
+            );
             game.rng = RfbRng::seeded(seed);
             let context = artifact_context(&game);
             let serial_before = game.next_item_instance_serial;

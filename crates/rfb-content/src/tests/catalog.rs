@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.362.0");
+    assert_eq!(catalog.pack_version(), "1.365.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -3253,7 +3253,7 @@ fn mutation_definitions_match_the_frozen_legacy_ledger() {
             .iter()
             .filter(|mutation| mutation["status"] == "active")
             .count(),
-        139
+        144
     );
 }
 
@@ -4474,7 +4474,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
             .iter()
             .filter(|entry| entry["status"] == "active")
             .count(),
-        139
+        144
     );
     assert_eq!(
         entries

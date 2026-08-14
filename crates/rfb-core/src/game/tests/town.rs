@@ -1100,6 +1100,10 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
             ("demo.item.nature-mastery", 1_000),
             ("demo.item.book-of-common-prayer", 100),
             ("demo.item.high-mass", 1_000),
+            ("demo.item.dark-incantations", 100),
+            ("demo.item.immortal-rituals", 1_000),
+            ("demo.item.rites-of-initiation", 100),
+            ("demo.item.ways-of-war", 1_000),
         ])
     );
     let book = shop

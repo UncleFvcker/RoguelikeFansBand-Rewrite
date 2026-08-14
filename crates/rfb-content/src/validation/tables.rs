@@ -255,12 +255,15 @@ pub(super) fn validate_tables(
             normalize_tags(&table.id, &mut allocation.preferred_tags)?;
             allocation.preferred_movement_modes.sort_unstable();
             allocation.preferred_habitats.sort_unstable();
+            allocation.preferred_damage_immunities.sort_unstable();
             let mut glyphs = BTreeSet::new();
             if !table.entries.is_empty()
-                || (allocation.preferred_glyphs.is_empty()
+                || (allocation.special_div != 64
+                    && allocation.preferred_glyphs.is_empty()
                     && allocation.preferred_tags.is_empty()
                     && allocation.preferred_movement_modes.is_empty()
-                    && allocation.preferred_habitats.is_empty())
+                    && allocation.preferred_habitats.is_empty()
+                    && allocation.preferred_damage_immunities.is_empty())
                 || allocation.preferred_glyphs.len() > 64
                 || allocation.preferred_tags.len() > 64
                 || allocation.special_div > 64
@@ -279,6 +282,10 @@ pub(super) fn validate_tables(
                     .any(|pair| pair[0] == pair[1])
                 || allocation
                     .preferred_habitats
+                    .windows(2)
+                    .any(|pair| pair[0] == pair[1])
+                || allocation
+                    .preferred_damage_immunities
                     .windows(2)
                     .any(|pair| pair[0] == pair[1])
             {
@@ -750,11 +757,14 @@ pub(super) fn validate_tables(
                             .digging
                             .as_ref()
                             .is_some_and(|digging| digging.result_terrain_id.is_some())
-                        || terrain.walkable
-                            && terrain
-                                .tags
-                                .iter()
-                                .any(|tag| matches!(tag.as_str(), "water" | "grass" | "dirt"))
+                        || terrain.tags.iter().any(|tag| {
+                            tag == "water"
+                                || terrain.walkable
+                                    && matches!(
+                                        tag.as_str(),
+                                        "grass" | "dirt" | "snow" | "ice" | "slush"
+                                    )
+                        })
                 }
                 TerrainFeaturePlacement::Corridor => terrain.open_to_terrain_id.is_some(),
             };

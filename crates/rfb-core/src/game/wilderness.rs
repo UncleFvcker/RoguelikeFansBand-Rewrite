@@ -20,6 +20,7 @@ const WILDERNESS_AMBUSH_ROLLS: u16 = 20;
 const WILDERNESS_AMBUSH_RNG_SALT: u64 = 0xA8B0_5A11;
 const WILDERNESS_AMBUSH_ID_MARKER: &str = ".ambush.";
 const WILDERNESS_SCROLL_RNG_SALT: u64 = 0x5C20_11ED;
+const WILDERNESS_ENTRANCE_GUARDIAN_RNG_SALT: u64 = 0xE17A_4D1A;
 const WILDERNESS_VIEW_CHUNK_COUNT: u64 = 9;
 const WILDERNESS_INTERESTING_CHANCE: u64 = 10;
 pub(super) const WILDERNESS_SEED_STEP: u64 = 0x9E37_79B9_7F4A_7C15;
@@ -526,6 +527,24 @@ fn translate_wilderness_position(position: Position, translation: Position) -> O
         && translated.y >= 0
         && translated.y < i32::from(WILDERNESS_VIEW_HEIGHT))
     .then_some(translated)
+}
+
+fn wilderness_location_view_position(
+    location: Position,
+    world_position: Position,
+    view_offset: Position,
+) -> Option<Position> {
+    translate_wilderness_position(
+        Position {
+            x: (location.x - world_position.x) * i32::from(WILDERNESS_VIEW_WIDTH)
+                + i32::from(WILDERNESS_VIEW_WIDTH / 2)
+                - view_offset.x * i32::from(WILDERNESS_CHUNK_WIDTH),
+            y: (location.y - world_position.y) * i32::from(WILDERNESS_VIEW_HEIGHT)
+                + i32::from(WILDERNESS_VIEW_HEIGHT / 2)
+                - view_offset.y * i32::from(WILDERNESS_CHUNK_HEIGHT),
+        },
+        Position::default(),
+    )
 }
 
 fn wilderness_exposed_chunks(center: Position, scroll: Position) -> BTreeSet<Position> {
@@ -1127,6 +1146,7 @@ impl Game {
         self.activate_floor(floor, global_items);
         self.restore_riding_actor(riding_actor);
         self.load_visible_town_states()?;
+        self.spawn_visible_dungeon_entrance_guardians();
         self.populate_local_wilderness(position, ambush);
         Ok(())
     }
@@ -1337,6 +1357,7 @@ impl Game {
         self.activate_floor(wilderness, global_items);
         self.restore_riding_actor(riding_actor);
         self.load_visible_town_states()?;
+        self.spawn_visible_dungeon_entrance_guardians();
         Ok(())
     }
 
@@ -1802,25 +1823,34 @@ impl Game {
             if wilderness_has_town(wilderness, dungeon_world_position) {
                 continue;
             }
-            let view = Position {
-                x: (dungeon_world_position.x - world_position.x) * i32::from(WILDERNESS_VIEW_WIDTH)
-                    + i32::from(WILDERNESS_VIEW_WIDTH / 2)
-                    - self.wilderness_view_offset.x * i32::from(WILDERNESS_CHUNK_WIDTH),
-                y: (dungeon_world_position.y - world_position.y)
-                    * i32::from(WILDERNESS_VIEW_HEIGHT)
-                    + i32::from(WILDERNESS_VIEW_HEIGHT / 2)
-                    - self.wilderness_view_offset.y * i32::from(WILDERNESS_CHUNK_HEIGHT),
-            };
-            if !(0..i32::from(WILDERNESS_VIEW_WIDTH)).contains(&view.x)
-                || !(0..i32::from(WILDERNESS_VIEW_HEIGHT)).contains(&view.y)
-            {
+            let Some(view) = wilderness_location_view_position(
+                dungeon_world_position,
+                world_position,
+                self.wilderness_view_offset,
+            ) else {
                 continue;
-            }
+            };
             let dungeon = world
                 .dungeons
                 .iter()
                 .find(|dungeon| dungeon.id == *dungeon_id)
                 .expect("validated wilderness dungeon must remain available");
+            if let Some(guardian) = &dungeon.entrance_guardian {
+                let anchor = position_from_content(guardian.position);
+                if let Some(position) = translate_wilderness_position(
+                    Position {
+                        x: view.x + anchor.x - i32::from(WILDERNESS_VIEW_WIDTH / 2),
+                        y: view.y + anchor.y - i32::from(WILDERNESS_VIEW_HEIGHT / 2),
+                    },
+                    Position::default(),
+                ) {
+                    let index = usize::try_from(position.y)
+                        .expect("guardian position y must fit usize")
+                        * usize::from(WILDERNESS_VIEW_WIDTH)
+                        + usize::try_from(position.x).expect("guardian position x must fit usize");
+                    terrain[index] = SURFACE_PATH_ID.to_owned();
+                }
+            }
             let entrance = world
                 .procedural_floors
                 .iter()
@@ -1832,6 +1862,99 @@ impl Game {
                 + usize::try_from(view.x).expect("dungeon entrance x must fit usize");
             terrain[index] = entrance.clone();
         }
+    }
+
+    fn spawn_visible_dungeon_entrance_guardians(&mut self) {
+        let Some(world_position) = self.wilderness_position else {
+            return;
+        };
+        let spawns = {
+            let world = self
+                .content
+                .world(&self.world_id)
+                .expect("active world must remain available");
+            let wilderness = world
+                .wilderness
+                .as_ref()
+                .expect("local wilderness requires wilderness content");
+            wilderness
+                .locations
+                .iter()
+                .filter_map(|location| {
+                    let WildernessLocationDefinition::Dungeon {
+                        position,
+                        dungeon_id,
+                    } = location
+                    else {
+                        return None;
+                    };
+                    let dungeon = world
+                        .dungeons
+                        .iter()
+                        .find(|dungeon| dungeon.id == *dungeon_id)?;
+                    let guardian = dungeon.entrance_guardian.as_ref()?;
+                    let state = self.dungeon_states.get(dungeon_id)?;
+                    if state.suppressed || state.entrance_guardian_defeated {
+                        return None;
+                    }
+                    let dungeon_world_position = position_from_content(*position);
+                    if wilderness_has_town(wilderness, dungeon_world_position) {
+                        return None;
+                    }
+                    let entrance_position = wilderness_location_view_position(
+                        dungeon_world_position,
+                        world_position,
+                        self.wilderness_view_offset,
+                    )?;
+                    let anchor = position_from_content(guardian.position);
+                    let position = translate_wilderness_position(
+                        Position {
+                            x: entrance_position.x + anchor.x
+                                - i32::from(WILDERNESS_VIEW_WIDTH / 2),
+                            y: entrance_position.y + anchor.y
+                                - i32::from(WILDERNESS_VIEW_HEIGHT / 2),
+                        },
+                        Position::default(),
+                    )?;
+                    Some((guardian.clone(), dungeon_world_position, position))
+                })
+                .collect::<Vec<_>>()
+        };
+
+        for (guardian, dungeon_world_position, position) in spawns {
+            if self
+                .entities
+                .iter()
+                .any(|actor| actor.id == guardian.instance_id || actor.position == position)
+                || self.player.position == position
+            {
+                continue;
+            }
+            let definition = self
+                .content
+                .actor(&guardian.actor_kind_id)
+                .expect("validated entrance guardian must remain available");
+            let mut rng = RfbRng::seeded(coordinate_seed(
+                self.wilderness_seed ^ WILDERNESS_ENTRANCE_GUARDIAN_RNG_SALT,
+                dungeon_world_position,
+            ));
+            let mut actor = spawn_actor_from_definition(
+                &mut rng,
+                definition,
+                &guardian.instance_id,
+                position,
+                INITIAL_MONSTER_ENERGY_NEED,
+                actor_starts_alerted(definition),
+            );
+            actor.pack = Some(MonsterPackIdentity {
+                id: guardian.instance_id.clone(),
+                leader_id: guardian.instance_id,
+                role: MonsterPackRoleDto::Leader,
+                behavior: MonsterPackBehaviorDto::GuardPosition,
+            });
+            self.entities.push(actor);
+        }
+        self.entities.sort_by(|left, right| left.id.cmp(&right.id));
     }
 
     fn cached_wilderness_view_terrain(&mut self, world_position: Position) -> Vec<String> {
@@ -2059,6 +2182,7 @@ impl Game {
         if self.map_scale != MapScaleDto::Local || !self.is_wilderness_floor() {
             return;
         }
+        self.spawn_visible_dungeon_entrance_guardians();
         let scroll = Position {
             x: -translation.x / i32::from(WILDERNESS_CHUNK_WIDTH),
             y: -translation.y / i32::from(WILDERNESS_CHUNK_HEIGHT),
