@@ -245,6 +245,7 @@ const SV_KATANA: u16 = 20;
 const SV_BLADE_OF_CHAOS: u16 = 30;
 const SV_DIAMOND_EDGE: u16 = 31;
 const SV_FALCON_SWORD: u16 = 33;
+const SV_MATTOCK: u16 = 7;
 
 #[derive(Debug, Default)]
 struct RfbWeaponRoll {
@@ -397,6 +398,7 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
             }
         }
         12 if is_weapon => roll_rfb_death(rng, &mut roll.state, &mut dice),
+        12 if is_digger => {}
         13 if is_weapon => {
             roll.state.weapon_traits.insert(WeaponTraitDto::Blessed);
         }
@@ -534,6 +536,16 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
             }
             roll_rfb_troika(rng, &mut roll, &mut dice, generation_level);
         }
+        40 if is_digger => {}
+        41 if is_digger => {
+            dice.dice = dice.dice.saturating_add(1);
+        }
+        42 if is_digger => {
+            if base_kind.sval != SV_MATTOCK {
+                return None;
+            }
+            dice.dice = dice.dice.saturating_add(2);
+        }
         _ => return None,
     }
 
@@ -577,6 +589,72 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
         None,
         None,
     ))
+}
+
+fn roll_and_materialize_rfb_ego_from_affixes_with_rng(
+    rng: &mut RfbRng,
+    item: &ItemDefinition,
+    affixes: &[AffixDefinition],
+    generation_level: u16,
+) -> Option<EgoMaterialization> {
+    let base_kind = item.rfb_base_kind?;
+    let allowed_type = if base_kind.tval == TV_DIGGING {
+        RfbEgoTypeDefinition::Digger
+    } else if matches!(base_kind.tval, TV_HAFTED | TV_POLEARM | TV_SWORD) {
+        RfbEgoTypeDefinition::Weapon
+    } else {
+        return None;
+    };
+    if !affixes.iter().any(|affix| {
+        affix.rfb_ego.as_ref().is_some_and(|ego| {
+            ego.types.contains(&allowed_type)
+                && rfb_ego_can_apply_to_base(ego.source_index, base_kind.tval, base_kind.sval, item)
+        })
+    }) {
+        return None;
+    }
+
+    loop {
+        let affix_id = roll_rfb_ego_from_affixes(
+            affixes.iter(),
+            rng,
+            generation_level,
+            std::slice::from_ref(&allowed_type),
+        )?;
+        let affix = affixes
+            .iter()
+            .find(|affix| affix.id == affix_id)
+            .expect("selected ego affix remains available");
+        if let Some(materialized) =
+            materialize_rfb_weapon_ego_with_rng(rng, item, affix, generation_level)
+        {
+            return Some(materialized);
+        }
+    }
+}
+
+fn rfb_ego_can_apply_to_base(
+    source_index: u32,
+    tval: u16,
+    sval: u16,
+    item: &ItemDefinition,
+) -> bool {
+    let dice_product = item
+        .melee_profile
+        .as_ref()
+        .map(|profile| profile.damage_dice.saturating_mul(profile.damage_sides))
+        .unwrap_or_default();
+    match source_index {
+        2 => matches!(tval, TV_POLEARM | TV_SWORD),
+        6 => tval == TV_HAFTED && sval == SV_WIZSTAFF,
+        23 => tval == TV_SWORD && sval != SV_BLADE_OF_CHAOS && dice_product >= 10,
+        24..=26 => is_lance(tval, sval),
+        27 => tval == TV_SWORD,
+        42 => tval == TV_DIGGING && sval == SV_MATTOCK,
+        1..=27 => matches!(tval, TV_HAFTED | TV_POLEARM | TV_SWORD) || tval == TV_DIGGING,
+        40 | 41 => tval == TV_DIGGING,
+        _ => false,
+    }
 }
 
 fn finalize_rfb_weapon_ego(
@@ -1729,6 +1807,129 @@ mod tests {
         );
         assert!(properties.passives.is_empty());
         assert_eq!(rng.draw_counter, 17);
+    }
+
+    #[test]
+    fn digger_egos_materialize_fixed_seed_results() {
+        for (source_index, seed, sval) in [(40, 17, 1), (41, 29, 1), (42, 43, SV_MATTOCK)] {
+            let item = rfb_weapon_item(TV_DIGGING, sval);
+            let affix = ego_affix(
+                &format!("test.affix.{source_index}"),
+                source_index,
+                1,
+                0,
+                u16::MAX,
+                vec![RfbEgoTypeDefinition::Digger],
+            );
+            let mut rng = RfbRng::seeded(seed);
+            let materialized = materialize_rfb_weapon_ego_with_rng(&mut rng, &item, &affix, 70)
+                .expect("digger ego should materialize");
+            let rolled = &materialized.rolled_affixes[0];
+            match source_index {
+                40 => {
+                    assert_eq!(rolled.melee_damage_dice, None);
+                    assert_eq!(rolled.properties.equipment_bonuses.digging_skill, 5);
+                    assert_eq!(rng.draw_counter, 1);
+                }
+                41 => {
+                    assert_eq!(
+                        rolled.melee_damage_dice,
+                        Some(MeleeDamageDiceDto { dice: 3, sides: 6 })
+                    );
+                    assert_eq!(rolled.enchantment_delta.to_damage, 3);
+                    assert_eq!(rolled.properties.equipment_bonuses.digging_skill, 4);
+                    assert_eq!(rng.draw_counter, 2);
+                }
+                42 => {
+                    assert_eq!(
+                        rolled.melee_damage_dice,
+                        Some(MeleeDamageDiceDto { dice: 4, sides: 6 })
+                    );
+                    assert_eq!(rolled.enchantment_delta.to_damage, 3);
+                    assert_eq!(rolled.properties.equipment_bonuses.digging_skill, 4);
+                    assert_eq!(rolled.properties.modifiers.strength, 4);
+                    assert_eq!(rng.draw_counter, 2);
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    #[test]
+    fn incompatible_digger_ego_retries_before_atomic_materialization() {
+        let item = rfb_weapon_item(TV_DIGGING, 1);
+        let mut disruption = ego_affix(
+            "test.affix.disruption",
+            42,
+            1,
+            0,
+            u16::MAX,
+            vec![RfbEgoTypeDefinition::Digger],
+        );
+        disruption.rfb_ego.as_mut().unwrap().rarity = 1;
+        let digging = ego_affix(
+            "test.affix.digging",
+            40,
+            1,
+            0,
+            u16::MAX,
+            vec![RfbEgoTypeDefinition::Digger],
+        );
+        let mut rng = RfbRng::seeded(1);
+        let materialized = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            &mut rng,
+            &item,
+            &[disruption, digging],
+            70,
+        )
+        .expect("compatible fallback ego should eventually materialize");
+        assert_eq!(materialized.affix_ids, ["test.affix.digging"]);
+        assert_eq!(
+            materialized.rolled_affixes[0]
+                .properties
+                .equipment_bonuses
+                .digging_skill,
+            1
+        );
+        assert_eq!(rng.draw_counter, 3);
+    }
+
+    #[test]
+    fn all_weapon_and_digger_source_indices_have_a_materialization_branch() {
+        for source_index in (1..=27).chain(40..=42) {
+            let (item, ego_type) = match source_index {
+                6 => (
+                    rfb_weapon_item(TV_HAFTED, SV_WIZSTAFF),
+                    RfbEgoTypeDefinition::Weapon,
+                ),
+                24..=26 => (
+                    rfb_weapon_item(TV_POLEARM, SV_LANCE),
+                    RfbEgoTypeDefinition::Weapon,
+                ),
+                40 | 41 => (rfb_weapon_item(TV_DIGGING, 1), RfbEgoTypeDefinition::Digger),
+                42 => (
+                    rfb_weapon_item(TV_DIGGING, SV_MATTOCK),
+                    RfbEgoTypeDefinition::Digger,
+                ),
+                _ => (
+                    rfb_weapon_item(TV_SWORD, SV_LONG_SWORD),
+                    RfbEgoTypeDefinition::Weapon,
+                ),
+            };
+            let affix = ego_affix(
+                &format!("test.affix.{source_index}"),
+                source_index,
+                1,
+                0,
+                u16::MAX,
+                vec![ego_type],
+            );
+            let mut rng = RfbRng::seeded(u64::from(source_index));
+            assert!(
+                materialize_rfb_weapon_ego_with_rng(&mut rng, &item, &affix, 80).is_some(),
+                "source {source_index} must materialize on its compatible base"
+            );
+        }
     }
 
     #[test]

@@ -144,6 +144,12 @@ Mauler 专属的 `ego_weapon_adjust_weight` 已审查，但当前 pack 没有 Ma
 
 ### E3.3：实现共同生成规则与 30 条 source-index 分支
 
+状态：已完成。共同物化器覆盖 1–27、40–42，拒绝分支由选择器重试并保持物品原子性；Slaying/Craft
+成为造箭与武器共享的权威 RNG helper，30 条分支由完整 source-index 测试锁定，Sharpness、Extra
+Attacks、Armageddon、Defender、Troika 与三个 digger 另有固定 seed 断言。补齐 Slaying 所需的
+ESP Evil/Living 后协议推进至 `1.223`；save 与 State Hash 结构未变。Mauler-only 重量调整仍明确不在
+本阶段实现。
+
 - 实现独立 `C:` 掷骰、共享 pval、fire-brand 自动光照、sustain/ability/元素抗性/高抗辅助函数；
 - 精确迁移 Slaying 与 Craft 的等级、次数、相关分支和 ESP，随后让造箭复用同一 helper；
 - 按 source index 实现 1–27、40–42 的选择后分支、基础物品拒绝重试和通用骰面 super-charge；
