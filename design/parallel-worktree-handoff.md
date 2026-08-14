@@ -1198,3 +1198,20 @@ git diff --stat
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。聚焦内容、
   导入器、核心、美德、Web、schema、source 验证、格式和 diff 检查均在本批完成；未运行或刷新全量
   fixture。下一正式种族是 `rfb-legacy.race.klackon`（克拉克人）。
+
+## 65. main 当前交接（克拉克人、喷吐酸液与等级速度）
+
+- 种族方向继续拥有既有 `rfb-legacy.race.klackon` 与
+  `rfb-legacy.skill-set.race-klackon`，并新增、拥有 `rfb.ability.race.spit-acid`；其他方向不得
+  复制该种族能力身份。它复用既有 `rfb.ability-program.mutation.spit-acid`，本批不新增 ability
+  program、item、material、affix、resource 或 actor ID。
+- 克拉克人按 RFB master 闭合完整静态资料、2 格红外、酸/混乱抗性、初始“勤勉”和 9 级
+  DEX/9/50“喷吐酸液”；原版没有等级奖励。喷酸在 25 级前投射酸液箭，25 级起改为半径 2 的
+  酸液球，伤害为玩家等级两倍，费用为 `9 + level / 5`。
+- `RaceDefinition.speedPerTenLevels` 直接在既有 Species 统计层按 `level / 10` 派生，没有新增状态或
+  种族专用分支。临时变形因此会获得并在解除时失去等级速度、两项抗性、红外与喷酸能力。
+- 共享协调点为 pack `1.349.0` / content hash
+  `28dae5ec2e1c29156610621c25e249ea7a940be965ffa1e26323d61313e711b1`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。聚焦内容、
+  导入器、核心、美德、Web、schema、source 验证、格式和 diff 检查均在本批完成；未运行或刷新全量
+  fixture。下一正式种族是 `rfb-legacy.race.dark-elf`（黑暗精灵）。

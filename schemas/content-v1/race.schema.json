@@ -746,6 +746,12 @@
     "skillSetId": {
       "type": "string"
     },
+    "speedPerTenLevels": {
+      "default": 0,
+      "description": "Additive speed gained for each ten character levels while this is the\ncurrently effective race.",
+      "format": "int32",
+      "type": "integer"
+    },
     "startingItems": {
       "default": [],
       "items": {

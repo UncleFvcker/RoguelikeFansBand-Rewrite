@@ -1,5 +1,19 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.spit-acid",
+      "minimumLevel": 9,
+      "governingAttribute": "dexterity",
+      "cost": 9,
+      "costScaling": {
+        "startLevel": 5,
+        "levelInterval": 5,
+        "amount": 1
+      },
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 23,
   "bodySlots": [
     {
@@ -67,6 +81,7 @@
   "experiencePercent": 170,
   "formatVersion": 1,
   "id": "rfb-legacy.race.klackon",
+  "infravision": 2,
   "kinCategory": "kin-glyph-75",
   "legacyIndex": 16,
   "lifePercent": 105,
@@ -85,8 +100,12 @@
   },
   "shopAdjustPercent": 115,
   "skillSetId": "rfb-legacy.skill-set.race-klackon",
+  "speedPerTenLevels": 1,
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

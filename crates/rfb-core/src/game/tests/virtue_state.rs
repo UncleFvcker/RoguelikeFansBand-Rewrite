@@ -281,6 +281,22 @@ fn formal_races_receive_their_original_race_virtues() {
         ]
     );
 
+    let klackon = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.klackon",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Klackon Archer should create");
+    assert_eq!(
+        &virtue_kinds(&klackon)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Diligence,
+        ]
+    );
+
     let dunadan = Game::new_with_build_race_and_name(
         43,
         "demo.build.archer",

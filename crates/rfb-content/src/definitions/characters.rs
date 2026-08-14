@@ -113,6 +113,10 @@ pub struct RaceDefinition {
     /// Additive percentage adjustment to the natural HP regeneration rate.
     #[serde(default)]
     pub regeneration_rate_modifier_percent: i32,
+    /// Additive speed gained for each ten character levels while this is the
+    /// currently effective race.
+    #[serde(default)]
+    pub speed_per_ten_levels: i32,
     pub skill_set_id: String,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,

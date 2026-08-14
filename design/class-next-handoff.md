@@ -601,3 +601,27 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `ea02a2ca6032c1243523c5d667c933f325294ecdb38faed3f831cd705d36f433`、Protocol `1.212`、
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。未运行或
   刷新全量 fixture；下一正式种族为克拉克人 `rfb-legacy.race.klackon`。
+
+## main 当前批次：克拉克人正式内容、喷吐酸液与等级速度
+
+- 权威来源为 RFB `master:src/races_k.c`、`master:src/spells_s.c`、`master:src/spells3.c` 与
+  `master:src/virtue.c`。正式种族复用 `rfb-legacy.race.klackon` 和
+  `rfb-legacy.skill-set.race-klackon`；新增并由种族方向拥有 `rfb.ability.race.spit-acid`，复用
+  已有 `rfb.ability-program.mutation.spit-acid`。本批不新增 ability program、item、material、affix、
+  resource 或 actor ID。
+- 克拉克人按原版闭合六维 `[2,-1,-1,1,2,1]`、生命 105%、基础 HP 23、经验 170%、商店 115%、
+  八项技能、2 格红外、酸与混乱抗性、Klackon kin、Standard 身体、初始“勤勉”和 9 级
+  DEX/9/50“喷吐酸液”；原版没有等级奖励。New Game 通过既有 `raceId` 正式开放，玩家 actor 与
+  tileset 继续由职业 build 决定。
+- 喷酸伤害为玩家等级两倍，费用为 `9 + level / 5`；9–24 级沿方向命中首个目标，25 级起切换为
+  半径 2 的酸液球。种族 Ability 保持独立身份，但复用 mutation 已有的同语义 Program 和共享酸液
+  伤害、地面物品、投射执行路径。
+- 内容模型新增默认 0 的 `RaceDefinition.speedPerTenLevels`，在既有 Species 统计层按 `level / 10`
+  计算，跟随当前有效种族且不保存重复状态。导入器同步识别原版
+  `p_ptr->pspeed += (p_ptr->lev) / 10`、`spit_acid_spell` 与正式克拉克人标签。
+- 聚焦验证覆盖静态内容、速度字段边界、8/9 级能力门槛、9/25/50 级伤害与费用、bolt→area 分支、
+  成功/失败支付、save/replay、变形切换、初始美德、导入器和 Web `raceId`；内容 schema 与 source
+  lock 已同步。协调版本为 pack `1.349.0` / hash
+  `28dae5ec2e1c29156610621c25e249ea7a940be965ffa1e26323d61313e711b1`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。未运行或
+  刷新全量 fixture；下一正式种族为黑暗精灵 `rfb-legacy.race.dark-elf`。

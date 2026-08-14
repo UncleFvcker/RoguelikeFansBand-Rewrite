@@ -818,6 +818,7 @@ pub struct LegacyCharacterEntry {
     pub attribute_sustains: Vec<String>,
     pub regeneration_rate_modifier_percent: i32,
     pub speed: i32,
+    pub speed_per_ten_levels: i32,
 }
 
 impl Default for LegacyCharacterEntry {
@@ -847,6 +848,7 @@ impl Default for LegacyCharacterEntry {
             attribute_sustains: Vec::new(),
             regeneration_rate_modifier_percent: 0,
             speed: 0,
+            speed_per_ten_levels: 0,
         }
     }
 }
@@ -5004,6 +5006,7 @@ pub type CalcBonusesDefenses = (
     Vec<String>,
     i32,
     i32,
+    i32,
 );
 
 pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefenses {
@@ -5026,7 +5029,7 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
         defensive_resistance_type(token.strip_prefix("RES_")?)
     }
     let Some(body) = find_function_body(text, hook) else {
-        return (Vec::new(), Vec::new(), false, false, Vec::new(), 0, 0);
+        return (Vec::new(), Vec::new(), false, false, Vec::new(), 0, 0, 0);
     };
     let mut adds: BTreeMap<&'static str, i32> = BTreeMap::new();
     let mut immune: BTreeSet<&'static str> = BTreeSet::new();
@@ -5036,6 +5039,7 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
     let mut attribute_sustains = BTreeSet::new();
     let mut regeneration_rate_modifier_percent = 0_i32;
     let mut speed = 0_i32;
+    let mut speed_per_ten_levels = 0_i32;
     let mut depth = 0_i32;
     let mut suppressed = false;
     let mut pending_minimum_level = None;
@@ -5128,6 +5132,14 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
             })
         {
             attribute_sustains.insert(attribute.to_owned());
+        } else if matches!(
+            line.chars()
+                .filter(|character| !character.is_whitespace())
+                .collect::<String>()
+                .as_str(),
+            "p_ptr->pspeed+=p_ptr->lev/10;" | "p_ptr->pspeed+=(p_ptr->lev)/10;"
+        ) {
+            speed_per_ten_levels += 1;
         } else if let Some(amount) = literal_adjustment(line, "p_ptr->pspeed") {
             speed += amount;
         } else if let Some(amount) = literal_adjustment(line, "p_ptr->regen") {
@@ -5162,6 +5174,7 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
         see_invisible,
         attribute_sustains.into_iter().collect(),
         speed,
+        speed_per_ten_levels,
         regeneration_rate_modifier_percent,
     )
 }
@@ -5382,6 +5395,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "poison_dart_spell" => "rfb.ability.race.poison-dart",
             "probing_spell" => "rfb.ability.race.probe-monsters",
             "scare_monster_spell" => "rfb.ability.race.scare-monster",
+            "spit_acid_spell" => "rfb.ability.race.spit-acid",
             "stone_to_mud_spell" => "rfb.ability.race.stone-to-mud",
             "throw_boulder_spell" => "rfb.ability.race.throw-boulder",
             _ => {
@@ -6210,6 +6224,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             | "half-titan"
             | "half-troll"
             | "hobbit"
+            | "klackon"
             | "kobold"
             | "nibelung"
             | "yeek"
@@ -6291,6 +6306,9 @@ fn race_json(
     if entry.regeneration_rate_modifier_percent != 0 {
         value["regenerationRateModifierPercent"] =
             serde_json::json!(entry.regeneration_rate_modifier_percent);
+    }
+    if entry.speed_per_ten_levels != 0 {
+        value["speedPerTenLevels"] = serde_json::json!(entry.speed_per_ten_levels);
     }
     if !entry.abilities.is_empty() {
         value["abilities"] = serde_json::json!(
@@ -12251,6 +12269,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                     see_invisible,
                     attribute_sustains,
                     speed,
+                    speed_per_ten_levels,
                     regeneration_rate_modifier_percent,
                 ) = parse_calc_bonuses_defenses(text, &hook);
                 entry.resistances = resistances;
@@ -12259,6 +12278,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                 entry.see_invisible = see_invisible;
                 entry.attribute_sustains = attribute_sustains;
                 entry.speed = speed;
+                entry.speed_per_ten_levels = speed_per_ten_levels;
                 entry.regeneration_rate_modifier_percent = regeneration_rate_modifier_percent;
             }
             parse_race_powers(text, &mut entry);
@@ -13041,6 +13061,7 @@ fn legacy_races_by_id(
                     see_invisible,
                     attribute_sustains,
                     speed,
+                    speed_per_ten_levels,
                     regeneration_rate_modifier_percent,
                 ) = parse_calc_bonuses_defenses(text, &hook);
                 entry.resistances = resistances;
@@ -13049,6 +13070,7 @@ fn legacy_races_by_id(
                 entry.see_invisible = see_invisible;
                 entry.attribute_sustains = attribute_sustains;
                 entry.speed = speed;
+                entry.speed_per_ten_levels = speed_per_ten_levels;
                 entry.regeneration_rate_modifier_percent = regeneration_rate_modifier_percent;
             }
             parse_race_powers(text, &mut entry);
@@ -19524,7 +19546,7 @@ race_t *test_beast_get_race(void)
 
         // The hook body yields its top-level static statements plus literal
         // one-line resistance thresholds; other conditional passives remain
-        // ignored, and only literal speed and regeneration adjustments count.
+        // ignored; literal speed, per-ten-level speed and regeneration count.
         let (
             resistances,
             level_resistances,
@@ -19532,6 +19554,7 @@ race_t *test_beast_get_race(void)
             see_invisible,
             attribute_sustains,
             speed,
+            speed_per_ten_levels,
             regeneration_rate_modifier_percent,
         ) = parse_calc_bonuses_defenses(SYNTHETIC_SOURCE, "_test_calc_bonuses");
         assert_eq!(
@@ -19546,6 +19569,7 @@ race_t *test_beast_get_race(void)
         assert!(see_invisible);
         assert_eq!(attribute_sustains, ["constitution"]);
         assert_eq!(speed, 3);
+        assert_eq!(speed_per_ten_levels, 1);
         assert_eq!(regeneration_rate_modifier_percent, 100);
         assert_eq!(
             level_resistances,
@@ -19554,7 +19578,7 @@ race_t *test_beast_get_race(void)
                 (45, "cold".to_owned(), "resistant".to_owned()),
             ]
         );
-        let (_, _, _, conditional_see_invisible, conditional_sustains, _, _) =
+        let (_, _, _, conditional_see_invisible, conditional_sustains, _, _, _) =
             parse_calc_bonuses_defenses(SYNTHETIC_SOURCE, "_conditional_calc_bonuses");
         assert!(!conditional_see_invisible);
         assert!(conditional_sustains.is_empty());
@@ -19565,6 +19589,7 @@ race_t *test_beast_get_race(void)
         folk.see_invisible = see_invisible;
         folk.attribute_sustains = attribute_sustains;
         folk.speed = speed;
+        folk.speed_per_ten_levels = speed_per_ten_levels;
         folk.regeneration_rate_modifier_percent = regeneration_rate_modifier_percent;
 
         let beast = parse_character_block(&blocks[1].0, &blocks[1].1);
@@ -19602,6 +19627,7 @@ race_t *test_beast_get_race(void)
         );
         assert_eq!(race["regenerationRateModifierPercent"], 100);
         assert_eq!(race["modifiers"]["speed"], 3);
+        assert_eq!(race["speedPerTenLevels"], 1);
         assert_eq!(race["kinCategory"], "kin-glyph-112");
         let high_elf = LegacyCharacterEntry {
             id: "high-elf".to_owned(),
@@ -19760,6 +19786,19 @@ race_t *test_beast_get_race(void)
                 "standard-body",
             ]
         );
+        let klackon = LegacyCharacterEntry {
+            id: "klackon".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&klackon),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
     }
 
     #[test]
@@ -19777,6 +19816,7 @@ static power_info _barbarian_get_powers[] =
     { A_STR, {20, 10, 70, stone_to_mud_spell}},
     { A_STR, {20, 0, 50, throw_boulder_spell}},
     { A_WIS, {15, 15, 50, scare_monster_spell}},
+    { A_DEX, {9, 9, 50, spit_acid_spell}},
     { A_WIS, {12, 7, 40, mystery_spell}},
     { -1, {-1, -1, -1, NULL} }
 };
@@ -19802,7 +19842,7 @@ race_t *barbarian_get_race(void)
             .next()
             .expect("synthetic Barbarian should parse");
         let mut barbarian = parse_character_block(&name, &body);
-        let (resistances, _, _, _, _, _, _) =
+        let (resistances, _, _, _, _, _, _, _) =
             parse_calc_bonuses_defenses(SOURCE, "_barbarian_calc_bonuses");
         barbarian.resistances = resistances;
         parse_race_powers(SOURCE, &mut barbarian);
@@ -19880,6 +19920,13 @@ race_t *barbarian_get_race(void)
                     base_failure_percent: 50,
                     ability_id: "rfb.ability.race.scare-monster".to_owned(),
                 },
+                LegacyInnatePower {
+                    governing_attribute: "dexterity".to_owned(),
+                    minimum_level: 9,
+                    cost: 9,
+                    base_failure_percent: 50,
+                    ability_id: "rfb.ability.race.spit-acid".to_owned(),
+                },
             ]
         );
         assert!(!barbarian.hooks.iter().any(|hook| hook == "get_powers"));
@@ -19932,7 +19979,11 @@ race_t *barbarian_get_race(void)
             race["abilities"][9]["abilityId"],
             "rfb.ability.race.scare-monster"
         );
-        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(10));
+        assert_eq!(
+            race["abilities"][10]["abilityId"],
+            "rfb.ability.race.spit-acid"
+        );
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(11));
         assert_eq!(race["resistances"]["fear"], "resistant");
         assert!(
             race["tags"]

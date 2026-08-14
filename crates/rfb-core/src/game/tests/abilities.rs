@@ -2903,6 +2903,7 @@ const RACE_PHASE_DOOR_ABILITY_ID: &str = "rfb.ability.race.phase-door";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
 const RACE_PROBE_MONSTERS_ABILITY_ID: &str = "rfb.ability.race.probe-monsters";
 const RACE_SCARE_MONSTER_ABILITY_ID: &str = "rfb.ability.race.scare-monster";
+const RACE_SPIT_ACID_ABILITY_ID: &str = "rfb.ability.race.spit-acid";
 const RACE_STONE_TO_MUD_ABILITY_ID: &str = "rfb.ability.race.stone-to-mud";
 const RACE_THROW_BOULDER_ABILITY_ID: &str = "rfb.ability.race.throw-boulder";
 
@@ -4315,6 +4316,262 @@ fn yeek_scare_monster_and_level_acid_immunity_follow_the_effective_race() {
             .abilities
             .iter()
             .all(|ability| ability.id != RACE_SCARE_MONSTER_ABILITY_ID)
+    );
+}
+
+#[test]
+fn klackon_acid_spit_and_speed_growth_follow_the_effective_race() {
+    fn spit_acid(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            RACE_SPIT_ACID_ABILITY_ID,
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Klackon acid spit should resolve");
+        events
+    }
+
+    let mut game = Game::new_with_build_race_and_name(
+        107,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.klackon",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Klackon High-Mage should create");
+    clear_monsters(&mut game);
+    let base_speed = game.player_derived_stats().speed.value;
+    assert_eq!(game.player_infravision_range(), 2);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Acid),
+        ResistanceLevel::Resistant
+    );
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Confusion),
+        ResistanceLevel::Resistant
+    );
+
+    let level_eight_experience = crate::stats::experience_required_for_level(8);
+    game.apply_unscaled_player_experience(level_eight_experience, &mut Vec::new());
+    assert_eq!(game.player_derived_stats().speed.value, base_speed);
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_SPIT_ACID_ABILITY_ID)
+        .expect("Klackon acid spit should be projected before it unlocks");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Dexterity)
+    );
+    assert_eq!(locked.minimum_level, 9);
+    assert_eq!((locked.base_resource_cost, locked.resource_cost), (9, 10));
+    assert!(!locked.can_cast);
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(9) - level_eight_experience,
+        &mut Vec::new(),
+    );
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+    let available = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_SPIT_ACID_ABILITY_ID)
+        .expect("Klackon acid spit should remain projected");
+    assert!(available.can_cast);
+    assert_eq!(
+        (available.base_resource_cost, available.resource_cost),
+        (9, 10)
+    );
+    assert!(matches!(
+        available.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrAreaDamage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 17,
+            damage_type: DamageTypeDto::Acid,
+            area_from_level: 25,
+            radius: 2,
+            ..
+        }]
+    ));
+    game.progress.level = 10;
+    assert_eq!(game.player_derived_stats().speed.value, base_speed + 1);
+    game.progress.level = 9;
+
+    game.player.position = Position { x: 3, y: 3 };
+    for position in [Position { x: 3, y: 3 }, Position { x: 4, y: 3 }] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor(
+        "test.klackon-acid-target".to_owned(),
+        "demo.actor.warrens-keeper",
+        Position { x: 4, y: 3 },
+    );
+
+    let failure_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(available.failure_percent)
+        })
+        .expect("Klackon acid spit should have a failing percentile seed");
+    let mut failed = game.clone();
+    failed.rng = RfbRng::seeded(failure_seed);
+    let failed_mana = failed.resources["demo.resource.mana"].current;
+    let failed_events = spit_acid(&mut failed);
+    assert!(matches!(
+        failed_events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert_eq!(
+        failed.resources["demo.resource.mana"].current,
+        failed_mana - 10
+    );
+    assert_eq!(failed.entities[0].hp, 150);
+
+    let mut bolt = game.clone();
+    bolt.debug_set_ability_casts_succeed(true);
+    let bolt_events = spit_acid(&mut bolt);
+    assert_eq!(bolt.entities[0].hp, 132);
+    assert!(
+        bolt_events
+            .iter()
+            .all(|event| !matches!(event, DomainEvent::AbilityAreaDamage { .. }))
+    );
+    assert!(bolt_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityHit { damage, .. }
+            if damage.raw == 18 && damage.applied == 18
+    )));
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(25)
+            - crate::stats::experience_required_for_level(9),
+        &mut Vec::new(),
+    );
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+    assert_eq!(game.player_derived_stats().speed.value, base_speed + 2);
+    let area = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_SPIT_ACID_ABILITY_ID)
+        .expect("level-twenty-five Klackon acid spit");
+    assert_eq!(area.resource_cost, 14);
+    assert!(matches!(
+        area.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrAreaDamage {
+            damage_bonus: 49,
+            area_from_level: 25,
+            radius: 2,
+            ..
+        }]
+    ));
+
+    let mut level_fifty = game.clone();
+    level_fifty.progress.level = 50;
+    assert_eq!(
+        level_fifty.player_derived_stats().speed.value,
+        base_speed + 5
+    );
+    let level_fifty = level_fifty
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_SPIT_ACID_ABILITY_ID)
+        .expect("level-fifty Klackon acid spit");
+    assert_eq!(level_fifty.resource_cost, 19);
+    assert!(matches!(
+        level_fifty.effects.as_slice(),
+        [AbilityEffectSpecDto::BoltOrAreaDamage {
+            damage_bonus: 99,
+            ..
+        }]
+    ));
+
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Klackon acid-spit setup should reload");
+    game.debug_set_ability_casts_succeed(true);
+    restored.debug_set_ability_casts_succeed(true);
+    let mana_before = game.resources["demo.resource.mana"].current;
+    let events = spit_acid(&mut game);
+    let restored_events = spit_acid(&mut restored);
+    assert_eq!(restored_events, events);
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        game.resources["demo.resource.mana"].current,
+        mana_before - 14
+    );
+    assert_eq!(game.entities[0].hp, 100);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityAreaDamage { resolution, .. }
+            if resolution.radius == 2
+    )));
+
+    let mut human = Game::new_with_build_race_and_name(
+        108,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human Warrior should create");
+    human.progress.level = 20;
+    let human_speed = human.player_derived_stats().speed.value;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.klackon-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.klackon".to_owned());
+    human.player.statuses.push(form);
+    assert_eq!(human.player_infravision_range(), 2);
+    assert_eq!(human.player_derived_stats().speed.value, human_speed + 2);
+    assert_eq!(
+        human.effective_player_resistances().level(DamageType::Acid),
+        ResistanceLevel::Resistant
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == RACE_SPIT_ACID_ABILITY_ID)
+    );
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(human.player_infravision_range(), 0);
+    assert_eq!(human.player_derived_stats().speed.value, human_speed);
+    assert_eq!(
+        human.effective_player_resistances().level(DamageType::Acid),
+        ResistanceLevel::Normal
+    );
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_SPIT_ACID_ABILITY_ID)
     );
 }
 

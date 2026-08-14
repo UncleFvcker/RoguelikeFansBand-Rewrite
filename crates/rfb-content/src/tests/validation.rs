@@ -290,6 +290,22 @@ fn race_infravision_is_nonnegative_and_bounded() {
     }
 }
 
+#[test]
+fn race_speed_growth_is_bounded() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut content = artifact.content;
+    let klackon = content
+        .races
+        .iter_mut()
+        .find(|race| race.id == "rfb-legacy.race.klackon")
+        .expect("Klackon race should exist");
+    klackon.speed_per_ten_levels = 101;
+    assert!(matches!(
+        validate_and_normalize(&mut content),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "rfb-legacy.race.klackon"
+    ));
+}
+
 fn human_level_mutation_rewards(
     content: &mut CompiledContentV1,
 ) -> &mut Vec<RaceLevelMutationRewardDefinition> {

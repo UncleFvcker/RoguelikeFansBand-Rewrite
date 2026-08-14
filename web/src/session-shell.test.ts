@@ -50,6 +50,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.half-titan",
     "rfb-legacy.race.cyclops",
     "rfb-legacy.race.yeek",
+    "rfb-legacy.race.klackon",
   ]);
 });
 
@@ -191,6 +192,15 @@ test("new character requests preserve the selected formal race", () => {
       "Yip",
     ).raceId,
     "rfb-legacy.race.yeek",
+  );
+  assert.equal(
+    createNewSessionRequest(
+      "97",
+      "demo.build.high-mage-death",
+      "rfb-legacy.race.klackon",
+      "Klick",
+    ).raceId,
+    "rfb-legacy.race.klackon",
   );
 });
 

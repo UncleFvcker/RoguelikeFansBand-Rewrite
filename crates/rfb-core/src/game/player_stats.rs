@@ -1470,6 +1470,14 @@ impl Game {
         let Some((_, race, class, personality)) = self.character_definitions() else {
             return;
         };
+        add_nonzero_stat(
+            pipeline,
+            StatKind::Speed,
+            StatLayer::Species,
+            &race.id,
+            race.speed_per_ten_levels
+                .saturating_mul(i32::from(self.progress.level / 10)),
+        );
         for (layer, source_id, modifiers) in [
             (StatLayer::Species, race.id.as_str(), &race.modifiers),
             (StatLayer::Class, class.id.as_str(), &class.modifiers),

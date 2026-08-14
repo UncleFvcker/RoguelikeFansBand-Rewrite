@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.348.0");
+    assert_eq!(catalog.pack_version(), "1.349.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1352,6 +1352,118 @@ fn formal_yeek_matches_rfb_profile_acid_growth_and_scare_power() {
         } if status_kind_id == "rfb.status.fear"
     ));
     assert_eq!(ability.level_scaling.len(), 3);
+}
+
+#[test]
+fn formal_klackon_matches_rfb_profile_speed_and_acid_spit() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let klackon = catalog
+        .race("rfb-legacy.race.klackon")
+        .expect("formal Klackon race");
+
+    assert_eq!(
+        [
+            klackon.modifiers.strength,
+            klackon.modifiers.intelligence,
+            klackon.modifiers.wisdom,
+            klackon.modifiers.dexterity,
+            klackon.modifiers.constitution,
+            klackon.modifiers.charisma,
+        ],
+        [2, -1, -1, 1, 2, 1]
+    );
+    assert_eq!(
+        (
+            klackon.life_percent,
+            klackon.base_hp,
+            klackon.experience_percent,
+            klackon.shop_adjust_percent,
+            klackon.infravision,
+            klackon.speed_per_ten_levels,
+        ),
+        (105, 23, 170, 115, 2, 1)
+    );
+    assert_eq!(klackon.kin_category.as_deref(), Some("kin-glyph-75"));
+    assert_eq!(
+        klackon.resistances.get(&ActorDamageType::Acid),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        klackon.resistances.get(&ActorDamageType::Confusion),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(klackon.level_mutation_rewards.is_empty());
+    assert_eq!(klackon.abilities.len(), 1);
+    let activation = &klackon.abilities[0];
+    assert_eq!(activation.minimum_level, 9);
+    assert_eq!(
+        activation.governing_attribute,
+        TechniqueAttribute::Dexterity
+    );
+    assert_eq!(activation.cost, 9);
+    assert_eq!(activation.base_failure_percent, 50);
+    assert_eq!(activation.ability_id, "rfb.ability.race.spit-acid");
+    assert_eq!(
+        activation.cost_scaling,
+        Some(InnatePowerCostScalingDefinition {
+            curve: InnatePowerCostScalingCurveDefinition::Step,
+            start_level: 5,
+            level_interval: 5,
+            amount: 1,
+            divisor: 1,
+            round_up: false,
+            linear_weight: 1,
+            quadratic_weight: 0,
+            cubic_weight: 0,
+        })
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(klackon.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&klackon.skill_set_id)
+        .expect("formal Klackon skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -2),
+            ("demo.skill.disarming", 10),
+            ("demo.skill.melee", 5),
+            ("demo.skill.perception", 10),
+            ("demo.skill.ranged", 3),
+            ("demo.skill.saving-throw", 3),
+            ("demo.skill.search", -1),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.spit-acid")
+        .expect("Klackon acid-spit ability");
+    assert!(ability.affects_ground_items);
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::BoltOrAreaDamage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 1,
+            damage_type: ActorDamageType::Acid,
+            area_from_level: 25,
+            radius: 2,
+        }
+    ));
+    assert_eq!(ability.level_scaling.len(), 1);
 }
 
 #[test]

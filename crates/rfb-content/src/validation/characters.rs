@@ -206,6 +206,7 @@ pub(super) fn validate_characters(
         if !(50..=200).contains(&race.shop_adjust_percent)
             || !(0..=64).contains(&race.infravision)
             || !(-1_000..=1_000).contains(&race.regeneration_rate_modifier_percent)
+            || !(-100..=100).contains(&race.speed_per_ten_levels)
             || !level_resistances_are_valid(&mut race.level_resistances)
         {
             return Err(ContentError::InvalidCharacterSource(race.id.clone()));
