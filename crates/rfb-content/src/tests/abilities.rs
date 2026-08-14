@@ -342,6 +342,1438 @@ fn life_first_book_keeps_the_original_spell_table_allocation_and_final_scaling()
 }
 
 #[test]
+fn daemon_first_book_keeps_the_original_identity_spell_table_and_effect_boundaries() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.dark-incantations")
+        .expect("Dark Incantations should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("daemon"));
+    assert_eq!(book.rank, Some(1));
+    let source_book: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(original_pack_path().join("abilityBooks/dark-incantations.json"))
+            .expect("Dark Incantations source should be readable"),
+    )
+    .expect("Dark Incantations source should be JSON");
+    assert_eq!(
+        source_book["abilityIds"],
+        serde_json::json!([
+            "demo.ability.daemon-magic-missile",
+            "demo.ability.daemon-detect-unlife",
+            "demo.ability.daemon-evil-bless",
+            "demo.ability.daemon-resist-fire",
+            "demo.ability.daemon-horrify",
+            "demo.ability.daemon-nether-bolt",
+            "demo.ability.daemon-summon-manes",
+            "demo.ability.daemon-hellish-flame",
+        ])
+    );
+    assert!(book.ability_ids.iter().all(|id| {
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == *id)
+            .expect("book ability should compile")
+            .effect
+            .ordered_effects()
+            .iter()
+            .all(|effect| !matches!(effect, AbilityEffectDefinition::NoOp { .. }))
+    }));
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.dark-incantations")
+        .expect("Dark Incantations item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (10, 30, 100, Some("demo.ability-book.dark-incantations"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Dark Incantations should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (10, 30, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.daemon-magic-missile", 1, 1, 15, 4),
+        ("demo.ability.daemon-detect-unlife", 1, 1, 15, 4),
+        ("demo.ability.daemon-evil-bless", 2, 2, 15, 4),
+        ("demo.ability.daemon-resist-fire", 3, 4, 20, 1),
+        ("demo.ability.daemon-horrify", 5, 4, 30, 1),
+        ("demo.ability.daemon-nether-bolt", 7, 5, 40, 6),
+        ("demo.ability.daemon-summon-manes", 9, 8, 25, 5),
+        ("demo.ability.daemon-hellish-flame", 11, 11, 40, 5),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        let player = ability
+            .player
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    let summon = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.daemon-summon-manes")
+        .expect("Summon Manes should compile");
+    assert!(matches!(
+        summon.effect,
+        AbilityEffectDefinition::SummonCategory {
+            ref category,
+            maximum_level: 0,
+            count_dice: 1,
+            count_sides: 1,
+            friendly_group_chance_percent: 100,
+            group_count_dice: 1,
+            group_count_sides: 10,
+            duration_turns: 0,
+            ..
+        } if category == "manes"
+    ));
+    assert_eq!(
+        summon
+            .spell_power_fields
+            .iter()
+            .map(|field| (field.effect_index, field.field))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([(0, AbilitySpellPowerField::SummonMaximumLevel)])
+    );
+
+    let nether_bolt = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.daemon-nether-bolt")
+        .expect("Nether Bolt should compile");
+    assert!(!nether_bolt.affects_ground_items);
+
+    let flame = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.daemon-hellish-flame")
+        .expect("Hellish Flame should compile");
+    assert!(flame.affects_ground_items);
+    assert!(matches!(
+        flame.effect,
+        AbilityEffectDefinition::AreaDamage {
+            damage_dice: 3,
+            damage_sides: 6,
+            damage_type: ActorDamageType::HellFire,
+            radius: 2,
+            ..
+        }
+    ));
+}
+
+#[test]
+fn crusade_first_book_keeps_original_identity_spell_table_and_effect_boundaries() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.rites-of-initiation")
+        .expect("Rites of Initiation should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("crusade"));
+    assert_eq!(book.rank, Some(1));
+    let source_book: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(original_pack_path().join("abilityBooks/rites-of-initiation.json"))
+            .expect("Rites of Initiation source should be readable"),
+    )
+    .expect("Rites of Initiation source should be JSON");
+    assert_eq!(
+        source_book["abilityIds"],
+        serde_json::json!([
+            "demo.ability.crusade-punishment",
+            "demo.ability.crusade-detect-evil",
+            "demo.ability.crusade-remove-fear",
+            "demo.ability.crusade-scare-monster",
+            "demo.ability.crusade-sanctuary",
+            "demo.ability.crusade-portal",
+            "demo.ability.crusade-star-dust",
+            "demo.ability.crusade-purification",
+        ])
+    );
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.rites-of-initiation")
+        .expect("Rites of Initiation item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (10, 30, 100, Some("demo.ability-book.rites-of-initiation"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Rites of Initiation should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (10, 30, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    for (id, level, mana, failure, experience) in [
+        ("demo.ability.crusade-punishment", 1, 1, 15, 4),
+        ("demo.ability.crusade-detect-evil", 1, 1, 10, 4),
+        ("demo.ability.crusade-remove-fear", 3, 2, 25, 4),
+        ("demo.ability.crusade-scare-monster", 4, 4, 30, 2),
+        ("demo.ability.crusade-sanctuary", 5, 4, 34, 4),
+        ("demo.ability.crusade-portal", 7, 6, 30, 2),
+        ("demo.ability.crusade-star-dust", 8, 8, 45, 6),
+        ("demo.ability.crusade-purification", 10, 8, 45, 4),
+    ] {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    let punishment = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.crusade-punishment")
+        .expect("Punishment should compile");
+    assert!(matches!(
+        punishment.effect,
+        AbilityEffectDefinition::BoltOrBeamDamage {
+            damage_dice: 3,
+            damage_sides: 4,
+            damage_type: ActorDamageType::Electricity,
+            beam_chance_modifier: -10,
+            ..
+        }
+    ));
+    let sanctuary = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.crusade-sanctuary")
+        .expect("Sanctuary should compile");
+    assert!(matches!(
+        sanctuary.effect,
+        AbilityEffectDefinition::Sanctuary {
+            power: 1,
+            radius: 1
+        }
+    ));
+    let stardust = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.crusade-star-dust")
+        .expect("Star Dust should compile");
+    assert!(matches!(
+        stardust.effect,
+        AbilityEffectDefinition::Stardust {
+            damage_dice: 3,
+            damage_sides: 2,
+            count: 10,
+            deviation: 3
+        }
+    ));
+    assert!(!stardust.affects_ground_items);
+    assert_eq!(
+        stardust
+            .spell_power_fields
+            .iter()
+            .map(|field| (field.effect_index, field.field))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([(0, AbilitySpellPowerField::DamageDice)])
+    );
+}
+
+#[test]
+fn crusade_second_book_keeps_original_identity_allocation_and_spell_table() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.ways-of-war")
+        .expect("Ways of War should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("crusade"));
+    assert_eq!(book.rank, Some(2));
+    let source_book: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(original_pack_path().join("abilityBooks/ways-of-war.json"))
+            .expect("Ways of War source should be readable"),
+    )
+    .expect("Ways of War source should be JSON");
+    assert_eq!(
+        source_book["abilityIds"],
+        serde_json::json!([
+            "demo.ability.crusade-scatter-evil",
+            "demo.ability.crusade-holy-orb",
+            "demo.ability.crusade-exorcism",
+            "demo.ability.crusade-remove-curse",
+            "demo.ability.crusade-sense-unseen",
+            "demo.ability.crusade-protection-from-evil",
+            "demo.ability.crusade-judgment-thunder",
+            "demo.ability.crusade-holy-word",
+        ])
+    );
+    assert!(
+        book.ability_ids
+            .iter()
+            .all(|id| { content.abilities.iter().any(|ability| ability.id == *id) })
+    );
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.ways-of-war")
+        .expect("Ways of War item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (20, 30, 1_000, Some("demo.ability-book.ways-of-war"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Ways of War should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (20, 50, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    for (id, level, mana, failure, experience) in [
+        ("demo.ability.crusade-scatter-evil", 11, 11, 45, 10),
+        ("demo.ability.crusade-holy-orb", 12, 11, 40, 4),
+        ("demo.ability.crusade-exorcism", 15, 15, 35, 10),
+        ("demo.ability.crusade-remove-curse", 16, 16, 55, 50),
+        ("demo.ability.crusade-sense-unseen", 17, 16, 40, 7),
+        ("demo.ability.crusade-protection-from-evil", 20, 18, 60, 10),
+        ("demo.ability.crusade-judgment-thunder", 28, 30, 65, 15),
+        ("demo.ability.crusade-holy-word", 36, 32, 75, 20),
+    ] {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    let scatter = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.crusade-scatter-evil")
+        .expect("Scatter Evil should compile");
+    assert!(matches!(
+        scatter.effect,
+        AbilityEffectDefinition::TeleportAway {
+            minimum_distance: 1,
+            power: 100,
+            stop_at_actor: true,
+            target_category: Some(ref category),
+        } if category == "evil"
+    ));
+    let exorcism = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.crusade-exorcism")
+        .expect("Exorcism should compile");
+    assert!(matches!(
+        exorcism.effect,
+        AbilityEffectDefinition::Sequence { ref effects }
+            if matches!(effects.as_slice(), [
+                AbilityEffectDefinition::VisibleDamage { target_category: Some(undead), .. },
+                AbilityEffectDefinition::VisibleDamage { target_category: Some(demon), .. },
+                AbilityEffectDefinition::VisibleApplyStatus {
+                    status_kind_id,
+                    duration_dice: 3,
+                    target_category: Some(evil),
+                    ..
+                }
+            ] if undead == "undead" && demon == "demon" && evil == "evil" && status_kind_id == "rfb.status.fear")
+    ));
+}
+
+#[test]
+fn crusade_third_book_keeps_original_identity_allocation_and_spell_table() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.exorcism-and-dispelling")
+        .expect("Exorcism and Dispelling should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("crusade"));
+    assert_eq!(book.rank, Some(3));
+    let source_book: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(original_pack_path().join("abilityBooks/exorcism-and-dispelling.json"))
+            .expect("Exorcism and Dispelling source should be readable"),
+    )
+    .expect("Exorcism and Dispelling source should be JSON");
+    assert_eq!(
+        source_book["abilityIds"],
+        serde_json::json!([
+            "demo.ability.crusade-unbarring-ways",
+            "demo.ability.crusade-arrest",
+            "demo.ability.crusade-angelic-cloak",
+            "demo.ability.crusade-dispel-undead-and-demons",
+            "demo.ability.crusade-dispel-evil",
+            "demo.ability.crusade-holy-blade",
+            "demo.ability.crusade-star-burst",
+            "demo.ability.crusade-summon-angel",
+        ])
+    );
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.exorcism-and-dispelling")
+        .expect("Exorcism and Dispelling item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (
+            45,
+            30,
+            15_000,
+            Some("demo.ability-book.exorcism-and-dispelling")
+        )
+    );
+    assert_eq!(
+        item.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+            ItemDestructionElement::Cold,
+        ])
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Exorcism and Dispelling should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (45, 90, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    for (id, level, mana, failure, experience) in [
+        ("demo.ability.crusade-unbarring-ways", 4, 4, 23, 40),
+        ("demo.ability.crusade-arrest", 13, 12, 35, 50),
+        ("demo.ability.crusade-angelic-cloak", 15, 13, 55, 70),
+        (
+            "demo.ability.crusade-dispel-undead-and-demons",
+            17,
+            14,
+            55,
+            70,
+        ),
+        ("demo.ability.crusade-dispel-evil", 25, 20, 70, 120),
+        ("demo.ability.crusade-holy-blade", 28, 65, 80, 100),
+        ("demo.ability.crusade-star-burst", 32, 38, 70, 100),
+        ("demo.ability.crusade-summon-angel", 38, 90, 75, 250),
+    ] {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    let arrest = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.crusade-arrest")
+        .expect("Arrest should compile");
+    assert!(matches!(
+        arrest.effect,
+        AbilityEffectDefinition::ApplyStatus {
+            ref status_kind_id,
+            duration_ticks: 3,
+            power: Some(2),
+            ..
+        } if status_kind_id == "rfb.status.paralysis"
+    ));
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.crusade-summon-angel")
+            .expect("Summon Angel should compile")
+            .effect,
+        AbilityEffectDefinition::AngelSummoning
+    ));
+    assert_eq!(
+        content
+            .affixes
+            .iter()
+            .find(|affix| affix.id == "demo.affix.holy-blade")
+            .and_then(|affix| affix.slays.get(&SlayTarget::Evil)),
+        Some(&SlayLevel::Slay)
+    );
+}
+
+#[test]
+fn crusade_fourth_book_keeps_original_identity_allocation_and_spell_table() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.wrath-of-god")
+        .expect("Wrath of God should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("crusade"));
+    assert_eq!(book.rank, Some(4));
+    let source_book: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(original_pack_path().join("abilityBooks/wrath-of-god.json"))
+            .expect("Wrath of God source should be readable"),
+    )
+    .expect("Wrath of God source should be JSON");
+    assert_eq!(
+        source_book["abilityIds"],
+        serde_json::json!([
+            "demo.ability.crusade-heroism",
+            "demo.ability.crusade-dispel-curse",
+            "demo.ability.crusade-banish-evil",
+            "demo.ability.crusade-armageddon",
+            "demo.ability.crusade-an-eye-for-an-eye",
+            "demo.ability.crusade-wrath-of-the-god",
+            "demo.ability.crusade-divine-intervention",
+            "demo.ability.crusade-crusade",
+        ])
+    );
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.wrath-of-god")
+        .expect("Wrath of God item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (85, 30, 100_000, Some("demo.ability-book.wrath-of-god"))
+    );
+    assert_eq!(
+        item.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+            ItemDestructionElement::Cold,
+        ])
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Wrath of God should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (85, u16::MAX, 33)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    for (id, level, mana, failure, experience) in [
+        ("demo.ability.crusade-heroism", 8, 8, 50, 40),
+        ("demo.ability.crusade-dispel-curse", 25, 25, 75, 250),
+        ("demo.ability.crusade-banish-evil", 27, 24, 60, 100),
+        ("demo.ability.crusade-armageddon", 28, 19, 70, 150),
+        ("demo.ability.crusade-an-eye-for-an-eye", 34, 30, 80, 150),
+        ("demo.ability.crusade-wrath-of-the-god", 39, 55, 75, 200),
+        ("demo.ability.crusade-divine-intervention", 42, 85, 85, 200),
+        ("demo.ability.crusade-crusade", 45, 90, 75, 250),
+    ] {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.crusade-banish-evil")
+            .expect("Banish Evil should compile")
+            .effect,
+        AbilityEffectDefinition::BanishEvil
+    ));
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.crusade-wrath-of-the-god")
+            .expect("Wrath of the God should compile")
+            .effect,
+        AbilityEffectDefinition::WrathOfGod
+    ));
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.crusade-divine-intervention")
+            .expect("Divine Intervention should compile")
+            .effect,
+        AbilityEffectDefinition::DivineIntervention
+    ));
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.crusade-crusade")
+            .expect("Crusade should compile")
+            .effect,
+        AbilityEffectDefinition::Crusade
+    ));
+}
+
+#[test]
+fn daemon_second_book_keeps_the_original_identity_allocation_and_spell_table() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.immortal-rituals")
+        .expect("Immortal Rituals should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("daemon"));
+    assert_eq!(book.rank, Some(2));
+    let source_book: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(original_pack_path().join("abilityBooks/immortal-rituals.json"))
+            .expect("Immortal Rituals source should be readable"),
+    )
+    .expect("Immortal Rituals source should be JSON");
+    assert_eq!(
+        source_book["abilityIds"],
+        serde_json::json!([
+            "demo.ability.daemon-dominate-demon",
+            "demo.ability.daemon-vision",
+            "demo.ability.daemon-resist-nether",
+            "demo.ability.daemon-plasma-bolt",
+            "demo.ability.daemon-fire-ball",
+            "demo.ability.daemon-fire-branding",
+            "demo.ability.daemon-nether-ball",
+            "demo.ability.daemon-summon-demon",
+        ])
+    );
+    assert!(book.ability_ids.iter().all(|id| {
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == *id)
+            .expect("book ability should compile")
+            .effect
+            .ordered_effects()
+            .iter()
+            .all(|effect| !matches!(effect, AbilityEffectDefinition::NoOp { .. }))
+    }));
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.immortal-rituals")
+        .expect("Immortal Rituals item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (20, 30, 1_000, Some("demo.ability-book.immortal-rituals"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Immortal Rituals should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (20, 50, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.daemon-dominate-demon", 13, 11, 35, 9),
+        ("demo.ability.daemon-vision", 15, 13, 35, 10),
+        ("demo.ability.daemon-resist-nether", 17, 15, 40, 11),
+        ("demo.ability.daemon-plasma-bolt", 21, 12, 40, 12),
+        ("demo.ability.daemon-fire-ball", 22, 13, 40, 12),
+        ("demo.ability.daemon-fire-branding", 26, 65, 70, 8),
+        ("demo.ability.daemon-nether-ball", 28, 25, 55, 15),
+        ("demo.ability.daemon-summon-demon", 33, 65, 75, 40),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        let player = ability
+            .player
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    let effect = |id: &str| {
+        &content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"))
+            .effect
+    };
+    assert!(matches!(
+        effect("demo.ability.daemon-dominate-demon"),
+        AbilityEffectDefinition::Control { category, power: 2 } if category == "demon"
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-resist-nether"),
+        AbilityEffectDefinition::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 20,
+            duration_dice: 1,
+            duration_sides: 20,
+            granted_resistances,
+            ..
+        } if status_kind_id == "rfb.status.resist-nether"
+            && granted_resistances.get(&ActorDamageType::Nether)
+                == Some(&ActorResistanceLevel::Resistant)
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-plasma-bolt"),
+        AbilityEffectDefinition::BoltOrBeamDamage {
+            damage_dice: 11,
+            damage_sides: 8,
+            damage_type: ActorDamageType::Plasma,
+            beam_chance_percent: 0,
+            beam_chance_modifier: 0,
+            ..
+        }
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-fire-ball"),
+        AbilityEffectDefinition::AreaDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 55,
+            damage_type: ActorDamageType::Fire,
+            radius: 2,
+            ..
+        }
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-fire-branding"),
+        AbilityEffectDefinition::BrandWeapon {
+            brand: Some(WeaponBrand::Fire),
+            resistance: Some(ActorDamageType::Fire),
+            ..
+        }
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-nether-ball"),
+        AbilityEffectDefinition::AreaDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 100,
+            damage_type: ActorDamageType::Nether,
+            radius: 2,
+            ..
+        }
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-summon-demon"),
+        AbilityEffectDefinition::DemonSummoning
+    ));
+    assert!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.daemon-fire-ball")
+            .expect("Fire Ball should compile")
+            .affects_ground_items
+    );
+    assert!(
+        !content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.daemon-nether-ball")
+            .expect("Nether Ball should compile")
+            .affects_ground_items
+    );
+}
+
+#[test]
+fn daemon_third_book_keeps_the_original_identity_allocation_spell_table_and_demon_form() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.demonthoughts")
+        .expect("Demonthoughts should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("daemon"));
+    assert_eq!(book.rank, Some(3));
+    let source_book: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(original_pack_path().join("abilityBooks/demonthoughts.json"))
+            .expect("Demonthoughts source should be readable"),
+    )
+    .expect("Demonthoughts source should be JSON");
+    assert_eq!(
+        source_book["abilityIds"],
+        serde_json::json!([
+            "demo.ability.daemon-devilish-eye",
+            "demo.ability.daemon-devilish-cloak",
+            "demo.ability.daemon-flow-of-lava",
+            "demo.ability.daemon-plasma-ball",
+            "demo.ability.daemon-polymorph-demon",
+            "demo.ability.daemon-nether-wave",
+            "demo.ability.daemon-kiss-of-succubus",
+            "demo.ability.daemon-doom-hand",
+        ])
+    );
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.demonthoughts")
+        .expect("Demonthoughts item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (45, 30, 15_000, Some("demo.ability-book.demonthoughts"))
+    );
+    assert_eq!(
+        item.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+            ItemDestructionElement::Cold,
+        ])
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Demonthoughts should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (45, 90, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.daemon-devilish-eye", 9, 10, 35, 9),
+        ("demo.ability.daemon-devilish-cloak", 12, 15, 70, 35),
+        ("demo.ability.daemon-flow-of-lava", 22, 19, 70, 35),
+        ("demo.ability.daemon-plasma-ball", 31, 26, 75, 150),
+        ("demo.ability.daemon-polymorph-demon", 32, 35, 75, 200),
+        ("demo.ability.daemon-nether-wave", 33, 32, 75, 100),
+        ("demo.ability.daemon-kiss-of-succubus", 34, 35, 75, 40),
+        ("demo.ability.daemon-doom-hand", 40, 70, 80, 250),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        let player = ability
+            .player
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+        assert!(
+            ability
+                .effect
+                .ordered_effects()
+                .iter()
+                .all(|effect| !matches!(effect, AbilityEffectDefinition::NoOp { .. }))
+        );
+    }
+
+    let effect = |id: &str| {
+        &content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"))
+            .effect
+    };
+    assert!(matches!(
+        effect("demo.ability.daemon-devilish-cloak"),
+        AbilityEffectDefinition::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 20,
+            duration_dice: 1,
+            duration_sides: 20,
+            granted_resistances,
+            ..
+        } if status_kind_id == "rfb.status.fire-aura"
+            && granted_resistances.get(&ActorDamageType::Acid)
+                == Some(&ActorResistanceLevel::Resistant)
+            && granted_resistances.get(&ActorDamageType::Fire)
+                == Some(&ActorResistanceLevel::Resistant)
+            && granted_resistances.get(&ActorDamageType::Poison)
+                == Some(&ActorResistanceLevel::Resistant)
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-flow-of-lava"),
+        AbilityEffectDefinition::LavaFlow {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 110,
+            radius: 3,
+            target_terrain_id,
+        } if target_terrain_id == "demo.terrain.surface-lava-deep"
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-polymorph-demon"),
+        AbilityEffectDefinition::ApplyStatus {
+            status_kind_id,
+            granted_race_id: Some(granted_race_id),
+            ..
+        } if status_kind_id == "rfb.status.demon-transformation"
+            && granted_race_id == "demo.race.demon"
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-nether-wave"),
+        AbilityEffectDefinition::Sequence { effects }
+            if effects.len() == 2
+                && matches!(effects[0], AbilityEffectDefinition::VisibleDamage { target_category: None, .. })
+                && matches!(effects[1], AbilityEffectDefinition::VisibleDamage { target_category: Some(ref category), .. } if category == "good")
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-doom-hand"),
+        AbilityEffectDefinition::DoomHand
+    ));
+
+    let race = content
+        .races
+        .iter()
+        .find(|race| race.id == "demo.race.demon")
+        .expect("the temporary demon race should compile");
+    assert_eq!(race.legacy_index, Some(1000));
+    assert_eq!(
+        (
+            race.modifiers.strength,
+            race.modifiers.intelligence,
+            race.modifiers.wisdom,
+            race.modifiers.dexterity,
+            race.modifiers.constitution,
+            race.modifiers.charisma,
+            race.modifiers.defense,
+            race.modifiers.speed,
+        ),
+        (5, 3, 2, 3, 4, 3, 10, 3)
+    );
+    assert_eq!(
+        (
+            race.life_percent,
+            race.experience_percent,
+            race.base_hp,
+            race.infravision,
+            race.see_invisible,
+        ),
+        (106, 500, 24, 5, true)
+    );
+    assert_eq!(
+        race.resistances.get(&ActorDamageType::Fire),
+        Some(&ActorResistanceLevel::Strong)
+    );
+    let breath = race
+        .abilities
+        .first()
+        .expect("demon should have its breath");
+    assert_eq!(
+        (
+            breath.minimum_level,
+            breath.cost,
+            breath.base_failure_percent,
+            breath.ability_id.as_str(),
+        ),
+        (15, 10, 70, "demo.ability.daemon-breath")
+    );
+    assert!(matches!(
+        effect("demo.ability.daemon-breath"),
+        AbilityEffectDefinition::RandomChoice { roll_sides: 2, branches, .. }
+            if branches.len() == 2
+                && branches.iter().all(|branch| matches!(branch.effect.as_ref(), AbilityEffectDefinition::ConeDamage { damage_dice: 0, damage_sides: 0, damage_bonus: 3, radius: 1, .. }))
+    ));
+
+    let mut invalid = content.clone();
+    let lava = invalid
+        .abilities
+        .iter_mut()
+        .find(|ability| ability.id == "demo.ability.daemon-flow-of-lava")
+        .expect("The Flow of Lava should compile");
+    let AbilityEffectDefinition::LavaFlow {
+        target_terrain_id, ..
+    } = &mut lava.effect
+    else {
+        panic!("The Flow of Lava should retain its effect")
+    };
+    *target_terrain_id = "demo.terrain.missing-lava".to_owned();
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::DanglingReference { owner, target })
+            if owner == "demo.ability.daemon-flow-of-lava"
+                && target == "demo.terrain.missing-lava"
+    ));
+
+    let mut invalid = content.clone();
+    invalid
+        .abilities
+        .iter_mut()
+        .find(|ability| ability.id == "demo.ability.daemon-breath")
+        .expect("Demon breath should compile")
+        .target
+        .modes = vec![AbilityTargetModeDefinition::Entity];
+    assert!(matches!(
+        validate_and_normalize(&mut invalid),
+        Err(ContentError::InvalidAbility(id)) if id == "demo.ability.daemon-breath"
+    ));
+}
+
+#[test]
+fn daemon_fourth_book_completes_the_original_realm_and_keeps_composite_effects_explicit() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.hellfire-tome")
+        .expect("Hellfire Tome should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("daemon"));
+    assert_eq!(book.rank, Some(4));
+    assert_eq!(book.ability_ids.len(), 8);
+    let source_book: serde_json::Value = serde_json::from_slice(
+        &std::fs::read(original_pack_path().join("abilityBooks/hellfire-tome.json"))
+            .expect("Hellfire Tome source should be readable"),
+    )
+    .expect("Hellfire Tome source should be JSON");
+    assert_eq!(
+        source_book["abilityIds"],
+        serde_json::json!([
+            "demo.ability.daemon-raise-the-morale",
+            "demo.ability.daemon-immortal-body",
+            "demo.ability.daemon-insanity-circle",
+            "demo.ability.daemon-explode-pets",
+            "demo.ability.daemon-summon-greater-demon",
+            "demo.ability.daemon-hellfire",
+            "demo.ability.daemon-send-to-hell",
+            "demo.ability.daemon-polymorph-demonlord",
+        ])
+    );
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.hellfire-tome")
+        .expect("Hellfire Tome item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (80, 30, 100_000, Some("demo.ability-book.hellfire-tome"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Hellfire Tome should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (80, u16::MAX, 33)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.daemon-raise-the-morale", 8, 8, 55, 8),
+        ("demo.ability.daemon-immortal-body", 23, 20, 75, 35),
+        ("demo.ability.daemon-insanity-circle", 33, 30, 70, 200),
+        ("demo.ability.daemon-explode-pets", 36, 44, 75, 100),
+        ("demo.ability.daemon-summon-greater-demon", 38, 90, 75, 250),
+        ("demo.ability.daemon-hellfire", 42, 85, 85, 250),
+        ("demo.ability.daemon-send-to-hell", 43, 75, 70, 200),
+        ("demo.ability.daemon-polymorph-demonlord", 46, 70, 75, 250),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let ability = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"));
+        let player = ability
+            .player
+            .as_ref()
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+        assert!(!matches!(
+            ability.effect,
+            AbilityEffectDefinition::NoOp { .. }
+        ));
+    }
+
+    let effect = |id: &str| {
+        &content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .unwrap_or_else(|| panic!("{id} should compile"))
+            .effect
+    };
+    assert!(matches!(
+        effect("demo.ability.daemon-insanity-circle"),
+        AbilityEffectDefinition::InsanityCircle {
+            damage_bonus: 50,
+            control_power: 20,
+            radius: 3
+        }
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-explode-pets"),
+        AbilityEffectDefinition::ExplodePets
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-summon-greater-demon"),
+        AbilityEffectDefinition::SummonGreaterDemon { corpse_item_kind_id, radius: 2 }
+            if corpse_item_kind_id == "demo.item.corpse-remains"
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-hellfire"),
+        AbilityEffectDefinition::Hellfire {
+            damage_bonus: 666,
+            radius: 3,
+            backlash_dice: 1,
+            backlash_sides: 30,
+            backlash_bonus: 20,
+        }
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-send-to-hell"),
+        AbilityEffectDefinition::Genocide {
+            scope: AbilityGenocideScopeDefinition::Single,
+            power: 666,
+            fatigue: false,
+            ..
+        }
+    ));
+    assert!(matches!(
+        effect("demo.ability.daemon-polymorph-demonlord"),
+        AbilityEffectDefinition::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 15,
+            duration_dice: 1,
+            duration_sides: 15,
+            granted_race_id: Some(race_id),
+            grants_wall_passage: true,
+            ..
+        } if status_kind_id == "rfb.status.demon-lord-transformation"
+            && race_id == "demo.race.demon-lord"
+    ));
+
+    let race = content
+        .races
+        .iter()
+        .find(|race| race.id == "demo.race.demon-lord")
+        .expect("the temporary demon lord race should compile");
+    assert_eq!(race.legacy_index, Some(1001));
+    assert_eq!(
+        (
+            race.modifiers.strength,
+            race.modifiers.intelligence,
+            race.modifiers.wisdom,
+            race.modifiers.dexterity,
+            race.modifiers.constitution,
+            race.modifiers.charisma,
+            race.modifiers.defense,
+            race.modifiers.speed,
+        ),
+        (10, 10, 10, 10, 10, 10, 20, 5)
+    );
+    assert_eq!(
+        (
+            race.life_percent,
+            race.experience_percent,
+            race.base_hp,
+            race.infravision,
+            race.see_invisible,
+        ),
+        (110, 1500, 28, 20, true)
+    );
+    assert_eq!(
+        race.resistances.get(&ActorDamageType::Fire),
+        Some(&ActorResistanceLevel::Immune)
+    );
+    assert_eq!(
+        race.resistances.get(&ActorDamageType::Chaos),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+}
+
+#[test]
 fn life_second_book_keeps_the_original_identity_allocation_and_spell_table() {
     let content = compile_pack_dir(&original_pack_path())
         .expect("original pack should compile")
@@ -640,6 +2072,215 @@ fn life_third_book_keeps_the_original_identity_allocation_and_spell_table() {
             1
         );
     }
+}
+
+#[test]
+fn life_fourth_book_completes_the_original_realm_and_acquisition() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.blessings-of-the-grail")
+        .expect("Blessings of the Grail should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("life"));
+    assert_eq!(book.rank, Some(4));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.blessings-of-the-grail")
+        .expect("Blessings of the Grail item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (
+            80,
+            30,
+            100_000,
+            Some("demo.ability-book.blessings-of-the-grail")
+        )
+    );
+    assert_eq!(
+        item.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+            ItemDestructionElement::Cold,
+        ])
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("Blessings of the Grail should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (80, u16::MAX, 33)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .map(|shop| shop.category)
+            .collect::<Vec<_>>(),
+        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+    );
+
+    let expected = [
+        ("demo.ability.life-sterilization", 5, 9, 40, 40),
+        ("demo.ability.life-detection", 20, 20, 40, 50),
+        ("demo.ability.life-annihilate-undead", 30, 50, 60, 115),
+        ("demo.ability.life-clairvoyance", 40, 80, 60, 225),
+        ("demo.ability.life-restoration", 42, 75, 60, 115),
+        ("demo.ability.life-healing-true", 45, 40, 60, 100),
+        ("demo.ability.life-holy-vision", 47, 90, 70, 250),
+        ("demo.ability.life-ultimate-resistance", 49, 90, 70, 250),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-sterilization")
+            .expect("Sterilization should compile")
+            .effect,
+        AbilityEffectDefinition::SuppressMonsterReproduction {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 0,
+        }
+    ));
+    assert!(matches!(
+        &content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-annihilate-undead")
+            .expect("Annihilate Undead should compile")
+            .effect,
+        AbilityEffectDefinition::Genocide {
+            scope: AbilityGenocideScopeDefinition::Nearby,
+            power: 50,
+            radius: 20,
+            target_category: Some(category),
+            fatigue: true,
+            unlife_change_on_success: -2,
+            chance_change_on_success: -1,
+        } if category == "undead"
+    ));
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-clairvoyance")
+            .expect("Clairvoyance should compile")
+            .effect,
+        AbilityEffectDefinition::Clairvoyance {
+            telepathy_duration_ticks: 0,
+            telepathy_duration_dice: 0,
+            telepathy_duration_sides: 0,
+            grants_virtues: false,
+            grants_telepathy: false,
+        }
+    ));
+    assert!(matches!(
+        content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-restoration")
+            .expect("Restoration should compile")
+            .effect,
+        AbilityEffectDefinition::RestoreVitality {
+            life_force: 1_000,
+            restore_attributes: true,
+        }
+    ));
+    let ultimate = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.life-ultimate-resistance")
+        .expect("Ultimate Resistance should compile");
+    assert!(matches!(
+        &ultimate.effect,
+        AbilityEffectDefinition::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 0,
+            duration_dice: 1,
+            duration_sides: 0,
+            granted_resistances,
+            granted_modifiers,
+            granted_equipment_bonuses,
+            granted_status_immunities,
+            ..
+        } if status_kind_id == "rfb.status.ultimate-resistance"
+            && granted_resistances.len() == 17
+            && granted_modifiers.defense == 100
+            && granted_modifiers.speed == 10
+            && granted_equipment_bonuses.light_radius == 1
+            && granted_status_immunities.contains("rfb.status.paralysis")
+    ));
+    assert_eq!(ultimate.level_scaling.len(), 2);
+    assert_eq!(ultimate.spell_power_fields.len(), 2);
+
+    let life_books = content
+        .ability_books
+        .iter()
+        .filter(|book| book.realm_id.as_deref() == Some("life"))
+        .collect::<Vec<_>>();
+    assert_eq!(life_books.len(), 4);
+    let ability_ids = life_books
+        .iter()
+        .flat_map(|book| &book.ability_ids)
+        .collect::<BTreeSet<_>>();
+    assert_eq!(ability_ids.len(), 32);
+    assert!(ability_ids.iter().all(|id| {
+        content
+            .abilities
+            .iter()
+            .find(|ability| &ability.id == *id)
+            .is_some_and(|ability| {
+                ability
+                    .effect
+                    .ordered_effects()
+                    .iter()
+                    .all(|effect| !matches!(effect, AbilityEffectDefinition::NoOp { .. }))
+            })
+    }));
 }
 
 #[test]
@@ -2102,6 +3743,7 @@ fn arcane_fourth_book_completes_the_original_realm_and_acquisition() {
             telepathy_duration_ticks: 25,
             telepathy_duration_dice: 1,
             telepathy_duration_sides: 30,
+            ..
         }
     ));
 }

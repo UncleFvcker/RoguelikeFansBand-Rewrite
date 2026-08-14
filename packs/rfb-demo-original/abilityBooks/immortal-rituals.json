@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.immortal-rituals",
+  "nameKey": "ability-book-demo-immortal-rituals-name",
+  "descriptionKey": "ability-book-demo-immortal-rituals-description",
+  "realmId": "daemon",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.daemon-dominate-demon",
+    "demo.ability.daemon-vision",
+    "demo.ability.daemon-resist-nether",
+    "demo.ability.daemon-plasma-bolt",
+    "demo.ability.daemon-fire-ball",
+    "demo.ability.daemon-fire-branding",
+    "demo.ability.daemon-nether-ball",
+    "demo.ability.daemon-summon-demon"
+  ],
+  "tags": ["daemon", "spellbook"]
+}

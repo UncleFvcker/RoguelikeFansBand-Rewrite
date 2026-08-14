@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.crusade-portal",
+  "nameKey": "ability-demo-crusade-portal-name",
+  "descriptionKey": "ability-demo-crusade-portal-description",
+  "abilityProgramId": "demo.ability-program.crusade-portal",
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "levelScaling": [
+    { "effectIndex": 0, "field": "radius", "multiplier": 1, "divisor": 2 }
+  ],
+  "tags": ["crusade", "spell", "teleportation"]
+}

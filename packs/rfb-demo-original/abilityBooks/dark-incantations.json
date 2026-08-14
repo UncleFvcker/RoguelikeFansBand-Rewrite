@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.dark-incantations",
+  "nameKey": "ability-book-demo-dark-incantations-name",
+  "descriptionKey": "ability-book-demo-dark-incantations-description",
+  "realmId": "daemon",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.daemon-magic-missile",
+    "demo.ability.daemon-detect-unlife",
+    "demo.ability.daemon-evil-bless",
+    "demo.ability.daemon-resist-fire",
+    "demo.ability.daemon-horrify",
+    "demo.ability.daemon-nether-bolt",
+    "demo.ability.daemon-summon-manes",
+    "demo.ability.daemon-hellish-flame"
+  ],
+  "tags": ["daemon", "spellbook"]
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.rites-of-initiation",
+  "nameKey": "ability-book-demo-rites-of-initiation-name",
+  "descriptionKey": "ability-book-demo-rites-of-initiation-description",
+  "realmId": "crusade",
+  "rank": 1,
+  "abilityIds": [
+    "demo.ability.crusade-punishment",
+    "demo.ability.crusade-detect-evil",
+    "demo.ability.crusade-remove-fear",
+    "demo.ability.crusade-scare-monster",
+    "demo.ability.crusade-sanctuary",
+    "demo.ability.crusade-portal",
+    "demo.ability.crusade-star-dust",
+    "demo.ability.crusade-purification"
+  ],
+  "tags": ["crusade", "spellbook"]
+}

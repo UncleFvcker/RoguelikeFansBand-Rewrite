@@ -185,6 +185,7 @@ fn ability_program_top_level_random_choice_is_valid(
                             | AbilityEffectDefinition::BeamDamage { .. }
                             | AbilityEffectDefinition::LightLine { .. }
                             | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                            | AbilityEffectDefinition::ConeDamage { .. }
                             | AbilityEffectDefinition::ApplyStatus { .. }
                             | AbilityEffectDefinition::DrainLife { .. }
                             | AbilityEffectDefinition::Genocide { .. }
@@ -217,6 +218,15 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::Summon { .. }
                     | AbilityEffectDefinition::SummonCategory { .. }
                     | AbilityEffectDefinition::NatureGate { .. }
+                    | AbilityEffectDefinition::DemonSummoning
+                    | AbilityEffectDefinition::AngelSummoning
+                    | AbilityEffectDefinition::BanishEvil
+                    | AbilityEffectDefinition::DivineIntervention
+                    | AbilityEffectDefinition::Crusade
+                    | AbilityEffectDefinition::InsanityCircle { .. }
+                    | AbilityEffectDefinition::ExplodePets
+                    | AbilityEffectDefinition::Sanctuary { .. }
+                    | AbilityEffectDefinition::LavaFlow { .. }
                     | AbilityEffectDefinition::Detect { .. }
                     | AbilityEffectDefinition::RefuelEquippedLight { .. }
                     | AbilityEffectDefinition::LightArea { .. }
@@ -279,12 +289,16 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::BeamDamage { .. }
                     | AbilityEffectDefinition::LightLine { .. }
                     | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                    | AbilityEffectDefinition::Stardust { .. }
                     | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                     | AbilityEffectDefinition::ConeDamage { .. }
                     | AbilityEffectDefinition::BreathDamage { .. }
                     | AbilityEffectDefinition::DraconianBreathDamage { .. }
                     | AbilityEffectDefinition::CurseDamage { .. }
                     | AbilityEffectDefinition::DeathRay { .. }
+                    | AbilityEffectDefinition::DoomHand
+                    | AbilityEffectDefinition::WrathOfGod
+                    | AbilityEffectDefinition::Hellfire { .. }
                     | AbilityEffectDefinition::TeleportAway { .. }
                     | AbilityEffectDefinition::BirdDrop
                     | AbilityEffectDefinition::DrainResource { .. }
@@ -330,6 +344,7 @@ fn ability_program_input_accepts_step(
                 effect,
                 AbilityEffectDefinition::IdentifyItem { .. }
                     | AbilityEffectDefinition::IdentifyOrMassIdentify { .. }
+                    | AbilityEffectDefinition::SummonGreaterDemon { .. }
                     | AbilityEffectDefinition::BrandWeapon { .. }
                     | AbilityEffectDefinition::ProtectFromCorrosion
                     | AbilityEffectDefinition::TransmuteItemToGold { .. }

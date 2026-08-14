@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.crusade-sanctuary",
+  "input": "self",
+  "steps": [
+    { "type": "sanctuary", "power": 1, "radius": 1 }
+  ]
+}

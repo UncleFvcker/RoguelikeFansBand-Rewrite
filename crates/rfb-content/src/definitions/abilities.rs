@@ -151,6 +151,7 @@ pub enum AbilityLevelScalingField {
 pub enum AbilitySpellPowerField {
     FinalDamage,
     FinalHealing,
+    DamageDice,
     DamageSides,
     DamageBonus,
     HealingAmount,
@@ -161,6 +162,7 @@ pub enum AbilitySpellPowerField {
     StatusPower,
     ControlPower,
     GenocidePower,
+    SummonMaximumLevel,
     IdentifyPower,
     TeleportAwayPower,
     RechargePower,
@@ -391,6 +393,12 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         beam_chance_modifier: i8,
     },
+    Stardust {
+        damage_dice: u16,
+        damage_sides: u16,
+        count: u8,
+        deviation: u8,
+    },
     BoltOrAreaDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -445,6 +453,10 @@ pub enum AbilityEffectDefinition {
         minimum_distance: u8,
         #[serde(default)]
         power: u16,
+        #[serde(default)]
+        stop_at_actor: bool,
+        #[serde(default)]
+        target_category: Option<String>,
     },
     RechargeFromPlayer {
         power: u16,
@@ -453,6 +465,10 @@ pub enum AbilityEffectDefinition {
         telepathy_duration_ticks: u16,
         telepathy_duration_dice: u8,
         telepathy_duration_sides: u16,
+        #[serde(default = "default_true")]
+        grants_virtues: bool,
+        #[serde(default = "default_true")]
+        grants_telepathy: bool,
     },
     CallSunlight {
         vampire_damage: u16,
@@ -621,6 +637,42 @@ pub enum AbilityEffectDefinition {
         radius: u8,
         duration_turns: u16,
     },
+    DemonSummoning,
+    AngelSummoning,
+    BanishEvil,
+    WrathOfGod,
+    DivineIntervention,
+    Crusade,
+    InsanityCircle {
+        damage_bonus: u16,
+        control_power: u16,
+        radius: u8,
+    },
+    ExplodePets,
+    SummonGreaterDemon {
+        corpse_item_kind_id: String,
+        radius: u8,
+    },
+    Hellfire {
+        damage_bonus: u16,
+        radius: u8,
+        backlash_dice: u16,
+        backlash_sides: u16,
+        backlash_bonus: u16,
+    },
+    LavaFlow {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+        radius: u8,
+        target_terrain_id: String,
+    },
+    DoomHand,
+    Sanctuary {
+        power: u16,
+        radius: u8,
+    },
     Detect {
         #[serde(default)]
         subject: AbilityDetectSubjectDefinition,
@@ -709,6 +761,10 @@ pub enum AbilityEffectDefinition {
         target_category: Option<String>,
         #[serde(default = "default_true")]
         fatigue: bool,
+        #[serde(default)]
+        unlife_change_on_success: i8,
+        #[serde(default)]
+        chance_change_on_success: i8,
     },
     IdentifyItem {
         full_identify_power: u16,
@@ -724,6 +780,8 @@ pub enum AbilityEffectDefinition {
     },
     RestoreVitality {
         life_force: u16,
+        #[serde(default)]
+        restore_attributes: bool,
     },
     AnimateDead {
         actor_kind_id: String,
@@ -776,6 +834,10 @@ pub enum AbilityEffectDefinition {
         status_kind_id: String,
         intensity: u16,
         duration_ticks: u32,
+        #[serde(default)]
+        duration_dice: u16,
+        #[serde(default)]
+        duration_sides: u32,
         stacking: AbilityStatusStackingDefinition,
         #[serde(default)]
         resistance_type: Option<ActorDamageType>,
@@ -862,9 +924,11 @@ fn ability_level_scaling_base_and_limit(
             AbilityEffectDefinition::Damage { damage_dice, .. }
             | AbilityEffectDefinition::Malediction { damage_dice, .. }
             | AbilityEffectDefinition::AreaDamage { damage_dice, .. }
+            | AbilityEffectDefinition::LavaFlow { damage_dice, .. }
             | AbilityEffectDefinition::JumpDamage { damage_dice, .. }
             | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. }
+            | AbilityEffectDefinition::Stardust { damage_dice, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { damage_dice, .. }
             | AbilityEffectDefinition::ConeDamage { damage_dice, .. }
             | AbilityEffectDefinition::CurseDamage { damage_dice, .. }
@@ -876,6 +940,7 @@ fn ability_level_scaling_base_and_limit(
             AbilityEffectDefinition::Damage { damage_sides, .. }
             | AbilityEffectDefinition::Malediction { damage_sides, .. }
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
+            | AbilityEffectDefinition::LavaFlow { damage_sides, .. }
             | AbilityEffectDefinition::JumpDamage { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::LightArea { damage_sides, .. }
@@ -891,6 +956,9 @@ fn ability_level_scaling_base_and_limit(
             AbilityEffectDefinition::Damage { damage_bonus, .. }
             | AbilityEffectDefinition::Malediction { damage_bonus, .. }
             | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::LavaFlow { damage_bonus, .. }
+            | AbilityEffectDefinition::InsanityCircle { damage_bonus, .. }
+            | AbilityEffectDefinition::Hellfire { damage_bonus, .. }
             | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { damage_bonus, .. }
@@ -920,6 +988,9 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*full_identify_power), 1_000)),
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::LavaFlow { radius, .. }
+            | AbilityEffectDefinition::InsanityCircle { radius, .. }
+            | AbilityEffectDefinition::Hellfire { radius, .. }
             | AbilityEffectDefinition::LightArea { radius, .. }
             | AbilityEffectDefinition::JumpDamage { radius, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
@@ -953,7 +1024,8 @@ fn ability_level_scaling_base_and_limit(
             AbilityLevelScalingField::StatusDurationTicks,
         ) => Some((u64::from(*duration_ticks), 1_000_000)),
         (
-            AbilityEffectDefinition::ApplyStatus { duration_sides, .. },
+            AbilityEffectDefinition::ApplyStatus { duration_sides, .. }
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_sides, .. },
             AbilityLevelScalingField::StatusDurationSides,
         ) => Some((u64::from(*duration_sides), 1_000_000)),
         (
@@ -969,6 +1041,7 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
             }
+            | AbilityEffectDefinition::Sanctuary { power, .. }
             | AbilityEffectDefinition::Entangle { power, .. }
             | AbilityEffectDefinition::TurnUndead { power },
             AbilityLevelScalingField::StatusPower,
@@ -984,7 +1057,11 @@ fn ability_level_scaling_base_and_limit(
             10_000,
         )),
         (
-            AbilityEffectDefinition::Control { power, .. },
+            AbilityEffectDefinition::Control { power, .. }
+            | AbilityEffectDefinition::InsanityCircle {
+                control_power: power,
+                ..
+            },
             AbilityLevelScalingField::ControlPower,
         ) => Some((u64::from(*power), 1_000)),
         (
@@ -1130,27 +1207,45 @@ pub(crate) fn valid_ability_spell_power(
                 return false;
             };
             let valid = match definition.field {
-                AbilitySpellPowerField::FinalDamage => matches!(
-                    effect,
-                    AbilityEffectDefinition::Damage { .. }
-                        | AbilityEffectDefinition::Malediction { .. }
-                        | AbilityEffectDefinition::AreaDamage { .. }
-                        | AbilityEffectDefinition::BeamDamage { .. }
-                        | AbilityEffectDefinition::LightArea { .. }
-                        | AbilityEffectDefinition::BoltOrBeamDamage { .. }
-                        | AbilityEffectDefinition::BoltOrAreaDamage { .. }
-                        | AbilityEffectDefinition::ConeDamage { .. }
-                        | AbilityEffectDefinition::VisibleDamage { .. }
-                        | AbilityEffectDefinition::DrainLife { .. }
-                ),
+                AbilitySpellPowerField::FinalDamage => {
+                    matches!(
+                        effect,
+                        AbilityEffectDefinition::Damage { .. }
+                            | AbilityEffectDefinition::Malediction { .. }
+                            | AbilityEffectDefinition::AreaDamage { .. }
+                            | AbilityEffectDefinition::LavaFlow { .. }
+                            | AbilityEffectDefinition::BeamDamage { .. }
+                            | AbilityEffectDefinition::LightArea { .. }
+                            | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                            | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+                            | AbilityEffectDefinition::ConeDamage { .. }
+                            | AbilityEffectDefinition::VisibleDamage { .. }
+                            | AbilityEffectDefinition::DrainLife { .. }
+                    ) || matches!(effect, AbilityEffectDefinition::RandomChoice { branches, .. }
+                    if branches.iter().all(|branch| matches!(branch.effect.as_ref(),
+                        AbilityEffectDefinition::Damage { .. }
+                            | AbilityEffectDefinition::AreaDamage { .. }
+                            | AbilityEffectDefinition::BeamDamage { .. }
+                            | AbilityEffectDefinition::LightArea { .. }
+                            | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                            | AbilityEffectDefinition::BoltOrAreaDamage { .. }
+                            | AbilityEffectDefinition::ConeDamage { .. }
+                            | AbilityEffectDefinition::VisibleDamage { .. }
+                            | AbilityEffectDefinition::DrainLife { .. }
+                    )))
+                }
                 AbilitySpellPowerField::FinalHealing => {
                     matches!(effect, AbilityEffectDefinition::HealDice { .. })
+                }
+                AbilitySpellPowerField::DamageDice => {
+                    matches!(effect, AbilityEffectDefinition::Stardust { .. })
                 }
                 AbilitySpellPowerField::DamageSides => matches!(
                     effect,
                     AbilityEffectDefinition::Damage { .. }
                         | AbilityEffectDefinition::Malediction { .. }
                         | AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::LavaFlow { .. }
                         | AbilityEffectDefinition::BeamDamage { .. }
                         | AbilityEffectDefinition::LightArea { .. }
                         | AbilityEffectDefinition::BoltOrBeamDamage { .. }
@@ -1170,6 +1265,9 @@ pub(crate) fn valid_ability_spell_power(
                     AbilityEffectDefinition::Damage { .. }
                         | AbilityEffectDefinition::Malediction { .. }
                         | AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::LavaFlow { .. }
+                        | AbilityEffectDefinition::InsanityCircle { .. }
+                        | AbilityEffectDefinition::Hellfire { .. }
                         | AbilityEffectDefinition::BeamDamage { .. }
                         | AbilityEffectDefinition::BoltOrBeamDamage { .. }
                         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
@@ -1180,6 +1278,9 @@ pub(crate) fn valid_ability_spell_power(
                 AbilitySpellPowerField::Radius => matches!(
                     effect,
                     AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::LavaFlow { .. }
+                        | AbilityEffectDefinition::InsanityCircle { .. }
+                        | AbilityEffectDefinition::Hellfire { .. }
                         | AbilityEffectDefinition::LightArea { .. }
                         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                         | AbilityEffectDefinition::ConeDamage { .. }
@@ -1192,9 +1293,11 @@ pub(crate) fn valid_ability_spell_power(
                         | AbilityEffectDefinition::VisibleApplyStatus { .. }
                         | AbilityEffectDefinition::SustainAttributes { .. }
                 ),
-                AbilitySpellPowerField::StatusDurationSides => {
-                    matches!(effect, AbilityEffectDefinition::ApplyStatus { .. })
-                }
+                AbilitySpellPowerField::StatusDurationSides => matches!(
+                    effect,
+                    AbilityEffectDefinition::ApplyStatus { .. }
+                        | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                ),
                 AbilitySpellPowerField::StatusPower => matches!(
                     effect,
                     AbilityEffectDefinition::ApplyStatus { power: Some(_), .. }
@@ -1203,10 +1306,17 @@ pub(crate) fn valid_ability_spell_power(
                         | AbilityEffectDefinition::Entangle { .. }
                 ),
                 AbilitySpellPowerField::ControlPower => {
-                    matches!(effect, AbilityEffectDefinition::Control { .. })
+                    matches!(
+                        effect,
+                        AbilityEffectDefinition::Control { .. }
+                            | AbilityEffectDefinition::InsanityCircle { .. }
+                    )
                 }
                 AbilitySpellPowerField::GenocidePower => {
                     matches!(effect, AbilityEffectDefinition::Genocide { .. })
+                }
+                AbilitySpellPowerField::SummonMaximumLevel => {
+                    matches!(effect, AbilityEffectDefinition::SummonCategory { .. })
                 }
                 AbilitySpellPowerField::IdentifyPower => {
                     matches!(effect, AbilityEffectDefinition::IdentifyItem { .. })

@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json","formatVersion":1,"id":"demo.ability-program.daemon-kiss-of-succubus","input":"cast-target","steps":[{"type":"area-damage","damageDice":0,"damageSides":0,"damageBonus":75,"damageType":"nexus","radius":4}]}

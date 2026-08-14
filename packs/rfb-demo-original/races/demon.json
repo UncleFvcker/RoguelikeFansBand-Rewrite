@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "formatVersion": 1,
+  "id": "demo.race.demon",
+  "legacyIndex": 1000,
+  "nameKey": "race-demo-demon-name",
+  "descriptionKey": "race-demo-demon-description",
+  "modifiers": {"strength":5,"intelligence":3,"wisdom":2,"dexterity":3,"constitution":4,"charisma":3,"defense":10,"speed":3},
+  "lifePercent": 106,
+  "experiencePercent": 500,
+  "baseHp": 24,
+  "infravision": 5,
+  "seeInvisible": true,
+  "skillSetId": "demo.skill-set.demon",
+  "resistances": {"chaos":"resistant","fire":"strong","nether":"resistant"},
+  "abilities": [{"minimumLevel":15,"governingAttribute":"constitution","cost":10,"costScaling":{"startLevel":3,"levelInterval":3,"amount":1},"baseFailurePercent":70,"abilityId":"demo.ability.daemon-breath"}],
+  "tags": ["demon", "nonliving", "standard-body"]
+}

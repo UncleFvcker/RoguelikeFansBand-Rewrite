@@ -420,6 +420,8 @@ pub enum LegacyImportError {
     InvalidDemoItemSelection(String),
     #[error("invalid demo item coverage audit: {0}")]
     InvalidDemoItemAudit(String),
+    #[error("invalid ego audit: {0}")]
+    InvalidEgoAudit(String),
     #[error("invalid demo mutation coverage audit: {0}")]
     InvalidDemoMutationAudit(String),
     #[error("invalid demo monster selection: {0}")]

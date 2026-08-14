@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.crusade-punishment",
+  "nameKey": "ability-demo-crusade-punishment-name",
+  "descriptionKey": "ability-demo-crusade-punishment-description",
+  "abilityProgramId": "demo.ability-program.crusade-punishment",
+  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "levelScaling": [
+    { "effectIndex": 0, "field": "damage-dice", "levelOffset": 1, "multiplier": 1, "divisor": 5 }
+  ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "final-damage" }
+  ],
+  "tags": ["beam", "bolt", "crusade", "electricity", "spell"]
+}

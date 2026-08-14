@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.213";
+pub const PROTOCOL_VERSION: &str = "1.220";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
 
@@ -1010,6 +1010,12 @@ pub enum AbilityEffectSpecDto {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         final_damage_spell_power_bonus: Option<i32>,
     },
+    Stardust {
+        damage_dice: u16,
+        damage_sides: u16,
+        count: u8,
+        deviation: u8,
+    },
     BoltOrAreaDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -1053,6 +1059,10 @@ pub enum AbilityEffectSpecDto {
         minimum_distance: u8,
         #[serde(default)]
         power: u16,
+        #[serde(default)]
+        stop_at_actor: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        target_category: Option<String>,
     },
     RechargeFromPlayer {
         power: u16,
@@ -1200,6 +1210,59 @@ pub enum AbilityEffectSpecDto {
         ent_actor_kind_id: String,
         radius: u8,
         duration_turns: u16,
+    },
+    DemonSummoning,
+    AngelSummoning,
+    BanishEvil {
+        power: u16,
+    },
+    WrathOfGod {
+        damage: u16,
+        radius: u8,
+        minimum_count: u8,
+        maximum_count: u8,
+    },
+    DivineIntervention {
+        adjacent_damage: u16,
+        visible_damage: u16,
+        healing: u16,
+        control_power: u16,
+        stun_duration_ticks: u32,
+    },
+    Crusade {
+        charm_power: u16,
+        summon_attempts: u8,
+    },
+    InsanityCircle {
+        damage_bonus: u16,
+        control_power: u16,
+        radius: u8,
+    },
+    ExplodePets,
+    SummonGreaterDemon {
+        corpse_item_kind_id: String,
+        radius: u8,
+    },
+    Hellfire {
+        damage_bonus: u16,
+        radius: u8,
+        backlash_dice: u16,
+        backlash_sides: u16,
+        backlash_bonus: u16,
+    },
+    LavaFlow {
+        damage_dice: u16,
+        damage_sides: u16,
+        damage_bonus: u16,
+        radius: u8,
+        target_terrain_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
+    },
+    DoomHand,
+    Sanctuary {
+        power: u16,
+        radius: u8,
     },
     Detect {
         #[serde(default)]
@@ -1376,6 +1439,8 @@ pub enum AbilityEffectSpecDto {
         status_kind_id: String,
         intensity: u16,
         duration_ticks: u32,
+        duration_dice: u16,
+        duration_sides: u32,
         stacking: AbilityStatusStackingDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         resistance_type: Option<DamageTypeDto>,
@@ -2377,6 +2442,21 @@ pub enum AbilityEffectResolutionDto {
     CreateDoor {
         effect_index: u8,
         positions: Vec<Position>,
+    },
+    ExplodePets {
+        effect_index: u8,
+        exploded_entity_ids: Vec<String>,
+        escaped_entity_ids: Vec<String>,
+    },
+    SacrificeCorpse {
+        effect_index: u8,
+        item_id: String,
+        consumed: bool,
+    },
+    SelfDamage {
+        effect_index: u8,
+        damage: i32,
+        fatal: bool,
     },
     DeviceMastery {
         effect_index: u8,

@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json","formatVersion":1,"id":"demo.ability-program.daemon-summon-greater-demon","input":"item","steps":[{"type":"summon-greater-demon","corpseItemKindId":"demo.item.corpse-remains","radius":2}]}

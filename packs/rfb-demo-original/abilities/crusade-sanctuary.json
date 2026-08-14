@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.crusade-sanctuary",
+  "nameKey": "ability-demo-crusade-sanctuary-name",
+  "descriptionKey": "ability-demo-crusade-sanctuary-description",
+  "abilityProgramId": "demo.ability-program.crusade-sanctuary",
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "levelScaling": [
+    { "effectIndex": 0, "field": "status-power", "levelOffset": 1, "multiplier": 1, "divisor": 1 }
+  ],
+  "tags": ["crusade", "sleep", "spell"]
+}

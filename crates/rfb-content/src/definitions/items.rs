@@ -79,6 +79,44 @@ pub enum ItemDestructionElement {
     Cold,
 }
 
+/// Authoritative `T:` category used by RFB's ego allocation table.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum RfbEgoTypeDefinition {
+    Weapon,
+    Digger,
+    Ammo,
+    Bow,
+    Harp,
+    BodyArmor,
+    DragonArmor,
+    Shield,
+    Crown,
+    Helmet,
+    Cloak,
+    Gloves,
+    Boots,
+    Robe,
+    Ring,
+    Amulet,
+    Lite,
+    Quiver,
+    Device,
+    Special,
+}
+
+/// Identity and allocation inputs copied from one authoritative `e_info`
+/// record. Affixes without this metadata never enter the RFB ego pool.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RfbEgoGenerationDefinition {
+    pub source_index: u32,
+    pub rarity: u16,
+    pub types: Vec<RfbEgoTypeDefinition>,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -140,6 +178,9 @@ pub struct AffixDefinition {
     /// Original maximum generation depth. `u16::MAX` means unrestricted.
     #[serde(default = "default_u16_max")]
     pub generation_max_level: u16,
+    /// Optional authoritative RFB ego identity and allocation metadata.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rfb_ego: Option<RfbEgoGenerationDefinition>,
     #[serde(default)]
     pub modifiers: StatModifiers,
     /// Equipment-only combat, skill, and sensory bonuses.

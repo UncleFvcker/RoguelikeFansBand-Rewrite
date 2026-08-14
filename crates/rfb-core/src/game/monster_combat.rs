@@ -2008,7 +2008,7 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
-        for damage_type in [DamageType::Fire, DamageType::Electricity] {
+        for damage_type in [DamageType::Fire, DamageType::Electricity, DamageType::Cold] {
             let level = self
                 .content
                 .mutations()
@@ -2020,7 +2020,13 @@ impl Game {
                         .map(DamageType::from)
                         == Some(damage_type)
                 })
-                .count();
+                .count()
+                + usize::from(self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE))
+                + usize::from(
+                    damage_type == DamageType::Fire
+                        && (self.player_has_status_kind(STATUS_FIRE_AURA)
+                            || self.player_has_status_kind(STATUS_DEMON_LORD_TRANSFORMATION)),
+                );
             if level == 0 {
                 continue;
             }
@@ -2042,34 +2048,80 @@ impl Game {
                     2_u16.saturating_add(player_level),
                 ),
             );
-            let damage =
-                resolve_damage(DamagePacket::new(raw, damage_type), ResistanceLevel::Normal);
-            let target_kind_id = self.entities[target_index].kind_id.clone();
-            let application = plan_damage_application(
-                &self.entities[target_index],
-                damage,
-                FatalityPolicy::AtOrBelowZero,
-            );
-            commit_damage_application(&mut self.entities[target_index], &application);
-            if application.fatal {
-                self.resolve_actor_death(
-                    target_index,
-                    DomainEvent::MutationAuraSlew {
-                        target_kind_id,
-                        damage,
-                    },
-                    events,
-                    changed,
-                    removed_entities,
-                )?;
+            if self.resolve_player_contact_aura_damage(
+                target_index,
+                damage_type,
+                raw,
+                events,
+                changed,
+                removed_entities,
+            )? {
                 return Ok(true);
             }
-            events.push(DomainEvent::MutationAuraHit {
-                target_kind_id,
-                damage,
-            });
-            self.wake_entity_after_damage(target_index, damage.applied, events);
         }
+        let holy_target = self.player_has_status_kind(STATUS_HOLY_AURA)
+            && self
+                .content
+                .actor(&self.entities[target_index].kind_id)
+                .is_some_and(|definition| {
+                    actor_matches_category(definition, "evil")
+                        && !definition.tags.iter().any(|tag| tag == "resist-all")
+                });
+        if holy_target {
+            let player_level = self.progress.level / 10;
+            let raw = 2_i32.saturating_add(self.roll_damage(
+                1_u16.saturating_add(player_level),
+                2_u16.saturating_add(player_level),
+            ));
+            if self.resolve_player_contact_aura_damage(
+                target_index,
+                DamageType::Mana,
+                raw,
+                events,
+                changed,
+                removed_entities,
+            )? {
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    fn resolve_player_contact_aura_damage(
+        &mut self,
+        target_index: usize,
+        damage_type: DamageType,
+        raw: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
+        let damage = resolve_damage(DamagePacket::new(raw, damage_type), ResistanceLevel::Normal);
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        let application = plan_damage_application(
+            &self.entities[target_index],
+            damage,
+            FatalityPolicy::AtOrBelowZero,
+        );
+        commit_damage_application(&mut self.entities[target_index], &application);
+        if application.fatal {
+            self.resolve_actor_death(
+                target_index,
+                DomainEvent::MutationAuraSlew {
+                    target_kind_id,
+                    damage,
+                },
+                events,
+                changed,
+                removed_entities,
+            )?;
+            return Ok(true);
+        }
+        events.push(DomainEvent::MutationAuraHit {
+            target_kind_id,
+            damage,
+        });
+        self.wake_entity_after_damage(target_index, damage.applied, events);
         Ok(false)
     }
 

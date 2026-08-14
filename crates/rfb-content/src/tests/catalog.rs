@@ -8,8 +8,8 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.361.0");
-    assert_eq!(catalog.races().count(), 55);
+    assert_eq!(catalog.pack_version(), "1.362.0");
+    assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
         .expect("formal Human race should exist")

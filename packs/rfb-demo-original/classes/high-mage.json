@@ -282,7 +282,8 @@
         "abilityBookIds": [
           "demo.ability-book.book-of-common-prayer",
           "demo.ability-book.high-mass",
-          "demo.ability-book.book-of-the-unicorn"
+          "demo.ability-book.book-of-the-unicorn",
+          "demo.ability-book.blessings-of-the-grail"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -309,7 +310,103 @@
           { "abilityId": "demo.ability.life-cure-mutation", "minimumLevel": 32, "resourceCost": 30, "baseFailurePercent": 60 },
           { "abilityId": "demo.ability.life-word-of-recall", "minimumLevel": 33, "resourceCost": 40, "baseFailurePercent": 60 },
           { "abilityId": "demo.ability.life-transcendence", "minimumLevel": 35, "resourceCost": 35, "baseFailurePercent": 60 },
-          { "abilityId": "demo.ability.life-warding-true", "minimumLevel": 40, "resourceCost": 70, "baseFailurePercent": 70 }
+          { "abilityId": "demo.ability.life-warding-true", "minimumLevel": 40, "resourceCost": 70, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.life-sterilization", "minimumLevel": 5, "resourceCost": 9, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-detection", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-annihilate-undead", "minimumLevel": 30, "resourceCost": 50, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-clairvoyance", "minimumLevel": 40, "resourceCost": 80, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-restoration", "minimumLevel": 42, "resourceCost": 75, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-healing-true", "minimumLevel": 45, "resourceCost": 40, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-holy-vision", "minimumLevel": 47, "resourceCost": 90, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.life-ultimate-resistance", "minimumLevel": 49, "resourceCost": 90, "baseFailurePercent": 70 }
+        ]
+      },
+      {
+        "realmId": "daemon",
+        "abilityBookIds": [
+          "demo.ability-book.dark-incantations",
+          "demo.ability-book.immortal-rituals",
+          "demo.ability-book.demonthoughts",
+          "demo.ability-book.hellfire-tome"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.daemon-magic-missile", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.daemon-detect-unlife", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.daemon-evil-bless", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.daemon-resist-fire", "minimumLevel": 3, "resourceCost": 4, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.daemon-horrify", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.daemon-nether-bolt", "minimumLevel": 7, "resourceCost": 5, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.daemon-summon-manes", "minimumLevel": 9, "resourceCost": 8, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.daemon-hellish-flame", "minimumLevel": 11, "resourceCost": 11, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.daemon-dominate-demon", "minimumLevel": 13, "resourceCost": 11, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.daemon-vision", "minimumLevel": 15, "resourceCost": 13, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.daemon-resist-nether", "minimumLevel": 17, "resourceCost": 15, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.daemon-plasma-bolt", "minimumLevel": 21, "resourceCost": 12, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.daemon-fire-ball", "minimumLevel": 22, "resourceCost": 13, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.daemon-fire-branding", "minimumLevel": 26, "resourceCost": 65, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.daemon-nether-ball", "minimumLevel": 28, "resourceCost": 25, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.daemon-summon-demon", "minimumLevel": 33, "resourceCost": 65, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.daemon-devilish-eye", "minimumLevel": 9, "resourceCost": 10, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.daemon-devilish-cloak", "minimumLevel": 12, "resourceCost": 15, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.daemon-flow-of-lava", "minimumLevel": 22, "resourceCost": 19, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.daemon-plasma-ball", "minimumLevel": 31, "resourceCost": 26, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.daemon-polymorph-demon", "minimumLevel": 32, "resourceCost": 35, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.daemon-nether-wave", "minimumLevel": 33, "resourceCost": 32, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.daemon-kiss-of-succubus", "minimumLevel": 34, "resourceCost": 35, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.daemon-doom-hand", "minimumLevel": 40, "resourceCost": 70, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.daemon-raise-the-morale", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.daemon-immortal-body", "minimumLevel": 23, "resourceCost": 20, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.daemon-insanity-circle", "minimumLevel": 33, "resourceCost": 30, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.daemon-explode-pets", "minimumLevel": 36, "resourceCost": 44, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.daemon-summon-greater-demon", "minimumLevel": 38, "resourceCost": 90, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.daemon-hellfire", "minimumLevel": 42, "resourceCost": 85, "baseFailurePercent": 85 },
+          { "abilityId": "demo.ability.daemon-send-to-hell", "minimumLevel": 43, "resourceCost": 75, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.daemon-polymorph-demonlord", "minimumLevel": 46, "resourceCost": 70, "baseFailurePercent": 75 }
+        ]
+      },
+      {
+        "realmId": "crusade",
+        "abilityBookIds": [
+          "demo.ability-book.rites-of-initiation",
+          "demo.ability-book.ways-of-war",
+          "demo.ability-book.exorcism-and-dispelling",
+          "demo.ability-book.wrath-of-god"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.crusade-punishment", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.crusade-detect-evil", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 10 },
+          { "abilityId": "demo.ability.crusade-remove-fear", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.crusade-scare-monster", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.crusade-sanctuary", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 34 },
+          { "abilityId": "demo.ability.crusade-portal", "minimumLevel": 7, "resourceCost": 6, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.crusade-star-dust", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 45 },
+          { "abilityId": "demo.ability.crusade-purification", "minimumLevel": 10, "resourceCost": 8, "baseFailurePercent": 45 },
+          { "abilityId": "demo.ability.crusade-scatter-evil", "minimumLevel": 11, "resourceCost": 11, "baseFailurePercent": 45 },
+          { "abilityId": "demo.ability.crusade-holy-orb", "minimumLevel": 12, "resourceCost": 11, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.crusade-exorcism", "minimumLevel": 15, "resourceCost": 15, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.crusade-remove-curse", "minimumLevel": 16, "resourceCost": 16, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.crusade-sense-unseen", "minimumLevel": 17, "resourceCost": 16, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.crusade-protection-from-evil", "minimumLevel": 20, "resourceCost": 18, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.crusade-judgment-thunder", "minimumLevel": 28, "resourceCost": 30, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.crusade-holy-word", "minimumLevel": 36, "resourceCost": 32, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.crusade-unbarring-ways", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 23 },
+          { "abilityId": "demo.ability.crusade-arrest", "minimumLevel": 13, "resourceCost": 12, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.crusade-angelic-cloak", "minimumLevel": 15, "resourceCost": 13, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.crusade-dispel-undead-and-demons", "minimumLevel": 17, "resourceCost": 14, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.crusade-dispel-evil", "minimumLevel": 25, "resourceCost": 20, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.crusade-holy-blade", "minimumLevel": 28, "resourceCost": 65, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.crusade-star-burst", "minimumLevel": 32, "resourceCost": 38, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.crusade-summon-angel", "minimumLevel": 38, "resourceCost": 90, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.crusade-heroism", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.crusade-dispel-curse", "minimumLevel": 25, "resourceCost": 25, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.crusade-banish-evil", "minimumLevel": 27, "resourceCost": 24, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.crusade-armageddon", "minimumLevel": 28, "resourceCost": 19, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.crusade-an-eye-for-an-eye", "minimumLevel": 34, "resourceCost": 30, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.crusade-wrath-of-the-god", "minimumLevel": 39, "resourceCost": 55, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.crusade-divine-intervention", "minimumLevel": 42, "resourceCost": 85, "baseFailurePercent": 85 },
+          { "abilityId": "demo.ability.crusade-crusade", "minimumLevel": 45, "resourceCost": 90, "baseFailurePercent": 75 }
         ]
       }
     ]

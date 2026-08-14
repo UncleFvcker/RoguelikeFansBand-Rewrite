@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.daemon-evil-bless",
+  "input": "self",
+  "steps": [{
+    "type": "apply-status",
+    "statusKindId": "rfb.status.blessed",
+    "intensity": 1,
+    "durationTicks": 12,
+    "durationDice": 1,
+    "durationSides": 12,
+    "stacking": "replace",
+    "grantedModifiers": { "defense": 5 },
+    "grantedEquipmentBonuses": { "meleeSkill": 10, "rangedSkill": 10 }
+  }]
+}

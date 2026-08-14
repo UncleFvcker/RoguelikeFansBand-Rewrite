@@ -246,7 +246,7 @@ impl Game {
         self.resources.get(&profile.resource_id)
     }
 
-    fn remove_pet_at(
+    pub(super) fn remove_pet_at(
         &mut self,
         index: usize,
         changed: &mut BTreeSet<Position>,

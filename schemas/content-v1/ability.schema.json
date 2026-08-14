@@ -130,6 +130,7 @@
       "enum": [
         "final-damage",
         "final-healing",
+        "damage-dice",
         "damage-sides",
         "damage-bonus",
         "healing-amount",
@@ -140,6 +141,7 @@
         "status-power",
         "control-power",
         "genocide-power",
+        "summon-maximum-level",
         "identify-power",
         "teleport-away-power",
         "recharge-power",

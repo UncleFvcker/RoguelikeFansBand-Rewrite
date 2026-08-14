@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json","formatVersion":1,"id":"demo.ability-program.life-restoration","input":"self","steps":[{"type":"restore-vitality","lifeForce":1000,"restoreAttributes":true}]}

@@ -340,6 +340,58 @@ fn item_shape_validation_uses_current_rfb_content() {
 }
 
 #[test]
+fn rfb_ego_affix_metadata_requires_identity_unique_source_and_distinct_types() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let metadata = RfbEgoGenerationDefinition {
+        source_index: 1,
+        rarity: 0,
+        types: vec![RfbEgoTypeDefinition::Weapon, RfbEgoTypeDefinition::Digger],
+    };
+
+    let mut valid = artifact.content.clone();
+    valid.affixes[0].rfb_ego = Some(metadata.clone());
+    validate_and_normalize(&mut valid).expect("rarity zero remains valid for forced ego paths");
+
+    let mut missing_identity = artifact.content.clone();
+    missing_identity.affixes[0].rfb_ego = Some(RfbEgoGenerationDefinition {
+        source_index: 0,
+        ..metadata.clone()
+    });
+    assert!(matches!(
+        validate_and_normalize(&mut missing_identity),
+        Err(ContentError::InvalidAffixModifiers(_))
+    ));
+
+    let mut duplicate_type = artifact.content.clone();
+    duplicate_type.affixes[0].rfb_ego = Some(RfbEgoGenerationDefinition {
+        types: vec![RfbEgoTypeDefinition::Weapon, RfbEgoTypeDefinition::Weapon],
+        ..metadata.clone()
+    });
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_type),
+        Err(ContentError::InvalidAffixModifiers(_))
+    ));
+
+    let mut missing_type = artifact.content.clone();
+    missing_type.affixes[0].rfb_ego = Some(RfbEgoGenerationDefinition {
+        types: Vec::new(),
+        ..metadata.clone()
+    });
+    assert!(matches!(
+        validate_and_normalize(&mut missing_type),
+        Err(ContentError::InvalidAffixModifiers(_))
+    ));
+
+    let mut duplicate_source = artifact.content.clone();
+    duplicate_source.affixes[0].rfb_ego = Some(metadata.clone());
+    duplicate_source.affixes[1].rfb_ego = Some(metadata);
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_source),
+        Err(ContentError::InvalidAffixModifiers(_))
+    ));
+}
+
+#[test]
 fn weapon_proficiency_content_rejects_invalid_bounds_and_base_aliases() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 

@@ -357,6 +357,9 @@ impl Game {
                 AbilityEffectDefinition::Damage { damage_bonus, .. }
                 | AbilityEffectDefinition::Malediction { damage_bonus, .. }
                 | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
+                | AbilityEffectDefinition::LavaFlow { damage_bonus, .. }
+                | AbilityEffectDefinition::InsanityCircle { damage_bonus, .. }
+                | AbilityEffectDefinition::Hellfire { damage_bonus, .. }
                 | AbilityEffectDefinition::JumpDamage { damage_bonus, .. }
                 | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
                 | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }

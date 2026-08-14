@@ -807,6 +807,19 @@ fn empty_device_absorption_spends_a_turn_without_changing_energy_or_food() {
 }
 
 #[test]
+fn ultimate_resistance_slow_digestion_halves_normal_food_use() {
+    let mut game = Game::new(42);
+    game.player.statuses.push(
+        monster_combat::melee_status(STATUS_ULTIMATE_RESISTANCE, 10, "test.ultimate-resistance")
+            .status,
+    );
+    game.nutrition = 9_000;
+    game.world_tick = 50;
+    game.process_hunger(&mut Vec::new());
+    assert_eq!(game.nutrition, 8_995);
+}
+
+#[test]
 fn wait_and_rest_share_the_hunger_world_clock() {
     let mut waiting = Game::new(42);
     waiting.entities.clear();

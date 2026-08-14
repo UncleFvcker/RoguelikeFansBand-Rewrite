@@ -1165,6 +1165,18 @@ impl Game {
             .expect("ability target definition must remain available")
             .clone();
         let target_kind_id = definition.id.clone();
+        let has_tag = |tag: &str| definition.tags.iter().any(|candidate| candidate == tag);
+        let raw_damage = match damage_type {
+            DamageType::HellFire if has_tag("good") => raw_damage.saturating_mul(2),
+            DamageType::HolyFire if has_tag("good") => 0,
+            DamageType::HolyFire if has_tag("evil") => raw_damage.saturating_mul(2),
+            DamageType::HolyFire => {
+                let divisor =
+                    i32::try_from(self.rng.bounded(6) + 7).expect("holy-fire divisor must fit i32");
+                raw_damage.saturating_mul(3) / divisor
+            }
+            _ => raw_damage,
+        };
         self.entities[index].alerted = true;
         changed.insert(self.entities[index].position);
         let target = self.actor_derived_stats(&self.entities[index], &definition, false);

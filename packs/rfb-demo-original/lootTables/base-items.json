@@ -1779,6 +1779,66 @@
       "maxDepth": 90
     },
     {
+      "itemKindId": "demo.item.blessings-of-the-grail",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 80
+    },
+    {
+      "itemKindId": "demo.item.dark-incantations",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.immortal-rituals",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.demonthoughts",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45,
+      "maxDepth": 90
+    },
+    {
+      "itemKindId": "demo.item.hellfire-tome",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 80
+    },
+    {
+      "itemKindId": "demo.item.rites-of-initiation",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.ways-of-war",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.exorcism-and-dispelling",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45,
+      "maxDepth": 90
+    },
+    {
+      "itemKindId": "demo.item.wrath-of-god",
+      "weight": 33,
+      "quantity": 1,
+      "minDepth": 85
+    },
+    {
       "itemKindId": "demo.item.call-of-the-wild",
       "weight": 100,
       "quantity": 1,
