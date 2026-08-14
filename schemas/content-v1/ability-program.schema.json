@@ -228,6 +228,16 @@
               "$ref": "#/$defs/ActorDamageType",
               "default": "physical"
             },
+            "maximumRange": {
+              "default": null,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
             "type": {
               "const": "beam-damage",
               "type": "string"
@@ -285,6 +295,20 @@
             "radius": {
               "format": "uint8",
               "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "sunlightBurnDamageDice": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "sunlightBurnDamageSides": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
               "minimum": 0,
               "type": "integer"
             },
@@ -627,6 +651,39 @@
             "telepathyDurationTicks",
             "telepathyDurationDice",
             "telepathyDurationSides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "call-sunlight",
+              "type": "string"
+            },
+            "vampireDamage": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "type",
+            "vampireDamage"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "nature-wrath",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
           ],
           "type": "object"
         },
@@ -1584,6 +1641,49 @@
         {
           "additionalProperties": false,
           "properties": {
+            "animalCategory": {
+              "type": "string"
+            },
+            "durationTurns": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "entActorKindId": {
+              "type": "string"
+            },
+            "houndCategory": {
+              "type": "string"
+            },
+            "hydraCategory": {
+              "type": "string"
+            },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "nature-gate",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "animalCategory",
+            "houndCategory",
+            "hydraCategory",
+            "entActorKindId",
+            "radius",
+            "durationTurns"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "category": {
               "type": "string"
             },
@@ -1665,6 +1765,54 @@
             "sourceTerrainIds",
             "targetTerrainId",
             "radius"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "sourceTerrainIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "create-adjacent-terrain",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "sourceTerrainIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "create-current-terrain",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId"
           ],
           "type": "object"
         },
@@ -2234,6 +2382,88 @@
         {
           "additionalProperties": false,
           "properties": {
+            "includeHeavy": {
+              "type": "boolean"
+            },
+            "type": {
+              "const": "remove-equipped-curses",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "includeHeavy"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "begin-fasting",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "power": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "turn-undead",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "power"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationTicks": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "sustain-attributes",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationTicks"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "cure-mutation",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "amount": {
               "format": "uint32",
               "minimum": 0,
@@ -2319,6 +2549,13 @@
             "type": {
               "const": "visible-damage",
               "type": "string"
+            },
+            "unlifeChangeOnHit": {
+              "default": 0,
+              "format": "int8",
+              "maximum": 127,
+              "minimum": -128,
+              "type": "integer"
             }
           },
           "required": [
@@ -2387,6 +2624,32 @@
             "intensity",
             "durationTicks",
             "stacking"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationTicks": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "power": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "entangle",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "power",
+            "durationTicks"
           ],
           "type": "object"
         },
@@ -2475,6 +2738,19 @@
           "required": [
             "type",
             "affixId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "protect-from-corrosion",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
           ],
           "type": "object"
         },
@@ -2714,6 +2990,7 @@
         "status-intensity",
         "status-duration-ticks",
         "status-duration-sides",
+        "status-defense",
         "status-power",
         "status-melee-damage",
         "control-power",
@@ -2722,7 +2999,8 @@
         "maximum-weight",
         "banish-distance",
         "device-mastery-duration-base",
-        "device-power-bonus"
+        "device-power-bonus",
+        "maximum-range"
       ],
       "type": "string"
     },

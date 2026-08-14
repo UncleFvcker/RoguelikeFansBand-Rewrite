@@ -22,11 +22,14 @@ use crate::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_ANTI_MAGIC,
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
         STATUS_CONFUSION, STATUS_DEVICE_MASTERY, STATUS_FEAR, STATUS_GIANT_STRENGTH,
-        STATUS_HALLUCINATION, STATUS_HASTE, STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY,
-        STATUS_NO_AIR, STATUS_PARALYSIS, STATUS_PLAYER_POLYMORPH, STATUS_POISON,
-        STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT,
-        STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE,
-        STATUS_TSUYOSHI, STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
+        STATUS_HALLUCINATION, STATUS_HASTE, STATUS_HOLD_LIFE, STATUS_INVENTORY_PROTECTION,
+        STATUS_INVULNERABILITY, STATUS_LEVITATION, STATUS_NO_AIR, STATUS_PARALYSIS,
+        STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION,
+        STATUS_SEE_INVISIBLE, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
+        STATUS_SUSTAIN_CHARISMA, STATUS_SUSTAIN_CONSTITUTION, STATUS_SUSTAIN_DEXTERITY,
+        STATUS_SUSTAIN_INTELLIGENCE, STATUS_SUSTAIN_STRENGTH, STATUS_SUSTAIN_WISDOM,
+        STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TRANSCENDENCE, STATUS_TSUYOSHI,
+        STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE, STATUS_WRAITHFORM,
         StatusApplication, StatusChange, StatusInstance, StatusStacking, apply_effect,
         apply_status, resolve_damage,
     },
@@ -100,12 +103,13 @@ use rfb_protocol::{
     MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
     MonsterAbilityTargetResolutionDto, MonsterAlignmentDto, MonsterDisplacementResolutionDto,
-    MonsterPackBehaviorDto, MonsterPackRoleDto, PendingMutationDirectionDto, Position,
-    ProbedMonsterDto, ProjectileProfileDto, RecallStateDto, ResistanceDto, ResourcePoolSaveDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SlayDto, SlayLevelDto,
-    SlayTargetDto, SniperShotModeDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
-    SummonCommandResolutionDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStatusKindDto,
-    ThrowProfileDto, VirtueDto, VirtueKindDto, WeaponBrandDto,
+    MonsterPackBehaviorDto, MonsterPackRoleDto, PendingAbilityDirectionDto,
+    PendingMutationDirectionDto, Position, ProbedMonsterDto, ProjectileProfileDto, RecallStateDto,
+    ResistanceDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
+    RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, SniperShotModeDto, StatModifiersDto,
+    SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto, TargetModeDto,
+    TargetSelection, TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, VirtueDto, VirtueKindDto,
+    WeaponBrandDto,
 };
 
 mod abilities;
@@ -169,8 +173,8 @@ use capabilities::{
     apply_healing, apply_resource_restoration, apply_status_application, apply_status_removal,
 };
 use damage::{
-    FatalityPolicy, commit_damage_application, plan_damage_application, process_actor_status_tick,
-    scale_damage_outcome,
+    FatalityPolicy, commit_damage_application, commit_final_player_damage, plan_damage_application,
+    process_actor_status_tick, process_actor_status_tick_with, scale_damage_outcome,
 };
 use environment_combat::PlayerTrapOutcome;
 use floor::{
@@ -216,7 +220,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 100;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 103;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -539,6 +543,7 @@ impl GeneratedItemDraft {
             rolled_affixes: self.rolled_affixes,
             enchantments: ItemEnchantmentsDto::default(),
             curse: self.curse,
+            permanent_destruction_immunities: Default::default(),
             activation: self.activation,
             charges: self.charges,
             fuel: self.fuel,
@@ -759,6 +764,7 @@ fn append_starting_item(
         rolled_affixes: Vec::new(),
         enchantments: ItemEnchantmentsDto::default(),
         curse: initial_item_curse(content, &starting_item.item_kind_id),
+        permanent_destruction_immunities: Default::default(),
         activation,
         charges,
         fuel: initial_item_fuel(content, &starting_item.item_kind_id),
@@ -923,6 +929,7 @@ pub struct Game {
     items: Vec<ItemInstance>,
     gold: u32,
     nutrition: u16,
+    fasting: bool,
     gold_piles: Vec<GoldPile>,
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
     item_property_knowledge: BTreeMap<String, ItemPropertyKnowledgeState>,
@@ -945,6 +952,7 @@ pub struct Game {
     chaos_patron_id: Option<String>,
     reality_change_ticks: u8,
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
+    pending_ability_direction: Option<PendingAbilityDirectionDto>,
     next_item_instance_serial: u64,
     next_gold_pile_serial: u64,
     explored: Vec<bool>,
@@ -1180,6 +1188,7 @@ impl Game {
                     rolled_affixes: Vec::new(),
                     enchantments: ItemEnchantmentsDto::default(),
                     curse: initial_item_curse(&content, &spawn.kind_id),
+                    permanent_destruction_immunities: Default::default(),
                     activation,
                     charges,
                     fuel: initial_item_fuel(&content, &spawn.kind_id),
@@ -1298,6 +1307,7 @@ impl Game {
             items,
             gold,
             nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
+            fasting: false,
             gold_piles: Vec::new(),
             item_knowledge: BTreeMap::new(),
             item_property_knowledge: BTreeMap::new(),
@@ -1320,6 +1330,7 @@ impl Game {
             chaos_patron_id,
             reality_change_ticks: 0,
             pending_mutation_direction: None,
+            pending_ability_direction: None,
             next_item_instance_serial,
             next_gold_pile_serial: 1,
             explored: vec![false; usize::from(width) * usize::from(height)],
@@ -1393,6 +1404,22 @@ impl Game {
         {
             return Err(CoreError::MutationDirectionUnavailable);
         }
+        if self.pending_ability_direction.is_some()
+            && !matches!(
+                action,
+                GameAction::ResolveAbilityDirection { .. } | GameAction::CancelAbilityDirection
+            )
+        {
+            return Err(CoreError::AbilityDirectionRequired);
+        }
+        if self.pending_ability_direction.is_none()
+            && matches!(
+                action,
+                GameAction::ResolveAbilityDirection { .. } | GameAction::CancelAbilityDirection
+            )
+        {
+            return Err(CoreError::AbilityDirectionUnavailable);
+        }
         if race_mutation_choice_pending && !matches!(action, GameAction::ChooseRaceMutation { .. })
         {
             return Err(CoreError::RaceMutationChoiceRequired);
@@ -1459,6 +1486,15 @@ impl Game {
             .last_visual_cells
             .take()
             .unwrap_or_else(|| self.visual_cells());
+        let mut nature_wrath_before = matches!(
+            &action,
+            GameAction::CastAbility { ability_id, target }
+                if matches!(target, TargetSelection::SelfTarget)
+                    && self.content.ability(ability_id).is_some_and(|ability| {
+                        matches!(ability.effect, AbilityEffectDefinition::NatureWrath)
+                    })
+        )
+        .then(|| self.clone());
         let mut changed = BTreeSet::new();
         let mut events = Vec::new();
         let mut chaos_patron_event_cursor = 0;
@@ -1528,6 +1564,11 @@ impl Game {
         };
         let unavailable_local_travel =
             matches!(&action, GameAction::TravelLocal { .. }) && local_travel_direction.is_none();
+        let zero_time_unavailable_ability = matches!(
+            &action,
+            GameAction::CastAbility { ability_id, .. }
+                if self.ability_state_unavailable_reason(ability_id).is_some()
+        );
         if let Some(direction) = local_travel_direction {
             action = GameAction::Move { direction };
         }
@@ -1542,7 +1583,7 @@ impl Game {
         }) {
             action = GameAction::Move { direction };
         }
-        let advances_world = !depleted_device_use
+        let mut advances_world = !depleted_device_use
             && !zero_time_unavailable_item_use
             && !cursed_unequip
             && !cursed_equip_replacement
@@ -1550,6 +1591,7 @@ impl Game {
             && !unavailable_recharging_item
             && !unavailable_world_travel
             && !unavailable_local_travel
+            && !zero_time_unavailable_ability
             && !matches!(
                 &action,
                 GameAction::Retire
@@ -1575,6 +1617,7 @@ impl Game {
                     | GameAction::PickUp
                     | GameAction::ResolveMogaminatorQuery { .. }
                     | GameAction::ResolveMutationDirection { .. }
+                    | GameAction::CancelAbilityDirection
                     | GameAction::InscribeItem { .. }
                     | GameAction::SetInterfaceLocale { .. }
             );
@@ -1965,6 +2008,44 @@ impl Game {
                 self.resolve_player_ability(
                     &ability_id,
                     target,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
+                if let Some(branch_roll) = abilities::nature_wrath_direction_roll(&events) {
+                    let cast_resolution = events.iter().find_map(|event| match event {
+                        DomainEvent::AbilityCastSucceeded { resolution }
+                            if resolution.ability_id == ability_id =>
+                        {
+                            Some(resolution.clone())
+                        }
+                        _ => None,
+                    });
+                    if let (Some(before), Some(cast_resolution)) =
+                        (nature_wrath_before.take(), cast_resolution)
+                    {
+                        let advanced_rng = self.rng.clone();
+                        *self = before;
+                        self.rng = advanced_rng;
+                        self.pending_ability_direction = Some(PendingAbilityDirectionDto {
+                            ability_id,
+                            branch_roll,
+                            cast_resolution,
+                        });
+                        events.clear();
+                        changed.clear();
+                        removed_entities.clear();
+                        advances_world = false;
+                        action_cost = 0;
+                    }
+                }
+            }
+            GameAction::CancelAbilityDirection => {
+                self.pending_ability_direction = None;
+            }
+            GameAction::ResolveAbilityDirection { direction } => {
+                self.resolve_pending_ability_direction(
+                    direction,
                     &mut events,
                     &mut changed,
                     &mut removed_entities,
@@ -2802,6 +2883,7 @@ impl Game {
             rolled_affixes: Vec::new(),
             enchantments: ItemEnchantmentsDto::default(),
             curse: initial_item_curse(&self.content, kind_id),
+            permanent_destruction_immunities: Default::default(),
             activation,
             charges,
             fuel: initial_item_fuel(&self.content, kind_id),
@@ -3098,7 +3180,16 @@ impl Game {
                 .saturating_div(100),
         )
         .unwrap_or(i32::MAX);
-        self.player.hp = self.player.hp.saturating_sub(fatigue_damage);
+        let fatigue_damage = self
+            .apply_final_player_damage(
+                resolve_damage(
+                    DamagePacket::new(fatigue_damage, DamageType::Physical),
+                    ResistanceLevel::Normal,
+                ),
+                FatalityPolicy::BelowZero,
+            )
+            .damage
+            .applied;
         GenocideResolution {
             removed_entity_ids,
             resisted_entity_ids,
@@ -6815,7 +6906,8 @@ fn apply_ability_level_scaling(
         }
         (
             AbilityEffectDefinition::ApplyStatus { duration_ticks, .. }
-            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. },
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. }
+            | AbilityEffectDefinition::SustainAttributes { duration_ticks },
             AbilityLevelScalingField::StatusDurationTicks,
         ) => {
             *duration_ticks = u32::try_from(scaled_ability_level_value(
@@ -6838,11 +6930,27 @@ fn apply_ability_level_scaling(
         }
         (
             AbilityEffectDefinition::ApplyStatus {
+                granted_modifiers, ..
+            },
+            AbilityLevelScalingField::StatusDefense,
+        ) => {
+            granted_modifiers.defense = i32::try_from(scaled_ability_level_value(
+                u64::try_from(granted_modifiers.defense)
+                    .expect("validated status defense must be non-negative"),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled status defense must fit i32");
+        }
+        (
+            AbilityEffectDefinition::ApplyStatus {
                 power: Some(power), ..
             }
             | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
-            },
+            }
+            | AbilityEffectDefinition::Entangle { power, .. }
+            | AbilityEffectDefinition::TurnUndead { power },
             AbilityLevelScalingField::StatusPower,
         )
         | (
@@ -6935,6 +7043,20 @@ fn apply_ability_level_scaling(
             ))
             .expect("validated level-scaled status melee damage must fit i32");
         }
+        (
+            AbilityEffectDefinition::BeamDamage {
+                maximum_range: Some(maximum_range),
+                ..
+            },
+            AbilityLevelScalingField::MaximumRange,
+        ) => {
+            *maximum_range = u16::try_from(scaled_ability_level_value(
+                u64::from(*maximum_range),
+                scaling,
+                level,
+            ))
+            .expect("validated level-scaled beam range must fit u16");
+        }
         _ => unreachable!("content validation must reject incompatible level scaling fields"),
     }
 }
@@ -6978,6 +7100,10 @@ fn apply_ability_spell_power(
             *sides = u16::try_from(scaled(u64::from(*sides)))
                 .expect("spell-powered healing sides must fit u16");
         }
+        (AbilityEffectDefinition::Heal { amount }, AbilitySpellPowerField::HealingAmount) => {
+            *amount = u32::try_from(scaled(u64::from(*amount)))
+                .expect("spell-powered healing amount must fit u32");
+        }
         (
             AbilityEffectDefinition::Damage { damage_bonus, .. }
             | AbilityEffectDefinition::Malediction { damage_bonus, .. }
@@ -6995,8 +7121,10 @@ fn apply_ability_spell_power(
         }
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::LightArea { radius, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
-            | AbilityEffectDefinition::ConeDamage { radius, .. },
+            | AbilityEffectDefinition::ConeDamage { radius, .. }
+            | AbilityEffectDefinition::Earthquake { radius, .. },
             AbilitySpellPowerField::Radius,
         ) => {
             *radius =
@@ -7008,7 +7136,8 @@ fn apply_ability_spell_power(
         }
         (
             AbilityEffectDefinition::ApplyStatus { duration_ticks, .. }
-            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. },
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. }
+            | AbilityEffectDefinition::SustainAttributes { duration_ticks },
             AbilitySpellPowerField::StatusDurationTicks,
         ) => {
             *duration_ticks = u32::try_from(scaled(u64::from(*duration_ticks)))
@@ -7027,7 +7156,8 @@ fn apply_ability_spell_power(
             }
             | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
-            },
+            }
+            | AbilityEffectDefinition::Entangle { power, .. },
             AbilitySpellPowerField::StatusPower,
         )
         | (AbilityEffectDefinition::Control { power, .. }, AbilitySpellPowerField::ControlPower)
@@ -7094,8 +7224,19 @@ fn apply_ability_spell_power(
                 .expect("spell-powered clairvoyance duration must fit u16");
         }
         (
+            AbilityEffectDefinition::BeamDamage {
+                maximum_range: Some(maximum_range),
+                ..
+            },
+            AbilitySpellPowerField::MaximumRange,
+        ) => {
+            *maximum_range = u16::try_from(scaled(u64::from(*maximum_range)))
+                .expect("spell-powered beam range must fit u16");
+        }
+        (
             _,
             AbilitySpellPowerField::FinalDamage
+            | AbilitySpellPowerField::FinalHealing
             | AbilitySpellPowerField::RandomChoiceRoll
             | AbilitySpellPowerField::MaledictionDeathRayPower
             | AbilitySpellPowerField::MaledictionFearPower
@@ -7203,6 +7344,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_sides,
             damage_bonus,
             damage_type,
+            ..
         } => AbilityEffectSpecDto::BeamDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
@@ -7221,10 +7363,12 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_dice,
             damage_sides,
             radius,
+            ..
         } => AbilityEffectSpecDto::LightArea {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
             radius: *radius,
+            final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::BoltOrBeamDamage {
             damage_dice,
@@ -7317,6 +7461,12 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             telepathy_duration_dice: *telepathy_duration_dice,
             telepathy_duration_sides: *telepathy_duration_sides,
         },
+        AbilityEffectDefinition::CallSunlight { vampire_damage } => {
+            AbilityEffectSpecDto::CallSunlight {
+                vampire_damage: *vampire_damage,
+            }
+        }
+        AbilityEffectDefinition::NatureWrath => AbilityEffectSpecDto::NatureWrath,
         AbilityEffectDefinition::Probe => AbilityEffectSpecDto::Probe,
         AbilityEffectDefinition::CreateDoor { terrain_id } => AbilityEffectSpecDto::CreateDoor {
             terrain_id: terrain_id.clone(),
@@ -7516,6 +7666,21 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             radius: *radius,
             duration_turns: *duration_turns,
         },
+        AbilityEffectDefinition::NatureGate {
+            animal_category,
+            hound_category,
+            hydra_category,
+            ent_actor_kind_id,
+            radius,
+            duration_turns,
+        } => AbilityEffectSpecDto::NatureGate {
+            animal_category: animal_category.clone(),
+            hound_category: hound_category.clone(),
+            hydra_category: hydra_category.clone(),
+            ent_actor_kind_id: ent_actor_kind_id.clone(),
+            radius: *radius,
+            duration_turns: *duration_turns,
+        },
         AbilityEffectDefinition::Detect {
             subject,
             category,
@@ -7542,6 +7707,20 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             source_terrain_ids: source_terrain_ids.clone(),
             target_terrain_id: target_terrain_id.clone(),
             radius: *radius,
+        },
+        AbilityEffectDefinition::CreateAdjacentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+        } => AbilityEffectSpecDto::CreateAdjacentTerrain {
+            source_terrain_ids: source_terrain_ids.clone(),
+            target_terrain_id: target_terrain_id.clone(),
+        },
+        AbilityEffectDefinition::CreateCurrentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+        } => AbilityEffectSpecDto::CreateCurrentTerrain {
+            source_terrain_ids: source_terrain_ids.clone(),
+            target_terrain_id: target_terrain_id.clone(),
         },
         AbilityEffectDefinition::TerrainBeam { operation } => AbilityEffectSpecDto::TerrainBeam {
             operation: match operation {
@@ -7702,7 +7881,23 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::HealDice { dice, sides } => AbilityEffectSpecDto::HealDice {
             dice: *dice,
             sides: *sides,
+            final_healing_spell_power_bonus: None,
         },
+        AbilityEffectDefinition::RemoveEquippedCurses { include_heavy } => {
+            AbilityEffectSpecDto::RemoveEquippedCurses {
+                include_heavy: *include_heavy,
+            }
+        }
+        AbilityEffectDefinition::BeginFasting => AbilityEffectSpecDto::BeginFasting,
+        AbilityEffectDefinition::TurnUndead { power } => {
+            AbilityEffectSpecDto::TurnUndead { power: *power }
+        }
+        AbilityEffectDefinition::SustainAttributes { duration_ticks } => {
+            AbilityEffectSpecDto::SustainAttributes {
+                duration_ticks: *duration_ticks,
+            }
+        }
+        AbilityEffectDefinition::CureMutation => AbilityEffectSpecDto::CureMutation,
         AbilityEffectDefinition::ReduceStatus {
             status_kind_id,
             amount,
@@ -7721,12 +7916,14 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             damage_bonus,
             damage_type,
             target_category,
+            unlife_change_on_hit,
         } => AbilityEffectSpecDto::VisibleDamage {
             damage_dice: *damage_dice,
             damage_sides: *damage_sides,
             damage_bonus: *damage_bonus,
             damage_type: DamageType::from(*damage_type).into(),
             target_category: target_category.clone(),
+            unlife_change_on_hit: *unlife_change_on_hit,
             final_damage_spell_power_bonus: None,
         },
         AbilityEffectDefinition::VisibleApplyStatus {
@@ -7745,6 +7942,13 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             resistance_type: resistance_type.map(DamageType::from).map(Into::into),
             power: *power,
             target_category: target_category.clone(),
+        },
+        AbilityEffectDefinition::Entangle {
+            power,
+            duration_ticks,
+        } => AbilityEffectSpecDto::Entangle {
+            power: *power,
+            duration_ticks: *duration_ticks,
         },
         AbilityEffectDefinition::MassSleepOrStasis { stasis, power, .. } => {
             AbilityEffectSpecDto::VisibleApplyStatus {
@@ -7774,6 +7978,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             brand: brand.map(weapon_brand_dto),
             resistance: resistance.map(DamageType::from).map(Into::into),
         },
+        AbilityEffectDefinition::ProtectFromCorrosion => AbilityEffectSpecDto::ProtectFromCorrosion,
         AbilityEffectDefinition::RandomChoice {
             roll_sides,
             level_bonus_divisor,
@@ -7831,6 +8036,10 @@ fn player_ability_effect_spec_dto(
                 final_damage_spell_power_bonus,
                 ..
             }
+            | AbilityEffectSpecDto::LightArea {
+                final_damage_spell_power_bonus,
+                ..
+            }
             | AbilityEffectSpecDto::BoltOrBeamDamage {
                 final_damage_spell_power_bonus,
                 ..
@@ -7853,6 +8062,16 @@ fn player_ability_effect_spec_dto(
             } => *final_damage_spell_power_bonus = bonus,
             _ => unreachable!("validated final damage marker must project a damage effect"),
         }
+    }
+    if ability_has_spell_power_field(ability, effect_index, AbilitySpellPowerField::FinalHealing) {
+        let AbilityEffectSpecDto::HealDice {
+            final_healing_spell_power_bonus,
+            ..
+        } = &mut spec
+        else {
+            unreachable!("validated final healing marker must project a healing-dice effect");
+        };
+        *final_healing_spell_power_bonus = Some(ability.spell_power_bonus);
     }
     if ability_has_spell_power_field(
         ability,

@@ -551,8 +551,8 @@ impl Game {
             resistance,
         ));
         let damage = self.apply_evasion_to_monster_ability_damage(ability_id, damage);
-        let application = plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-        commit_damage_application(&mut self.player, &application);
+        let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+        let damage = application.damage;
         if application.fatal {
             events.push(DomainEvent::PlayerDied {
                 source_kind_id: source_kind_id.to_owned(),
@@ -1891,9 +1891,8 @@ impl Game {
                 let shatters = matches!(effect, MeleeBlowEffectDefinition::Shatter { .. })
                     && damage.applied > 23;
                 let quake_center = self.entities[index].position;
-                let application =
-                    plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-                commit_damage_application(&mut self.player, &application);
+                let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+                let damage = application.damage;
                 events.push(DomainEvent::MonsterMeleeHit {
                     source_kind_id: kind_id.clone(),
                     method_id: blow.method_id.clone(),

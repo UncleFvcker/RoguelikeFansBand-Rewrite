@@ -211,11 +211,13 @@ pub(super) fn validate_abilities(
                     damage_dice,
                     damage_sides,
                     damage_bonus,
+                    maximum_range,
                     ..
                 } => {
                     (1..=100).contains(damage_dice)
                         && (1..=10_000).contains(damage_sides)
                         && *damage_bonus <= 10_000
+                        && maximum_range.is_none_or(|range| (1..=64).contains(&range))
                 }
                 AbilityEffectDefinition::LightLine {
                     damage_dice,
@@ -225,12 +227,17 @@ pub(super) fn validate_abilities(
                     damage_dice,
                     damage_sides,
                     radius,
+                    sunlight_burn_damage_dice,
+                    sunlight_burn_damage_sides,
                 } => {
                     (1..=100).contains(damage_dice)
                         && ((*damage_sides == 0
                             && has_level_scaling(AbilityLevelScalingField::DamageSides))
                             || (1..=10_000).contains(damage_sides))
                         && (1..=16).contains(radius)
+                        && ((*sunlight_burn_damage_dice == 0 && *sunlight_burn_damage_sides == 0)
+                            || ((1..=100).contains(sunlight_burn_damage_dice)
+                                && (1..=10_000).contains(sunlight_burn_damage_sides)))
                 }
                 AbilityEffectDefinition::BoltOrBeamDamage {
                     damage_dice,
@@ -322,6 +329,10 @@ pub(super) fn validate_abilities(
                         && (1..=100).contains(telepathy_duration_dice)
                         && (1..=10_000).contains(telepathy_duration_sides)
                 }
+                AbilityEffectDefinition::CallSunlight { vampire_damage } => {
+                    (1..=10_000).contains(vampire_damage)
+                }
+                AbilityEffectDefinition::NatureWrath => true,
                 AbilityEffectDefinition::Probe => true,
                 AbilityEffectDefinition::CreateDoor { terrain_id } => !terrain_id.is_empty(),
                 AbilityEffectDefinition::DeviceMastery {
@@ -583,6 +594,21 @@ pub(super) fn validate_abilities(
                         && (1..=64).contains(radius)
                         && *duration_turns <= 10_000
                 }
+                AbilityEffectDefinition::NatureGate {
+                    animal_category,
+                    hound_category,
+                    hydra_category,
+                    ent_actor_kind_id,
+                    radius,
+                    duration_turns,
+                } => {
+                    [animal_category, hound_category, hydra_category]
+                        .into_iter()
+                        .all(|category| actor_tag_values.contains(category))
+                        && validate_id(ent_actor_kind_id).is_ok()
+                        && (1..=64).contains(radius)
+                        && *duration_turns == 0
+                }
                 AbilityEffectDefinition::Detect {
                     subject,
                     category,
@@ -640,7 +666,32 @@ pub(super) fn validate_abilities(
                             .iter()
                             .all(|source_id| source_id != target_terrain_id)
                 }
+                AbilityEffectDefinition::CreateAdjacentTerrain {
+                    source_terrain_ids,
+                    target_terrain_id,
+                }
+                | AbilityEffectDefinition::CreateCurrentTerrain {
+                    source_terrain_ids,
+                    target_terrain_id,
+                } => {
+                    !source_terrain_ids.is_empty()
+                        && source_terrain_ids.len() <= 32
+                        && !target_terrain_id.is_empty()
+                        && source_terrain_ids.windows(2).all(|pair| pair[0] != pair[1])
+                        && source_terrain_ids
+                            .iter()
+                            .all(|source_id| source_id != target_terrain_id)
+                }
                 AbilityEffectDefinition::TerrainBeam { .. } => true,
+                AbilityEffectDefinition::RemoveEquippedCurses { .. }
+                | AbilityEffectDefinition::BeginFasting
+                | AbilityEffectDefinition::CureMutation => true,
+                AbilityEffectDefinition::TurnUndead { power } => *power <= 1_000,
+                AbilityEffectDefinition::SustainAttributes { duration_ticks } => {
+                    (*duration_ticks > 0
+                        || has_level_scaling(AbilityLevelScalingField::StatusDurationTicks))
+                        && *duration_ticks <= 1_000_000
+                }
                 AbilityEffectDefinition::ApplyStatus {
                     status_kind_id,
                     intensity,
@@ -659,7 +710,9 @@ pub(super) fn validate_abilities(
                 } => {
                     validate_id(status_kind_id).is_ok()
                         && (1..=1_000).contains(intensity)
-                        && (*duration_ticks > 0 || *duration_dice > 0)
+                        && (*duration_ticks > 0
+                            || *duration_dice > 0
+                            || has_level_scaling(AbilityLevelScalingField::StatusDurationTicks))
                         && *duration_ticks <= 1_000_000
                         && *duration_dice <= 100
                         && ((*duration_dice == 0 && *duration_sides == 0)
@@ -800,14 +853,18 @@ pub(super) fn validate_abilities(
                     damage_sides,
                     damage_bonus,
                     target_category,
+                    unlife_change_on_hit,
                     ..
                 } => {
-                    (1..=100).contains(damage_dice)
-                        && (1..=10_000).contains(damage_sides)
+                    ((*damage_dice == 0 && *damage_sides == 0)
+                        || ((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides)))
                         && *damage_bonus <= 10_000
                         && target_category
                             .as_ref()
                             .is_none_or(|category| actor_tag_values.contains(category))
+                        && (-125..=125).contains(unlife_change_on_hit)
+                        && (*unlife_change_on_hit == 0
+                            || target_category.as_deref() == Some("undead"))
                 }
                 AbilityEffectDefinition::VisibleApplyStatus {
                     status_kind_id,
@@ -824,6 +881,15 @@ pub(super) fn validate_abilities(
                         && target_category
                             .as_ref()
                             .is_none_or(|category| actor_tag_values.contains(category))
+                }
+                AbilityEffectDefinition::Entangle {
+                    power,
+                    duration_ticks,
+                } => {
+                    ((1..=1_000).contains(power)
+                        || (*power == 0
+                            && has_level_scaling(AbilityLevelScalingField::StatusPower)))
+                        && (1..=1_000_000).contains(duration_ticks)
                 }
                 AbilityEffectDefinition::MassSleepOrStasis {
                     stasis_at_level,
@@ -844,6 +910,7 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::BrandWeapon { affix_id, .. } => {
                     validate_id(affix_id).is_ok()
                 }
+                AbilityEffectDefinition::ProtectFromCorrosion => true,
                 AbilityEffectDefinition::RandomChoice { .. } => false,
                 AbilityEffectDefinition::SniperShot { .. }
                 | AbilityEffectDefinition::MeleeAdjacent
@@ -1036,6 +1103,7 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::IdentifyItem { .. }
             | AbilityEffectDefinition::IdentifyOrMassIdentify { .. }
             | AbilityEffectDefinition::BrandWeapon { .. }
+            | AbilityEffectDefinition::ProtectFromCorrosion
             | AbilityEffectDefinition::TransmuteItemToGold { .. }
             | AbilityEffectDefinition::DrainItemMagic { .. }
             | AbilityEffectDefinition::RechargeFromPlayer { .. } => item_target_rule,
@@ -1057,6 +1125,7 @@ pub(super) fn validate_abilities(
             }
             AbilityEffectDefinition::Summon { .. }
             | AbilityEffectDefinition::SummonCategory { .. }
+            | AbilityEffectDefinition::NatureGate { .. }
             | AbilityEffectDefinition::AnimateDead { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
                     && ability.target.range == 0
@@ -1064,10 +1133,20 @@ pub(super) fn validate_abilities(
             }
             AbilityEffectDefinition::Heal { .. }
             | AbilityEffectDefinition::HealDice { .. }
+            | AbilityEffectDefinition::Entangle { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::CreateItem { .. }
             | AbilityEffectDefinition::Clairvoyance { .. }
+            | AbilityEffectDefinition::CallSunlight { .. }
+            | AbilityEffectDefinition::NatureWrath
+            | AbilityEffectDefinition::CreateAdjacentTerrain { .. }
+            | AbilityEffectDefinition::CreateCurrentTerrain { .. }
+            | AbilityEffectDefinition::RemoveEquippedCurses { .. }
+            | AbilityEffectDefinition::BeginFasting
+            | AbilityEffectDefinition::TurnUndead { .. }
+            | AbilityEffectDefinition::SustainAttributes { .. }
+            | AbilityEffectDefinition::CureMutation
             | AbilityEffectDefinition::Probe
             | AbilityEffectDefinition::CreateDoor { .. }
             | AbilityEffectDefinition::DeviceMastery { .. }
@@ -1122,8 +1201,11 @@ pub(super) fn validate_abilities(
                                 | AbilityEffectDefinition::VisibleDamage { .. }
                                 | AbilityEffectDefinition::VisibleApplyStatus { .. }
                                 | AbilityEffectDefinition::AreaDamage { .. }
+                                | AbilityEffectDefinition::CallSunlight { .. }
                                 | AbilityEffectDefinition::AggravateMonsters
                                 | AbilityEffectDefinition::Detect { .. }
+                                | AbilityEffectDefinition::CreateAdjacentTerrain { .. }
+                                | AbilityEffectDefinition::CreateCurrentTerrain { .. }
                                 | AbilityEffectDefinition::NoOp { .. }
                         )
                     }))
@@ -1202,6 +1284,17 @@ pub(super) fn validate_abilities(
                     )?;
                 }
             }
+            if let AbilityEffectDefinition::NatureGate {
+                ent_actor_kind_id, ..
+            } = effect
+            {
+                require_actor_role(
+                    actor_roles,
+                    ent_actor_kind_id,
+                    ActorRole::Monster,
+                    &ability.id,
+                )?;
+            }
             if let AbilityEffectDefinition::BrandWeapon { affix_id, .. } = effect {
                 require_reference(affix_ids, affix_id, &ability.id)?;
             }
@@ -1278,6 +1371,20 @@ pub(super) fn validate_abilities(
             source_terrain_ids,
             target_terrain_id,
             ..
+        } = &ability.effect
+        {
+            for source_terrain_id in source_terrain_ids {
+                require_reference(terrain_ids, source_terrain_id, &ability.id)?;
+            }
+            require_reference(terrain_ids, target_terrain_id, &ability.id)?;
+        }
+        if let AbilityEffectDefinition::CreateAdjacentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+        }
+        | AbilityEffectDefinition::CreateCurrentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
         } = &ability.effect
         {
             for source_terrain_id in source_terrain_ids {

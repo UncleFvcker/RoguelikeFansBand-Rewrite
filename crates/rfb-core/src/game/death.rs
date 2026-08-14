@@ -316,8 +316,8 @@ impl Game {
                         |damage| damage.damage,
                     ));
                     let application =
-                        plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-                    commit_damage_application(&mut self.player, &application);
+                        self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+                    let damage = application.damage;
                     if !application.fatal
                         && let Some(bomb_damage) = bomb_damage
                     {
@@ -495,6 +495,7 @@ impl Game {
                 device_recovery_progress: 0,
                 captured_actor: None,
                 curse: initial_item_curse(&self.content, &kind_id),
+                permanent_destruction_immunities: Default::default(),
                 kind_id,
                 quantity: 1,
                 inscription: None,

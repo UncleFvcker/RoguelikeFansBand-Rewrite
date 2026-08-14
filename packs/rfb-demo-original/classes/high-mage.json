@@ -232,6 +232,85 @@
           { "abilityId": "demo.ability.armageddon-breathe-mana", "minimumLevel": 42, "resourceCost": 43, "baseFailurePercent": 75 },
           { "abilityId": "demo.ability.armageddon-breathe-shards", "minimumLevel": 44, "resourceCost": 49, "baseFailurePercent": 75 }
         ]
+      },
+      {
+        "realmId": "nature",
+        "abilityBookIds": [
+          "demo.ability-book.call-of-the-wild",
+          "demo.ability-book.nature-mastery",
+          "demo.ability-book.natures-gifts",
+          "demo.ability-book.natures-wrath"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.nature-detect-creatures", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.nature-lightning", "minimumLevel": 2, "resourceCost": 1, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.nature-detect-doors-and-traps", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 15 },
+          { "abilityId": "demo.ability.nature-produce-food", "minimumLevel": 3, "resourceCost": 2, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.nature-daylight", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.nature-wind-walker", "minimumLevel": 4, "resourceCost": 3, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.nature-resist-environment", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.nature-cure-wounds-and-poison", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.nature-stone-to-mud", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.nature-frost-bolt", "minimumLevel": 5, "resourceCost": 4, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.nature-awareness", "minimumLevel": 5, "resourceCost": 5, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.nature-fire-bolt", "minimumLevel": 5, "resourceCost": 5, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.nature-ray-of-sunlight", "minimumLevel": 7, "resourceCost": 5, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.nature-entangle", "minimumLevel": 14, "resourceCost": 10, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.nature-natures-gate", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.nature-herbal-healing", "minimumLevel": 35, "resourceCost": 50, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.nature-stair-building", "minimumLevel": 7, "resourceCost": 7, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.nature-stone-skin", "minimumLevel": 8, "resourceCost": 8, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-resistance-true", "minimumLevel": 12, "resourceCost": 15, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.nature-forest-creation", "minimumLevel": 17, "resourceCost": 20, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.nature-stone-tell", "minimumLevel": 33, "resourceCost": 35, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.nature-wall-of-stone", "minimumLevel": 35, "resourceCost": 40, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-protect-from-corrosion", "minimumLevel": 37, "resourceCost": 65, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.nature-call-sunlight", "minimumLevel": 38, "resourceCost": 30, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.nature-earthquake", "minimumLevel": 15, "resourceCost": 15, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.nature-fire-storm", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-blizzard", "minimumLevel": 22, "resourceCost": 22, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-lightning-storm", "minimumLevel": 28, "resourceCost": 25, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-whirlpool", "minimumLevel": 32, "resourceCost": 28, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.nature-ice-bolt", "minimumLevel": 36, "resourceCost": 32, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-gravity-storm", "minimumLevel": 38, "resourceCost": 35, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.nature-natures-wrath", "minimumLevel": 39, "resourceCost": 65, "baseFailurePercent": 55 }
+        ]
+      },
+      {
+        "realmId": "life",
+        "abilityBookIds": [
+          "demo.ability-book.book-of-common-prayer",
+          "demo.ability-book.high-mass",
+          "demo.ability-book.book-of-the-unicorn"
+        ],
+        "learningCapacityBonus": 4,
+        "abilityOverrides": [
+          { "abilityId": "demo.ability.life-cure-light-wounds", "minimumLevel": 1, "resourceCost": 1, "baseFailurePercent": 20 },
+          { "abilityId": "demo.ability.life-bless", "minimumLevel": 2, "resourceCost": 2, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.life-regeneration", "minimumLevel": 3, "resourceCost": 3, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.life-call-light", "minimumLevel": 4, "resourceCost": 4, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.life-detect-doors-and-traps", "minimumLevel": 5, "resourceCost": 5, "baseFailurePercent": 25 },
+          { "abilityId": "demo.ability.life-cure-medium-wounds", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.life-cure-poison", "minimumLevel": 9, "resourceCost": 9, "baseFailurePercent": 30 },
+          { "abilityId": "demo.ability.life-satisfy-hunger", "minimumLevel": 12, "resourceCost": 10, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.life-remove-curse", "minimumLevel": 14, "resourceCost": 12, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.life-fasting", "minimumLevel": 15, "resourceCost": 14, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-cure-critical-wounds", "minimumLevel": 15, "resourceCost": 15, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-resist-heat-and-cold", "minimumLevel": 17, "resourceCost": 15, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-sense-surroundings", "minimumLevel": 19, "resourceCost": 17, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-turn-undead", "minimumLevel": 21, "resourceCost": 19, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-healing", "minimumLevel": 25, "resourceCost": 25, "baseFailurePercent": 45 },
+          { "abilityId": "demo.ability.life-glyph-of-warding", "minimumLevel": 30, "resourceCost": 50, "baseFailurePercent": 55 },
+          { "abilityId": "demo.ability.life-dispel-curse", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-perception", "minimumLevel": 24, "resourceCost": 24, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-dispel-undead", "minimumLevel": 30, "resourceCost": 30, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.life-sustain-attributes", "minimumLevel": 31, "resourceCost": 30, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.life-cure-mutation", "minimumLevel": 32, "resourceCost": 30, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-word-of-recall", "minimumLevel": 33, "resourceCost": 40, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-transcendence", "minimumLevel": 35, "resourceCost": 35, "baseFailurePercent": 60 },
+          { "abilityId": "demo.ability.life-warding-true", "minimumLevel": 40, "resourceCost": 70, "baseFailurePercent": 70 }
+        ]
       }
     ]
   },

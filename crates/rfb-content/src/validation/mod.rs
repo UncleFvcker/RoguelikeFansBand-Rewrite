@@ -280,7 +280,6 @@ pub(crate) fn validate_and_normalize(content: &mut CompiledContentV1) -> Result<
         .iter()
         .flat_map(|item| item.tags.iter().cloned())
         .collect::<BTreeSet<_>>();
-
     let affix_ids = validate_affixes(&mut content.affixes, &mut all_ids)?.affix_ids;
 
     let AbilityValidationOutputs {

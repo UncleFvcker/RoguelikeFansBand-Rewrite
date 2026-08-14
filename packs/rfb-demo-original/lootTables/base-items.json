@@ -1746,6 +1746,54 @@
       "minDepth": 25
     },
     {
+      "itemKindId": "demo.item.book-of-common-prayer",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.high-mass",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.book-of-the-unicorn",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45,
+      "maxDepth": 90
+    },
+    {
+      "itemKindId": "demo.item.call-of-the-wild",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10,
+      "maxDepth": 30
+    },
+    {
+      "itemKindId": "demo.item.nature-mastery",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 50
+    },
+    {
+      "itemKindId": "demo.item.natures-gifts",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 45,
+      "maxDepth": 90
+    },
+    {
+      "itemKindId": "demo.item.natures-wrath",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 70
+    },
+    {
       "itemKindId": "demo.item.book-of-elements",
       "weight": 100,
       "quantity": 1,

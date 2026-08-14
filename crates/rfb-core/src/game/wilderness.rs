@@ -2005,8 +2005,8 @@ impl Game {
             DamagePacket::new(raw_damage, damage_type),
             self.effective_player_resistances().level(damage_type),
         ));
-        let application = plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-        commit_damage_application(&mut self.player, &application);
+        let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+        let damage = application.damage;
         let mut events = vec![DomainEvent::WildernessTerrainDamaged {
             terrain_id: terrain_id.clone(),
             damage,

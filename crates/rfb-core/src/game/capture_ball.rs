@@ -140,9 +140,8 @@ impl Game {
                     ),
                     ResistanceLevel::Normal,
                 );
-                let application =
-                    plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-                commit_damage_application(&mut self.player, &application);
+                let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+                let damage = application.damage;
                 events.push(DomainEvent::RidingFell {
                     target_kind_id: target_kind_id.clone(),
                     damage,

@@ -6,9 +6,11 @@ use crate::{
         advance_status_ticks, resolve_damage,
     },
     resistance::{DamageType, ResistanceLevel},
-    state::Actor,
+    state::{Actor, ResourcePool},
 };
 use rfb_protocol::Position;
+
+use super::Game;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum FatalityPolicy {
@@ -55,6 +57,50 @@ pub(super) fn commit_damage_application(target: &mut Actor, plan: &DamageApplica
     target.hp = plan.hp_after;
 }
 
+impl Game {
+    pub(super) fn apply_final_player_damage(
+        &mut self,
+        damage: DamageOutcome,
+        fatality_policy: FatalityPolicy,
+    ) -> DamageApplicationPlan {
+        let transcendence = self
+            .player
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == crate::effect::STATUS_TRANSCENDENCE);
+        commit_final_player_damage(
+            &mut self.player,
+            self.resources.get_mut("demo.resource.mana"),
+            transcendence,
+            damage,
+            fatality_policy,
+        )
+    }
+}
+
+pub(super) fn commit_final_player_damage(
+    player: &mut Actor,
+    mana: Option<&mut ResourcePool>,
+    transcendence: bool,
+    mut damage: DamageOutcome,
+    fatality_policy: FatalityPolicy,
+) -> DamageApplicationPlan {
+    if transcendence && damage.applied > 0 {
+        if let Some(mana) = mana {
+            let absorbed = mana
+                .current
+                .min(u32::try_from(damage.applied).unwrap_or(u32::MAX));
+            mana.current -= absorbed;
+            damage.applied = damage
+                .applied
+                .saturating_sub(i32::try_from(absorbed).unwrap_or(i32::MAX));
+        }
+    }
+    let application = plan_damage_application(player, damage, fatality_policy);
+    commit_damage_application(player, &application);
+    application
+}
+
 pub(super) struct ActorStatusTick {
     pub(super) damage: Vec<StatusDamageTick>,
     pub(super) expired: Vec<String>,
@@ -73,6 +119,27 @@ pub(super) fn process_actor_status_tick(
     lethal_at_zero: bool,
     incoming_damage_percent: u8,
 ) -> ActorStatusTick {
+    process_actor_status_tick_with(
+        actor,
+        lethal_at_zero,
+        incoming_damage_percent,
+        |actor, damage, fatality_policy| {
+            let application = plan_damage_application(actor, damage, fatality_policy);
+            commit_damage_application(actor, &application);
+            application
+        },
+    )
+}
+
+pub(super) fn process_actor_status_tick_with<F>(
+    actor: &mut Actor,
+    lethal_at_zero: bool,
+    incoming_damage_percent: u8,
+    mut finalize_damage: F,
+) -> ActorStatusTick
+where
+    F: FnMut(&mut Actor, DamageOutcome, FatalityPolicy) -> DamageApplicationPlan,
+{
     let periodic = actor
         .statuses
         .iter()
@@ -111,11 +178,10 @@ pub(super) fn process_actor_status_tick(
         } else {
             FatalityPolicy::BelowZero
         };
-        let application = plan_damage_application(actor, outcome, fatality_policy);
-        commit_damage_application(actor, &application);
+        let application = finalize_damage(actor, outcome, fatality_policy);
         let damage_tick = StatusDamageTick {
             status_kind_id: status_kind_id.clone(),
-            outcome,
+            outcome: application.damage,
         };
         if application.wakes_sleeping_target {
             let before = actor.statuses.len();

@@ -245,7 +245,11 @@ impl Game {
                     changed,
                     removed_entities,
                 )?;
-                self.player.hp = self.player.hp.saturating_sub(damage);
+                let damage = resolve_damage(
+                    DamagePacket::new(damage, DamageType::Disintegrate),
+                    ResistanceLevel::Normal,
+                );
+                self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
             }
             ChaosPatronRewardKind::CurseWeapon => {
                 self.curse_equipped_item(CurseEquippedItemRequest::new(
@@ -397,7 +401,11 @@ impl Game {
                     .expect("curse damage must fit i32"),
             )
             .min(maximum_damage);
-        self.player.hp = self.player.hp.saturating_sub(damage);
+        let damage = resolve_damage(
+            DamagePacket::new(damage, DamageType::Physical),
+            ResistanceLevel::Normal,
+        );
+        self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
         for status_kind_id in [STATUS_CONFUSION, STATUS_STUN] {
             apply_status(
                 &mut self.player.statuses,
@@ -458,7 +466,11 @@ impl Game {
             .saturating_mul(2)
             .saturating_div(3)
             .min(i32::from(level).saturating_mul(4));
-        self.player.hp = self.player.hp.saturating_sub(damage);
+        let damage = resolve_damage(
+            DamagePacket::new(damage, DamageType::Physical),
+            ResistanceLevel::Normal,
+        );
+        self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
         if self.player_is_dead() {
             return;
         }
@@ -771,6 +783,7 @@ impl Game {
                 to_armor: 0,
             },
             curse: initial_item_curse(&self.content, kind_id),
+            permanent_destruction_immunities: Default::default(),
             activation,
             charges,
             fuel: initial_item_fuel(&self.content, kind_id),

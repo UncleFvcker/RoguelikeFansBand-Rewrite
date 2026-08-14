@@ -47,7 +47,42 @@ impl Game {
             .nutrition
             .saturating_add(amount)
             .min(rfb_protocol::PLAYER_NUTRITION_MAXIMUM);
+        if self.nutrition > before {
+            self.fasting = false;
+        }
         self.nutrition - before
+    }
+
+    pub(super) fn process_fasting(&mut self, events: &mut Vec<DomainEvent>) {
+        if !self.fasting
+            || !self.world_tick.is_multiple_of(WORLD_PROCESS_INTERVAL_TICKS)
+            || self.rng.bounded(7) != 0
+            || self.rng.bounded(u64::from(NUTRITION_HUNGRY)) + 1 <= u64::from(self.nutrition)
+        {
+            return;
+        }
+
+        match self.rng.bounded(8) {
+            branch @ 0..=5 => {
+                let attribute = [
+                    AttributeKind::Strength,
+                    AttributeKind::Intelligence,
+                    AttributeKind::Wisdom,
+                    AttributeKind::Dexterity,
+                    AttributeKind::Constitution,
+                    AttributeKind::Charisma,
+                ][usize::try_from(branch).expect("fasting restoration branch must fit usize")];
+                self.restore_player_attribute(attribute);
+            }
+            6 => {
+                apply_experience_restoration(&mut self.progress);
+                self.apply_player_experience(0, events);
+            }
+            7 => {
+                self.restore_player_life_force(LifeForceRestorationRequest::add(150));
+            }
+            _ => unreachable!("bounded fasting restoration branch must fit 1d8"),
+        }
     }
 
     pub(super) fn process_hunger(&mut self, events: &mut Vec<DomainEvent>) {
@@ -115,9 +150,8 @@ impl Game {
                 DamagePacket::new(amount, DamageType::Physical),
                 ResistanceLevel::Normal,
             );
-            let application =
-                plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-            commit_damage_application(&mut self.player, &application);
+            let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+            let damage = application.damage;
             events.push(DomainEvent::PlayerDamagedByStarvation { damage });
             if application.fatal {
                 events.push(DomainEvent::PlayerDiedFromStarvation { damage });

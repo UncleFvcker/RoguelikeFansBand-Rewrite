@@ -117,6 +117,7 @@ pub enum AbilityLevelScalingField {
     StatusIntensity,
     StatusDurationTicks,
     StatusDurationSides,
+    StatusDefense,
     StatusPower,
     StatusMeleeDamage,
     ControlPower,
@@ -126,6 +127,7 @@ pub enum AbilityLevelScalingField {
     BanishDistance,
     DeviceMasteryDurationBase,
     DevicePowerBonus,
+    MaximumRange,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
@@ -133,8 +135,10 @@ pub enum AbilityLevelScalingField {
 #[serde(rename_all = "kebab-case")]
 pub enum AbilitySpellPowerField {
     FinalDamage,
+    FinalHealing,
     DamageSides,
     DamageBonus,
+    HealingAmount,
     HealingSides,
     Radius,
     StatusDurationTicks,
@@ -153,6 +157,7 @@ pub enum AbilitySpellPowerField {
     DeviceMasteryDurationBase,
     InvulnerabilityDuration,
     ClairvoyanceDurationSides,
+    MaximumRange,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -338,6 +343,8 @@ pub enum AbilityEffectDefinition {
         damage_bonus: u16,
         #[serde(default)]
         damage_type: ActorDamageType,
+        #[serde(default)]
+        maximum_range: Option<u16>,
     },
     LightLine {
         damage_dice: u16,
@@ -347,6 +354,10 @@ pub enum AbilityEffectDefinition {
         damage_dice: u16,
         damage_sides: u16,
         radius: u8,
+        #[serde(default)]
+        sunlight_burn_damage_dice: u16,
+        #[serde(default)]
+        sunlight_burn_damage_sides: u16,
     },
     BoltOrBeamDamage {
         damage_dice: u16,
@@ -411,6 +422,10 @@ pub enum AbilityEffectDefinition {
         telepathy_duration_dice: u8,
         telepathy_duration_sides: u16,
     },
+    CallSunlight {
+        vampire_damage: u16,
+    },
+    NatureWrath,
     Probe,
     CreateDoor {
         terrain_id: String,
@@ -563,6 +578,14 @@ pub enum AbilityEffectDefinition {
         radius: u8,
         duration_turns: u16,
     },
+    NatureGate {
+        animal_category: String,
+        hound_category: String,
+        hydra_category: String,
+        ent_actor_kind_id: String,
+        radius: u8,
+        duration_turns: u16,
+    },
     Detect {
         #[serde(default)]
         subject: AbilityDetectSubjectDefinition,
@@ -580,6 +603,14 @@ pub enum AbilityEffectDefinition {
         source_terrain_ids: Vec<String>,
         target_terrain_id: String,
         radius: u8,
+    },
+    CreateAdjacentTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
+    },
+    CreateCurrentTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
     },
     TerrainBeam {
         operation: AbilityTerrainBeamOperationDefinition,
@@ -674,6 +705,17 @@ pub enum AbilityEffectDefinition {
         dice: u16,
         sides: u16,
     },
+    RemoveEquippedCurses {
+        include_heavy: bool,
+    },
+    BeginFasting,
+    TurnUndead {
+        power: u16,
+    },
+    SustainAttributes {
+        duration_ticks: u32,
+    },
+    CureMutation,
     ReduceStatus {
         status_kind_id: String,
         amount: u32,
@@ -692,6 +734,8 @@ pub enum AbilityEffectDefinition {
         damage_type: ActorDamageType,
         #[serde(default)]
         target_category: Option<String>,
+        #[serde(default)]
+        unlife_change_on_hit: i8,
     },
     VisibleApplyStatus {
         status_kind_id: String,
@@ -704,6 +748,10 @@ pub enum AbilityEffectDefinition {
         power: Option<u16>,
         #[serde(default)]
         target_category: Option<String>,
+    },
+    Entangle {
+        power: u16,
+        duration_ticks: u32,
     },
     MassSleepOrStasis {
         stasis_at_level: u16,
@@ -726,6 +774,7 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         resistance: Option<ActorDamageType>,
     },
+    ProtectFromCorrosion,
     RandomChoice {
         roll_sides: u16,
         #[serde(default)]
@@ -860,7 +909,8 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*intensity), 1_000)),
         (
             AbilityEffectDefinition::ApplyStatus { duration_ticks, .. }
-            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. },
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_ticks, .. }
+            | AbilityEffectDefinition::SustainAttributes { duration_ticks },
             AbilityLevelScalingField::StatusDurationTicks,
         ) => Some((u64::from(*duration_ticks), 1_000_000)),
         (
@@ -869,11 +919,19 @@ fn ability_level_scaling_base_and_limit(
         ) => Some((u64::from(*duration_sides), 1_000_000)),
         (
             AbilityEffectDefinition::ApplyStatus {
+                granted_modifiers, ..
+            },
+            AbilityLevelScalingField::StatusDefense,
+        ) => Some((u64::try_from(granted_modifiers.defense).ok()?, 10_000)),
+        (
+            AbilityEffectDefinition::ApplyStatus {
                 power: Some(power), ..
             }
             | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
-            },
+            }
+            | AbilityEffectDefinition::Entangle { power, .. }
+            | AbilityEffectDefinition::TurnUndead { power },
             AbilityLevelScalingField::StatusPower,
         ) => Some((u64::from(*power), 1_000)),
         (
@@ -918,6 +976,13 @@ fn ability_level_scaling_base_and_limit(
             },
             AbilityLevelScalingField::DevicePowerBonus,
         ) => Some((u64::try_from(*device_power_bonus).ok()?, 1_000)),
+        (
+            AbilityEffectDefinition::BeamDamage {
+                maximum_range: Some(maximum_range),
+                ..
+            },
+            AbilityLevelScalingField::MaximumRange,
+        ) => Some((u64::from(*maximum_range), 64)),
         _ => None,
     }
 }
@@ -995,12 +1060,16 @@ pub(crate) fn valid_ability_spell_power(
                         | AbilityEffectDefinition::Malediction { .. }
                         | AbilityEffectDefinition::AreaDamage { .. }
                         | AbilityEffectDefinition::BeamDamage { .. }
+                        | AbilityEffectDefinition::LightArea { .. }
                         | AbilityEffectDefinition::BoltOrBeamDamage { .. }
                         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                         | AbilityEffectDefinition::ConeDamage { .. }
                         | AbilityEffectDefinition::VisibleDamage { .. }
                         | AbilityEffectDefinition::DrainLife { .. }
                 ),
+                AbilitySpellPowerField::FinalHealing => {
+                    matches!(effect, AbilityEffectDefinition::HealDice { .. })
+                }
                 AbilitySpellPowerField::DamageSides => matches!(
                     effect,
                     AbilityEffectDefinition::Damage { .. }
@@ -1017,6 +1086,9 @@ pub(crate) fn valid_ability_spell_power(
                 AbilitySpellPowerField::HealingSides => {
                     matches!(effect, AbilityEffectDefinition::HealDice { .. })
                 }
+                AbilitySpellPowerField::HealingAmount => {
+                    matches!(effect, AbilityEffectDefinition::Heal { .. })
+                }
                 AbilitySpellPowerField::DamageBonus => matches!(
                     effect,
                     AbilityEffectDefinition::Damage { .. }
@@ -1032,14 +1104,17 @@ pub(crate) fn valid_ability_spell_power(
                 AbilitySpellPowerField::Radius => matches!(
                     effect,
                     AbilityEffectDefinition::AreaDamage { .. }
+                        | AbilityEffectDefinition::LightArea { .. }
                         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                         | AbilityEffectDefinition::ConeDamage { .. }
+                        | AbilityEffectDefinition::Earthquake { .. }
                         | AbilityEffectDefinition::DimensionDoor { .. }
                 ),
                 AbilitySpellPowerField::StatusDurationTicks => matches!(
                     effect,
                     AbilityEffectDefinition::ApplyStatus { .. }
                         | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                        | AbilityEffectDefinition::SustainAttributes { .. }
                 ),
                 AbilitySpellPowerField::StatusDurationSides => {
                     matches!(effect, AbilityEffectDefinition::ApplyStatus { .. })
@@ -1049,6 +1124,7 @@ pub(crate) fn valid_ability_spell_power(
                     AbilityEffectDefinition::ApplyStatus { power: Some(_), .. }
                         | AbilityEffectDefinition::VisibleApplyStatus { power: Some(_), .. }
                         | AbilityEffectDefinition::MassSleepOrStasis { .. }
+                        | AbilityEffectDefinition::Entangle { .. }
                 ),
                 AbilitySpellPowerField::ControlPower => {
                     matches!(effect, AbilityEffectDefinition::Control { .. })
@@ -1087,6 +1163,13 @@ pub(crate) fn valid_ability_spell_power(
                 AbilitySpellPowerField::ClairvoyanceDurationSides => {
                     matches!(effect, AbilityEffectDefinition::Clairvoyance { .. })
                 }
+                AbilitySpellPowerField::MaximumRange => matches!(
+                    effect,
+                    AbilityEffectDefinition::BeamDamage {
+                        maximum_range: Some(_),
+                        ..
+                    }
+                ),
             };
             valid && unique.insert((definition.effect_index, definition.field))
         })

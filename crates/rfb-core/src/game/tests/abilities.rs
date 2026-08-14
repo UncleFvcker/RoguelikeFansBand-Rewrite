@@ -1693,6 +1693,18 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
                 true,
             ));
         }
+        place_test_ground_item(
+            &mut game,
+            "test.item.near",
+            "demo.item.arrow",
+            Position { x: 4, y: 3 },
+        );
+        place_test_ground_item(
+            &mut game,
+            "test.item.far",
+            "demo.item.arrow",
+            Position { x: 5, y: 3 },
+        );
         game
     };
     let make_ability = |game: &Game, id: &str, beam_chance_percent| {
@@ -1701,15 +1713,16 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
             .ability("demo.ability.death-dark-bolt")
             .expect("dark bolt should provide a bolt-or-beam definition")
             .clone();
-        let AbilityEffectDefinition::BoltOrBeamDamage { damage_type, .. } = ability.effect else {
+        let AbilityEffectDefinition::BoltOrBeamDamage { .. } = ability.effect else {
             unreachable!("dark bolt must remain a bolt-or-beam ability");
         };
         ability.id = id.to_owned();
+        ability.affects_ground_items = true;
         ability.effect = AbilityEffectDefinition::BoltOrBeamDamage {
             damage_dice: 1,
             damage_sides: 1,
             damage_bonus: 3,
-            damage_type,
+            damage_type: rfb_content::ActorDamageType::Fire,
             beam_chance_percent,
             beam_chance_modifier: 0,
         };
@@ -1730,6 +1743,8 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
     )
     .expect("beam should resolve");
     assert!(beam.entities.iter().all(|actor| actor.hp < initial_hp));
+    assert!(!beam.items.iter().any(|item| item.id == "test.item.near"));
+    assert!(!beam.items.iter().any(|item| item.id == "test.item.far"));
     assert!(beam_events.iter().any(|event| matches!(
         event,
         DomainEvent::AbilityBeamDamage { resolution, .. } if resolution.target_count == 2
@@ -1748,6 +1763,8 @@ fn bolt_or_beam_damage_uses_one_roll_and_changes_only_penetration() {
     .expect("bolt should resolve");
     assert!(bolt.entities[0].hp < initial_hp);
     assert_eq!(bolt.entities[1].hp, initial_hp);
+    assert!(bolt.items.iter().any(|item| item.id == "test.item.near"));
+    assert!(bolt.items.iter().any(|item| item.id == "test.item.far"));
     assert!(
         !bolt_events
             .iter()

@@ -124,6 +124,7 @@
         "status-intensity",
         "status-duration-ticks",
         "status-duration-sides",
+        "status-defense",
         "status-power",
         "status-melee-damage",
         "control-power",
@@ -132,7 +133,8 @@
         "maximum-weight",
         "banish-distance",
         "device-mastery-duration-base",
-        "device-power-bonus"
+        "device-power-bonus",
+        "maximum-range"
       ],
       "type": "string"
     },

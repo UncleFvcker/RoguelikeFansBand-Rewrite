@@ -294,9 +294,8 @@ impl Game {
             DamagePacket::new(backlash_raw, backlash_damage_type),
             backlash_resistance,
         ));
-        let application =
-            plan_damage_application(&self.player, backlash, FatalityPolicy::BelowZero);
-        commit_damage_application(&mut self.player, &application);
+        let application = self.apply_final_player_damage(backlash, FatalityPolicy::BelowZero);
+        let backlash = application.damage;
         events.push(DomainEvent::ItemElementalBlastBacklash {
             source_kind_id: source_kind_id.to_owned(),
             damage: backlash,
@@ -319,8 +318,8 @@ impl Game {
             DamagePacket::new(raw_damage, DamageType::Physical),
             ResistanceLevel::Normal,
         ));
-        let application = plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-        commit_damage_application(&mut self.player, &application);
+        let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+        let damage = application.damage;
         let fatal = application.fatal;
         if !fatal {
             let immunities = self.player_status_immunities();
@@ -385,7 +384,12 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) {
         let amount = i32::try_from(amount).expect("validated life loss must fit i32");
-        self.player.hp = self.player.hp.saturating_sub(amount);
+        let damage = resolve_damage(
+            DamagePacket::new(amount, DamageType::Physical),
+            ResistanceLevel::Normal,
+        );
+        let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+        let amount = application.damage.applied;
         self.mark_item_aware(source_kind_id);
         events.push(DomainEvent::ItemLifeLost {
             source_kind_id: source_kind_id.to_owned(),

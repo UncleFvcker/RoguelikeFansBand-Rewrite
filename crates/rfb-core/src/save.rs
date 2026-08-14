@@ -16,18 +16,20 @@ use crate::{
 use rfb_content::{
     AbilityTargetModeDefinition, ActorDamageType, ActorResistanceLevel,
     AffixPropertyBundleDefinition, ContentCatalog, ContentPosition, EquipmentBonuses,
-    EquipmentPassive, ItemFuelKindDefinition, SlayLevel, SlayTarget, StatModifiers, WeaponBrand,
+    EquipmentPassive, ItemDestructionElement, ItemFuelKindDefinition, SlayLevel, SlayTarget,
+    StatModifiers, WeaponBrand,
 };
 use rfb_protocol::{
     ActorSaveDto, CapturedActorSaveDto, CarriedItemSaveDto, DamageTypeDto, EquipmentBonusesDto,
     EquipmentItemSaveDto, EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
     FloorSaveDto, GoldPileDto, InventoryItemSaveDto, ItemActivationDto, ItemChargesDto,
-    ItemEnchantmentsDto, ItemFuelDto, ItemFuelKindDto, ItemOriginKindDto, ItemSaveDto,
-    MaterialSaveDto, MonsterPackSaveDto, NaturalAttributeSetSaveDto, PlayerBuildSaveDto,
-    PlayerProgressSaveDto, PlayerSaveDto, Position, ResistanceDto, ResistanceLevelDto,
-    ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto, SlayDto, SlayLevelDto,
-    SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto, TargetModeDto, TargetSpecDto,
-    TerrainSaveDto, VirtueDto, WeaponBrandDto, WeaponProficiencySaveDto,
+    ItemDestructionElementDto, ItemEnchantmentsDto, ItemFuelDto, ItemFuelKindDto,
+    ItemOriginKindDto, ItemSaveDto, MaterialSaveDto, MonsterPackSaveDto,
+    NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
+    ResistanceDto, ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto,
+    SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto,
+    TargetModeDto, TargetSpecDto, TerrainSaveDto, VirtueDto, WeaponBrandDto,
+    WeaponProficiencySaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -360,6 +362,11 @@ pub(crate) fn item_from_dto(
         rolled_affixes,
         enchantments: item.enchantments,
         curse: item.curse,
+        permanent_destruction_immunities: item
+            .permanent_destruction_immunities
+            .into_iter()
+            .map(item_destruction_element_from_dto)
+            .collect(),
         activation: item.activation,
         charges: item.charges,
         fuel,
@@ -407,6 +414,11 @@ pub(crate) fn inventory_item_from_dto(
         rolled_affixes,
         enchantments: item.enchantments,
         curse: item.curse,
+        permanent_destruction_immunities: item
+            .permanent_destruction_immunities
+            .into_iter()
+            .map(item_destruction_element_from_dto)
+            .collect(),
         activation: item.activation,
         charges: item.charges,
         fuel,
@@ -459,6 +471,11 @@ pub(crate) fn equipment_item_from_dto(
         rolled_affixes,
         enchantments: item.enchantments,
         curse: item.curse,
+        permanent_destruction_immunities: item
+            .permanent_destruction_immunities
+            .into_iter()
+            .map(item_destruction_element_from_dto)
+            .collect(),
         activation: item.activation,
         charges: item.charges,
         fuel,
@@ -508,6 +525,11 @@ pub(crate) fn carried_item_from_dto(
         rolled_affixes,
         enchantments: item.enchantments,
         curse: item.curse,
+        permanent_destruction_immunities: item
+            .permanent_destruction_immunities
+            .into_iter()
+            .map(item_destruction_element_from_dto)
+            .collect(),
         activation: item.activation,
         charges: item.charges,
         fuel,
@@ -666,8 +688,8 @@ fn validate_item_creation_state(
         Some(ItemOriginKindDto::PlayerMade) => {
             discount_percent == 99 && (ammunition || definition.melee_profile.is_some())
         }
-        Some(ItemOriginKindDto::Rubble) => discount_percent == 0,
         Some(ItemOriginKindDto::Acquire) => discount_percent == 0,
+        Some(ItemOriginKindDto::Rubble) => discount_percent == 0,
     };
     let damage_override_is_valid =
         damage_dice_override.is_none_or(|dice| (1..=9).contains(&dice) && ammunition);
@@ -693,6 +715,7 @@ pub(crate) fn player_to_save(
         hp: player.hp,
         gold: 0,
         nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
+        fasting: false,
         base_max_hp: player.max_hp,
         base_speed: player.speed,
         energy_need: player.energy_need,
@@ -701,6 +724,7 @@ pub(crate) fn player_to_save(
         chaos_patron_id: None,
         reality_change_ticks: 0,
         pending_mutation_direction: None,
+        pending_ability_direction: None,
         statuses: player
             .statuses
             .iter()
@@ -1393,6 +1417,28 @@ const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
     }
 }
 
+const fn item_destruction_element_from_dto(
+    value: ItemDestructionElementDto,
+) -> ItemDestructionElement {
+    match value {
+        ItemDestructionElementDto::Acid => ItemDestructionElement::Acid,
+        ItemDestructionElementDto::Electricity => ItemDestructionElement::Electricity,
+        ItemDestructionElementDto::Fire => ItemDestructionElement::Fire,
+        ItemDestructionElementDto::Cold => ItemDestructionElement::Cold,
+    }
+}
+
+pub(crate) const fn item_destruction_element_to_dto(
+    value: ItemDestructionElement,
+) -> ItemDestructionElementDto {
+    match value {
+        ItemDestructionElement::Acid => ItemDestructionElementDto::Acid,
+        ItemDestructionElement::Electricity => ItemDestructionElementDto::Electricity,
+        ItemDestructionElement::Fire => ItemDestructionElementDto::Fire,
+        ItemDestructionElement::Cold => ItemDestructionElementDto::Cold,
+    }
+}
+
 pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
     let mut items = items
         .iter()
@@ -1415,6 +1461,12 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 enchantments: item.enchantments,
                 curse: item.curse,
+                permanent_destruction_immunities: item
+                    .permanent_destruction_immunities
+                    .iter()
+                    .copied()
+                    .map(item_destruction_element_to_dto)
+                    .collect(),
                 activation: item.activation.clone(),
                 charges: item.charges,
                 fuel: item.fuel,
@@ -1448,6 +1500,12 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 enchantments: item.enchantments,
                 curse: item.curse,
+                permanent_destruction_immunities: item
+                    .permanent_destruction_immunities
+                    .iter()
+                    .copied()
+                    .map(item_destruction_element_to_dto)
+                    .collect(),
                 activation: item.activation.clone(),
                 charges: item.charges,
                 fuel: item.fuel,
@@ -1482,6 +1540,12 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 enchantments: item.enchantments,
                 curse: item.curse,
+                permanent_destruction_immunities: item
+                    .permanent_destruction_immunities
+                    .iter()
+                    .copied()
+                    .map(item_destruction_element_to_dto)
+                    .collect(),
                 activation: item.activation.clone(),
                 charges: item.charges,
                 fuel: item.fuel,
@@ -1520,6 +1584,12 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 enchantments: item.enchantments,
                 curse: item.curse,
+                permanent_destruction_immunities: item
+                    .permanent_destruction_immunities
+                    .iter()
+                    .copied()
+                    .map(item_destruction_element_to_dto)
+                    .collect(),
                 activation: item.activation.clone(),
                 charges: item.charges,
                 fuel: item.fuel,

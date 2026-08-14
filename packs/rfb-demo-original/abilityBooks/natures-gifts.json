@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.natures-gifts",
+  "nameKey": "ability-book-demo-natures-gifts-name",
+  "descriptionKey": "ability-book-demo-natures-gifts-description",
+  "realmId": "nature",
+  "rank": 3,
+  "abilityIds": [
+    "demo.ability.nature-stair-building",
+    "demo.ability.nature-stone-skin",
+    "demo.ability.nature-resistance-true",
+    "demo.ability.nature-forest-creation",
+    "demo.ability.nature-stone-tell",
+    "demo.ability.nature-wall-of-stone",
+    "demo.ability.nature-protect-from-corrosion",
+    "demo.ability.nature-call-sunlight"
+  ],
+  "tags": ["nature", "spellbook"]
+}

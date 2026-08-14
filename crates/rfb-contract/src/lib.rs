@@ -748,6 +748,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             fuel: item.fuel,
             enchantments: item.enchantments,
             curse: item.curse,
+            permanent_destruction_immunities: Vec::new(),
             device_recovery_progress: item.device_recovery_progress,
             captured_actor: None,
         });

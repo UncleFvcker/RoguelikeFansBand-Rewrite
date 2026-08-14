@@ -5,11 +5,14 @@ use super::support::{
     give_inventory_item, replace_terrain,
 };
 use super::*;
+use rfb_protocol::{DamageTypeDto, ItemCurseSeverityDto, ItemDestructionElementDto};
 
 const HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-death";
 const ARCANE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-arcane";
 const SORCERY_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-sorcery";
 const ARMAGEDDON_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-armageddon";
+const NATURE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-nature";
+const LIFE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-life";
 
 fn high_mage_game(seed: u64) -> Game {
     Game::new_with_build(seed, HIGH_MAGE_BUILD_ID).expect("Death High-Mage build should create")
@@ -128,6 +131,111 @@ fn armageddon_high_mage_game(seed: u64, level: u16) -> Game {
     game
 }
 
+fn nature_high_mage_game(seed: u64, level: u16) -> Game {
+    let mut game = Game::new_with_build(seed, NATURE_HIGH_MAGE_BUILD_ID)
+        .expect("Nature High-Mage build should create");
+    game.progress.level = level;
+    game.progress.max_level = level;
+    game.learned_abilities.extend(
+        [
+            "demo.ability.nature-detect-creatures",
+            "demo.ability.nature-lightning",
+            "demo.ability.nature-detect-doors-and-traps",
+            "demo.ability.nature-produce-food",
+            "demo.ability.nature-daylight",
+            "demo.ability.nature-wind-walker",
+            "demo.ability.nature-resist-environment",
+            "demo.ability.nature-cure-wounds-and-poison",
+            "demo.ability.nature-stone-to-mud",
+            "demo.ability.nature-frost-bolt",
+            "demo.ability.nature-awareness",
+            "demo.ability.nature-fire-bolt",
+            "demo.ability.nature-ray-of-sunlight",
+            "demo.ability.nature-entangle",
+            "demo.ability.nature-natures-gate",
+            "demo.ability.nature-herbal-healing",
+            "demo.ability.nature-stair-building",
+            "demo.ability.nature-stone-skin",
+            "demo.ability.nature-resistance-true",
+            "demo.ability.nature-forest-creation",
+            "demo.ability.nature-stone-tell",
+            "demo.ability.nature-wall-of-stone",
+            "demo.ability.nature-protect-from-corrosion",
+            "demo.ability.nature-call-sunlight",
+            "demo.ability.nature-earthquake",
+            "demo.ability.nature-fire-storm",
+            "demo.ability.nature-blizzard",
+            "demo.ability.nature-lightning-storm",
+            "demo.ability.nature-whirlpool",
+            "demo.ability.nature-ice-bolt",
+            "demo.ability.nature-gravity-storm",
+            "demo.ability.nature-natures-wrath",
+        ]
+        .into_iter()
+        .map(str::to_owned),
+    );
+    give_inventory_item(&mut game, "test.nature-mastery", "demo.item.nature-mastery");
+    give_inventory_item(&mut game, "test.natures-gifts", "demo.item.natures-gifts");
+    give_inventory_item(&mut game, "test.natures-wrath", "demo.item.natures-wrath");
+    game.refresh_player_resource_maxima();
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should have mana")
+        .current = 100;
+    game.debug_ability_casts_succeed = true;
+    game
+}
+
+fn life_high_mage_game(seed: u64, level: u16) -> Game {
+    let mut game = Game::new_with_build(seed, LIFE_HIGH_MAGE_BUILD_ID)
+        .expect("Life High-Mage build should create");
+    game.progress.level = level;
+    game.progress.max_level = level;
+    game.learned_abilities.extend(
+        [
+            "demo.ability.life-cure-light-wounds",
+            "demo.ability.life-bless",
+            "demo.ability.life-regeneration",
+            "demo.ability.life-call-light",
+            "demo.ability.life-detect-doors-and-traps",
+            "demo.ability.life-cure-medium-wounds",
+            "demo.ability.life-cure-poison",
+            "demo.ability.life-satisfy-hunger",
+            "demo.ability.life-remove-curse",
+            "demo.ability.life-fasting",
+            "demo.ability.life-cure-critical-wounds",
+            "demo.ability.life-resist-heat-and-cold",
+            "demo.ability.life-sense-surroundings",
+            "demo.ability.life-turn-undead",
+            "demo.ability.life-healing",
+            "demo.ability.life-glyph-of-warding",
+            "demo.ability.life-dispel-curse",
+            "demo.ability.life-perception",
+            "demo.ability.life-dispel-undead",
+            "demo.ability.life-sustain-attributes",
+            "demo.ability.life-cure-mutation",
+            "demo.ability.life-word-of-recall",
+            "demo.ability.life-transcendence",
+            "demo.ability.life-warding-true",
+        ]
+        .into_iter()
+        .map(str::to_owned),
+    );
+    give_inventory_item(&mut game, "test.high-mass", "demo.item.high-mass");
+    give_inventory_item(
+        &mut game,
+        "test.book-of-the-unicorn",
+        "demo.item.book-of-the-unicorn",
+    );
+    game.refresh_player_resource_maxima();
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 100;
+    game.debug_ability_casts_succeed = true;
+    game
+}
+
 fn grant_spell_power(game: &mut Game, bonus: i32) {
     game.player.statuses.push(StatusInstance {
         kind_id: "test.status.spell-power".to_owned(),
@@ -146,6 +254,16 @@ fn grant_spell_power(game: &mut Game, bonus: i32) {
         grants_wall_passage: false,
         incoming_damage_percent: 100,
     });
+}
+
+fn nature_wrath_seed(branch: u64) -> u64 {
+    (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            let _ = rng.bounded(100);
+            rng.bounded(6) + 1 == branch
+        })
+        .expect("a bounded seed should select every Nature's Wrath branch")
 }
 
 #[test]
@@ -229,6 +347,2075 @@ fn armageddon_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
             .iter()
             .all(|ability| ability.id.starts_with("demo.ability.armageddon-"))
     );
+}
+
+#[test]
+fn life_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
+    let game = Game::new_with_build(0x4c49_4645_3031, LIFE_HIGH_MAGE_BUILD_ID)
+        .expect("Life High-Mage build should create");
+    let carried = game
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        })
+        .map(|item| item.kind_id.as_str())
+        .collect::<BTreeSet<_>>();
+    for expected in [
+        "demo.item.book-of-common-prayer",
+        "demo.item.dagger",
+        "demo.item.robe",
+        "demo.item.clarity-draught",
+        "demo.item.magic-missile-wand",
+    ] {
+        assert!(carried.contains(expected));
+    }
+    for excluded in [
+        "demo.item.black-prayers",
+        "demo.item.cantrips-for-beginners",
+        "demo.item.beginners-handbook",
+        "demo.item.book-of-elements",
+        "demo.item.call-of-the-wild",
+        "demo.item.high-mass",
+        "demo.item.book-of-the-unicorn",
+    ] {
+        assert!(!carried.contains(excluded));
+    }
+
+    let learned = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .filter(|ability| ability.source == AbilitySourceDto::Learned)
+        .collect::<Vec<_>>();
+    assert_eq!(learned.len(), 24);
+    assert!(
+        learned
+            .iter()
+            .all(|ability| ability.id.starts_with("demo.ability.life-"))
+    );
+}
+
+#[test]
+fn life_first_book_projects_final_healing_light_and_status_formulas() {
+    for (level, expected_sides, expected_radius) in [(1, 0, 1), (25, 12, 3), (50, 25, 6)] {
+        let projected = life_high_mage_game(0x4c49_4645_5000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        assert!(matches!(
+            projected["demo.ability.life-call-light"].effects.as_slice(),
+            [AbilityEffectSpecDto::LightArea {
+                damage_dice: 2,
+                damage_sides,
+                radius,
+                final_damage_spell_power_bonus: None,
+            }] if *damage_sides == expected_sides && *radius == expected_radius
+        ));
+    }
+
+    let mut game = life_high_mage_game(0x4c49_4645_5052, 50);
+    grant_spell_power(&mut game, 7);
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    for id in [
+        "demo.ability.life-cure-light-wounds",
+        "demo.ability.life-cure-medium-wounds",
+    ] {
+        assert!(matches!(
+            projected[id].effects.as_slice(),
+            [
+                AbilityEffectSpecDto::HealDice {
+                    final_healing_spell_power_bonus: Some(7),
+                    ..
+                },
+                ..
+            ]
+        ));
+    }
+    assert!(matches!(
+        projected["demo.ability.life-call-light"].effects.as_slice(),
+        [AbilityEffectSpecDto::LightArea {
+            damage_dice: 2,
+            damage_sides: 25,
+            radius: 9,
+            final_damage_spell_power_bonus: Some(7),
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.life-bless"].effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 18,
+            duration_sides: 18,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.life-regeneration"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 123,
+            duration_sides: 123,
+            ..
+        }]
+    ));
+}
+
+#[test]
+fn life_first_book_applies_final_healing_and_light_after_the_roll() {
+    let mut plain = life_high_mage_game(0x4c49_4645_524f, 50);
+    let mut powered = plain.clone();
+    grant_spell_power(&mut powered, 7);
+    for game in [&mut plain, &mut powered] {
+        game.player.max_hp = 1_000;
+        game.player.hp = 1;
+        game.rng = RfbRng::seeded(0x4845_414c);
+    }
+    plain
+        .resolve_player_ability(
+            "demo.ability.life-cure-medium-wounds",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("plain Cure Medium Wounds should resolve");
+    powered
+        .resolve_player_ability(
+            "demo.ability.life-cure-medium-wounds",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("powered Cure Medium Wounds should resolve");
+    let plain_healing = plain.player.hp - 1;
+    let powered_healing = powered.player.hp - 1;
+    assert_eq!(powered_healing, plain_healing + plain_healing * 7 / 13);
+
+    let light_damage = |game: &mut Game| {
+        game.rng = RfbRng::seeded(0x4c49_4748);
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.life-call-light",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Call Light should resolve");
+        events
+            .into_iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilityAreaDamage { resolution, .. } => {
+                    Some(resolution.base_raw_damage)
+                }
+                _ => None,
+            })
+            .expect("Call Light should report its rolled damage")
+    };
+    let plain_light = light_damage(&mut plain);
+    let powered_light = light_damage(&mut powered);
+    assert_eq!(powered_light, plain_light + plain_light * 7 / 13);
+}
+
+#[test]
+fn life_first_book_applies_blessing_regeneration_and_cures() {
+    let mut game = life_high_mage_game(0x4c49_4645_4355, 50);
+    grant_spell_power(&mut game, 7);
+    for ability_id in ["demo.ability.life-bless", "demo.ability.life-regeneration"] {
+        game.resolve_player_ability(
+            ability_id,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap_or_else(|error| panic!("{ability_id} should resolve: {error}"));
+    }
+    let blessed = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.blessed")
+        .expect("Bless should apply the shared blessed status");
+    assert!((19..=36).contains(&blessed.remaining_ticks));
+    assert_eq!(blessed.granted_modifiers.defense, 5);
+    assert_eq!(blessed.granted_equipment_bonuses.melee_skill, 10);
+    let regeneration = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_REGENERATION)
+        .expect("Regeneration should apply the shared regeneration status");
+    assert!((124..=246).contains(&regeneration.remaining_ticks));
+    assert_eq!(game.player_regeneration_rate_percent(), 200);
+
+    let status = |kind_id: &str, remaining_ticks| StatusInstance {
+        kind_id: kind_id.to_owned(),
+        intensity: 1,
+        remaining_ticks,
+        source_id: Some("test.life".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    game.player.statuses.push(status(STATUS_BLEEDING, 300));
+    game.player.statuses.push(status(STATUS_POISON, 1_000));
+    game.resolve_player_ability(
+        "demo.ability.life-cure-medium-wounds",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Medium Wounds should resolve");
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_BLEEDING)
+            .map(|status| status.remaining_ticks),
+        Some(130)
+    );
+    game.resolve_player_ability(
+        "demo.ability.life-cure-poison",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Poison should resolve");
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_POISON)
+            .map(|status| status.remaining_ticks),
+        Some(667)
+    );
+    game.nutrition = 1;
+    game.resolve_player_ability(
+        "demo.ability.life-satisfy-hunger",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Satisfy Hunger should resolve");
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+}
+
+fn fasting_restoration_seed(branch: u64) -> u64 {
+    (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(7) == 0 && {
+                let _ = rng.bounded(2_000);
+                rng.bounded(8) == branch
+            }
+        })
+        .expect("each fasting restoration branch should have a deterministic seed")
+}
+
+#[test]
+fn life_fasting_starts_atomically_persists_and_recasts_for_free() {
+    let mut game = life_high_mage_game(0x4c49_4645_4641_5354, 50);
+    game.nutrition = 9_999;
+    let hash_before = game.state_hash();
+    game.resolve_player_ability(
+        "demo.ability.life-fasting",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Fasting should resolve");
+    assert!(game.fasting);
+    assert_eq!(game.nutrition, 4_999);
+    assert!(game.snapshot().player.fasting);
+    assert_ne!(game.state_hash(), hash_before);
+    game.refresh_character_skills();
+    let restored = Game::from_save(game.to_save()).expect("fasting should round-trip");
+    assert!(restored.fasting);
+    assert_eq!(restored.state_hash(), game.state_hash());
+
+    choose_human_talent_if_pending(&mut game);
+    let mana_before = game.resources["demo.resource.mana"].current;
+    let world_tick_before = game.world_tick;
+    let energy_before = game.player.energy_need;
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::CastAbility {
+            ability_id: "demo.ability.life-fasting".to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+    assert!(update.events.iter().any(|event| {
+        event.kind == "ability.cast-unavailable"
+            && event
+                .args
+                .get("reason")
+                .is_some_and(|reason| reason == "already-fasting")
+    }));
+    assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
+    assert_eq!(game.world_tick, world_tick_before);
+    assert_eq!(game.player.energy_need, energy_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+}
+
+#[test]
+fn life_fasting_uses_the_original_three_roll_gate_and_all_eight_restorations() {
+    for branch in 0..8 {
+        let mut game = life_high_mage_game(0x4c49_4645_5238 + branch, 50);
+        game.world_tick = 10;
+        game.fasting = true;
+        game.nutrition = 0;
+        game.progress.attributes = AttributeSet {
+            strength: 1,
+            intelligence: 1,
+            wisdom: 1,
+            dexterity: 1,
+            constitution: 1,
+            charisma: 1,
+        };
+        game.progress.experience = 0;
+        game.progress.maximum_experience = 1_000;
+        game.progress.life_force = 100;
+        game.rng = RfbRng::seeded(fasting_restoration_seed(branch));
+        let draws_before = game.rng_draw_counter();
+        game.process_fasting(&mut Vec::new());
+        assert_eq!(game.rng_draw_counter(), draws_before + 3);
+        match branch {
+            0..=5 => {
+                let attribute = [
+                    AttributeKind::Strength,
+                    AttributeKind::Intelligence,
+                    AttributeKind::Wisdom,
+                    AttributeKind::Dexterity,
+                    AttributeKind::Constitution,
+                    AttributeKind::Charisma,
+                ][usize::try_from(branch).expect("branch must fit usize")];
+                assert_eq!(
+                    game.progress.attributes.value(attribute),
+                    game.progress.maximum_attributes.value(attribute)
+                );
+            }
+            6 => assert_eq!(game.progress.experience, 1_000),
+            7 => assert_eq!(game.progress.life_force, 250),
+            _ => unreachable!(),
+        }
+    }
+
+    let mut gated = life_high_mage_game(0x4c49_4645_4741_5445, 50);
+    gated.world_tick = 10;
+    gated.fasting = true;
+    gated.nutrition = 2_000;
+    gated.rng = RfbRng::seeded(fasting_restoration_seed(0));
+    let draws_before = gated.rng_draw_counter();
+    gated.process_fasting(&mut Vec::new());
+    assert_eq!(gated.rng_draw_counter(), draws_before + 2);
+}
+
+#[test]
+fn life_fasting_ends_on_every_real_nutrition_increase() {
+    let mut game = life_high_mage_game(0x4c49_4645_464f_4f44, 50);
+    game.fasting = true;
+    game.nutrition = 100;
+    assert_eq!(game.increase_nutrition(1), 1);
+    assert!(!game.fasting);
+
+    game.fasting = true;
+    game.nutrition = rfb_protocol::PLAYER_NUTRITION_MAXIMUM;
+    assert_eq!(game.increase_nutrition(1), 0);
+    assert!(game.fasting, "a capped no-op is not a nutrition increase");
+}
+
+#[test]
+fn life_second_book_reuses_curse_healing_resistance_mapping_and_glyph_transactions() {
+    let mut game = life_high_mage_game(0x4c49_4645_5345_434f, 50);
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 1_000;
+    game.items
+        .iter_mut()
+        .find(|item| item.kind_id == "demo.item.robe")
+        .expect("starting robe")
+        .curse = Some(ItemCurseSeverityDto::Normal);
+    game.items
+        .iter_mut()
+        .find(|item| item.kind_id == "demo.item.dagger")
+        .expect("starting dagger")
+        .curse = Some(ItemCurseSeverityDto::Heavy);
+    game.resolve_player_ability(
+        "demo.ability.life-remove-curse",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Remove Curse should resolve");
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.kind_id == "demo.item.robe")
+            .and_then(|item| item.curse),
+        None
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.kind_id == "demo.item.dagger")
+            .and_then(|item| item.curse),
+        Some(ItemCurseSeverityDto::Heavy)
+    );
+
+    let status = |kind_id: &str| StatusInstance {
+        kind_id: kind_id.to_owned(),
+        intensity: 1,
+        remaining_ticks: 500,
+        source_id: Some("test.life-second-book".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    game.player.max_hp = 2_000;
+    game.player.hp = 1;
+    game.player.statuses.push(status(STATUS_STUN));
+    game.player.statuses.push(status(STATUS_BLEEDING));
+    let expected_healing_hp = game.effective_player_max_hp().min(301);
+    game.resolve_player_ability(
+        "demo.ability.life-cure-critical-wounds",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Critical Wounds should resolve");
+    assert!(game.player.hp > 1);
+    assert!(!game.player_has_status_kind(STATUS_STUN));
+    assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+
+    game.player.hp = 1;
+    game.player.statuses.push(status(STATUS_STUN));
+    game.player.statuses.push(status(STATUS_BLEEDING));
+    game.resolve_player_ability(
+        "demo.ability.life-healing",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Healing should resolve");
+    assert_eq!(game.player.hp, expected_healing_hp);
+    assert!(!game.player_has_status_kind(STATUS_STUN));
+    assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+
+    let resistance_draws = game.rng_draw_counter();
+    game.resolve_player_ability(
+        "demo.ability.life-resist-heat-and-cold",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Resist Heat and Cold should resolve");
+    assert_eq!(
+        game.rng_draw_counter(),
+        resistance_draws + 2,
+        "one cast roll plus one duration roll should serve both resistances"
+    );
+    let resistance = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.resist-heat-and-cold")
+        .expect("the shared resistance status should be applied");
+    assert!((21..=40).contains(&resistance.remaining_ticks));
+    assert_eq!(
+        resistance
+            .granted_resistances
+            .keys()
+            .copied()
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([DamageType::Cold, DamageType::Fire])
+    );
+
+    game.resolve_player_ability(
+        "demo.ability.life-sense-surroundings",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Sense Surroundings should resolve");
+    assert!(game.explored.iter().filter(|explored| **explored).count() > 1);
+
+    let player_position = game.player.position;
+    replace_terrain(&mut game, player_position, "demo.terrain.floor");
+    game.floor_connections.clear();
+    clear_monsters(&mut game);
+    game.items.retain(
+        |item| !matches!(item.location, ItemLocation::Ground(position) if position == player_position),
+    );
+    game.gold_piles
+        .retain(|pile| pile.position != player_position);
+    assert!(
+        game.current_terrain_creation_replacement(
+            &["demo.terrain.floor".to_owned()],
+            "demo.terrain.warding-glyph",
+        )
+        .is_some()
+    );
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 100;
+    game.resolve_player_ability(
+        "demo.ability.life-glyph-of-warding",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Glyph of Warding should resolve");
+    assert_eq!(
+        game.terrain[game.index(game.player.position).expect("player position")],
+        "demo.terrain.warding-glyph"
+    );
+}
+
+#[test]
+fn life_turn_undead_uses_level_power_and_only_changes_unlife_after_success() {
+    let mut game = life_high_mage_game(0x4c49_4645_5455_524e, 50);
+    clear_monsters(&mut game);
+    let position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, position, "demo.terrain.floor");
+    game.entities.push(actor_from_runtime_spawn(
+        "test.turn-undead",
+        "demo.actor.zombified-kobold",
+        position,
+        27,
+        110,
+        100,
+        true,
+    ));
+    game.virtues[0].kind = VirtueKindDto::Unlife;
+    game.virtues[0].value = 0;
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            for _ in 0..3 {
+                let _ = rng.bounded(25);
+            }
+            let power_roll = rng.bounded(50) + 1;
+            let target_roll = rng.bounded(7) + 1;
+            target_roll < power_roll
+        })
+        .expect("Turn Undead should have a successful deterministic seed");
+    game.rng = RfbRng::seeded(seed);
+    game.resolve_player_ability(
+        "demo.ability.life-turn-undead",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Turn Undead should resolve");
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_FEAR)
+    );
+    assert_eq!(game.virtue_current(VirtueKindDto::Unlife), -1);
+    assert!(matches!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-turn-undead")
+            .expect("Turn Undead should project")
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::TurnUndead { power: 50 }]
+    ));
+}
+
+#[test]
+fn life_third_book_projects_and_resolves_dispel_undead_without_a_damage_roll() {
+    let mut game = life_high_mage_game(0x4c49_4645_554e_4444, 50);
+    clear_monsters(&mut game);
+    let undead_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    let living_position = Position {
+        x: game.player.position.x,
+        y: game.player.position.y + 1,
+    };
+    replace_terrain(&mut game, undead_position, "demo.terrain.floor");
+    replace_terrain(&mut game, living_position, "demo.terrain.floor");
+    game.entities.push(actor_from_runtime_spawn(
+        "test.dispel-undead",
+        "demo.actor.zombified-kobold",
+        undead_position,
+        1_000,
+        110,
+        100,
+        true,
+    ));
+    game.entities.push(actor_from_runtime_spawn(
+        "test.dispel-living",
+        "demo.actor.large-kobold",
+        living_position,
+        1_000,
+        110,
+        100,
+        true,
+    ));
+    game.virtues[0] = VirtueDto {
+        kind: VirtueKindDto::Unlife,
+        value: 0,
+    };
+
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "demo.ability.life-dispel-undead")
+        .expect("Dispel Undead should project");
+    assert!(matches!(
+        projected.effects.as_slice(),
+        [AbilityEffectSpecDto::VisibleDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 165,
+            target_category: Some(category),
+            unlife_change_on_hit: -2,
+            ..
+        }] if category == "undead"
+    ));
+    let draws_before = game.rng_draw_counter();
+    game.resolve_player_ability(
+        "demo.ability.life-dispel-undead",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Dispel Undead should resolve");
+    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+    assert_eq!(game.entities[0].hp, 835);
+    assert_eq!(game.entities[1].hp, 1_000);
+    assert_eq!(game.virtue_current(VirtueKindDto::Unlife), -2);
+}
+
+#[test]
+fn life_sustain_attributes_uses_the_original_order_and_one_shared_duration() {
+    let mut game = life_high_mage_game(0x4c49_4645_5355_5354, 50);
+    let draws_before = game.rng_draw_counter();
+    game.resolve_player_ability(
+        "demo.ability.life-sustain-attributes",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Sustain Attributes should resolve");
+    assert_eq!(
+        game.rng_draw_counter(),
+        draws_before + 7,
+        "one cast roll and the original six ordered sustain rolls are required"
+    );
+    let statuses = [
+        STATUS_HOLD_LIFE,
+        STATUS_SUSTAIN_CONSTITUTION,
+        STATUS_SUSTAIN_STRENGTH,
+        STATUS_SUSTAIN_INTELLIGENCE,
+        STATUS_SUSTAIN_DEXTERITY,
+        STATUS_SUSTAIN_WISDOM,
+        STATUS_SUSTAIN_CHARISMA,
+    ];
+    for kind_id in statuses {
+        assert_eq!(
+            game.player
+                .statuses
+                .iter()
+                .find(|status| status.kind_id == kind_id)
+                .map(|status| status.remaining_ticks),
+            Some(50),
+            "{kind_id} should share the spell-powered level duration"
+        );
+    }
+    assert_eq!(game.player_hold_life_sources(), 1);
+    assert!(
+        [
+            EquipmentPassive::SustainStrength,
+            EquipmentPassive::SustainIntelligence,
+            EquipmentPassive::SustainWisdom,
+            EquipmentPassive::SustainDexterity,
+            EquipmentPassive::SustainConstitution,
+            EquipmentPassive::SustainCharisma,
+        ]
+        .into_iter()
+        .all(|passive| game.player_equipment_passives().contains(&passive))
+    );
+}
+
+#[test]
+fn life_cure_mutation_prefers_harmful_mutations_and_preserves_locked_mutations() {
+    let mut game = life_high_mage_game(0x4c49_4645_4355_5245, 50);
+    game.progress.active_mutation_ids = BTreeSet::from([
+        "rfb.mutation.bad-luck".to_owned(),
+        "rfb.mutation.astral-guide".to_owned(),
+    ]);
+    game.progress.locked_mutation_ids = BTreeSet::from(["rfb.mutation.astral-guide".to_owned()]);
+    let seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            let _ = rng.bounded(100);
+            rng.bounded(2) == 0
+        })
+        .expect("a deterministic harmful-only cure seed should exist");
+    game.rng = RfbRng::seeded(seed);
+    let draws_before = game.rng_draw_counter();
+    game.resolve_player_ability(
+        "demo.ability.life-cure-mutation",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Mutation should resolve");
+    assert_eq!(game.rng_draw_counter(), draws_before + 3);
+    assert!(
+        !game
+            .progress
+            .active_mutation_ids
+            .contains("rfb.mutation.bad-luck")
+    );
+    assert!(
+        game.progress
+            .active_mutation_ids
+            .contains("rfb.mutation.astral-guide")
+    );
+    assert!(
+        game.progress
+            .locked_mutation_ids
+            .contains("rfb.mutation.astral-guide")
+    );
+}
+
+#[test]
+fn life_transcendence_absorbs_direct_and_status_damage_with_mana_first() {
+    let mut game = life_high_mage_game(0x4c49_4645_5452_414e, 50);
+    game.resolve_player_ability(
+        "demo.ability.life-transcendence",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Transcendence should resolve");
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_TRANSCENDENCE)
+            .map(|status| status.remaining_ticks),
+        Some(5)
+    );
+
+    game.player.hp = 100;
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 6;
+    let application = game.apply_final_player_damage(
+        DamageOutcome {
+            raw: 10,
+            armor_reduction: 0,
+            requested: 10,
+            applied: 10,
+            resistance_delta: 0,
+            damage_type: DamageType::Physical,
+            resistance: ResistanceLevel::Normal,
+        },
+        FatalityPolicy::BelowZero,
+    );
+    assert_eq!(application.damage.applied, 4);
+    assert_eq!(game.player.hp, 96);
+    assert_eq!(game.resources["demo.resource.mana"].current, 0);
+
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 20;
+    game.player.statuses.push(StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 1,
+        remaining_ticks: 1_000,
+        source_id: Some("test.transcendence-poison".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    let hp_before = game.player.hp;
+    game.process_status_tick(
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+        false,
+    )
+    .expect("status damage should use the final player damage entry");
+    assert_eq!(game.player.hp, hp_before);
+    assert!(game.resources["demo.resource.mana"].current < 20);
+}
+
+#[test]
+fn life_warding_true_creates_the_current_and_eight_adjacent_glyphs_atomically() {
+    let mut game = life_high_mage_game(0x4c49_4645_5741_5244, 50);
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 1_000;
+    clear_monsters(&mut game);
+    let center = game.player.position;
+    game.floor_connections.clear();
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let positions = (-1..=1)
+        .flat_map(|dy| {
+            (-1..=1).map(move |dx| Position {
+                x: center.x + dx,
+                y: center.y + dy,
+            })
+        })
+        .collect::<Vec<_>>();
+    game.items.retain(|item| {
+        !matches!(item.location, ItemLocation::Ground(position) if positions.contains(&position))
+    });
+    game.gold_piles
+        .retain(|pile| !positions.contains(&pile.position));
+    let adjacent = game.adjacent_terrain_creation_replacements(
+        &["demo.terrain.floor".to_owned()],
+        "demo.terrain.warding-glyph",
+    );
+    assert_eq!(adjacent.len(), 8);
+    game.resolve_player_ability(
+        "demo.ability.life-warding-true",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Warding True should resolve");
+    assert!(
+        positions
+            .into_iter()
+            .all(|position| game.terrain_at(position) == "demo.terrain.warding-glyph")
+    );
+}
+
+#[test]
+fn nature_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
+    let game = Game::new_with_build(0x4e41_5455_5245_3031, NATURE_HIGH_MAGE_BUILD_ID)
+        .expect("Nature High-Mage build should create");
+    let carried = game
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        })
+        .map(|item| item.kind_id.as_str())
+        .collect::<BTreeSet<_>>();
+    for expected in [
+        "demo.item.call-of-the-wild",
+        "demo.item.dagger",
+        "demo.item.robe",
+        "demo.item.clarity-draught",
+        "demo.item.magic-missile-wand",
+    ] {
+        assert!(carried.contains(expected));
+    }
+    for excluded in [
+        "demo.item.black-prayers",
+        "demo.item.cantrips-for-beginners",
+        "demo.item.beginners-handbook",
+        "demo.item.book-of-elements",
+        "demo.item.nature-mastery",
+        "demo.item.natures-gifts",
+        "demo.item.natures-wrath",
+    ] {
+        assert!(!carried.contains(excluded));
+    }
+
+    let learned = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .filter(|ability| ability.source == AbilitySourceDto::Learned)
+        .collect::<Vec<_>>();
+    assert_eq!(learned.len(), 32);
+    assert!(
+        learned
+            .iter()
+            .all(|ability| ability.id.starts_with("demo.ability.nature-"))
+    );
+}
+
+#[test]
+fn nature_first_book_projects_level_and_spell_power_formulas() {
+    for (level, dice, range, light_sides, light_radius) in
+        [(1, 3, 2, 0, 1), (25, 7, 6, 12, 3), (50, 12, 10, 25, 6)]
+    {
+        let projected = nature_high_mage_game(0x4e41_5455_5245_1000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        assert_eq!(
+            projected["demo.ability.nature-lightning"].target_spec.range,
+            range
+        );
+        assert!(matches!(
+            projected["demo.ability.nature-lightning"].effects.as_slice(),
+            [AbilityEffectSpecDto::BeamDamage {
+                damage_dice,
+                damage_sides: 4,
+                ..
+            }] if *damage_dice == dice
+        ));
+        assert!(matches!(
+            projected["demo.ability.nature-daylight"].effects.as_slice(),
+            [AbilityEffectSpecDto::LightArea {
+                damage_dice: 2,
+                damage_sides,
+                radius,
+                ..
+            }] if *damage_sides == light_sides && *radius == light_radius
+        ));
+    }
+
+    let mut powered = nature_high_mage_game(0x4e41_5455_5245_5057, 50);
+    grant_spell_power(&mut powered, 7);
+    let lightning = powered
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "demo.ability.nature-lightning")
+        .expect("Lightning should be projected");
+    assert_eq!(lightning.target_spec.range, 15);
+    assert!(matches!(
+        lightning.effects.as_slice(),
+        [AbilityEffectSpecDto::BeamDamage {
+            final_damage_spell_power_bonus: Some(7),
+            ..
+        }]
+    ));
+}
+
+#[test]
+fn nature_first_book_applies_food_levitation_environment_and_curing() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_4546, 10);
+    let position = game.player.position;
+    game.resolve_player_ability(
+        "demo.ability.nature-produce-food",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Produce Food should resolve");
+    let ration = game
+        .items
+        .iter()
+        .find(|item| {
+            item.kind_id == "demo.item.ration-of-food"
+                && item.location == ItemLocation::Ground(position)
+        })
+        .expect("Produce Food should create a ration at the player's feet");
+    assert_eq!(
+        ration.origin_kind,
+        Some(rfb_protocol::ItemOriginKindDto::Acquire)
+    );
+
+    game.resolve_player_ability(
+        "demo.ability.nature-wind-walker",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Wind Walker should resolve");
+    assert!(game.player_levitates());
+
+    game.resolve_player_ability(
+        "demo.ability.nature-resist-environment",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Resist Environment should resolve");
+    for damage_type in [DamageType::Fire, DamageType::Cold, DamageType::Electricity] {
+        assert_eq!(
+            game.effective_player_resistances().level(damage_type),
+            ResistanceLevel::Resistant
+        );
+    }
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .filter(|status| status.kind_id == "rfb.status.resist-environment")
+            .count(),
+        1
+    );
+
+    let status = |kind_id: &str, remaining_ticks| StatusInstance {
+        kind_id: kind_id.to_owned(),
+        intensity: 1,
+        remaining_ticks,
+        source_id: Some("test.nature".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    game.player.statuses.push(status(STATUS_BLEEDING, 50));
+    game.player.statuses.push(status(STATUS_POISON, 600));
+    game.player.hp = game.player.hp.saturating_sub(20);
+    let hp_before = game.player.hp;
+    game.resolve_player_ability(
+        "demo.ability.nature-cure-wounds-and-poison",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Wounds & Poison should resolve");
+    assert!(game.player.hp > hp_before);
+    assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_POISON)
+            .map(|status| status.remaining_ticks),
+        Some(400)
+    );
+}
+
+#[test]
+fn nature_daylight_burns_an_unprotected_vampire_form() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_5355, 10);
+    game.player.statuses.push(StatusInstance {
+        kind_id: "test.status.vampire-form".to_owned(),
+        intensity: 1,
+        remaining_ticks: 100,
+        source_id: Some("test.nature".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: Some("demo.race.vampire-lord".to_owned()),
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    let hp_before = game.player.hp;
+    game.resolve_player_ability(
+        "demo.ability.nature-daylight",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Daylight should resolve");
+    assert!((2..=4).contains(&hp_before.saturating_sub(game.player.hp)));
+}
+
+#[test]
+fn nature_second_book_projects_bolts_entangle_and_fixed_healing() {
+    for (level, frost_dice, fire_dice, beam_chance) in
+        [(5, 3, 5, 5), (25, 8, 10, 25), (50, 14, 16, 50)]
+    {
+        let projected = nature_high_mage_game(0x4e41_5455_5245_2000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        for (id, expected_dice, damage_type) in [
+            (
+                "demo.ability.nature-frost-bolt",
+                frost_dice,
+                DamageTypeDto::Cold,
+            ),
+            (
+                "demo.ability.nature-fire-bolt",
+                fire_dice,
+                DamageTypeDto::Fire,
+            ),
+        ] {
+            assert!(matches!(
+                projected[id].effects.as_slice(),
+                [AbilityEffectSpecDto::BoltOrBeamDamage {
+                    damage_dice,
+                    damage_sides: 8,
+                    damage_type: actual_type,
+                    beam_chance_percent: actual_chance,
+                    ..
+                }] if *damage_dice == expected_dice
+                    && *actual_type == damage_type
+                    && *actual_chance == beam_chance
+            ));
+        }
+        assert!(matches!(
+            projected["demo.ability.nature-entangle"].effects.as_slice(),
+            [AbilityEffectSpecDto::Entangle {
+                power,
+                duration_ticks: 50,
+            }] if *power == level * 2
+        ));
+    }
+
+    let mut powered = nature_high_mage_game(0x4e41_5455_5245_4850, 50);
+    grant_spell_power(&mut powered, 7);
+    let projected = powered
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert!(matches!(
+        projected["demo.ability.nature-entangle"].effects.as_slice(),
+        [AbilityEffectSpecDto::Entangle { power: 153, .. }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.nature-herbal-healing"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Heal { amount: 769 }, ..]
+    ));
+}
+
+#[test]
+fn nature_entangle_uses_the_original_unique_immunity_and_old_slow_save() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_534c, 50);
+    clear_monsters(&mut game);
+    let origin = game.player.position;
+    for (id, kind_id, offset) in [
+        ("test.entangle-normal", "demo.actor.small-kobold", 1),
+        ("test.entangle-unique", "demo.actor.serpent-of-chaos", 2),
+    ] {
+        let definition = game.content.actor(kind_id).expect("test actor").clone();
+        let position = Position {
+            x: origin.x + offset,
+            y: origin.y,
+        };
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+        game.entities.push(actor_from_runtime_spawn(
+            id,
+            kind_id,
+            position,
+            definition.max_hp,
+            definition.speed,
+            100,
+            true,
+        ));
+    }
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.nature-entangle",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Entangle should resolve");
+
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_SLOW && status.remaining_ticks == 50)
+    );
+    assert!(
+        game.entities[1]
+            .statuses
+            .iter()
+            .all(|status| status.kind_id != STATUS_SLOW)
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if resolution.target_entity_id.as_deref() == Some("test.entangle-unique")
+                && matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::ApplyStatus {
+                    change: AbilityStatusChangeDto::Immune,
+                    ..
+                }])
+    )));
+}
+
+#[test]
+fn nature_gate_uses_all_three_level_bands_and_creates_upkeep_pets() {
+    let cast = |seed, level| {
+        let mut game = nature_high_mage_game(seed, level);
+        clear_monsters(&mut game);
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.nature-natures-gate",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Nature's Gate should resolve");
+        let resolution = events
+            .into_iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilitySummoned { resolution, .. } => Some(resolution),
+                _ => None,
+            })
+            .expect("Nature's Gate should report its summon result");
+        (game, resolution)
+    };
+
+    let (game, resolution) = cast(0x4e41_5455_5245_2911, 29);
+    assert_eq!(resolution.actor_kind_id, "animal-ranger");
+    assert_eq!(resolution.entity_ids.len(), 1);
+    assert_eq!(game.pet_upkeep().controlled_pets, 1);
+
+    let mut middle_categories = BTreeSet::new();
+    for seed in 0..96 {
+        let (game, resolution) = cast(0x4e41_5455_3500_0000 + seed, 35);
+        if !resolution.entity_ids.is_empty() {
+            assert!(game.entities.iter().all(|entity| {
+                entity.controller_id.as_deref() == Some(game.player.id.as_str())
+            }));
+            middle_categories.insert(resolution.actor_kind_id);
+        }
+        if middle_categories.len() == 3 {
+            break;
+        }
+    }
+    assert_eq!(
+        middle_categories,
+        BTreeSet::from([
+            "animal-ranger".to_owned(),
+            "hound".to_owned(),
+            "hydra".to_owned(),
+        ])
+    );
+
+    let mut saw_no_reinforcements = false;
+    let mut saw_ent = false;
+    for seed in 0..96 {
+        let (game, resolution) = cast(0x4e41_5455_4700_0000 + seed, 47);
+        if resolution.actor_kind_id == "nature-gate" {
+            saw_no_reinforcements = true;
+        } else if resolution.actor_kind_id == "ent" && !resolution.entity_ids.is_empty() {
+            saw_ent = true;
+            assert_eq!(resolution.summoned_kind_ids, ["demo.actor.ent"]);
+            assert_eq!(game.pet_upkeep().controlled_pets, 1);
+        }
+        if saw_no_reinforcements && saw_ent {
+            break;
+        }
+    }
+    assert!(saw_no_reinforcements && saw_ent);
+}
+
+#[test]
+fn nature_herbal_healing_scales_fixed_healing_and_cures_statuses() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_4848, 50);
+    grant_spell_power(&mut game, 7);
+    game.progress.hp_progression.fill(1_000);
+    game.player.max_hp = 1_000;
+    game.player.hp = 100;
+    let status = |kind_id: &str, remaining_ticks| StatusInstance {
+        kind_id: kind_id.to_owned(),
+        intensity: 1,
+        remaining_ticks,
+        source_id: Some("test.nature".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    game.player.statuses.push(status(STATUS_STUN, 40));
+    game.player.statuses.push(status(STATUS_BLEEDING, 80));
+    game.player.statuses.push(status(STATUS_POISON, 1_000));
+    game.resolve_player_ability(
+        "demo.ability.nature-herbal-healing",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Herbal Healing should resolve");
+    assert_eq!(game.player.hp, 869);
+    assert!(!game.player_has_status_kind(STATUS_STUN));
+    assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_POISON)
+            .map(|status| status.remaining_ticks),
+        Some(500)
+    );
+}
+
+#[test]
+fn commit32_nature_third_book_projects_and_applies_stone_skin_and_shared_resistance() {
+    for (level, defense) in [(8, 16), (25, 30), (50, 50)] {
+        let projected = nature_high_mage_game(0x4e41_5455_5245_3200 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities;
+        let stone_skin = projected
+            .iter()
+            .find(|ability| ability.id == "demo.ability.nature-stone-skin")
+            .expect("Stone Skin should be projected");
+        assert!(matches!(
+            stone_skin.effects.as_slice(),
+            [AbilityEffectSpecDto::ApplyStatus {
+                duration_ticks: 20,
+                duration_dice: 1,
+                duration_sides: 30,
+                granted_modifiers,
+                ..
+            }] if granted_modifiers.defense == defense
+        ));
+    }
+
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_3250, 50);
+    grant_spell_power(&mut game, 7);
+    let projected = game.snapshot().player.abilities;
+    let stone_skin = projected
+        .iter()
+        .find(|ability| ability.id == "demo.ability.nature-stone-skin")
+        .expect("Stone Skin should remain projected");
+    assert!(matches!(
+        stone_skin.effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 30,
+            duration_sides: 46,
+            granted_modifiers,
+            ..
+        }] if granted_modifiers.defense == 50
+    ));
+    let resistance = projected
+        .iter()
+        .find(|ability| ability.id == "demo.ability.nature-resistance-true")
+        .expect("Resistance True should be projected");
+    assert!(matches!(
+        resistance.effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 30,
+            duration_dice: 1,
+            duration_sides: 30,
+            granted_resistances,
+            ..
+        }] if granted_resistances.len() == 5
+    ));
+
+    for ability_id in [
+        "demo.ability.nature-stone-skin",
+        "demo.ability.nature-resistance-true",
+    ] {
+        game.resolve_player_ability(
+            ability_id,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .unwrap_or_else(|error| panic!("{ability_id} should resolve: {error:?}"));
+    }
+    let stone_skin = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.stone-skin")
+        .expect("Stone Skin should create one status");
+    assert!((31..=76).contains(&stone_skin.remaining_ticks));
+    assert_eq!(stone_skin.granted_modifiers.defense, 50);
+    let resistance = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.resistance-true")
+        .expect("Resistance True should create one shared status");
+    assert!((31..=60).contains(&resistance.remaining_ticks));
+    for damage_type in [
+        DamageType::Acid,
+        DamageType::Electricity,
+        DamageType::Fire,
+        DamageType::Cold,
+        DamageType::Poison,
+    ] {
+        assert_eq!(
+            resistance.granted_resistances.get(&damage_type),
+            Some(&ResistanceLevel::Resistant)
+        );
+    }
+}
+
+#[test]
+fn commit32_nature_forest_and_stone_wall_share_adjacent_terrain_rules() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_5445, 50);
+    clear_monsters(&mut game);
+    game.gold_piles.clear();
+    game.floor_connections.clear();
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let expected = game
+        .adjacent_terrain_creation_replacements(
+            &["demo.terrain.floor".to_owned()],
+            "demo.terrain.surface-tree",
+        )
+        .len();
+    let mut changed = BTreeSet::new();
+    game.resolve_player_ability(
+        "demo.ability.nature-forest-creation",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .expect("Forest Creation should resolve");
+    assert_eq!(changed.len(), expected);
+    assert!(expected > 0);
+    assert_eq!(
+        game.terrain
+            .iter()
+            .filter(|terrain| terrain.as_str() == "demo.terrain.surface-tree")
+            .count(),
+        expected
+    );
+
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should retain mana")
+        .current = 100;
+    let expected = game
+        .adjacent_terrain_creation_replacements(
+            &["demo.terrain.floor".to_owned()],
+            "demo.terrain.wall",
+        )
+        .len();
+    let mut changed = BTreeSet::new();
+    game.resolve_player_ability(
+        "demo.ability.nature-wall-of-stone",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .expect("Wall of Stone should resolve");
+    assert_eq!(changed.len(), expected);
+    assert!(expected > 0);
+    assert_eq!(
+        game.terrain
+            .iter()
+            .filter(|terrain| terrain.as_str() == "demo.terrain.wall")
+            .count(),
+        expected
+    );
+}
+
+#[test]
+fn commit32_nature_corrosion_protection_is_permanent_visible_and_location_agnostic() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_4143, 50);
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should retain mana");
+    mana.current = 1_000;
+    mana.maximum = 1_000;
+    give_inventory_item(
+        &mut game,
+        "test.corrosion.inventory",
+        "demo.item.hard-leather-armour",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.corrosion.inventory")
+        .expect("inventory armor should exist")
+        .enchantments
+        .to_armor = -3;
+    let hash_before = game.state_hash();
+    game.resolve_player_ability(
+        "demo.ability.nature-protect-from-corrosion",
+        TargetSelection::Item {
+            item_id: "test.corrosion.inventory".to_owned(),
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("inventory armor should accept corrosion protection");
+    let protected = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.corrosion.inventory")
+        .expect("protected armor should remain");
+    assert_eq!(protected.enchantments.to_armor, 0);
+    assert!(
+        protected
+            .permanent_destruction_immunities
+            .contains(&ItemDestructionElement::Acid)
+    );
+    assert_ne!(game.state_hash(), hash_before);
+    assert_eq!(
+        game.inventory_dto()
+            .into_iter()
+            .find(|item| item.id == "test.corrosion.inventory")
+            .expect("protected armor should be projected")
+            .permanent_destruction_immunities,
+        vec![ItemDestructionElementDto::Acid]
+    );
+
+    let player_position = game.player.position;
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.corrosion.inventory")
+        .expect("protected armor should remain")
+        .location = ItemLocation::Ground(player_position);
+    game.resolve_ground_item_projectile_effects(
+        "test.ability.acid",
+        &[player_position],
+        DamageType::Acid,
+        true,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == "test.corrosion.inventory")
+    );
+
+    give_inventory_item(
+        &mut game,
+        "test.corrosion.equipped",
+        "demo.item.hard-leather-armour",
+    );
+    let equipped = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.corrosion.equipped")
+        .expect("equipped armor should exist");
+    equipped.location = ItemLocation::Equipped {
+        slot_id: "body".to_owned(),
+    };
+    equipped.enchantments.to_armor = -2;
+    equipped.curse = Some(ItemCurseSeverityDto::Normal);
+    game.resolve_player_ability(
+        "demo.ability.nature-protect-from-corrosion",
+        TargetSelection::Item {
+            item_id: "test.corrosion.equipped".to_owned(),
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("equipped armor should accept corrosion protection");
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.corrosion.equipped")
+            .expect("equipped armor should remain")
+            .enchantments
+            .to_armor,
+        -2
+    );
+
+    give_inventory_item(
+        &mut game,
+        "test.corrosion.floor",
+        "demo.item.hard-leather-armour",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.corrosion.floor")
+        .expect("floor armor should exist")
+        .location = ItemLocation::Ground(player_position);
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should retain mana")
+        .current = 100;
+    game.resolve_player_ability(
+        "demo.ability.nature-protect-from-corrosion",
+        TargetSelection::Item {
+            item_id: "test.corrosion.floor".to_owned(),
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("floor armor should accept corrosion protection");
+    assert!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.corrosion.floor")
+            .expect("floor armor should remain")
+            .permanent_destruction_immunities
+            .contains(&ItemDestructionElement::Acid)
+    );
+
+    give_inventory_item(&mut game, "test.corrosion.dagger", "demo.item.dagger");
+    let hash_before_invalid_target = game.state_hash();
+    let draws_before_invalid_target = game.rng_draw_counter();
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.nature-protect-from-corrosion",
+        TargetSelection::Item {
+            item_id: "test.corrosion.dagger".to_owned(),
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("a non-armor target should be rejected without an execution error");
+    assert_eq!(game.state_hash(), hash_before_invalid_target);
+    assert_eq!(game.rng_draw_counter(), draws_before_invalid_target);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::AbilityTargetUnavailable { ability_id }]
+            if ability_id == "demo.ability.nature-protect-from-corrosion"
+    ));
+
+    let mut persisted = Game::new(0x4143_4944);
+    give_inventory_item(
+        &mut persisted,
+        "test.corrosion.persisted",
+        "demo.item.hard-leather-armour",
+    );
+    persisted
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.corrosion.persisted")
+        .expect("persisted armor should exist")
+        .permanent_destruction_immunities
+        .insert(ItemDestructionElement::Acid);
+    let restored = Game::from_save_with_content(persisted.to_save(), persisted.content.clone())
+        .expect("corrosion protection should round-trip");
+    assert_eq!(restored.state_hash(), persisted.state_hash());
+    assert!(
+        restored
+            .items
+            .iter()
+            .find(|item| item.id == "test.corrosion.persisted")
+            .expect("restored armor should remain")
+            .permanent_destruction_immunities
+            .contains(&ItemDestructionElement::Acid)
+    );
+}
+
+#[test]
+fn commit32_nature_call_sunlight_maps_lights_reveals_without_esp_and_burns_vampires() {
+    let mut game = nature_high_mage_game(0x4e41_5455_5245_5355, 50);
+    clear_monsters(&mut game);
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should retain mana");
+    mana.current = 1_000;
+    mana.maximum = 1_000;
+    for virtue in &mut game.virtues {
+        if matches!(
+            virtue.kind,
+            VirtueKindDto::Knowledge | VirtueKindDto::Enlightenment
+        ) {
+            virtue.value = 0;
+        }
+    }
+    game.explored.fill(false);
+    game.glow.fill(false);
+    give_inventory_item(&mut game, "test.sunlight-item", "demo.item.dagger");
+    let item_position = Position { x: 0, y: 0 };
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.sunlight-item")
+        .expect("sunlight test item should exist")
+        .location = ItemLocation::Ground(item_position);
+    game.player.statuses.push(StatusInstance {
+        kind_id: "test.status.vampire-form".to_owned(),
+        intensity: 1,
+        remaining_ticks: 100,
+        source_id: Some("test.nature".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: Some("demo.race.vampire-lord".to_owned()),
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    let hp_before = game.player.hp;
+    game.resolve_player_ability(
+        "demo.ability.nature-call-sunlight",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Call Sunlight should resolve");
+
+    assert_eq!(game.player.hp, hp_before - 50);
+    assert!(game.explored.iter().all(|explored| *explored));
+    assert!(game.glow.iter().all(|glow| *glow));
+    assert!(game.item_is_discovered("test.sunlight-item"));
+    assert_eq!(game.virtue_current(VirtueKindDto::Knowledge), 1);
+    assert_eq!(game.virtue_current(VirtueKindDto::Enlightenment), 1);
+    assert!(!game.player_has_status_kind(STATUS_TELEPATHY));
+}
+
+#[test]
+fn commit33_nature_fourth_book_projects_original_damage_radius_and_spell_power() {
+    for (level, storm_bonus, radius, ice_dice, ice_bonus) in
+        [(1, 66, 1, 5, 5), (25, 119, 3, 12, 10), (50, 174, 5, 20, 15)]
+    {
+        let projected = nature_high_mage_game(0x4e41_5455_5245_3300 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        assert!(matches!(
+            projected["demo.ability.nature-earthquake"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::Earthquake { radius: 10, .. }]
+        ));
+        assert!(matches!(
+            projected["demo.ability.nature-fire-storm"].effects.as_slice(),
+            [AbilityEffectSpecDto::AreaDamage {
+                damage_dice: 1,
+                damage_sides: 1,
+                damage_bonus,
+                radius: actual_radius,
+                final_damage_spell_power_bonus: None,
+                ..
+            }] if *damage_bonus == storm_bonus && *actual_radius == radius
+        ));
+        assert!(matches!(
+            projected["demo.ability.nature-ice-bolt"].effects.as_slice(),
+            [AbilityEffectSpecDto::Damage {
+                damage_dice,
+                damage_sides: 15,
+                damage_bonus,
+                final_damage_spell_power_bonus: None,
+                ..
+            }] if *damage_dice == ice_dice && *damage_bonus == ice_bonus
+        ));
+        assert!(matches!(
+            projected["demo.ability.nature-natures-wrath"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::NatureWrath]
+        ));
+    }
+
+    let mut powered = nature_high_mage_game(0x4e41_5455_5245_3350, 50);
+    grant_spell_power(&mut powered, 7);
+    let projected = powered
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert!(matches!(
+        projected["demo.ability.nature-earthquake"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Earthquake { radius: 15, .. }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.nature-fire-storm"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::AreaDamage {
+            damage_bonus: 174,
+            radius: 5,
+            final_damage_spell_power_bonus: Some(7),
+            ..
+        }]
+    ));
+
+    let mut events = Vec::new();
+    let target = powered
+        .open_positions_around(powered.player.position, 1)
+        .into_iter()
+        .next()
+        .expect("Fire Storm should have an adjacent target");
+    powered
+        .resolve_player_ability(
+            "demo.ability.nature-fire-storm",
+            TargetSelection::Position { position: target },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("powered Fire Storm should resolve");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityAreaDamage { resolution, .. }
+            if resolution.base_raw_damage == 269 && resolution.radius == 5
+    )));
+}
+
+#[test]
+fn commit33_natures_wrath_selects_all_six_branches_and_orders_the_elemental_storms() {
+    for branch in 1..=6_u64 {
+        let mut game = nature_high_mage_game(0x4e41_5455_5245_3300 + branch, 50);
+        clear_monsters(&mut game);
+        let mana = game
+            .resources
+            .get_mut("demo.resource.mana")
+            .expect("Nature High-Mage should have mana");
+        mana.current = mana.maximum;
+        game.ability_progress
+            .get_mut("demo.ability.nature-natures-wrath")
+            .expect("Nature's Wrath should have progress")
+            .proficiency = SPELL_EXP_MASTER;
+        game.rng = RfbRng::seeded(nature_wrath_seed(branch));
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.nature-natures-wrath",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Nature's Wrath branch should resolve");
+        assert!(
+            events.iter().any(|event| matches!(
+                event,
+                DomainEvent::AbilityEffectsResolved { resolution, .. }
+                    if matches!(
+                        resolution.effects.as_slice(),
+                        [AbilityEffectResolutionDto::RandomChoice {
+                            roll,
+                            maximum_roll: 6,
+                            ..
+                        }] if *roll == branch as i32
+                    )
+            )),
+            "branch {branch} events: {events:#?}"
+        );
+        if branch == 5 {
+            let storms = events
+                .iter()
+                .filter_map(|event| match event {
+                    DomainEvent::AbilityAreaDamage { resolution, .. } => Some((
+                        resolution.damage_type,
+                        resolution.base_raw_damage,
+                        resolution.radius,
+                    )),
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(
+                storms,
+                vec![
+                    (DamageTypeDto::Fire, 370, 5),
+                    (DamageTypeDto::Cold, 370, 5),
+                    (DamageTypeDto::Electricity, 370, 5),
+                ]
+            );
+        }
+    }
+}
+
+#[test]
+fn commit33_natures_wrath_direction_prompt_is_atomic_cancelable_and_persistent() {
+    let mut cancelled = nature_high_mage_game(0x4e41_5455_5245_3343, 50);
+    choose_human_talent_if_pending(&mut cancelled);
+    cancelled.learned_abilities.clear();
+    cancelled
+        .learned_abilities
+        .insert("demo.ability.nature-natures-wrath".to_owned());
+    let mana = cancelled
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should have mana");
+    mana.current = mana.maximum;
+    cancelled
+        .ability_progress
+        .get_mut("demo.ability.nature-natures-wrath")
+        .expect("Nature's Wrath should have progress")
+        .proficiency = SPELL_EXP_MASTER;
+    cancelled.refresh_character_skills();
+    cancelled.rng = RfbRng::seeded(nature_wrath_seed(2));
+    let mana_before = cancelled.resources["demo.resource.mana"].current;
+    let world_tick_before = cancelled.world_tick;
+    dispatch_next(
+        &mut cancelled,
+        GameCommand::CastAbility {
+            ability_id: "demo.ability.nature-natures-wrath".to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+    assert_eq!(
+        cancelled
+            .pending_ability_direction
+            .as_ref()
+            .map(|pending| pending.branch_roll),
+        Some(2)
+    );
+    assert_eq!(
+        cancelled.resources["demo.resource.mana"].current,
+        mana_before
+    );
+    assert_eq!(cancelled.world_tick, world_tick_before);
+    assert_eq!(
+        cancelled.ability_progress["demo.ability.nature-natures-wrath"].cast_count,
+        0
+    );
+    let restored = Game::from_save(cancelled.to_save()).expect("pending direction should reload");
+    assert_eq!(
+        restored
+            .pending_ability_direction
+            .as_ref()
+            .map(|pending| (pending.ability_id.as_str(), pending.branch_roll)),
+        Some(("demo.ability.nature-natures-wrath", 2))
+    );
+
+    dispatch_next(&mut cancelled, GameCommand::CancelAbilityDirection);
+    assert!(cancelled.pending_ability_direction.is_none());
+    assert_eq!(
+        cancelled.resources["demo.resource.mana"].current,
+        mana_before
+    );
+    assert_eq!(cancelled.world_tick, world_tick_before);
+    assert_eq!(
+        cancelled.ability_progress["demo.ability.nature-natures-wrath"].cast_count,
+        0
+    );
+
+    let mut resolved = nature_high_mage_game(0x4e41_5455_5245_3352, 50);
+    choose_human_talent_if_pending(&mut resolved);
+    resolved.learned_abilities.clear();
+    resolved
+        .learned_abilities
+        .insert("demo.ability.nature-natures-wrath".to_owned());
+    let mana = resolved
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should have mana");
+    mana.current = mana.maximum;
+    resolved
+        .ability_progress
+        .get_mut("demo.ability.nature-natures-wrath")
+        .expect("Nature's Wrath should have progress")
+        .proficiency = SPELL_EXP_MASTER;
+    resolved.rng = RfbRng::seeded(nature_wrath_seed(6));
+    let mana_before = resolved.resources["demo.resource.mana"].current;
+    dispatch_next(
+        &mut resolved,
+        GameCommand::CastAbility {
+            ability_id: "demo.ability.nature-natures-wrath".to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+    let resource_paid = resolved
+        .pending_ability_direction
+        .as_ref()
+        .expect("the shard branch should request a direction")
+        .cast_resolution
+        .resource_paid;
+    let mut events = Vec::new();
+    resolved
+        .resolve_pending_ability_direction(
+            Direction::East,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("the deferred shard branch should resolve");
+    assert!(resolved.pending_ability_direction.is_none());
+    assert_eq!(
+        resolved.resources["demo.resource.mana"].current,
+        mana_before - resource_paid
+    );
+    assert_eq!(
+        resolved.ability_progress["demo.ability.nature-natures-wrath"].cast_count,
+        1
+    );
+    let shard_balls = events
+        .iter()
+        .filter(|event| {
+            matches!(
+                event,
+                DomainEvent::AbilityAreaDamage { resolution, .. }
+                    if resolution.damage_type == DamageTypeDto::Shards
+                        && resolution.base_raw_damage == 135
+                        && resolution.radius == 1
+            )
+        })
+        .count();
+    assert_eq!(shard_balls, 3);
 }
 
 #[test]

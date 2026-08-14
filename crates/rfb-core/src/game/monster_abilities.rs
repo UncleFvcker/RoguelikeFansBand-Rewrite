@@ -1402,6 +1402,7 @@ impl Game {
             damage_sides,
             damage_bonus,
             damage_type,
+            ..
         } = &plan.ability.effect
         else {
             unreachable!("monster beam plan must retain a beam effect");

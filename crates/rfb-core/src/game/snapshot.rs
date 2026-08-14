@@ -5,7 +5,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::{
     effect::{STATUS_ANTI_MAGIC, STATUS_BERSERK, STATUS_CONFUSION, STATUS_FEAR},
     resistance::DamageType,
-    save::position_from_content,
+    save::{item_destruction_element_to_dto, position_from_content},
     state::{ItemInstance, ItemLocation},
     stats::{AttributeKind, CharacterProgress, experience_required_for_level},
 };
@@ -109,12 +109,14 @@ impl Game {
             max_hp: stats.max_hp.value,
             gold: self.gold,
             nutrition: self.nutrition,
+            fasting: self.fasting,
             nutrition_state: self.nutrition_state(),
             speed: derived_speed(&stats.speed),
             energy_need: self.player.energy_need,
             minor_slow: self.minor_slow,
             reality_change_ticks: self.reality_change_ticks,
             pending_mutation_direction: self.pending_mutation_direction.clone(),
+            pending_ability_direction: self.pending_ability_direction.clone(),
             carried_weight_tenths_pound: self.carried_weight_tenths_pound(),
             carry_capacity_tenths_pound: self.player_carry_capacity_tenths_pound(),
             encumbrance_speed_penalty: u16::try_from(self.player_encumbrance_speed_penalty())
@@ -886,6 +888,12 @@ impl Game {
                     fuel: item.fuel,
                     enchantments: item.enchantments,
                     curse: self.visible_item_curse(item),
+                    permanent_destruction_immunities: item
+                        .permanent_destruction_immunities
+                        .iter()
+                        .copied()
+                        .map(item_destruction_element_to_dto)
+                        .collect(),
                 })
             })
             .collect::<Vec<_>>();
@@ -960,6 +968,12 @@ impl Game {
                     inscription: item.inscription.clone(),
                     enchantments: item.enchantments,
                     curse: self.visible_item_curse(item),
+                    permanent_destruction_immunities: item
+                        .permanent_destruction_immunities
+                        .iter()
+                        .copied()
+                        .map(item_destruction_element_to_dto)
+                        .collect(),
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     equipment_slot: self
                         .content
@@ -1009,6 +1023,12 @@ impl Game {
                     fuel: item.fuel,
                     enchantments: item.enchantments,
                     curse: self.visible_item_curse(item),
+                    permanent_destruction_immunities: item
+                        .permanent_destruction_immunities
+                        .iter()
+                        .copied()
+                        .map(item_destruction_element_to_dto)
+                        .collect(),
                     weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
                     slot_id: slot_id.clone(),
                     modifiers: self.visible_item_modifiers(item),

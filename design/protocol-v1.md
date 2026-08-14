@@ -699,5 +699,36 @@ Schema 保持 v100，save 容器保持 v1。
 
 协议 1.204 / active baseline contract-v303 为能力效果增加 `create-item`，并以结构化结果
 投影生成的物品种类、数量、落点和目标实例 ID；`ItemOriginKindDto` 增加 `acquire`，保存原版
-`ORIGIN_ACQUIRE` 来源。能力仍复用现有施放命令和 self 目标；没有新增权威状态或 save 字段，
+`ORIGIN_ACQUIRE` 来源；自然领域第一册同时使 Beam 可声明独立最大射程并参与等级、
+`spell_power` 缩放。能力仍复用现有施放命令和 self 目标；没有新增权威状态或 save 字段，
 State Hash Schema 保持 v100，save 容器保持 v1。
+
+协议 1.205 为自然领域第二册增加窄化的 `entangle` 与 `nature-gate` 能力投影。前者保留
+唯一怪免疫和原版旧式等级检定；后者按施法者等级选择 Ranger 动物、猎犬、九头蛇或树人，
+生成物继续进入既有宠物维持系统。固定治疗值现在可显式参与 `spell_power`。这些变化不增加
+命令、待处理输入或持久状态，State Hash Schema 保持 v100，save 容器保持 v1。
+
+协议 1.206 为自然领域第三册增加相邻地形创建、永久防腐保护和召唤阳光的窄化能力投影及
+结构化结算；状态防御加值可以显式参与等级缩放。物品实例、背包、装备、地面、商店与住宅
+投影增加永久元素破坏免疫集合，save DTO 同步增加必填字段。该集合进入 State Hash Schema
+v101；save 容器保持 v1，不为缺少该字段的旧开发存档提供兼容默认值。
+
+协议 1.207 为自然领域第四册增加无参数 `nature-wrath` 能力投影，以及
+`ResolveAbilityDirection`、`CancelAbilityDirection` 两条命令。六分支事务先完成一次原版
+`1d6` 选择；仅闪电矢和三连碎片球分支保存 `PlayerSaveDto.pendingAbilityDirection`，待玩家
+选择方向后才一次性支付已结算的法力、熟练度和行动成本，取消不留下部分效果。该待处理状态
+进入 State Hash Schema v102；save 容器保持 v1，不兼容缺少该字段的旧开发存档。
+
+协议 1.208 为生命领域第一册补充 `heal-dice` 的整次治疗量 `spell_power` 投影，并允许
+`light-area` 声明整次伤害的 `spell_power`。两者只增加可观察公式元数据，运行时继续复用既有
+治疗、照明与区域伤害事务；不增加命令、持久状态或 State Hash 输入。State Hash Schema
+保持 v102，save 容器保持 v1。
+
+协议 1.209 为生命领域第二册增加普通装备解咒、开始禁食、亡灵退散和脚下地形创建的
+能力投影，并在 `PlayerDto` 与 `PlayerSaveDto` 增加必填 `fasting`。禁食状态进入
+State Hash Schema v103；save 容器保持 v1，旧开发存档不兼容。
+
+协议 1.210 为生命领域第三册增加有序属性维持、随机治愈变异的能力投影及结构化结算，
+并允许视野伤害在实际命中亡灵后更新 Unlife。`transcendence` 复用既有临时状态容器，
+在统一的最终玩家伤害入口按 1:1 先消耗法力、再扣除剩余生命；结界序列复用脚下与相邻
+地形事务。没有增加新的持久字段，State Hash Schema 保持 v103，save 容器保持 v1。

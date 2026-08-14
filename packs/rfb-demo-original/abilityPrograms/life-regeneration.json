@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.life-regeneration",
+  "input": "self",
+  "steps": [{
+    "type": "apply-status",
+    "statusKindId": "rfb.status.regeneration",
+    "intensity": 1,
+    "durationTicks": 80,
+    "durationDice": 1,
+    "durationSides": 80,
+    "stacking": "replace"
+  }]
+}

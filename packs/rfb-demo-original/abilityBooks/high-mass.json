@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.high-mass",
+  "nameKey": "ability-book-demo-high-mass-name",
+  "descriptionKey": "ability-book-demo-high-mass-description",
+  "realmId": "life",
+  "rank": 2,
+  "abilityIds": [
+    "demo.ability.life-remove-curse",
+    "demo.ability.life-fasting",
+    "demo.ability.life-cure-critical-wounds",
+    "demo.ability.life-resist-heat-and-cold",
+    "demo.ability.life-sense-surroundings",
+    "demo.ability.life-turn-undead",
+    "demo.ability.life-healing",
+    "demo.ability.life-glyph-of-warding"
+  ],
+  "tags": ["life", "spellbook"]
+}

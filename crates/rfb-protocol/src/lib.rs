@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.204";
+pub const PROTOCOL_VERSION: &str = "1.210";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -88,6 +88,15 @@ pub struct PendingMutationDirectionDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct PendingAbilityDirectionDto {
+    pub ability_id: String,
+    pub branch_roll: u8,
+    pub cast_resolution: AbilityCastResolutionDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(
     tag = "type",
     rename_all = "kebab-case",
@@ -133,6 +142,7 @@ pub enum GameCommand {
         ability_id: String,
         target: TargetSelection,
     },
+    CancelAbilityDirection,
     CloseDoor {
         direction: Direction,
     },
@@ -162,6 +172,9 @@ pub enum GameCommand {
     },
     DismissPets,
     ResolveMutationDirection {
+        direction: Direction,
+    },
+    ResolveAbilityDirection {
         direction: Direction,
     },
     Drop {
@@ -981,6 +994,8 @@ pub enum AbilityEffectSpecDto {
         damage_dice: u16,
         damage_sides: u16,
         radius: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_damage_spell_power_bonus: Option<i32>,
     },
     BoltOrBeamDamage {
         damage_dice: u16,
@@ -1044,6 +1059,10 @@ pub enum AbilityEffectSpecDto {
         telepathy_duration_dice: u8,
         telepathy_duration_sides: u16,
     },
+    CallSunlight {
+        vampire_damage: u16,
+    },
+    NatureWrath,
     Probe,
     CreateDoor {
         terrain_id: String,
@@ -1171,6 +1190,14 @@ pub enum AbilityEffectSpecDto {
         radius: u8,
         duration_turns: u16,
     },
+    NatureGate {
+        animal_category: String,
+        hound_category: String,
+        hydra_category: String,
+        ent_actor_kind_id: String,
+        radius: u8,
+        duration_turns: u16,
+    },
     Detect {
         #[serde(default)]
         subject: AbilityDetectSubjectDto,
@@ -1187,6 +1214,14 @@ pub enum AbilityEffectSpecDto {
         source_terrain_ids: Vec<String>,
         target_terrain_id: String,
         radius: u8,
+    },
+    CreateAdjacentTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
+    },
+    CreateCurrentTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
     },
     TerrainBeam {
         operation: AbilityTerrainBeamOperationDto,
@@ -1299,7 +1334,20 @@ pub enum AbilityEffectSpecDto {
     HealDice {
         dice: u16,
         sides: u16,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        final_healing_spell_power_bonus: Option<i32>,
     },
+    RemoveEquippedCurses {
+        include_heavy: bool,
+    },
+    BeginFasting,
+    TurnUndead {
+        power: u16,
+    },
+    SustainAttributes {
+        duration_ticks: u32,
+    },
+    CureMutation,
     ReduceStatus {
         status_kind_id: String,
         amount: u32,
@@ -1316,6 +1364,8 @@ pub enum AbilityEffectSpecDto {
         damage_type: DamageTypeDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target_category: Option<String>,
+        #[serde(default)]
+        unlife_change_on_hit: i8,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         final_damage_spell_power_bonus: Option<i32>,
     },
@@ -1331,6 +1381,10 @@ pub enum AbilityEffectSpecDto {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         target_category: Option<String>,
     },
+    Entangle {
+        power: u16,
+        duration_ticks: u32,
+    },
     BrandWeapon {
         affix_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1338,6 +1392,7 @@ pub enum AbilityEffectSpecDto {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         resistance: Option<DamageTypeDto>,
     },
+    ProtectFromCorrosion,
     RandomChoice {
         roll_sides: u16,
         level_bonus_divisor: u16,
@@ -1876,6 +1931,16 @@ pub enum DamageTypeDto {
     Telekinesis,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemDestructionElementDto {
+    Acid,
+    Electricity,
+    Fire,
+    Cold,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "kebab-case")]
@@ -2275,6 +2340,32 @@ pub enum AbilityEffectResolutionDto {
         effect_index: u8,
         resolution: HealingResolutionDto,
     },
+    RemoveEquippedCurses {
+        effect_index: u8,
+        resolution: ItemCurseRemovalResolutionDto,
+    },
+    BeginFasting {
+        effect_index: u8,
+        nutrition_before: u16,
+        nutrition_after: u16,
+    },
+    SustainAttributes {
+        effect_index: u8,
+        duration_ticks: u32,
+        status_kind_ids: Vec<String>,
+    },
+    CureMutation {
+        effect_index: u8,
+        harmful_only: bool,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        removed_mutation_id: Option<String>,
+    },
+    CreateCurrentTerrain {
+        effect_index: u8,
+        position: Position,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        terrain_id: Option<String>,
+    },
     Probe {
         effect_index: u8,
         targets: Vec<AbilityProbeTargetDto>,
@@ -2606,6 +2697,18 @@ pub enum AbilityEffectResolutionDto {
         to_hit: ItemEnchantmentComponentResolutionDto,
         to_damage: ItemEnchantmentComponentResolutionDto,
     },
+    ProtectFromCorrosion {
+        effect_index: u8,
+        item_id: String,
+        item_kind_id: String,
+        already_protected: bool,
+        defense_before: i16,
+        defense_after: i16,
+    },
+    CallSunlight {
+        effect_index: u8,
+        vampire_damage: i32,
+    },
     Concentrate {
         effect_index: u8,
         before: u8,
@@ -2916,6 +3019,7 @@ pub struct PlayerDto {
     pub gold: u32,
     #[serde(default = "default_player_nutrition")]
     pub nutrition: u16,
+    pub fasting: bool,
     #[serde(default)]
     pub nutrition_state: NutritionStateDto,
     #[serde(default = "default_actor_speed")]
@@ -2928,6 +3032,8 @@ pub struct PlayerDto {
     pub reality_change_ticks: u8,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
     #[serde(default)]
     pub carried_weight_tenths_pound: u32,
     #[serde(default)]
@@ -3123,6 +3229,8 @@ pub struct ItemDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -3215,9 +3323,9 @@ pub enum ItemQualityDto {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ItemOriginKindDto {
+    Acquire,
     PlayerMade,
     Rubble,
-    Acquire,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -3377,6 +3485,8 @@ pub struct InventoryItemDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default)]
     pub weight_tenths_pound: u16,
     #[serde(default)]
@@ -3445,6 +3555,8 @@ pub struct EquipmentItemDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default)]
     pub weight_tenths_pound: u16,
     pub slot_id: String,
@@ -3575,6 +3687,8 @@ pub struct ShopStockItemDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     pub quality: ItemQualityDto,
 }
 
@@ -3638,6 +3752,8 @@ pub struct HomeItemDto {
     pub weight_tenths_pound: u16,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub fuel: Option<ItemFuelDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -3812,6 +3928,7 @@ pub fn generated_typescript() -> String {
 
     push_declaration!(Direction);
     push_declaration!(PendingMutationDirectionDto);
+    push_declaration!(PendingAbilityDirectionDto);
     push_declaration!(LocaleDto);
     push_declaration!(AutoGetModeDto);
     push_declaration!(MogaminatorDispositionDto);
@@ -3888,6 +4005,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(CellVisualDto);
     push_declaration!(ContentVisualDto);
     push_declaration!(DamageTypeDto);
+    push_declaration!(ItemDestructionElementDto);
     push_declaration!(ResistanceLevelDto);
     push_declaration!(ResistanceDto);
     push_declaration!(SlayTargetDto);
@@ -4020,6 +4138,7 @@ pub struct PlayerSaveDto {
     pub gold: u32,
     #[serde(default = "default_player_nutrition")]
     pub nutrition: u16,
+    pub fasting: bool,
     #[serde(default)]
     pub base_max_hp: i32,
     #[serde(default = "default_actor_speed")]
@@ -4032,6 +4151,7 @@ pub struct PlayerSaveDto {
     #[serde(default)]
     pub reality_change_ticks: u8,
     pub pending_mutation_direction: Option<PendingMutationDirectionDto>,
+    pub pending_ability_direction: Option<PendingAbilityDirectionDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub statuses: Vec<StatusSaveDto>,
     #[serde(default, skip_serializing_if = "is_false")]
@@ -4325,6 +4445,7 @@ pub struct ItemSaveDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4362,6 +4483,7 @@ pub struct InventoryItemSaveDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4400,6 +4522,7 @@ pub struct EquipmentItemSaveDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4438,6 +4561,7 @@ pub struct CarriedItemSaveDto {
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub curse: Option<ItemCurseSeverityDto>,
+    pub permanent_destruction_immunities: Vec<ItemDestructionElementDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub charges: Option<ItemChargesDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5020,12 +5144,14 @@ mod tests {
                 max_hp: 14,
                 gold: 0,
                 nutrition: PLAYER_NUTRITION_BIRTH,
+                fasting: false,
                 nutrition_state: NutritionStateDto::Normal,
                 speed: 110,
                 energy_need: 0,
                 minor_slow: 0,
                 reality_change_ticks: 0,
                 pending_mutation_direction: None,
+                pending_ability_direction: None,
                 carried_weight_tenths_pound: 5,
                 carry_capacity_tenths_pound: 100,
                 encumbrance_speed_penalty: 0,
@@ -5108,6 +5234,7 @@ mod tests {
                 quantity: 2,
                 inscription: None,
                 fuel: None,
+                permanent_destruction_immunities: Vec::new(),
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,
             }],
@@ -5131,6 +5258,7 @@ mod tests {
                 can_supply_recharge: false,
                 quantity: 1,
                 inscription: None,
+                permanent_destruction_immunities: Vec::new(),
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,
                 weight_tenths_pound: 5,
@@ -5165,6 +5293,7 @@ mod tests {
                 quantity: 1,
                 inscription: None,
                 fuel: None,
+                permanent_destruction_immunities: Vec::new(),
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: None,
                 weight_tenths_pound: 5,
@@ -5211,6 +5340,9 @@ mod tests {
         current["entities"][0]["anger"] = serde_json::json!(0);
         current["entities"][0]["friendly"] = serde_json::json!(false);
         current["entities"][0]["minorSlow"] = serde_json::json!(0);
+        current["items"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
+        current["inventory"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
+        current["equipment"][0]["permanentDestructionImmunities"] = serde_json::json!([]);
         current["player"]["activeMutationIds"] = serde_json::json!([]);
         current["player"]["lockedMutationIds"] = serde_json::json!([]);
         current["player"]["minorSlowEnergy"] = serde_json::json!(0);
@@ -5271,6 +5403,7 @@ mod tests {
             hp: 10,
             gold: 0,
             nutrition: PLAYER_NUTRITION_BIRTH,
+            fasting: false,
             base_max_hp: 10,
             base_speed: 110,
             energy_need: 0,
@@ -5279,6 +5412,7 @@ mod tests {
             chaos_patron_id: None,
             reality_change_ticks: 0,
             pending_mutation_direction: None,
+            pending_ability_direction: None,
             statuses: Vec::new(),
             confusing_strike_ready: false,
             sniper_concentration: 0,

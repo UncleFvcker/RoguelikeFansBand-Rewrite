@@ -784,6 +784,152 @@
               "maximum": 255,
               "minimum": 0
             },
+            "resolution": {
+              "$ref": "#/$defs/ItemCurseRemovalResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "remove-equipped-curses"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "nutritionAfter": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "nutritionBefore": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "begin-fasting"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "nutritionBefore",
+            "nutritionAfter"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "durationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "statusKindIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "sustain-attributes"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "durationTicks",
+            "statusKindIds"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "harmfulOnly": {
+              "type": "boolean"
+            },
+            "removedMutationId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "cure-mutation"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "harmfulOnly"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "terrainId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "create-current-terrain"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "position"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
             "targets": {
               "type": "array",
               "items": {
@@ -2573,6 +2719,75 @@
         {
           "type": "object",
           "properties": {
+            "alreadyProtected": {
+              "type": "boolean"
+            },
+            "defenseAfter": {
+              "type": "integer",
+              "format": "int16",
+              "maximum": 32767,
+              "minimum": -32768
+            },
+            "defenseBefore": {
+              "type": "integer",
+              "format": "int16",
+              "maximum": 32767,
+              "minimum": -32768
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "itemKindId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "protect-from-corrosion"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "itemId",
+            "itemKindId",
+            "alreadyProtected",
+            "defenseBefore",
+            "defenseAfter"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "call-sunlight"
+            },
+            "vampireDamage": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "vampireDamage"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "after": {
               "type": "integer",
               "format": "uint8",
@@ -2831,6 +3046,13 @@
               "format": "uint16",
               "maximum": 65535,
               "minimum": 0
+            },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
             },
             "radius": {
               "type": "integer",
@@ -3182,6 +3404,37 @@
             "telepathyDurationTicks",
             "telepathyDurationDice",
             "telepathyDurationSides"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "call-sunlight"
+            },
+            "vampireDamage": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            }
+          },
+          "required": [
+            "type",
+            "vampireDamage"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "nature-wrath"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
@@ -3951,6 +4204,48 @@
         {
           "type": "object",
           "properties": {
+            "animalCategory": {
+              "type": "string"
+            },
+            "durationTurns": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "entActorKindId": {
+              "type": "string"
+            },
+            "houndCategory": {
+              "type": "string"
+            },
+            "hydraCategory": {
+              "type": "string"
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "nature-gate"
+            }
+          },
+          "required": [
+            "type",
+            "animalCategory",
+            "houndCategory",
+            "hydraCategory",
+            "entActorKindId",
+            "radius",
+            "durationTurns"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "category": {
               "type": "string"
             },
@@ -4030,6 +4325,52 @@
             "sourceTerrainIds",
             "targetTerrainId",
             "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sourceTerrainIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "create-adjacent-terrain"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sourceTerrainIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "create-current-terrain"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId"
           ]
         },
         {
@@ -4648,6 +4989,13 @@
               "maximum": 65535,
               "minimum": 0
             },
+            "finalHealingSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
             "sides": {
               "type": "integer",
               "format": "uint16",
@@ -4663,6 +5011,83 @@
             "type",
             "dice",
             "sides"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "includeHeavy": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "remove-equipped-curses"
+            }
+          },
+          "required": [
+            "type",
+            "includeHeavy"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "begin-fasting"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "turn-undead"
+            }
+          },
+          "required": [
+            "type",
+            "power"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "durationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "sustain-attributes"
+            }
+          },
+          "required": [
+            "type",
+            "durationTicks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "cure-mutation"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
@@ -4755,6 +5180,13 @@
             "type": {
               "type": "string",
               "const": "visible-damage"
+            },
+            "unlifeChangeOnHit": {
+              "type": "integer",
+              "format": "int8",
+              "default": 0,
+              "maximum": 127,
+              "minimum": -128
             }
           },
           "required": [
@@ -4826,6 +5258,31 @@
         {
           "type": "object",
           "properties": {
+            "durationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "entangle"
+            }
+          },
+          "required": [
+            "type",
+            "power",
+            "durationTicks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "affixId": {
               "type": "string"
             },
@@ -4857,6 +5314,18 @@
           "required": [
             "type",
             "affixId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "protect-from-corrosion"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {
@@ -6231,6 +6700,12 @@
             "$ref": "#/$defs/EquipmentPassiveDto"
           }
         },
+        "permanentDestructionImmunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDestructionElementDto"
+          }
+        },
         "projectileProfile": {
           "anyOf": [
             {
@@ -6540,6 +7015,18 @@
         {
           "type": "object",
           "properties": {
+            "type": {
+              "type": "string",
+              "const": "cancel-ability-direction"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "direction": {
               "$ref": "#/$defs/Direction"
             },
@@ -6696,6 +7183,22 @@
             "type": {
               "type": "string",
               "const": "resolve-mutation-direction"
+            }
+          },
+          "required": [
+            "type",
+            "direction"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "direction": {
+              "$ref": "#/$defs/Direction"
+            },
+            "type": {
+              "type": "string",
+              "const": "resolve-ability-direction"
             }
           },
           "required": [
@@ -8408,6 +8911,12 @@
           "format": "uint32",
           "minimum": 0
         },
+        "permanentDestructionImmunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDestructionElementDto"
+          }
+        },
         "quantity": {
           "type": "integer",
           "format": "uint32",
@@ -8599,6 +9108,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/EquipmentPassiveDto"
+          }
+        },
+        "permanentDestructionImmunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDestructionElementDto"
           }
         },
         "projectileProfile": {
@@ -8820,6 +9335,15 @@
         "permanent"
       ]
     },
+    "ItemDestructionElementDto": {
+      "type": "string",
+      "enum": [
+        "acid",
+        "electricity",
+        "fire",
+        "cold"
+      ]
+    },
     "ItemDto": {
       "type": "object",
       "properties": {
@@ -8865,6 +9389,12 @@
         "knowledge": {
           "$ref": "#/$defs/ItemKnowledgeDto",
           "default": "aware"
+        },
+        "permanentDestructionImmunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDestructionElementDto"
+          }
         },
         "position": {
           "$ref": "#/$defs/Position"
@@ -9712,6 +10242,28 @@
         "starving"
       ]
     },
+    "PendingAbilityDirectionDto": {
+      "type": "object",
+      "properties": {
+        "abilityId": {
+          "type": "string"
+        },
+        "branchRoll": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "castResolution": {
+          "$ref": "#/$defs/AbilityCastResolutionDto"
+        }
+      },
+      "required": [
+        "abilityId",
+        "branchRoll",
+        "castResolution"
+      ]
+    },
     "PendingMutationDirectionDto": {
       "type": "object",
       "properties": {
@@ -9990,6 +10542,9 @@
             "wisdom": 0
           }
         },
+        "fasting": {
+          "type": "boolean"
+        },
         "gold": {
           "type": "integer",
           "format": "uint32",
@@ -10080,6 +10635,16 @@
         "nutritionState": {
           "$ref": "#/$defs/NutritionStateDto",
           "default": "normal"
+        },
+        "pendingAbilityDirection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PendingAbilityDirectionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "pendingMutationDirection": {
           "anyOf": [
@@ -10210,6 +10775,7 @@
         "position",
         "hp",
         "maxHp",
+        "fasting",
         "virtues"
       ]
     },
@@ -10961,6 +11527,12 @@
           "type": "integer",
           "format": "uint32",
           "minimum": 0
+        },
+        "permanentDestructionImmunities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ItemDestructionElementDto"
+          }
         },
         "quality": {
           "$ref": "#/$defs/ItemQualityDto"

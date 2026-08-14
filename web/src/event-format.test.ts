@@ -189,6 +189,36 @@ test("Archer ammunition creation reports the generated kind and quantity", () =>
   localization.setLocale("en-US");
 });
 
+test("Nature food creation reports the generated item at the player's feet", () => {
+  const event = {
+    kind: "ability.effects",
+    messageKey: "ability-effects",
+    args: { target: "demo.ability.nature-produce-food", count: "1" },
+    outcome: {
+      type: "ability-effects",
+      resolution: {
+        targetEntityId: null,
+        targetKindId: null,
+        effects: [
+          {
+            type: "create-item",
+            effectIndex: 0,
+            itemKindId: "demo.item.ration-of-food",
+            quantity: 1,
+            itemId: "generated.item.1",
+            position: { x: 4, y: 5 },
+          },
+        ],
+      },
+    },
+  };
+
+  assert.equal(formatter.formatEvent(event), "Produce Food creates Ration of Food × 1 at your feet.");
+  localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(event), "制造食物在你脚下制造了食物口粮 × 1。");
+  localization.setLocale("en-US");
+});
+
 test("M6-B mutation events describe fumbling and delayed reality changes", () => {
   const fumbling = {
     kind: "mutation.fumbled-drop",

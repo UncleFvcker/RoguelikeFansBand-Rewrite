@@ -2,7 +2,7 @@
 
 use rfb_content::{MutationDefinition, MutationRatingDefinition};
 
-use super::damage::{FatalityPolicy, commit_damage_application, plan_damage_application};
+use super::damage::FatalityPolicy;
 use super::hunger::NUTRITION_WEAK;
 use super::*;
 
@@ -333,8 +333,8 @@ impl Game {
                         ResistanceLevel::Normal,
                     );
                     let application =
-                        plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
-                    commit_damage_application(&mut self.player, &application);
+                        self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+                    let damage = application.damage;
                     let dropped_item_kind_id = self.drop_random_equipped_melee_weapon(changed);
                     events.push(DomainEvent::MutationFumbled {
                         damage,
@@ -525,6 +525,9 @@ impl Game {
             MutationPeriodicEffectDefinition::Nausea => {
                 if self.rng.bounded(9_000) == 0 {
                     let before = self.nutrition_state();
+                    if NUTRITION_WEAK > self.nutrition {
+                        self.fasting = false;
+                    }
                     self.nutrition = NUTRITION_WEAK;
                     let after = self.nutrition_state();
                     if before != after {
@@ -565,7 +568,11 @@ impl Game {
         let healing = self.roll_damage(self.progress.level.max(1), 5);
         self.apply_player_healing(healing);
         if self.rng.bounded(5) == 0 {
-            self.player.hp = self.player.hp.saturating_sub(healing / 2);
+            let damage = resolve_damage(
+                DamagePacket::new(healing / 2, DamageType::Physical),
+                ResistanceLevel::Normal,
+            );
+            self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
             apply_status(
                 &mut self.player.statuses,
                 StatusApplication {
@@ -982,10 +989,14 @@ impl Game {
             return false;
         }
         pool.current = pool.current.saturating_add(amount).min(pool.maximum);
-        self.player.hp = self
-            .player
-            .hp
-            .saturating_sub(i32::try_from(amount).unwrap_or(i32::MAX));
+        let damage = resolve_damage(
+            DamagePacket::new(
+                i32::try_from(amount).unwrap_or(i32::MAX),
+                DamageType::Physical,
+            ),
+            ResistanceLevel::Normal,
+        );
+        self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
         true
     }
 
@@ -1332,6 +1343,29 @@ impl Game {
         lost.then_some(mutation_id)
     }
 
+    pub(super) fn cure_random_mutation(
+        &mut self,
+        harmful_only: bool,
+        events: &mut Vec<DomainEvent>,
+    ) -> Option<String> {
+        let candidates = self
+            .random_mutation_candidates(RandomMutationOperation::Lose)
+            .into_iter()
+            .filter(|(_, mutation_id, _)| {
+                !harmful_only
+                    || self.content.mutation(mutation_id).is_some_and(|mutation| {
+                        matches!(
+                            mutation.rating,
+                            MutationRatingDefinition::Awful | MutationRatingDefinition::Bad
+                        )
+                    })
+            })
+            .collect();
+        let mutation_id = self.select_mutation_from_candidates(candidates)?;
+        self.lose_mutation(&mutation_id, events)
+            .then_some(mutation_id)
+    }
+
     pub(super) fn resolve_polymorph_mutations(&mut self, events: &mut Vec<DomainEvent>) -> bool {
         let previous_max_hp = self.effective_player_max_hp();
         let previous_resource_maxima = self.player_resource_maxima();
@@ -1400,6 +1434,13 @@ impl Game {
 
     fn select_random_mutation(&mut self, operation: RandomMutationOperation) -> Option<String> {
         let candidates = self.random_mutation_candidates(operation);
+        self.select_mutation_from_candidates(candidates)
+    }
+
+    fn select_mutation_from_candidates(
+        &mut self,
+        candidates: Vec<(u16, String, u64)>,
+    ) -> Option<String> {
         let total = candidates.iter().map(|(_, _, weight)| *weight).sum::<u64>();
         if total == 0 {
             return None;

@@ -718,6 +718,7 @@ impl Game {
             rolled_affixes: Vec::new(),
             enchantments: ItemEnchantmentsDto::default(),
             curse: initial_item_curse(&self.content, &spawn.kind_id),
+            permanent_destruction_immunities: Default::default(),
             activation,
             charges,
             fuel: initial_item_fuel(&self.content, &spawn.kind_id),
@@ -2473,6 +2474,7 @@ impl Game {
                 rolled_affixes: Vec::new(),
                 enchantments: ItemEnchantmentsDto::default(),
                 curse: initial_item_curse(&self.content, &entry.item_kind_id),
+                permanent_destruction_immunities: Default::default(),
                 activation,
                 charges,
                 fuel: initial_item_fuel(&self.content, &entry.item_kind_id),
@@ -2503,6 +2505,7 @@ impl Game {
                             .clone()
                             .expect("validated item objective must have an instance ID"),
                         curse: initial_item_curse(&self.content, &kind_id),
+                        permanent_destruction_immunities: Default::default(),
                         kind_id,
                         quantity: 1,
                         inscription: None,

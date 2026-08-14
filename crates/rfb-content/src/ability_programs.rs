@@ -214,9 +214,11 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::ResistElements { .. }
                     | AbilityEffectDefinition::Summon { .. }
                     | AbilityEffectDefinition::SummonCategory { .. }
+                    | AbilityEffectDefinition::NatureGate { .. }
                     | AbilityEffectDefinition::Detect { .. }
                     | AbilityEffectDefinition::RefuelEquippedLight { .. }
                     | AbilityEffectDefinition::LightArea { .. }
+                    | AbilityEffectDefinition::CreateItem { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
                     | AbilityEffectDefinition::RemoveStatus { .. }
                     | AbilityEffectDefinition::AnimateDead { .. }
@@ -224,10 +226,10 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::HealDice { .. }
                     | AbilityEffectDefinition::ReduceStatus { .. }
                     | AbilityEffectDefinition::SatisfyHunger
-                    | AbilityEffectDefinition::CreateItem { .. }
                     | AbilityEffectDefinition::RestoreVitality { .. }
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                    | AbilityEffectDefinition::Entangle { .. }
                     | AbilityEffectDefinition::MassSleepOrStasis { .. }
                     | AbilityEffectDefinition::BlinkSelf { .. }
                     | AbilityEffectDefinition::TeleportSelf { .. }
@@ -240,6 +242,15 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::CreateStair { .. }
                     | AbilityEffectDefinition::SelfKnowledge
                     | AbilityEffectDefinition::Clairvoyance { .. }
+                    | AbilityEffectDefinition::CallSunlight { .. }
+                    | AbilityEffectDefinition::NatureWrath
+                    | AbilityEffectDefinition::CreateAdjacentTerrain { .. }
+                    | AbilityEffectDefinition::CreateCurrentTerrain { .. }
+                    | AbilityEffectDefinition::RemoveEquippedCurses { .. }
+                    | AbilityEffectDefinition::BeginFasting
+                    | AbilityEffectDefinition::TurnUndead { .. }
+                    | AbilityEffectDefinition::SustainAttributes { .. }
+                    | AbilityEffectDefinition::CureMutation
                     | AbilityEffectDefinition::MeleeAdjacent
                     | AbilityEffectDefinition::ProbeMonsters
                     | AbilityEffectDefinition::Concentrate
@@ -316,6 +327,7 @@ fn ability_program_input_accepts_step(
                 AbilityEffectDefinition::IdentifyItem { .. }
                     | AbilityEffectDefinition::IdentifyOrMassIdentify { .. }
                     | AbilityEffectDefinition::BrandWeapon { .. }
+                    | AbilityEffectDefinition::ProtectFromCorrosion
                     | AbilityEffectDefinition::TransmuteItemToGold { .. }
                     | AbilityEffectDefinition::DrainItemMagic { .. }
                     | AbilityEffectDefinition::RechargeFromPlayer { .. }
@@ -347,10 +359,13 @@ fn ability_program_step_is_composable(
                 | AbilityEffectDefinition::RemoveStatus { .. }
                 | AbilityEffectDefinition::AnimateDead { .. }
                 | AbilityEffectDefinition::AreaDamage { .. }
+                | AbilityEffectDefinition::CallSunlight { .. }
                 | AbilityEffectDefinition::AggravateMonsters
                 | AbilityEffectDefinition::Detect { .. }
                 | AbilityEffectDefinition::VisibleDamage { .. }
                 | AbilityEffectDefinition::VisibleApplyStatus { .. }
+                | AbilityEffectDefinition::CreateAdjacentTerrain { .. }
+                | AbilityEffectDefinition::CreateCurrentTerrain { .. }
                 | AbilityEffectDefinition::NoOp { .. }
         ),
         AbilityProgramInputDefinition::CastTarget => matches!(

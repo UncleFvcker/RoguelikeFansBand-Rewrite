@@ -103,6 +103,9 @@ impl Game {
             target
         };
         let noticed = self.nutrition != target;
+        if target > self.nutrition {
+            self.fasting = false;
+        }
         self.nutrition = target;
         self.mark_item_aware(source_kind_id);
         events.push(DomainEvent::ItemNutritionSatisfied {
@@ -157,6 +160,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) {
         let before_state = self.nutrition_state();
+        if hunger::NUTRITION_STARVING - 1 > self.nutrition {
+            self.fasting = false;
+        }
         self.nutrition = hunger::NUTRITION_STARVING - 1;
         let after_state = self.nutrition_state();
         if after_state != before_state {
@@ -855,7 +861,7 @@ impl Game {
         });
     }
 
-    fn adjacent_terrain_creation_replacements(
+    pub(super) fn adjacent_terrain_creation_replacements(
         &self,
         source_terrain_ids: &[String],
         target_terrain_id: &str,
@@ -893,7 +899,7 @@ impl Game {
             .collect()
     }
 
-    fn current_terrain_creation_replacement(
+    pub(super) fn current_terrain_creation_replacement(
         &self,
         source_terrain_ids: &[String],
         target_terrain_id: &str,
@@ -943,7 +949,23 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
-        let affected_positions = replacements
+        let affected_positions = self.apply_adjacent_terrain_creation(replacements, changed);
+        if !affected_positions.is_empty() {
+            self.mark_item_aware(source_kind_id);
+        }
+        events.push(DomainEvent::ItemCreatedAdjacentTerrain {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            affected_positions,
+        });
+    }
+
+    pub(super) fn apply_adjacent_terrain_creation(
+        &mut self,
+        replacements: Vec<(Position, String)>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Vec<Position> {
+        replacements
             .into_iter()
             .map(|(position, target_terrain_id)| {
                 let index = self
@@ -954,15 +976,7 @@ impl Game {
                 changed.insert(position);
                 position
             })
-            .collect::<Vec<_>>();
-        if !affected_positions.is_empty() {
-            self.mark_item_aware(source_kind_id);
-        }
-        events.push(DomainEvent::ItemCreatedAdjacentTerrain {
-            source_kind_id: source_kind_id.to_owned(),
-            display_name_key: self.item_display_name_key(source_kind_id),
-            affected_positions,
-        });
+            .collect()
     }
 
     fn resolve_item_current_terrain_creation(
@@ -2102,12 +2116,9 @@ impl Game {
         attribute: AttributeKind,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
-        let previous_max_hp = self.effective_player_max_hp();
-        let previous_resource_maxima = self.player_resource_maxima();
-        let outcome = apply_attribute_restoration(&mut self.progress, attribute);
+        let outcome = self.restore_player_attribute(attribute);
         let noticed = outcome.changed;
         if noticed {
-            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
             self.mark_item_aware(source_kind_id);
         }
         events.push(DomainEvent::ItemAttributeChanged {

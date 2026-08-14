@@ -31,6 +31,7 @@ use super::{
 };
 use crate::save::{
     GENERATED_ITEM_ID_PREFIX, initial_item_fuel, inventory_item_from_dto, inventory_to_save,
+    item_destruction_element_to_dto,
 };
 
 const CHARISMA_PRICE_ADJUST_PERCENT: [u16; 38] = [
@@ -447,6 +448,7 @@ fn plain_shop_item(
         rolled_affixes: Vec::new(),
         enchantments: ItemEnchantmentsDto::default(),
         curse: initial_item_curse(content, item_kind_id),
+        permanent_destruction_immunities: Default::default(),
         activation,
         charges,
         fuel: initial_item_fuel(content, item_kind_id),
@@ -1948,6 +1950,12 @@ impl Game {
                                 activation: item.activation.clone(),
                                 enchantments: item.enchantments,
                                 curse: item.curse,
+                                permanent_destruction_immunities: item
+                                    .permanent_destruction_immunities
+                                    .iter()
+                                    .copied()
+                                    .map(item_destruction_element_to_dto)
+                                    .collect(),
                                 quality: item.quality,
                             }
                         })
@@ -2063,6 +2071,12 @@ impl Game {
                                 maximum_quantity: quantity.min(slot_carryable),
                                 weight_tenths_pound: definition.weight_tenths_pound,
                                 fuel: item.fuel,
+                                permanent_destruction_immunities: item
+                                    .permanent_destruction_immunities
+                                    .iter()
+                                    .copied()
+                                    .map(item_destruction_element_to_dto)
+                                    .collect(),
                             }
                         })
                         .collect::<Vec<_>>()
@@ -2088,6 +2102,12 @@ impl Game {
                                 maximum_quantity: quantity,
                                 weight_tenths_pound: definition.weight_tenths_pound,
                                 fuel: item.fuel,
+                                permanent_destruction_immunities: item
+                                    .permanent_destruction_immunities
+                                    .iter()
+                                    .copied()
+                                    .map(item_destruction_element_to_dto)
+                                    .collect(),
                             }
                         })
                         .collect::<Vec<_>>()

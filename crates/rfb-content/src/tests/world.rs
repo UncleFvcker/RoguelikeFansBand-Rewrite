@@ -8210,7 +8210,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 321);
+    assert_eq!(base_items.entries.len(), 328);
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -8258,7 +8258,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 297);
+    assert_eq!(active_source_items.len(), 304);
 
     let source_items_without_allocations =
         BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
@@ -8272,7 +8272,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 287);
+    assert_eq!(expected_item_ids.len(), 294);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -8909,13 +8909,17 @@ fn bookstore_stocks_original_town_books() {
             "demo.item.beginners-handbook",
             "demo.item.black-mass",
             "demo.item.black-prayers",
+            "demo.item.book-of-common-prayer",
             "demo.item.book-of-elements",
+            "demo.item.call-of-the-wild",
             "demo.item.cantrips-for-beginners",
             "demo.item.earth-wind-and-fire",
+            "demo.item.high-mass",
             "demo.item.major-arcana",
             "demo.item.manual-of-mastery",
             "demo.item.master-sorcerers-handbook",
             "demo.item.minor-arcana",
+            "demo.item.nature-mastery",
         ])
     );
     let values = artifact
@@ -8956,9 +8960,12 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
             .collect::<BTreeSet<_>>(),
         BTreeSet::from([
             "demo.item.black-channels",
+            "demo.item.book-of-the-unicorn",
             "demo.item.day-of-ragnarok",
             "demo.item.disease-mushroom",
             "demo.item.necronomicon",
+            "demo.item.natures-gifts",
+            "demo.item.natures-wrath",
             "demo.item.path-of-destruction",
             "demo.item.pattern-sorcery",
             "demo.item.restore-constitution-mushroom",

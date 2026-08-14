@@ -48,6 +48,7 @@ pub(crate) enum GameAction {
         ability_id: String,
         target: TargetSelection,
     },
+    CancelAbilityDirection,
     CloseDoor {
         direction: Direction,
     },
@@ -77,6 +78,9 @@ pub(crate) enum GameAction {
     },
     DismissPets,
     ResolveMutationDirection {
+        direction: Direction,
+    },
+    ResolveAbilityDirection {
         direction: Direction,
     },
     Move {
@@ -220,6 +224,7 @@ impl GameAction {
             | Self::PickUp
             | Self::ResolveMogaminatorQuery { .. }
             | Self::ResolveMutationDirection { .. }
+            | Self::CancelAbilityDirection
             | Self::InscribeItem { .. }
             | Self::SetInterfaceLocale { .. } => 0,
             Self::TravelLocal { .. } => 0,
@@ -288,6 +293,7 @@ impl From<GameCommand> for GameAction {
             GameCommand::CastAbility { ability_id, target } => {
                 Self::CastAbility { ability_id, target }
             }
+            GameCommand::CancelAbilityDirection => Self::CancelAbilityDirection,
             GameCommand::CloseDoor { direction } => Self::CloseDoor { direction },
             GameCommand::ConfigureMogaminator {
                 enabled,
@@ -314,6 +320,9 @@ impl From<GameCommand> for GameAction {
             GameCommand::DismissPets => Self::DismissPets,
             GameCommand::ResolveMutationDirection { direction } => {
                 Self::ResolveMutationDirection { direction }
+            }
+            GameCommand::ResolveAbilityDirection { direction } => {
+                Self::ResolveAbilityDirection { direction }
             }
             GameCommand::EnterWorldMap {
                 leave_pets,

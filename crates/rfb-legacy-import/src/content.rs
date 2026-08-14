@@ -2349,6 +2349,9 @@ fn launcher_range(multiplier_percent: u16) -> u16 {
 
 fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str> {
     match (entry.tval, entry.sval) {
+        (LIFE_BOOK_TVAL, LIFE_FIRST_BOOK_SVAL) => Some(LIFE_FIRST_BOOK_ID),
+        (LIFE_BOOK_TVAL, LIFE_SECOND_BOOK_SVAL) => Some(LIFE_SECOND_BOOK_ID),
+        (LIFE_BOOK_TVAL, LIFE_THIRD_BOOK_SVAL) => Some(LIFE_THIRD_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_FIRST_BOOK_SVAL) => Some(DEATH_FIRST_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_SECOND_BOOK_SVAL) => Some(DEATH_SECOND_BOOK_ID),
         (DEATH_BOOK_TVAL, DEATH_THIRD_BOOK_SVAL) => Some(DEATH_THIRD_BOOK_ID),
@@ -2361,6 +2364,10 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
         (ARCANE_BOOK_TVAL, ARCANE_SECOND_BOOK_SVAL) => Some(ARCANE_SECOND_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_THIRD_BOOK_SVAL) => Some(ARCANE_THIRD_BOOK_ID),
         (ARCANE_BOOK_TVAL, ARCANE_FOURTH_BOOK_SVAL) => Some(ARCANE_FOURTH_BOOK_ID),
+        (NATURE_BOOK_TVAL, NATURE_FIRST_BOOK_SVAL) => Some(NATURE_FIRST_BOOK_ID),
+        (NATURE_BOOK_TVAL, NATURE_SECOND_BOOK_SVAL) => Some(NATURE_SECOND_BOOK_ID),
+        (NATURE_BOOK_TVAL, NATURE_THIRD_BOOK_SVAL) => Some(NATURE_THIRD_BOOK_ID),
+        (NATURE_BOOK_TVAL, NATURE_FOURTH_BOOK_SVAL) => Some(NATURE_FOURTH_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_FIRST_BOOK_SVAL) => Some(ARMAGEDDON_FIRST_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_SECOND_BOOK_SVAL) => Some(ARMAGEDDON_SECOND_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_THIRD_BOOK_SVAL) => Some(ARMAGEDDON_THIRD_BOOK_ID),
@@ -8891,6 +8898,23 @@ fn demo_monster_omitted_flags(entry: &LegacyMonsterEntry) -> BTreeSet<String> {
         .collect()
 }
 
+fn monster_is_ranger_animal(entry: &LegacyMonsterEntry) -> bool {
+    entry.flags.iter().any(|flag| flag == "ANIMAL")
+        && entry
+            .glyph
+            .is_some_and(|glyph| "abcflqrwBCHIJKMRS".contains(glyph))
+        && !entry.flags.iter().any(|flag| {
+            matches!(
+                flag.as_str(),
+                "DRAGON" | "EVIL" | "UNDEAD" | "DEMON" | "MULTIPLY"
+            )
+        })
+        && entry
+            .spells
+            .iter()
+            .all(|spell| spell.starts_with("FREQ_") || spell.starts_with("1_IN_"))
+}
+
 fn demo_monster_json(
     entry: &LegacyMonsterEntry,
     selection: &DemoMonsterSelectionEntry,
@@ -9171,6 +9195,9 @@ fn demo_monster_json(
     if matches!(entry.glyph, Some('C' | 'Z')) {
         tags.insert("hound".to_owned());
     }
+    if monster_is_ranger_animal(entry) {
+        tags.insert("animal-ranger".to_owned());
+    }
     if entry.glyph == Some('A')
         && entry
             .flags
@@ -9392,6 +9419,13 @@ pub struct ContentImportOutcome {
 
 const LEGACY_RESOURCE_ID: &str = "rfb-legacy.resource.essence";
 const LEGACY_MANA_RESOURCE_ID: &str = "rfb-legacy.resource.mana";
+const LIFE_BOOK_TVAL: u16 = 90;
+const LIFE_FIRST_BOOK_SVAL: u16 = 0;
+const LIFE_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.life-book-of-common-prayer";
+const LIFE_SECOND_BOOK_SVAL: u16 = 1;
+const LIFE_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.life-high-mass";
+const LIFE_THIRD_BOOK_SVAL: u16 = 2;
+const LIFE_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.life-book-of-the-unicorn";
 const DEATH_REALM_INDEX: u8 = 4;
 const DEATH_BOOK_TVAL: u16 = 94;
 const DEATH_FIRST_BOOK_SVAL: u16 = 0;
@@ -9420,6 +9454,15 @@ const ARCANE_THIRD_BOOK_SVAL: u16 = 2;
 const ARCANE_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-major-arcana";
 const ARCANE_FOURTH_BOOK_SVAL: u16 = 3;
 const ARCANE_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.arcane-manual-of-mastery";
+const NATURE_BOOK_TVAL: u16 = 92;
+const NATURE_FIRST_BOOK_SVAL: u16 = 0;
+const NATURE_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.nature-call-of-the-wild";
+const NATURE_SECOND_BOOK_SVAL: u16 = 1;
+const NATURE_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.nature-nature-mastery";
+const NATURE_THIRD_BOOK_SVAL: u16 = 2;
+const NATURE_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.nature-natures-gifts";
+const NATURE_FOURTH_BOOK_SVAL: u16 = 3;
+const NATURE_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.nature-natures-wrath";
 const ARMAGEDDON_BOOK_TVAL: u16 = 101;
 const ARMAGEDDON_FIRST_BOOK_SVAL: u16 = 0;
 const ARMAGEDDON_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.armageddon-book-of-elements";
@@ -19701,6 +19744,40 @@ F:BRAND_VAMP | HOLD_LIFE
 
     #[test]
     fn physical_spellbooks_use_explicit_realm_tvals_without_capturing_necromancy() {
+        let life_book = LegacyItemEntry {
+            tval: LIFE_BOOK_TVAL,
+            sval: LIFE_FIRST_BOOK_SVAL,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(
+            player_ability_book_for_item(&life_book),
+            Some(LIFE_FIRST_BOOK_ID)
+        );
+        let life_second_book = LegacyItemEntry {
+            tval: LIFE_BOOK_TVAL,
+            sval: LIFE_SECOND_BOOK_SVAL,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(
+            player_ability_book_for_item(&life_second_book),
+            Some(LIFE_SECOND_BOOK_ID)
+        );
+        let life_third_book = LegacyItemEntry {
+            tval: LIFE_BOOK_TVAL,
+            sval: LIFE_THIRD_BOOK_SVAL,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(
+            player_ability_book_for_item(&life_third_book),
+            Some(LIFE_THIRD_BOOK_ID)
+        );
+        let unsupported_life_book = LegacyItemEntry {
+            tval: LIFE_BOOK_TVAL,
+            sval: 3,
+            ..LegacyItemEntry::default()
+        };
+        assert_eq!(player_ability_book_for_item(&unsupported_life_book), None);
+
         assert_eq!(
             death_first_book_json(&[])["nameKey"],
             "ability-book-legacy-death-black-prayers-name"
@@ -19789,6 +19866,23 @@ F:BRAND_VAMP | HOLD_LIFE
         }
 
         for (sval, expected_book_id) in [
+            (NATURE_FIRST_BOOK_SVAL, NATURE_FIRST_BOOK_ID),
+            (NATURE_SECOND_BOOK_SVAL, NATURE_SECOND_BOOK_ID),
+            (NATURE_THIRD_BOOK_SVAL, NATURE_THIRD_BOOK_ID),
+            (NATURE_FOURTH_BOOK_SVAL, NATURE_FOURTH_BOOK_ID),
+        ] {
+            let nature_book = LegacyItemEntry {
+                tval: NATURE_BOOK_TVAL,
+                sval,
+                ..LegacyItemEntry::default()
+            };
+            assert_eq!(
+                player_ability_book_for_item(&nature_book),
+                Some(expected_book_id)
+            );
+        }
+
+        for (sval, expected_book_id) in [
             (ARMAGEDDON_FIRST_BOOK_SVAL, ARMAGEDDON_FIRST_BOOK_ID),
             (ARMAGEDDON_SECOND_BOOK_SVAL, ARMAGEDDON_SECOND_BOOK_ID),
             (ARMAGEDDON_THIRD_BOOK_SVAL, ARMAGEDDON_THIRD_BOOK_ID),
@@ -19803,6 +19897,37 @@ F:BRAND_VAMP | HOLD_LIFE
                 player_ability_book_for_item(&armageddon_book),
                 Some(expected_book_id)
             );
+        }
+    }
+
+    #[test]
+    fn ranger_animal_predicate_matches_the_original_summon_filter() {
+        let eligible = LegacyMonsterEntry {
+            glyph: Some('a'),
+            flags: vec!["ANIMAL".to_owned()],
+            ..LegacyMonsterEntry::default()
+        };
+        assert!(monster_is_ranger_animal(&eligible));
+
+        for blocked in [
+            LegacyMonsterEntry {
+                glyph: Some('D'),
+                flags: vec!["ANIMAL".to_owned()],
+                ..LegacyMonsterEntry::default()
+            },
+            LegacyMonsterEntry {
+                glyph: Some('a'),
+                flags: vec!["ANIMAL".to_owned(), "EVIL".to_owned()],
+                ..LegacyMonsterEntry::default()
+            },
+            LegacyMonsterEntry {
+                glyph: Some('a'),
+                flags: vec!["ANIMAL".to_owned()],
+                spells: vec!["BO_FIRE".to_owned()],
+                ..LegacyMonsterEntry::default()
+            },
+        ] {
+            assert!(!monster_is_ranger_animal(&blocked));
         }
     }
 

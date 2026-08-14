@@ -10,6 +10,7 @@ import type {
   EquipmentPassiveDto,
   GameCommand,
   InventoryItemDto,
+  ItemDestructionElementDto,
   ItemCurseSeverityDto,
   ItemEnchantmentsDto,
   ItemPropertyDto,
@@ -539,6 +540,7 @@ export class InventoryPanel {
     this.#appendItemCurse(container, item.curse);
     this.#appendEquipmentBonuses(container, item.equipmentBonuses);
     this.#appendItemDefenses(container, item.resistances, item.statusImmunities);
+    this.#appendDestructionImmunities(container, item.permanentDestructionImmunities);
     this.#appendItemOffense(container, item.slays, item.brands);
     this.#appendEquipmentPassives(container, item.passives);
     this.#appendItemQuality(container, item.quality);
@@ -968,6 +970,21 @@ export class InventoryPanel {
         "item-modifier",
         this.#localization.format("item-status-immunity-label", {
           status: this.#formatter.statusName(statusId),
+        }),
+      );
+    }
+  }
+
+  #appendDestructionImmunities(
+    container: HTMLElement,
+    elements: ItemDestructionElementDto[] | undefined,
+  ): void {
+    for (const element of elements ?? []) {
+      this.#appendDetail(
+        container,
+        "item-modifier",
+        this.#localization.format("item-destruction-immunity-label", {
+          type: this.#formatter.damageTypeName(element),
         }),
       );
     }

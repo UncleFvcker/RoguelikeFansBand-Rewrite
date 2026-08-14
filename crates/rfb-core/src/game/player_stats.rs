@@ -2,6 +2,19 @@
 
 use super::*;
 
+fn temporary_sustain_passive(status_kind_id: &str) -> Option<EquipmentPassive> {
+    match status_kind_id {
+        STATUS_HOLD_LIFE => Some(EquipmentPassive::HoldLife),
+        STATUS_SUSTAIN_STRENGTH => Some(EquipmentPassive::SustainStrength),
+        STATUS_SUSTAIN_INTELLIGENCE => Some(EquipmentPassive::SustainIntelligence),
+        STATUS_SUSTAIN_WISDOM => Some(EquipmentPassive::SustainWisdom),
+        STATUS_SUSTAIN_DEXTERITY => Some(EquipmentPassive::SustainDexterity),
+        STATUS_SUSTAIN_CONSTITUTION => Some(EquipmentPassive::SustainConstitution),
+        STATUS_SUSTAIN_CHARISMA => Some(EquipmentPassive::SustainCharisma),
+        _ => None,
+    }
+}
+
 pub(in crate::game) struct ActorDerivedStats {
     pub(in crate::game) max_hp: DerivedStat,
     pub(in crate::game) attack: DerivedStat,
@@ -647,13 +660,21 @@ impl Game {
     }
 
     pub(super) fn player_equipment_passives(&self) -> BTreeSet<EquipmentPassive> {
-        self.items
+        let mut passives = self
+            .items
             .iter()
             .filter(|item| {
                 matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
             })
             .flat_map(|item| self.item_passives(item))
-            .collect()
+            .collect::<BTreeSet<_>>();
+        passives.extend(
+            self.player
+                .statuses
+                .iter()
+                .filter_map(|status| temporary_sustain_passive(&status.kind_id)),
+        );
+        passives
     }
 
     pub(super) fn player_sustains_attribute(&self, attribute: AttributeKind) -> bool {
@@ -674,6 +695,12 @@ impl Game {
                     && self.item_passives(item).contains(&EquipmentPassive::HoldLife)
             })
             .count()
+            + usize::from(
+                self.player
+                    .statuses
+                    .iter()
+                    .any(|status| status.kind_id == STATUS_HOLD_LIFE),
+            )
     }
 
     pub(super) fn player_see_invisible_sources(&self) -> usize {
@@ -727,9 +754,10 @@ impl Game {
     }
 
     pub(super) fn player_levitates(&self) -> bool {
-        self.content.mutations().any(|mutation| {
-            mutation.levitation && self.progress.active_mutation_ids.contains(&mutation.id)
-        })
+        self.player_has_status_kind(STATUS_LEVITATION)
+            || self.content.mutations().any(|mutation| {
+                mutation.levitation && self.progress.active_mutation_ids.contains(&mutation.id)
+            })
     }
 
     pub(super) fn player_has_telepathy(&self) -> bool {

@@ -573,6 +573,7 @@ pub(super) fn reward_item(
         rolled_affixes,
         enchantments: ItemEnchantmentsDto::default(),
         curse: initial_item_curse(content, &entry.item_kind_id),
+        permanent_destruction_immunities: Default::default(),
         activation,
         charges,
         fuel: initial_item_fuel(content, &entry.item_kind_id),
