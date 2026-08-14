@@ -613,6 +613,11 @@
       "type": "array",
       "uniqueItems": true
     },
+    "protectsQuiverAmmunition": {
+      "default": false,
+      "description": "Protects ammunition assigned to this equipped quiver from inventory damage.",
+      "type": "boolean"
+    },
     "resistances": {
       "additionalProperties": false,
       "default": {},

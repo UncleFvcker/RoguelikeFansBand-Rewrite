@@ -1767,6 +1767,13 @@ impl Game {
                 let application =
                     plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
                 commit_damage_application(&mut self.player, &application);
+                self.damage_player_inventory(
+                    &definition.id,
+                    damage_type,
+                    true,
+                    damage.applied,
+                    events,
+                );
                 events.push(DomainEvent::MonsterMeleeHit {
                     source_kind_id: definition.id.clone(),
                     method_id: None,

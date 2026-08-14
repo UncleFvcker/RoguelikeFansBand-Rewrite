@@ -37,6 +37,33 @@ fn mirror_shield_keeps_original_reflection_and_allocation() {
 }
 
 #[test]
+fn p88b_quiver_protection_is_a_distinct_quiver_only_affix() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let affix = artifact
+        .content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.quiver-protection")
+        .expect("Protection quiver affix should exist");
+    let quiver = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.quiver")
+        .expect("base quiver should exist");
+    let shield = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.small-leather-shield")
+        .expect("ordinary shield should exist");
+
+    assert!(affix.protects_quiver_ammunition);
+    assert!(affix_is_compatible_with_item(affix, quiver, 20));
+    assert!(!affix_is_compatible_with_item(affix, shield, 20));
+}
+
+#[test]
 fn capture_ball_keeps_rfb_shape_and_low_probability_store_stock() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let item = artifact

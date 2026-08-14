@@ -164,6 +164,13 @@ impl Game {
                             FatalityPolicy::BelowZero,
                         );
                         commit_damage_application(&mut self.player, &application);
+                        self.damage_player_inventory(
+                            source_kind_id,
+                            damage_type,
+                            false,
+                            damage.applied,
+                            events,
+                        );
                         changed.insert(self.player.position);
                         events.push(DomainEvent::AbilityHit {
                             ability_id: source_kind_id.to_owned(),
@@ -331,7 +338,7 @@ impl Game {
         }
     }
 
-    fn item_has_elemental_destruction_immunity(
+    pub(super) fn item_has_elemental_destruction_immunity(
         &self,
         item: &ItemInstance,
         element: ItemDestructionElement,
@@ -354,7 +361,7 @@ impl Game {
             })
     }
 
-    fn item_has_elemental_destruction_vulnerability(
+    pub(super) fn item_has_elemental_destruction_vulnerability(
         &self,
         item: &ItemInstance,
         element: ItemDestructionElement,
@@ -415,7 +422,7 @@ impl Game {
             })
     }
 
-    fn element_destroys_item(
+    pub(super) fn element_destroys_item(
         &self,
         item: &ItemInstance,
         element: ItemDestructionElement,

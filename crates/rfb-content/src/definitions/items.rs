@@ -176,6 +176,9 @@ pub struct AffixDefinition {
     /// Protects instances from `KILL_ITEM`; used by Endurance ammunition.
     #[serde(default)]
     pub resists_monster_destruction: bool,
+    /// Protects ammunition assigned to this equipped quiver from inventory damage.
+    #[serde(default)]
+    pub protects_quiver_ammunition: bool,
     /// Generation-time weighted rolls. Results are materialized into the
     /// item instance and never recomputed while loading a save.
     #[serde(default)]
@@ -915,6 +918,7 @@ pub fn affix_is_compatible_with_item(
             Some("gloves") => &["gloves"],
             Some("boots") => &["boots"],
             Some("light") => &["lite"],
+            Some("quiver") => &["quiver"],
             Some("ring") => &["ring"],
             Some("amulet") => &["amulet"],
             _ => return false,

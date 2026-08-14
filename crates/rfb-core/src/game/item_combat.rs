@@ -297,6 +297,13 @@ impl Game {
         let application =
             plan_damage_application(&self.player, backlash, FatalityPolicy::BelowZero);
         commit_damage_application(&mut self.player, &application);
+        self.damage_player_inventory(
+            source_kind_id,
+            backlash_damage_type,
+            false,
+            backlash.applied,
+            events,
+        );
         events.push(DomainEvent::ItemElementalBlastBacklash {
             source_kind_id: source_kind_id.to_owned(),
             damage: backlash,

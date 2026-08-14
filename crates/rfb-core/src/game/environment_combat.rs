@@ -123,6 +123,13 @@ impl Game {
         ));
         let application = plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
         commit_damage_application(&mut self.player, &application);
+        self.damage_player_inventory(
+            &source_kind_id,
+            trap.damage_type.into(),
+            false,
+            damage.applied,
+            events,
+        );
         Some(PlayerTrapOutcome::Triggered {
             source_kind_id,
             damage,

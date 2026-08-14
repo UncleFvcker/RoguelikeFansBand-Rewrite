@@ -318,6 +318,30 @@ impl Game {
                     let application =
                         plan_damage_application(&self.player, damage, FatalityPolicy::BelowZero);
                     commit_damage_application(&mut self.player, &application);
+                    if bomb {
+                        self.damage_player_inventory(
+                            &actor.kind_id,
+                            DamageType::Shards,
+                            false,
+                            damage.applied,
+                            events,
+                        );
+                        self.damage_player_inventory(
+                            &actor.kind_id,
+                            DamageType::Sound,
+                            false,
+                            damage.applied,
+                            events,
+                        );
+                    } else {
+                        self.damage_player_inventory(
+                            &actor.kind_id,
+                            damage_type,
+                            false,
+                            damage.applied,
+                            events,
+                        );
+                    }
                     if !application.fatal
                         && let Some(bomb_damage) = bomb_damage
                     {

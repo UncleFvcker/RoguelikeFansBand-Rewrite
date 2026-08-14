@@ -66,6 +66,7 @@ pub(super) fn validate_affixes(
             || !affix.elemental_destruction_immunities.is_empty()
             || affix.resists_projection_destruction
             || affix.resists_monster_destruction
+            || affix.protects_quiver_ammunition
             || roll_substance;
         if !has_substance
             || affix.generation_level > affix.generation_max_level

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use std::collections::{BTreeMap, BTreeSet};
 
-use rfb_content::{ContentCatalog, TaskObjectiveKind};
+use rfb_content::{ContentCatalog, ItemDestructionElement, TaskObjectiveKind};
 use rfb_protocol::{
     ItemCurseSeverityDto, ItemEnchantmentsDto, ItemKnowledgeDto, ItemQualityDto, Position,
 };
@@ -9,6 +9,7 @@ use rfb_protocol::{
 use crate::{
     error::CoreError,
     event::DomainEvent,
+    resistance::{DamageType, ResistanceLevel},
     state::{EquipOutcome, ItemInstance, ItemLocation},
 };
 
@@ -308,6 +309,136 @@ enum PickUpPlan {
     Nothing,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct InventoryDamageProfile {
+    element: ItemDestructionElement,
+    chance_percent: u8,
+    resistance: DamageType,
+}
+
+fn inventory_damage_profiles(
+    damage_type: DamageType,
+    touch: bool,
+) -> &'static [InventoryDamageProfile] {
+    use DamageType as Damage;
+    use ItemDestructionElement as Element;
+
+    match damage_type {
+        Damage::Acid => &[InventoryDamageProfile {
+            element: Element::Acid,
+            chance_percent: 3,
+            resistance: Damage::Acid,
+        }],
+        Damage::Electricity => &[InventoryDamageProfile {
+            element: Element::Electricity,
+            chance_percent: 3,
+            resistance: Damage::Electricity,
+        }],
+        Damage::Fire => &[InventoryDamageProfile {
+            element: Element::Fire,
+            chance_percent: 3,
+            resistance: Damage::Fire,
+        }],
+        Damage::Cold => &[InventoryDamageProfile {
+            element: Element::Cold,
+            chance_percent: 3,
+            resistance: Damage::Cold,
+        }],
+        Damage::Water => &[InventoryDamageProfile {
+            element: Element::Cold,
+            chance_percent: 3,
+            resistance: Damage::Sound,
+        }],
+        Damage::Plasma if !touch => &[InventoryDamageProfile {
+            element: Element::Acid,
+            chance_percent: 3,
+            resistance: Damage::Fire,
+        }],
+        Damage::Chaos if !touch => &[
+            InventoryDamageProfile {
+                element: Element::Electricity,
+                chance_percent: 2,
+                resistance: Damage::Chaos,
+            },
+            InventoryDamageProfile {
+                element: Element::Fire,
+                chance_percent: 2,
+                resistance: Damage::Chaos,
+            },
+        ],
+        Damage::Shards if !touch => &[InventoryDamageProfile {
+            element: Element::Cold,
+            chance_percent: 2,
+            resistance: Damage::Shards,
+        }],
+        Damage::Sound if !touch => &[InventoryDamageProfile {
+            element: Element::Cold,
+            chance_percent: 2,
+            resistance: Damage::Sound,
+        }],
+        Damage::Nuke => &[InventoryDamageProfile {
+            element: Element::Acid,
+            chance_percent: 2,
+            resistance: Damage::Poison,
+        }],
+        Damage::Meteor => &[
+            InventoryDamageProfile {
+                element: Element::Fire,
+                chance_percent: 2,
+                resistance: Damage::Fire,
+            },
+            InventoryDamageProfile {
+                element: Element::Cold,
+                chance_percent: 2,
+                resistance: Damage::Shards,
+            },
+        ],
+        Damage::Ice => &[
+            InventoryDamageProfile {
+                element: Element::Cold,
+                chance_percent: 3,
+                resistance: Damage::Cold,
+            },
+            InventoryDamageProfile {
+                element: Element::Cold,
+                chance_percent: 3,
+                resistance: Damage::Cold,
+            },
+        ],
+        Damage::Rocket => &[InventoryDamageProfile {
+            element: Element::Cold,
+            chance_percent: 3,
+            resistance: Damage::Shards,
+        }],
+        _ => &[],
+    }
+}
+
+fn inventory_resistance_power(damage_type: DamageType) -> u64 {
+    if matches!(
+        damage_type,
+        DamageType::Acid
+            | DamageType::Electricity
+            | DamageType::Fire
+            | DamageType::Cold
+            | DamageType::Poison
+    ) {
+        66
+    } else {
+        41
+    }
+}
+
+fn inventory_resistance_save(
+    rng: &mut crate::rng::RfbRng,
+    resistance: ResistanceLevel,
+    damage_type: DamageType,
+) -> bool {
+    let power = inventory_resistance_power(damage_type);
+    let resistance = u64::try_from(resistance.reduction_percent().max(0)).unwrap_or(0);
+    rng.bounded(power) < resistance
+}
+
 fn equipped_ammunition_capacity(content: &ContentCatalog, items: &[ItemInstance]) -> u32 {
     items
         .iter()
@@ -318,32 +449,41 @@ fn equipped_ammunition_capacity(content: &ContentCatalog, items: &[ItemInstance]
         })
 }
 
-fn inventory_used_slots(content: &ContentCatalog, items: &[ItemInstance]) -> u16 {
-    let mut ordinary_slots = 0_u16;
-    let mut ammunition_stacks = Vec::new();
-    for item in items
+fn quivered_ammunition_item_ids<'a>(
+    content: &ContentCatalog,
+    items: &'a [ItemInstance],
+) -> BTreeSet<&'a str> {
+    let mut ammunition_stacks = items
         .iter()
         .filter(|item| item.location == ItemLocation::Inventory)
-    {
-        if content
-            .item(&item.kind_id)
-            .is_some_and(|definition| definition.ammunition_profile.is_some())
-        {
-            ammunition_stacks.push((item.quantity, item.id.as_str()));
-        } else {
-            ordinary_slots = ordinary_slots.saturating_add(1);
-        }
-    }
+        .filter(|item| {
+            content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.ammunition_profile.is_some())
+        })
+        .map(|item| (item.quantity, item.id.as_str()))
+        .collect::<Vec<_>>();
     ammunition_stacks.sort_unstable();
-    let mut quiver_capacity = equipped_ammunition_capacity(content, items);
-    for (quantity, _) in ammunition_stacks {
-        if quantity <= quiver_capacity {
-            quiver_capacity -= quantity;
-        } else {
-            ordinary_slots = ordinary_slots.saturating_add(1);
-        }
-    }
-    ordinary_slots
+    let mut capacity = equipped_ammunition_capacity(content, items);
+    ammunition_stacks
+        .into_iter()
+        .filter_map(|(quantity, item_id)| {
+            if quantity > capacity {
+                return None;
+            }
+            capacity -= quantity;
+            Some(item_id)
+        })
+        .collect()
+}
+
+fn inventory_used_slots(content: &ContentCatalog, items: &[ItemInstance]) -> u16 {
+    let quivered = quivered_ammunition_item_ids(content, items);
+    items
+        .iter()
+        .filter(|item| item.location == ItemLocation::Inventory)
+        .filter(|item| !quivered.contains(item.id.as_str()))
+        .fold(0_u16, |slots, _| slots.saturating_add(1))
 }
 
 fn compatible_inventory_space(
@@ -692,6 +832,118 @@ pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemI
 }
 
 impl Game {
+    fn equipped_quiver_protects_ammunition(&self) -> bool {
+        self.items
+            .iter()
+            .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+            .filter(|item| {
+                self.content
+                    .item(&item.kind_id)
+                    .is_some_and(|definition| definition.ammunition_capacity > 0)
+            })
+            .any(|item| {
+                item.affix_ids.iter().any(|affix_id| {
+                    self.content
+                        .affix(affix_id)
+                        .is_some_and(|affix| affix.protects_quiver_ammunition)
+                }) || item.rolled_affixes.iter().any(|rolled| {
+                    self.content
+                        .affix(&rolled.affix_id)
+                        .is_some_and(|affix| affix.protects_quiver_ammunition)
+                })
+            })
+    }
+
+    pub(super) fn damage_player_inventory(
+        &mut self,
+        source_kind_id: &str,
+        damage_type: DamageType,
+        touch: bool,
+        damage_applied: i32,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        if damage_applied <= 0 {
+            return;
+        }
+        if damage_type == DamageType::Nuke {
+            let poison_resistance = self
+                .effective_player_resistances()
+                .level(DamageType::Poison);
+            let poison_threshold =
+                u64::try_from(poison_resistance.reduction_percent().max(0)).unwrap_or(0);
+            if self.rng.bounded(55) < poison_threshold {
+                return;
+            }
+        }
+        let protected_ammunition = self
+            .equipped_quiver_protects_ammunition()
+            .then(|| {
+                quivered_ammunition_item_ids(&self.content, &self.items)
+                    .into_iter()
+                    .map(str::to_owned)
+                    .collect::<BTreeSet<_>>()
+            })
+            .unwrap_or_default();
+        let inventory_protected = self.player_has_status_kind(STATUS_INVENTORY_PROTECTION);
+
+        for profile in inventory_damage_profiles(damage_type, touch) {
+            let resistance = self
+                .effective_player_resistances()
+                .level(profile.resistance);
+            let candidates = self
+                .items
+                .iter()
+                .enumerate()
+                .filter(|(_, item)| item.location == ItemLocation::Inventory && item.quantity > 0)
+                .filter(|(_, item)| !protected_ammunition.contains(item.id.as_str()))
+                .filter(|(_, item)| {
+                    self.content.item(&item.kind_id).is_some_and(|definition| {
+                        !definition.tags.iter().any(|tag| tag == "artifact")
+                    })
+                })
+                .filter(|(_, item)| self.element_destroys_item(item, profile.element, true))
+                .map(|(index, _)| index)
+                .collect::<Vec<_>>();
+            let mut removed_item_ids = Vec::new();
+            for index in candidates {
+                let mut destroyed = 0;
+                for _ in 0..self.items[index].quantity {
+                    if self.rng.bounded(100) >= u64::from(profile.chance_percent) {
+                        continue;
+                    }
+                    if inventory_protected {
+                        let _protection_roll = self.rng.bounded(100);
+                        continue;
+                    }
+                    if inventory_resistance_save(&mut self.rng, resistance, profile.resistance) {
+                        continue;
+                    }
+                    destroyed += 1;
+                }
+                if destroyed == 0 {
+                    continue;
+                }
+                let item = &mut self.items[index];
+                item.quantity -= destroyed;
+                events.push(DomainEvent::InventoryItemDestroyedByDamage {
+                    source_kind_id: source_kind_id.to_owned(),
+                    target_kind_id: item.kind_id.clone(),
+                    quantity: destroyed,
+                });
+                if item.quantity == 0 {
+                    removed_item_ids.push(item.id.clone());
+                }
+            }
+            if !removed_item_ids.is_empty() {
+                self.items
+                    .retain(|item| !removed_item_ids.contains(&item.id));
+                for item_id in removed_item_ids {
+                    self.item_property_knowledge.remove(&item_id);
+                }
+            }
+        }
+    }
+
     pub(super) fn can_destroy_item(&self, item: &ItemInstance) -> Result<(), DestroyItemFailure> {
         let definition = self
             .content

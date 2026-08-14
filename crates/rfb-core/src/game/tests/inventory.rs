@@ -429,3 +429,209 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
         }]
     );
 }
+
+fn p88b_add_item(
+    game: &mut Game,
+    id: &str,
+    kind_id: &str,
+    quantity: u32,
+    location: ItemLocation,
+    affix_ids: &[&str],
+) {
+    give_inventory_item(game, id, kind_id);
+    let item = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == id)
+        .expect("P88B item should exist");
+    item.quantity = quantity;
+    item.location = location;
+    item.affix_ids = affix_ids.iter().map(|id| (*id).to_owned()).collect();
+}
+
+#[test]
+fn p88b_protection_quiver_skips_quivered_ammunition_without_rng() {
+    let mut game = Game::new(0);
+    game.items.clear();
+    p88b_add_item(
+        &mut game,
+        "p88b.quiver",
+        "demo.item.quiver",
+        1,
+        ItemLocation::Equipped {
+            slot_id: "quiver".to_owned(),
+        },
+        &["rfb-legacy.affix.quiver-protection"],
+    );
+    p88b_add_item(
+        &mut game,
+        "p88b.arrows",
+        "demo.item.arrow",
+        60,
+        ItemLocation::Inventory,
+        &[],
+    );
+    assert_eq!(game.inventory_used_slots(), 0);
+
+    let draws = game.rng_draw_counter();
+    let mut events = Vec::new();
+    game.damage_player_inventory("test.acid", DamageType::Acid, false, 1, &mut events);
+
+    assert_eq!(game.rng_draw_counter(), draws);
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "p88b.arrows")
+            .unwrap()
+            .quantity,
+        60
+    );
+    assert!(events.is_empty());
+
+    let mut expected = game.clone();
+    let _nuke_resistance_roll = expected.rng.bounded(55);
+    game.damage_player_inventory("test.nuke", DamageType::Nuke, false, 1, &mut events);
+    assert_eq!(game.rng_draw_counter(), draws + 1);
+    assert_eq!(game.rng.bounded(10_000), expected.rng.bounded(10_000));
+    assert!(events.is_empty());
+}
+
+#[test]
+fn p88b_quiver_overflow_remains_vulnerable_and_emits_partial_destruction() {
+    let mut game = Game::new(0);
+    game.items.clear();
+    p88b_add_item(
+        &mut game,
+        "p88b.quiver",
+        "demo.item.quiver",
+        1,
+        ItemLocation::Equipped {
+            slot_id: "quiver".to_owned(),
+        },
+        &["rfb-legacy.affix.quiver-protection"],
+    );
+    for id in ["p88b.arrows-a", "p88b.arrows-b"] {
+        p88b_add_item(
+            &mut game,
+            id,
+            "demo.item.arrow",
+            60,
+            ItemLocation::Inventory,
+            &[],
+        );
+    }
+    assert_eq!(game.inventory_used_slots(), 1);
+
+    let mut events = Vec::new();
+    game.resolve_monster_damage_to_player(
+        "test.monster",
+        "test.monster-kind",
+        "test.acid-bolt",
+        0,
+        1,
+        1,
+        DamageType::Acid,
+        &mut events,
+    );
+
+    let protected = game
+        .items
+        .iter()
+        .find(|item| item.id == "p88b.arrows-a")
+        .expect("quivered arrows should remain");
+    let overflow = game
+        .items
+        .iter()
+        .find(|item| item.id == "p88b.arrows-b")
+        .expect("partially destroyed overflow should remain");
+    assert_eq!(protected.quantity, 60);
+    assert!(overflow.quantity < 60);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::InventoryItemDestroyedByDamage {
+            source_kind_id,
+            target_kind_id,
+            quantity,
+        } if source_kind_id == "test.monster-kind"
+            && target_kind_id == "demo.item.arrow"
+            && *quantity == 60 - overflow.quantity
+    )));
+}
+
+#[test]
+fn p88b_protection_boundaries_preserve_other_destruction_rules() {
+    let mut touch = Game::new(0);
+    touch.items.clear();
+    p88b_add_item(
+        &mut touch,
+        "p88b.touch-arrows",
+        "demo.item.arrow",
+        60,
+        ItemLocation::Inventory,
+        &[],
+    );
+    let draws = touch.rng_draw_counter();
+    touch.damage_player_inventory("test.plasma", DamageType::Plasma, true, 1, &mut Vec::new());
+    assert_eq!(touch.rng_draw_counter(), draws);
+
+    let mut enduring = Game::new(0);
+    enduring.items.clear();
+    p88b_add_item(
+        &mut enduring,
+        "p88b.enduring-arrows",
+        "demo.item.arrow",
+        60,
+        ItemLocation::Inventory,
+        &["rfb-legacy.affix.endurance"],
+    );
+    let draws = enduring.rng_draw_counter();
+    enduring.damage_player_inventory("test.acid", DamageType::Acid, false, 1, &mut Vec::new());
+    assert_eq!(enduring.rng_draw_counter(), draws);
+
+    let mut protected = Game::new(0);
+    protected.items.clear();
+    p88b_add_item(
+        &mut protected,
+        "p88b.protected-status-arrows",
+        "demo.item.arrow",
+        60,
+        ItemLocation::Inventory,
+        &[],
+    );
+    protected
+        .player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_INVENTORY_PROTECTION, 10, "test.status").status);
+    let draws = protected.rng_draw_counter();
+    protected.damage_player_inventory("test.acid", DamageType::Acid, false, 1, &mut Vec::new());
+    assert!(protected.rng_draw_counter() > draws);
+    assert_eq!(protected.items[0].quantity, 60);
+
+    let mut manual = Game::new(0);
+    manual.items.clear();
+    p88b_add_item(
+        &mut manual,
+        "p88b.manual-quiver",
+        "demo.item.quiver",
+        1,
+        ItemLocation::Equipped {
+            slot_id: "quiver".to_owned(),
+        },
+        &["rfb-legacy.affix.quiver-protection"],
+    );
+    p88b_add_item(
+        &mut manual,
+        "p88b.manual-arrows",
+        "demo.item.arrow",
+        10,
+        ItemLocation::Inventory,
+        &[],
+    );
+    assert_eq!(
+        manual
+            .destroy_item("p88b.manual-arrows", 1)
+            .unwrap()
+            .quantity,
+        1
+    );
+}
