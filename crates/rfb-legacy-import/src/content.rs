@@ -5266,6 +5266,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "detect_treasure_spell" => "rfb.ability.race.detect-treasure",
             "phase_door_spell" => "rfb.ability.race.phase-door",
             "poison_dart_spell" => "rfb.ability.race.poison-dart",
+            "probing_spell" => "rfb.ability.race.probe-monsters",
             "stone_to_mud_spell" => "rfb.ability.race.stone-to-mud",
             _ => {
                 gaps.push(format!("get_powers:{spell}"));
@@ -6089,6 +6090,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             | "dwarf"
             | "gnome"
             | "half-giant"
+            | "half-titan"
             | "half-troll"
             | "hobbit"
             | "kobold"
@@ -19210,6 +19212,19 @@ race_t *test_beast_get_race(void)
                 "standard-body",
             ]
         );
+        let half_titan = LegacyCharacterEntry {
+            id: "half-titan".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&half_titan),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
     }
 
     #[test]
@@ -19223,6 +19238,7 @@ static power_info _barbarian_get_powers[] =
     { A_CHR, {10, 5, 50, detect_treasure_spell}},
     { A_INT, {5, 2, 50, phase_door_spell}},
     { A_DEX, {12, 8, 50, poison_dart_spell}},
+    { A_INT, {15, 10, 60, probing_spell}},
     { A_STR, {20, 10, 70, stone_to_mud_spell}},
     { A_WIS, {12, 7, 40, mystery_spell}},
     { -1, {-1, -1, -1, NULL} }
@@ -19300,6 +19316,13 @@ race_t *barbarian_get_race(void)
                     ability_id: "rfb.ability.race.poison-dart".to_owned(),
                 },
                 LegacyInnatePower {
+                    governing_attribute: "intelligence".to_owned(),
+                    minimum_level: 15,
+                    cost: 10,
+                    base_failure_percent: 60,
+                    ability_id: "rfb.ability.race.probe-monsters".to_owned(),
+                },
+                LegacyInnatePower {
                     governing_attribute: "strength".to_owned(),
                     minimum_level: 20,
                     cost: 10,
@@ -19344,9 +19367,13 @@ race_t *barbarian_get_race(void)
         );
         assert_eq!(
             race["abilities"][6]["abilityId"],
+            "rfb.ability.race.probe-monsters"
+        );
+        assert_eq!(
+            race["abilities"][7]["abilityId"],
             "rfb.ability.race.stone-to-mud"
         );
-        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(7));
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(8));
         assert_eq!(race["resistances"]["fear"], "resistant");
         assert!(
             race["tags"]

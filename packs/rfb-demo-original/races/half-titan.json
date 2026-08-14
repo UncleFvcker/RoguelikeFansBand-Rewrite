@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.probe-monsters",
+      "minimumLevel": 15,
+      "governingAttribute": "intelligence",
+      "cost": 10,
+      "baseFailurePercent": 60
+    }
+  ],
   "baseHp": 28,
   "bodySlots": [
     {
@@ -85,7 +94,10 @@
   "shopAdjustPercent": 90,
   "skillSetId": "rfb-legacy.skill-set.race-half-titan",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

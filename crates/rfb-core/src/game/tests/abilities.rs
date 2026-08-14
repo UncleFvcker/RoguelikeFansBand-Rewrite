@@ -2568,6 +2568,7 @@ const RACE_DETECT_DOORS_ABILITY_ID: &str = "rfb.ability.race.detect-doors-stairs
 const RACE_DETECT_TREASURE_ABILITY_ID: &str = "rfb.ability.race.detect-treasure";
 const RACE_PHASE_DOOR_ABILITY_ID: &str = "rfb.ability.race.phase-door";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
+const RACE_PROBE_MONSTERS_ABILITY_ID: &str = "rfb.ability.race.probe-monsters";
 const RACE_STONE_TO_MUD_ABILITY_ID: &str = "rfb.ability.race.stone-to-mud";
 
 #[test]
@@ -3398,6 +3399,102 @@ fn formal_half_troll_regeneration_and_berserk_follow_the_effective_race() {
             .iter()
             .all(|ability| ability.id != RACE_BERSERK_ABILITY_ID)
     );
+}
+
+#[test]
+fn half_titan_probe_knowledge_survives_losing_the_race_power_and_reloading() {
+    let mut game = Game::new_with_build_race_and_name(
+        102,
+        "demo.build.high-mage-death",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human High-Mage should create");
+    clear_monsters(&mut game);
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.half-titan-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.half-titan".to_owned());
+    game.player.statuses.push(form);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Chaos),
+        ResistanceLevel::Resistant
+    );
+
+    let level_fourteen_experience = crate::stats::experience_required_for_level(14);
+    game.apply_unscaled_player_experience(level_fourteen_experience, &mut Vec::new());
+    let racial = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_PROBE_MONSTERS_ABILITY_ID)
+        .expect("temporary Half-Titan form should grant monster probing");
+    assert_eq!(racial.source, AbilitySourceDto::Race);
+    assert_eq!(
+        racial.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Intelligence)
+    );
+    assert_eq!(racial.minimum_level, 15);
+    assert_eq!(racial.base_resource_cost, 10);
+    assert!(!racial.can_cast);
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(15) - level_fourteen_experience,
+        &mut Vec::new(),
+    );
+    game.debug_set_ability_casts_succeed(true);
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+    let mana_before = mana.current;
+    let target = game.position_in_direction(Direction::East);
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    let target_index = game.index(target).expect("probe target should exist");
+    game.glow[target_index] = true;
+    game.push_generated_actor(
+        "test.half-titan-probe".to_owned(),
+        "demo.actor.sheep",
+        target,
+    );
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        RACE_PROBE_MONSTERS_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Half-Titan monster probing should resolve");
+    assert_eq!(
+        game.resources["demo.resource.mana"].current,
+        mana_before - 10
+    );
+    assert!(game.probed_actor_kind_ids.contains("demo.actor.sheep"));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityMonstersProbed { resolution, .. }
+            if resolution.monsters.iter().any(|monster| monster.kind_id == "demo.actor.sheep")
+    )));
+
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    game.refresh_player_resource_maxima();
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_PROBE_MONSTERS_ABILITY_ID)
+    );
+    assert!(game.probed_actor_kind_ids.contains("demo.actor.sheep"));
+    let hash = game.state_hash();
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("probe knowledge should not require a current Sniper or Half-Titan source");
+    assert!(restored.probed_actor_kind_ids.contains("demo.actor.sheep"));
+    assert_eq!(restored.state_hash(), hash);
 }
 
 #[test]

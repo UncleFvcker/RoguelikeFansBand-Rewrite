@@ -1126,3 +1126,20 @@ git diff --stat
   `23c6ddf5d8d8080af9fab3cafd85847077cbff7db76715094eaee5b69b2ea0d3`、Protocol `1.204`、State Hash
   Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量 fixture，
   留待合并验收。
+
+## 61. main 当前交接（半泰坦正式内容、共享怪物探测与知识持久化）
+
+- 种族方向继续拥有既有 `rfb-legacy.race.half-titan` 与
+  `rfb-legacy.skill-set.race-half-titan`，并新增、拥有 `rfb.ability.race.probe-monsters`。该能力共享
+  `demo.ability-program.sniper-probe-monsters` 与现有怪物探测面板；其他方向不得重复建立种族探测
+  身份。本批不占用新的 ability program、item、material、affix、resource 或玩家 actor ID。
+- 半泰坦按 RFB master 闭合六维、生命 110%、基础 HP 28、经验 200%、商店 90%、八项技能、
+  混沌抗性、Giant kin、Standard 身体、初始“和谐”和 15 级 INT/10/60“探测怪物”；原版没有
+  等级奖励。New Game 通过既有 `raceId` 正式开放，外观继续由职业 build 决定。
+- 已探测 Actor 种类知识不再要求当前职业具有 `snipingProfile`，能力来源消失后仍保留。读档只对
+  该集合检查 ID 唯一和 Actor 引用存在；狙击专注的职业与上限校验保持不变。能力门槛、共享面板
+  事件、知识保留、非狙击读档、非法知识、美德和 Web 入口由聚焦测试覆盖。
+- 协调点为 pack `1.344.0` / content hash
+  `7930a9ba2980097431e039479334265842cb54bd143e279efde2c93fd47da96b`、Protocol `1.204`、State Hash
+  Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量 fixture，
+  留待合并验收。

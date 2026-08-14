@@ -86,6 +86,7 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.gnome" => kinds.push(VirtueKindDto::Knowledge),
             "rfb-legacy.race.half-giant" => kinds.push(VirtueKindDto::Justice),
             "rfb-legacy.race.half-troll" => kinds.push(VirtueKindDto::Valour),
+            "rfb-legacy.race.half-titan" => kinds.push(VirtueKindDto::Harmony),
             _ => {}
         }
 

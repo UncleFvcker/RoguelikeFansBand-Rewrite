@@ -528,3 +528,19 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 协调版本为 pack `1.343.0` / hash
   `23c6ddf5d8d8080af9fab3cafd85847077cbff7db76715094eaee5b69b2ea0d3`、Protocol `1.204`、State Hash
   Schema v100、save v1、active baseline `contract-v303`。未运行或刷新全量 fixture。
+
+## main 当前批次：半泰坦正式内容、共享怪物探测与知识持久化
+
+- 正式种族复用既有 `rfb-legacy.race.half-titan` 与
+  `rfb-legacy.skill-set.race-half-titan`；新增并由种族方向拥有
+  `rfb.ability.race.probe-monsters`，共享既有
+  `demo.ability-program.sniper-probe-monsters` 和怪物探测面板。本批不新增 ability program、item、
+  material、affix、resource 或玩家 actor ID。
+- RFB master 的六维、生命 110%、基础 HP 28、经验 200%、商店 90%、八项技能、混沌抗性、
+  Giant kin、Standard 身体、初始“和谐”和 15 级 INT/10/60“探测怪物”均已闭合；原版没有
+  等级奖励。
+- `probed_actor_kind_ids` 不再错误依赖狙击职业。读档继续拒绝重复或未知 Actor ID，狙击专注仍
+  严格要求狙击配置；已探测知识在种族能力来源消失后保留并可正常保存、读取和回放。
+- 协调版本为 pack `1.344.0` / hash
+  `7930a9ba2980097431e039479334265842cb54bd143e279efde2c93fd47da96b`、Protocol `1.204`、State Hash
+  Schema v100、save v1、active baseline `contract-v303`。未运行或刷新全量 fixture。

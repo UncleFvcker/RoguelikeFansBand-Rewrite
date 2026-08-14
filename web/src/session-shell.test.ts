@@ -47,6 +47,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.gnome",
     "rfb-legacy.race.half-giant",
     "rfb-legacy.race.half-troll",
+    "rfb-legacy.race.half-titan",
   ]);
 });
 
@@ -161,6 +162,15 @@ test("new character requests preserve the selected formal race", () => {
       "Grish",
     ).raceId,
     "rfb-legacy.race.half-troll",
+  );
+  assert.equal(
+    createNewSessionRequest(
+      "94",
+      "demo.build.high-mage-death",
+      "rfb-legacy.race.half-titan",
+      "Atlas",
+    ).raceId,
+    "rfb-legacy.race.half-titan",
   );
 });
 

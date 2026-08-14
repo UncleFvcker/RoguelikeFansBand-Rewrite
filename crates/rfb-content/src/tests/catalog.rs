@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.343.0");
+    assert_eq!(catalog.pack_version(), "1.344.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1059,6 +1059,87 @@ fn formal_half_troll_matches_rfb_profile_and_reuses_racial_berserk() {
             ("demo.skill.stealth", -2),
         ]
     );
+}
+
+#[test]
+fn formal_half_titan_matches_rfb_profile_and_reuses_monster_probe() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let half_titan = catalog
+        .race("rfb-legacy.race.half-titan")
+        .expect("formal Half-Titan race");
+
+    assert_eq!(
+        [
+            half_titan.modifiers.strength,
+            half_titan.modifiers.intelligence,
+            half_titan.modifiers.wisdom,
+            half_titan.modifiers.dexterity,
+            half_titan.modifiers.constitution,
+            half_titan.modifiers.charisma,
+        ],
+        [5, 1, 2, -2, 3, 3]
+    );
+    assert_eq!(half_titan.life_percent, 110);
+    assert_eq!(half_titan.base_hp, 28);
+    assert_eq!(half_titan.experience_percent, 200);
+    assert_eq!(half_titan.shop_adjust_percent, 90);
+    assert_eq!(half_titan.infravision, 0);
+    assert_eq!(half_titan.kin_category.as_deref(), Some("kin-glyph-80"));
+    assert_eq!(
+        half_titan.resistances.get(&ActorDamageType::Chaos),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(half_titan.level_mutation_rewards.is_empty());
+    assert_eq!(
+        half_titan.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 15,
+            governing_attribute: TechniqueAttribute::Intelligence,
+            cost: 10,
+            cost_scaling: None,
+            base_failure_percent: 60,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.probe-monsters".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(half_titan.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&half_titan.skill_set_id)
+        .expect("formal Half-Titan skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 3),
+            ("demo.skill.disarming", -5),
+            ("demo.skill.melee", 25),
+            ("demo.skill.perception", 8),
+            ("demo.skill.saving-throw", 1),
+            ("demo.skill.search", 1),
+            ("demo.skill.stealth", -2),
+        ]
+    );
+
+    assert!(matches!(
+        catalog
+            .ability("rfb.ability.race.probe-monsters")
+            .expect("Half-Titan monster probe ability")
+            .effect,
+        AbilityEffectDefinition::ProbeMonsters
+    ));
 }
 
 #[test]

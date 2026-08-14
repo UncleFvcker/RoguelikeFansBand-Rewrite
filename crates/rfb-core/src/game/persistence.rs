@@ -970,13 +970,17 @@ impl Game {
         if sniping_profile.is_none_or(|profile| {
             sniper_concentration > profile.maximum_concentration(progress.level)
         }) && sniper_concentration != 0
-            || probed_actor_kind_ids.len() != saved_probed_actor_kind_ids.len()
-            || (!probed_actor_kind_ids.is_empty() && sniping_profile.is_none())
+        {
+            return Err(CoreError::InvalidSave("player sniper state is invalid"));
+        }
+        if probed_actor_kind_ids.len() != saved_probed_actor_kind_ids.len()
             || probed_actor_kind_ids
                 .iter()
                 .any(|actor_kind_id| content.actor(actor_kind_id).is_none())
         {
-            return Err(CoreError::InvalidSave("player sniper state is invalid"));
+            return Err(CoreError::InvalidSave(
+                "player probed actor knowledge is invalid",
+            ));
         }
         let minor_slow = payload.player.minor_slow;
         if minor_slow > 10 {

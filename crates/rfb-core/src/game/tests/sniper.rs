@@ -691,7 +691,7 @@ fn sniper_state_round_trips_and_rejects_invalid_build_or_bounds() {
     assert_eq!(restored.sniper_concentration, 2);
     assert_eq!(
         restored.probed_actor_kind_ids,
-        BTreeSet::from([probed_kind_id])
+        BTreeSet::from([probed_kind_id.clone()])
     );
     assert_eq!(restored.state_hash(), hash);
 
@@ -707,6 +707,24 @@ fn sniper_state_round_trips_and_rejects_invalid_build_or_bounds() {
     assert!(matches!(
         Game::from_save(non_sniper),
         Err(CoreError::InvalidSave("player sniper state is invalid"))
+    ));
+
+    let mut duplicate_knowledge = game.to_save();
+    duplicate_knowledge.player.probed_actor_kind_ids = vec![probed_kind_id.clone(), probed_kind_id];
+    assert!(matches!(
+        Game::from_save_with_content(duplicate_knowledge, game.content.clone()),
+        Err(CoreError::InvalidSave(
+            "player probed actor knowledge is invalid"
+        ))
+    ));
+
+    let mut unknown_knowledge = game.to_save();
+    unknown_knowledge.player.probed_actor_kind_ids = vec!["test.actor.missing".to_owned()];
+    assert!(matches!(
+        Game::from_save_with_content(unknown_knowledge, game.content.clone()),
+        Err(CoreError::InvalidSave(
+            "player probed actor knowledge is invalid"
+        ))
     ));
 }
 
