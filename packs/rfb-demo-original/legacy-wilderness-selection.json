@@ -108,6 +108,44 @@
       "substituteSourceIndex": 36
     },
     {
+      "sourceIndex": 36,
+      "sourceName": "Troll cave",
+      "id": "demo.dungeon.troll-cave",
+      "position": { "x": 30, "y": 45 },
+      "minimumDepth": 18,
+      "maximumDepth": 36,
+      "monsterDivisor": 12,
+      "generationFlags": [
+        "ALL_SHAFTS",
+        "CAVE",
+        "WATER_RIVER",
+        "CAVERN",
+        "LAKE_WATER",
+        "LAKE_RUBBLE",
+        "DESTROY",
+        "BIG"
+      ],
+      "monsterPreferences": [
+        "R_CHAR_hpTO",
+        "ANIMAL",
+        "TROLL"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "DIRT", "percent": 70 },
+        { "sourceTag": "GRASS", "percent": 30 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 14,
+      "guardian": {
+        "sourceIndex": 1304,
+        "sourceName": "Spulga, the Troll Priestess",
+        "chineseName": "巨魔女祭司斯普尔加",
+        "level": 40
+      },
+      "finalObject": { "tval": 37, "sval": 13 },
+      "finalEgoSourceIndex": 72
+    },
+    {
       "sourceIndex": 2,
       "sourceName": "Camelot",
       "id": "demo.dungeon.camelot",

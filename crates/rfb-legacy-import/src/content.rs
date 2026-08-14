@@ -14891,6 +14891,84 @@ mod tests {
     }
 
     #[test]
+    fn p90a_troll_cave_plan_locks_shared_entrance_ecology_guardian_and_reward() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let orc_cave = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 3)
+            .expect("Orc cave should have an implementation plan");
+        let troll_cave = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 36)
+            .expect("Troll cave should have an implementation plan");
+
+        assert_eq!(troll_cave.source_name, "Troll cave");
+        assert_eq!(troll_cave.id, "demo.dungeon.troll-cave");
+        assert_eq!(troll_cave.position, DemoWildernessPosition { x: 30, y: 45 });
+        assert_eq!(troll_cave.position, orc_cave.position);
+        assert_eq!(orc_cave.substitute_source_index, Some(36));
+        assert_eq!(
+            (troll_cave.minimum_depth, troll_cave.maximum_depth),
+            (18, 36)
+        );
+        assert_eq!(troll_cave.monster_divisor, 12);
+        assert_eq!(
+            troll_cave.generation_flags,
+            [
+                "ALL_SHAFTS",
+                "CAVE",
+                "WATER_RIVER",
+                "CAVERN",
+                "LAKE_WATER",
+                "LAKE_RUBBLE",
+                "DESTROY",
+                "BIG",
+            ]
+        );
+        assert_eq!(
+            troll_cave.monster_preferences,
+            ["R_CHAR_hpTO", "ANIMAL", "TROLL"]
+        );
+        assert_eq!(
+            troll_cave.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "DIRT".to_owned(),
+                    percent: 70,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GRASS".to_owned(),
+                    percent: 30,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0,
+                },
+            ]
+        );
+        assert_eq!(troll_cave.tunnel_percent, Some(14));
+        assert_eq!(troll_cave.guardian.source_index, 1304);
+        assert_eq!(
+            troll_cave.guardian.source_name,
+            "Spulga, the Troll Priestess"
+        );
+        assert_eq!(troll_cave.guardian.chinese_name, "巨魔女祭司斯普尔加");
+        assert_eq!(troll_cave.guardian.level, 40);
+        assert_eq!(
+            troll_cave.final_object,
+            Some(DemoDungeonObjectPlan { tval: 37, sval: 13 })
+        );
+        assert_eq!(troll_cave.final_artifact_source_index, None);
+        assert_eq!(troll_cave.final_ego_source_index, Some(72));
+        assert_eq!(troll_cave.substitute_source_index, None);
+    }
+
+    #[test]
     fn melee_effect_parser_preserves_order_dice_and_independent_chances() {
         let blow = parse_blow("SLASH:HURT(10d1):POISON(4d4, 50%):CUT(2d3, 30%)", 1)
             .expect("synthetic blow should parse");
