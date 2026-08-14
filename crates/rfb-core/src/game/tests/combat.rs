@@ -1558,6 +1558,7 @@ fn hold_life_can_save_against_unlife_without_changing_life_force_or_monster_powe
                 passives: BTreeSet::from([EquipmentPassive::HoldLife]),
                 ..AffixPropertyBundleDefinition::default()
             },
+            ..RolledAffixState::default()
         });
 
     let save_seed = (0..100)

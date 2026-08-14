@@ -6,7 +6,10 @@ use rfb_content::{
     ActorResistanceLevel, AffixDefinition, AffixPropertyBundleDefinition, ContentCatalog,
     RfbEgoTypeDefinition, StatModifiers,
 };
-use rfb_protocol::{ItemActivationDto, ItemChargesDto};
+use rfb_protocol::{
+    ItemActivationDto, ItemChargesDto, ItemCurseEffectDto, ItemEnchantmentsDto, MeleeDamageDiceDto,
+    WeaponTraitDto,
+};
 
 use crate::{
     rng::RfbRng,
@@ -20,15 +23,84 @@ use super::{initial_item_runtime_state, merge_equipment_bonuses, roll_weighted_i
 pub(super) struct EgoMaterialization {
     pub(super) affix_ids: Vec<String>,
     pub(super) rolled_affixes: Vec<RolledAffixState>,
+    pub(super) enchantment_delta: ItemEnchantmentsDto,
+    pub(super) melee_damage_dice: Option<MeleeDamageDiceDto>,
+    pub(super) weapon_traits: BTreeSet<WeaponTraitDto>,
+    pub(super) curse_effects: BTreeSet<ItemCurseEffectDto>,
     pub(super) activation: Option<ItemActivationDto>,
     pub(super) charges: Option<ItemChargesDto>,
 }
 
 impl EgoMaterialization {
+    pub(super) fn new(
+        affix_ids: Vec<String>,
+        rolled_affixes: Vec<RolledAffixState>,
+        activation: Option<ItemActivationDto>,
+        charges: Option<ItemChargesDto>,
+    ) -> Self {
+        debug_assert!(
+            rolled_affixes
+                .iter()
+                .filter(|rolled| rolled.melee_damage_dice.is_some())
+                .count()
+                <= 1,
+            "one weapon ego may replace melee dice"
+        );
+        let enchantment_delta =
+            rolled_affixes
+                .iter()
+                .fold(ItemEnchantmentsDto::default(), |mut total, rolled| {
+                    total.to_hit = total.to_hit.saturating_add(rolled.enchantment_delta.to_hit);
+                    total.to_damage = total
+                        .to_damage
+                        .saturating_add(rolled.enchantment_delta.to_damage);
+                    total.to_armor = total
+                        .to_armor
+                        .saturating_add(rolled.enchantment_delta.to_armor);
+                    total
+                });
+        let melee_damage_dice = rolled_affixes
+            .iter()
+            .find_map(|rolled| rolled.melee_damage_dice);
+        let weapon_traits = rolled_affixes
+            .iter()
+            .flat_map(|rolled| rolled.weapon_traits.iter().copied())
+            .collect();
+        let curse_effects = rolled_affixes
+            .iter()
+            .flat_map(|rolled| rolled.curse_effects.iter().copied())
+            .collect();
+        Self {
+            affix_ids,
+            rolled_affixes,
+            enchantment_delta,
+            melee_damage_dice,
+            weapon_traits,
+            curse_effects,
+            activation,
+            charges,
+        }
+    }
+
     /// Commits a fully prepared materialization to an existing item in one step.
     pub(super) fn apply_to(self, item: &mut ItemInstance) {
+        let enchantments = ItemEnchantmentsDto {
+            to_hit: item
+                .enchantments
+                .to_hit
+                .saturating_add(self.enchantment_delta.to_hit),
+            to_damage: item
+                .enchantments
+                .to_damage
+                .saturating_add(self.enchantment_delta.to_damage),
+            to_armor: item
+                .enchantments
+                .to_armor
+                .saturating_add(self.enchantment_delta.to_armor),
+        };
         item.affix_ids = self.affix_ids;
         item.rolled_affixes = self.rolled_affixes;
+        item.enchantments = enchantments;
         item.activation = self.activation;
         item.charges = self.charges;
         item.device_recovery_progress = 0;
@@ -50,12 +122,7 @@ pub(super) fn materialize_ego_with_rng(
     let rolled_affixes = roll_affix_properties_with_rng(content, rng, &affix_ids, roll_depth);
     let (activation, charges) =
         initial_item_runtime_state(content, rng, kind_id, &affix_ids, activation_depth);
-    EgoMaterialization {
-        affix_ids,
-        rolled_affixes,
-        activation,
-        charges,
-    }
+    EgoMaterialization::new(affix_ids, rolled_affixes, activation, charges)
 }
 
 /// Selects one authoritative RFB ego without changing any item state.
@@ -111,6 +178,7 @@ fn roll_affix_properties_with_rng(
             rolled_affixes.push(RolledAffixState {
                 affix_id: affix_id.clone(),
                 properties,
+                ..RolledAffixState::default()
             });
         }
     }
@@ -236,6 +304,9 @@ mod tests {
     use rfb_content::{
         AffixDefinition, EquipmentBonuses, RfbEgoGenerationDefinition, StatModifiers,
     };
+    use rfb_protocol::{ItemCurseEffectDto, ItemQualityDto, MeleeDamageDiceDto, WeaponTraitDto};
+
+    use crate::state::ItemLocation;
 
     use super::*;
 
@@ -317,6 +388,144 @@ mod tests {
         assert_eq!(materialized.activation, expected_activation);
         assert_eq!(materialized.charges, expected_charges);
         assert_eq!(rng, expected_rng);
+    }
+
+    #[test]
+    fn ego_materialization_commits_complete_instance_state_only_after_success() {
+        let mut item = ItemInstance {
+            id: "test.item.weapon".to_owned(),
+            kind_id: "demo.item.long-sword".to_owned(),
+            quantity: 1,
+            inscription: None,
+            origin_actor_kind_id: None,
+            origin_kind: None,
+            damage_dice_override: None,
+            discount_percent: 0,
+            quality: ItemQualityDto::Fine,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            enchantments: ItemEnchantmentsDto {
+                to_hit: 1,
+                to_damage: 2,
+                to_armor: 0,
+            },
+            curse: None,
+            permanent_destruction_immunities: BTreeSet::new(),
+            activation: None,
+            charges: None,
+            fuel: None,
+            device_recovery_progress: 0,
+            captured_actor: None,
+            location: ItemLocation::Inventory,
+        };
+        let before_failed_selection = item.clone();
+        let mut failed_rng = RfbRng::seeded(33);
+        let rng_before = failed_rng.clone();
+        assert_eq!(
+            roll_rfb_ego_from_affixes(
+                std::iter::empty::<&AffixDefinition>(),
+                &mut failed_rng,
+                30,
+                &[RfbEgoTypeDefinition::Weapon],
+            ),
+            None
+        );
+        assert_eq!(item, before_failed_selection);
+        assert_eq!(failed_rng, rng_before);
+
+        let rolled = RolledAffixState {
+            affix_id: "rfb-legacy.affix.slaying".to_owned(),
+            enchantment_delta: ItemEnchantmentsDto {
+                to_hit: 3,
+                to_damage: -1,
+                to_armor: 0,
+            },
+            melee_damage_dice: Some(MeleeDamageDiceDto { dice: 4, sides: 6 }),
+            weapon_traits: BTreeSet::from([WeaponTraitDto::Vorpal, WeaponTraitDto::Impact]),
+            curse_effects: BTreeSet::from([ItemCurseEffectDto::Aggravate]),
+            ..RolledAffixState::default()
+        };
+        let materialization = EgoMaterialization::new(
+            vec![rolled.affix_id.clone()],
+            vec![rolled.clone()],
+            None,
+            None,
+        );
+        assert_eq!(materialization.enchantment_delta, rolled.enchantment_delta);
+        assert_eq!(materialization.melee_damage_dice, rolled.melee_damage_dice);
+        assert_eq!(materialization.weapon_traits, rolled.weapon_traits);
+        assert_eq!(materialization.curse_effects, rolled.curse_effects);
+
+        materialization.apply_to(&mut item);
+        assert_eq!(
+            item.affix_ids.as_slice(),
+            std::slice::from_ref(&rolled.affix_id)
+        );
+        assert_eq!(item.rolled_affixes, [rolled]);
+        assert_eq!(
+            item.enchantments,
+            ItemEnchantmentsDto {
+                to_hit: 4,
+                to_damage: 1,
+                to_armor: 0,
+            }
+        );
+    }
+
+    #[test]
+    fn rolled_weapon_ego_state_round_trips_without_rng_draws() {
+        let game = Game::new(57);
+        let mut item = ItemInstance {
+            id: "test.item.weapon".to_owned(),
+            kind_id: "demo.item.long-sword".to_owned(),
+            quantity: 1,
+            inscription: None,
+            origin_actor_kind_id: None,
+            origin_kind: None,
+            damage_dice_override: None,
+            discount_percent: 0,
+            quality: ItemQualityDto::Fine,
+            affix_ids: vec!["rfb-legacy.affix.slaying".to_owned()],
+            rolled_affixes: vec![RolledAffixState {
+                affix_id: "rfb-legacy.affix.slaying".to_owned(),
+                enchantment_delta: ItemEnchantmentsDto {
+                    to_hit: 2,
+                    to_damage: 5,
+                    to_armor: 0,
+                },
+                melee_damage_dice: Some(MeleeDamageDiceDto { dice: 5, sides: 5 }),
+                weapon_traits: BTreeSet::from([WeaponTraitDto::ManaBrand, WeaponTraitDto::Order]),
+                curse_effects: BTreeSet::from([
+                    ItemCurseEffectDto::DrainExperience,
+                    ItemCurseEffectDto::Teleport,
+                ]),
+                ..RolledAffixState::default()
+            }],
+            enchantments: ItemEnchantmentsDto {
+                to_hit: 2,
+                to_damage: 5,
+                to_armor: 0,
+            },
+            curse: None,
+            permanent_destruction_immunities: BTreeSet::new(),
+            activation: None,
+            charges: None,
+            fuel: None,
+            device_recovery_progress: 0,
+            captured_actor: None,
+            location: ItemLocation::Inventory,
+        };
+        let rng_before = game.rng.clone();
+        let saved = crate::save::inventory_to_save(std::slice::from_ref(&item));
+        let restored = crate::save::inventory_item_from_dto(saved[0].clone(), &game.content)
+            .expect("weapon ego instance state should round-trip");
+        assert_eq!(restored.rolled_affixes, item.rolled_affixes);
+        assert_eq!(restored.enchantments, item.enchantments);
+        assert_eq!(game.rng, rng_before);
+
+        item.rolled_affixes[0].melee_damage_dice = Some(MeleeDamageDiceDto { dice: 0, sides: 5 });
+        let invalid = crate::save::inventory_to_save(std::slice::from_ref(&item));
+        assert!(crate::save::inventory_item_from_dto(invalid[0].clone(), &game.content).is_err());
     }
 
     #[test]

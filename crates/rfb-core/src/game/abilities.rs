@@ -3,6 +3,7 @@
 use super::item_use::VisibleBanishmentOutcome;
 use super::terrain::TerrainChangeSource;
 use super::*;
+use crate::rng::rfb_m_bonus;
 
 const DEATH_INVOKE_SPIRITS_ABILITY_ID: &str = "demo.ability.death-invoke-spirits";
 const DEATH_POISON_BRANDING_ABILITY_ID: &str = "demo.ability.death-poison-branding";
@@ -5286,6 +5287,7 @@ impl Game {
             item.rolled_affixes.push(RolledAffixState {
                 affix_id: affix_id.clone(),
                 properties,
+                ..RolledAffixState::default()
             });
             item.rolled_affixes
                 .sort_by(|left, right| left.affix_id.cmp(&right.affix_id));
@@ -6080,44 +6082,6 @@ impl Game {
         events.extend(self.relocate_player(position, changed));
     }
 
-    fn roll_rfb_m_bonus(&mut self, maximum: u16) -> u16 {
-        let level = self.progress.level.min(127);
-        let product = maximum.saturating_mul(level);
-        let mut mean = i32::from(product / 128);
-        if self.rng.bounded(128) < u64::from(product % 128) {
-            mean += 1;
-        }
-        let mut deviation = maximum / 4;
-        if self.rng.bounded(4) < u64::from(maximum % 4) {
-            deviation += 1;
-        }
-        let value = if deviation == 0 {
-            mean
-        } else {
-            let roll = self.rng.bounded(32_768);
-            // Only deviations 1..=3 are reachable by Create Ammo's m_bonus
-            // calls. These are the exact category boundaries from RFB's
-            // 256-entry randnor table after scaling by RANDNOR_STD (64).
-            let thresholds: &[u64] = match deviation {
-                1 => &[22_245, 31_249, 32_677],
-                2 => &[12_367, 22_245, 28_323, 31_249, 32_352, 32_677, 32_752],
-                3 => &[
-                    8_621, 16_166, 22_245, 26_818, 29_619, 31_249, 32_129, 32_515, 32_677, 32_740,
-                    32_760,
-                ],
-                _ => unreachable!("Create Ammo m_bonus deviation is bounded by three"),
-            };
-            let offset = i32::try_from(thresholds.partition_point(|threshold| *threshold < roll))
-                .expect("randnor category count fits i32");
-            if self.rng.bounded(100) < 50 {
-                mean.saturating_sub(offset)
-            } else {
-                mean.saturating_add(offset)
-            }
-        };
-        u16::try_from(value.clamp(0, i32::from(maximum))).expect("bounded RFB bonus must fit u16")
-    }
-
     fn roll_rfb_ammunition_magic_power(&mut self) -> i8 {
         let level = self.progress.level.min(127);
         let good_chance = level.saturating_add(10).min(75);
@@ -6184,7 +6148,7 @@ impl Game {
                 .iter()
                 .map(|(_, rarity, _)| (255 / rarity).max(1))
                 .sum::<u32>();
-            let mut rolls = 1_u16.saturating_add(self.roll_rfb_m_bonus(4));
+            let mut rolls = 1_u16.saturating_add(rfb_m_bonus(&mut self.rng, 4, level));
             if self.rng.bounded(8) == 0 {
                 rolls = rolls.saturating_mul(2);
             }
@@ -6219,10 +6183,11 @@ impl Game {
             RolledAffixState {
                 affix_id: SLAYING_AFFIX_ID.to_owned(),
                 properties,
+                ..RolledAffixState::default()
             }
         } else {
             let mut properties = AffixPropertyBundleDefinition::default();
-            let mut rolls = 1_u16.saturating_add(self.roll_rfb_m_bonus(4));
+            let mut rolls = 1_u16.saturating_add(rfb_m_bonus(&mut self.rng, 4, level));
             if self.rng.bounded(8) == 0 {
                 rolls = rolls.saturating_mul(2);
             }
@@ -6239,6 +6204,7 @@ impl Game {
             RolledAffixState {
                 affix_id: ELEMENTAL_AFFIX_ID.to_owned(),
                 properties,
+                ..RolledAffixState::default()
             }
         }
     }
@@ -6259,12 +6225,12 @@ impl Game {
 
         let primary_to_hit = 1_u16
             .saturating_add(u16::try_from(self.rng.bounded(5)).expect("d5 roll fits u16"))
-            .saturating_add(self.roll_rfb_m_bonus(5));
+            .saturating_add(rfb_m_bonus(&mut self.rng, 5, level));
         let primary_to_damage = 1_u16
             .saturating_add(u16::try_from(self.rng.bounded(5)).expect("d5 roll fits u16"))
-            .saturating_add(self.roll_rfb_m_bonus(5));
-        let extra_to_hit = self.roll_rfb_m_bonus(10).saturating_add(1) / 2;
-        let extra_to_damage = self.roll_rfb_m_bonus(10).saturating_add(1) / 2;
+            .saturating_add(rfb_m_bonus(&mut self.rng, 5, level));
+        let extra_to_hit = rfb_m_bonus(&mut self.rng, 10, level).saturating_add(1) / 2;
+        let extra_to_damage = rfb_m_bonus(&mut self.rng, 10, level).saturating_add(1) / 2;
         let sign = if power < 0 { -1_i16 } else { 1_i16 };
         item.enchantments.to_hit = sign.saturating_mul(
             i16::try_from(primary_to_hit.saturating_add(if power.abs() > 1 {
@@ -6343,6 +6309,7 @@ impl Game {
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            enchantments: ItemEnchantmentsDto::default(),
             curse: None,
             activation: None,
             charges: None,
@@ -6486,7 +6453,11 @@ impl Game {
         };
         let maximum_tier = u16::try_from(item_kind_ids.len() - 1)
             .expect("validated ammunition tier count must fit u16");
-        let tier = usize::from(self.roll_rfb_m_bonus(maximum_tier));
+        let tier = usize::from(rfb_m_bonus(
+            &mut self.rng,
+            maximum_tier,
+            self.progress.level,
+        ));
         let item_kind_id = item_kind_ids[tier].clone();
         let quantity = quantity_minimum.saturating_add(
             u32::try_from(

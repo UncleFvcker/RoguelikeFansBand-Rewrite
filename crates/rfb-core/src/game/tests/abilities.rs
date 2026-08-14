@@ -389,6 +389,7 @@ fn spell_power_uses_shared_formula_and_modifier_sources_in_projection() {
             },
             ..AffixPropertyBundleDefinition::default()
         },
+        ..RolledAffixState::default()
     });
     game.player.statuses.push(StatusInstance {
         kind_id: "test.status.blood-rite".to_owned(),

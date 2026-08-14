@@ -128,6 +128,11 @@ Mauler 专属的 `ego_weapon_adjust_weight` 已审查，但当前 pack 没有 Ma
 
 ### E3.2：扩展原子物化结果
 
+状态：已完成。共享 `rfb_m_bonus` 保持造箭 RNG 顺序并支持显式 generation level；实例级附魔、
+近战骰面、特殊武器性质与 heavy-mask curse effect 全部随 `rolledAffixes` 持久化，物化成功后才由
+`apply_to` 一次提交。协议推进至 `1.222`、save header/payload 推进至 v3、State Hash Schema
+推进至 v105。
+
 - 把造箭已有的 `m_bonus` 移入共享纯 RNG helper，输入显式 generation level；
 - `EgoMaterialization` 增加附魔 delta、逐实例近战骰面、typed weapon traits 和具体 curse effects；
 - `apply_to` 一次提交所有结果，retry/失败不得留下部分属性；

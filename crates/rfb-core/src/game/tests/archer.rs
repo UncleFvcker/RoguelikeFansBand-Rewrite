@@ -594,6 +594,7 @@ fn player_made_ammunition_dice_and_rolled_brands_feed_the_projectile_profile() {
     arrows.rolled_affixes = vec![RolledAffixState {
         affix_id: "demo.affix.ammo-elemental".to_owned(),
         properties,
+        ..RolledAffixState::default()
     }];
 
     let profile = game

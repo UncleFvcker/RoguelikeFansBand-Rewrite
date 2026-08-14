@@ -782,6 +782,7 @@ impl Game {
             rolled_affixes: vec![RolledAffixState {
                 affix_id: CHAOS_AFFIX_ID.to_owned(),
                 properties,
+                ..RolledAffixState::default()
             }],
             enchantments: ItemEnchantmentsDto {
                 to_hit: enchantment(&mut self.rng),

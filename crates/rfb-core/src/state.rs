@@ -4,9 +4,9 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::{AffixPropertyBundleDefinition, ItemDestructionElement};
 use rfb_protocol::{
-    GoldAppearanceDto, ItemActivationDto, ItemChargesDto, ItemCurseSeverityDto,
-    ItemEnchantmentsDto, ItemFuelDto, ItemOriginKindDto, ItemQualityDto, MonsterPackBehaviorDto,
-    MonsterPackRoleDto, Position,
+    GoldAppearanceDto, ItemActivationDto, ItemChargesDto, ItemCurseEffectDto, ItemCurseSeverityDto,
+    ItemEnchantmentsDto, ItemFuelDto, ItemOriginKindDto, ItemQualityDto, MeleeDamageDiceDto,
+    MonsterPackBehaviorDto, MonsterPackRoleDto, Position, WeaponTraitDto,
 };
 use serde::{Deserialize, Serialize};
 
@@ -115,10 +115,24 @@ pub(crate) struct CapturedActor {
     pub(crate) experience: u64,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct RolledAffixState {
     pub(crate) affix_id: String,
     pub(crate) properties: AffixPropertyBundleDefinition,
+    pub(crate) enchantment_delta: ItemEnchantmentsDto,
+    pub(crate) melee_damage_dice: Option<MeleeDamageDiceDto>,
+    pub(crate) weapon_traits: BTreeSet<WeaponTraitDto>,
+    pub(crate) curse_effects: BTreeSet<ItemCurseEffectDto>,
+}
+
+impl RolledAffixState {
+    pub(crate) fn has_instance_state(&self) -> bool {
+        self.properties != AffixPropertyBundleDefinition::default()
+            || !self.enchantment_delta.is_empty()
+            || self.melee_damage_dice.is_some()
+            || !self.weapon_traits.is_empty()
+            || !self.curse_effects.is_empty()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

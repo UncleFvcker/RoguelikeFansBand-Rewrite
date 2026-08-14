@@ -226,7 +226,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 104;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 105;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -527,6 +527,7 @@ struct GeneratedItemDraft {
     quality: ItemQualityDto,
     affix_ids: Vec<String>,
     rolled_affixes: Vec<RolledAffixState>,
+    enchantments: ItemEnchantmentsDto,
     curse: Option<ItemCurseSeverityDto>,
     activation: Option<ItemActivationDto>,
     charges: Option<ItemChargesDto>,
@@ -547,7 +548,7 @@ impl GeneratedItemDraft {
             quality: self.quality,
             affix_ids: self.affix_ids,
             rolled_affixes: self.rolled_affixes,
-            enchantments: ItemEnchantmentsDto::default(),
+            enchantments: self.enchantments,
             curse: self.curse,
             permanent_destruction_immunities: Default::default(),
             activation: self.activation,
@@ -1303,12 +1304,7 @@ impl Game {
             .items
             .iter()
             .map(|spawn| {
-                let EgoMaterialization {
-                    affix_ids,
-                    rolled_affixes,
-                    activation,
-                    charges,
-                } = materialize_ego_with_rng(
+                let materialization = materialize_ego_with_rng(
                     &content,
                     &mut rng,
                     &spawn.kind_id,
@@ -1316,7 +1312,7 @@ impl Game {
                     |_| 1,
                     1,
                 );
-                ItemInstance {
+                let mut item = ItemInstance {
                     id: spawn.instance_id.clone(),
                     kind_id: spawn.kind_id.clone(),
                     quantity: spawn.quantity,
@@ -1326,18 +1322,20 @@ impl Game {
                     damage_dice_override: None,
                     discount_percent: 0,
                     quality: item_quality_dto(spawn.quality),
-                    affix_ids,
-                    rolled_affixes,
+                    affix_ids: Vec::new(),
+                    rolled_affixes: Vec::new(),
                     enchantments: ItemEnchantmentsDto::default(),
                     curse: initial_item_curse(&content, &spawn.kind_id),
                     permanent_destruction_immunities: Default::default(),
-                    activation,
-                    charges,
+                    activation: None,
+                    charges: None,
                     fuel: initial_item_fuel(&content, &spawn.kind_id),
                     device_recovery_progress: 0,
                     captured_actor: None,
                     location: ItemLocation::Ground(position_from_content(spawn.position)),
-                }
+                };
+                materialization.apply_to(&mut item);
+                item
             })
             .collect::<Vec<_>>();
         let body_slots = resolve_body_slots(&content, build.as_ref())?;
@@ -5649,8 +5647,10 @@ impl Game {
             let EgoMaterialization {
                 affix_ids,
                 rolled_affixes,
+                enchantment_delta,
                 activation,
                 charges,
+                ..
             } = materialize_ego_with_rng(
                 &self.content,
                 &mut self.rng,
@@ -5669,6 +5669,7 @@ impl Game {
                 quality,
                 affix_ids,
                 rolled_affixes,
+                enchantments: enchantment_delta,
                 curse: initial_item_curse(&self.content, &entry.item_kind_id),
                 activation,
                 charges,
@@ -5775,8 +5776,10 @@ impl Game {
         let EgoMaterialization {
             affix_ids,
             rolled_affixes,
+            enchantment_delta,
             activation,
             charges,
+            ..
         } = materialize_ego_with_rng(
             &self.content,
             &mut self.rng,
@@ -5794,6 +5797,7 @@ impl Game {
             quality: ItemQualityDto::Ordinary,
             affix_ids,
             rolled_affixes,
+            enchantments: enchantment_delta,
             curse: initial_item_curse(&self.content, &kind_id),
             activation,
             charges,
