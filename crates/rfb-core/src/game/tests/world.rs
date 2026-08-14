@@ -946,6 +946,75 @@ fn p87c_tidal_cave_room_water_and_optional_river_use_existing_terrain() {
 }
 
 #[test]
+fn p87e_tidal_cave_all_depths_keep_water_and_stairs_reachable() {
+    let mut game =
+        Game::new_with_build(87, "demo.build.warrior").expect("Middle-earth should create");
+    let definitions = game
+        .content
+        .world(&game.world_id)
+        .expect("Middle-earth should remain available")
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.tidal-cave"))
+        .cloned()
+        .collect::<Vec<_>>();
+    assert_eq!(definitions.len(), 13);
+
+    for definition in definitions {
+        let generated = game
+            .generate_procedural_floor(&definition, None)
+            .expect("Tidal Cave floor should generate");
+        let route_terrain = generated
+            .terrain
+            .iter()
+            .map(|terrain_id| match terrain_id.as_str() {
+                "demo.terrain.magma-vein" | "demo.terrain.quartz-vein" => {
+                    "demo.terrain.wall".to_owned()
+                }
+                _ => terrain_id.clone(),
+            })
+            .collect::<Vec<_>>();
+        assert!(
+            generated_terrain_is_connected(
+                &route_terrain,
+                generated.width,
+                generated.height,
+                &game.content,
+            ),
+            "depth {} travel network",
+            definition.depth
+        );
+        assert!(
+            generated
+                .terrain
+                .iter()
+                .any(|terrain| terrain == "demo.terrain.surface-water-shallow"),
+            "depth {} shallow water",
+            definition.depth
+        );
+        assert!(
+            (1..=2).contains(
+                &generated
+                    .terrain
+                    .iter()
+                    .filter(|terrain| terrain.as_str() == "demo.terrain.stairs-up")
+                    .count()
+            )
+        );
+        let down_stairs = generated
+            .terrain
+            .iter()
+            .filter(|terrain| terrain.as_str() == "demo.terrain.stairs-down")
+            .count();
+        if definition.depth < 27 {
+            assert!((4..=5).contains(&down_stairs), "depth {}", definition.depth);
+        } else {
+            assert_eq!(down_stairs, 0);
+        }
+    }
+}
+
+#[test]
 fn warrens_maps_are_seeded_connected_varied_and_persistent() {
     let mut generated_maps = BTreeSet::new();
     let mut walkable_masks = Vec::<Vec<bool>>::new();

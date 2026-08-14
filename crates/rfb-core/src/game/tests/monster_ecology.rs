@@ -572,6 +572,76 @@ fn p87b_dungeon_definition_excludes_a_tagless_guardian_from_allocation() {
 }
 
 #[test]
+fn p87e_tidal_cave_allocation_keeps_location_locks_and_grendel_out() {
+    let mut game =
+        Game::new_with_build(87, "demo.build.warrior").expect("Middle-earth should create");
+    game.current_floor_id = "demo.floor.tidal-cave-depth-15".to_owned();
+    let policy = game
+        .content
+        .encounter_table("demo.encounter-table.tidal-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Tidal Cave global allocation policy")
+        .clone();
+
+    let level_zero_allocations = game
+        .content
+        .actor_definitions()
+        .filter(|actor| actor.level == 0)
+        .filter_map(|actor| actor.allocation.as_ref())
+        .collect::<Vec<_>>();
+    assert!(!level_zero_allocations.is_empty());
+    assert!(
+        level_zero_allocations
+            .iter()
+            .all(|allocation| allocation.wild_only)
+    );
+    assert_eq!(
+        game.select_original_allocated_monster(&policy, 0, 15, None, &[], None, None),
+        None
+    );
+
+    let mut restricted_elsewhere = 0;
+    for actor in game.content.actor_definitions() {
+        let Some(allocation) = actor.allocation.as_ref() else {
+            continue;
+        };
+        if !allocation.legacy_dungeon_indices.is_empty()
+            && !allocation.legacy_dungeon_indices.contains(&33)
+        {
+            restricted_elsewhere += 1;
+            assert!(!actor_allocation_matches_legacy_dungeon(
+                allocation,
+                Some(33)
+            ));
+        }
+    }
+    assert!(restricted_elsewhere > 0);
+
+    let grendel = game
+        .content
+        .actor("demo.actor.grendel")
+        .expect("Grendel definition");
+    assert!(grendel.allocation.is_some());
+    assert!(grendel.movement.modes.contains(&ActorMovementMode::Swim));
+    assert!(game.actor_kind_is_dungeon_guardian(&grendel.id));
+
+    for _ in 0..256 {
+        let selected = game
+            .select_original_allocated_monster(&policy, 27, 27, None, &[], None, None)
+            .expect("Tidal Cave should retain ordinary dungeon candidates");
+        let actor = game.content.actor(&selected).expect("selected actor");
+        let allocation = actor.allocation.as_ref().expect("selected allocation");
+        assert!(!allocation.wild_only, "{selected}");
+        assert!(
+            allocation.legacy_dungeon_indices.is_empty()
+                || allocation.legacy_dungeon_indices.contains(&33),
+            "{selected}"
+        );
+        assert_ne!(selected, "demo.actor.grendel");
+    }
+}
+
+#[test]
 fn warg_friend_count_uses_three_d_three_including_the_leader() {
     let mut game = enter_warrens(4);
     let warg = game
