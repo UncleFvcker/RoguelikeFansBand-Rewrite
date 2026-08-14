@@ -1750,9 +1750,9 @@ impl Game {
             return Ok((index, false));
         }
         let mut split = self.items[index].clone();
-        self.items[index].quantity -= 1;
         split.id = self.allocate_item_instance_id()?;
         split.quantity = 1;
+        self.items[index].quantity -= 1;
         self.items.push(split);
         Ok((self.items.len() - 1, true))
     }
@@ -1859,19 +1859,25 @@ impl Game {
         } else {
             weapon_affix_ids
         };
-        let selected = usize::try_from(self.rng.bounded(candidates.len() as u64))
-            .expect("validated crafting candidate count must fit usize");
-        let affix_id = candidates[selected].clone();
-        let rolled_affixes = self.roll_affix_properties(
-            std::slice::from_ref(&affix_id),
-            self.floor_depth(&self.current_floor_id),
-        );
         let (index, split) = self.split_item_for_mutation(target_item_id)?;
         let target_item_id = self.items[index].id.clone();
         let target_kind_id = self.items[index].kind_id.clone();
+        let selected = usize::try_from(self.rng.bounded(candidates.len() as u64))
+            .expect("validated crafting candidate count must fit usize");
+        let affix_id = candidates[selected].clone();
+        let depth = self.floor_depth(&self.current_floor_id);
+        let materialization = materialize_ego_with_rng(
+            &self.content,
+            &mut self.rng,
+            &target_kind_id,
+            vec![affix_id.clone()],
+            |_| depth,
+            depth,
+        );
+        materialization.apply_to(&mut self.items[index]);
         self.items[index].quality = ItemQualityDto::Exceptional;
-        self.items[index].affix_ids = vec![affix_id.clone()];
-        self.items[index].rolled_affixes = rolled_affixes;
+        self.items[index].origin_kind = Some(ItemOriginKindDto::PlayerMade);
+        self.items[index].discount_percent = 99;
         self.item_property_knowledge.insert(
             target_item_id.clone(),
             ItemPropertyKnowledgeState {

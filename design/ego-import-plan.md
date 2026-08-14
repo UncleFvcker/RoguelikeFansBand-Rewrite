@@ -183,7 +183,7 @@ importer 已逐条写出 source index、rarity 和完整 `T:` 类型集合。
 最高等级、英文重名、多类型、rarity 0 与原创 affix 均有确定性测试。该批未接入 `base-items`、Craft
 或其他玩家可达入口，现有 pack 因可选字段省略而保持原 content hash。
 
-### E2：共享实例化底座
+### E2：共享实例化底座（已完成）
 
 - 把当前 loot、`craft-item` 和指定 affix 路径共用的 materialize 逻辑收敛为一个 owner；
 - 优先落到现有 `rolledAffixes/enchantments/damageDiceOverride/curse/activation` 字段；
@@ -191,6 +191,15 @@ importer 已逐条写出 source index、rarity 和完整 `T:` 类型集合。
 - 不为尚未实现的 ego 添加占位效果。
 
 提交目标：`refactor: share ego materialization`
+
+E2 已把内容驱动 affix 的静态 ID、动态 `rollGroups`、activation 与 charges 收敛到同一个纯物化入口，
+并由自然掉落、固定神器、任务奖励、世界显式物品和旧 `craft-item` 共同调用。各路径原有的 roll depth
+策略和“先动态属性、后 activation”RNG 顺序保持不变；物化结果完整生成后才写入已有物品。
+
+旧 `craft-item` 继续使用其小型显式候选池，但已通过共享入口提交结果，成功物品标记为 PlayerMade、
+完全鉴定并保留堆叠拆分语义。拆分先分配实例 ID 再减少原堆数量；取消、非法目标或 ID 耗尽均不改变
+物品或 RNG。该批未增加持久字段，也未给尚未导入的 ego 添加占位行为；法术烙印和造箭的专用动态
+分支将在对应 ego 行为批次迁移，避免当前重复执行 `Slaying` 等 roll group。
 
 ### E3：近战武器与挖掘工具 30 条
 

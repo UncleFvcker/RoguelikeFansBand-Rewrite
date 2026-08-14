@@ -698,11 +698,17 @@ impl Game {
         spawn: &ItemSpawn,
         position: ContentPosition,
     ) -> ItemInstance {
-        let (activation, charges) = initial_item_runtime_state(
+        let EgoMaterialization {
+            affix_ids,
+            rolled_affixes,
+            activation,
+            charges,
+        } = materialize_ego_with_rng(
             &self.content,
             &mut self.rng,
             &spawn.kind_id,
-            &spawn.affix_ids,
+            spawn.affix_ids.clone(),
+            |_| definition.depth,
             definition.depth,
         );
         ItemInstance {
@@ -715,8 +721,8 @@ impl Game {
             damage_dice_override: None,
             discount_percent: 0,
             quality: item_quality_dto(spawn.quality),
-            affix_ids: spawn.affix_ids.clone(),
-            rolled_affixes: Vec::new(),
+            affix_ids,
+            rolled_affixes,
             enchantments: ItemEnchantmentsDto::default(),
             curse: initial_item_curse(&self.content, &spawn.kind_id),
             permanent_destruction_immunities: Default::default(),

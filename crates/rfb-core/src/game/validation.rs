@@ -124,8 +124,10 @@ fn item_creation_state_is_valid(
         None => item.discount_percent == 0,
         Some(ItemOriginKindDto::PlayerMade) => {
             item.discount_percent == 99
-                && (definition.tags.iter().any(|tag| tag == "ammunition")
-                    || definition.melee_profile.is_some())
+                && (definition.melee_profile.is_some()
+                    || definition.tags.iter().any(|tag| {
+                        matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")
+                    }))
         }
         Some(ItemOriginKindDto::Acquire) => item.discount_percent == 0,
         Some(ItemOriginKindDto::Rubble) => item.discount_percent == 0,

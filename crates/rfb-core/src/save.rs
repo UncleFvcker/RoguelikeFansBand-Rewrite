@@ -689,7 +689,11 @@ fn validate_item_creation_state(
     let origin_is_valid = match origin_kind {
         None => discount_percent == 0,
         Some(ItemOriginKindDto::PlayerMade) => {
-            discount_percent == 99 && (ammunition || definition.melee_profile.is_some())
+            discount_percent == 99
+                && (definition.melee_profile.is_some()
+                    || definition.tags.iter().any(|tag| {
+                        matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")
+                    }))
         }
         Some(ItemOriginKindDto::Acquire) => discount_percent == 0,
         Some(ItemOriginKindDto::Rubble) => discount_percent == 0,

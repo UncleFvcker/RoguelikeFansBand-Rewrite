@@ -18,7 +18,9 @@ use crate::{
 };
 
 use super::{
-    ActorDeathRecord, DungeonState, Game, initial_item_curse, initial_item_runtime_state,
+    ActorDeathRecord, DungeonState, Game,
+    ego::{EgoMaterialization, materialize_ego_with_rng},
+    initial_item_curse,
     inventory::item_instances_stack_compatible,
 };
 
@@ -533,25 +535,19 @@ pub(super) fn reward_item(
     rng: &mut crate::rng::RfbRng,
 ) -> ItemInstance {
     let entry = selected_reward_entry(reward, class_id, rng).clone();
-    let rolled_affixes = entry
-        .affix_ids
-        .iter()
-        .flat_map(|affix_id| {
-            let depth = content
-                .affix(affix_id)
-                .expect("validated task reward affix must remain available")
-                .generation_level
-                .max(1);
-            super::roll_affix_properties_with_rng(
-                content,
-                rng,
-                std::slice::from_ref(affix_id),
-                depth,
-            )
-        })
-        .collect();
-    let (activation, mut charges) =
-        initial_item_runtime_state(content, rng, &entry.item_kind_id, &entry.affix_ids, 1);
+    let EgoMaterialization {
+        affix_ids,
+        rolled_affixes,
+        activation,
+        mut charges,
+    } = materialize_ego_with_rng(
+        content,
+        rng,
+        &entry.item_kind_id,
+        entry.affix_ids,
+        |affix| affix.generation_level.max(1),
+        1,
+    );
     if let Some(charges) = &mut charges {
         charges.current = charges.maximum;
     }
@@ -564,12 +560,12 @@ pub(super) fn reward_item(
         origin_kind: None,
         damage_dice_override: None,
         discount_percent: 0,
-        quality: if entry.affix_ids.is_empty() {
+        quality: if affix_ids.is_empty() {
             ItemQualityDto::Ordinary
         } else {
             ItemQualityDto::Fine
         },
-        affix_ids: entry.affix_ids,
+        affix_ids,
         rolled_affixes,
         enchantments: ItemEnchantmentsDto::default(),
         curse: initial_item_curse(content, &entry.item_kind_id),

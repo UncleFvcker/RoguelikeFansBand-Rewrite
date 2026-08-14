@@ -120,11 +120,8 @@ mod capture_ball;
 mod chaos_patron;
 mod damage;
 mod death;
-mod environment_combat;
-// E1 establishes the authoritative selector before any player-reachable
-// generation policy is allowed to consume it.
-#[allow(dead_code)]
 mod ego;
+mod environment_combat;
 mod floor;
 mod gold;
 mod ground_item_effects;
@@ -184,6 +181,7 @@ use damage::{
     FatalityPolicy, commit_damage_application, commit_final_player_damage, plan_damage_application,
     process_actor_status_tick, process_actor_status_tick_with, scale_damage_outcome,
 };
+use ego::{EgoMaterialization, materialize_ego_with_rng};
 use environment_combat::PlayerTrapOutcome;
 use floor::{
     FloorTransitionTarget, RecallUseAction, dungeon_instance_id, dungeon_instance_storage_key,
@@ -1305,11 +1303,17 @@ impl Game {
             .items
             .iter()
             .map(|spawn| {
-                let (activation, charges) = initial_item_runtime_state(
+                let EgoMaterialization {
+                    affix_ids,
+                    rolled_affixes,
+                    activation,
+                    charges,
+                } = materialize_ego_with_rng(
                     &content,
                     &mut rng,
                     &spawn.kind_id,
-                    &spawn.affix_ids,
+                    spawn.affix_ids.clone(),
+                    |_| 1,
                     1,
                 );
                 ItemInstance {
@@ -1322,8 +1326,8 @@ impl Game {
                     damage_dice_override: None,
                     discount_percent: 0,
                     quality: item_quality_dto(spawn.quality),
-                    affix_ids: spawn.affix_ids.clone(),
-                    rolled_affixes: Vec::new(),
+                    affix_ids,
+                    rolled_affixes,
                     enchantments: ItemEnchantmentsDto::default(),
                     curse: initial_item_curse(&content, &spawn.kind_id),
                     permanent_destruction_immunities: Default::default(),
@@ -5642,12 +5646,17 @@ impl Game {
             } else {
                 Vec::new()
             };
-            let rolled_affixes = self.roll_affix_properties(&affix_ids, generation_depth);
-            let (activation, charges) = initial_item_runtime_state(
+            let EgoMaterialization {
+                affix_ids,
+                rolled_affixes,
+                activation,
+                charges,
+            } = materialize_ego_with_rng(
                 &self.content,
                 &mut self.rng,
                 &entry.item_kind_id,
-                &affix_ids,
+                affix_ids,
+                |_| generation_depth,
                 generation_depth,
             );
             generated.push(GeneratedItemDraft {
@@ -5763,12 +5772,17 @@ impl Game {
             .and_then(|item| item.artifact_generation.as_ref())
             .map(|generation| generation.affix_ids.clone())
             .unwrap_or_default();
-        let rolled_affixes = self.roll_affix_properties(&affix_ids, context.depth);
-        let (activation, charges) = initial_item_runtime_state(
+        let EgoMaterialization {
+            affix_ids,
+            rolled_affixes,
+            activation,
+            charges,
+        } = materialize_ego_with_rng(
             &self.content,
             &mut self.rng,
             &kind_id,
-            &affix_ids,
+            affix_ids,
+            |_| context.depth,
             context.depth,
         );
         GeneratedItemDraft {
@@ -5906,10 +5920,6 @@ impl Game {
             adjusted = adjusted.saturating_sub(adjusted / 15);
         }
         adjusted
-    }
-
-    fn roll_affix_properties(&mut self, affix_ids: &[String], depth: u16) -> Vec<RolledAffixState> {
-        roll_affix_properties_with_rng(&self.content, &mut self.rng, affix_ids, depth)
     }
 
     fn roll_weighted_index(&mut self, weights: &[u32]) -> usize {
@@ -6722,93 +6732,6 @@ fn roll_weighted_index_with_rng(rng: &mut RfbRng, weights: &[u32]) -> usize {
     unreachable!("validated positive weighted table must select an entry")
 }
 
-fn roll_affix_properties_with_rng(
-    content: &ContentCatalog,
-    rng: &mut RfbRng,
-    affix_ids: &[String],
-    depth: u16,
-) -> Vec<RolledAffixState> {
-    let mut rolled_affixes = Vec::new();
-    for affix_id in affix_ids {
-        let roll_groups = content
-            .affix(affix_id)
-            .expect("selected affix must remain available")
-            .roll_groups
-            .clone();
-        let mut properties = AffixPropertyBundleDefinition::default();
-        for group in roll_groups {
-            let eligible = group
-                .candidates
-                .iter()
-                .filter(|candidate| candidate.min_depth <= depth && depth <= candidate.max_depth)
-                .collect::<Vec<_>>();
-            if eligible.is_empty() {
-                continue;
-            }
-            let weights = eligible
-                .iter()
-                .map(|candidate| candidate.weight)
-                .collect::<Vec<_>>();
-            for _ in 0..group.rolls {
-                let selected = eligible[roll_weighted_index_with_rng(rng, &weights)];
-                merge_affix_properties(&mut properties, &selected.properties);
-            }
-        }
-        if properties != AffixPropertyBundleDefinition::default() {
-            rolled_affixes.push(RolledAffixState {
-                affix_id: affix_id.clone(),
-                properties,
-            });
-        }
-    }
-    rolled_affixes
-}
-
-fn merge_affix_properties(
-    total: &mut AffixPropertyBundleDefinition,
-    addition: &AffixPropertyBundleDefinition,
-) {
-    merge_stat_modifiers(&mut total.modifiers, &addition.modifiers);
-    merge_equipment_bonuses(&mut total.equipment_bonuses, &addition.equipment_bonuses);
-    for (damage_type, level) in &addition.resistances {
-        let current = total.resistances.entry(*damage_type).or_insert(*level);
-        if actor_resistance_rank(*level) > actor_resistance_rank(*current) {
-            *current = *level;
-        }
-    }
-    let mut status_immunities = total
-        .status_immunities
-        .iter()
-        .chain(&addition.status_immunities)
-        .cloned()
-        .collect::<BTreeSet<_>>();
-    total.status_immunities = std::mem::take(&mut status_immunities).into_iter().collect();
-    for (target, level) in &addition.slays {
-        let current = total.slays.entry(*target).or_insert(*level);
-        if *level > *current {
-            *current = *level;
-        }
-    }
-    total.brands.extend(&addition.brands);
-    total.passives.extend(&addition.passives);
-}
-
-fn merge_stat_modifiers(total: &mut StatModifiers, addition: &StatModifiers) {
-    total.attack = total.attack.saturating_add(addition.attack);
-    total.defense = total.defense.saturating_add(addition.defense);
-    total.max_hp = total.max_hp.saturating_add(addition.max_hp);
-    total.strength = total.strength.saturating_add(addition.strength);
-    total.intelligence = total.intelligence.saturating_add(addition.intelligence);
-    total.wisdom = total.wisdom.saturating_add(addition.wisdom);
-    total.dexterity = total.dexterity.saturating_add(addition.dexterity);
-    total.constitution = total.constitution.saturating_add(addition.constitution);
-    total.charisma = total.charisma.saturating_add(addition.charisma);
-    total.speed = total.speed.saturating_add(addition.speed);
-    total.spell_power_bonus = total
-        .spell_power_bonus
-        .saturating_add(addition.spell_power_bonus);
-}
-
 fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBonuses) {
     total.life_percent = total.life_percent.saturating_add(addition.life_percent);
     total.melee_attacks = total.melee_attacks.saturating_add(addition.melee_attacks);
@@ -6831,15 +6754,6 @@ fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBon
     total.digging_skill = total.digging_skill.saturating_add(addition.digging_skill);
     total.infravision = total.infravision.saturating_add(addition.infravision);
     total.light_radius = total.light_radius.saturating_add(addition.light_radius);
-}
-
-const fn actor_resistance_rank(level: ActorResistanceLevel) -> u8 {
-    match level {
-        ActorResistanceLevel::Vulnerable => 0,
-        ActorResistanceLevel::Resistant => 1,
-        ActorResistanceLevel::Strong => 2,
-        ActorResistanceLevel::Immune => 3,
-    }
 }
 
 fn throw_range(weight_tenths_pound: u16, mighty: bool) -> u16 {
