@@ -799,3 +799,9 @@ schema 保持 v2。
 随机治愈变异、四类装备强化、护甲评估和召回都复用既有核心事务；设施动作不消耗回合，失败不
 扣费。城镇楼层现在与初始地表一样允许启动已有召回目的地。没有新增持久状态，State Hash Schema
 保持 v104，save header/payload schema 保持 v2。
+
+协议 1.224 / P106 增加类型化 `UseBountyOffice` 命令及 `BountyOfficeDto`，统一服务 Outpost
+赏金事务所和 Anambar 警察局。投影包含按日固定的普通怪目标、角色创建时随机选择并按等级排序的
+20 名独特怪、可交付遗骸以及一项动态地牢悬赏；只有专属 bounty-target 实例的玩家击杀会减少
+任务计数。已领取的独特怪奖励、今日目标和动态任务进入 `BountyStateSaveDto`，State Hash Schema
+升至 v105，save header/payload schema 升至 v3。

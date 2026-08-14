@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::game::tests::support::{dispatch_next, test_caster_game};
-use rfb_protocol::{FacilityMembershipDto, FacilityServiceKindDto};
+use rfb_protocol::{BountyOfficeActionDto, FacilityMembershipDto, FacilityServiceKindDto};
 
 const GENERAL_STORE_ID: &str = "demo.shop.outpost-general-store";
 const ARMOURY_ID: &str = "demo.shop.outpost-armoury";
@@ -24,6 +24,7 @@ const ANAMBAR_MAMMON_TEMPLE_ID: &str = "demo.town-facility.anambar-mammon-temple
 const ANAMBAR_ARCHER_GUILD_ID: &str = "demo.town-facility.anambar-archer-guild";
 const ANAMBAR_TRUMP_TOWER_ID: &str = "demo.town-facility.anambar-trump-tower";
 const OUTPOST_COUNT_ID: &str = "demo.town-facility.outpost-count";
+const OUTPOST_BOUNTY_OFFICE_ID: &str = "demo.town-facility.outpost-bounty-office";
 
 fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
     shops
@@ -111,6 +112,27 @@ fn anambar_facility_game(
             .any(|service| service.id == facility_id && service.player_at_entrance)
     );
     game
+}
+
+fn add_bounty_remains(game: &mut Game, id: &str, actor_kind_id: &str) {
+    let mut remains = game
+        .items
+        .first()
+        .expect("a new character should carry an item")
+        .clone();
+    remains.id = id.to_owned();
+    remains.kind_id = "demo.item.corpse-remains".to_owned();
+    remains.quantity = 1;
+    remains.origin_actor_kind_id = Some(actor_kind_id.to_owned());
+    remains.origin_kind = None;
+    remains.affix_ids.clear();
+    remains.rolled_affixes.clear();
+    remains.activation = None;
+    remains.charges = None;
+    remains.fuel = None;
+    remains.captured_actor = None;
+    remains.location = ItemLocation::Inventory;
+    game.items.push(remains);
 }
 
 fn white_horse_inn_game(seed: u64) -> Game {
@@ -2176,4 +2198,195 @@ fn maintenance_refills_only_after_interval_at_entrance() {
         .collect::<std::collections::BTreeSet<_>>();
     assert!(guaranteed_stock.is_subset(&stocked));
     assert!(game.rng_draw_counter() > draws_before);
+}
+
+#[test]
+fn p106_bounty_office_projects_and_redeems_daily_and_wanted_remains() {
+    let mut game =
+        Game::new_with_build(106, "demo.build.warrior").expect("Middle-earth game should start");
+    game.player.position = Position { x: 57, y: 19 };
+    let office = game
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == OUTPOST_BOUNTY_OFFICE_ID)
+        .expect("Outpost bounty office should be projected");
+    let bounty = office
+        .bounty_office
+        .expect("bounty details should be visible at the entrance");
+    assert_eq!(bounty.wanted_targets.len(), 20);
+
+    let daily = bounty.daily_target;
+    add_bounty_remains(&mut game, "test.bounty.daily", &daily.actor_kind_id);
+    let gold_before = game.gold;
+    let daily_update = dispatch_next(
+        &mut game,
+        GameCommand::UseBountyOffice {
+            facility_id: OUTPOST_BOUNTY_OFFICE_ID.to_owned(),
+            action: BountyOfficeActionDto::TurnIn,
+            item_id: Some("test.bounty.daily".to_owned()),
+        },
+    );
+    assert!(
+        daily_update
+            .events
+            .iter()
+            .any(|event| event.kind == "bounty.daily-turned-in")
+    );
+    assert_eq!(game.gold, gold_before + daily.corpse_reward);
+    assert!(!game.items.iter().any(|item| item.id == "test.bounty.daily"));
+
+    let wanted = bounty
+        .wanted_targets
+        .into_iter()
+        .find(|target| !target.completed)
+        .expect("a new character should have an open wanted target");
+    let reward_before = game
+        .items
+        .iter()
+        .filter(|item| item.kind_id == wanted.reward_item_kind_id)
+        .map(|item| item.quantity)
+        .sum::<u32>();
+    add_bounty_remains(&mut game, "test.bounty.wanted", &wanted.actor_kind_id);
+    let wanted_update = dispatch_next(
+        &mut game,
+        GameCommand::UseBountyOffice {
+            facility_id: OUTPOST_BOUNTY_OFFICE_ID.to_owned(),
+            action: BountyOfficeActionDto::TurnIn,
+            item_id: Some("test.bounty.wanted".to_owned()),
+        },
+    );
+    assert!(
+        wanted_update
+            .events
+            .iter()
+            .any(|event| event.kind == "bounty.wanted-turned-in")
+    );
+    assert!(
+        game.bounty_state
+            .completed_wanted_actor_kind_ids
+            .contains(&wanted.actor_kind_id)
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == wanted.reward_item_kind_id)
+            .map(|item| item.quantity)
+            .sum::<u32>(),
+        reward_before + 1
+    );
+}
+
+#[test]
+fn p106_dynamic_bounty_spawns_only_counted_targets_and_round_trips() {
+    let mut game =
+        Game::new_with_build(206, "demo.build.warrior").expect("Middle-earth game should start");
+    game.player.position = Position { x: 57, y: 19 };
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseBountyOffice {
+            facility_id: OUTPOST_BOUNTY_OFFICE_ID.to_owned(),
+            action: BountyOfficeActionDto::RequestMission,
+            item_id: None,
+        },
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "bounty.mission-requested")
+    );
+    let mission = game
+        .bounty_state
+        .mission
+        .clone()
+        .expect("requesting a bounty should create a mission");
+    let definition = game
+        .content
+        .world(&game.world_id)
+        .and_then(|world| {
+            world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == mission.floor_id)
+        })
+        .expect("bounty floor should exist")
+        .clone();
+    let floor = game
+        .generate_procedural_floor(&definition, None)
+        .expect("bounty floor should generate");
+    let targets = floor
+        .entities
+        .iter()
+        .filter(|actor| actor.id.contains(".bounty-target."))
+        .collect::<Vec<_>>();
+    assert_eq!(targets.len(), usize::from(mission.total));
+    assert!(
+        targets
+            .iter()
+            .all(|actor| actor.kind_id == mission.actor_kind_id)
+    );
+
+    game.current_floor_id.clone_from(&mission.floor_id);
+    game.command_actor_deaths.push(ActorDeathRecord {
+        actor_id: "ordinary.same-kind".to_owned(),
+        actor_kind_id: mission.actor_kind_id.clone(),
+        position: Position::default(),
+        credit_player: true,
+    });
+    assert_eq!(game.apply_bounty_deaths(), None);
+    assert_eq!(
+        game.bounty_state.mission.as_ref().unwrap().remaining,
+        mission.total
+    );
+    game.command_actor_deaths = targets
+        .iter()
+        .map(|actor| ActorDeathRecord {
+            actor_id: actor.id.clone(),
+            actor_kind_id: actor.kind_id.clone(),
+            position: actor.position,
+            credit_player: true,
+        })
+        .collect();
+    assert_eq!(
+        game.apply_bounty_deaths(),
+        Some(mission.actor_kind_id.clone())
+    );
+    assert_eq!(game.bounty_state.mission.as_ref().unwrap().remaining, 0);
+
+    let mut restored = Game::from_save(game.to_save()).expect("bounty mission should round-trip");
+    assert_eq!(restored.bounty_state, game.bounty_state);
+    restored.current_floor_id = "demo.floor.surface".to_owned();
+    restored.current_dungeon_instance_id = None;
+    restored.player.position = Position { x: 57, y: 19 };
+    let reward_kind_id = restored
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == OUTPOST_BOUNTY_OFFICE_ID)
+        .and_then(|service| service.bounty_office)
+        .and_then(|bounty| bounty.mission)
+        .expect("completed mission should be projected")
+        .reward_item_kind_id;
+    let claim = dispatch_next(
+        &mut restored,
+        GameCommand::UseBountyOffice {
+            facility_id: OUTPOST_BOUNTY_OFFICE_ID.to_owned(),
+            action: BountyOfficeActionDto::ClaimMissionReward,
+            item_id: None,
+        },
+    );
+    assert!(
+        claim
+            .events
+            .iter()
+            .any(|event| event.kind == "bounty.mission-rewarded")
+    );
+    assert!(restored.bounty_state.mission.is_none());
+    assert!(
+        restored
+            .items
+            .iter()
+            .any(|item| item.kind_id == reward_kind_id && item.location == ItemLocation::Inventory)
+    );
 }

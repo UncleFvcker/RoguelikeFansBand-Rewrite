@@ -832,6 +832,36 @@ export function createPresentationFormatter(
         return localization.format("facility-service-unavailable", {
           reason: facilityServiceReason(event.args.reason),
         });
+      case "bounty-action-unavailable":
+        return localization.format("bounty-action-unavailable", {
+          reason: facilityServiceReason(event.args.reason),
+        });
+      case "bounty-daily-turned-in":
+        return localization.format("bounty-daily-turned-in", {
+          actor: contentName(event.args.actor),
+          gold: event.args.gold ?? "?",
+        });
+      case "bounty-wanted-turned-in":
+        return localization.format("bounty-wanted-turned-in", {
+          actor: contentName(event.args.actor),
+          item: contentName(event.args.item),
+        });
+      case "bounty-mission-requested":
+        return localization.format("bounty-mission-requested", {
+          actor: contentName(event.args.actor),
+          floor: floorName(event.args.floor),
+          total: event.args.total ?? "?",
+        });
+      case "bounty-mission-abandoned":
+        return localization.format("bounty-mission-abandoned");
+      case "bounty-mission-rewarded":
+        return localization.format("bounty-mission-rewarded", {
+          item: contentName(event.args.item),
+        });
+      case "bounty-mission-completed":
+        return localization.format("bounty-mission-completed", {
+          actor: contentName(event.args.actor),
+        });
       case "facility-rename-completed":
         return localization.format("facility-rename-completed", {
           previousName: event.args.previousName ?? "?",

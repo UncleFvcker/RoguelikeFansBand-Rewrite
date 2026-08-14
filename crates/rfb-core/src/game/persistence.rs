@@ -628,6 +628,7 @@ struct StateHashPayloadV98<'a> {
     item_knowledge: Vec<ItemKnowledgeSaveDto>,
     item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     task_states: Vec<TaskStateSaveDto>,
+    bounty_state: rfb_protocol::BountyStateSaveDto,
     dungeon_states: Vec<DungeonStateSaveDto>,
     defeated_limited_actor_counts: Vec<DefeatedActorCountSaveRef<'a>>,
     generated_artifact_ids: Vec<&'a str>,
@@ -745,10 +746,9 @@ impl Game {
                 .map_err(|_| CoreError::InvalidSave("Mogaminator source is invalid"))?;
         if mogaminator.wanted_actor_kind_ids.len() > 20
             || mogaminator.wanted_actor_kind_ids.iter().any(|actor_id| {
-                content.actor(actor_id).is_none_or(|actor| {
-                    !actor.tags.iter().any(|tag| tag == "unique")
-                        || (actor.corpse_item_kind_id.is_none() && actor.remains.is_none())
-                })
+                content
+                    .actor(actor_id)
+                    .is_none_or(|actor| !super::mogaminator::wanted_actor_candidate(actor))
             })
         {
             return Err(CoreError::InvalidSave(
@@ -758,6 +758,13 @@ impl Game {
         let world = content
             .world(&payload.world_id)
             .ok_or_else(|| CoreError::UnknownWorld(payload.world_id.clone()))?;
+        let bounty_state = super::bounty::BountyState::from_save(
+            payload.bounty_state.clone(),
+            &content,
+            world,
+            &mogaminator.wanted_actor_kind_ids,
+            payload.world_tick,
+        )?;
         let wilderness_position = match (&world.wilderness, payload.wilderness_position) {
             (Some(wilderness), Some(position)) => {
                 let symbol = usize::try_from(position.y)
@@ -1401,6 +1408,7 @@ impl Game {
             item_knowledge,
             item_property_knowledge,
             task_states,
+            bounty_state,
             command_actor_deaths: Vec::new(),
             dungeon_states,
             defeated_limited_actor_counts,
@@ -1492,6 +1500,7 @@ impl Game {
             item_property_knowledge: self.item_property_knowledge_to_save(),
             task_progress: Vec::new(),
             task_states: self.task_states_to_save(),
+            bounty_state: self.bounty_state.to_save(),
             dungeon_states: self.dungeon_states_to_save(),
             defeated_limited_actor_counts: self
                 .defeated_limited_actor_counts
@@ -1569,6 +1578,7 @@ impl Game {
             item_knowledge: self.item_knowledge_to_save(),
             item_property_knowledge: self.item_property_knowledge_to_save(),
             task_states: self.task_states_to_save(),
+            bounty_state: self.bounty_state.to_save(),
             dungeon_states: self.dungeon_states_to_save(),
             defeated_limited_actor_counts: self
                 .defeated_limited_actor_counts

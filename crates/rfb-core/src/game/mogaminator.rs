@@ -136,10 +136,7 @@ impl MogaminatorState {
         let mut state = Self::default();
         let mut candidates = content
             .actor_definitions()
-            .filter(|actor| {
-                actor.tags.iter().any(|tag| tag == "unique")
-                    && (actor.corpse_item_kind_id.is_some() || actor.remains.is_some())
-            })
+            .filter(|actor| wanted_actor_candidate(actor))
             .map(|actor| actor.id.clone())
             .collect::<Vec<_>>();
         candidates.sort();
@@ -154,6 +151,19 @@ impl MogaminatorState {
         state.wanted_actor_kind_ids = candidates.into_iter().take(wanted_count).collect();
         state
     }
+}
+
+pub(super) fn wanted_actor_candidate(actor: &rfb_content::ActorDefinition) -> bool {
+    actor.tags.iter().any(|tag| tag == "unique")
+        && !actor
+            .tags
+            .iter()
+            .any(|tag| tag == "no-quest" || tag == "unique2")
+        && (actor.corpse_item_kind_id.is_some() || actor.remains.is_some())
+        && actor
+            .allocation
+            .as_ref()
+            .is_some_and(|allocation| allocation.rarity <= 100)
 }
 
 impl Game {

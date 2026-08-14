@@ -1595,6 +1595,9 @@ impl Game {
                     legal_name_change_cost: facility.legal_name_change_cost,
                     membership: self.town_facility_membership(facility),
                     service_actions: self.town_facility_service_dtos(facility),
+                    bounty_office: player_at_entrance
+                        .then(|| self.bounty_office_dto(facility))
+                        .flatten(),
                     tasks,
                 }
             })

@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.223";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
+pub const PROTOCOL_VERSION: &str = "1.224";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 3;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 3;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -253,6 +253,12 @@ pub enum GameCommand {
     UseFacilityService {
         facility_id: String,
         service: FacilityServiceKindDto,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        item_id: Option<String>,
+    },
+    UseBountyOffice {
+        facility_id: String,
+        action: BountyOfficeActionDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         item_id: Option<String>,
     },
@@ -3931,8 +3937,104 @@ pub struct TaskServiceDto {
     pub membership: FacilityMembershipDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub service_actions: Vec<FacilityServiceDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bounty_office: Option<BountyOfficeDto>,
     #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum BountyOfficeActionDto {
+    TurnIn,
+    RequestMission,
+    AbandonMission,
+    ClaimMissionReward,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct BountyOfficeDto {
+    pub daily_target: BountyDailyTargetDto,
+    pub wanted_targets: Vec<BountyWantedTargetDto>,
+    pub turn_ins: Vec<BountyTurnInDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mission: Option<BountyMissionDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct BountyDailyTargetDto {
+    pub actor_kind_id: String,
+    pub actor_name_key: String,
+    pub corpse_reward: u32,
+    pub skeleton_reward: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct BountyWantedTargetDto {
+    pub actor_kind_id: String,
+    pub actor_name_key: String,
+    pub completed: bool,
+    pub reward_item_kind_id: String,
+    pub reward_name_key: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "kind",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum BountyTurnInRewardDto {
+    Gold {
+        amount: u32,
+    },
+    Item {
+        item_kind_id: String,
+        item_name_key: String,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct BountyTurnInDto {
+    pub item_id: String,
+    pub actor_kind_id: String,
+    pub actor_name_key: String,
+    pub reward: BountyTurnInRewardDto,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum BountyMissionStatusDto {
+    Active,
+    RewardAvailable,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct BountyMissionDto {
+    pub status: BountyMissionStatusDto,
+    pub dungeon_id: String,
+    pub floor_id: String,
+    pub floor_name_key: String,
+    pub depth: u16,
+    pub actor_kind_id: String,
+    pub actor_name_key: String,
+    pub total: u8,
+    pub remaining: u8,
+    pub reward_item_kind_id: String,
+    pub reward_name_key: String,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -4285,6 +4387,14 @@ pub fn generated_typescript() -> String {
     push_declaration!(FacilityServiceKindDto);
     push_declaration!(FacilityServiceTargetDto);
     push_declaration!(FacilityServiceDto);
+    push_declaration!(BountyOfficeActionDto);
+    push_declaration!(BountyDailyTargetDto);
+    push_declaration!(BountyWantedTargetDto);
+    push_declaration!(BountyTurnInRewardDto);
+    push_declaration!(BountyTurnInDto);
+    push_declaration!(BountyMissionStatusDto);
+    push_declaration!(BountyMissionDto);
+    push_declaration!(BountyOfficeDto);
     push_declaration!(TaskServiceDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
@@ -4858,6 +4968,26 @@ pub struct TaskStateSaveDto {
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct BountyStateSaveDto {
+    pub daily_day: u32,
+    pub daily_actor_kind_id: String,
+    pub completed_wanted_actor_kind_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mission: Option<BountyMissionSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BountyMissionSaveDto {
+    pub dungeon_id: String,
+    pub floor_id: String,
+    pub actor_kind_id: String,
+    pub total: u8,
+    pub remaining: u8,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DungeonStateSaveDto {
     pub dungeon_id: String,
     pub suppressed: bool,
@@ -4974,6 +5104,7 @@ pub struct SavePayloadV1 {
     pub task_progress: Vec<TaskProgressSaveDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub task_states: Vec<TaskStateSaveDto>,
+    pub bounty_state: BountyStateSaveDto,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dungeon_states: Vec<DungeonStateSaveDto>,
     pub defeated_limited_actor_counts: Vec<DefeatedActorCountSaveDto>,
@@ -5183,6 +5314,11 @@ mod tests {
             GameCommand::UseFacilityService {
                 facility_id: "demo.town-facility.anambar-mammon-temple".to_owned(),
                 service: FacilityServiceKindDto::Heal,
+                item_id: None,
+            },
+            GameCommand::UseBountyOffice {
+                facility_id: "demo.town-facility.outpost-bounty-office".to_owned(),
+                action: BountyOfficeActionDto::RequestMission,
                 item_id: None,
             },
             GameCommand::RenameAtFacility {

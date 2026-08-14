@@ -393,6 +393,7 @@ struct DemoWildernessSelection {
     towns: Vec<DemoWildernessLocationSelection>,
     dungeons: Vec<DemoWildernessLocationSelection>,
     town_plans: Vec<DemoWildernessTownPlan>,
+    bounty_offices: Vec<DemoBountyOfficePlan>,
     dungeon_plans: Vec<DemoWildernessDungeonPlan>,
 }
 
@@ -427,6 +428,14 @@ struct DemoWildernessTownPlan {
     mammon_temple: DemoTownBuildingPlan,
     archer_guild: DemoTownBuildingPlan,
     trump_tower: DemoTownBuildingPlan,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoBountyOfficePlan {
+    town_id: String,
+    source_file: String,
+    building: DemoTownBuildingPlan,
 }
 
 #[derive(Debug, Deserialize)]
@@ -13124,6 +13133,49 @@ fn validate_demo_wilderness_plans(
         }
     }
 
+    for office in &selection.bounty_offices {
+        if !selection.towns.iter().any(|town| town.id == office.town_id) {
+            return Err(invalid_wilderness_selection(format!(
+                "bounty office {} is not in an active town",
+                office.town_id
+            )));
+        }
+        let source = read_legacy_object_at(source, source_commit, &office.source_file)?;
+        let building = &office.building;
+        let identity = format!(
+            "B:{}:N:{}:{}:{}",
+            building.building_index, building.name, building.owner_name, building.owner_race
+        );
+        if !source.lines().any(|line| line.trim() == identity) {
+            return Err(invalid_wilderness_selection(format!(
+                "bounty office {} identity drifted",
+                office.town_id
+            )));
+        }
+        let mut action_indexes = BTreeSet::new();
+        for service in &building.services {
+            let line = format!(
+                "B:{}:A:{}:{}:{}:{}:{}:{}:{}",
+                building.building_index,
+                service.action_index,
+                service.name,
+                service.minimum_cost,
+                service.maximum_cost,
+                service.command,
+                service.action_id,
+                service.restriction
+            );
+            if !action_indexes.insert(service.action_index)
+                || !source.lines().any(|source_line| source_line.trim() == line)
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "bounty office {} action {} drifted",
+                    office.town_id, service.action_index
+                )));
+            }
+        }
+    }
+
     let monsters = parse_r_info(&read_legacy_object_at(
         source,
         source_commit,
@@ -13266,14 +13318,15 @@ pub fn sync_demo_wilderness(
         ));
     }
     let selection: DemoWildernessSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
-    if selection.schema_version != 6
+    if selection.schema_version != 7
         || selection.towns.is_empty()
         || selection.dungeons.is_empty()
         || selection.town_plans.is_empty()
+        || selection.bounty_offices.len() != 2
         || selection.dungeon_plans.is_empty()
     {
         return Err(LegacyImportError::InvalidDemoWildernessSelection(
-            "selection must use schemaVersion 6 and contain active towns, town plans, active dungeons, and dungeon plans"
+            "selection must use schemaVersion 7 and contain active towns, town plans, two bounty offices, active dungeons, and dungeon plans"
                 .to_owned(),
         ));
     }
@@ -24390,7 +24443,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 6);
+        assert_eq!(selection.schema_version, 7);
         let anambar = selection
             .town_plans
             .iter()
@@ -24438,7 +24491,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 6);
+        assert_eq!(selection.schema_version, 7);
         let anambar = selection
             .town_plans
             .iter()
@@ -24514,6 +24567,53 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
                 && membership.role == "Owner"
         }));
         assert_eq!(anambar.trump_tower.services[0].action_id, 33);
+    }
+
+    #[test]
+    fn p106a_bounty_office_plan_locks_both_source_buildings() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 7);
+        assert_eq!(selection.bounty_offices.len(), 2);
+        let office = |town_id: &str| {
+            selection
+                .bounty_offices
+                .iter()
+                .find(|office| office.town_id == town_id)
+                .expect("P106 town should retain a bounty office plan")
+        };
+        let outpost = office("demo.town.outpost");
+        assert_eq!(outpost.source_file, "lib/edit/t_outp.txt");
+        assert_eq!(outpost.building.building_index, 13);
+        assert_eq!(outpost.building.name, "赏金事务所");
+        assert_eq!(outpost.building.owner_name, "驯兽师阿拉克");
+        assert_eq!(outpost.building.owner_race, "矮人");
+        assert_eq!(
+            outpost
+                .building
+                .services
+                .iter()
+                .map(|service| service.action_id)
+                .collect::<Vec<_>>(),
+            [38, 39, 37, 40, 65]
+        );
+        let anambar = office("demo.town.anambar");
+        assert_eq!(anambar.source_file, "lib/edit/t_ana.txt");
+        assert_eq!(anambar.building.building_index, 13);
+        assert_eq!(anambar.building.name, "警察局");
+        assert_eq!(anambar.building.owner_name, "瓦茨");
+        assert_eq!(anambar.building.owner_race, "小魔怪");
+        assert_eq!(
+            anambar
+                .building
+                .services
+                .iter()
+                .map(|service| service.action_id)
+                .collect::<Vec<_>>(),
+            [38, 39, 37, 40, 6, 65]
+        );
     }
 
     #[test]

@@ -7,6 +7,8 @@ import type {
   GameEventDto,
   GameSnapshot,
   GameUpdate,
+  BountyOfficeActionDto,
+  BountyMissionStatusDto,
   FacilityMembershipDto,
   FacilityServiceKindDto,
   ItemIdentificationDto,
@@ -179,6 +181,20 @@ export class TaskServicePanel {
       }
       return;
     }
+    const bountyButton = target.closest<HTMLButtonElement>("[data-bounty-action]");
+    if (bountyButton && service && !bountyButton.disabled && !this.#state.busy) {
+      const action = bountyButton.dataset.bountyAction as BountyOfficeActionDto | undefined;
+      if (action) {
+        this.#feedback = undefined;
+        void this.#dispatch({
+          type: "use-bounty-office",
+          facilityId: service.id,
+          action,
+          itemId: bountyButton.dataset.itemId,
+        });
+      }
+      return;
+    }
     const button = target.closest<HTMLButtonElement>("[data-task-action]");
     const taskId = button?.dataset.taskId;
     const action = button?.dataset.taskAction as TaskServiceAction | undefined;
@@ -230,6 +246,7 @@ export class TaskServicePanel {
     const service = this.#service;
     if (!service) return;
     const document = this.#dom.list.ownerDocument;
+    this.#renderBountyOffice();
     const renderItemAction = (
       action: "identify" | "research",
       cost: number | null | undefined,
@@ -350,6 +367,92 @@ export class TaskServicePanel {
     }
   }
 
+  #renderBountyOffice(): void {
+    const bounty = this.#service?.bountyOffice;
+    if (!bounty) return;
+    const document = this.#dom.list.ownerDocument;
+    const daily = document.createElement("li");
+    daily.className = "task-service-row";
+    daily.textContent = this.#localization.format("bounty-daily-target", {
+      actor: this.#localization.format(bounty.dailyTarget.actorNameKey),
+      corpse: bounty.dailyTarget.corpseReward,
+      skeleton: bounty.dailyTarget.skeletonReward,
+    });
+    this.#dom.list.append(daily);
+
+    const wanted = document.createElement("li");
+    wanted.className = "task-service-row task-service-copy";
+    for (const [index, target] of bounty.wantedTargets.entries()) {
+      const line = document.createElement("p");
+      line.textContent = this.#localization.format("bounty-wanted-target", {
+        index: index + 1,
+        status: this.#localization.format(
+          target.completed ? "bounty-wanted-completed" : "bounty-wanted-open",
+        ),
+        actor: this.#localization.format(target.actorNameKey),
+        reward: this.#localization.format(target.rewardNameKey),
+      });
+      wanted.append(line);
+    }
+    this.#dom.list.append(wanted);
+
+    for (const turnIn of bounty.turnIns) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-button task-service-action";
+      button.dataset.bountyAction = "turn-in";
+      button.dataset.itemId = turnIn.itemId;
+      button.disabled = this.#state.busy;
+      button.textContent = turnIn.reward.kind === "gold"
+        ? this.#localization.format("action-bounty-turn-in-gold", {
+            actor: this.#localization.format(turnIn.actorNameKey),
+            gold: turnIn.reward.amount,
+          })
+        : this.#localization.format("action-bounty-turn-in-item", {
+            actor: this.#localization.format(turnIn.actorNameKey),
+            item: this.#localization.format(turnIn.reward.itemNameKey),
+          });
+      row.append(button);
+      this.#dom.list.append(row);
+    }
+
+    const missionRow = document.createElement("li");
+    missionRow.className = "task-service-row";
+    const missionButton = document.createElement("button");
+    missionButton.type = "button";
+    missionButton.className = "primary-button task-service-action";
+    missionButton.disabled = this.#state.busy;
+    if (!bounty.mission) {
+      missionButton.dataset.bountyAction = bountyMissionAction(undefined);
+      missionButton.textContent = this.#localization.format("action-bounty-request-mission");
+    } else if (bounty.mission.status === "active") {
+      const progress = document.createElement("p");
+      progress.textContent = this.#localization.format("bounty-mission-progress", {
+        floor: this.#localization.format(bounty.mission.floorNameKey),
+        depth: bounty.mission.depth,
+        actor: this.#localization.format(bounty.mission.actorNameKey),
+        remaining: bounty.mission.remaining,
+        total: bounty.mission.total,
+      });
+      missionRow.append(progress);
+      missionButton.dataset.bountyAction = bountyMissionAction(bounty.mission.status);
+      missionButton.textContent = this.#localization.format("action-bounty-abandon-mission");
+    } else {
+      const complete = document.createElement("p");
+      complete.textContent = this.#localization.format("bounty-mission-complete", {
+        actor: this.#localization.format(bounty.mission.actorNameKey),
+        item: this.#localization.format(bounty.mission.rewardNameKey),
+      });
+      missionRow.append(complete);
+      missionButton.dataset.bountyAction = bountyMissionAction(bounty.mission.status);
+      missionButton.textContent = this.#localization.format("action-bounty-claim-mission");
+    }
+    missionRow.append(missionButton);
+    this.#dom.list.append(missionRow);
+  }
+
   #taskRow(task: TaskStatusDto): HTMLLIElement {
     const document = this.#dom.list.ownerDocument;
     const row = document.createElement("li");
@@ -406,6 +509,14 @@ export function taskActionForStatus(
   return undefined;
 }
 
+export function bountyMissionAction(
+  status: BountyMissionStatusDto | undefined,
+): BountyOfficeActionDto {
+  if (status === "active") return "abandon-mission";
+  if (status === "reward-available") return "claim-mission-reward";
+  return "request-mission";
+}
+
 function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | undefined {
   if (!("events" in state)) return undefined;
   for (let index = state.events.length - 1; index >= 0; index -= 1) {
@@ -427,7 +538,8 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "facility.armor-assessed" ||
       event?.kind === "facility.recall-started" ||
       event?.kind === "facility.rename-unavailable" ||
-      event?.kind === "facility.renamed"
+      event?.kind === "facility.renamed" ||
+      event?.kind.startsWith("bounty.")
     ) {
       return event;
     }

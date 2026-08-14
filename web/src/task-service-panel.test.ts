@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  bountyMissionAction,
   facilityIdentificationCandidate,
   facilityMembershipKey,
   facilityServiceActionKey,
@@ -52,4 +53,10 @@ test("p105d Anambar facility roles and typed service actions stay stable", () =>
   assert.equal(facilityServiceUsesItem("enchant-bow"), true);
   assert.equal(facilityServiceActionKey("restore-vitality"), "action-facility-restore-vitality");
   assert.equal(facilityServiceActionKey("cure-mutation"), "action-facility-cure-mutation");
+});
+
+test("p106d bounty mission controls follow the authoritative mission state", () => {
+  assert.equal(bountyMissionAction(undefined), "request-mission");
+  assert.equal(bountyMissionAction("active"), "abandon-mission");
+  assert.equal(bountyMissionAction("reward-available"), "claim-mission-reward");
 });

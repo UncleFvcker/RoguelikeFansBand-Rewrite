@@ -6,6 +6,7 @@
   "descriptionKey": "town-demo-outpost-description",
   "floorId": "demo.floor.surface",
   "facilityIds": [
+    "demo.town-facility.outpost-bounty-office",
     "demo.town-facility.outpost-count",
     "demo.town-facility.outpost-home",
     "demo.town-facility.outpost-white-horse"

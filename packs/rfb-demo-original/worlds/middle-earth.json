@@ -697,6 +697,10 @@
       "positions": [{ "x": 55, "y": 19 }]
     },
     {
+      "terrainId": "demo.terrain.bounty-office-entrance",
+      "positions": [{ "x": 57, "y": 19 }]
+    },
+    {
       "terrainId": "demo.terrain.shroomery-entrance",
       "positions": [{ "x": 61, "y": 19 }]
     },
@@ -8075,6 +8079,7 @@
           { "terrainId": "demo.terrain.black-market-entrance", "positions": [{ "x": 6, "y": 9 }] },
           { "terrainId": "demo.terrain.trump-tower-entrance", "positions": [{ "x": 8, "y": 9 }] },
           { "terrainId": "demo.terrain.home-entrance", "positions": [{ "x": 10, "y": 9 }] },
+          { "terrainId": "demo.terrain.bounty-office-entrance", "positions": [{ "x": 12, "y": 9 }] },
           { "terrainId": "demo.terrain.bookstore-entrance", "positions": [{ "x": 14, "y": 9 }] },
           { "terrainId": "demo.terrain.inn-entrance", "positions": [{ "x": 18, "y": 9 }] },
           { "terrainId": "demo.terrain.outpost-gate", "positions": [{ "x": 21, "y": 10 }] }

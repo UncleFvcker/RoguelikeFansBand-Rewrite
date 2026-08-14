@@ -48,8 +48,12 @@ visitors retain access because every imported building action has restriction 0,
 while Owner membership selects the owner price and the original higher guild
 enchantment limit. A source price of 0 on weapon, armor, and bow enchantment maps
 to the original 1500-gold minimum (750 for Owner); ammunition retains its
-declared 44/22 gold per stack unit. Unsupported casino, bank, police, and
-quest-building entrances are not drawn.
+declared 44/22 gold per stack unit. P106 draws and activates the police station
+together with the Outpost bounty office: both expose the same daily target,
+character-specific wanted unique list, remains turn-in, and dynamic dungeon
+bounty. The Tsuchinoko special target and Anambar's ordinary quest request remain
+deferred. Unsupported casino, bank, and other quest-building entrances are not
+drawn.
 
 The focused `sync-demo-wilderness` command validates every imported fact against
 the authoritative `master` objects before rewriting the world, preserves authored
@@ -62,4 +66,5 @@ L0 itself changed importer metadata only. L2 activates Anambar in pack 1.224.0.
 Contract-v260 activates Orc Cave in pack 1.251.0. P104 updates Anambar in pack
 1.368.0 and Protocol 1.222; State Hash Schema remains v104 and save schema remains
 v2. P105 updates Anambar in pack 1.369.0 and Protocol 1.223; State Hash Schema
-remains v104 and save schema remains v2.
+remains v104 and save schema remains v2. P106 updates both towns in pack 1.370.0
+and Protocol 1.224; State Hash Schema is v105 and save schema is v3.

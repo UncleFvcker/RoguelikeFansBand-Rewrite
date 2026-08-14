@@ -22,6 +22,22 @@
       ],
       "type": "object"
     },
+    "TownFacilityBountyDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "wantedRewardItemKindIds": {
+          "description": "The twenty source-ordered prizes for the character's wanted uniques.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "wantedRewardItemKindIds"
+      ],
+      "type": "object"
+    },
     "TownFacilityCategory": {
       "enum": [
         "home",
@@ -75,6 +91,17 @@
   "properties": {
     "$schema": {
       "type": "string"
+    },
+    "bountyOffice": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TownFacilityBountyDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "category": {
       "$ref": "#/$defs/TownFacilityCategory"

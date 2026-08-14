@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.outpost-bounty-office",
+  "nameKey": "town-facility-demo-outpost-bounty-office-name",
+  "descriptionKey": "town-facility-demo-outpost-bounty-office-description",
+  "townId": "demo.town.outpost",
+  "category": "quest-giver",
+  "ownerNameKey": "town-facility-demo-outpost-bounty-office-owner-name",
+  "bountyOffice": {
+    "wantedRewardItemKindIds": [
+      "demo.item.healing-potion",
+      "demo.item.healing-potion",
+      "demo.item.healing-potion",
+      "demo.item.enlightenment-potion",
+      "demo.item.enlightenment-potion",
+      "demo.item.healing-potion",
+      "demo.item.star-healing-potion",
+      "demo.item.destruction-scroll",
+      "demo.item.star-enlightenment-potion",
+      "demo.item.crafting-scroll",
+      "demo.item.destruction-scroll",
+      "demo.item.star-healing-potion",
+      "demo.item.star-healing-potion",
+      "demo.item.new-life-potion",
+      "demo.item.destruction-scroll",
+      "demo.item.star-healing-potion",
+      "demo.item.star-healing-potion",
+      "demo.item.new-life-potion",
+      "demo.item.invulnerability-potion",
+      "demo.item.crafting-scroll"
+    ]
+  },
+  "entrancePosition": { "x": 57, "y": 19 },
+  "entranceTerrainId": "demo.terrain.bounty-office-entrance"
+}

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "worldId": "demo.world.middle-earth",
   "towns": [
     {
@@ -203,6 +203,43 @@
         ],
         "services": [
           { "actionIndex": 0, "name": "传送回地下城", "minimumCost": 0, "maximumCost": 150, "command": "r", "actionId": 33, "restriction": 0 }
+        ]
+      }
+    }
+  ],
+  "bountyOffices": [
+    {
+      "townId": "demo.town.outpost",
+      "sourceFile": "lib/edit/t_outp.txt",
+      "building": {
+        "buildingIndex": 13,
+        "name": "赏金事务所",
+        "ownerName": "驯兽师阿拉克",
+        "ownerRace": "矮人",
+        "services": [
+          { "actionIndex": 0, "name": "今日通缉", "minimumCost": 0, "maximumCost": 0, "command": "a", "actionId": 38, "restriction": 0 },
+          { "actionIndex": 1, "name": "通缉独特怪名单", "minimumCost": 0, "maximumCost": 0, "command": "b", "actionId": 39, "restriction": 0 },
+          { "actionIndex": 2, "name": "特殊目标", "minimumCost": 0, "maximumCost": 0, "command": "s", "actionId": 37, "restriction": 0 },
+          { "actionIndex": 3, "name": "领取赏金", "minimumCost": 0, "maximumCost": 0, "command": "c", "actionId": 40, "restriction": 0 },
+          { "actionIndex": 4, "name": "悬赏任务", "minimumCost": 0, "maximumCost": 0, "command": "m", "actionId": 65, "restriction": 0 }
+        ]
+      }
+    },
+    {
+      "townId": "demo.town.anambar",
+      "sourceFile": "lib/edit/t_ana.txt",
+      "building": {
+        "buildingIndex": 13,
+        "name": "警察局",
+        "ownerName": "瓦茨",
+        "ownerRace": "小魔怪",
+        "services": [
+          { "actionIndex": 0, "name": "今日通缉", "minimumCost": 0, "maximumCost": 0, "command": "a", "actionId": 38, "restriction": 0 },
+          { "actionIndex": 1, "name": "通缉独特怪名单", "minimumCost": 0, "maximumCost": 0, "command": "b", "actionId": 39, "restriction": 0 },
+          { "actionIndex": 2, "name": "特殊目标", "minimumCost": 0, "maximumCost": 0, "command": "s", "actionId": 37, "restriction": 0 },
+          { "actionIndex": 3, "name": "领取赏金", "minimumCost": 0, "maximumCost": 0, "command": "c", "actionId": 40, "restriction": 0 },
+          { "actionIndex": 4, "name": "请求任务", "minimumCost": 0, "maximumCost": 0, "command": "q", "actionId": 6, "restriction": 0 },
+          { "actionIndex": 5, "name": "悬赏任务", "minimumCost": 0, "maximumCost": 0, "command": "m", "actionId": 65, "restriction": 0 }
         ]
       }
     }

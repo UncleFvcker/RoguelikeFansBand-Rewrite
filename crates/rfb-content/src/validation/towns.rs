@@ -143,13 +143,22 @@ pub(super) fn validate_towns_and_shops(
             || facility.service_actions.iter().any(|service| {
                 service.owner_cost > 999_999_999 || service.other_cost > 999_999_999
             });
+        let valid_bounty_office = facility.bounty_office.as_ref().is_none_or(|bounty| {
+            bounty.wanted_reward_item_kind_ids.len() == 20
+                && bounty.wanted_reward_item_kind_ids.iter().all(|item_id| {
+                    validate_definition_id(item_id, "item").is_ok()
+                        && refs.items.iter().any(|item| item.id == *item_id)
+                })
+        });
         let has_service = facility.identify_item_cost.is_some()
             || facility.research_item_cost.is_some()
             || facility.identify_all_items_cost.is_some()
             || facility.overview_message_key.is_some()
             || facility.legal_name_change_cost.is_some()
-            || !facility.service_actions.is_empty();
+            || !facility.service_actions.is_empty()
+            || facility.bounty_office.is_some();
         let empty_task_service_has_shop = !facility.task_ids.is_empty()
+            || facility.bounty_office.is_some()
             || shops.iter().any(|shop| {
                 shop.town_id == facility.town_id
                     && shop.entrance_position == facility.entrance_position
@@ -165,7 +174,8 @@ pub(super) fn validate_towns_and_shops(
                 || facility.overview_message_key.is_some()
                 || facility.legal_name_change_cost.is_some()
                 || has_membership
-                || !facility.service_actions.is_empty()))
+                || !facility.service_actions.is_empty()
+                || facility.bounty_office.is_some()))
             || (facility.category == TownFacilityCategory::QuestGiver
                 && (facility.storage_id.is_some()
                     || facility.owner_name_key.is_none()
@@ -176,8 +186,10 @@ pub(super) fn validate_towns_and_shops(
                 && (facility.storage_id.is_some()
                     || facility.owner_name_key.is_none()
                     || !facility.task_ids.is_empty()
+                    || facility.bounty_office.is_some()
                     || !has_service))
             || invalid_service_cost
+            || !valid_bounty_office
             || !valid_memberships
             || duplicate_membership
             || overlapping_memberships

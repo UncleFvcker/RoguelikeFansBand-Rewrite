@@ -733,3 +733,11 @@ content hash 为 `e0e6820f83989f8790a455d6af5656ec833341e03ef84b2005652c898c47e5
 王牌之塔；五名业主、九项服务、原版价格和会员关系均由 RFB `master:t_ana.txt` 锁定。零价武器、
 护甲和弓强化采用原版最低价格 1500，Owner 为 750；弹药按堆叠数量采用声明的 44/22 单价。
 content hash 为 `6a383c424681994144ba97a0c46710dc58f031b1dfb74b916a8a0335ef43040d`。
+
+包 1.370.0 / P106 为 `TownFacilityDefinition` 增加可选 `bountyOffice`，其中按原版领奖顺序声明
+20 项独特怪奖励。Outpost 的“赏金事务所/驯兽师阿拉克”和 Anambar 的“警察局/瓦茨”均由
+RFB `master` 锁定，共用今日通缉、独特怪遗骸交付和动态悬赏任务运行时。尚未导入的 Speed、
+Resistance、Restore Mana、Genocide、Life、Augmentation 与 Artifact Creation 奖品按相邻强度
+复用现有药水/卷轴；动态悬赏原版的 Good/Great 随机装备也按任务深度映射到这组现有奖励梯度。
+原版“特殊目标（土奇诺子）”以及 Anambar 的普通请求任务仍明确留待各自系统。
+content hash 为 `ed96b99abe3ac0f6ced3799ee9b0571f93bee47f332cd8bfba33a7fd440b25c2`。

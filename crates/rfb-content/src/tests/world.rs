@@ -13657,3 +13657,65 @@ fn p105b_anambar_recovery_enchantment_and_recall_facilities_are_fully_bound() {
         ]
     );
 }
+
+#[test]
+fn p106_dual_town_bounty_offices_share_the_wanted_reward_contract() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let facility = |id: &str| {
+        artifact
+            .content
+            .town_facilities
+            .iter()
+            .find(|facility| facility.id == id)
+            .expect("P106 bounty facility should exist")
+    };
+    let outpost = facility("demo.town-facility.outpost-bounty-office");
+    let anambar = facility("demo.town-facility.anambar-police-station");
+    assert_eq!(outpost.category, TownFacilityCategory::QuestGiver);
+    assert_eq!(anambar.category, TownFacilityCategory::QuestGiver);
+    assert_eq!(outpost.entrance_position, ContentPosition { x: 57, y: 19 });
+    assert_eq!(anambar.entrance_position, ContentPosition { x: 12, y: 9 });
+    assert_eq!(
+        outpost.entrance_terrain_id,
+        "demo.terrain.bounty-office-entrance"
+    );
+    let outpost_rewards = &outpost
+        .bounty_office
+        .as_ref()
+        .expect("Outpost should expose bounty rules")
+        .wanted_reward_item_kind_ids;
+    let anambar_rewards = &anambar
+        .bounty_office
+        .as_ref()
+        .expect("Anambar should expose bounty rules")
+        .wanted_reward_item_kind_ids;
+    assert_eq!(outpost_rewards.len(), 20);
+    assert_eq!(outpost_rewards, anambar_rewards);
+    assert_eq!(outpost_rewards[7], "demo.item.destruction-scroll");
+    assert_eq!(outpost_rewards[9], "demo.item.crafting-scroll");
+    assert_eq!(outpost_rewards[13], "demo.item.new-life-potion");
+    assert_eq!(outpost_rewards[18], "demo.item.invulnerability-potion");
+
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    assert!(world.terrain_overrides.iter().any(|override_| {
+        override_.terrain_id == "demo.terrain.bounty-office-entrance"
+            && override_
+                .positions
+                .contains(&ContentPosition { x: 57, y: 19 })
+    }));
+    let anambar_floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.anambar")
+        .and_then(|floor| floor.inline_map.as_ref())
+        .expect("Anambar fixed map should exist");
+    assert!(anambar_floor.terrain_overrides.iter().any(|override_| {
+        override_.terrain_id == "demo.terrain.bounty-office-entrance"
+            && override_.positions == [ContentPosition { x: 12, y: 9 }]
+    }));
+}

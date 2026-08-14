@@ -6518,6 +6518,236 @@
         "slotType"
       ]
     },
+    "BountyDailyTargetDto": {
+      "type": "object",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "actorNameKey": {
+          "type": "string"
+        },
+        "corpseReward": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "skeletonReward": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "actorKindId",
+        "actorNameKey",
+        "corpseReward",
+        "skeletonReward"
+      ]
+    },
+    "BountyMissionDto": {
+      "type": "object",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "actorNameKey": {
+          "type": "string"
+        },
+        "depth": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "dungeonId": {
+          "type": "string"
+        },
+        "floorId": {
+          "type": "string"
+        },
+        "floorNameKey": {
+          "type": "string"
+        },
+        "remaining": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "rewardItemKindId": {
+          "type": "string"
+        },
+        "rewardNameKey": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/BountyMissionStatusDto"
+        },
+        "total": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "status",
+        "dungeonId",
+        "floorId",
+        "floorNameKey",
+        "depth",
+        "actorKindId",
+        "actorNameKey",
+        "total",
+        "remaining",
+        "rewardItemKindId",
+        "rewardNameKey"
+      ]
+    },
+    "BountyMissionStatusDto": {
+      "type": "string",
+      "enum": [
+        "active",
+        "reward-available"
+      ]
+    },
+    "BountyOfficeActionDto": {
+      "type": "string",
+      "enum": [
+        "turn-in",
+        "request-mission",
+        "abandon-mission",
+        "claim-mission-reward"
+      ]
+    },
+    "BountyOfficeDto": {
+      "type": "object",
+      "properties": {
+        "dailyTarget": {
+          "$ref": "#/$defs/BountyDailyTargetDto"
+        },
+        "mission": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BountyMissionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "turnIns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BountyTurnInDto"
+          }
+        },
+        "wantedTargets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BountyWantedTargetDto"
+          }
+        }
+      },
+      "required": [
+        "dailyTarget",
+        "wantedTargets",
+        "turnIns"
+      ]
+    },
+    "BountyTurnInDto": {
+      "type": "object",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "actorNameKey": {
+          "type": "string"
+        },
+        "itemId": {
+          "type": "string"
+        },
+        "reward": {
+          "$ref": "#/$defs/BountyTurnInRewardDto"
+        }
+      },
+      "required": [
+        "itemId",
+        "actorKindId",
+        "actorNameKey",
+        "reward"
+      ]
+    },
+    "BountyTurnInRewardDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "gold"
+            }
+          },
+          "required": [
+            "kind",
+            "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemKindId": {
+              "type": "string"
+            },
+            "itemNameKey": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "item"
+            }
+          },
+          "required": [
+            "kind",
+            "itemKindId",
+            "itemNameKey"
+          ]
+        }
+      ]
+    },
+    "BountyWantedTargetDto": {
+      "type": "object",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "actorNameKey": {
+          "type": "string"
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "rewardItemKindId": {
+          "type": "string"
+        },
+        "rewardNameKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "actorKindId",
+        "actorNameKey",
+        "completed",
+        "rewardItemKindId",
+        "rewardNameKey"
+      ]
+    },
     "CampaignStateDto": {
       "type": "object",
       "properties": {
@@ -8235,6 +8465,32 @@
             "type",
             "facilityId",
             "service"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "action": {
+              "$ref": "#/$defs/BountyOfficeActionDto"
+            },
+            "facilityId": {
+              "type": "string"
+            },
+            "itemId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "use-bounty-office"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "action"
           ]
         },
         {
@@ -12743,6 +12999,16 @@
     "TaskServiceDto": {
       "type": "object",
       "properties": {
+        "bountyOffice": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BountyOfficeDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "descriptionKey": {
           "type": "string"
         },
