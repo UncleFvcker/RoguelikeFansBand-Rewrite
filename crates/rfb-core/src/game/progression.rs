@@ -756,14 +756,24 @@ impl Game {
 
     pub(super) fn pending_race_mutation_choice(&self) -> Option<(String, Vec<String>)> {
         let race = self.selected_race_definition()?;
+        let excluded = self
+            .character_definitions()
+            .and_then(|(_, _, class, _)| race.mutation_choice_exclusions_by_class.get(&class.id));
         race.level_mutation_rewards
             .iter()
             .filter(|reward| reward.minimum_level <= self.progress.level)
             .filter(|reward| !self.race_mutation_reward_completed(reward))
             .find_map(|reward| match &reward.selection {
-                RaceMutationSelectionDefinition::Choice { mutation_ids } => {
-                    Some((reward.id.clone(), mutation_ids.clone()))
-                }
+                RaceMutationSelectionDefinition::Choice { mutation_ids } => Some((
+                    reward.id.clone(),
+                    mutation_ids
+                        .iter()
+                        .filter(|mutation_id| {
+                            excluded.is_none_or(|excluded| !excluded.contains(*mutation_id))
+                        })
+                        .cloned()
+                        .collect(),
+                )),
                 RaceMutationSelectionDefinition::CastingAttribute { .. } => None,
             })
     }
@@ -814,10 +824,19 @@ impl Game {
         }
     }
 
-    fn selected_race_definition(&self) -> Option<&rfb_content::RaceDefinition> {
+    pub(super) fn selected_race_definition(&self) -> Option<&rfb_content::RaceDefinition> {
         self.build
             .as_ref()
             .and_then(|identity| self.content.race(&identity.race_id))
+    }
+
+    pub(super) fn birth_race_mutation_override(
+        &self,
+        mutation_id: &str,
+    ) -> Option<&rfb_content::RaceMutationOverrideDefinition> {
+        self.selected_race_definition()?
+            .mutation_overrides
+            .get(mutation_id)
     }
 
     fn race_mutation_reward_completed(

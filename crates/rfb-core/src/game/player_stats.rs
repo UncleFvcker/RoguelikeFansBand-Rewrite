@@ -477,7 +477,11 @@ impl Game {
             .mutations()
             .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
         {
-            for (damage_type, level) in &mutation.resistances {
+            let resistances = self
+                .birth_race_mutation_override(&mutation.id)
+                .and_then(|override_| override_.resistances.as_ref())
+                .unwrap_or(&mutation.resistances);
+            for (damage_type, level) in resistances {
                 record(
                     DamageType::from(*damage_type),
                     ResistanceLevel::from(*level),
@@ -546,7 +550,10 @@ impl Game {
     }
 
     pub(super) fn player_reflects_bolts(&self) -> bool {
-        self.items.iter().any(|item| {
+        self.character_definitions().is_some_and(|(_, race, _, _)| {
+            race.reflects_bolts_minimum_level
+                .is_some_and(|minimum_level| self.progress.level >= minimum_level)
+        }) || self.items.iter().any(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
                 && self
                     .content
@@ -779,6 +786,9 @@ impl Game {
 
     pub(super) fn player_levitates(&self) -> bool {
         self.player_has_status_kind(STATUS_LEVITATION)
+            || self
+                .character_definitions()
+                .is_some_and(|(_, race, _, _)| race.levitation)
             || self.content.mutations().any(|mutation| {
                 mutation.levitation && self.progress.active_mutation_ids.contains(&mutation.id)
             })
@@ -1484,6 +1494,13 @@ impl Game {
             race.speed_per_ten_levels
                 .saturating_mul(i32::from(self.progress.level / 10)),
         );
+        add_nonzero_stat(
+            pipeline,
+            StatKind::ArmorClass,
+            StatLayer::Species,
+            &race.id,
+            race.armor_class,
+        );
         for (layer, source_id, modifiers) in [
             (StatLayer::Species, race.id.as_str(), &race.modifiers),
             (StatLayer::Class, class.id.as_str(), &class.modifiers),
@@ -1805,8 +1822,11 @@ impl Game {
                     ),
                     (
                         StatKind::ArmorClass,
-                        rating_to_armor_class(modifiers.defense)
-                            .saturating_add(mutation.armor_class),
+                        rating_to_armor_class(modifiers.defense).saturating_add(
+                            self.birth_race_mutation_override(&mutation.id)
+                                .and_then(|override_| override_.armor_class)
+                                .unwrap_or(mutation.armor_class),
+                        ),
                     ),
                     (StatKind::Speed, modifiers.speed),
                     (

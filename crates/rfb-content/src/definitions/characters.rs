@@ -101,9 +101,15 @@ pub struct RaceDefinition {
     pub shop_adjust_percent: u16,
     #[serde(default)]
     pub base_hp: i32,
+    /// Direct intrinsic armor-class adjustment supplied by the effective race.
+    #[serde(default)]
+    pub armor_class: i32,
     /// Intrinsic infravision range in map cells.
     #[serde(default)]
     pub infravision: i32,
+    /// Whether the effective race can cross terrain that requires levitation.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub levitation: bool,
     /// Whether this race contributes one intrinsic see-invisible source.
     #[serde(default, skip_serializing_if = "is_false")]
     pub see_invisible: bool,
@@ -114,6 +120,9 @@ pub struct RaceDefinition {
     /// Character level at which this effective race grants permanent telepathy.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub telepathy_minimum_level: Option<u16>,
+    /// Character level at which this effective race begins reflecting bolts.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reflects_bolts_minimum_level: Option<u16>,
     /// Attributes this race innately prevents from being reduced.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub attribute_sustains: BTreeSet<ItemAttributeDefinition>,
@@ -148,6 +157,12 @@ pub struct RaceDefinition {
     /// mutation being present in the character's locked mutation set.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub level_mutation_rewards: Vec<RaceLevelMutationRewardDefinition>,
+    /// Birth-race-specific behavior for mutations granted by this race.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub mutation_overrides: BTreeMap<String, RaceMutationOverrideDefinition>,
+    /// Mutations omitted from a manual race reward for a specific class.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub mutation_choice_exclusions_by_class: BTreeMap<String, BTreeSet<String>>,
     /// RFB innate powers supplied by the currently effective race.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub abilities: Vec<InnatePowerDefinition>,
@@ -165,6 +180,22 @@ pub struct RaceLevelMutationRewardDefinition {
     pub id: String,
     pub minimum_level: u16,
     pub selection: RaceMutationSelectionDefinition,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RaceMutationOverrideDefinition {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub activation: Option<InnatePowerDefinition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub armor_class: Option<i32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resistances: Option<BTreeMap<ActorDamageType, ActorResistanceLevel>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub contact_aura: Option<ActorDamageType>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

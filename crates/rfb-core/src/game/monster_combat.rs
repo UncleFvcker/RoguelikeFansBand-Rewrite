@@ -1982,7 +1982,13 @@ impl Game {
                 .content
                 .mutations()
                 .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
-                .filter(|mutation| mutation.contact_aura.map(DamageType::from) == Some(damage_type))
+                .filter(|mutation| {
+                    self.birth_race_mutation_override(&mutation.id)
+                        .and_then(|override_| override_.contact_aura)
+                        .or(mutation.contact_aura)
+                        .map(DamageType::from)
+                        == Some(damage_type)
+                })
                 .count();
             if level == 0 {
                 continue;

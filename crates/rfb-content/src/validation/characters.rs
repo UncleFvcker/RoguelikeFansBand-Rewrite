@@ -180,6 +180,58 @@ pub(super) fn validate_characters(
         .iter()
         .map(|mutation| (mutation.id.as_str(), mutation.random_weight))
         .collect::<BTreeMap<_, _>>();
+    let invalid_innate_power = |activation: &crate::InnatePowerDefinition| {
+        !(1..=100).contains(&activation.minimum_level)
+            || activation.cost > 1_000_000
+            || activation.cost_scaling.is_some_and(|scaling| {
+                !(1..=100).contains(&scaling.start_level)
+                    || scaling.level_interval == 0
+                    || scaling.level_interval > 100
+                    || scaling.amount == 0
+                    || scaling.amount > 1_000_000
+                    || scaling.divisor == 0
+                    || scaling.divisor > 1_000_000
+                    || match scaling.curve {
+                        InnatePowerCostScalingCurveDefinition::Step => {
+                            scaling.divisor != 1
+                                || scaling.round_up
+                                || scaling.linear_weight != 1
+                                || scaling.quadratic_weight != 0
+                                || scaling.cubic_weight != 0
+                        }
+                        InnatePowerCostScalingCurveDefinition::Prorated => {
+                            scaling.start_level != 1
+                                || scaling.level_interval != 1
+                                || !(1..=100).contains(&scaling.linear_weight)
+                                || scaling.quadratic_weight > 100
+                                || scaling.cubic_weight > 100
+                        }
+                    }
+            })
+            || activation.base_failure_percent > 95
+            || activation
+                .minimum_failure_percent
+                .is_some_and(|minimum| minimum > activation.base_failure_percent)
+    };
+    let non_mutation_ability_ids = ability_books_by_id
+        .values()
+        .flat_map(|book| book.ability_ids.iter())
+        .chain(
+            definitions
+                .classes
+                .iter()
+                .flat_map(|class| class.abilities.iter())
+                .map(|activation| &activation.ability_id),
+        )
+        .chain(
+            definitions
+                .races
+                .iter()
+                .flat_map(|race| race.abilities.iter())
+                .map(|activation| &activation.ability_id),
+        )
+        .cloned()
+        .collect::<BTreeSet<_>>();
     let unavailable_race_ability_ids = ability_books_by_id
         .values()
         .flat_map(|book| book.ability_ids.iter())
@@ -196,7 +248,15 @@ pub(super) fn validate_characters(
                 .flat_map(|class| class.abilities.iter())
                 .map(|activation| &activation.ability_id),
         )
-        .map(String::as_str)
+        .chain(
+            definitions
+                .races
+                .iter()
+                .flat_map(|race| race.mutation_overrides.values())
+                .filter_map(|override_| override_.activation.as_ref())
+                .map(|activation| &activation.ability_id),
+        )
+        .cloned()
         .collect::<BTreeSet<_>>();
     for race in definitions.races.iter_mut() {
         require_schema(&race.schema, RACE_SCHEMA, &race.id)?;
@@ -211,6 +271,10 @@ pub(super) fn validate_characters(
             || race
                 .telepathy_minimum_level
                 .is_some_and(|level| !(1..=100).contains(&level))
+            || race
+                .reflects_bolts_minimum_level
+                .is_some_and(|level| !(1..=100).contains(&level))
+            || !(-1_000..=1_000).contains(&race.armor_class)
             || !(-1_000..=1_000).contains(&race.regeneration_rate_modifier_percent)
             || !(-100..=100).contains(&race.speed_per_ten_levels)
             || !(-20..=20).contains(&race.spell_capacity_bonus)
@@ -242,41 +306,88 @@ pub(super) fn validate_characters(
         }
         validate_status_immunities(&race.id, &mut race.status_immunities)?;
         validate_race_level_mutation_rewards(race, &mutation_random_weights)?;
+        let reward_mutation_ids = race
+            .level_mutation_rewards
+            .iter()
+            .flat_map(|reward| match &reward.selection {
+                RaceMutationSelectionDefinition::Choice { mutation_ids } => {
+                    mutation_ids.iter().collect::<Vec<_>>()
+                }
+                RaceMutationSelectionDefinition::CastingAttribute {
+                    default_mutation_id,
+                    mutation_ids_by_attribute,
+                } => std::iter::once(default_mutation_id)
+                    .chain(mutation_ids_by_attribute.values())
+                    .collect(),
+            })
+            .collect::<BTreeSet<_>>();
+        let choice_mutation_ids = race
+            .level_mutation_rewards
+            .iter()
+            .filter_map(|reward| match &reward.selection {
+                RaceMutationSelectionDefinition::Choice { mutation_ids } => Some(mutation_ids),
+                RaceMutationSelectionDefinition::CastingAttribute { .. } => None,
+            })
+            .flatten()
+            .collect::<BTreeSet<_>>();
+        let mut override_ability_ids = BTreeSet::new();
+        if race
+            .mutation_overrides
+            .iter()
+            .any(|(mutation_id, override_)| {
+                !reward_mutation_ids.contains(mutation_id)
+                    || override_
+                        .description
+                        .as_ref()
+                        .is_some_and(|description| description.trim().is_empty())
+                    || override_
+                        .armor_class
+                        .is_some_and(|armor_class| !(-1_000..=1_000).contains(&armor_class))
+                    || override_
+                        .resistances
+                        .as_ref()
+                        .is_some_and(|resistances| resistances.is_empty() || resistances.len() > 32)
+                    || override_.activation.as_ref().is_some_and(|activation| {
+                        invalid_innate_power(activation)
+                            || !override_ability_ids.insert(activation.ability_id.as_str())
+                            || non_mutation_ability_ids.contains(&activation.ability_id)
+                            || abilities
+                                .iter()
+                                .find(|ability| ability.id == activation.ability_id)
+                                .is_none_or(|ability| ability.player.is_some())
+                    })
+            })
+        {
+            return Err(ContentError::InvalidCharacterSource(race.id.clone()));
+        }
+        if race
+            .mutation_choice_exclusions_by_class
+            .iter()
+            .any(|(class_id, excluded)| {
+                validate_definition_id(class_id, "class").is_err()
+                    || excluded.is_empty()
+                    || excluded
+                        .iter()
+                        .any(|mutation_id| !choice_mutation_ids.contains(mutation_id))
+                    || race.level_mutation_rewards.iter().any(|reward| {
+                        let RaceMutationSelectionDefinition::Choice { mutation_ids } =
+                            &reward.selection
+                        else {
+                            return false;
+                        };
+                        mutation_ids
+                            .iter()
+                            .all(|mutation_id| excluded.contains(mutation_id))
+                    })
+            })
+        {
+            return Err(ContentError::InvalidCharacterSource(race.id.clone()));
+        }
         let mut race_ability_ids = BTreeSet::new();
         if race.abilities.iter().any(|activation| {
             !race_ability_ids.insert(activation.ability_id.as_str())
-                || !(1..=100).contains(&activation.minimum_level)
-                || activation.cost > 1_000_000
-                || activation.cost_scaling.is_some_and(|scaling| {
-                    !(1..=100).contains(&scaling.start_level)
-                        || scaling.level_interval == 0
-                        || scaling.level_interval > 100
-                        || scaling.amount == 0
-                        || scaling.amount > 1_000_000
-                        || scaling.divisor == 0
-                        || scaling.divisor > 1_000_000
-                        || match scaling.curve {
-                            InnatePowerCostScalingCurveDefinition::Step => {
-                                scaling.divisor != 1
-                                    || scaling.round_up
-                                    || scaling.linear_weight != 1
-                                    || scaling.quadratic_weight != 0
-                                    || scaling.cubic_weight != 0
-                            }
-                            InnatePowerCostScalingCurveDefinition::Prorated => {
-                                scaling.start_level != 1
-                                    || scaling.level_interval != 1
-                                    || !(1..=100).contains(&scaling.linear_weight)
-                                    || scaling.quadratic_weight > 100
-                                    || scaling.cubic_weight > 100
-                            }
-                        }
-                })
-                || activation.base_failure_percent > 95
-                || activation
-                    .minimum_failure_percent
-                    .is_some_and(|minimum| minimum > activation.base_failure_percent)
-                || unavailable_race_ability_ids.contains(activation.ability_id.as_str())
+                || invalid_innate_power(activation)
+                || unavailable_race_ability_ids.contains(&activation.ability_id)
                 || abilities
                     .iter()
                     .find(|ability| ability.id == activation.ability_id)
@@ -538,6 +649,11 @@ pub(super) fn validate_characters(
         normalize_tags(&class.id, &mut class.tags)?;
         insert_definition_id(all_ids, &class.id)?;
         class_ids.insert(class.id.clone());
+    }
+    for race in definitions.races.iter() {
+        for class_id in race.mutation_choice_exclusions_by_class.keys() {
+            require_reference(&class_ids, class_id, &race.id)?;
+        }
     }
 
     let mut personality_ids = BTreeSet::new();

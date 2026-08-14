@@ -1,5 +1,46 @@
 {
   "$defs": {
+    "ActorDamageType": {
+      "enum": [
+        "physical",
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison",
+        "light",
+        "dark",
+        "blindness",
+        "fear",
+        "confusion",
+        "nether",
+        "nexus",
+        "sound",
+        "shards",
+        "rock",
+        "chaos",
+        "disenchant",
+        "time",
+        "mana",
+        "gravity",
+        "inertia",
+        "plasma",
+        "force",
+        "nuke",
+        "disintegrate",
+        "storm",
+        "holy-fire",
+        "hell-fire",
+        "ice",
+        "water",
+        "psi",
+        "curse",
+        "meteor",
+        "rocket",
+        "telekinesis"
+      ],
+      "type": "string"
+    },
     "ActorResistanceLevel": {
       "description": "Content-declared resistance tier; `normal` is expressed by omission.",
       "enum": [
@@ -316,6 +357,162 @@
       ],
       "type": "object"
     },
+    "RaceMutationOverrideDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "activation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InnatePowerDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "armorClass": {
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "contactAura": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActorDamageType"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "description": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "resistances": {
+          "additionalProperties": false,
+          "properties": {
+            "acid": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "blindness": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "chaos": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "cold": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "confusion": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "curse": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "dark": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "disenchant": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "disintegrate": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "electricity": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "fear": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "fire": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "force": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "gravity": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "hell-fire": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "holy-fire": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "ice": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "inertia": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "light": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "mana": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "meteor": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "nether": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "nexus": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "nuke": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "physical": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "plasma": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "poison": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "psi": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "rock": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "rocket": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "shards": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "sound": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "storm": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "telekinesis": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "time": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            },
+            "water": {
+              "$ref": "#/$defs/ActorResistanceLevel"
+            }
+          },
+          "type": [
+            "object",
+            "null"
+          ]
+        }
+      },
+      "type": "object"
+    },
     "RaceMutationSelectionDefinition": {
       "oneOf": [
         {
@@ -504,6 +701,12 @@
       },
       "type": "array"
     },
+    "armorClass": {
+      "default": 0,
+      "description": "Direct intrinsic armor-class adjustment supplied by the effective race.",
+      "format": "int32",
+      "type": "integer"
+    },
     "attributeSustains": {
       "description": "Attributes this race innately prevents from being reduced.",
       "items": {
@@ -582,6 +785,10 @@
       },
       "type": "array"
     },
+    "levitation": {
+      "description": "Whether the effective race can cross terrain that requires levitation.",
+      "type": "boolean"
+    },
     "lifePercent": {
       "default": 100,
       "format": "uint16",
@@ -606,8 +813,36 @@
         "wisdom": 0
       }
     },
+    "mutationChoiceExclusionsByClass": {
+      "additionalProperties": {
+        "items": {
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "description": "Mutations omitted from a manual race reward for a specific class.",
+      "type": "object"
+    },
+    "mutationOverrides": {
+      "additionalProperties": {
+        "$ref": "#/$defs/RaceMutationOverrideDefinition"
+      },
+      "description": "Birth-race-specific behavior for mutations granted by this race.",
+      "type": "object"
+    },
     "nameKey": {
       "type": "string"
+    },
+    "reflectsBoltsMinimumLevel": {
+      "description": "Character level at which this effective race begins reflecting bolts.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
     },
     "regenerationRateModifierPercent": {
       "default": 0,

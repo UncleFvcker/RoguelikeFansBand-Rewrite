@@ -2,7 +2,7 @@
 use super::support::*;
 use super::*;
 use crate::stats::{AttributeSet, experience_required_for_level, modify_attribute_value};
-use rfb_protocol::{AttributeKindDto, MutationRatingDto};
+use rfb_protocol::{AbilitySourceDto, AttributeKindDto, MutationRatingDto};
 
 const TEST_RACE_REWARD_BUILD_ID: &str = "test.build.race-rewards";
 const TEST_RACE_REWARD_CASTER_BUILD_ID: &str = "test.build.caster";
@@ -10,6 +10,7 @@ const TEST_RACE_CHOICE_REWARD_ID: &str = "test-talent";
 const TEST_RACE_CHOICE_MUTATION_ID: &str = "rfb.mutation.ambidextrous";
 const TEST_RACE_DEFAULT_MUTATION_ID: &str = "rfb.mutation.black-marketeer";
 const TEST_RACE_INT_MUTATION_ID: &str = "rfb.mutation.astral-guide";
+const TEST_RACE_OVERRIDE_ABILITY_ID: &str = "test.ability.race-mutation-override";
 
 fn race_reward_catalog() -> Arc<rfb_content::ContentCatalog> {
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -31,6 +32,9 @@ fn race_reward_catalog() -> Arc<rfb_content::ContentCatalog> {
     race.legacy_index = None;
     race.name_key = "test-race-level-mutation-rewards-name".to_owned();
     race.description_key = "test-race-level-mutation-rewards-description".to_owned();
+    race.armor_class = 7;
+    race.levitation = true;
+    race.reflects_bolts_minimum_level = Some(2);
     race.level_mutation_rewards = vec![
         rfb_content::RaceLevelMutationRewardDefinition {
             id: "test-weakness".to_owned(),
@@ -54,7 +58,44 @@ fn race_reward_catalog() -> Arc<rfb_content::ContentCatalog> {
             },
         },
     ];
+    race.mutation_overrides.insert(
+        TEST_RACE_CHOICE_MUTATION_ID.to_owned(),
+        rfb_content::RaceMutationOverrideDefinition {
+            description: Some("Race-specific mutation behavior".to_owned()),
+            activation: Some(rfb_content::InnatePowerDefinition {
+                minimum_level: 1,
+                governing_attribute: rfb_content::TechniqueAttribute::Constitution,
+                cost: 3,
+                cost_scaling: None,
+                base_failure_percent: 20,
+                minimum_failure_percent: None,
+                ability_id: TEST_RACE_OVERRIDE_ABILITY_ID.to_owned(),
+            }),
+            armor_class: Some(9),
+            resistances: Some(BTreeMap::from([(
+                rfb_content::ActorDamageType::Fire,
+                rfb_content::ActorResistanceLevel::Resistant,
+            )])),
+            contact_aura: Some(rfb_content::ActorDamageType::Fire),
+        },
+    );
+    race.mutation_choice_exclusions_by_class.insert(
+        "demo.class.archer".to_owned(),
+        BTreeSet::from([TEST_RACE_CHOICE_MUTATION_ID.to_owned()]),
+    );
     artifact.content.races.push(race);
+
+    let mut override_ability = artifact
+        .content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "rfb.ability.mutation.cold-touch")
+        .expect("Cold Touch ability should exist")
+        .clone();
+    override_ability.id = TEST_RACE_OVERRIDE_ABILITY_ID.to_owned();
+    override_ability.name_key = "test-race-mutation-override-name".to_owned();
+    override_ability.description_key = "test-race-mutation-override-description".to_owned();
+    artifact.content.abilities.push(override_ability);
 
     let mut build = artifact
         .content
@@ -75,11 +116,89 @@ fn race_reward_catalog() -> Arc<rfb_content::ContentCatalog> {
         .find(|build| build.id == TEST_RACE_REWARD_CASTER_BUILD_ID)
         .expect("test caster build should exist")
         .race_id = "test.race.level-mutation-rewards".to_owned();
+    artifact
+        .content
+        .builds
+        .iter_mut()
+        .find(|build| build.id == "demo.build.archer")
+        .expect("Archer build should exist")
+        .race_id = "test.race.level-mutation-rewards".to_owned();
 
     Arc::new(rfb_content::ContentCatalog::from_artifact(
         rfb_content::encode_content(artifact.content)
             .expect("test race reward content should remain valid"),
     ))
+}
+
+#[test]
+fn birth_race_passives_mutation_overrides_and_class_exclusions_are_resolved() {
+    let catalog = race_reward_catalog();
+    let mut game = Game::from_content_with_build(
+        47,
+        catalog.clone(),
+        DEFAULT_WORLD_ID,
+        TEST_RACE_REWARD_BUILD_ID,
+    )
+    .expect("race override game should create");
+    let mut control =
+        Game::from_content_with_build(47, catalog.clone(), DEFAULT_WORLD_ID, "demo.build.warrior")
+            .expect("control game should create");
+    assert!(game.player_levitates());
+    assert!(!game.player_reflects_bolts());
+
+    game.apply_unscaled_player_experience(experience_required_for_level(2), &mut Vec::new());
+    control.apply_unscaled_player_experience(experience_required_for_level(2), &mut Vec::new());
+    assert!(game.player_reflects_bolts());
+    let race_armor = game.player_derived_stats().armor_class.value;
+    assert_eq!(
+        race_armor,
+        control.player_derived_stats().armor_class.value + 7
+    );
+
+    assert!(game.choose_race_mutation(
+        TEST_RACE_CHOICE_REWARD_ID,
+        TEST_RACE_CHOICE_MUTATION_ID,
+        &mut Vec::new(),
+    ));
+    assert_eq!(
+        game.player_derived_stats().armor_class.value,
+        race_armor + 9
+    );
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Fire),
+        ResistanceLevel::Resistant
+    );
+    let snapshot = game.snapshot();
+    let mutation = snapshot
+        .player
+        .mutations
+        .iter()
+        .find(|mutation| mutation.id == TEST_RACE_CHOICE_MUTATION_ID)
+        .expect("chosen mutation should be projected");
+    assert_eq!(mutation.description, "Race-specific mutation behavior");
+    assert!(snapshot.player.abilities.iter().any(|ability| {
+        ability.id == TEST_RACE_OVERRIDE_ABILITY_ID
+            && ability.source == AbilitySourceDto::Mutation
+            && ability.resource_cost == 3
+    }));
+
+    let mut archer =
+        Game::from_content_with_build(47, catalog, DEFAULT_WORLD_ID, "demo.build.archer")
+            .expect("Archer race override game should create");
+    archer.apply_unscaled_player_experience(experience_required_for_level(2), &mut Vec::new());
+    let pending = archer
+        .snapshot()
+        .player
+        .pending_race_mutation_choice
+        .expect("Archer should retain an eligible choice");
+    assert_eq!(
+        pending
+            .candidates
+            .iter()
+            .map(|candidate| candidate.id.as_str())
+            .collect::<Vec<_>>(),
+        ["rfb.mutation.evasion"]
+    );
 }
 
 fn race_reward_game(build_id: &str) -> Game {

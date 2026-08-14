@@ -1152,8 +1152,17 @@ impl Game {
         self.content
             .mutations()
             .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
-            .filter_map(|mutation| mutation.activation.as_ref())
+            .filter_map(|mutation| self.mutation_activation_for_definition(mutation))
             .find(|activation| activation.ability_id == ability_id)
+    }
+
+    pub(super) fn mutation_activation_for_definition<'a>(
+        &'a self,
+        mutation: &'a MutationDefinition,
+    ) -> Option<&'a InnatePowerDefinition> {
+        self.birth_race_mutation_override(&mutation.id)
+            .and_then(|override_| override_.activation.as_ref())
+            .or(mutation.activation.as_ref())
     }
 
     pub(super) fn gain_mutation(

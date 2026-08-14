@@ -235,7 +235,10 @@ impl Game {
         PlayerMutationDto {
             id: id.to_owned(),
             name: definition.name.clone(),
-            description: definition.description.clone(),
+            description: self
+                .birth_race_mutation_override(id)
+                .and_then(|override_| override_.description.clone())
+                .unwrap_or_else(|| definition.description.clone()),
             rating,
             locked,
         }
@@ -316,7 +319,7 @@ impl Game {
             .content
             .mutations()
             .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
-            .filter_map(|mutation| mutation.activation.as_ref())
+            .filter_map(|mutation| self.mutation_activation_for_definition(mutation))
             .map(|activation| (activation.ability_id.clone(), activation.clone()))
             .collect::<BTreeMap<_, _>>();
         let race_activations = self

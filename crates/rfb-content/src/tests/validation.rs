@@ -117,6 +117,49 @@ fn class_and_race_level_resistance_thresholds_are_strict() {
 }
 
 #[test]
+fn birth_race_mutation_overrides_and_class_exclusions_are_strict() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let mut invalid_override = artifact.content.clone();
+    invalid_override
+        .races
+        .iter_mut()
+        .find(|race| race.id == "rfb-legacy.race.dunadan")
+        .expect("Dunadan race should exist")
+        .mutation_overrides
+        .insert(
+            "rfb.mutation.not-a-race-reward".to_owned(),
+            RaceMutationOverrideDefinition {
+                description: None,
+                activation: None,
+                armor_class: Some(1),
+                resistances: None,
+                contact_aura: None,
+            },
+        );
+    assert!(matches!(
+        validate_and_normalize(&mut invalid_override),
+        Err(ContentError::InvalidCharacterSource(id)) if id == "rfb-legacy.race.dunadan"
+    ));
+
+    let mut dangling_class = artifact.content;
+    dangling_class
+        .races
+        .iter_mut()
+        .find(|race| race.id == "rfb-legacy.race.dunadan")
+        .expect("Dunadan race should exist")
+        .mutation_choice_exclusions_by_class
+        .insert(
+            "demo.class.missing".to_owned(),
+            std::collections::BTreeSet::from(["rfb.mutation.fast-learner".to_owned()]),
+        );
+    assert!(matches!(
+        validate_and_normalize(&mut dangling_class),
+        Err(ContentError::DanglingReference { owner, target })
+            if owner == "rfb-legacy.race.dunadan" && target == "demo.class.missing"
+    ));
+}
+
+#[test]
 fn sniping_profiles_and_concentration_requirements_are_strict() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let profile = SnipingProfileDefinition {
