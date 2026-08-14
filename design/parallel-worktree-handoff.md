@@ -1,7 +1,7 @@
 # 并行 worktree 通用交接说明
 
 更新时间：2026-08-15
-当前工作批次起点：`main@be87dc1b2`
+当前工作批次起点：`main@9d3397869`
 
 本说明供新的 Codex 对话接手独立方向时使用。每个写入方向必须使用自己的
 worktree 和分支；`main` 只负责集成、版本与发布收口。
@@ -1425,3 +1425,18 @@ git diff --stat
   `a5d56b9c5e0f6c2fece100b5b117e363d0be4a78bab82f94927d5c48c3a8310d`、Protocol `1.221`、
   State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
   Web 共 10 项聚焦测试通过，含 save/state-hash/replay；按用户要求未运行全量测试或刷新 fixture。
+
+## 78. main 当前交接（木精灵正式内容、自然感知与树木通行）
+
+- 种族方向继续拥有 `rfb-legacy.race.wood-elf` 与 `rfb-legacy.skill-set.race-wood-elf`，并新增、拥有
+  `rfb.ability.race.wood-elf-nature-awareness`。能力复用既有
+  `demo.ability-program.nature-awareness`，其他方向不得复制或改名这些身份，也不得另建侦测执行器。
+- 木精灵完整行为包括权威属性/生命/HP/经验/红外/商店/技能矩阵、标准身体与出生、初始“自然”、
+  20 级“自然感知”，以及未骑乘时按普通行动成本穿越树木。临时木精灵形态按当前有效种族获得并
+  失去能力与树木通行；未修改普通角色和坐骑的树木规则。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 32。没有
+  新增 Protocol、save 或 State Hash 字段，也没有刷新 fixture。
+- 实现提交为 `9d3397869`（`Import Wood-Elf race`）。共享协调点为 pack `1.368.0` / content hash
+  `cce98fbd13eb10f345494c1562b72170d511a0f6627371e93068d5405800efb5`、Protocol `1.221`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
+  Web 共 7 项聚焦测试通过，含 save/state-hash/replay；按用户要求未运行全量测试或刷新 fixture。

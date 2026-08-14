@@ -5,7 +5,7 @@
 
 更新时间：2026-08-15
 
-当前 main 实现基线：`be87dc1b2`（骷髅正式 New Game 开放）
+当前 main 实现基线：`9d3397869`（木精灵正式 New Game 开放）
 
 分支：`codex/class-next`
 
@@ -882,3 +882,24 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 新增聚焦测试共 10 项：内容 1、中文名 1、importer 1、核心 6、Web 1，覆盖静态矩阵、食物与药水
   规则、能力、等级抗性、变形生命周期、出生物品、美德、夜间出生及 save/state-hash/replay。
   `verify-source`、格式和 diff 检查通过；按用户要求未运行全量测试或刷新 fixture。
+
+## main 当前批次：木精灵正式内容、自然感知与树木通行
+
+- 权威来源为 RFB `master:src/races_k.c`、`master:src/cmd1.c` 和 `master:src/virtue.c`。种族方向继续
+  拥有既有 `rfb-legacy.race.wood-elf` 与 `rfb-legacy.skill-set.race-wood-elf`，新增并拥有
+  `rfb.ability.race.wood-elf-nature-awareness`；侦测执行复用既有
+  `demo.ability-program.nature-awareness`，没有复制 Ability Program。
+- 木精灵按原版闭合六维 `-1/+1/+2/+1/-1/+1`、生命 97%、基础 HP 16、经验 125%、3 格红外、商店
+  95%、八项技能、标准身体/出生与初始“自然”。20 级智慧能力“自然感知”消耗 15、基础失败率
+  50%，绘制附近地图并侦测怪物、陷阱、门和上下楼梯。
+- `forest-adapted` 通过当前有效种族判定允许未骑乘木精灵以普通行动成本穿越带 `tree` 标签的地形；
+  普通 Human 仍被树木阻挡，临时木精灵形态获得能力和通行，解除后立即失去。没有改动全局地形、
+  骑乘、协议、存档字段或 State Hash 输入。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数从 31 增至 32；
+  请求继续使用既有 `{ buildId, raceId, playerName, seed }`，不增加玩家 Actor、tileset 或重复 Build。
+- 实现提交为 `9d3397869`（`Import Wood-Elf race`）。最终协调点为 pack `1.368.0` / content hash
+  `cce98fbd13eb10f345494c1562b72170d511a0f6627371e93068d5405800efb5`、Protocol `1.221`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。
+- 新增聚焦测试共 7 项：内容 1、中文名 1、importer 1、核心 3、Web 1，覆盖静态矩阵、完整侦测、
+  等级/消耗、树木通行、临时形态、美德及 save/state-hash/replay。`verify-source`、格式和 diff 检查
+  通过；按用户要求未运行全量测试或刷新 fixture。

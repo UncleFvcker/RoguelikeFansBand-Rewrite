@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-15
-当前实现基线：`be87dc1b2`（骷髅正式 New Game 开放；本次文档提交只做交接封板）
+当前实现基线：`9d3397869`（木精灵正式 New Game 开放；本次文档提交只做交接封板）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,14 +10,14 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.367.0`
-- content hash：`a5d56b9c5e0f6c2fece100b5b117e363d0be4a78bab82f94927d5c48c3a8310d`
+- demo pack：`1.368.0`
+- content hash：`cce98fbd13eb10f345494c1562b72170d511a0f6627371e93068d5405800efb5`
 - Protocol：`1.221`
 - State Hash Schema：`v104`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v303`，26 个 exact fixture
 - 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 31 个种族。
+  6 个职业构筑和 32 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -72,6 +72,8 @@ New Game 当前按以下稳定 ID 开放：
   - `rfb-legacy.race.draconian-shadow`
 - `rfb-legacy.race.golem`
 - `rfb-legacy.race.zombie`
+- `rfb-legacy.race.skeleton`
+- `rfb-legacy.race.wood-elf`
 
 种族通过新游戏请求中的独立 `raceId` 覆盖 Build 的默认 Human。不要生成
 “职业 × 种族”的重复 Build JSON。玩家外观目前由职业 Build 决定，新增普通种族不复制玩家 Actor 或
@@ -94,6 +96,9 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
 装置吸收与满充能空手法杖路径，新增通用 `night-start` 出生标签和独立“恢复生命”能力。骷髅
 `rfb-legacy.race.skeleton` 也已正式开放，复用同一亡灵底座，并在既有物品使用事务中闭合普通食物
 漏到脚下、特殊食物消失及药水泼洒规则。
+木精灵 `rfb-legacy.race.wood-elf` 已正式开放：静态矩阵和标准出生沿用既有内容模型，20 级
+“自然感知”复用 `demo.ability-program.nature-awareness`，`forest-adapted` 标签通过统一当前有效
+种族判定允许未骑乘木精灵以普通行动成本穿越树木；临时木精灵形态同步获得并在解除后失去能力与通行。
 
 ### 龙人专项最终证据
 
@@ -152,6 +157,22 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
   核心覆盖食物分类与附加效果、药水破碎、等级被动、恢复生命、临时形态、夜间出生以及
   save/state-hash/replay。`verify-source`、Rust format 和 diff 检查通过。按用户要求未运行全量测试，
   也未刷新 fixture。
+
+### 木精灵导入最终证据
+
+- 实现提交：`9d3397869`（`Import Wood-Elf race`）。最终协调点为 pack `1.368.0` / content hash
+  `cce98fbd13eb10f345494c1562b72170d511a0f6627371e93068d5405800efb5`；Protocol `1.221`、
+  State Hash Schema v104、save v2 和 `contract-v303` fixture baseline 均未改变。正式 New Game 种族数
+  从 31 增至 32。
+- 木精灵闭合六维 `-1/+1/+2/+1/-1/+1`、生命 97%、基础 HP 16、经验 125%、3 格红外、商店 95%及
+  八项技能矩阵，保持标准身体和标准出生。初始美德为“自然”；未骑乘时可无延迟穿过树木，临时形态
+  复用同一当前有效种族判定。
+- 新增并由种族方向拥有 `rfb.ability.race.wood-elf-nature-awareness`，复用既有
+  `demo.ability-program.nature-awareness`。该智慧能力在 20 级开放，消耗 15、基础失败率 50%，继续
+  精确执行地图、陷阱、门、上下楼梯和普通怪物侦测，没有增加第二套侦测执行器。
+- 只运行了本批新增聚焦测试：内容 1 项、本地化 1 项、导入器 1 项、核心 3 项、Web 1 项，均通过；
+  核心覆盖能力等级/消耗/完整侦测、树木通行、临时形态、美德及 save/state-hash/replay。
+  `verify-source`、Rust format 和 diff 检查通过。按用户要求未运行全量测试，也未刷新 fixture。
 
 ## 2. 权威来源与不可变规则
 
