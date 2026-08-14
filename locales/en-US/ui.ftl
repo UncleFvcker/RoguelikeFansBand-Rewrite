@@ -15,6 +15,7 @@ session-career-label = Career
 session-career-first = First RFB career slice
 session-career-death-realm = Death realm
 session-race-label = Race
+session-race-group-draconian = Draconians
 session-seed-label = Run seed
 session-character-name-label = Character name
 session-character-name-help = 1–32 characters. The Count in Outpost can register a legal name change.

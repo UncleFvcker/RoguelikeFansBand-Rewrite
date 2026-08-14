@@ -1321,3 +1321,20 @@ git diff --stat
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。本阶段仅运行
   新增内容、核心和 replay 聚焦测试；source/格式/相关编译检查通过，未运行或刷新全量测试与 fixture。
   九个 Race 仍不带 `rfb-compatibility`，不得提前加入 New Game 白名单或正式 UI。
+
+## 72. main 当前交接（龙人专项阶段 6：正式 New Game 亚种选择）
+
+- 种族方向复用并继续拥有九个既有
+  `rfb-legacy.race.draconian-{red,white,blue,black,green,bronze,crystal,gold,shadow}` ID；本批没有
+  新增 ability、ability program、skill set、item、material、affix、resource、actor 或公共协议 ID。
+  九个 Race 现均带 `rfb-compatibility`，其他方向不得恢复隐藏状态或建立重复的龙人创建身份。
+- Web 的同一个 `PLAYTEST_RACE_IDS` 白名单和原生 `<select>` 现在正式包含九个 ID，并以权威中文
+  “龙人分支”分组。请求仍只提交既有 `raceId`，玩家 Actor 与 tileset 仍由职业 Build 决定；没有增加
+  “职业 × 亚种”Build 或第二套出生流程。
+- 九个 Race 仍刻意不带 `polymorph-candidate`。普通临时种族变形方向不得因为正式 New Game 开放而
+  自动把九个亚种加入候选；若未来改变该边界，必须单独验收亚种选择、35 级奖励和龙形身体交互。
+- 共享协调点为 pack `1.357.0` / content hash
+  `43c8437b663e727646a077e75a1f7a55318651087062542ffa6e60fbe399108c`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。本阶段只运行
+  三项新增聚焦测试；source、相关 Rust 测试目标编译、Web typecheck、格式和 diff 检查通过，未运行
+  或刷新全量测试与 fixture。下一普通静态种族仍为 `rfb-legacy.race.golem`（魔像）。

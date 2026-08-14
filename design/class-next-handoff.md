@@ -764,3 +764,22 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   装备/AC/攻击/免疫/save/state-hash 测试及 replay 聚焦测试通过；source lock、格式和相关编译检查
   同步完成。按用户要求未运行或刷新全量测试与 fixture。九个 Race 仍隐藏且没有
   `rfb-compatibility`；出生亚种选择和正式 New Game/UI 入口留给下一里程碑。
+
+## main 当前批次：龙人专项阶段 6、正式 New Game 亚种选择
+
+- 权威来源为 RFB `master:src/py_birth.c`、`master:src/races_a.c` 和
+  `master:lib/help/Draconians.txt`。九个既有龙人 Race 全部加入 `rfb-compatibility`，并以稳定
+  `rfb-legacy.race.draconian-{red,white,blue,black,green,bronze,crystal,gold,shadow}` ID 进入
+  `PLAYTEST_RACE_IDS`；它们继续不带 `polymorph-candidate`，不会混入普通临时变形候选。
+- New Game 的同一个原生种族选择器新增龙人 `<optgroup>`，英文显示 `Draconians`，中文按原版出生
+  UI 精确显示“龙人分支”；组内继续使用原版“红色/白色/蓝色/黑色/绿色/青铜/水晶/金色/阴影”。
+  本地化补充通用 `data-l10n-label` 属性写入，不会以 `textContent` 覆盖并删除组内 option。
+- 九个亚种全部通过既有 `{ buildId, raceId, playerName, seed }` 请求进入正式创建，玩家 Actor、tileset、
+  save、state hash 和 replay 继续走已有路径。阶段 4/5 测试删除了隐藏 Race 专用的临时造包和测试
+  `rfb-content` 依赖，改为直接使用正式创建入口；没有新增内容 ID、协议 DTO 或权威状态。
+- 协调版本为 pack `1.357.0` / hash
+  `43c8437b663e727646a077e75a1f7a55318651087062542ffa6e60fbe399108c`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。新增的九亚种
+  正式创建、New Game 分组和本地化 label 聚焦测试通过，source lock、相关 Rust 测试目标编译和 Web
+  typecheck 同步通过；按用户要求未运行或刷新全量测试与 fixture。下一普通静态种族仍为魔像
+  `rfb-legacy.race.golem`。

@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.356.0");
+    assert_eq!(catalog.pack_version(), "1.357.0");
     assert_eq!(catalog.races().count(), 55);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1794,7 +1794,7 @@ fn formal_imp_matches_rfb_profile_demon_identity_and_fire_upgrade() {
 }
 
 #[test]
-fn hidden_draconian_subraces_match_rfb_profiles_and_breath_bindings() {
+fn draconian_subraces_match_rfb_profiles_and_breath_bindings() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
     let profiles = [
@@ -1921,7 +1921,7 @@ fn hidden_draconian_subraces_match_rfb_profiles_and_breath_bindings() {
         assert_eq!(race.body_slots.len(), 15, "{suffix}");
         assert_eq!(race.level_mutation_rewards.len(), 1, "{suffix}");
         assert!(race.tags.iter().any(|tag| tag == "draconian"));
-        assert!(!race.tags.iter().any(|tag| tag == "rfb-compatibility"));
+        assert!(race.tags.iter().any(|tag| tag == "rfb-compatibility"));
         assert!(!race.tags.iter().any(|tag| tag == "polymorph-candidate"));
 
         let [activation] = race.abilities.as_slice() else {

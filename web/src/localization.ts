@@ -45,6 +45,10 @@ export class Localization {
       const key = element.dataset.l10nAriaLabel;
       if (key) element.setAttribute("aria-label", this.format(key));
     }
+    for (const element of root.querySelectorAll<HTMLElement>("[data-l10n-label]")) {
+      const key = element.dataset.l10nLabel;
+      if (key) element.setAttribute("label", this.format(key));
+    }
     document.documentElement.lang = this.#locale;
   }
 

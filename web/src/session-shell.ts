@@ -43,6 +43,15 @@ export const PLAYTEST_RACE_IDS = [
   "rfb-legacy.race.dark-elf",
   "rfb-legacy.race.mindflayer",
   "rfb-legacy.race.imp",
+  "rfb-legacy.race.draconian-red",
+  "rfb-legacy.race.draconian-white",
+  "rfb-legacy.race.draconian-blue",
+  "rfb-legacy.race.draconian-black",
+  "rfb-legacy.race.draconian-green",
+  "rfb-legacy.race.draconian-bronze",
+  "rfb-legacy.race.draconian-crystal",
+  "rfb-legacy.race.draconian-gold",
+  "rfb-legacy.race.draconian-shadow",
 ] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";

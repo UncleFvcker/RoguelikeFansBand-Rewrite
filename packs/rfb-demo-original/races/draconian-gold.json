@@ -153,6 +153,7 @@
     "draconian",
     "humanoid",
     "legacy-import",
+    "rfb-compatibility",
     "standard-body"
   ],
   "levitation": true

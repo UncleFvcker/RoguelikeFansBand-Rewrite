@@ -207,41 +207,40 @@ fn race_reward_game(build_id: &str) -> Game {
 }
 
 fn draconian_reward_game_for_build(build_id: &str) -> Game {
-    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(std::path::Path::parent)
-        .expect("core crate should be inside the workspace")
-        .join("packs/rfb-demo-original");
-    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
-    let mut build = artifact
-        .content
-        .builds
-        .iter()
-        .find(|build| build.id == build_id)
-        .unwrap_or_else(|| panic!("{build_id} should exist"))
-        .clone();
-    build.id = format!("test.build.draconian-red.{}", build.class_id);
-    build.race_id = "rfb-legacy.race.draconian-red".to_owned();
-    let test_build_id = build.id.clone();
-    artifact.content.builds.push(build);
-    artifact
-        .content
-        .races
-        .iter_mut()
-        .find(|race| race.id == "rfb-legacy.race.draconian-red")
-        .expect("red Draconian race should exist")
-        .tags
-        .push("rfb-compatibility".to_owned());
-    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
-        rfb_content::encode_content(artifact.content)
-            .expect("test Draconian content should remain valid"),
-    ));
-    Game::from_content_with_build(3535, catalog, DEFAULT_WORLD_ID, &test_build_id)
-        .expect("hidden Draconian should be usable by the internal test build")
+    Game::new_with_build_race_and_name(
+        3535,
+        build_id,
+        "rfb-legacy.race.draconian-red",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal red Draconian should create")
 }
 
 fn draconian_reward_game() -> Game {
     draconian_reward_game_for_build("demo.build.high-mage-death")
+}
+
+#[test]
+fn draconian_subraces_are_available_to_formal_character_creation() {
+    for suffix in [
+        "red", "white", "blue", "black", "green", "bronze", "crystal", "gold", "shadow",
+    ] {
+        let race_id = format!("rfb-legacy.race.draconian-{suffix}");
+        let game = Game::new_with_build_race_and_name(
+            357,
+            "demo.build.warrior",
+            &race_id,
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .unwrap_or_else(|error| panic!("{race_id} should create: {error}"));
+        assert_eq!(
+            game.build.as_ref().expect("formal build identity").race_id,
+            race_id
+        );
+        assert!(game.snapshot().player.abilities.iter().any(|ability| {
+            ability.id == format!("rfb.ability.race.draconian-{suffix}-breath")
+        }));
+    }
 }
 
 #[test]

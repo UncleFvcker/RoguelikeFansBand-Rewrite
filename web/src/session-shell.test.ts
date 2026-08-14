@@ -54,6 +54,15 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.dark-elf",
     "rfb-legacy.race.mindflayer",
     "rfb-legacy.race.imp",
+    "rfb-legacy.race.draconian-red",
+    "rfb-legacy.race.draconian-white",
+    "rfb-legacy.race.draconian-blue",
+    "rfb-legacy.race.draconian-black",
+    "rfb-legacy.race.draconian-green",
+    "rfb-legacy.race.draconian-bronze",
+    "rfb-legacy.race.draconian-crystal",
+    "rfb-legacy.race.draconian-gold",
+    "rfb-legacy.race.draconian-shadow",
   ]);
 });
 
@@ -62,6 +71,43 @@ test("the New Game form renders every formal race slice", () => {
   for (const raceId of PLAYTEST_RACE_IDS) {
     assert.ok(indexHtml.includes(`<option value="${raceId}"`), raceId);
   }
+});
+
+test("the New Game form groups all nine formal Draconian subraces", () => {
+  const draconianRaceIds = [
+    "rfb-legacy.race.draconian-red",
+    "rfb-legacy.race.draconian-white",
+    "rfb-legacy.race.draconian-blue",
+    "rfb-legacy.race.draconian-black",
+    "rfb-legacy.race.draconian-green",
+    "rfb-legacy.race.draconian-bronze",
+    "rfb-legacy.race.draconian-crystal",
+    "rfb-legacy.race.draconian-gold",
+    "rfb-legacy.race.draconian-shadow",
+  ];
+  assert.deepEqual(PLAYTEST_RACE_IDS.slice(-9), draconianRaceIds);
+
+  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const groupStart = indexHtml.indexOf(
+    '<optgroup label="" data-l10n-label="session-race-group-draconian">',
+  );
+  const groupEnd = indexHtml.indexOf("</optgroup>", groupStart);
+  assert.ok(groupStart >= 0 && groupEnd > groupStart);
+  const groupMarkup = indexHtml.slice(groupStart, groupEnd);
+  for (const raceId of draconianRaceIds) {
+    assert.ok(groupMarkup.includes(`<option value="${raceId}"`), raceId);
+  }
+
+  const english = readFileSync(
+    new URL("../../locales/en-US/ui.ftl", import.meta.url),
+    "utf8",
+  );
+  const chinese = readFileSync(
+    new URL("../../locales/zh-CN/ui.ftl", import.meta.url),
+    "utf8",
+  );
+  assert.match(english, /^session-race-group-draconian = Draconians$/m);
+  assert.match(chinese, /^session-race-group-draconian = 龙人分支$/m);
 });
 
 test("new character requests preserve the selected formal race", () => {

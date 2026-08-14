@@ -135,6 +135,38 @@ test("a missing active-locale message falls back to English", () => {
   assert.equal(localization.format("app-title"), "English fallback");
 });
 
+test("localized label attributes preserve grouped option children", () => {
+  const localization = new Localization("zh-CN", {
+    "en-US": ["session-race-group-draconian = Draconians"],
+    "zh-CN": ["session-race-group-draconian = 龙人分支"],
+  });
+  const option = {};
+  const group = {
+    dataset: { l10nLabel: "session-race-group-draconian" },
+    label: "",
+    children: [option],
+    setAttribute(name, value) {
+      this[name] = value;
+    },
+  };
+  const root = {
+    querySelectorAll(selector) {
+      return selector === "[data-l10n-label]" ? [group] : [];
+    },
+  };
+  const previousDocument = globalThis.document;
+  globalThis.document = { documentElement: { lang: "" } };
+  try {
+    localization.localizeDocument(root);
+    assert.equal(group.label, "龙人分支");
+    assert.deepEqual(group.children, [option]);
+    assert.equal(globalThis.document.documentElement.lang, "zh-CN");
+  } finally {
+    if (previousDocument) globalThis.document = previousDocument;
+    else delete globalThis.document;
+  }
+});
+
 test("front-end sources do not reintroduce high-confidence hardcoded UI text", () => {
   const sourceDirectory = new URL("./", import.meta.url);
   for (const entry of readdirSync(sourceDirectory, { withFileTypes: true })) {

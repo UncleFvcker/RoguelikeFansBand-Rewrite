@@ -15,6 +15,7 @@ session-career-label = 职业
 session-career-first = 首个 RFB 职业切片
 session-career-death-realm = 死亡领域
 session-race-label = 种族
+session-race-group-draconian = 龙人分支
 session-seed-label = 本局种子
 session-character-name-label = 角色姓名
 session-character-name-help = 1 至 32 个字符；可在前哨镇伯爵府合法改名。

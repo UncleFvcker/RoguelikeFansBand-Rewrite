@@ -5304,17 +5304,6 @@ fn imp_fire_upgrade_and_demon_traits_follow_the_effective_race() {
 fn draconian_breath_uses_current_hp_maturity_shape_and_deadly_upgrade() {
     const ABILITY_ID: &str = "rfb.ability.race.draconian-red-breath";
 
-    assert!(matches!(
-        Game::new_with_build_race_and_name(
-            117,
-            "demo.build.high-mage-death",
-            "rfb-legacy.race.draconian-red",
-            Game::DEFAULT_PLAYER_NAME,
-        ),
-        Err(crate::error::CoreError::CharacterRaceUnavailable(race_id))
-            if race_id == "rfb-legacy.race.draconian-red"
-    ));
-
     let mut base = Game::new_with_build_race_and_name(
         117,
         "demo.build.high-mage-death",

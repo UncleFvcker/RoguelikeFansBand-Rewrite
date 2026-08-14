@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use std::sync::Arc;
-
 use rfb_core::stats::experience_required_for_level;
 use rfb_protocol::{
     ActorSaveDto, Direction, GameCommand, MapScaleDto, MonsterPackBehaviorDto, Position,
@@ -318,65 +316,14 @@ fn level_thirty_race(seed: u64, race_id: &str) -> Game {
 }
 
 fn level_thirty_five_draconian(seed: u64) -> Game {
-    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(std::path::Path::parent)
-        .expect("replay crate should be inside the workspace")
-        .join("packs/rfb-demo-original");
-    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
-    let mut build = artifact
-        .content
-        .builds
-        .iter()
-        .find(|build| build.id == "demo.build.warrior")
-        .expect("Warrior build should exist")
-        .clone();
-    build.id = "test.build.replay.draconian-red".to_owned();
-    build.race_id = "rfb-legacy.race.draconian-red".to_owned();
-    artifact.content.builds.push(build);
-    artifact
-        .content
-        .races
-        .iter_mut()
-        .find(|race| race.id == "rfb-legacy.race.draconian-red")
-        .expect("red Draconian race should exist")
-        .tags
-        .push("rfb-compatibility".to_owned());
-    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
-        rfb_content::encode_content(artifact.content)
-            .expect("test Draconian content should remain valid"),
-    ));
-    let mut payload = Game::from_content_with_build(
+    let mut payload = Game::new_with_build_race_and_name(
         seed,
-        catalog.clone(),
-        rfb_core::DEFAULT_WORLD_ID,
-        "test.build.replay.draconian-red",
+        "demo.build.warrior",
+        "rfb-legacy.race.draconian-red",
+        Game::DEFAULT_PLAYER_NAME,
     )
-    .expect("hidden Draconian should be usable by the replay test build")
+    .expect("formal red Draconian should create")
     .to_save();
-    let identity = payload
-        .player
-        .build
-        .as_ref()
-        .expect("formal build identity")
-        .clone();
-    let skill_set_ids = [
-        catalog
-            .race(&identity.race_id)
-            .expect("Draconian race")
-            .skill_set_id
-            .clone(),
-        catalog
-            .class(&identity.class_id)
-            .expect("Warrior class")
-            .skill_set_id
-            .clone(),
-        catalog
-            .personality(&identity.personality_id)
-            .expect("Ordinary personality")
-            .skill_set_id
-            .clone(),
-    ];
     let progress = payload
         .player
         .progress
@@ -388,26 +335,17 @@ fn level_thirty_five_draconian(seed: u64) -> Game {
     progress.maximum_experience = progress.experience;
     progress.pending_attribute_increases = 7;
     for skill in &mut progress.skills {
-        let (base, growth) = skill_set_ids
-            .iter()
-            .filter_map(|skill_set_id| catalog.skill_set(skill_set_id))
-            .flat_map(|skill_set| &skill_set.entries)
-            .filter(|entry| entry.skill_id == skill.id)
-            .fold((0_i32, 0_i32), |(base, growth), entry| {
-                (
-                    base.saturating_add(entry.base),
-                    growth.saturating_add(entry.growth_per_ten_levels),
-                )
-            });
-        skill.base = base;
-        skill.growth_per_ten_levels = growth;
-        skill.maximum = catalog.skill(&skill.id).expect("skill definition").maximum;
-        skill.current = base
-            .saturating_add(growth.saturating_mul(35).saturating_div(10))
+        skill.current = skill
+            .base
+            .saturating_add(
+                skill
+                    .growth_per_ten_levels
+                    .saturating_mul(35)
+                    .saturating_div(10),
+            )
             .clamp(0, skill.maximum);
     }
-    Game::from_save_with_content(payload, catalog)
-        .expect("level 35 Draconian replay precondition should restore")
+    Game::from_save(payload).expect("level 35 Draconian replay precondition should restore")
 }
 
 fn invisible_replay_game(seed: u64, race_id: &str) -> Game {
