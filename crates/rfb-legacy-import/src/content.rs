@@ -6074,7 +6074,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
     }
     if matches!(
         entry.id.as_str(),
-        "barbarian" | "dunadan" | "dwarf" | "hobbit" | "kobold"
+        "barbarian" | "dunadan" | "dwarf" | "hobbit" | "kobold" | "nibelung"
     ) {
         return vec![
             "humanoid",
@@ -19105,6 +19105,19 @@ race_t *test_beast_get_race(void)
         };
         assert_eq!(
             legacy_race_tags(&dwarf),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
+        let nibelung = LegacyCharacterEntry {
+            id: "nibelung".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&nibelung),
             [
                 "humanoid",
                 "legacy-import",

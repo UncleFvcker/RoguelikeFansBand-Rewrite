@@ -1058,3 +1058,20 @@ git diff --stat
   `0a04d780fa04c221a43fba292e9ce33826c93fa1fc02943f8f5928ef52f90e74`、Protocol `1.204`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量
   fixture，留待合并验收。
+
+## 57. main 当前交接（尼伯龙人正式内容、新游戏 UI 与验收）
+
+- 种族方向继续拥有既有 `rfb-legacy.race.nibelung` 与
+  `rfb-legacy.skill-set.race-nibelung`。尼伯龙人只引用已经由种族方向拥有的
+  `rfb.ability.race.detect-doors-stairs-traps` 和 `rfb.ability.race.detect-treasure`；本批不新增
+  或占用 ability、program、item、material、affix、resource 或玩家 actor ID。
+- 尼伯龙人已按 RFB master 闭合六维、生命 101%、基础 HP 21、经验 150%、商店 115%、八项
+  技能、5 格红外、黑暗与解除魔法抗性、Nibelung kin、Standard 身体、初始“耐心”和两项
+  10 级 WIS/CHR、消耗 5、失败参数 50 的原版侦测能力；原版没有等级奖励。
+- New Game 通过既有 `raceId` 正式开放“尼伯龙人”，玩家 actor 与 tileset 继续由职业 build
+  决定。静态内容、能力门槛与投影、种族被动、美德、本地化和 Web 入口均由新增或直接相关
+  聚焦测试覆盖。
+- 协调点为 pack `1.340.0` / content hash
+  `cfbe50b700ca2647b4f8519970012c92e8eb42be4f14f541c2b1741434b3b930`、Protocol `1.204`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量
+  fixture，留待合并验收。

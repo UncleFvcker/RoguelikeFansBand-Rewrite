@@ -82,6 +82,7 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.hobbit" => kinds.push(VirtueKindDto::Temperance),
             "rfb-legacy.race.kobold" => kinds.push(VirtueKindDto::Honour),
             "rfb-legacy.race.dwarf" => kinds.push(VirtueKindDto::Diligence),
+            "rfb-legacy.race.nibelung" => kinds.push(VirtueKindDto::Patience),
             _ => {}
         }
 

@@ -169,6 +169,22 @@ fn formal_races_receive_their_original_race_virtues() {
         ]
     );
 
+    let nibelung = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.nibelung",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Nibelung Archer should create");
+    assert_eq!(
+        &virtue_kinds(&nibelung)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Patience,
+        ]
+    );
+
     let dunadan = Game::new_with_build_race_and_name(
         43,
         "demo.build.archer",

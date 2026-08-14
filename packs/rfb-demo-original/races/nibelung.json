@@ -1,5 +1,21 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.detect-doors-stairs-traps",
+      "minimumLevel": 10,
+      "governingAttribute": "wisdom",
+      "cost": 5,
+      "baseFailurePercent": 50
+    },
+    {
+      "abilityId": "rfb.ability.race.detect-treasure",
+      "minimumLevel": 10,
+      "governingAttribute": "charisma",
+      "cost": 5,
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 21,
   "bodySlots": [
     {
@@ -67,6 +83,7 @@
   "experiencePercent": 150,
   "formatVersion": 1,
   "id": "rfb-legacy.race.nibelung",
+  "infravision": 5,
   "kinCategory": "kin-glyph-104",
   "legacyIndex": 18,
   "lifePercent": 101,
@@ -84,7 +101,10 @@
   "shopAdjustPercent": 115,
   "skillSetId": "rfb-legacy.skill-set.race-nibelung",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

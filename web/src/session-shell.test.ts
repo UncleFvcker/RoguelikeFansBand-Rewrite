@@ -43,6 +43,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.hobbit",
     "rfb-legacy.race.kobold",
     "rfb-legacy.race.dwarf",
+    "rfb-legacy.race.nibelung",
   ]);
 });
 
@@ -121,6 +122,15 @@ test("new character requests preserve the selected formal race", () => {
       "Gimli",
     ).raceId,
     "rfb-legacy.race.dwarf",
+  );
+  assert.equal(
+    createNewSessionRequest(
+      "90",
+      "demo.build.warrior",
+      "rfb-legacy.race.nibelung",
+      "Alberich",
+    ).raceId,
+    "rfb-legacy.race.nibelung",
   );
 });
 

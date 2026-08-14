@@ -3078,6 +3078,78 @@ fn formal_dwarf_detection_powers_reveal_original_terrain_categories_only() {
 }
 
 #[test]
+fn formal_nibelung_intrinsics_and_detection_powers_unlock_at_level_ten() {
+    let mut game = Game::new_with_build_race_and_name(
+        97,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.nibelung",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Nibelung High-Mage should create");
+    assert_eq!(game.player_infravision_range(), 5);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Dark),
+        ResistanceLevel::Resistant
+    );
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Disenchant),
+        ResistanceLevel::Resistant
+    );
+
+    let level_nine_experience = crate::stats::experience_required_for_level(9);
+    game.apply_unscaled_player_experience(level_nine_experience, &mut Vec::new());
+    let snapshot = game.snapshot();
+    for (ability_id, attribute) in [
+        (
+            RACE_DETECT_DOORS_ABILITY_ID,
+            rfb_protocol::AttributeKindDto::Wisdom,
+        ),
+        (
+            RACE_DETECT_TREASURE_ABILITY_ID,
+            rfb_protocol::AttributeKindDto::Charisma,
+        ),
+    ] {
+        let ability = snapshot
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == ability_id)
+            .expect("Nibelung detection power should be projected");
+        assert_eq!(ability.source, AbilitySourceDto::Race);
+        assert_eq!(ability.governing_attribute, Some(attribute));
+        assert_eq!(ability.minimum_level, 10);
+        assert_eq!(ability.base_resource_cost, 5);
+        assert!(!ability.can_cast);
+    }
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(10) - level_nine_experience,
+        &mut Vec::new(),
+    );
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+    let snapshot = game.snapshot();
+    for ability_id in [
+        RACE_DETECT_DOORS_ABILITY_ID,
+        RACE_DETECT_TREASURE_ABILITY_ID,
+    ] {
+        assert!(
+            snapshot
+                .player
+                .abilities
+                .iter()
+                .find(|ability| ability.id == ability_id)
+                .expect("Nibelung detection power should remain projected")
+                .can_cast
+        );
+    }
+}
+
+#[test]
 fn formal_dwarf_detection_failure_spills_mana_into_hp_without_revealing() {
     let mut game = Game::new_with_build_race_and_name(
         95,

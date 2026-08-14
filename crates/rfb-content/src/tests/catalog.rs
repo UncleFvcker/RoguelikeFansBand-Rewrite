@@ -717,6 +717,101 @@ fn formal_dwarf_matches_rfb_profile_and_detection_powers() {
 }
 
 #[test]
+fn formal_nibelung_matches_rfb_profile_and_reuses_detection_powers() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let nibelung = catalog
+        .race("rfb-legacy.race.nibelung")
+        .expect("formal Nibelung race");
+
+    assert_eq!(
+        [
+            nibelung.modifiers.strength,
+            nibelung.modifiers.intelligence,
+            nibelung.modifiers.wisdom,
+            nibelung.modifiers.dexterity,
+            nibelung.modifiers.constitution,
+            nibelung.modifiers.charisma,
+        ],
+        [0, 1, 0, 1, 1, -2]
+    );
+    assert_eq!(nibelung.life_percent, 101);
+    assert_eq!(nibelung.base_hp, 21);
+    assert_eq!(nibelung.experience_percent, 150);
+    assert_eq!(nibelung.shop_adjust_percent, 115);
+    assert_eq!(nibelung.infravision, 5);
+    assert_eq!(nibelung.kin_category.as_deref(), Some("kin-glyph-104"));
+    assert_eq!(
+        nibelung.resistances.get(&ActorDamageType::Dark),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        nibelung.resistances.get(&ActorDamageType::Disenchant),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert!(nibelung.level_mutation_rewards.is_empty());
+    assert_eq!(
+        nibelung.abilities,
+        [
+            InnatePowerDefinition {
+                minimum_level: 10,
+                governing_attribute: TechniqueAttribute::Wisdom,
+                cost: 5,
+                cost_scaling: None,
+                base_failure_percent: 50,
+                minimum_failure_percent: None,
+                ability_id: "rfb.ability.race.detect-doors-stairs-traps".to_owned(),
+            },
+            InnatePowerDefinition {
+                minimum_level: 10,
+                governing_attribute: TechniqueAttribute::Charisma,
+                cost: 5,
+                cost_scaling: None,
+                base_failure_percent: 50,
+                minimum_failure_percent: None,
+                ability_id: "rfb.ability.race.detect-treasure".to_owned(),
+            },
+        ]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(nibelung.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&nibelung.skill_set_id)
+        .expect("formal Nibelung skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 3),
+            ("demo.skill.disarming", 3),
+            ("demo.skill.melee", 10),
+            ("demo.skill.perception", 10),
+            ("demo.skill.saving-throw", 6),
+            ("demo.skill.search", 5),
+            ("demo.skill.stealth", 1),
+        ]
+    );
+
+    for ability_id in [
+        "rfb.ability.race.detect-doors-stairs-traps",
+        "rfb.ability.race.detect-treasure",
+    ] {
+        assert!(catalog.ability(ability_id).is_some());
+    }
+}
+
+#[test]
 fn formal_barbarian_matches_rfb_profile_power_and_talent_pool() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
