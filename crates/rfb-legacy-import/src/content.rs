@@ -5253,6 +5253,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
         };
         let ability_id = match spell {
             "berserk_spell" => "rfb.ability.race.berserk",
+            "create_food_spell" => "rfb.ability.race.create-food",
             _ => {
                 gaps.push(format!("get_powers:{spell}"));
                 continue;
@@ -6068,7 +6069,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             "standard-body",
         ];
     }
-    if matches!(entry.id.as_str(), "barbarian" | "dunadan") {
+    if matches!(entry.id.as_str(), "barbarian" | "dunadan" | "hobbit") {
         return vec![
             "humanoid",
             "legacy-import",
@@ -19066,6 +19067,19 @@ race_t *test_beast_get_race(void)
                 "standard-body",
             ]
         );
+        let hobbit = LegacyCharacterEntry {
+            id: "hobbit".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&hobbit),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
     }
 
     #[test]
@@ -19074,6 +19088,7 @@ race_t *test_beast_get_race(void)
 static power_info _barbarian_get_powers[] =
 {
     { A_STR, {8, 10, 30, berserk_spell}},
+    { A_INT, {15, 10, 50, create_food_spell}},
     { A_WIS, {12, 7, 40, mystery_spell}},
     { -1, {-1, -1, -1, NULL} }
 };
@@ -19106,13 +19121,22 @@ race_t *barbarian_get_race(void)
 
         assert_eq!(
             barbarian.abilities,
-            [LegacyInnatePower {
-                governing_attribute: "strength".to_owned(),
-                minimum_level: 8,
-                cost: 10,
-                base_failure_percent: 30,
-                ability_id: "rfb.ability.race.berserk".to_owned(),
-            }]
+            [
+                LegacyInnatePower {
+                    governing_attribute: "strength".to_owned(),
+                    minimum_level: 8,
+                    cost: 10,
+                    base_failure_percent: 30,
+                    ability_id: "rfb.ability.race.berserk".to_owned(),
+                },
+                LegacyInnatePower {
+                    governing_attribute: "intelligence".to_owned(),
+                    minimum_level: 15,
+                    cost: 10,
+                    base_failure_percent: 50,
+                    ability_id: "rfb.ability.race.create-food".to_owned(),
+                },
+            ]
         );
         assert!(!barbarian.hooks.iter().any(|hook| hook == "get_powers"));
         assert!(
@@ -19128,7 +19152,11 @@ race_t *barbarian_get_race(void)
             race["abilities"][0]["abilityId"],
             "rfb.ability.race.berserk"
         );
-        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(1));
+        assert_eq!(
+            race["abilities"][1]["abilityId"],
+            "rfb.ability.race.create-food"
+        );
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(2));
         assert_eq!(race["resistances"]["fear"], "resistant");
         assert!(
             race["tags"]

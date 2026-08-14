@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.336.0");
+    assert_eq!(catalog.pack_version(), "1.337.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -414,6 +414,88 @@ fn formal_half_orc_matches_rfb_profile_and_talent_pool() {
         .expect("Half-Orc talent");
     assert_eq!(half_orc_talent.minimum_level, 30);
     assert_eq!(half_orc_talent.selection, human_talent.selection);
+}
+
+#[test]
+fn formal_hobbit_matches_rfb_profile_and_create_food_power() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let hobbit = catalog
+        .race("rfb-legacy.race.hobbit")
+        .expect("formal Hobbit race");
+
+    assert_eq!(
+        [
+            hobbit.modifiers.strength,
+            hobbit.modifiers.intelligence,
+            hobbit.modifiers.wisdom,
+            hobbit.modifiers.dexterity,
+            hobbit.modifiers.constitution,
+            hobbit.modifiers.charisma,
+        ],
+        [-2, 1, 1, 3, 2, 1]
+    );
+    assert_eq!(hobbit.life_percent, 92);
+    assert_eq!(hobbit.base_hp, 14);
+    assert_eq!(hobbit.experience_percent, 120);
+    assert_eq!(hobbit.shop_adjust_percent, 100);
+    assert_eq!(hobbit.infravision, 4);
+    assert_eq!(hobbit.kin_category.as_deref(), Some("kin-glyph-104"));
+    assert!(hobbit.resistances.is_empty());
+    assert!(hobbit.level_mutation_rewards.is_empty());
+    assert_eq!(
+        hobbit.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 15,
+            governing_attribute: TechniqueAttribute::Intelligence,
+            cost: 10,
+            cost_scaling: None,
+            base_failure_percent: 50,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.create-food".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(hobbit.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&hobbit.skill_set_id)
+        .expect("formal Hobbit skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 8),
+            ("demo.skill.disarming", 15),
+            ("demo.skill.melee", -10),
+            ("demo.skill.perception", 15),
+            ("demo.skill.ranged", 10),
+            ("demo.skill.saving-throw", 10),
+            ("demo.skill.search", 12),
+            ("demo.skill.stealth", 5),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.create-food")
+        .expect("Hobbit Create Food ability");
+    assert!(matches!(
+        &ability.effect,
+        AbilityEffectDefinition::CreateItem {
+            item_kind_id,
+            quantity: 1,
+        } if item_kind_id == "demo.item.ration-of-food"
+    ));
 }
 
 #[test]

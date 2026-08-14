@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.create-food",
+      "minimumLevel": 15,
+      "governingAttribute": "intelligence",
+      "cost": 10,
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 14,
   "bodySlots": [
     {
@@ -67,6 +76,7 @@
   "experiencePercent": 120,
   "formatVersion": 1,
   "id": "rfb-legacy.race.hobbit",
+  "infravision": 4,
   "kinCategory": "kin-glyph-104",
   "legacyIndex": 3,
   "lifePercent": 92,
@@ -82,7 +92,10 @@
   "shopAdjustPercent": 100,
   "skillSetId": "rfb-legacy.skill-set.race-hobbit",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

@@ -121,6 +121,22 @@ fn formal_races_receive_their_original_race_virtues() {
         ]
     );
 
+    let hobbit = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.warrior",
+        "rfb-legacy.race.hobbit",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Hobbit Warrior should create");
+    assert_eq!(
+        &virtue_kinds(&hobbit)[..3],
+        [
+            VirtueKindDto::Valour,
+            VirtueKindDto::Honour,
+            VirtueKindDto::Temperance,
+        ]
+    );
+
     let dunadan = Game::new_with_build_race_and_name(
         43,
         "demo.build.archer",
