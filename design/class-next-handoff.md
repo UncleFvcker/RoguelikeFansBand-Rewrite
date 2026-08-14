@@ -367,3 +367,19 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `902ac3141bab282d663871d70e50a80cb4c9556b347f32eeddf230943b1e7fd3`、Protocol `1.201`、
   State Hash Schema v100、save v1、baseline `contract-v303`。只运行新增和直接相关测试；全量
   fixture 留到合并验收。
+
+## main 当前批次：野蛮人 Commit 1 种族能力底座
+
+- 本批预留并归种族方向所有 `rfb.ability.race.berserk`；它复用既有
+  `rfb.ability-program.mutation.berserk`，不新增 item、material、affix、resource 或
+  ability-program ID。其他并行方向不得重复创建这个 ability ID。
+- `RaceDefinition.abilities` 使用与变异能力共享的 `InnatePowerDefinition`。运行时从当前
+  有效种族派生，因此临时变形成带能力的种族会获得能力，解除后立即失去；不保存第二份解锁
+  状态。种族、职业和变异能力受恐惧与混乱限制，费用先扣职业 SP、不足部分扣 HP；已学法术在
+  狂暴时不可施放。
+- 共享狂暴程序改为 `keep-strongest`；种族版能力预先承载原版 `10 + 1d(level)` 持续时间和
+  `level / 5` 额外近战伤害。野蛮人种族尚未加入能力配置或 New Game，留给后续正式内容提交。
+- 协调版本为 pack `1.335.0` / hash
+  `bf30576bef5c777b778d085de8e69e240a163a151901c6fa6b91d623fd444f6f`、Protocol `1.202`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。按用户要求只运行新增和直接
+  相关测试，不刷新全量 fixture。

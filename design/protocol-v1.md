@@ -686,3 +686,8 @@ save 容器保持 v1，不提供旧开发存档默认值。
 投影及结构化结果。`StatModifiersDto` 增加装置强度修正，`EntityDto` 与 `ActorSaveDto`
 增加必填的 0..10 `minorSlow`；后两项权威状态与 contract-v301 的怒气、友好状态共同进入
 State Hash Schema v100。save 容器保持 v1，不为缺少这些字段的旧开发存档提供兼容默认值。
+
+协议 1.202 / active baseline contract-v303 为 `AbilitySourceDto` 增加 `race`，使种族天生
+能力与职业能力、已学法术和变异能力在同一 `AbilityDto` 列表中保持可辨来源。能力继续复用
+既有 `CastAbility`、目标选择和结算投影；没有新增命令、权威状态或 save 字段，State Hash
+Schema 保持 v100，save 容器保持 v1。

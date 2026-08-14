@@ -102,6 +102,17 @@ impl Game {
         })
     }
 
+    pub(super) fn race_ability_activation(
+        &self,
+        ability_id: &str,
+    ) -> Option<&InnatePowerDefinition> {
+        self.character_definitions().and_then(|(_, race, _, _)| {
+            race.abilities
+                .iter()
+                .find(|activation| activation.ability_id == ability_id)
+        })
+    }
+
     pub(super) fn uses_spell_scrolls(&self) -> bool {
         self.character_definitions()
             .is_some_and(|(_, _, class, _)| class.uses_spell_scrolls)
@@ -468,7 +479,7 @@ impl Game {
         }
     }
 
-    pub(super) fn mutation_failure_percent(&self, activation: &MutationActivationDefinition) -> u8 {
+    pub(super) fn innate_power_failure_percent(&self, activation: &InnatePowerDefinition) -> u8 {
         if self.progress.level < activation.minimum_level {
             return 100;
         }
@@ -537,7 +548,7 @@ impl Game {
             .expect("bounded class ability failure chance must fit u8")
     }
 
-    pub(super) fn mutation_resource_cost(&self, activation: &MutationActivationDefinition) -> u32 {
+    pub(super) fn innate_power_resource_cost(&self, activation: &InnatePowerDefinition) -> u32 {
         let extra = activation.cost_scaling.map_or(0, |scaling| {
             if self.progress.level < scaling.start_level {
                 0

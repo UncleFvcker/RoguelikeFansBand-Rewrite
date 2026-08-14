@@ -81,7 +81,7 @@ export type AbilityStudyModeDto = "chosen" | "divine-random";
 
 export type AbilityProficiencyRankDto = "unskilled" | "beginner" | "skilled" | "expert" | "master";
 
-export type AbilitySourceDto = "class" | "learned" | "mutation";
+export type AbilitySourceDto = "class" | "learned" | "mutation" | "race";
 
 export type AbilityStatusStackingDto = "replace" | "extend" | "keep-strongest";
 

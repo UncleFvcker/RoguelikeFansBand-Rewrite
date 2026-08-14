@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.334.0");
+    assert_eq!(catalog.pack_version(), "1.335.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -2181,7 +2181,7 @@ fn mutation_activation_is_bounded_unique_and_uses_an_unowned_ability() {
     let pack = original_pack_path();
     let artifact = compile_pack_dir(&pack).expect("original pack should compile");
     let mutation_id = artifact.content.mutations[0].id.clone();
-    let activation = MutationActivationDefinition {
+    let activation = InnatePowerDefinition {
         minimum_level: 1,
         governing_attribute: TechniqueAttribute::Constitution,
         cost: 0,
@@ -2196,7 +2196,7 @@ fn mutation_activation_is_bounded_unique_and_uses_an_unowned_ability() {
     encode_content(valid).expect("a mutation may grant an otherwise unowned ability");
 
     let mut invalid_level = artifact.content.clone();
-    invalid_level.mutations[0].activation = Some(MutationActivationDefinition {
+    invalid_level.mutations[0].activation = Some(InnatePowerDefinition {
         minimum_level: 0,
         ..activation.clone()
     });
@@ -2206,7 +2206,7 @@ fn mutation_activation_is_bounded_unique_and_uses_an_unowned_ability() {
     ));
 
     let mut invalid_minimum = artifact.content.clone();
-    invalid_minimum.mutations[0].activation = Some(MutationActivationDefinition {
+    invalid_minimum.mutations[0].activation = Some(InnatePowerDefinition {
         minimum_failure_percent: Some(31),
         ..activation.clone()
     });
@@ -2216,7 +2216,7 @@ fn mutation_activation_is_bounded_unique_and_uses_an_unowned_ability() {
     ));
 
     let mut dangling = artifact.content.clone();
-    dangling.mutations[0].activation = Some(MutationActivationDefinition {
+    dangling.mutations[0].activation = Some(InnatePowerDefinition {
         ability_id: "rfb.ability.missing".to_owned(),
         ..activation.clone()
     });
@@ -2226,7 +2226,7 @@ fn mutation_activation_is_bounded_unique_and_uses_an_unowned_ability() {
     ));
 
     let mut ordinary = artifact.content.clone();
-    ordinary.mutations[0].activation = Some(MutationActivationDefinition {
+    ordinary.mutations[0].activation = Some(InnatePowerDefinition {
         ability_id: "demo.ability.death-dark-bolt".to_owned(),
         ..activation.clone()
     });
@@ -2241,6 +2241,75 @@ fn mutation_activation_is_bounded_unique_and_uses_an_unowned_ability() {
     assert!(matches!(
         encode_content(duplicate),
         Err(ContentError::InvalidMutation(_))
+    ));
+}
+
+#[test]
+fn race_abilities_are_bounded_unique_and_use_unowned_abilities() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let race_id = "demo.race.rfb-human";
+    let activation = InnatePowerDefinition {
+        minimum_level: 8,
+        governing_attribute: TechniqueAttribute::Strength,
+        cost: 10,
+        cost_scaling: None,
+        base_failure_percent: 30,
+        minimum_failure_percent: None,
+        ability_id: "rfb.ability.race.berserk".to_owned(),
+    };
+
+    let mut valid = artifact.content.clone();
+    valid
+        .races
+        .iter_mut()
+        .find(|race| race.id == race_id)
+        .expect("Human race should exist")
+        .abilities
+        .push(activation.clone());
+    encode_content(valid).expect("a race may grant an otherwise unowned ability");
+
+    for invalid_activation in [
+        InnatePowerDefinition {
+            minimum_level: 0,
+            ..activation.clone()
+        },
+        InnatePowerDefinition {
+            minimum_failure_percent: Some(31),
+            ..activation.clone()
+        },
+        InnatePowerDefinition {
+            ability_id: "rfb.ability.missing".to_owned(),
+            ..activation.clone()
+        },
+        InnatePowerDefinition {
+            ability_id: "demo.ability.death-dark-bolt".to_owned(),
+            ..activation.clone()
+        },
+    ] {
+        let mut invalid = artifact.content.clone();
+        invalid
+            .races
+            .iter_mut()
+            .find(|race| race.id == race_id)
+            .expect("Human race should exist")
+            .abilities
+            .push(invalid_activation);
+        assert!(matches!(
+            encode_content(invalid),
+            Err(ContentError::InvalidCharacterSource(id)) if id == race_id
+        ));
+    }
+
+    let mut duplicate = artifact.content;
+    let race = duplicate
+        .races
+        .iter_mut()
+        .find(|race| race.id == race_id)
+        .expect("Human race should exist");
+    race.abilities = vec![activation.clone(), activation];
+    assert!(matches!(
+        encode_content(duplicate),
+        Err(ContentError::InvalidCharacterSource(id)) if id == race_id
     ));
 }
 
@@ -2305,7 +2374,7 @@ fn active_mutation_batches_are_bound_to_authoritative_abilities() {
             .as_ref()
             .unwrap()
             .cost_scaling,
-        Some(MutationActivationCostScalingDefinition {
+        Some(InnatePowerCostScalingDefinition {
             start_level: 5,
             level_interval: 5,
             amount: 1,

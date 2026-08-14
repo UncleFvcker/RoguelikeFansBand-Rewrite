@@ -11,7 +11,7 @@
       "durationTicks": 10,
       "durationDice": 1,
       "durationSides": 1,
-      "stacking": "replace",
+      "stacking": "keep-strongest",
       "grantedModifiers": {
         "defense": -10,
         "maxHp": 30

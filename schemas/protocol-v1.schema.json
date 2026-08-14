@@ -5044,7 +5044,8 @@
       "enum": [
         "class",
         "learned",
-        "mutation"
+        "mutation",
+        "race"
       ]
     },
     "AbilityStatusChangeDto": {

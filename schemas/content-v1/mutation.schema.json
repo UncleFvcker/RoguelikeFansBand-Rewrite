@@ -127,7 +127,7 @@
       ],
       "type": "string"
     },
-    "MutationActivationCostScalingDefinition": {
+    "InnatePowerCostScalingDefinition": {
       "additionalProperties": false,
       "properties": {
         "amount": {
@@ -155,7 +155,7 @@
       ],
       "type": "object"
     },
-    "MutationActivationDefinition": {
+    "InnatePowerDefinition": {
       "additionalProperties": false,
       "properties": {
         "abilityId": {
@@ -175,7 +175,7 @@
         "costScaling": {
           "anyOf": [
             {
-              "$ref": "#/$defs/MutationActivationCostScalingDefinition"
+              "$ref": "#/$defs/InnatePowerCostScalingDefinition"
             },
             {
               "type": "null"
@@ -790,7 +790,7 @@
     "activation": {
       "anyOf": [
         {
-          "$ref": "#/$defs/MutationActivationDefinition"
+          "$ref": "#/$defs/InnatePowerDefinition"
         },
         {
           "type": "null"

@@ -134,9 +134,13 @@ impl Game {
         }
         let ability = self.content.ability(ability_id).cloned();
         let mutation_activation = self.mutation_activation_for_ability(ability_id).cloned();
+        let race_activation = self.race_ability_activation(ability_id).cloned();
         let class_activation = self.class_ability_activation(ability_id).cloned();
         let casting_profile = self.casting_profile().cloned();
-        if mutation_activation.is_none() && class_activation.is_none() && casting_profile.is_none()
+        if mutation_activation.is_none()
+            && race_activation.is_none()
+            && class_activation.is_none()
+            && casting_profile.is_none()
         {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
@@ -162,6 +166,8 @@ impl Game {
         }
         let source = if mutation_activation.is_some() {
             AbilitySourceDto::Mutation
+        } else if race_activation.is_some() {
+            AbilitySourceDto::Race
         } else if class_activation.is_some() {
             AbilitySourceDto::Class
         } else if casting_profile.is_some() {
@@ -169,10 +175,30 @@ impl Game {
         } else {
             unreachable!("at least one validated ability source must be available")
         };
+        let innate_power = matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race);
+        let innate_activation = match source {
+            AbilitySourceDto::Mutation => mutation_activation.as_ref(),
+            AbilitySourceDto::Race => race_activation.as_ref(),
+            AbilitySourceDto::Class | AbilitySourceDto::Learned => None,
+        };
+        if source != AbilitySourceDto::Learned && self.player_has_status_kind(STATUS_FEAR) {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "afraid".to_owned(),
+            });
+            return Ok(());
+        }
         if source == AbilitySourceDto::Learned && self.player_has_status_kind(STATUS_ANTI_MAGIC) {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "anti-magic".to_owned(),
+            });
+            return Ok(());
+        }
+        if source == AbilitySourceDto::Learned && self.player_has_status_kind(STATUS_BERSERK) {
+            events.push(DomainEvent::AbilityCastUnavailable {
+                ability_id: ability_id.to_owned(),
+                reason: "berserk".to_owned(),
             });
             return Ok(());
         }
@@ -183,7 +209,9 @@ impl Game {
                     .expect("learned ability source requires a casting profile"),
                 &ability,
             ),
-            AbilitySourceDto::Class | AbilitySourceDto::Mutation => ability,
+            AbilitySourceDto::Class | AbilitySourceDto::Mutation | AbilitySourceDto::Race => {
+                ability
+            }
         };
         Self::apply_player_level_scaling(&mut ability, self.progress.level);
         if source == AbilitySourceDto::Learned {
@@ -195,17 +223,14 @@ impl Game {
                 self.progress.level,
             );
         }
-        if source != AbilitySourceDto::Mutation
-            && let Some(profile) = casting_profile.as_ref()
-        {
+        if !innate_power && let Some(profile) = casting_profile.as_ref() {
             Self::apply_casting_profile_damage_bonus(profile, &mut ability, self.progress.level);
         }
         Self::apply_player_spell_power(&mut ability, self.effective_player_spell_power_bonus());
         let unavailable_reason = match source {
-            AbilitySourceDto::Mutation => {
-                let activation = mutation_activation
-                    .as_ref()
-                    .expect("mutation ability source requires an activation");
+            AbilitySourceDto::Mutation | AbilitySourceDto::Race => {
+                let activation =
+                    innate_activation.expect("innate ability source requires an activation");
                 (self.progress.level < activation.minimum_level).then_some("level-too-low")
             }
             AbilitySourceDto::Class => {
@@ -282,11 +307,10 @@ impl Game {
             self.ability_cooldown_remaining(&ability)
         };
         let (base_resource_cost, resource_cost, resource_id) = match source {
-            AbilitySourceDto::Mutation => {
-                let activation = mutation_activation
-                    .as_ref()
-                    .expect("mutation ability source requires an activation");
-                let cost = self.mutation_resource_cost(activation);
+            AbilitySourceDto::Mutation | AbilitySourceDto::Race => {
+                let activation =
+                    innate_activation.expect("innate ability source requires an activation");
+                let cost = self.innate_power_resource_cost(activation);
                 (
                     activation.cost,
                     cost,
@@ -318,11 +342,10 @@ impl Game {
             0
         } else {
             match source {
-                AbilitySourceDto::Mutation => self.mutation_failure_percent(
-                    mutation_activation
-                        .as_ref()
-                        .expect("mutation ability source requires an activation"),
-                ),
+                AbilitySourceDto::Mutation | AbilitySourceDto::Race => self
+                    .innate_power_failure_percent(
+                        innate_activation.expect("innate ability source requires an activation"),
+                    ),
                 AbilitySourceDto::Class => self.class_ability_failure_percent(
                     class_activation
                         .as_ref()
@@ -347,7 +370,7 @@ impl Game {
         } else {
             0
         };
-        if source != AbilitySourceDto::Mutation
+        if !innate_power
             && resource_cost > 0
             && resource_id
                 .as_deref()
@@ -359,17 +382,17 @@ impl Game {
             });
             return Ok(());
         }
-        let resource_paid = if source == AbilitySourceDto::Mutation {
+        let resource_paid = if innate_power {
             resource_before.min(resource_cost)
         } else {
             resource_cost
         };
-        let hp_paid = if source == AbilitySourceDto::Mutation {
+        let hp_paid = if innate_power {
             resource_cost.saturating_sub(resource_paid)
         } else {
             class_hit_point_cost
         };
-        let affordable = if source == AbilitySourceDto::Mutation {
+        let affordable = if innate_power {
             hp_paid <= u32::try_from(self.player.hp.max(0)).unwrap_or(0)
         } else {
             resource_before >= resource_cost
@@ -405,7 +428,7 @@ impl Game {
         }
         if hp_paid > 0 {
             self.player.hp = self.player.hp.saturating_sub(
-                i32::try_from(hp_paid).expect("validated mutation cost must fit i32"),
+                i32::try_from(hp_paid).expect("validated innate power cost must fit i32"),
             );
         }
         if !matches!(

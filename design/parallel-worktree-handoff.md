@@ -961,3 +961,19 @@ git diff --stat
   `902ac3141bab282d663871d70e50a80cb4c9556b347f32eeddf230943b1e7fd3`、Protocol `1.201`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。按用户要求不运行、不刷新
   全量 fixture；合并验收时统一处理。
+
+## 51. main 当前交接（野蛮人 Commit 1：种族能力底座）
+
+- 种族方向已预留并拥有 `rfb.ability.race.berserk`，复用
+  `rfb.ability-program.mutation.berserk`；本批不新增 item、material、affix、resource 或
+  ability-program ID。items 等并行方向不得重复导入该能力。
+- `RaceDefinition.abilities` 与变异能力共享 `InnatePowerDefinition`，能力从当前有效种族派生。
+  临时变形随形态获得或失去，不增加持久解锁状态。协议以 `AbilitySourceDto::Race` 区分来源，
+  前端继续显示既有“先天 / Innate”标签。
+- 原版能力菜单限制和费用路径已统一：种族、职业、变异能力受恐惧与混乱限制；天生能力先扣
+  职业 SP、不足部分扣 HP，成功与失败均支付；狂暴时禁止已学法术。共享狂暴程序使用
+  `keep-strongest`，较短的新持续时间不会覆盖较长状态。
+- `rfb.ability.race.berserk` 已承载原版 `10 + 1d(level)` 与 `level / 5` 近战伤害增长，但尚未
+  挂到野蛮人正式种族内容，也未开放 New Game。共享协调点为 pack `1.335.0` / hash
+  `bf30576bef5c777b778d085de8e69e240a163a151901c6fa6b91d623fd444f6f`、Protocol `1.202`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`；不刷新全量 fixture。

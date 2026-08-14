@@ -1137,7 +1137,7 @@ impl Game {
     pub(super) fn mutation_activation_for_ability(
         &self,
         ability_id: &str,
-    ) -> Option<&MutationActivationDefinition> {
+    ) -> Option<&InnatePowerDefinition> {
         self.content
             .mutations()
             .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))

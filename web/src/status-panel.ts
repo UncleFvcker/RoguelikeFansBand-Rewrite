@@ -1184,6 +1184,7 @@ export function abilityStatusMessageKey(
 ): MessageKey {
   if (ability.source === "mutation") return "ability-status-mutation";
   if (ability.source === "class") return "ability-status-class";
+  if (ability.source === "race") return "ability-status-innate";
   return ability.learned ? "ability-status-learned" : "ability-status-unlearned";
 }
 

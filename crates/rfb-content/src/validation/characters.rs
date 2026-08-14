@@ -166,6 +166,24 @@ pub(super) fn validate_characters(
         .iter()
         .map(|mutation| (mutation.id.as_str(), mutation.random_weight))
         .collect::<BTreeMap<_, _>>();
+    let unavailable_race_ability_ids = ability_books_by_id
+        .values()
+        .flat_map(|book| book.ability_ids.iter())
+        .chain(
+            mutations
+                .iter()
+                .filter_map(|mutation| mutation.activation.as_ref())
+                .map(|activation| &activation.ability_id),
+        )
+        .chain(
+            definitions
+                .classes
+                .iter()
+                .flat_map(|class| class.abilities.iter())
+                .map(|activation| &activation.ability_id),
+        )
+        .map(String::as_str)
+        .collect::<BTreeSet<_>>();
     for race in definitions.races.iter_mut() {
         require_schema(&race.schema, RACE_SCHEMA, &race.id)?;
         require_format_version(race.format_version, &race.id)?;
@@ -199,6 +217,30 @@ pub(super) fn validate_characters(
         }
         validate_status_immunities(&race.id, &mut race.status_immunities)?;
         validate_race_level_mutation_rewards(race, &mutation_random_weights)?;
+        let mut race_ability_ids = BTreeSet::new();
+        if race.abilities.iter().any(|activation| {
+            !race_ability_ids.insert(activation.ability_id.as_str())
+                || !(1..=100).contains(&activation.minimum_level)
+                || activation.cost > 1_000_000
+                || activation.cost_scaling.is_some_and(|scaling| {
+                    !(1..=100).contains(&scaling.start_level)
+                        || scaling.level_interval == 0
+                        || scaling.level_interval > 100
+                        || scaling.amount == 0
+                        || scaling.amount > 1_000_000
+                })
+                || activation.base_failure_percent > 95
+                || activation
+                    .minimum_failure_percent
+                    .is_some_and(|minimum| minimum > activation.base_failure_percent)
+                || unavailable_race_ability_ids.contains(activation.ability_id.as_str())
+                || abilities
+                    .iter()
+                    .find(|ability| ability.id == activation.ability_id)
+                    .is_none_or(|ability| ability.player.is_some())
+        }) {
+            return Err(ContentError::InvalidCharacterSource(race.id.clone()));
+        }
         if let Some(category) = &race.kin_category
             && (category.is_empty()
                 || category.len() > 64

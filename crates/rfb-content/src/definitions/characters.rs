@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     AbilityLevelScalingDefinition, ActorDamageType, ActorResistanceLevel, AmmunitionTypeDefinition,
-    ItemAttributeDefinition, StatModifiers, default_percent,
+    InnatePowerDefinition, ItemAttributeDefinition, StatModifiers, default_percent,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -127,6 +127,9 @@ pub struct RaceDefinition {
     /// mutation being present in the character's locked mutation set.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub level_mutation_rewards: Vec<RaceLevelMutationRewardDefinition>,
+    /// RFB innate powers supplied by the currently effective race.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub abilities: Vec<InnatePowerDefinition>,
     /// Actor category used by player-kin summons. Omission makes that race
     /// produce an observed zero-result summon instead of guessing ancestry.
     #[serde(default)]

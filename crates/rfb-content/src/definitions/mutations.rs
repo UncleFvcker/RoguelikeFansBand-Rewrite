@@ -95,7 +95,7 @@ pub struct MutationRatioDefinition {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct MutationActivationCostScalingDefinition {
+pub struct InnatePowerCostScalingDefinition {
     pub start_level: u16,
     pub level_interval: u16,
     pub amount: u32,
@@ -104,12 +104,12 @@ pub struct MutationActivationCostScalingDefinition {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub struct MutationActivationDefinition {
+pub struct InnatePowerDefinition {
     pub minimum_level: u16,
     pub governing_attribute: TechniqueAttribute,
     pub cost: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub cost_scaling: Option<MutationActivationCostScalingDefinition>,
+    pub cost_scaling: Option<InnatePowerCostScalingDefinition>,
     pub base_failure_percent: u8,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub minimum_failure_percent: Option<u8>,
@@ -181,7 +181,7 @@ pub struct MutationDefinition {
     #[serde(default = "default_true")]
     pub random_selection_enabled: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub activation: Option<MutationActivationDefinition>,
+    pub activation: Option<InnatePowerDefinition>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub periodic_effect: Option<MutationPeriodicEffectDefinition>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

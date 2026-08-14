@@ -82,6 +82,10 @@ test("mutation presentation exposes ratings and the shared ability source", () =
     abilityStatusMessageKey({ source: "class", learned: false }),
     "ability-status-class",
   );
+  assert.equal(
+    abilityStatusMessageKey({ source: "race", learned: false }),
+    "ability-status-innate",
+  );
 });
 
 test("Paladin Hell Lance stays visible as a level-gated class power", () => {

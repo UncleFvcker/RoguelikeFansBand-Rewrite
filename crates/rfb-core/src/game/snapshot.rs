@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
-    effect::STATUS_ANTI_MAGIC,
+    effect::{STATUS_ANTI_MAGIC, STATUS_BERSERK, STATUS_CONFUSION, STATUS_FEAR},
     resistance::DamageType,
     save::position_from_content,
     state::{ItemInstance, ItemLocation},
@@ -304,17 +304,29 @@ impl Game {
             .filter_map(|mutation| mutation.activation.as_ref())
             .map(|activation| (activation.ability_id.clone(), activation.clone()))
             .collect::<BTreeMap<_, _>>();
+        let race_activations = self
+            .character_definitions()
+            .map(|(_, race, _, _)| {
+                race.abilities
+                    .iter()
+                    .map(|activation| (activation.ability_id.clone(), activation.clone()))
+                    .collect::<BTreeMap<_, _>>()
+            })
+            .unwrap_or_default();
         book_ability_ids
             .iter()
             .cloned()
             .chain(class_activations.keys().cloned())
             .chain(mutation_activations.keys().cloned())
+            .chain(race_activations.keys().cloned())
             .collect::<BTreeSet<_>>()
             .into_iter()
             .filter_map(|ability_id| {
                 let ability = self.content.ability(&ability_id)?;
                 let source = if mutation_activations.contains_key(&ability_id) {
                     AbilitySourceDto::Mutation
+                } else if race_activations.contains_key(&ability_id) {
+                    AbilitySourceDto::Race
                 } else if class_activations.contains_key(&ability_id) {
                     AbilitySourceDto::Class
                 } else {
@@ -325,7 +337,9 @@ impl Game {
                         casting_profile.expect("book ability requires casting profile"),
                         ability,
                     ),
-                    AbilitySourceDto::Class | AbilitySourceDto::Mutation => ability.clone(),
+                    AbilitySourceDto::Class
+                    | AbilitySourceDto::Mutation
+                    | AbilitySourceDto::Race => ability.clone(),
                 };
                 Self::apply_player_level_scaling(&mut effective_ability, self.progress.level);
                 if let Some(profile) = casting_profile {
@@ -336,7 +350,7 @@ impl Game {
                             self.progress.level,
                         );
                     }
-                    if source != AbilitySourceDto::Mutation {
+                    if !matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race) {
                         Self::apply_casting_profile_damage_bonus(
                             profile,
                             &mut effective_ability,
@@ -350,7 +364,13 @@ impl Game {
                 );
                 let ability = &effective_ability;
                 let mutation_activation = mutation_activations.get(&ability_id);
+                let race_activation = race_activations.get(&ability_id);
                 let class_activation = class_activations.get(&ability_id);
+                let innate_activation = match source {
+                    AbilitySourceDto::Mutation => mutation_activation,
+                    AbilitySourceDto::Race => race_activation,
+                    AbilitySourceDto::Class | AbilitySourceDto::Learned => None,
+                };
                 let (
                     minimum_level,
                     ui_group_name_key,
@@ -365,18 +385,18 @@ impl Game {
                     cooldown_turns,
                     cooldown_group_id,
                 ) = match source {
-                    AbilitySourceDto::Mutation => {
-                        let activation = mutation_activation
-                            .expect("mutation ability source requires an activation");
+                    AbilitySourceDto::Mutation | AbilitySourceDto::Race => {
+                        let activation = innate_activation
+                            .expect("innate ability source requires an activation");
                         (
                             activation.minimum_level,
                             None,
                             casting_profile.map(|profile| profile.resource_id.clone()),
                             activation.cost,
-                            self.mutation_resource_cost(activation),
+                            self.innate_power_resource_cost(activation),
                             0,
                             0,
-                            self.mutation_failure_percent(activation),
+                            self.innate_power_failure_percent(activation),
                             AbilityProgress {
                                 proficiency: 0,
                                 proficiency_cap: 0,
@@ -450,7 +470,7 @@ impl Game {
                     hit_point_cost <= u32::try_from(self.player.hp.max(0)).unwrap_or(0);
                 let resource_available = if resource_cost == 0 {
                     true
-                } else if source == AbilitySourceDto::Mutation {
+                } else if matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race) {
                     let resource = resource_id
                         .as_deref()
                         .and_then(|id| self.resources.get(id))
@@ -584,8 +604,12 @@ impl Game {
                             .is_some_and(|learning| learning.remaining_slots > 0),
                     can_forget: source == AbilitySourceDto::Learned && learned,
                     can_cast: match source {
-                        AbilitySourceDto::Class | AbilitySourceDto::Mutation => {
+                        AbilitySourceDto::Class
+                        | AbilitySourceDto::Mutation
+                        | AbilitySourceDto::Race => {
                             level_available
+                                && !self.player_has_status_kind(STATUS_CONFUSION)
+                                && !self.player_has_status_kind(STATUS_FEAR)
                                 && concentration_available
                                 && hit_points_available
                                 && resource_available
@@ -594,7 +618,9 @@ impl Game {
                         }
                         AbilitySourceDto::Learned => {
                             learned
+                                && !self.player_has_status_kind(STATUS_CONFUSION)
                                 && !self.player_has_status_kind(STATUS_ANTI_MAGIC)
+                                && !self.player_has_status_kind(STATUS_BERSERK)
                                 && level_available
                                 && resource_available
                                 && projectile_available

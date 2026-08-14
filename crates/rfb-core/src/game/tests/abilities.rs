@@ -45,6 +45,43 @@ fn anti_magic_status_blocks_learned_spells_without_spending_resources() {
 }
 
 #[test]
+fn berserk_status_blocks_learned_spells_without_spending_resources() {
+    let mut game = prepare_death_caster(7, 40, "demo.ability.death-berserk");
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_BERSERK, 5, "test.berserk").status);
+    let mana_before = game.resources["demo.resource.mana"].current;
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+
+    game.resolve_player_ability(
+        "demo.ability.death-berserk",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("berserk rejection should resolve cleanly");
+
+    assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == "berserk"
+    ));
+    assert!(
+        !game
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.death-berserk")
+            .expect("learned spell should remain projected")
+            .can_cast
+    );
+}
+
+#[test]
 fn damage_bonus_adds_flat_amount_to_monster_cast_damage() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);
@@ -2525,6 +2562,188 @@ fn natural_regeneration_and_rest_restore_warrior_health() {
 
 const MUTATION_CONTRACT_ABILITY_ID: &str = "demo.ability.mutation-contract";
 const MUTATION_CONTRACT_ID: &str = "rfb.mutation.spit-acid";
+const RACE_BERSERK_ABILITY_ID: &str = "rfb.ability.race.berserk";
+
+fn race_ability_catalog() -> Arc<rfb_content::ContentCatalog> {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    artifact
+        .content
+        .races
+        .iter_mut()
+        .find(|race| race.id == "demo.race.rfb-human")
+        .expect("Human race should exist")
+        .abilities
+        .push(InnatePowerDefinition {
+            minimum_level: 8,
+            governing_attribute: TechniqueAttribute::Strength,
+            cost: 10,
+            cost_scaling: None,
+            base_failure_percent: 30,
+            minimum_failure_percent: None,
+            ability_id: RACE_BERSERK_ABILITY_ID.to_owned(),
+        });
+    Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("race ability contract content should remain valid"),
+    ))
+}
+
+#[test]
+fn race_ability_follows_the_effective_race_and_projects_its_source() {
+    let catalog = race_ability_catalog();
+    let mut game =
+        Game::from_content_with_build(0, catalog, DEFAULT_WORLD_ID, "demo.build.warrior")
+            .expect("warrior build should create");
+    game.progress.level = 7;
+
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_BERSERK_ABILITY_ID)
+        .expect("the selected Human race should project its ability");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(locked.minimum_level, 8);
+    assert!(!locked.can_cast);
+
+    game.progress.level = 8;
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == RACE_BERSERK_ABILITY_ID)
+            .expect("race ability should remain projected")
+            .can_cast
+    );
+
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_CONFUSION, 10, "test.confusion").status);
+    assert!(
+        !game
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == RACE_BERSERK_ABILITY_ID)
+            .expect("race ability should remain projected while confused")
+            .can_cast
+    );
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_CONFUSION);
+
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.race-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.high-elf".to_owned());
+    game.player.statuses.push(form);
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_BERSERK_ABILITY_ID)
+    );
+
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == RACE_BERSERK_ABILITY_ID)
+    );
+}
+
+#[test]
+fn racial_berserk_pays_hp_obeys_fear_and_never_shortens_a_stronger_rage() {
+    let mut game = Game::from_content_with_build(
+        0,
+        race_ability_catalog(),
+        DEFAULT_WORLD_ID,
+        "demo.build.warrior",
+    )
+    .expect("warrior build should create");
+    game.progress.level = 8;
+    clear_monsters(&mut game);
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_FEAR, 5, "test.fear").status);
+    let hp_before = game.player.hp;
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+
+    game.resolve_player_ability(
+        RACE_BERSERK_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("fear rejection should resolve cleanly");
+    assert_eq!(game.player.hp, hp_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == "afraid"
+    ));
+
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_FEAR);
+    game.debug_set_ability_casts_succeed(true);
+    events.clear();
+    game.resolve_player_ability(
+        RACE_BERSERK_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("racial berserk should resolve");
+    let resolution = mutation_cast_resolution(&events);
+    assert_eq!(resolution.resource_id, None);
+    assert_eq!(resolution.resource_paid, 0);
+    assert_eq!(resolution.hp_paid, 10);
+    assert_eq!(game.player.hp, hp_before - 10);
+    let rage = game
+        .player
+        .statuses
+        .iter_mut()
+        .find(|status| status.kind_id == STATUS_BERSERK)
+        .expect("racial berserk should apply the shared rage status");
+    assert!((11..=18).contains(&rage.remaining_ticks));
+    assert_eq!(rage.granted_equipment_bonuses.melee_damage, 4);
+    rage.remaining_ticks = 100;
+
+    events.clear();
+    game.resolve_player_ability(
+        RACE_BERSERK_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("a repeated racial berserk should resolve");
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_BERSERK)
+            .expect("the stronger rage should remain")
+            .remaining_ticks,
+        100
+    );
+}
 
 fn mutation_ability_catalog(
     minimum_level: u16,
@@ -2564,7 +2783,7 @@ fn mutation_ability_catalog(
         .iter_mut()
         .find(|mutation| mutation.id == MUTATION_CONTRACT_ID)
         .expect("Spit Acid mutation should exist")
-        .activation = Some(MutationActivationDefinition {
+        .activation = Some(InnatePowerDefinition {
         minimum_level,
         governing_attribute: TechniqueAttribute::Constitution,
         cost,
@@ -2664,6 +2883,59 @@ fn active_mutation_projects_without_learning_progress_or_persistent_cooldown() {
             .iter()
             .all(|ability| ability.id != MUTATION_CONTRACT_ABILITY_ID)
     );
+}
+
+#[test]
+fn fear_blocks_class_and_mutation_power_sources_without_cost_or_rng() {
+    let catalog = mutation_ability_catalog(1, 7, 30);
+    let mutation = mutation_ability_game(catalog.clone(), "demo.build.warrior");
+    let class = Game::from_content_with_build(0, catalog, DEFAULT_WORLD_ID, "demo.build.archer")
+        .expect("Archer build should create");
+
+    for (mut game, ability_id, expected_source) in [
+        (
+            mutation,
+            MUTATION_CONTRACT_ABILITY_ID,
+            AbilitySourceDto::Mutation,
+        ),
+        (
+            class,
+            "demo.ability.archer-create-shots",
+            AbilitySourceDto::Class,
+        ),
+    ] {
+        game.player
+            .statuses
+            .push(monster_combat::melee_status(STATUS_FEAR, 5, "test.fear").status);
+        let projected = game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == ability_id)
+            .expect("the power should remain projected while afraid");
+        assert_eq!(projected.source, expected_source);
+        assert!(!projected.can_cast);
+        let hp_before = game.player.hp;
+        let draws_before = game.rng_draw_counter();
+        let mut events = Vec::new();
+
+        game.resolve_player_ability(
+            ability_id,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("fear rejection should resolve cleanly");
+
+        assert_eq!(game.player.hp, hp_before);
+        assert_eq!(game.rng_draw_counter(), draws_before);
+        assert!(matches!(
+            events.as_slice(),
+            [DomainEvent::AbilityCastUnavailable { reason, .. }] if reason == "afraid"
+        ));
+    }
 }
 
 #[test]
@@ -3095,7 +3367,7 @@ fn mutation_eat_magic_and_weigh_magic_use_existing_device_and_status_state() {
         .activation
         .clone()
         .unwrap();
-    assert_eq!(capped_failure.mutation_failure_percent(&activation), 11);
+    assert_eq!(capped_failure.innate_power_failure_percent(&activation), 11);
 
     let mut eater = active_source_mutation_game(53, "eat-magic", 17);
     give_inventory_item(
