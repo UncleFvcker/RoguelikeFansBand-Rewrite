@@ -288,3 +288,10 @@ git diff --check
 - [ ] 新增及直接相关测试通过；
 - [ ] pack、lock、必要生成物和版本只按真实变化更新；
 - [ ] `git diff --check` 通过，且没有带入其他工作树的无关改动。
+
+## 12. 当前下一方向：Ego
+
+Craft 第四册「工艺」会进入完整的 RFB ego 选择与实例化流程，现有 15 条 affix 和显式等概率
+`craft-item` 候选不足以表达权威行为。因此领域导入暂时让位于
+[`ego-import-plan.md`](ego-import-plan.md)：先闭合 122 条 Craft 类型 ego（其中 121 条 rarity > 0
+可由标准选择器抽中），再恢复 Craft 领域；不得用当前小候选池或单一“工艺”词条近似第四册。
