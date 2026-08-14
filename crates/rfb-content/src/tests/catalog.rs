@@ -812,6 +812,86 @@ fn formal_nibelung_matches_rfb_profile_and_reuses_detection_powers() {
 }
 
 #[test]
+fn formal_gnome_matches_rfb_profile_and_uses_a_distinct_race_phase_door() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let gnome = catalog
+        .race("rfb-legacy.race.gnome")
+        .expect("formal Gnome race");
+
+    assert_eq!(
+        [
+            gnome.modifiers.strength,
+            gnome.modifiers.intelligence,
+            gnome.modifiers.wisdom,
+            gnome.modifiers.dexterity,
+            gnome.modifiers.constitution,
+            gnome.modifiers.charisma,
+        ],
+        [-1, 2, -1, 2, 1, -1]
+    );
+    assert_eq!(gnome.life_percent, 95);
+    assert_eq!(gnome.base_hp, 16);
+    assert_eq!(gnome.experience_percent, 115);
+    assert_eq!(gnome.shop_adjust_percent, 115);
+    assert_eq!(gnome.infravision, 4);
+    assert_eq!(gnome.kin_category.as_deref(), Some("kin-glyph-104"));
+    assert_eq!(gnome.status_immunities, ["rfb.status.paralysis"]);
+    assert!(gnome.level_mutation_rewards.is_empty());
+    assert_eq!(
+        gnome.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 5,
+            governing_attribute: TechniqueAttribute::Intelligence,
+            cost: 2,
+            cost_scaling: None,
+            base_failure_percent: 50,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.phase-door".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(gnome.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&gnome.skill_set_id)
+        .expect("formal Gnome skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 6),
+            ("demo.skill.disarming", 10),
+            ("demo.skill.melee", -8),
+            ("demo.skill.perception", 13),
+            ("demo.skill.ranged", 8),
+            ("demo.skill.saving-throw", 7),
+            ("demo.skill.search", 6),
+            ("demo.skill.stealth", 3),
+        ]
+    );
+
+    let phase_door = catalog
+        .ability("rfb.ability.race.phase-door")
+        .expect("Gnome race Phase Door ability");
+    assert_ne!(phase_door.id, "demo.ability.sorcery-phase-door");
+    assert!(matches!(
+        phase_door.effect,
+        AbilityEffectDefinition::BlinkSelf { radius: 10 }
+    ));
+}
+
+#[test]
 fn formal_barbarian_matches_rfb_profile_power_and_talent_pool() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");

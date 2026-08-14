@@ -44,6 +44,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.kobold",
     "rfb-legacy.race.dwarf",
     "rfb-legacy.race.nibelung",
+    "rfb-legacy.race.gnome",
   ]);
 });
 
@@ -131,6 +132,15 @@ test("new character requests preserve the selected formal race", () => {
       "Alberich",
     ).raceId,
     "rfb-legacy.race.nibelung",
+  );
+  assert.equal(
+    createNewSessionRequest(
+      "91",
+      "demo.build.high-mage-sorcery",
+      "rfb-legacy.race.gnome",
+      "Fizzwick",
+    ).raceId,
+    "rfb-legacy.race.gnome",
   );
 });
 

@@ -5256,6 +5256,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "create_food_spell" => "rfb.ability.race.create-food",
             "detect_doors_stairs_traps_spell" => "rfb.ability.race.detect-doors-stairs-traps",
             "detect_treasure_spell" => "rfb.ability.race.detect-treasure",
+            "phase_door_spell" => "rfb.ability.race.phase-door",
             "poison_dart_spell" => "rfb.ability.race.poison-dart",
             _ => {
                 gaps.push(format!("get_powers:{spell}"));
@@ -6074,7 +6075,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
     }
     if matches!(
         entry.id.as_str(),
-        "barbarian" | "dunadan" | "dwarf" | "hobbit" | "kobold" | "nibelung"
+        "barbarian" | "dunadan" | "dwarf" | "gnome" | "hobbit" | "kobold" | "nibelung"
     ) {
         return vec![
             "humanoid",
@@ -19125,6 +19126,19 @@ race_t *test_beast_get_race(void)
                 "standard-body",
             ]
         );
+        let gnome = LegacyCharacterEntry {
+            id: "gnome".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&gnome),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
     }
 
     #[test]
@@ -19136,6 +19150,7 @@ static power_info _barbarian_get_powers[] =
     { A_INT, {15, 10, 50, create_food_spell}},
     { A_WIS, {5, 5, 50, detect_doors_stairs_traps_spell}},
     { A_CHR, {10, 5, 50, detect_treasure_spell}},
+    { A_INT, {5, 2, 50, phase_door_spell}},
     { A_DEX, {12, 8, 50, poison_dart_spell}},
     { A_WIS, {12, 7, 40, mystery_spell}},
     { -1, {-1, -1, -1, NULL} }
@@ -19199,6 +19214,13 @@ race_t *barbarian_get_race(void)
                     ability_id: "rfb.ability.race.detect-treasure".to_owned(),
                 },
                 LegacyInnatePower {
+                    governing_attribute: "intelligence".to_owned(),
+                    minimum_level: 5,
+                    cost: 2,
+                    base_failure_percent: 50,
+                    ability_id: "rfb.ability.race.phase-door".to_owned(),
+                },
+                LegacyInnatePower {
                     governing_attribute: "dexterity".to_owned(),
                     minimum_level: 12,
                     cost: 8,
@@ -19235,9 +19257,13 @@ race_t *barbarian_get_race(void)
         );
         assert_eq!(
             race["abilities"][4]["abilityId"],
+            "rfb.ability.race.phase-door"
+        );
+        assert_eq!(
+            race["abilities"][5]["abilityId"],
             "rfb.ability.race.poison-dart"
         );
-        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(5));
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(6));
         assert_eq!(race["resistances"]["fear"], "resistant");
         assert!(
             race["tags"]

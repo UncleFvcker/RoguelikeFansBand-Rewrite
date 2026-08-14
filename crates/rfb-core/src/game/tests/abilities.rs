@@ -2566,6 +2566,7 @@ const RACE_BERSERK_ABILITY_ID: &str = "rfb.ability.race.berserk";
 const RACE_CREATE_FOOD_ABILITY_ID: &str = "rfb.ability.race.create-food";
 const RACE_DETECT_DOORS_ABILITY_ID: &str = "rfb.ability.race.detect-doors-stairs-traps";
 const RACE_DETECT_TREASURE_ABILITY_ID: &str = "rfb.ability.race.detect-treasure";
+const RACE_PHASE_DOOR_ABILITY_ID: &str = "rfb.ability.race.phase-door";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
 
 #[test]
@@ -3147,6 +3148,76 @@ fn formal_nibelung_intrinsics_and_detection_powers_unlock_at_level_ten() {
                 .can_cast
         );
     }
+}
+
+#[test]
+fn formal_gnome_phase_door_is_distinct_from_the_sorcery_spell() {
+    let mut game = Game::new_with_build_race_and_name(
+        98,
+        "demo.build.high-mage-sorcery",
+        "rfb-legacy.race.gnome",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Gnome Sorcery High-Mage should create");
+    clear_monsters(&mut game);
+    assert_eq!(game.player_infravision_range(), 4);
+    assert!(game.player_status_immunities().contains(STATUS_PARALYSIS));
+
+    let level_four_experience = crate::stats::experience_required_for_level(4);
+    game.apply_unscaled_player_experience(level_four_experience, &mut Vec::new());
+    let snapshot = game.snapshot();
+    let racial = snapshot
+        .player
+        .abilities
+        .iter()
+        .find(|ability| ability.id == RACE_PHASE_DOOR_ABILITY_ID)
+        .expect("Gnome racial Phase Door should be projected");
+    assert_eq!(racial.source, AbilitySourceDto::Race);
+    assert_eq!(
+        racial.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Intelligence)
+    );
+    assert_eq!(racial.minimum_level, 5);
+    assert_eq!(racial.base_resource_cost, 2);
+    assert!(!racial.can_cast);
+    assert_eq!(
+        snapshot
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.sorcery-phase-door")
+            .expect("Sorcery Phase Door should keep its separate identity")
+            .source,
+        AbilitySourceDto::Learned
+    );
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(5) - level_four_experience,
+        &mut Vec::new(),
+    );
+    game.debug_set_ability_casts_succeed(true);
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+    let mana_before = mana.current;
+    let position_before = game.player.position;
+    game.resolve_player_ability(
+        RACE_PHASE_DOOR_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Gnome racial Phase Door should resolve");
+    assert_eq!(
+        game.resources["demo.resource.mana"].current,
+        mana_before - 2
+    );
+    assert_ne!(game.player.position, position_before);
+    assert!(game.player.position.x.abs_diff(position_before.x) <= 10);
+    assert!(game.player.position.y.abs_diff(position_before.y) <= 10);
 }
 
 #[test]

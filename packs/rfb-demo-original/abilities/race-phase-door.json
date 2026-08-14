@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.phase-door",
+  "nameKey": "ability-rfb-race-phase-door-name",
+  "descriptionKey": "ability-rfb-race-phase-door-description",
+  "abilityProgramId": "demo.ability-program.arcane-blink",
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "tags": ["race", "teleportation"]
+}

@@ -479,3 +479,19 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 协调版本为 pack `1.340.0` / hash
   `cfbe50b700ca2647b4f8519970012c92e8eb42be4f14f541c2b1741434b3b930`、Protocol `1.204`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。未运行或刷新全量 fixture。
+
+## main 当前批次：侏儒正式内容、新游戏 UI 与验收
+
+- 正式种族复用既有 `rfb-legacy.race.gnome` 与 `rfb-legacy.skill-set.race-gnome`；新增并由种族
+  方向拥有 `rfb.ability.race.phase-door`，共享既有 `demo.ability-program.arcane-blink`。不得与
+  书本法术 `demo.ability.sorcery-phase-door` 合并身份；本批不新增或占用 ability program、item、
+  material、affix、resource 或玩家 actor ID。
+- RFB master 的六维、生命 95%、基础 HP 16、经验 115%、商店 115%、八项技能、4 格红外、
+  麻痹免疫、Gnome kin、Standard 身体、初始“知识”和 5 级 INT/2/50“相位之门”均已闭合；
+  原版没有等级奖励。
+- New Game 通过既有 `raceId` 正式开放“侏儒”，玩家 actor 与 tileset 继续由职业 build 决定。
+  静态内容、4/5 级门槛、资源支付、10 格传送、麻痹免疫、美德、独立能力身份、本地化和 Web
+  入口均由新增或直接相关聚焦测试覆盖。
+- 协调版本为 pack `1.341.0` / hash
+  `7d7e534496653c1a846dd461c73f245e4a9ce36fb3715b80d2976d3c659dbc47`、Protocol `1.204`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。未运行或刷新全量 fixture。

@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.phase-door",
+      "minimumLevel": 5,
+      "governingAttribute": "intelligence",
+      "cost": 2,
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 16,
   "bodySlots": [
     {
@@ -67,6 +76,7 @@
   "experiencePercent": 115,
   "formatVersion": 1,
   "id": "rfb-legacy.race.gnome",
+  "infravision": 4,
   "kinCategory": "kin-glyph-104",
   "legacyIndex": 4,
   "lifePercent": 95,
@@ -85,7 +95,10 @@
     "rfb.status.paralysis"
   ],
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

@@ -1075,3 +1075,20 @@ git diff --stat
   `cfbe50b700ca2647b4f8519970012c92e8eb42be4f14f541c2b1741434b3b930`、Protocol `1.204`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量
   fixture，留待合并验收。
+
+## 58. main 当前交接（侏儒正式内容、新游戏 UI 与验收）
+
+- 种族方向继续拥有既有 `rfb-legacy.race.gnome` 与 `rfb-legacy.skill-set.race-gnome`，并新增、
+  拥有 `rfb.ability.race.phase-door`。该能力共享 `demo.ability-program.arcane-blink`，不得与书本
+  法术 `demo.ability.sorcery-phase-door` 合并身份；本批不占用新的 ability program、item、
+  material、affix、resource 或玩家 actor ID。
+- 侏儒已按 RFB master 闭合六维、生命 95%、基础 HP 16、经验 115%、商店 115%、八项技能、
+  4 格红外、麻痹免疫、Gnome kin、Standard 身体、初始“知识”和 5 级 INT/2/50“相位之门”；
+  原版没有等级奖励。
+- New Game 通过既有 `raceId` 正式开放“侏儒”，玩家 actor 与 tileset 继续由职业 build 决定。
+  4/5 级门槛、资源支付、10 格传送、麻痹免疫、美德、种族/书本双能力身份和 Web 入口均由
+  新增或直接相关聚焦测试覆盖。
+- 协调点为 pack `1.341.0` / content hash
+  `7d7e534496653c1a846dd461c73f245e4a9ce36fb3715b80d2976d3c659dbc47`、Protocol `1.204`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量
+  fixture，留待合并验收。
