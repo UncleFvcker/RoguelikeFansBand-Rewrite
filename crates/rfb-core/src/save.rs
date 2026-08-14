@@ -723,6 +723,7 @@ pub(crate) fn player_to_save(
         chaos_patron_id: None,
         reality_change_ticks: 0,
         pending_mutation_direction: None,
+        pending_ability_direction: None,
         statuses: player
             .statuses
             .iter()

@@ -243,6 +243,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::SelfKnowledge
                     | AbilityEffectDefinition::Clairvoyance { .. }
                     | AbilityEffectDefinition::CallSunlight { .. }
+                    | AbilityEffectDefinition::NatureWrath
                     | AbilityEffectDefinition::CreateAdjacentTerrain { .. }
                     | AbilityEffectDefinition::MeleeAdjacent
                     | AbilityEffectDefinition::ProbeMonsters

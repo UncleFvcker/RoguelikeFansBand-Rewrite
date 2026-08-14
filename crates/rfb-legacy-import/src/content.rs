@@ -2345,6 +2345,7 @@ fn player_ability_book_for_item(entry: &LegacyItemEntry) -> Option<&'static str>
         (NATURE_BOOK_TVAL, NATURE_FIRST_BOOK_SVAL) => Some(NATURE_FIRST_BOOK_ID),
         (NATURE_BOOK_TVAL, NATURE_SECOND_BOOK_SVAL) => Some(NATURE_SECOND_BOOK_ID),
         (NATURE_BOOK_TVAL, NATURE_THIRD_BOOK_SVAL) => Some(NATURE_THIRD_BOOK_ID),
+        (NATURE_BOOK_TVAL, NATURE_FOURTH_BOOK_SVAL) => Some(NATURE_FOURTH_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_FIRST_BOOK_SVAL) => Some(ARMAGEDDON_FIRST_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_SECOND_BOOK_SVAL) => Some(ARMAGEDDON_SECOND_BOOK_ID),
         (ARMAGEDDON_BOOK_TVAL, ARMAGEDDON_THIRD_BOOK_SVAL) => Some(ARMAGEDDON_THIRD_BOOK_ID),
@@ -9238,6 +9239,8 @@ const NATURE_SECOND_BOOK_SVAL: u16 = 1;
 const NATURE_SECOND_BOOK_ID: &str = "rfb-legacy.ability-book.nature-nature-mastery";
 const NATURE_THIRD_BOOK_SVAL: u16 = 2;
 const NATURE_THIRD_BOOK_ID: &str = "rfb-legacy.ability-book.nature-natures-gifts";
+const NATURE_FOURTH_BOOK_SVAL: u16 = 3;
+const NATURE_FOURTH_BOOK_ID: &str = "rfb-legacy.ability-book.nature-natures-wrath";
 const ARMAGEDDON_BOOK_TVAL: u16 = 101;
 const ARMAGEDDON_FIRST_BOOK_SVAL: u16 = 0;
 const ARMAGEDDON_FIRST_BOOK_ID: &str = "rfb-legacy.ability-book.armageddon-book-of-elements";
@@ -19266,6 +19269,7 @@ F:BRAND_VAMP | HOLD_LIFE
             (NATURE_FIRST_BOOK_SVAL, NATURE_FIRST_BOOK_ID),
             (NATURE_SECOND_BOOK_SVAL, NATURE_SECOND_BOOK_ID),
             (NATURE_THIRD_BOOK_SVAL, NATURE_THIRD_BOOK_ID),
+            (NATURE_FOURTH_BOOK_SVAL, NATURE_FOURTH_BOOK_ID),
         ] {
             let nature_book = LegacyItemEntry {
                 tval: NATURE_BOOK_TVAL,

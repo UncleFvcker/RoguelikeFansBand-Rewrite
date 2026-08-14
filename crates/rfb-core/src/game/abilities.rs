@@ -10,10 +10,30 @@ const DEATH_RAISE_DEAD_ABILITY_ID: &str = "demo.ability.death-raise-dead";
 const DEATH_VAMPIRIC_DRAIN_ABILITY_ID: &str = "demo.ability.death-vampiric-drain";
 const DEATH_VAMPIRIC_BRANDING_ABILITY_ID: &str = "demo.ability.death-vampiric-branding";
 const DEATH_VAMPIRISM_TRUE_ABILITY_ID: &str = "demo.ability.death-vampirism-true";
+const NATURE_WRATH_ABILITY_ID: &str = "demo.ability.nature-natures-wrath";
 
 enum EarthquakeSource {
     Ability(String),
     Monster(String),
+}
+
+pub(super) fn nature_wrath_direction_roll(events: &[DomainEvent]) -> Option<u8> {
+    events.iter().rev().find_map(|event| match event {
+        DomainEvent::AbilityEffectsResolved {
+            ability_id,
+            resolution,
+            ..
+        } if ability_id == NATURE_WRATH_ABILITY_ID =>
+            resolution.effects.iter().find_map(|effect| match effect {
+                AbilityEffectResolutionDto::RandomChoice { roll, .. }
+                    if matches!(*roll, 2 | 6) =>
+                {
+                    u8::try_from(*roll).ok()
+                }
+                _ => None,
+            }),
+        _ => None,
+    })
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -491,7 +511,9 @@ impl Game {
         {
             self.add_virtue(VirtueKindDto::Unlife, 1);
         }
-        if result.is_ok() && first_success_experience > 0 {
+        let direction_pending =
+            ability_id == NATURE_WRATH_ABILITY_ID && nature_wrath_direction_roll(events).is_some();
+        if result.is_ok() && !direction_pending && first_success_experience > 0 {
             self.apply_player_experience(u64::from(first_success_experience), events);
         }
         result
@@ -801,6 +823,14 @@ impl Game {
             }
             (AbilityEffectDefinition::CallSunlight { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_call_sunlight_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::NatureWrath, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_nature_wrath_effect(
+                    &ability,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
             }
             (AbilityEffectDefinition::ResistElements { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_resist_elements_effect(&ability, events)
@@ -1150,12 +1180,83 @@ impl Game {
             u64::try_from(raw_damage).expect("ability damage must be non-negative"),
         ))
         .expect("spell-powered ability damage must fit i32");
+        self.resolve_player_projectile_damage_target_with_base(
+            &ability.id,
+            trace,
+            index,
+            DamageType::from(*damage_type),
+            raw_damage,
+            ability.affects_ground_items,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_player_projectile_damage_with_base(
+        &mut self,
+        source_id: &str,
+        path: Vec<Position>,
+        damage_type: DamageType,
+        raw_damage: i32,
+        affects_ground_items: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let (trace, target_index) = self.trace_projectile_path(path);
+        self.resolve_projectile_terrain_effects(&[trace.impact], damage_type, changed);
+        if affects_ground_items {
+            self.resolve_ground_item_projectile_effects(
+                source_id,
+                &[trace.landing],
+                damage_type,
+                true,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
+        let Some(index) = target_index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: source_id.to_owned(),
+                trace,
+            });
+            return Ok(());
+        };
+        self.resolve_player_projectile_damage_target_with_base(
+            source_id,
+            trace,
+            index,
+            damage_type,
+            raw_damage,
+            affects_ground_items,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_player_projectile_damage_target_with_base(
+        &mut self,
+        source_id: &str,
+        trace: ProjectileTrace,
+        index: usize,
+        damage_type: DamageType,
+        raw_damage: i32,
+        affects_ground_items: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         if self.try_reflect_player_bolt(
             index,
-            &ability.id,
+            source_id,
             raw_damage,
-            DamageType::from(*damage_type),
-            ability.affects_ground_items,
+            damage_type,
+            affects_ground_items,
             events,
             changed,
             removed_entities,
@@ -1164,8 +1265,8 @@ impl Game {
         }
         self.resolve_ability_damage_to_entity(
             index,
-            &ability.id,
-            DamageType::from(*damage_type),
+            source_id,
+            damage_type,
             raw_damage,
             trace,
             events,
@@ -1497,11 +1598,45 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
+        self.resolve_player_area_damage_with_base_policy(
+            source_id,
+            path,
+            stop_at_actor,
+            damage_type,
+            radius,
+            target_category,
+            base_raw_damage,
+            affects_ground_items,
+            true,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_player_area_damage_with_base_policy(
+        &mut self,
+        source_id: &str,
+        path: Vec<Position>,
+        stop_at_actor: bool,
+        damage_type: DamageType,
+        radius: u8,
+        target_category: Option<&str>,
+        base_raw_damage: i32,
+        affects_ground_items: bool,
+        affects_terrain: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         let (trace, _) = self.trace_projectile_path_with_actor_policy(path, stop_at_actor);
         let center = trace.landing;
         let (affected_positions, targets) =
             self.area_damage_targets(center, radius, target_category);
-        self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
+        if affects_terrain {
+            self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
+        }
         if affects_ground_items {
             self.resolve_ground_item_projectile_effects(
                 source_id,
@@ -2434,13 +2569,46 @@ impl Game {
         else {
             unreachable!("visible damage executor requires a visible damage effect");
         };
+        let base_raw_damage = self
+            .roll_damage(*damage_dice, *damage_sides)
+            .saturating_add(i32::from(*damage_bonus))
+            .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("visible damage must be non-negative"),
+        ))
+        .expect("spell-powered visible damage must fit i32");
+        self.resolve_player_visible_damage_with_base(
+            &ability.id,
+            DamageType::from(*damage_type),
+            target_category.as_deref(),
+            base_raw_damage,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_player_visible_damage_with_base(
+        &mut self,
+        source_id: &str,
+        damage_type: DamageType,
+        target_category: Option<&str>,
+        base_raw_damage: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         let target_ids = self
             .entities
             .iter()
             .filter(|entity| {
                 entity.hp > 0
                     && self.entity_is_visible_to_player(entity)
-                    && target_category.as_ref().is_none_or(|category| {
+                    && target_category.is_none_or(|category| {
                         self.content
                             .actor(&entity.kind_id)
                             .is_some_and(|definition| actor_matches_category(definition, category))
@@ -2453,22 +2621,11 @@ impl Game {
             .filter_map(|id| self.entities.iter().find(|entity| &entity.id == id))
             .map(|entity| entity.position)
             .collect::<Vec<_>>();
-        let base_raw_damage = self
-            .roll_damage(*damage_dice, *damage_sides)
-            .saturating_add(i32::from(*damage_bonus))
-            .max(0);
-        let base_raw_damage = i32::try_from(spell_powered_ability_value(
-            ability,
-            0,
-            AbilitySpellPowerField::FinalDamage,
-            u64::try_from(base_raw_damage).expect("visible damage must be non-negative"),
-        ))
-        .expect("spell-powered visible damage must fit i32");
         events.push(DomainEvent::AbilityVisibleDamage {
-            ability_id: ability.id.clone(),
+            ability_id: source_id.to_owned(),
             resolution: AbilityVisibleDamageResolutionDto {
                 base_raw_damage,
-                damage_type: DamageType::from(*damage_type).into(),
+                damage_type: damage_type.into(),
                 affected_positions,
                 target_count: u16::try_from(target_ids.len()).unwrap_or(u16::MAX),
             },
@@ -2489,8 +2646,8 @@ impl Game {
             };
             self.resolve_ability_damage_to_entity(
                 index,
-                &ability.id,
-                DamageType::from(*damage_type),
+                source_id,
+                damage_type,
                 base_raw_damage,
                 trace.clone(),
                 events,
@@ -6582,6 +6739,300 @@ impl Game {
         });
     }
 
+    fn resolve_player_nature_wrath_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let roll =
+            u8::try_from(self.rng.bounded(6) + 1).expect("Nature's Wrath branch roll must fit u8");
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::RandomChoice {
+                    effect_index: 0,
+                    roll: i32::from(roll),
+                    branch_index: u16::from(roll - 1),
+                    maximum_roll: 6,
+                }],
+            },
+            trace: None,
+        });
+        if matches!(roll, 2 | 6) {
+            return Ok(());
+        }
+        self.resolve_nature_wrath_branch(ability, roll, None, events, changed, removed_entities)
+    }
+
+    #[allow(clippy::too_many_lines)]
+    fn resolve_nature_wrath_branch(
+        &mut self,
+        ability: &AbilityDefinition,
+        roll: u8,
+        direction: Option<Direction>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let level = self.progress.level;
+        let spell_damage_bonus = self.casting_profile().map_or(0, |profile| {
+            profile.spell_damage_bonus_base.saturating_add(
+                profile
+                    .spell_damage_bonus_per_level
+                    .saturating_mul(level / u16::from(profile.spell_damage_bonus_level_divisor)),
+            )
+        });
+        let powered = |value: u64| spell_power_value(value, ability.spell_power_bonus);
+        let powered_damage =
+            |value: u64| i32::try_from(powered(value)).expect("Nature's Wrath damage must fit i32");
+        let powered_radius =
+            |value: u64| u8::try_from(powered(value)).expect("Nature's Wrath radius must fit u8");
+
+        match roll {
+            1 => {
+                self.resolve_player_visible_damage_with_base(
+                    &ability.id,
+                    DamageType::Physical,
+                    None,
+                    powered_damage(
+                        u64::from(level)
+                            .saturating_mul(4)
+                            .saturating_add(u64::from(spell_damage_bonus)),
+                    ),
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                self.resolve_earthquake(
+                    self.player.position,
+                    powered_radius(20 + u64::from(level / 2)),
+                    15,
+                    "demo.terrain.floor",
+                    &[
+                        "demo.terrain.wall".to_owned(),
+                        "demo.terrain.quartz-vein".to_owned(),
+                        "demo.terrain.magma-vein".to_owned(),
+                    ],
+                    EarthquakeSource::Ability(ability.id.clone()),
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                self.resolve_player_area_damage_with_base_policy(
+                    &ability.id,
+                    Vec::new(),
+                    false,
+                    DamageType::Disintegrate,
+                    powered_radius(1 + u64::from(level / 12)),
+                    None,
+                    powered_damage(
+                        (100 + u64::from(level) + u64::from(spell_damage_bonus)).saturating_mul(2),
+                    ),
+                    true,
+                    false,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            2 => {
+                let direction = direction.expect("Nature's Wrath lightning requires a direction");
+                let path = self
+                    .projectile_path(
+                        &TargetSelection::Direction { direction },
+                        self.width.max(self.height),
+                    )
+                    .expect("directional Nature's Wrath must produce a path");
+                self.resolve_player_projectile_damage_with_base(
+                    &ability.id,
+                    path,
+                    DamageType::Electricity,
+                    powered_damage(
+                        u64::from(level)
+                            .saturating_mul(8)
+                            .saturating_add(u64::from(spell_damage_bonus)),
+                    ),
+                    false,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            3 => {
+                self.resolve_player_visible_damage_with_base(
+                    &ability.id,
+                    DamageType::Sound,
+                    None,
+                    powered_damage(
+                        u64::from(level)
+                            .saturating_mul(5)
+                            .saturating_add(u64::from(spell_damage_bonus)),
+                    ),
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            4 => {
+                self.resolve_player_visible_damage_with_base(
+                    &ability.id,
+                    DamageType::Gravity,
+                    None,
+                    powered_damage(
+                        u64::from(level)
+                            .saturating_mul(4)
+                            .saturating_add(u64::from(spell_damage_bonus)),
+                    ),
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            5 => {
+                let radius = powered_radius(1 + u64::from(level / 12));
+                let damage = powered_damage(
+                    (120 + u64::from(level) + u64::from(spell_damage_bonus)).saturating_mul(2),
+                );
+                for damage_type in [DamageType::Fire, DamageType::Cold, DamageType::Electricity] {
+                    self.resolve_player_area_damage_with_base(
+                        &ability.id,
+                        Vec::new(),
+                        false,
+                        damage_type,
+                        radius,
+                        None,
+                        damage,
+                        true,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            }
+            6 => {
+                let direction = direction.expect("Nature's Wrath shards require a direction");
+                let path = self
+                    .projectile_path(
+                        &TargetSelection::Direction { direction },
+                        self.width.max(self.height),
+                    )
+                    .expect("directional Nature's Wrath must produce a path");
+                let damage = powered_damage(70 + u64::from(level) + u64::from(spell_damage_bonus));
+                for _ in 0..3 {
+                    self.resolve_player_area_damage_with_base(
+                        &ability.id,
+                        path.clone(),
+                        true,
+                        DamageType::Shards,
+                        1,
+                        None,
+                        damage,
+                        true,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            }
+            _ => unreachable!("validated Nature's Wrath roll must be in 1..=6"),
+        }
+        Ok(())
+    }
+
+    pub(super) fn resolve_pending_ability_direction(
+        &mut self,
+        direction: Direction,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let pending = self
+            .pending_ability_direction
+            .clone()
+            .ok_or(CoreError::AbilityDirectionUnavailable)?;
+        let profile = self
+            .casting_profile()
+            .cloned()
+            .ok_or(CoreError::AbilityDirectionUnavailable)?;
+        let mut ability = self
+            .content
+            .ability(&pending.ability_id)
+            .cloned()
+            .ok_or(CoreError::AbilityDirectionUnavailable)?;
+        ability = self.effective_casting_ability(&profile, &ability);
+        Self::apply_player_level_scaling(&mut ability, self.progress.level);
+        Self::apply_casting_profile_effect_scaling(&profile, &mut ability, self.progress.level);
+        Self::apply_casting_profile_damage_bonus(&profile, &mut ability, self.progress.level);
+        Self::apply_player_spell_power(&mut ability, self.effective_player_spell_power_bonus());
+
+        let resolution = pending.cast_resolution;
+        if let Some(resource_id) = resolution.resource_id.as_deref() {
+            let current = self
+                .resources
+                .get(resource_id)
+                .ok_or(CoreError::AbilityDirectionUnavailable)?
+                .current;
+            if current != resolution.resource_before {
+                return Err(CoreError::AbilityDirectionUnavailable);
+            }
+        }
+        if !self.ability_progress.contains_key(&ability.id) {
+            return Err(CoreError::AbilityDirectionUnavailable);
+        }
+        self.pending_ability_direction = None;
+        if let Some(resource_id) = resolution.resource_id.as_deref() {
+            self.resources
+                .get_mut(resource_id)
+                .expect("validated pending ability resource must remain available")
+                .current = resolution.resource_after;
+        }
+        let progress = self
+            .ability_progress
+            .get_mut(&ability.id)
+            .expect("validated pending ability progress must remain available");
+        progress.proficiency = resolution.proficiency_after;
+        progress.cast_count = resolution.cast_count;
+        progress.fail_count = resolution.fail_count;
+        progress.cooldown_remaining = resolution.cooldown_after;
+        self.sniper_concentration = 0;
+        events.push(DomainEvent::AbilityCastSucceeded {
+            resolution: resolution.clone(),
+        });
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::RandomChoice {
+                    effect_index: 0,
+                    roll: i32::from(pending.branch_roll),
+                    branch_index: u16::from(pending.branch_roll - 1),
+                    maximum_roll: 6,
+                }],
+            },
+            trace: None,
+        });
+        self.resolve_nature_wrath_branch(
+            &ability,
+            pending.branch_roll,
+            Some(direction),
+            events,
+            changed,
+            removed_entities,
+        )?;
+        if resolution.cast_count == 1 {
+            let experience = Self::player_ability_parameters(&ability).first_success_experience;
+            if experience > 0 {
+                self.apply_player_experience(u64::from(experience), events);
+            }
+        }
+        Ok(())
+    }
+
     fn resolve_player_resist_elements_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -8031,6 +8482,7 @@ impl Game {
             | AbilityEffectDefinition::SelfKnowledge
             | AbilityEffectDefinition::Clairvoyance { .. }
             | AbilityEffectDefinition::CallSunlight { .. }
+            | AbilityEffectDefinition::NatureWrath
             | AbilityEffectDefinition::Probe
             | AbilityEffectDefinition::CreateDoor { .. }
             | AbilityEffectDefinition::DeviceMastery { .. }

@@ -305,6 +305,30 @@ export class InputController {
     } else if (!pendingDirection && this.#state.targetingIntent?.type === "mutation-direction") {
       this.cancelTargeting(false);
     }
+    const pendingAbilityDirection = state.player.pendingAbilityDirection;
+    if (
+      !pendingDirection &&
+      pendingAbilityDirection &&
+      this.#state.targetingIntent?.type !== "ability-direction"
+    ) {
+      this.cancelTargeting(false);
+      const targeting = beginTargeting(state.player.position, {
+        modes: ["direction"],
+        range: Math.max(state.width, state.height),
+        requiresLineOfEffect: false,
+      });
+      if (targeting) {
+        this.#state.targeting = targeting;
+        this.#state.targetingIntent = { type: "ability-direction" };
+        this.#announce("message-ability-direction-required", undefined, "ability");
+        this.#onLookOrTargeting("targeting");
+      }
+    } else if (
+      !pendingAbilityDirection &&
+      this.#state.targetingIntent?.type === "ability-direction"
+    ) {
+      this.cancelTargeting(false);
+    }
   }
 
   render(): void {
@@ -536,6 +560,11 @@ export class InputController {
     if (event.key === "Escape") {
       event.preventDefault();
       if (this.#state.targetingIntent?.type === "mutation-direction") return;
+      if (this.#state.targetingIntent?.type === "ability-direction") {
+        this.cancelTargeting(false);
+        void this.#dispatch({ type: "cancel-ability-direction" });
+        return;
+      }
       this.cancelTargeting();
       return;
     }
@@ -692,6 +721,8 @@ export class InputController {
     await this.#dispatch(
       intent.type === "mutation-direction" && target.type === "direction"
         ? { type: "resolve-mutation-direction", direction: target.direction }
+        : intent.type === "ability-direction" && target.type === "direction"
+          ? { type: "resolve-ability-direction", direction: target.direction }
         : intent.type === "ability"
         ? { type: "cast-ability", abilityId: intent.abilityId, target }
         : intent.type === "item"
@@ -971,7 +1002,7 @@ function targetSpecForIntent(
   intent: TargetingIntent,
 ): TargetSpecDto | null | undefined {
   if (intent.type === "look" || intent.type === "local-travel") return undefined;
-  if (intent.type === "mutation-direction") {
+  if (intent.type === "mutation-direction" || intent.type === "ability-direction") {
     return {
       modes: ["direction"],
       range: Math.max(state.width, state.height),

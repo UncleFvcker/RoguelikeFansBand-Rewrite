@@ -238,7 +238,8 @@
         "abilityBookIds": [
           "demo.ability-book.call-of-the-wild",
           "demo.ability-book.nature-mastery",
-          "demo.ability-book.natures-gifts"
+          "demo.ability-book.natures-gifts",
+          "demo.ability-book.natures-wrath"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -265,7 +266,15 @@
           { "abilityId": "demo.ability.nature-stone-tell", "minimumLevel": 33, "resourceCost": 35, "baseFailurePercent": 80 },
           { "abilityId": "demo.ability.nature-wall-of-stone", "minimumLevel": 35, "resourceCost": 40, "baseFailurePercent": 65 },
           { "abilityId": "demo.ability.nature-protect-from-corrosion", "minimumLevel": 37, "resourceCost": 65, "baseFailurePercent": 80 },
-          { "abilityId": "demo.ability.nature-call-sunlight", "minimumLevel": 38, "resourceCost": 30, "baseFailurePercent": 80 }
+          { "abilityId": "demo.ability.nature-call-sunlight", "minimumLevel": 38, "resourceCost": 30, "baseFailurePercent": 80 },
+          { "abilityId": "demo.ability.nature-earthquake", "minimumLevel": 15, "resourceCost": 15, "baseFailurePercent": 50 },
+          { "abilityId": "demo.ability.nature-fire-storm", "minimumLevel": 20, "resourceCost": 20, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-blizzard", "minimumLevel": 22, "resourceCost": 22, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-lightning-storm", "minimumLevel": 28, "resourceCost": 25, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-whirlpool", "minimumLevel": 32, "resourceCost": 28, "baseFailurePercent": 75 },
+          { "abilityId": "demo.ability.nature-ice-bolt", "minimumLevel": 36, "resourceCost": 32, "baseFailurePercent": 65 },
+          { "abilityId": "demo.ability.nature-gravity-storm", "minimumLevel": 38, "resourceCost": 35, "baseFailurePercent": 70 },
+          { "abilityId": "demo.ability.nature-natures-wrath", "minimumLevel": 39, "resourceCost": 65, "baseFailurePercent": 55 }
         ]
       }
     ]

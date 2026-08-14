@@ -140,6 +140,7 @@ pub(super) fn english_item_name(kind_id: &str) -> Option<&'static str> {
         "demo.item.call-of-the-wild" => Some("[Call of the Wild]"),
         "demo.item.nature-mastery" => Some("[Nature Mastery]"),
         "demo.item.natures-gifts" => Some("[Nature's Gifts]"),
+        "demo.item.natures-wrath" => Some("[Nature's Wrath]"),
         "demo.item.book-of-elements" => Some("[Book of Elements]"),
         "demo.item.earth-wind-and-fire" => Some("[Earth, Wind and Fire]"),
         "demo.item.path-of-destruction" => Some("[Path of Destruction]"),

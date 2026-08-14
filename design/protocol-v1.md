@@ -701,3 +701,9 @@ Hash Schema 保持 v100，save 容器保持 v1。
 结构化结算；状态防御加值可以显式参与等级缩放。物品实例、背包、装备、地面、商店与住宅
 投影增加永久元素破坏免疫集合，save DTO 同步增加必填字段。该集合进入 State Hash Schema
 v101；save 容器保持 v1，不为缺少该字段的旧开发存档提供兼容默认值。
+
+协议 1.205 为自然领域第四册增加无参数 `nature-wrath` 能力投影，以及
+`ResolveAbilityDirection`、`CancelAbilityDirection` 两条命令。六分支事务先完成一次原版
+`1d6` 选择；仅闪电矢和三连碎片球分支保存 `PlayerSaveDto.pendingAbilityDirection`，待玩家
+选择方向后才一次性支付已结算的法力、熟练度和行动成本，取消不留下部分效果。该待处理状态
+进入 State Hash Schema v102；save 容器保持 v1，不兼容缺少该字段的旧开发存档。

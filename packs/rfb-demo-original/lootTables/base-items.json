@@ -1767,6 +1767,12 @@
       "maxDepth": 90
     },
     {
+      "itemKindId": "demo.item.natures-wrath",
+      "weight": 50,
+      "quantity": 1,
+      "minDepth": 70
+    },
+    {
       "itemKindId": "demo.item.book-of-elements",
       "weight": 100,
       "quantity": 1,

@@ -100,12 +100,13 @@ use rfb_protocol::{
     MonsterAbilityCandidateResolutionDto, MonsterAbilityCastResolutionDto,
     MonsterAbilityDecisionResolutionDto, MonsterAbilityRejectionReasonDto,
     MonsterAbilityTargetResolutionDto, MonsterAlignmentDto, MonsterDisplacementResolutionDto,
-    MonsterPackBehaviorDto, MonsterPackRoleDto, PendingMutationDirectionDto, Position,
-    ProbedMonsterDto, ProjectileProfileDto, RecallStateDto, ResistanceDto, ResourcePoolSaveDto,
-    ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto, SlayDto, SlayLevelDto,
-    SlayTargetDto, SniperShotModeDto, StatModifiersDto, SummonCommandDto, SummonCommandModeDto,
-    SummonCommandResolutionDto, TargetModeDto, TargetSelection, TargetSpecDto, TaskStatusKindDto,
-    ThrowProfileDto, VirtueDto, VirtueKindDto, WeaponBrandDto,
+    MonsterPackBehaviorDto, MonsterPackRoleDto, PendingAbilityDirectionDto,
+    PendingMutationDirectionDto, Position, ProbedMonsterDto, ProjectileProfileDto, RecallStateDto,
+    ResistanceDto, ResourcePoolSaveDto, ResourceRecoveryResolutionDto, RestResolutionDto,
+    RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, SniperShotModeDto, StatModifiersDto,
+    SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto, TargetModeDto,
+    TargetSelection, TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, VirtueDto, VirtueKindDto,
+    WeaponBrandDto,
 };
 
 mod abilities;
@@ -216,7 +217,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 101;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 102;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -920,6 +921,7 @@ pub struct Game {
     chaos_patron_id: Option<String>,
     reality_change_ticks: u8,
     pending_mutation_direction: Option<PendingMutationDirectionDto>,
+    pending_ability_direction: Option<PendingAbilityDirectionDto>,
     next_item_instance_serial: u64,
     next_gold_pile_serial: u64,
     explored: Vec<bool>,
@@ -1267,6 +1269,7 @@ impl Game {
             chaos_patron_id,
             reality_change_ticks: 0,
             pending_mutation_direction: None,
+            pending_ability_direction: None,
             next_item_instance_serial,
             next_gold_pile_serial: 1,
             explored: vec![false; usize::from(width) * usize::from(height)],
@@ -1340,6 +1343,22 @@ impl Game {
         {
             return Err(CoreError::MutationDirectionUnavailable);
         }
+        if self.pending_ability_direction.is_some()
+            && !matches!(
+                action,
+                GameAction::ResolveAbilityDirection { .. } | GameAction::CancelAbilityDirection
+            )
+        {
+            return Err(CoreError::AbilityDirectionRequired);
+        }
+        if self.pending_ability_direction.is_none()
+            && matches!(
+                action,
+                GameAction::ResolveAbilityDirection { .. } | GameAction::CancelAbilityDirection
+            )
+        {
+            return Err(CoreError::AbilityDirectionUnavailable);
+        }
         if race_mutation_choice_pending && !matches!(action, GameAction::ChooseRaceMutation { .. })
         {
             return Err(CoreError::RaceMutationChoiceRequired);
@@ -1406,6 +1425,15 @@ impl Game {
             .last_visual_cells
             .take()
             .unwrap_or_else(|| self.visual_cells());
+        let mut nature_wrath_before = matches!(
+            &action,
+            GameAction::CastAbility { ability_id, target }
+                if matches!(target, TargetSelection::SelfTarget)
+                    && self.content.ability(ability_id).is_some_and(|ability| {
+                        matches!(ability.effect, AbilityEffectDefinition::NatureWrath)
+                    })
+        )
+        .then(|| self.clone());
         let mut changed = BTreeSet::new();
         let mut events = Vec::new();
         let mut chaos_patron_event_cursor = 0;
@@ -1489,7 +1517,7 @@ impl Game {
         }) {
             action = GameAction::Move { direction };
         }
-        let advances_world = !depleted_device_use
+        let mut advances_world = !depleted_device_use
             && !zero_time_unavailable_item_use
             && !cursed_unequip
             && !cursed_equip_replacement
@@ -1522,6 +1550,7 @@ impl Game {
                     | GameAction::PickUp
                     | GameAction::ResolveMogaminatorQuery { .. }
                     | GameAction::ResolveMutationDirection { .. }
+                    | GameAction::CancelAbilityDirection
                     | GameAction::InscribeItem { .. }
                     | GameAction::SetInterfaceLocale { .. }
             );
@@ -1911,6 +1940,44 @@ impl Game {
                 self.resolve_player_ability(
                     &ability_id,
                     target,
+                    &mut events,
+                    &mut changed,
+                    &mut removed_entities,
+                )?;
+                if let Some(branch_roll) = abilities::nature_wrath_direction_roll(&events) {
+                    let cast_resolution = events.iter().find_map(|event| match event {
+                        DomainEvent::AbilityCastSucceeded { resolution }
+                            if resolution.ability_id == ability_id =>
+                        {
+                            Some(resolution.clone())
+                        }
+                        _ => None,
+                    });
+                    if let (Some(before), Some(cast_resolution)) =
+                        (nature_wrath_before.take(), cast_resolution)
+                    {
+                        let advanced_rng = self.rng.clone();
+                        *self = before;
+                        self.rng = advanced_rng;
+                        self.pending_ability_direction = Some(PendingAbilityDirectionDto {
+                            ability_id,
+                            branch_roll,
+                            cast_resolution,
+                        });
+                        events.clear();
+                        changed.clear();
+                        removed_entities.clear();
+                        advances_world = false;
+                        action_cost = 0;
+                    }
+                }
+            }
+            GameAction::CancelAbilityDirection => {
+                self.pending_ability_direction = None;
+            }
+            GameAction::ResolveAbilityDirection { direction } => {
+                self.resolve_pending_ability_direction(
+                    direction,
                     &mut events,
                     &mut changed,
                     &mut removed_entities,
@@ -6991,7 +7058,8 @@ fn apply_ability_spell_power(
             AbilityEffectDefinition::AreaDamage { radius, .. }
             | AbilityEffectDefinition::LightArea { radius, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
-            | AbilityEffectDefinition::ConeDamage { radius, .. },
+            | AbilityEffectDefinition::ConeDamage { radius, .. }
+            | AbilityEffectDefinition::Earthquake { radius, .. },
             AbilitySpellPowerField::Radius,
         ) => {
             *radius =
@@ -7330,6 +7398,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
                 vampire_damage: *vampire_damage,
             }
         }
+        AbilityEffectDefinition::NatureWrath => AbilityEffectSpecDto::NatureWrath,
         AbilityEffectDefinition::Probe => AbilityEffectSpecDto::Probe,
         AbilityEffectDefinition::CreateDoor { terrain_id } => AbilityEffectSpecDto::CreateDoor {
             terrain_id: terrain_id.clone(),

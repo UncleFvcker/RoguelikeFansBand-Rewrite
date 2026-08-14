@@ -5,7 +5,7 @@ use super::support::{
     give_inventory_item, replace_terrain,
 };
 use super::*;
-use rfb_protocol::ItemDestructionElementDto;
+use rfb_protocol::{DamageTypeDto, ItemDestructionElementDto};
 
 const HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-death";
 const ARCANE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-arcane";
@@ -161,12 +161,21 @@ fn nature_high_mage_game(seed: u64, level: u16) -> Game {
             "demo.ability.nature-wall-of-stone",
             "demo.ability.nature-protect-from-corrosion",
             "demo.ability.nature-call-sunlight",
+            "demo.ability.nature-earthquake",
+            "demo.ability.nature-fire-storm",
+            "demo.ability.nature-blizzard",
+            "demo.ability.nature-lightning-storm",
+            "demo.ability.nature-whirlpool",
+            "demo.ability.nature-ice-bolt",
+            "demo.ability.nature-gravity-storm",
+            "demo.ability.nature-natures-wrath",
         ]
         .into_iter()
         .map(str::to_owned),
     );
     give_inventory_item(&mut game, "test.nature-mastery", "demo.item.nature-mastery");
     give_inventory_item(&mut game, "test.natures-gifts", "demo.item.natures-gifts");
+    give_inventory_item(&mut game, "test.natures-wrath", "demo.item.natures-wrath");
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
@@ -194,6 +203,16 @@ fn grant_spell_power(game: &mut Game, bonus: i32) {
         grants_wall_passage: false,
         incoming_damage_percent: 100,
     });
+}
+
+fn nature_wrath_seed(branch: u64) -> u64 {
+    (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            let _ = rng.bounded(100);
+            rng.bounded(6) + 1 == branch
+        })
+        .expect("a bounded seed should select every Nature's Wrath branch")
 }
 
 #[test]
@@ -310,6 +329,7 @@ fn nature_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         "demo.item.book-of-elements",
         "demo.item.nature-mastery",
         "demo.item.natures-gifts",
+        "demo.item.natures-wrath",
     ] {
         assert!(!carried.contains(excluded));
     }
@@ -321,7 +341,7 @@ fn nature_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         .into_iter()
         .filter(|ability| ability.source == AbilitySourceDto::Learned)
         .collect::<Vec<_>>();
-    assert_eq!(learned.len(), 24);
+    assert_eq!(learned.len(), 32);
     assert!(
         learned
             .iter()
@@ -1153,6 +1173,295 @@ fn commit32_nature_call_sunlight_maps_lights_reveals_without_esp_and_burns_vampi
     assert_eq!(game.virtue_current(VirtueKindDto::Knowledge), 1);
     assert_eq!(game.virtue_current(VirtueKindDto::Enlightenment), 1);
     assert!(!game.player_has_status_kind(STATUS_TELEPATHY));
+}
+
+#[test]
+fn commit33_nature_fourth_book_projects_original_damage_radius_and_spell_power() {
+    for (level, storm_bonus, radius, ice_dice, ice_bonus) in
+        [(1, 66, 1, 5, 5), (25, 119, 3, 12, 10), (50, 174, 5, 20, 15)]
+    {
+        let projected = nature_high_mage_game(0x4e41_5455_5245_3300 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        assert!(matches!(
+            projected["demo.ability.nature-earthquake"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::Earthquake { radius: 10, .. }]
+        ));
+        assert!(matches!(
+            projected["demo.ability.nature-fire-storm"].effects.as_slice(),
+            [AbilityEffectSpecDto::AreaDamage {
+                damage_dice: 1,
+                damage_sides: 1,
+                damage_bonus,
+                radius: actual_radius,
+                final_damage_spell_power_bonus: None,
+                ..
+            }] if *damage_bonus == storm_bonus && *actual_radius == radius
+        ));
+        assert!(matches!(
+            projected["demo.ability.nature-ice-bolt"].effects.as_slice(),
+            [AbilityEffectSpecDto::Damage {
+                damage_dice,
+                damage_sides: 15,
+                damage_bonus,
+                final_damage_spell_power_bonus: None,
+                ..
+            }] if *damage_dice == ice_dice && *damage_bonus == ice_bonus
+        ));
+        assert!(matches!(
+            projected["demo.ability.nature-natures-wrath"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::NatureWrath]
+        ));
+    }
+
+    let mut powered = nature_high_mage_game(0x4e41_5455_5245_3350, 50);
+    grant_spell_power(&mut powered, 7);
+    let projected = powered
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert!(matches!(
+        projected["demo.ability.nature-earthquake"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Earthquake { radius: 15, .. }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.nature-fire-storm"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::AreaDamage {
+            damage_bonus: 174,
+            radius: 5,
+            final_damage_spell_power_bonus: Some(7),
+            ..
+        }]
+    ));
+
+    let mut events = Vec::new();
+    let target = powered
+        .open_positions_around(powered.player.position, 1)
+        .into_iter()
+        .next()
+        .expect("Fire Storm should have an adjacent target");
+    powered
+        .resolve_player_ability(
+            "demo.ability.nature-fire-storm",
+            TargetSelection::Position { position: target },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("powered Fire Storm should resolve");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityAreaDamage { resolution, .. }
+            if resolution.base_raw_damage == 269 && resolution.radius == 5
+    )));
+}
+
+#[test]
+fn commit33_natures_wrath_selects_all_six_branches_and_orders_the_elemental_storms() {
+    for branch in 1..=6_u64 {
+        let mut game = nature_high_mage_game(0x4e41_5455_5245_3300 + branch, 50);
+        clear_monsters(&mut game);
+        let mana = game
+            .resources
+            .get_mut("demo.resource.mana")
+            .expect("Nature High-Mage should have mana");
+        mana.current = mana.maximum;
+        game.ability_progress
+            .get_mut("demo.ability.nature-natures-wrath")
+            .expect("Nature's Wrath should have progress")
+            .proficiency = SPELL_EXP_MASTER;
+        game.rng = RfbRng::seeded(nature_wrath_seed(branch));
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.nature-natures-wrath",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Nature's Wrath branch should resolve");
+        assert!(
+            events.iter().any(|event| matches!(
+                event,
+                DomainEvent::AbilityEffectsResolved { resolution, .. }
+                    if matches!(
+                        resolution.effects.as_slice(),
+                        [AbilityEffectResolutionDto::RandomChoice {
+                            roll,
+                            maximum_roll: 6,
+                            ..
+                        }] if *roll == branch as i32
+                    )
+            )),
+            "branch {branch} events: {events:#?}"
+        );
+        if branch == 5 {
+            let storms = events
+                .iter()
+                .filter_map(|event| match event {
+                    DomainEvent::AbilityAreaDamage { resolution, .. } => Some((
+                        resolution.damage_type,
+                        resolution.base_raw_damage,
+                        resolution.radius,
+                    )),
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(
+                storms,
+                vec![
+                    (DamageTypeDto::Fire, 370, 5),
+                    (DamageTypeDto::Cold, 370, 5),
+                    (DamageTypeDto::Electricity, 370, 5),
+                ]
+            );
+        }
+    }
+}
+
+#[test]
+fn commit33_natures_wrath_direction_prompt_is_atomic_cancelable_and_persistent() {
+    let mut cancelled = nature_high_mage_game(0x4e41_5455_5245_3343, 50);
+    choose_human_talent_if_pending(&mut cancelled);
+    cancelled.learned_abilities.clear();
+    cancelled
+        .learned_abilities
+        .insert("demo.ability.nature-natures-wrath".to_owned());
+    let mana = cancelled
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should have mana");
+    mana.current = mana.maximum;
+    cancelled
+        .ability_progress
+        .get_mut("demo.ability.nature-natures-wrath")
+        .expect("Nature's Wrath should have progress")
+        .proficiency = SPELL_EXP_MASTER;
+    cancelled.refresh_character_skills();
+    cancelled.rng = RfbRng::seeded(nature_wrath_seed(2));
+    let mana_before = cancelled.resources["demo.resource.mana"].current;
+    let world_tick_before = cancelled.world_tick;
+    dispatch_next(
+        &mut cancelled,
+        GameCommand::CastAbility {
+            ability_id: "demo.ability.nature-natures-wrath".to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+    assert_eq!(
+        cancelled
+            .pending_ability_direction
+            .as_ref()
+            .map(|pending| pending.branch_roll),
+        Some(2)
+    );
+    assert_eq!(
+        cancelled.resources["demo.resource.mana"].current,
+        mana_before
+    );
+    assert_eq!(cancelled.world_tick, world_tick_before);
+    assert_eq!(
+        cancelled.ability_progress["demo.ability.nature-natures-wrath"].cast_count,
+        0
+    );
+    let restored = Game::from_save(cancelled.to_save()).expect("pending direction should reload");
+    assert_eq!(
+        restored
+            .pending_ability_direction
+            .as_ref()
+            .map(|pending| (pending.ability_id.as_str(), pending.branch_roll)),
+        Some(("demo.ability.nature-natures-wrath", 2))
+    );
+
+    dispatch_next(&mut cancelled, GameCommand::CancelAbilityDirection);
+    assert!(cancelled.pending_ability_direction.is_none());
+    assert_eq!(
+        cancelled.resources["demo.resource.mana"].current,
+        mana_before
+    );
+    assert_eq!(cancelled.world_tick, world_tick_before);
+    assert_eq!(
+        cancelled.ability_progress["demo.ability.nature-natures-wrath"].cast_count,
+        0
+    );
+
+    let mut resolved = nature_high_mage_game(0x4e41_5455_5245_3352, 50);
+    choose_human_talent_if_pending(&mut resolved);
+    resolved.learned_abilities.clear();
+    resolved
+        .learned_abilities
+        .insert("demo.ability.nature-natures-wrath".to_owned());
+    let mana = resolved
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Nature High-Mage should have mana");
+    mana.current = mana.maximum;
+    resolved
+        .ability_progress
+        .get_mut("demo.ability.nature-natures-wrath")
+        .expect("Nature's Wrath should have progress")
+        .proficiency = SPELL_EXP_MASTER;
+    resolved.rng = RfbRng::seeded(nature_wrath_seed(6));
+    let mana_before = resolved.resources["demo.resource.mana"].current;
+    dispatch_next(
+        &mut resolved,
+        GameCommand::CastAbility {
+            ability_id: "demo.ability.nature-natures-wrath".to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+    let resource_paid = resolved
+        .pending_ability_direction
+        .as_ref()
+        .expect("the shard branch should request a direction")
+        .cast_resolution
+        .resource_paid;
+    let mut events = Vec::new();
+    resolved
+        .resolve_pending_ability_direction(
+            Direction::East,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("the deferred shard branch should resolve");
+    assert!(resolved.pending_ability_direction.is_none());
+    assert_eq!(
+        resolved.resources["demo.resource.mana"].current,
+        mana_before - resource_paid
+    );
+    assert_eq!(
+        resolved.ability_progress["demo.ability.nature-natures-wrath"].cast_count,
+        1
+    );
+    let shard_balls = events
+        .iter()
+        .filter(|event| {
+            matches!(
+                event,
+                DomainEvent::AbilityAreaDamage { resolution, .. }
+                    if resolution.damage_type == DamageTypeDto::Shards
+                        && resolution.base_raw_damage == 135
+                        && resolution.radius == 1
+            )
+        })
+        .count();
+    assert_eq!(shard_balls, 3);
 }
 
 #[test]

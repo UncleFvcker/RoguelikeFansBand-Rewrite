@@ -135,6 +135,7 @@ message-mutation-warning-paranoid = You feel paranoid!
 message-mutation-warning-safe = You feel reasonably safe.
 message-mutation-warning-lonely = You feel lonely.
 message-mutation-direction-required = Magical energy surges through you! Choose a direction to release it.
+message-ability-direction-required = Choose a direction for Nature's Wrath.
 message-mutation-fumbled = You trip over your own feet and take { $damage } damage.
 message-mutation-fumbled-drop = You trip over your own feet, take { $damage } damage, and drop { $target }.
 message-mutation-reality-changed = You reject this reality and replace it with another one.

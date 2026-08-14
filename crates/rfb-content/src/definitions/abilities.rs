@@ -424,6 +424,7 @@ pub enum AbilityEffectDefinition {
     CallSunlight {
         vampire_damage: u16,
     },
+    NatureWrath,
     Probe,
     CreateDoor {
         terrain_id: String,
@@ -1082,6 +1083,7 @@ pub(crate) fn valid_ability_spell_power(
                         | AbilityEffectDefinition::LightArea { .. }
                         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                         | AbilityEffectDefinition::ConeDamage { .. }
+                        | AbilityEffectDefinition::Earthquake { .. }
                         | AbilityEffectDefinition::DimensionDoor { .. }
                 ),
                 AbilitySpellPowerField::StatusDurationTicks => matches!(

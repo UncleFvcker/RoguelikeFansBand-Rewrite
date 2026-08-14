@@ -19,7 +19,9 @@ use crate::{
     state::{Actor, FloorState, ItemInstance, ItemLocation, RidingBond},
     stats::{AttributeKind, AttributeSet, CharacterProgress, SkillProgress},
 };
-use rfb_content::{ContentCatalog, FloorLifecycle, TaskObjectiveKind, WildernessTerrain};
+use rfb_content::{
+    AbilityEffectDefinition, ContentCatalog, FloorLifecycle, TaskObjectiveKind, WildernessTerrain,
+};
 use rfb_protocol::{
     AbilityProgressSaveDto, ActorSaveDto, BodySlotSaveDto, CampaignStateSaveDto, CampaignStatusDto,
     CarriedItemSaveDto, DefeatedActorCountSaveDto, DungeonStateSaveDto, EquipmentItemSaveDto,
@@ -1003,6 +1005,22 @@ impl Game {
                 "pending mutation direction is invalid",
             ));
         }
+        let pending_ability_direction = payload.player.pending_ability_direction.clone();
+        if pending_ability_direction.as_ref().is_some_and(|pending| {
+            pending.ability_id != "demo.ability.nature-natures-wrath"
+                || !matches!(pending.branch_roll, 2 | 6)
+                || pending.cast_resolution.ability_id != pending.ability_id
+                || !pending.cast_resolution.succeeded
+                || !saved_learned_ability_ids.contains(&pending.ability_id)
+                || !content.ability(&pending.ability_id).is_some_and(|ability| {
+                    matches!(ability.effect, AbilityEffectDefinition::NatureWrath)
+                })
+                || payload.map_scale != MapScaleDto::Local
+        }) {
+            return Err(CoreError::InvalidSave(
+                "pending ability direction is invalid",
+            ));
+        }
         // Body slots are save-authoritative once present; pre-template saves
         // derive them from the build's race (or the standard body) with no
         // RNG involvement.
@@ -1390,6 +1408,7 @@ impl Game {
             chaos_patron_id,
             reality_change_ticks,
             pending_mutation_direction,
+            pending_ability_direction,
             next_item_instance_serial,
             next_gold_pile_serial,
             explored,
@@ -1648,6 +1667,7 @@ impl Game {
         player.chaos_patron_id = self.chaos_patron_id.clone();
         player.reality_change_ticks = self.reality_change_ticks;
         player.pending_mutation_direction = self.pending_mutation_direction.clone();
+        player.pending_ability_direction = self.pending_ability_direction.clone();
         player.body_slots = self
             .body_slots
             .iter()

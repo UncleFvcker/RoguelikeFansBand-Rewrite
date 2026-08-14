@@ -21,6 +21,7 @@ export type TargetingIntent =
   | { type: "local-travel" }
   | { type: "projectile" }
   | { type: "mutation-direction" }
+  | { type: "ability-direction" }
   | { type: "ability"; abilityId: string }
   | { type: "item"; itemId: string };
 
@@ -51,7 +52,8 @@ export class AppState {
       this.mode !== "playing" ||
       this.playerDead ||
       this.campaignEnded ||
-      this.status?.player.pendingMutationDirection != null
+      (this.status?.player.pendingMutationDirection != null ||
+        this.status?.player.pendingAbilityDirection != null)
     );
   }
 

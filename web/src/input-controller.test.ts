@@ -302,6 +302,46 @@ test("a pending Produce Mana effect opens mandatory direction targeting", () => 
   assert.deepEqual(announcements, ["message-mutation-direction-required"]);
 });
 
+test("a pending Nature's Wrath branch opens ability direction targeting", () => {
+  const state = new AppState();
+  const announcements = [];
+  const controller = new InputController({
+    state,
+    dom: {},
+    localization: {},
+    window: {},
+    getInputPreset: () => "vi",
+    getZoom: () => 1,
+    dispatch: async () => {},
+    describeLook: () => "",
+    openObjectList: () => {},
+    openMogaminator: () => {},
+    onLookOrTargeting: () => {},
+    onLookFocusChange: () => {},
+    announce: (key) => announcements.push(key),
+  });
+  const update = {
+    mapScale: "local",
+    worldTravelDestination: null,
+    width: 96,
+    height: 33,
+    floorId: "core.floor.wilderness",
+    player: {
+      position: { x: 48, y: 16 },
+      pendingAbilityDirection: {
+        abilityId: "demo.ability.nature-natures-wrath",
+        branchRoll: 6,
+      },
+    },
+  };
+
+  controller.reconcileStatus(update);
+
+  assert.equal(state.targetingIntent?.type, "ability-direction");
+  assert.deepEqual(state.targeting?.spec.modes, ["direction"]);
+  assert.deepEqual(announcements, ["message-ability-direction-required"]);
+});
+
 test("auto-get locks one target, then requests the next Core target", async () => {
   const state = new AppState();
   state.mode = "playing";

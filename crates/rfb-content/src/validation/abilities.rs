@@ -332,6 +332,7 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::CallSunlight { vampire_damage } => {
                     (1..=10_000).contains(vampire_damage)
                 }
+                AbilityEffectDefinition::NatureWrath => true,
                 AbilityEffectDefinition::Probe => true,
                 AbilityEffectDefinition::CreateDoor { terrain_id } => !terrain_id.is_empty(),
                 AbilityEffectDefinition::DeviceMastery {
@@ -1118,6 +1119,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::Clairvoyance { .. }
             | AbilityEffectDefinition::CallSunlight { .. }
+            | AbilityEffectDefinition::NatureWrath
             | AbilityEffectDefinition::CreateAdjacentTerrain { .. }
             | AbilityEffectDefinition::Probe
             | AbilityEffectDefinition::CreateDoor { .. }

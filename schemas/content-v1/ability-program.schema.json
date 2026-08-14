@@ -678,6 +678,19 @@
           "additionalProperties": false,
           "properties": {
             "type": {
+              "const": "nature-wrath",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
               "const": "probe",
               "type": "string"
             }

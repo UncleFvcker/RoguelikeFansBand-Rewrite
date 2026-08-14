@@ -169,6 +169,7 @@
     { "sourceIndex": 512, "sourceName": "[Call of the Wild]", "sourceId": "call-of-the-wild", "itemId": "demo.item.call-of-the-wild", "status": "active", "contract": "class-high-mage-nature-first-book" },
     { "sourceIndex": 513, "sourceName": "[Nature Mastery]", "sourceId": "nature-mastery", "itemId": "demo.item.nature-mastery", "status": "active", "contract": "class-high-mage-nature-second-book" },
     { "sourceIndex": 514, "sourceName": "[Nature's Gifts]", "sourceId": "natures-gifts", "itemId": "demo.item.natures-gifts", "status": "active", "contract": "class-high-mage-nature-third-book" },
+    { "sourceIndex": 515, "sourceName": "[Nature's Wrath]", "sourceId": "natures-wrath", "itemId": "demo.item.natures-wrath", "status": "active", "contract": "class-high-mage-nature-fourth-book" },
     { "sourceIndex": 516, "sourceName": "[Black Prayers]", "sourceId": "black-prayers", "itemId": "demo.item.black-prayers", "status": "active", "contract": "class-high-mage-death-first-book" },
     { "sourceIndex": 517, "sourceName": "[Black Mass]", "sourceId": "black-mass", "itemId": "demo.item.black-mass", "status": "active", "contract": "class-high-mage-death-second-book" },
     { "sourceIndex": 518, "sourceName": "[Black Channels]", "sourceId": "black-channels", "itemId": "demo.item.black-channels", "status": "active", "contract": "contract-v106-death-third-book" },
