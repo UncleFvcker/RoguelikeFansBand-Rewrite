@@ -3,9 +3,9 @@
 当前职业与种族导入流程、正式清单和验收规则统一见
 [`class-race-import-handoff.md`](class-race-import-handoff.md)。本文保留各批次的历史实现与版本记录。
 
-更新时间：2026-08-14
+更新时间：2026-08-15
 
-当前 main 实现基线：`25b2bc0b6`（魔像正式 New Game 开放）
+当前 main 实现基线：`2ecec68cd`（僵尸正式 New Game 开放）
 
 分支：`codex/class-next`
 
@@ -833,3 +833,29 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   通过；吸收装置覆盖 save/state-hash/replay。`verify-source`、schema、Rust format、相关 crate
   `cargo check`、Web typecheck 与协议 binding 检查通过。按用户要求未运行或刷新全量测试与 fixture。
   下一普通静态种族为 `rfb-legacy.race.skeleton`（骷髅）。
+
+## main 当前批次：僵尸正式内容、夜间出生与恢复生命
+
+- 权威来源为 RFB `master:src/races_k.c`、`master:src/spells_m.c`、`master:src/effects.c`、
+  `master:src/birth.c` 和 `master:src/virtue.c`。种族方向继续拥有既有 `rfb-legacy.race.zombie` 与
+  `rfb-legacy.skill-set.race-zombie`，新增并拥有 `rfb.ability.race.restore-life` 和
+  `rfb.ability-program.race.restore-life`；出生法杖复用魔像批次既有 `demo.item.staff-of-nothing`。
+- 僵尸按原版闭合六维 `+2/-6/-6/+1/+4/-3`、生命 108%、基础 HP 24、经验 180%、2 格红外、商店
+  140%、虚空/毒抗、5 级寒冷抗性、看破隐形、1 级生命力保护、非生命/亡灵身份及初始“非生”。
+  不增加职业过滤；临时变形按当前有效种族获得并在解除时失去这些被动和种族能力。
+- 僵尸复用 `slow-digestion`、`foodNutritionDivisor: 20`、`device-eater`、`AbsorbDevice` 和出生满充能
+  空手法杖；出生不生成普通口粮但保留标准火把。通用 `night-start` 内容标签把出生 `worldTick` 设为
+  `3 * WILDERNESS_DAY_TICKS / 4 + 1`，不增加存档或 State Hash 字段，临时变形也不会重置时间。
+- 30 级感知能力“恢复生命”消耗 30、基础失败率 70%，恢复全部损失经验并按原版
+  `lp_player(150)` 增加 150 生命力。既有 `RestoreVitality` 执行器从“至少达到参数值”修正为“增加
+  参数值并封顶”；现有 1000 点恢复行为保持等价。极低感知同时暴露并修复了种族能力失败率先应用
+  最低值、再封顶 95% 的原版顺序。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数从 29 增至 30；
+  请求继续使用既有 `{ buildId, raceId, playerName, seed }`，不增加玩家 Actor、tileset 或重复 Build。
+- 实现提交为 `2ecec68cd`（`Import Zombie race`）。最终协调点为 pack `1.366.0` / content hash
+  `795d9e95d5285636b4a0273eb438f15d86f8ca6c4a7fb6ade99310ee094b9f2c`、Protocol `1.221`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。
+- 新增聚焦测试共 9 项：内容 1、中文名 1、importer 1、核心 5、Web 1，覆盖静态矩阵、能力成功/失败、
+  生命力加法、等级抗性、变形生命周期、代谢/吸收、出生物品、美德、夜间出生及
+  save/state-hash/replay。`verify-source`、格式和 diff 检查通过；按用户要求未运行全量测试或刷新
+  fixture。下一普通静态种族为 `rfb-legacy.race.skeleton`（骷髅）。

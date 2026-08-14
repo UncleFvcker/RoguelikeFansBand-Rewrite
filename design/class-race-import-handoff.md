@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
-更新时间：2026-08-14
-当前实现基线：`25b2bc0b6`（魔像正式 New Game 开放；本次文档提交只做交接封板）
+更新时间：2026-08-15
+当前实现基线：`2ecec68cd`（僵尸正式 New Game 开放；本次文档提交只做交接封板）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,14 +10,14 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.361.0`
-- content hash：`48db8bec826fc84f1b4b262ca621721b1ef729d4e78a79c4344914822d01d095`
-- Protocol：`1.213`
+- demo pack：`1.366.0`
+- content hash：`795d9e95d5285636b4a0273eb438f15d86f8ca6c4a7fb6ade99310ee094b9f2c`
+- Protocol：`1.221`
 - State Hash Schema：`v104`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v303`，26 个 exact fixture
-- 正式内容：6 个 Class、11 个 Build、63 个 SkillSet、55 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 29 个种族。
+- 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
+  6 个职业构筑和 30 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -71,6 +71,7 @@ New Game 当前按以下稳定 ID 开放：
   - `rfb-legacy.race.draconian-gold`
   - `rfb-legacy.race.draconian-shadow`
 - `rfb-legacy.race.golem`
+- `rfb-legacy.race.zombie`
 
 种族通过新游戏请求中的独立 `raceId` 覆盖 Build 的默认 Human。不要生成
 “职业 × 种族”的重复 Build JSON。玩家外观目前由职业 Build 决定，新增普通种族不复制玩家 Actor 或
@@ -88,7 +89,9 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
 九个 Race 均带 `rfb-compatibility`，通过既有 `raceId` 请求正式创建；仍刻意不带
 `polymorph-candidate`，不会混入普通临时变形候选。玩家 Actor 与 tileset 继续由职业 Build 决定。
 魔像专项也已封板：`rfb-legacy.race.golem` 现带正式选择标签并进入同一 `raceId` 请求与 Web 原生
-种族选择器。它继续使用标准玩家 Actor/tileset，不增加职业过滤或“职业 × 种族”Build。下一普通静态
+种族选择器。它继续使用标准玩家 Actor/tileset，不增加职业过滤或“职业 × 种族”Build。
+僵尸 `rfb-legacy.race.zombie` 已在后续 main 基线上正式开放：复用魔像的缓慢消化、1/20 食物营养、
+装置吸收与满充能空手法杖路径，新增通用 `night-start` 出生标签和独立“恢复生命”能力。下一普通静态
 种族为 `rfb-legacy.race.skeleton`（骷髅）。
 
 ### 龙人专项最终证据
@@ -117,6 +120,20 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
   魔像选项、`raceId` 请求和吸收装置入口。
 - 本专项只运行魔像新增与直接相关测试、内容锁/schema 检查、相关 Rust 编译、Web typecheck 与协议
   binding 检查；按用户要求未运行全量 Rust/Web/fixture/replay 回归，累计验收留给主合并里程碑。
+
+### 僵尸导入最终证据
+
+- 实现提交：`2ecec68cd`（`Import Zombie race`）。最终协调点为 pack `1.366.0` / content hash
+  `795d9e95d5285636b4a0273eb438f15d86f8ca6c4a7fb6ade99310ee094b9f2c`；Protocol `1.221`、
+  State Hash Schema v104、save v2 和 `contract-v303` fixture baseline 均未改变。正式 New Game 种族数
+  从 29 增至 30。
+- 僵尸闭合六维、生命/HP/经验/红外/商店/技能矩阵，虚空与毒抗、5 级寒冷抗性、看破隐形、生命力
+  保护、非生命/亡灵身份、缓慢消化、1/20 食物营养、装置吸收、夜间出生、无普通口粮、满充能空手
+  法杖和初始“非生”。30 级感知能力“恢复生命”消耗 30、基础失败率 70%，恢复全部损失经验并
+  增加 150 生命力；共享执行器现按原版 `lp_player(150)` 使用加法并封顶。
+- 只运行了本批新增聚焦测试：内容 1 项、本地化 1 项、导入器 1 项、核心 5 项、Web 1 项，均通过；
+  核心覆盖成功/失败支付、变形获得/失去、食物与装置代谢、夜间出生及 save/state-hash/replay。
+  `verify-source`、Rust format 和 diff 检查通过。按用户要求未运行全量测试，也未刷新 fixture。
 
 ## 2. 权威来源与不可变规则
 

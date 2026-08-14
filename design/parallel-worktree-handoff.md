@@ -1,7 +1,7 @@
 # 并行 worktree 通用交接说明
 
-更新时间：2026-08-14
-当前工作批次起点：`main@25b2bc0b6`
+更新时间：2026-08-15
+当前工作批次起点：`main@2ecec68cd`
 
 本说明供新的 Codex 对话接手独立方向时使用。每个写入方向必须使用自己的
 worktree 和分支；`main` 只负责集成、版本与发布收口。
@@ -1392,3 +1392,20 @@ git diff --stat
 - 验收通过：`rfb-core` 830 项、`rfb-content` 287 项、本地化 21 项、其余 Rust workspace 测试、
   Clippy `-D warnings`、格式、协议/内容生成器、source lock 校验，以及 Web 152 项测试、typecheck 和
   生产 UI build。`codex/items-next`、`codex/monsters-next` 分支及对应工作树均保留，不做删除。
+
+## 76. main 当前交接（僵尸正式内容、夜间出生与恢复生命）
+
+- 种族方向继续拥有 `rfb-legacy.race.zombie`、`rfb-legacy.skill-set.race-zombie`，并新增、拥有
+  `rfb.ability.race.restore-life` 与 `rfb.ability-program.race.restore-life`。出生空手法杖、缓慢消化、
+  1/20 食物营养和装置吸收全部复用魔像批次既有身份与路径，其他方向不得复制或改名。
+- 通用 `night-start` 标签只影响新角色初始化的 `worldTick`，不新增 Protocol、save 或 State Hash
+  字段；临时变形不会改变时间。`RestoreVitality` 的生命力参数现按原版执行加法并封顶，现有 1000 点
+  恢复保持等价。种族能力失败率按原版先应用最低失败率、再封顶 95%，支持僵尸的极低感知边界。
+- 僵尸完整行为包括虚空/毒抗、5 级寒冷抗性、看破隐形、生命力保护、非生命/亡灵身份、30 级“恢复
+  生命”、夜间出生、无普通口粮、满充能空手法杖和初始“非生”。`rfb-compatibility`、Web option 与
+  `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 30。
+- 实现提交为 `2ecec68cd`（`Import Zombie race`）。共享协调点为 pack `1.366.0` / content hash
+  `795d9e95d5285636b4a0273eb438f15d86f8ca6c4a7fb6ade99310ee094b9f2c`、Protocol `1.221`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
+  Web 共 9 项聚焦测试通过，含 save/state-hash/replay；按用户要求未运行全量测试或刷新 fixture。
+- 下一普通静态种族为 `rfb-legacy.race.skeleton`（骷髅）。
