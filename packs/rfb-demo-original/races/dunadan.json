@@ -78,10 +78,47 @@
     "wisdom": 2
   },
   "nameKey": "race-legacy-dunadan-name",
+  "attributeSustains": [
+    "constitution"
+  ],
+  "levelMutationRewards": [
+    {
+      "id": "dunadan-talent",
+      "minimumLevel": 30,
+      "selection": {
+        "type": "choice",
+        "mutationIds": [
+          "rfb.mutation.fast-learner",
+          "rfb.mutation.weapon-skills",
+          "rfb.mutation.subtle-casting",
+          "rfb.mutation.peerless-sniper",
+          "rfb.mutation.unyielding",
+          "rfb.mutation.untouchable",
+          "rfb.mutation.loremaster",
+          "rfb.mutation.arcane-mastery",
+          "rfb.mutation.evasion",
+          "rfb.mutation.potion-chugger",
+          "rfb.mutation.one-with-magic",
+          "rfb.mutation.peerless-tracker",
+          "rfb.mutation.infernal-deal",
+          "rfb.mutation.fell-sorcery",
+          "rfb.mutation.sacred-vitality",
+          "rfb.mutation.cult-of-personality",
+          "rfb.mutation.fleet-of-foot",
+          "rfb.mutation.demonic-grasp",
+          "rfb.mutation.weird-mind",
+          "rfb.mutation.fantastic-frenzy"
+        ]
+      }
+    }
+  ],
   "shopAdjustPercent": 100,
   "skillSetId": "rfb-legacy.skill-set.race-dunadan",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

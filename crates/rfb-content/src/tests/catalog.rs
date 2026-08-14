@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.333.0");
+    assert_eq!(catalog.pack_version(), "1.334.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -475,6 +475,79 @@ fn formal_high_elf_matches_the_original_profile() {
             ("demo.skill.stealth", 4),
         ]
     );
+}
+
+#[test]
+fn formal_dunadan_matches_the_original_profile_and_talent_pool() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let dunadan = catalog
+        .race("rfb-legacy.race.dunadan")
+        .expect("formal Dunadan race");
+
+    assert_eq!(
+        [
+            dunadan.modifiers.strength,
+            dunadan.modifiers.intelligence,
+            dunadan.modifiers.wisdom,
+            dunadan.modifiers.dexterity,
+            dunadan.modifiers.constitution,
+            dunadan.modifiers.charisma,
+        ],
+        [1, 2, 2, 2, 3, 0]
+    );
+    assert_eq!(dunadan.life_percent, 100);
+    assert_eq!(dunadan.base_hp, 20);
+    assert_eq!(dunadan.experience_percent, 160);
+    assert_eq!(dunadan.shop_adjust_percent, 100);
+    assert_eq!(dunadan.infravision, 0);
+    assert_eq!(
+        dunadan
+            .attribute_sustains
+            .iter()
+            .copied()
+            .collect::<Vec<_>>(),
+        [ItemAttributeDefinition::Constitution]
+    );
+    for tag in ["humanoid", "rfb-compatibility", "standard-body"] {
+        assert!(dunadan.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&dunadan.skill_set_id)
+        .expect("formal Dunadan skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 3),
+            ("demo.skill.disarming", 4),
+            ("demo.skill.melee", 15),
+            ("demo.skill.perception", 13),
+            ("demo.skill.ranged", 7),
+            ("demo.skill.saving-throw", 3),
+            ("demo.skill.search", 3),
+            ("demo.skill.stealth", 2),
+        ]
+    );
+
+    let talent = dunadan
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "dunadan-talent")
+        .expect("Dunadan should choose a level 30 talent");
+    let human_talent = catalog
+        .race("demo.race.rfb-human")
+        .expect("formal Human race")
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "human-talent")
+        .expect("Human talent");
+    assert_eq!(talent.minimum_level, 30);
+    assert_eq!(talent.selection, human_talent.selection);
 }
 
 #[test]

@@ -72,7 +72,7 @@ fn rfb_virtue_initialization_keeps_class_race_and_realm_order_then_fills_unique_
 }
 
 #[test]
-fn half_orc_and_high_elf_receive_their_original_race_virtues() {
+fn formal_races_receive_their_original_race_virtues() {
     let half_orc = Game::new_with_build_race_and_name(
         43,
         "demo.build.archer",
@@ -102,6 +102,22 @@ fn half_orc_and_high_elf_receive_their_original_race_virtues() {
             VirtueKindDto::Nature,
             VirtueKindDto::Temperance,
             VirtueKindDto::Vitality,
+        ]
+    );
+
+    let dunadan = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.dunadan",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Dunadan Archer should create");
+    assert_eq!(
+        &virtue_kinds(&dunadan)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Individualism,
         ]
     );
 }

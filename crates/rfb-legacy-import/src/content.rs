@@ -788,6 +788,7 @@ pub struct LegacyCharacterEntry {
     pub resistances: Vec<(String, String)>,
     pub free_act: bool,
     pub see_invisible: bool,
+    pub attribute_sustains: Vec<String>,
     pub speed: i32,
 }
 
@@ -812,6 +813,7 @@ impl Default for LegacyCharacterEntry {
             resistances: Vec::new(),
             free_act: false,
             see_invisible: false,
+            attribute_sustains: Vec::new(),
             speed: 0,
         }
     }
@@ -4886,23 +4888,25 @@ fn find_function_body<'a>(text: &'a str, name: &str) -> Option<&'a str> {
 
 /// Extracts the statically expressible defensive surface from a race's
 /// calc_bonuses hook: top-level `res_add` family calls, `free_act++`,
-/// `see_inv++` and literal `pspeed` adjustments. Conditional (level-gated)
-/// and computed statements are ignored and remain accounted as hook gaps.
+/// `see_inv++`, unconditional attribute sustains and literal `pspeed`
+/// adjustments. Conditional (level-gated) and computed statements are ignored
+/// and remain accounted as hook gaps.
 pub fn parse_calc_bonuses_defenses(
     text: &str,
     hook: &str,
-) -> (Vec<(String, String)>, bool, bool, i32) {
+) -> (Vec<(String, String)>, bool, bool, Vec<String>, i32) {
     fn resistance_token(rest: &str) -> Option<&'static str> {
         let token = rest[..rest.find(')')?].trim();
         defensive_resistance_type(token.strip_prefix("RES_")?)
     }
     let Some(body) = find_function_body(text, hook) else {
-        return (Vec::new(), false, false, 0);
+        return (Vec::new(), false, false, Vec::new(), 0);
     };
     let mut adds: BTreeMap<&'static str, i32> = BTreeMap::new();
     let mut immune: BTreeSet<&'static str> = BTreeSet::new();
     let mut free_act = false;
     let mut see_invisible = false;
+    let mut attribute_sustains = BTreeSet::new();
     let mut speed = 0_i32;
     let mut depth = 0_i32;
     let mut suppressed = false;
@@ -4954,6 +4958,20 @@ pub fn parse_calc_bonuses_defenses(
             free_act = true;
         } else if line == "p_ptr->see_inv++;" {
             see_invisible = true;
+        } else if let Some(attribute) = line
+            .strip_prefix("p_ptr->sustain_")
+            .and_then(|line| line.strip_suffix(" = TRUE;"))
+            .and_then(|attribute| match attribute {
+                "str" => Some("strength"),
+                "int" => Some("intelligence"),
+                "wis" => Some("wisdom"),
+                "dex" => Some("dexterity"),
+                "con" => Some("constitution"),
+                "chr" => Some("charisma"),
+                _ => None,
+            })
+        {
+            attribute_sustains.insert(attribute.to_owned());
         } else if let Some(rest) = line.strip_prefix("p_ptr->pspeed") {
             let rest = rest.trim_start();
             let (sign, tail) = if let Some(tail) = rest.strip_prefix("+=") {
@@ -4989,7 +5007,13 @@ pub fn parse_calc_bonuses_defenses(
         };
         resistances.push((damage_type.to_owned(), level.to_owned()));
     }
-    (resistances, free_act, see_invisible, speed)
+    (
+        resistances,
+        free_act,
+        see_invisible,
+        attribute_sustains.into_iter().collect(),
+        speed,
+    )
 }
 
 /// Finds `personality_ptr _get_X_personality(...)` definitions.
@@ -5935,6 +5959,14 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             "standard-body",
         ];
     }
+    if entry.id == "dunadan" {
+        return vec![
+            "humanoid",
+            "legacy-import",
+            "rfb-compatibility",
+            "standard-body",
+        ];
+    }
     vec!["legacy-import"]
 }
 
@@ -5980,6 +6012,9 @@ fn race_json(
     }
     if entry.see_invisible {
         value["seeInvisible"] = serde_json::json!(true);
+    }
+    if !entry.attribute_sustains.is_empty() {
+        value["attributeSustains"] = serde_json::json!(entry.attribute_sustains);
     }
     character_gap_accounting(entry, report);
     value
@@ -11880,11 +11915,12 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         for (name, body) in extract_race_blocks(text) {
             let mut entry = parse_character_block(&name, &body);
             if let Some(hook) = entry.calc_bonuses_fn.clone() {
-                let (resistances, free_act, see_invisible, speed) =
+                let (resistances, free_act, see_invisible, attribute_sustains, speed) =
                     parse_calc_bonuses_defenses(text, &hook);
                 entry.resistances = resistances;
                 entry.free_act = free_act;
                 entry.see_invisible = see_invisible;
+                entry.attribute_sustains = attribute_sustains;
                 entry.speed = speed;
             }
             if seen_character_ids.insert(format!("race:{}", entry.id)) {
@@ -12652,11 +12688,12 @@ fn legacy_races_by_id(
         for (name, body) in extract_race_blocks(text) {
             let mut entry = parse_character_block(&name, &body);
             if let Some(hook) = entry.calc_bonuses_fn.clone() {
-                let (resistances, free_act, see_invisible, speed) =
+                let (resistances, free_act, see_invisible, attribute_sustains, speed) =
                     parse_calc_bonuses_defenses(text, &hook);
                 entry.resistances = resistances;
                 entry.free_act = free_act;
                 entry.see_invisible = see_invisible;
+                entry.attribute_sustains = attribute_sustains;
                 entry.speed = speed;
             }
             races.entry(entry.id.clone()).or_insert(entry);
@@ -18741,10 +18778,12 @@ static void _test_calc_bonuses(void)
     /*res_add_vuln(RES_ELEC); disabled for parity checks*/
     p_ptr->free_act++;
     p_ptr->see_inv++;
+    p_ptr->sustain_con = TRUE;
     p_ptr->pspeed += 3;
     p_ptr->pspeed += p_ptr->lev / 10;
     if (p_ptr->lev >= 45) res_add(RES_COLD);
     if (p_ptr->lev >= 40) p_ptr->see_inv++;
+    if (p_ptr->lev >= 35) p_ptr->sustain_str = TRUE;
     if (p_ptr->lev >= 10)
         res_add(RES_POIS);
     if (p_ptr->lev >= 30)
@@ -18819,7 +18858,7 @@ race_t *test_beast_get_race(void)
         // The hook body yields only its top-level static statements: doubled
         // res_add stacks to strong, comments and level-gated branches are
         // ignored, and only the literal speed adjustment counts.
-        let (resistances, free_act, see_invisible, speed) =
+        let (resistances, free_act, see_invisible, attribute_sustains, speed) =
             parse_calc_bonuses_defenses(SYNTHETIC_SOURCE, "_test_calc_bonuses");
         assert_eq!(
             resistances,
@@ -18831,14 +18870,17 @@ race_t *test_beast_get_race(void)
         );
         assert!(free_act);
         assert!(see_invisible);
+        assert_eq!(attribute_sustains, ["constitution"]);
         assert_eq!(speed, 3);
-        let (_, _, conditional_see_invisible, _) =
+        let (_, _, conditional_see_invisible, conditional_sustains, _) =
             parse_calc_bonuses_defenses(SYNTHETIC_SOURCE, "_conditional_calc_bonuses");
         assert!(!conditional_see_invisible);
+        assert!(conditional_sustains.is_empty());
         let mut folk = folk;
         folk.resistances = resistances;
         folk.free_act = free_act;
         folk.see_invisible = see_invisible;
+        folk.attribute_sustains = attribute_sustains;
         folk.speed = speed;
 
         let beast = parse_character_block(&blocks[1].0, &blocks[1].1);
@@ -18865,6 +18907,10 @@ race_t *test_beast_get_race(void)
         assert_eq!(race["resistances"]["light"], "vulnerable");
         assert_eq!(race["statusImmunities"][0], "rfb.status.paralysis");
         assert_eq!(race["seeInvisible"], true);
+        assert_eq!(
+            race["attributeSustains"],
+            serde_json::json!(["constitution"])
+        );
         assert_eq!(race["modifiers"]["speed"], 3);
         assert_eq!(race["kinCategory"], "kin-glyph-112");
         let high_elf = LegacyCharacterEntry {
@@ -18878,6 +18924,19 @@ race_t *test_beast_get_race(void)
                 "legacy-import",
                 "rfb-compatibility",
                 "snow-adapted",
+                "standard-body",
+            ]
+        );
+        let dunadan = LegacyCharacterEntry {
+            id: "dunadan".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&dunadan),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
                 "standard-body",
             ]
         );
