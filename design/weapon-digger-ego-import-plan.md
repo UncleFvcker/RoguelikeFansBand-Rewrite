@@ -164,6 +164,12 @@ ESP Evil/Living 后协议推进至 `1.223`；save 与 State Hash 结构未变。
 
 ### E3.4：闭合特殊近战消费者
 
+状态：已完成。逐实例近战骰面进入可见与实际攻击 profile；Mana、Vorpal/Vorpal2、Order 保持命中、
+暴击与资源 RNG 顺序，Impact/Stun 复用现有地震和眩晕事务，Blessed 接入善良牧师武器惩罚与装备
+诅咒抵抗。Wild 以现有可持久化状态承载五个全局槽位，按权威 100 权重表先抽未激活效果、再选择
+空槽或随机替换，14 种效果均持续两回合。新增状态仍使用既有 `StatusInstance` DTO，因此 Protocol
+保持 `1.223`、save v3 与 State Hash v105 均不推进。
+
 - Mana：每次有效近战按当前骰面计算资源成本，资源足够才增伤并扣除；
 - Vorpal/Vorpal2：闭合连锁伤害概率，并与现有暴击顺序保持一致；
 - Order：固定骰面结果并禁止普通暴击；

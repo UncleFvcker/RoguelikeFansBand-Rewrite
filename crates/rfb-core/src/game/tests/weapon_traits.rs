@@ -3,6 +3,7 @@
 use rfb_protocol::{MeleeDamageDiceDto, WeaponTraitDto};
 
 use super::{support::clear_monsters, *};
+use crate::effect::advance_status_ticks;
 use crate::game::player_stats::good_priest_weapon_penalty;
 
 fn weapon_index(game: &Game) -> usize {
@@ -452,4 +453,204 @@ fn blessed_weapon_resists_curses_and_exempts_good_priest_weapon_penalties() {
     ));
     assert_eq!(outcome.item_id, None);
     assert_eq!(no_candidate.rng.draw_counter, before);
+}
+
+fn wild_statuses(game: &Game) -> Vec<&StatusInstance> {
+    game.player
+        .statuses
+        .iter()
+        .filter(|status| {
+            status
+                .source_id
+                .as_deref()
+                .is_some_and(|source| source.starts_with("rfb.weapon.wild.slot."))
+        })
+        .collect()
+}
+
+#[test]
+fn wild_weapon_activates_on_hit_for_two_ticks_without_spending_rng_on_miss() {
+    let base = melee_game(0, "demo.build.warrior");
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut game = base.clone();
+            game.rng = RfbRng::seeded(*seed);
+            add_weapon_trait(&mut game, WeaponTraitDto::Wild, 1, 1);
+            add_weapon_trait(&mut game, WeaponTraitDto::Order, 1, 1);
+            resolve_melee(&mut game)
+                .iter()
+                .any(|event| matches!(event, DomainEvent::WildWeaponPowerActivated { .. }))
+        })
+        .expect("a deterministic wild weapon hit should exist");
+    let mut hit = base.clone();
+    hit.rng = RfbRng::seeded(seed);
+    add_weapon_trait(&mut hit, WeaponTraitDto::Wild, 1, 1);
+    add_weapon_trait(&mut hit, WeaponTraitDto::Order, 1, 1);
+    let events = resolve_melee(&mut hit);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::WildWeaponPowerActivated { source_item_id, .. }
+            if source_item_id == &hit.items[weapon_index(&hit)].id
+    )));
+    assert_eq!(wild_statuses(&hit).len(), 1);
+    assert_eq!(wild_statuses(&hit)[0].remaining_ticks, 2);
+    assert!(advance_status_ticks(&mut hit.player.statuses, 1).is_empty());
+    assert_eq!(wild_statuses(&hit)[0].remaining_ticks, 1);
+    assert_eq!(advance_status_ticks(&mut hit.player.statuses, 1).len(), 1);
+    assert!(wild_statuses(&hit).is_empty());
+
+    let mut missed = base.clone();
+    add_weapon_trait(&mut missed, WeaponTraitDto::Wild, 1, 1);
+    force_melee_misses(&mut missed);
+    let mut control = missed.clone();
+    clear_weapon_traits(&mut control);
+    resolve_melee(&mut missed);
+    resolve_melee(&mut control);
+    assert!(wild_statuses(&missed).is_empty());
+    assert_eq!(missed.rng.draw_counter, control.rng.draw_counter);
+}
+
+#[test]
+fn wild_weapon_selects_inactive_powers_before_filling_or_replacing_five_slots() {
+    let mut game = Game::new(0x5749_4c44_0005);
+    let mut events = Vec::new();
+    for _ in 0..5 {
+        game.resolve_wild_weapon_strike("test.weapon.wild", &mut events);
+    }
+    let before = wild_statuses(&game)
+        .into_iter()
+        .map(|status| (status.source_id.clone().unwrap(), status.kind_id.clone()))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(before.len(), 5);
+    assert_eq!(before.values().collect::<BTreeSet<_>>().len(), 5);
+    assert!(
+        wild_statuses(&game)
+            .iter()
+            .all(|status| status.remaining_ticks == 2)
+    );
+
+    game.resolve_wild_weapon_strike("test.weapon.wild", &mut events);
+    let after = wild_statuses(&game)
+        .into_iter()
+        .map(|status| (status.source_id.clone().unwrap(), status.kind_id.clone()))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(after.len(), 5);
+    assert_eq!(after.values().collect::<BTreeSet<_>>().len(), 5);
+    assert_eq!(
+        before
+            .values()
+            .filter(|kind| after.values().any(|after_kind| after_kind == *kind))
+            .count(),
+        4
+    );
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::WildWeaponPowerActivated { .. }))
+            .count(),
+        6
+    );
+}
+
+#[test]
+fn wild_weapon_weight_table_builds_all_fourteen_concrete_status_effects() {
+    let mut statuses = BTreeMap::new();
+    for seed in 0..10_000 {
+        let mut game = Game::new(seed);
+        game.progress.level = 50;
+        game.resolve_wild_weapon_strike("test.weapon.wild", &mut Vec::new());
+        let status = wild_statuses(&game)[0].clone();
+        statuses.entry(status.kind_id.clone()).or_insert(status);
+        if statuses.len() == 14 {
+            break;
+        }
+    }
+    assert_eq!(statuses.len(), 14);
+    assert_eq!(
+        statuses["rfb.status.infravision"]
+            .granted_equipment_bonuses
+            .infravision,
+        3
+    );
+    assert_eq!(statuses["rfb.status.blessed"].granted_modifiers.defense, 5);
+    assert_eq!(
+        statuses[STATUS_BERSERK]
+            .granted_equipment_bonuses
+            .melee_damage,
+        13
+    );
+    assert_eq!(
+        statuses[STATUS_BASIC_RESISTANCE].granted_resistances.len(),
+        5
+    );
+    assert_eq!(
+        statuses["rfb.status.stone-skin"].granted_modifiers.defense,
+        50
+    );
+    assert!(statuses["rfb.status.passwall"].grants_wall_passage);
+    assert_eq!(
+        statuses["rfb.status.wild-invulnerability"].incoming_damage_percent,
+        0
+    );
+    assert_eq!(statuses[STATUS_WRAITHFORM].incoming_damage_percent, 50);
+    assert_eq!(
+        statuses[STATUS_WRAITHFORM]
+            .granted_resistances
+            .get(&DamageType::Dark),
+        Some(&ResistanceLevel::Immune)
+    );
+
+    let mut magic = Game::new(0);
+    magic.progress.level = 50;
+    magic
+        .player
+        .statuses
+        .push(statuses[STATUS_MAGIC_RESISTANCE].clone());
+    assert!(magic.player_derived_stats().saving_throw_skill.value >= 145);
+    let mut light_speed = Game::new(0);
+    light_speed
+        .player
+        .statuses
+        .push(statuses[STATUS_LIGHT_SPEED].clone());
+    assert_eq!(light_speed.player_derived_stats().speed.value, 199);
+    let mut telepathy = Game::new(0);
+    telepathy
+        .player
+        .statuses
+        .push(statuses[STATUS_TELEPATHY].clone());
+    assert!(telepathy.player_has_telepathy());
+
+    let speed_seed = (0..10_000)
+        .find(|seed| {
+            let mut game = Game::new(*seed);
+            game.resolve_wild_weapon_strike("test.weapon.wild", &mut Vec::new());
+            wild_statuses(&game)[0].kind_id == STATUS_HASTE
+        })
+        .expect("a deterministic wild speed seed should exist");
+    let mut clobbered = Game::new(speed_seed);
+    clobbered.player.statuses.push(StatusInstance {
+        kind_id: STATUS_HASTE.to_owned(),
+        intensity: 1,
+        remaining_ticks: 20,
+        source_id: Some("test.normal-haste".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    clobbered.resolve_wild_weapon_strike("test.weapon.wild", &mut Vec::new());
+    assert_eq!(
+        clobbered
+            .player
+            .statuses
+            .iter()
+            .filter(|status| status.kind_id == STATUS_HASTE)
+            .count(),
+        1
+    );
+    assert_eq!(wild_statuses(&clobbered)[0].remaining_ticks, 2);
 }

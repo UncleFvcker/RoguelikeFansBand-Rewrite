@@ -300,6 +300,10 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         damage: DamageOutcome,
     },
+    WildWeaponPowerActivated {
+        source_item_id: String,
+        status_kind_id: String,
+    },
     MonsterMeleeAmnesia {
         source_kind_id: String,
         cleared_cells: u32,
@@ -2120,6 +2124,14 @@ impl DomainEvent {
                 GameEventOutcomeDto::Damage {
                     resolution: damage.into(),
                 },
+            ),
+            Self::WildWeaponPowerActivated {
+                source_item_id,
+                status_kind_id,
+            } => dto(
+                "weapon.wild-power-activated",
+                "weapon-wild-power-activated",
+                [("source", source_item_id), ("status", status_kind_id)],
             ),
             Self::MonsterMeleeAmnesia {
                 source_kind_id,

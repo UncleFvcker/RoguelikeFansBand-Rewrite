@@ -2542,6 +2542,34 @@ impl Game {
         } else {
             max_hp
         };
+        let speed = pipeline.resolve(StatKind::Speed, StatBounds::ACTOR_SPEED);
+        let speed = if include_equipment
+            && self.riding_actor_id.is_none()
+            && self.player_has_status_kind(STATUS_LIGHT_SPEED)
+        {
+            speed.with_modifier(
+                StatLayer::Status,
+                STATUS_LIGHT_SPEED,
+                199_i32.saturating_sub(speed.value),
+                StatBounds::ACTOR_SPEED,
+            )
+        } else {
+            speed
+        };
+        let saving_throw_skill =
+            pipeline.resolve(StatKind::SavingThrowSkill, StatBounds::NON_NEGATIVE);
+        let saving_throw_skill =
+            if include_equipment && self.player_has_status_kind(STATUS_MAGIC_RESISTANCE) {
+                let minimum = 95_i32.saturating_add(i32::from(self.progress.level));
+                saving_throw_skill.with_modifier(
+                    StatLayer::Status,
+                    STATUS_MAGIC_RESISTANCE,
+                    minimum.saturating_sub(saving_throw_skill.value).max(0),
+                    StatBounds::NON_NEGATIVE,
+                )
+            } else {
+                saving_throw_skill
+            };
         ActorDerivedStats {
             max_hp: if include_equipment {
                 apply_player_life_force(max_hp, self.progress.life_force)
@@ -2560,7 +2588,7 @@ impl Game {
                 definition,
                 StatBounds::NON_NEGATIVE,
             ),
-            speed: pipeline.resolve(StatKind::Speed, StatBounds::ACTOR_SPEED),
+            speed,
             melee_skill: pipeline.resolve(StatKind::MeleeSkill, StatBounds::NON_NEGATIVE),
             armor_class: apply_monster_power(
                 pipeline.resolve(StatKind::ArmorClass, StatBounds::NON_NEGATIVE),
@@ -2576,8 +2604,7 @@ impl Game {
             bash_power: pipeline.resolve(StatKind::BashPower, StatBounds::NON_NEGATIVE),
             search_skill: pipeline.resolve(StatKind::SearchSkill, StatBounds::NON_NEGATIVE),
             device_skill: pipeline.resolve(StatKind::DeviceSkill, StatBounds::NON_NEGATIVE),
-            saving_throw_skill: pipeline
-                .resolve(StatKind::SavingThrowSkill, StatBounds::NON_NEGATIVE),
+            saving_throw_skill,
             stealth_skill: pipeline.resolve(StatKind::StealthSkill, StatBounds::NON_NEGATIVE),
             perception_skill: pipeline.resolve(StatKind::PerceptionSkill, StatBounds::NON_NEGATIVE),
             disarm_skill: pipeline.resolve(StatKind::DisarmSkill, StatBounds::NON_NEGATIVE),

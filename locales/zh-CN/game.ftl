@@ -196,6 +196,7 @@ message-monster-earthquake = { $source }震碎了大地！
 message-weapon-impact-earthquake = { $source }震撼了大地！
 message-weapon-impact-earthquake-hit = { $source }引发的地震击中了目标。
 message-weapon-impact-earthquake-slew = { $source }引发的地震杀死了{ $target }。
+message-weapon-wild-power-activated = { $source }唤醒了{ $status }。
 message-monster-melee-amnesia = { $source }从你的记忆中抹去了{ $count }处地点。
 message-monster-time-ravaged = { $source }让时间侵蚀了你的{ $count }项属性。
 message-monster-blinked-target = { $source }把{ $target }闪现到了近处的新位置！

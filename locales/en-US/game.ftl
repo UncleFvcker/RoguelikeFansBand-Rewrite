@@ -196,6 +196,7 @@ message-monster-earthquake = { $source } shatters the ground!
 message-weapon-impact-earthquake = { $source } shakes the ground!
 message-weapon-impact-earthquake-hit = { $source }'s impact earthquake hits.
 message-weapon-impact-earthquake-slew = { $source }'s impact earthquake slays { $target }.
+message-weapon-wild-power-activated = { $source } awakens { $status }.
 message-monster-melee-amnesia = { $source } tears { $count } remembered places from your mind.
 message-monster-time-ravaged = { $source } turns time against { $count } of your attributes.
 message-monster-blinked-target = { $source } blinks { $target } to a nearby spot!
