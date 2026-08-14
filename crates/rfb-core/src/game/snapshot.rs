@@ -894,6 +894,7 @@ impl Game {
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
+                    absorbable: self.item_can_be_absorbed(item),
                     position: *position,
                     quantity: item.quantity,
                     inscription: item.inscription.clone(),
@@ -937,6 +938,7 @@ impl Game {
                                 .is_some_and(|state| state.current >= activation.cost)
                         })
                     }),
+                    absorbable: self.item_can_be_absorbed(item),
                     mount_usable: self.mount_item_is_usable(&item.kind_id),
                     capture_ball: self
                         .content

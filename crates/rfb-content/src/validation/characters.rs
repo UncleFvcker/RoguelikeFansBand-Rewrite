@@ -279,6 +279,7 @@ pub(super) fn validate_characters(
                 .is_some_and(|level| !(1..=100).contains(&level))
             || !(-1_000..=1_000).contains(&race.armor_class)
             || !(-1_000..=1_000).contains(&race.regeneration_rate_modifier_percent)
+            || !(1..=100).contains(&race.food_nutrition_divisor)
             || !race_level_stat_scalings_are_valid(&race.level_stat_scalings)
             || !(-20..=20).contains(&race.spell_capacity_bonus)
             || !level_resistances_are_valid(&mut race.level_resistances)

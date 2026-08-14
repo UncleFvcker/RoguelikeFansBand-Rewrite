@@ -60,11 +60,16 @@ pub(crate) fn valid_item_effect(
         ItemUseEffectDefinition::ApplyRestorativeFeast {
             healing_dice,
             healing_sides,
-        }
-        | ItemUseEffectDefinition::ApplyElvishWaybread {
+        } => (1..=100).contains(healing_dice) && (1..=10_000).contains(healing_sides),
+        ItemUseEffectDefinition::ApplyElvishWaybread {
+            nutrition,
             healing_dice,
             healing_sides,
-        } => (1..=100).contains(healing_dice) && (1..=10_000).contains(healing_sides),
+        } => {
+            *nutrition > 0
+                && (1..=100).contains(healing_dice)
+                && (1..=10_000).contains(healing_sides)
+        }
         ItemUseEffectDefinition::ApplySaltWater | ItemUseEffectDefinition::ApplyFastRecovery => {
             true
         }

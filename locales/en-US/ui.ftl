@@ -435,6 +435,7 @@ item-identification-identified-ego = Fully identified · { $count } ego properti
 item-modifier-defense = Defense { $value }
 action-inventory-equip = Equip
 action-inventory-use = Use
+action-inventory-absorb = Absorb device
 action-inventory-use-on-mount = Give to mount
 action-equipment-refuel = Refuel
 action-equipment-activate = Activate

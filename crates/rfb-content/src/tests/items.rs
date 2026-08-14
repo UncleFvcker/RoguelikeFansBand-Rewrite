@@ -737,6 +737,7 @@ fn elvish_waybread_keeps_original_shape_effect_and_town_acquisition() {
     assert!(matches!(
         waybread.use_action.as_ref().map(|action| &action.effect),
         Some(ItemUseEffectDefinition::ApplyElvishWaybread {
+            nutrition: 7_500,
             healing_dice: 4,
             healing_sides: 8,
         })

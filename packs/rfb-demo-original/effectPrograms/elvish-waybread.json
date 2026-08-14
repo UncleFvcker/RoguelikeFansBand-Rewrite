@@ -6,6 +6,7 @@
   "steps": [
     {
       "type": "apply-elvish-waybread",
+      "nutrition": 7500,
       "healingDice": 4,
       "healingSides": 8
     }

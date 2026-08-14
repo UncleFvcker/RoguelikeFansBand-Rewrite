@@ -7785,6 +7785,22 @@
             "itemId": {
               "type": "string"
             },
+            "type": {
+              "type": "string",
+              "const": "absorb-device"
+            }
+          },
+          "required": [
+            "type",
+            "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
             "target": {
               "anyOf": [
                 {
@@ -8987,6 +9003,9 @@
     "InventoryItemDto": {
       "type": "object",
       "properties": {
+        "absorbable": {
+          "type": "boolean"
+        },
         "activation": {
           "anyOf": [
             {
@@ -9372,6 +9391,9 @@
     "ItemDto": {
       "type": "object",
       "properties": {
+        "absorbable": {
+          "type": "boolean"
+        },
         "curse": {
           "anyOf": [
             {

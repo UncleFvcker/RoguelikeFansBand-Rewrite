@@ -89,6 +89,7 @@ export interface AppDom {
   readonly inventoryCount: HTMLElement;
   readonly inventorySelectionCount: HTMLElement;
   readonly inventoryUse: HTMLButtonElement;
+  readonly inventoryAbsorb: HTMLButtonElement;
   readonly inventoryUseOnMount: HTMLButtonElement;
   readonly inventoryAppraise: HTMLButtonElement;
   readonly inventoryEquip: HTMLButtonElement;
@@ -218,6 +219,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     inventoryCount: element<HTMLElement>(document, "inventory-count"),
     inventorySelectionCount: element<HTMLElement>(document, "inventory-selection-count"),
     inventoryUse: element<HTMLButtonElement>(document, "inventory-use"),
+    inventoryAbsorb: element<HTMLButtonElement>(document, "inventory-absorb"),
     inventoryUseOnMount: element<HTMLButtonElement>(document, "inventory-use-on-mount"),
     inventoryAppraise: element<HTMLButtonElement>(document, "inventory-appraise"),
     inventoryEquip: element<HTMLButtonElement>(document, "inventory-equip"),

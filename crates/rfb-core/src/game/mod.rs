@@ -2242,6 +2242,21 @@ impl Game {
                     events.push(DomainEvent::FloorTransitionUnavailable);
                 }
             }
+            GameAction::AbsorbDevice { item_id } => {
+                if let Some(outcome) = self.absorb_device(&item_id) {
+                    events.push(DomainEvent::DeviceAbsorbed {
+                        item_id: outcome.item_id,
+                        item_kind_id: outcome.item_kind_id,
+                        charges_before: outcome.charges_before,
+                        charges_after: outcome.charges_after,
+                        drained: outcome.drained,
+                        nutrition_before: outcome.nutrition_before,
+                        nutrition_after: outcome.nutrition_after,
+                    });
+                } else {
+                    events.push(DomainEvent::DeviceAbsorptionUnavailable { item_id });
+                }
+            }
             GameAction::UseItem {
                 item_id,
                 target,

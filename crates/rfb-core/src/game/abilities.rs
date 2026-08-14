@@ -6124,15 +6124,7 @@ impl Game {
             }
             destroyed = true;
         } else {
-            let charges = self.items[index]
-                .charges
-                .as_mut()
-                .expect("planned magic drain item must retain charges");
-            charges.current = if failed {
-                0
-            } else {
-                charges.current.saturating_sub(drained)
-            };
+            self.decrease_item_charges(index, if failed { charges_before } else { drained });
         }
         let resource_id = self
             .casting_profile()
@@ -8754,8 +8746,7 @@ impl Game {
                     .iter()
                     .find(|item| {
                         item.id == *item_id
-                            && (item.location == ItemLocation::Inventory
-                                || item.location == ItemLocation::Ground(self.player.position))
+                            && self.item_is_in_pack_or_at_feet(item)
                             && item.charges.is_some_and(|charges| charges.current > 0)
                     })
                     .map(|_| AbilityTargetPlan::Item {

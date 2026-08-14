@@ -794,6 +794,18 @@ pub(crate) enum DomainEvent {
         trace: ProjectileTrace,
     },
     ItemThrowUnavailable,
+    DeviceAbsorbed {
+        item_id: String,
+        item_kind_id: String,
+        charges_before: u32,
+        charges_after: u32,
+        drained: u32,
+        nutrition_before: u16,
+        nutrition_after: u16,
+    },
+    DeviceAbsorptionUnavailable {
+        item_id: String,
+    },
     ItemUsed {
         source_kind_id: String,
         display_name_key: String,
@@ -3306,6 +3318,36 @@ impl DomainEvent {
             Self::ItemThrowUnavailable => {
                 dto_without_args("item.throw-unavailable", "item-throw-unavailable")
             }
+            Self::DeviceAbsorbed {
+                item_id,
+                item_kind_id,
+                charges_before,
+                charges_after,
+                drained,
+                nutrition_before,
+                nutrition_after,
+            } => dto(
+                "item.device-absorbed",
+                if drained == 0 {
+                    "item-device-empty"
+                } else {
+                    "item-device-absorbed"
+                },
+                [
+                    ("item", item_id),
+                    ("target", item_kind_id),
+                    ("amount", drained.to_string()),
+                    ("chargesBefore", charges_before.to_string()),
+                    ("chargesAfter", charges_after.to_string()),
+                    ("nutritionBefore", nutrition_before.to_string()),
+                    ("nutritionAfter", nutrition_after.to_string()),
+                ],
+            ),
+            Self::DeviceAbsorptionUnavailable { item_id } => dto(
+                "item.device-absorb-unavailable",
+                "item-device-absorb-unavailable",
+                [("item", item_id)],
+            ),
             Self::ItemUsed {
                 source_kind_id,
                 display_name_key,

@@ -431,6 +431,7 @@ item-identification-identified-ego = 完全鉴定 · ego 词条 { $count } 项
 item-modifier-defense = 防御 { $value }
 action-inventory-equip = 装备所选
 action-inventory-use = 使用所选
+action-inventory-absorb = 吸收装置
 action-inventory-use-on-mount = 给坐骑使用
 action-equipment-refuel = 补充燃料
 action-equipment-activate = 激活

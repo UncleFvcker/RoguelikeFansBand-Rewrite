@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.358.0");
+    assert_eq!(catalog.pack_version(), "1.359.0");
     assert_eq!(catalog.races().count(), 55);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1510,6 +1510,20 @@ fn hidden_golem_has_authoritative_level_scaled_intrinsics() {
         ["rfb.status.paralysis", "rfb.status.stun"]
     );
     assert!(!golem.tags.iter().any(|tag| tag == "rfb-compatibility"));
+}
+
+#[test]
+fn hidden_golem_declares_construct_metabolism_tags() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let golem = catalog
+        .race("rfb-legacy.race.golem")
+        .expect("hidden Golem race");
+
+    assert_eq!(golem.food_nutrition_divisor, 20);
+    for tag in ["device-eater", "nonliving", "slow-digestion"] {
+        assert!(golem.tags.iter().any(|candidate| candidate == tag));
+    }
 }
 
 #[test]

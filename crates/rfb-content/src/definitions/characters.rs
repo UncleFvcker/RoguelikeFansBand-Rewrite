@@ -149,6 +149,9 @@ pub struct RaceDefinition {
     /// Additive percentage adjustment to the natural HP regeneration rate.
     #[serde(default)]
     pub regeneration_rate_modifier_percent: i32,
+    /// Divisor applied to nutrition gained from ordinary food effects.
+    #[serde(default = "default_food_nutrition_divisor")]
+    pub food_nutrition_divisor: u16,
     /// Intrinsic derived-stat adjustments scaled from character level while
     /// this is the currently effective race.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -239,6 +242,10 @@ pub enum RaceMutationSelectionDefinition {
 
 const fn default_shop_adjust_percent() -> u16 {
     110
+}
+
+const fn default_food_nutrition_divisor() -> u16 {
+    1
 }
 
 const fn is_false(value: &bool) -> bool {

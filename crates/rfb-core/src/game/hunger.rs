@@ -98,9 +98,15 @@ impl Game {
             .is_multiple_of(NORMAL_DIGESTION_INTERVAL_TICKS)
         {
             let speed = derived_speed(&self.player_derived_stats().speed);
-            let digestion = u16::try_from(energy_gain(speed))
-                .expect("scheduler energy gain must fit nutrition")
-                .clamp(1, 100);
+            let mut digestion = u16::try_from(energy_gain(speed))
+                .expect("scheduler energy gain must fit nutrition");
+            if self
+                .character_definitions()
+                .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "slow-digestion"))
+            {
+                digestion /= 2;
+            }
+            let digestion = digestion.clamp(1, 100);
             self.nutrition = self.nutrition.saturating_sub(digestion);
         }
         let after_state = self.nutrition_state();

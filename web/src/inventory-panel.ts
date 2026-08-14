@@ -28,6 +28,7 @@ type InventoryDom = Pick<
   | "inventoryCount"
   | "inventorySelectionCount"
   | "inventoryUse"
+  | "inventoryAbsorb"
   | "inventoryUseOnMount"
   | "inventoryAppraise"
   | "inventoryEquip"
@@ -108,6 +109,7 @@ export class InventoryPanel {
     if (this.#installed) return;
     this.#installed = true;
     this.#dom.inventoryUse.addEventListener("click", this.#handleUse);
+    this.#dom.inventoryAbsorb.addEventListener("click", this.#handleAbsorb);
     this.#dom.inventoryUseOnMount.addEventListener("click", this.#handleUseOnMount);
     this.#dom.inventoryAppraise.addEventListener("click", this.#handleAppraise);
     this.#dom.inventoryEquip.addEventListener("click", this.#handleEquip);
@@ -121,6 +123,7 @@ export class InventoryPanel {
     if (!this.#installed) return;
     this.#installed = false;
     this.#dom.inventoryUse.removeEventListener("click", this.#handleUse);
+    this.#dom.inventoryAbsorb.removeEventListener("click", this.#handleAbsorb);
     this.#dom.inventoryUseOnMount.removeEventListener("click", this.#handleUseOnMount);
     this.#dom.inventoryAppraise.removeEventListener("click", this.#handleAppraise);
     this.#dom.inventoryEquip.removeEventListener("click", this.#handleEquip);
@@ -195,6 +198,14 @@ export class InventoryPanel {
           !selected[0].requiresRechargeTargets) ||
         selectedRechargingItems(selected)
       );
+    this.#dom.inventoryAbsorb.disabled =
+      this.#state.busy ||
+      this.#state.playerDead ||
+      worldMap ||
+      absorbableItemCandidates(
+        this.#state,
+        (displayNameKey, kindId) => this.#formatter.visibleItemName(displayNameKey, kindId),
+      ).length === 0;
     this.#dom.inventoryUseOnMount.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
@@ -274,6 +285,18 @@ export class InventoryPanel {
 
   readonly #handleUse = (): void => {
     void this.#useSelectedItem();
+  };
+
+  readonly #handleAbsorb = (): void => {
+    if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+    this.#onInventoryInteraction();
+    this.#selectItemTargetFrom(
+      absorbableItemCandidates(
+        this.#state,
+        (displayNameKey, kindId) => this.#formatter.visibleItemName(displayNameKey, kindId),
+      ),
+      (itemId) => this.#dispatch({ type: "absorb-device", itemId }),
+    );
   };
 
   readonly #handleUseOnMount = (): void => {
@@ -1109,6 +1132,25 @@ export function itemTargetCandidates(
       id: item.id,
       label: visibleItemName(item.displayNameKey, item.kindId),
     }));
+}
+
+export function absorbableItemCandidates(
+  state: Pick<AppState, "inventory" | "status">,
+  visibleItemName: (displayNameKey: string, kindId: string) => string,
+): Array<{ id: string; label: string }> {
+  const playerPosition = state.status?.player.position;
+  const groundItems = playerPosition
+    ? state.status?.items.filter(
+        (item) =>
+          item.absorbable &&
+          item.position.x === playerPosition.x &&
+          item.position.y === playerPosition.y,
+      ) ?? []
+    : [];
+  return [...state.inventory.filter((item) => item.absorbable), ...groundItems].map((item) => ({
+    id: item.id,
+    label: visibleItemName(item.displayNameKey, item.kindId),
+  }));
 }
 
 export function parseDropQuantity(value: string, itemQuantity: number): number | undefined {

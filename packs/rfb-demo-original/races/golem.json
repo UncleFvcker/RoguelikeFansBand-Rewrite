@@ -67,6 +67,7 @@
   "descriptionKey": "race-legacy-golem-description",
   "experiencePercent": 185,
   "formatVersion": 1,
+  "foodNutritionDivisor": 20,
   "holdLifeMinimumLevel": 35,
   "id": "rfb-legacy.race.golem",
   "infravision": 4,
@@ -104,7 +105,10 @@
     "rfb.status.stun"
   ],
   "tags": [
+    "device-eater",
     "legacy-import",
+    "nonliving",
+    "slow-digestion",
     "polymorph-candidate"
   ]
 }

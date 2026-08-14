@@ -769,6 +769,14 @@
       "minimum": 0,
       "type": "integer"
     },
+    "foodNutritionDivisor": {
+      "default": 1,
+      "description": "Divisor applied to nutrition gained from ordinary food effects.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "formatVersion": {
       "format": "uint16",
       "maximum": 65535,

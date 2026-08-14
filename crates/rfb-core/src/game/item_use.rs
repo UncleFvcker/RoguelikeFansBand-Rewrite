@@ -128,6 +128,7 @@ impl Game {
     fn resolve_item_elvish_waybread(
         &mut self,
         source_kind_id: &str,
+        nutrition: u16,
         healing_dice: u16,
         healing_sides: u16,
         events: &mut Vec<DomainEvent>,
@@ -150,8 +151,45 @@ impl Game {
             },
             events,
         );
-        self.resolve_item_satisfy_hunger(source_kind_id, true, events);
+        if self.player_food_nutrition_divisor() > 1 {
+            self.resolve_item_nutrition_increase(source_kind_id, nutrition, events);
+        } else {
+            self.resolve_item_satisfy_hunger(source_kind_id, true, events);
+        }
         true
+    }
+
+    fn resolve_item_nutrition_increase(
+        &mut self,
+        source_kind_id: &str,
+        amount: u16,
+        events: &mut Vec<DomainEvent>,
+    ) -> bool {
+        let before_state = self.nutrition_state();
+        let divisor = self.player_food_nutrition_divisor();
+        let amount = amount / divisor;
+        let applied = self.increase_nutrition(amount);
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::ItemNutritionIncreased {
+            source_kind_id: source_kind_id.to_owned(),
+            display_name_key: self.item_display_name_key(source_kind_id),
+            amount: applied,
+            nutrition: self.nutrition,
+        });
+        let after_state = self.nutrition_state();
+        if after_state != before_state {
+            events.push(DomainEvent::NutritionStateChanged {
+                from: before_state,
+                to: after_state,
+                nutrition: self.nutrition,
+            });
+        }
+        true
+    }
+
+    fn player_food_nutrition_divisor(&self) -> u16 {
+        self.character_definitions()
+            .map_or(1, |(_, race, _, _)| race.food_nutrition_divisor)
     }
 
     fn resolve_starvation_paralysis_antidote(
@@ -4504,24 +4542,7 @@ impl Game {
                 true
             }
             ItemUseEffectDefinition::IncreaseNutrition { amount } => {
-                let before_state = self.nutrition_state();
-                let applied = self.increase_nutrition(*amount);
-                self.mark_item_aware(source_kind_id);
-                events.push(DomainEvent::ItemNutritionIncreased {
-                    source_kind_id: source_kind_id.to_owned(),
-                    display_name_key: self.item_display_name_key(source_kind_id),
-                    amount: applied,
-                    nutrition: self.nutrition,
-                });
-                let after_state = self.nutrition_state();
-                if after_state != before_state {
-                    events.push(DomainEvent::NutritionStateChanged {
-                        from: before_state,
-                        to: after_state,
-                        nutrition: self.nutrition,
-                    });
-                }
-                true
+                self.resolve_item_nutrition_increase(source_kind_id, *amount, events)
             }
             ItemUseEffectDefinition::SatisfyHunger => {
                 self.resolve_item_satisfy_hunger(source_kind_id, false, events)
@@ -4621,10 +4642,12 @@ impl Game {
                 self.resolve_item_vitality_restoration_effect(source_kind_id, effect, events)
             }
             ItemUseEffectDefinition::ApplyElvishWaybread {
+                nutrition,
                 healing_dice,
                 healing_sides,
             } => self.resolve_item_elvish_waybread(
                 source_kind_id,
+                *nutrition,
                 *healing_dice,
                 *healing_sides,
                 events,

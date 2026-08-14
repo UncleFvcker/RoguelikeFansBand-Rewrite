@@ -669,6 +669,12 @@
               "minimum": 0,
               "type": "integer"
             },
+            "nutrition": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
             "type": {
               "const": "apply-elvish-waybread",
               "type": "string"
@@ -676,6 +682,7 @@
           },
           "required": [
             "type",
+            "nutrition",
             "healingDice",
             "healingSides"
           ],

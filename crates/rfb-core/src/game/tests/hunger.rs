@@ -498,6 +498,244 @@ fn digestion_uses_world_tick_and_current_scheduler_speed() {
 }
 
 #[test]
+fn golem_slow_digestion_and_food_magic_follow_construct_metabolism() {
+    let mut digestion = hidden_golem_game(360);
+    digestion.nutrition = 9_000;
+    digestion.world_tick = 50;
+    digestion.process_hunger(&mut Vec::new());
+    assert_eq!(digestion.nutrition, 8_995);
+
+    digestion.nutrition = rfb_protocol::PLAYER_NUTRITION_MAXIMUM;
+    digestion.world_tick = 60;
+    digestion.process_hunger(&mut Vec::new());
+    assert_eq!(digestion.nutrition, 14_900);
+
+    let mut mushroom = hidden_golem_game(361);
+    clear_monsters(&mut mushroom);
+    mushroom.nutrition = 9_000;
+    mushroom.player.hp = 1;
+    give_inventory_item(
+        &mut mushroom,
+        "test.item.golem-mushroom",
+        "demo.item.fast-recovery-mushroom",
+    );
+    let update = dispatch_next(
+        &mut mushroom,
+        GameCommand::UseItem {
+            item_id: "test.item.golem-mushroom".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(mushroom.nutrition, 9_025);
+    assert!(mushroom.player.hp > 1);
+    assert!(mushroom.player_has_status_kind(STATUS_REGENERATION));
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.use-food"
+            && event
+                .args
+                .get("amount")
+                .is_some_and(|amount| amount == "25")
+    }));
+
+    let mut waybread = hidden_golem_game(362);
+    clear_monsters(&mut waybread);
+    waybread.nutrition = 9_000;
+    waybread.player.hp = 1;
+    waybread.player.statuses.push(StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 1,
+        remaining_ticks: 2_000,
+        source_id: None,
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    });
+    give_inventory_item(
+        &mut waybread,
+        "test.item.golem-waybread",
+        "demo.item.piece-of-elvish-waybread",
+    );
+    dispatch_next(
+        &mut waybread,
+        GameCommand::UseItem {
+            item_id: "test.item.golem-waybread".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(waybread.nutrition, 9_375);
+    assert!(waybread.player.hp > 1);
+    assert_eq!(
+        waybread
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_POISON)
+            .expect("Waybread should reduce rather than remove this poison")
+            .remaining_ticks,
+        990
+    );
+}
+
+#[test]
+fn golem_absorbs_inventory_and_floor_devices_without_consuming_them() {
+    let mut human =
+        Game::new_with_build(363, RFB_WARRIOR_BUILD_ID).expect("living Warrior should create");
+    give_inventory_item(
+        &mut human,
+        "test.item.human-device",
+        "demo.item.detect-objects-staff",
+    );
+    assert!(
+        !human
+            .snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.id == "test.item.human-device")
+            .expect("projected human device")
+            .absorbable
+    );
+
+    let mut game = hidden_golem_game(363);
+    clear_monsters(&mut game);
+    game.nutrition = 1_000;
+    give_inventory_item(
+        &mut game,
+        "test.item.golem-device.pack",
+        "demo.item.detect-objects-staff",
+    );
+    let pack = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.golem-device.pack")
+        .expect("pack device");
+    pack.charges.as_mut().expect("device charges").current = 2;
+    assert!(
+        game.snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.id == "test.item.golem-device.pack")
+            .expect("projected pack device")
+            .absorbable
+    );
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::AbsorbDevice {
+            item_id: "test.item.golem-device.pack".to_owned(),
+        },
+    );
+    assert_eq!(game.nutrition, 6_000);
+    assert_eq!(game.world_tick, 10);
+    assert_eq!(game.turn, 1);
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.golem-device.pack")
+            .and_then(|item| item.charges)
+            .expect("absorbed device remains")
+            .current,
+        0
+    );
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.device-absorbed"
+            && event.args.get("amount").is_some_and(|amount| amount == "2")
+            && event
+                .args
+                .get("chargesAfter")
+                .is_some_and(|charges| charges == "0")
+    }));
+
+    give_inventory_item(
+        &mut game,
+        "test.item.golem-device.floor",
+        "demo.item.detection-rod",
+    );
+    let floor = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.golem-device.floor")
+        .expect("floor device");
+    let cost = floor.activation.as_ref().expect("device activation").cost;
+    floor.charges.as_mut().expect("device charges").current = cost + 3;
+    floor.location = ItemLocation::Ground(game.player.position);
+    game.item_property_knowledge
+        .entry("test.item.golem-device.floor".to_owned())
+        .or_default()
+        .discovered = true;
+    assert!(
+        game.snapshot()
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.golem-device.floor")
+            .expect("projected floor device")
+            .absorbable
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::AbsorbDevice {
+            item_id: "test.item.golem-device.floor".to_owned(),
+        },
+    );
+    assert_eq!(game.nutrition, 11_000);
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.golem-device.floor")
+            .and_then(|item| item.charges)
+            .expect("floor device remains")
+            .current,
+        3
+    );
+}
+
+#[test]
+fn empty_device_absorption_spends_a_turn_without_changing_energy_or_food() {
+    let mut game = hidden_golem_game(364);
+    clear_monsters(&mut game);
+    game.nutrition = 9_000;
+    give_inventory_item(
+        &mut game,
+        "test.item.golem-device.empty",
+        "demo.item.detect-objects-staff",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.golem-device.empty")
+        .and_then(|item| item.charges.as_mut())
+        .expect("empty device charges")
+        .current = 0;
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::AbsorbDevice {
+            item_id: "test.item.golem-device.empty".to_owned(),
+        },
+    );
+    assert_eq!(game.nutrition, 9_000);
+    assert_eq!(game.world_tick, 10);
+    assert_eq!(game.turn, 1);
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == "test.item.golem-device.empty")
+            .and_then(|item| item.charges)
+            .expect("empty device remains")
+            .current,
+        0
+    );
+    assert!(update.events.iter().any(|event| {
+        event.kind == "item.device-absorbed"
+            && event.args.get("amount").is_some_and(|amount| amount == "0")
+            && event.message_key == "item-device-empty"
+    }));
+}
+
+#[test]
 fn wait_and_rest_share_the_hunger_world_clock() {
     let mut waiting = Game::new(42);
     waiting.entities.clear();

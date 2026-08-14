@@ -403,6 +403,7 @@ pub enum ItemUseEffectDefinition {
         healing_sides: u16,
     },
     ApplyElvishWaybread {
+        nutrition: u16,
         healing_dice: u16,
         healing_sides: u16,
     },

@@ -743,3 +743,8 @@ State Hash Schema v103；save 容器保持 v1，旧开发存档不兼容。
 怪物若没有音波抗性则进行等级检定并可能眩晕；反射回玩家时按原版等概率进入碎片/流血或
 音波/眩晕分支，并复用现有元素库存损坏事务。该变化不增加命令、权威状态或 save 字段，
 State Hash Schema 保持 v104，save header/payload schema 保持 v2。
+
+协议 1.213 增加独立的 `AbsorbDevice` 命令，并在背包与地面物品投影增加默认 `false` 的
+`absorbable`。有效种族可从背包或脚下吸收装置的一次使用充能并恢复营养；该事务不复用普通
+`UseItem` 的装置激活路径，也不增加权威状态或 save 字段。State Hash Schema 保持 v104，
+save header/payload schema 保持 v2。

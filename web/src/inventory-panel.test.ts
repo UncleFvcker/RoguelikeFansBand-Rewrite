@@ -5,12 +5,49 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  absorbableItemCandidates,
   formatTenthsPound,
   itemIdentificationMessageKey,
   itemTargetCandidates,
   parseDropQuantity,
   selectedRechargingItems,
 } from "./inventory-panel.ts";
+
+test("device absorption candidates include the pack and only devices underfoot", () => {
+  const state = {
+    inventory: [
+      { id: "pack", kindId: "item.pack", displayNameKey: "pack", absorbable: true },
+      { id: "food", kindId: "item.food", displayNameKey: "food", absorbable: false },
+    ],
+    status: {
+      player: { position: { x: 4, y: 7 } },
+      items: [
+        {
+          id: "floor",
+          kindId: "item.floor",
+          displayNameKey: "floor",
+          position: { x: 4, y: 7 },
+          absorbable: true,
+        },
+        {
+          id: "distant",
+          kindId: "item.distant",
+          displayNameKey: "distant",
+          position: { x: 5, y: 7 },
+          absorbable: true,
+        },
+      ],
+    },
+  };
+
+  assert.deepEqual(
+    absorbableItemCandidates(state, (displayNameKey) => displayNameKey),
+    [
+      { id: "pack", label: "pack" },
+      { id: "floor", label: "floor" },
+    ],
+  );
+});
 
 test("inventory quantity parsing preserves whole-stack boundaries", () => {
   assert.equal(parseDropQuantity("1", 3), 1);

@@ -9,6 +9,9 @@ use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum GameAction {
+    AbsorbDevice {
+        item_id: String,
+    },
     AcceptTask {
         facility_id: String,
         task_id: String,
@@ -237,6 +240,7 @@ impl GameAction {
 impl From<GameCommand> for GameAction {
     fn from(command: GameCommand) -> Self {
         match command {
+            GameCommand::AbsorbDevice { item_id } => Self::AbsorbDevice { item_id },
             GameCommand::AcceptTask {
                 facility_id,
                 task_id,

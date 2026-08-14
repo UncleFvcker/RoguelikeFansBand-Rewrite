@@ -163,7 +163,8 @@ export class PlayerUiLayout {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     if (
-      (this.#openPage === "inventory" && target.closest("#inventory-use")) ||
+      (this.#openPage === "inventory" &&
+        target.closest("#inventory-use, #inventory-absorb")) ||
       (this.#openPage === "ability" && target.closest(".ability-cast-action"))
     ) {
       this.closePage();

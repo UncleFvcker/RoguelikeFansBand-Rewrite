@@ -220,34 +220,6 @@ fn draconian_reward_game() -> Game {
     draconian_reward_game_for_build("demo.build.high-mage-death")
 }
 
-fn hidden_golem_catalog() -> Arc<rfb_content::ContentCatalog> {
-    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(std::path::Path::parent)
-        .expect("core crate should be inside the workspace")
-        .join("packs/rfb-demo-original");
-    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
-    artifact
-        .content
-        .races
-        .iter_mut()
-        .find(|race| race.id == "rfb-legacy.race.golem")
-        .expect("hidden Golem race")
-        .tags
-        .push("rfb-compatibility".to_owned());
-    artifact
-        .content
-        .builds
-        .iter_mut()
-        .find(|build| build.id == "demo.build.warrior")
-        .expect("Warrior build")
-        .race_id = "rfb-legacy.race.golem".to_owned();
-    Arc::new(rfb_content::ContentCatalog::from_artifact(
-        rfb_content::encode_content(artifact.content)
-            .expect("hidden Golem test content should encode"),
-    ))
-}
-
 fn species_contribution(stat: &DerivedStat, race_id: &str) -> i32 {
     stat.contributions
         .iter()

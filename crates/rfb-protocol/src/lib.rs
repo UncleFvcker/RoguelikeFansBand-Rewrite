@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.212";
+pub const PROTOCOL_VERSION: &str = "1.213";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
 
@@ -279,6 +279,9 @@ pub enum GameCommand {
         direction: Direction,
     },
     TraverseStairs,
+    AbsorbDevice {
+        item_id: String,
+    },
     UseItem {
         item_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3220,6 +3223,8 @@ pub struct ItemDto {
     pub display_name_key: String,
     #[serde(default)]
     pub knowledge: ItemKnowledgeDto,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub absorbable: bool,
     pub position: Position,
     pub quantity: u32,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3457,6 +3462,8 @@ pub struct InventoryItemDto {
     pub knowledge: ItemKnowledgeDto,
     #[serde(default)]
     pub usable: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub absorbable: bool,
     #[serde(default)]
     pub mount_usable: bool,
     #[serde(default)]
@@ -5001,6 +5008,9 @@ mod tests {
                 item_id: "demo.item.ration-of-food.1".to_owned(),
                 target: None,
             },
+            GameCommand::AbsorbDevice {
+                item_id: "demo.item.detect-objects-staff.1".to_owned(),
+            },
             GameCommand::UseItemByGlyph {
                 item_id: "demo.item.glyph-severance-scroll.1".to_owned(),
                 glyph: "o".to_owned(),
@@ -5238,6 +5248,7 @@ mod tests {
                 kind_id: "demo.item.shard".to_owned(),
                 display_name_key: "item-demo-shard-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
+                absorbable: false,
                 position: Position { x: 0, y: 0 },
                 quantity: 2,
                 inscription: None,
@@ -5253,6 +5264,7 @@ mod tests {
                 display_name_key: "item-demo-charm-name".to_owned(),
                 knowledge: ItemKnowledgeDto::Aware,
                 usable: false,
+                absorbable: false,
                 mount_usable: false,
                 capture_ball: false,
                 captured_actor: None,

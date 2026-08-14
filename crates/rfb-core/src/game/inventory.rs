@@ -214,6 +214,17 @@ pub(super) struct DeviceRechargeOutcome {
     pub(super) target: InventoryItemRechargeOutcome,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) struct DeviceAbsorptionOutcome {
+    pub(super) item_id: String,
+    pub(super) item_kind_id: String,
+    pub(super) charges_before: u32,
+    pub(super) charges_after: u32,
+    pub(super) drained: u32,
+    pub(super) nutrition_before: u16,
+    pub(super) nutrition_after: u16,
+}
+
 pub(super) enum PickUpOutcome {
     Picked {
         kind_id: String,
@@ -1427,9 +1438,78 @@ impl Game {
     }
 
     pub(super) fn item_can_receive_player_recharge(&self, item: &ItemInstance) -> bool {
-        (item.location == ItemLocation::Inventory
-            || item.location == ItemLocation::Ground(self.player.position))
-            && self.item_has_recharge_capacity(item)
+        self.item_is_in_pack_or_at_feet(item) && self.item_has_recharge_capacity(item)
+    }
+
+    pub(super) fn item_can_be_absorbed(&self, item: &ItemInstance) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, race, _, _)| race.tags.iter().any(|tag| tag == "device-eater"))
+            && self.item_is_in_pack_or_at_feet(item)
+            && self.item_is_device(item)
+            && item.charges.is_some()
+            && self.item_device_charge_cost(item).is_some()
+    }
+
+    pub(super) fn absorb_device(&mut self, item_id: &str) -> Option<DeviceAbsorptionOutcome> {
+        let index = self
+            .items
+            .iter()
+            .position(|item| item.id == item_id && self.item_can_be_absorbed(item))?;
+        let item_kind_id = self.items[index].kind_id.clone();
+        let cost = self.item_device_charge_cost(&self.items[index])?;
+        let nutrition_before = self.nutrition;
+        let (charges_before, charges_after, drained) = self.decrease_item_charges(index, cost);
+        if drained > 0 {
+            self.increase_nutrition(5_000);
+        }
+        Some(DeviceAbsorptionOutcome {
+            item_id: item_id.to_owned(),
+            item_kind_id,
+            charges_before,
+            charges_after,
+            drained,
+            nutrition_before,
+            nutrition_after: self.nutrition,
+        })
+    }
+
+    pub(super) fn decrease_item_charges(
+        &mut self,
+        item_index: usize,
+        requested: u32,
+    ) -> (u32, u32, u32) {
+        let charges = self.items[item_index]
+            .charges
+            .as_mut()
+            .expect("preflighted charged item must retain energy state");
+        let before = charges.current;
+        let drained = requested.min(before);
+        charges.current -= drained;
+        (before, charges.current, drained)
+    }
+
+    pub(super) fn item_is_in_pack_or_at_feet(&self, item: &ItemInstance) -> bool {
+        item.location == ItemLocation::Inventory
+            || item.location == ItemLocation::Ground(self.player.position)
+    }
+
+    fn item_is_device(&self, item: &ItemInstance) -> bool {
+        self.content
+            .item(&item.kind_id)
+            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "device"))
+    }
+
+    fn item_device_charge_cost(&self, item: &ItemInstance) -> Option<u32> {
+        item.activation
+            .as_ref()
+            .map(|activation| activation.cost)
+            .or_else(|| {
+                self.content
+                    .item(&item.kind_id)
+                    .and_then(|definition| definition.use_action.as_ref())
+                    .and_then(|action| action.charges)
+                    .map(|charges| charges.cost)
+            })
     }
 
     fn item_has_recharge_capacity(&self, item: &ItemInstance) -> bool {
@@ -1454,10 +1534,7 @@ impl Game {
 
     pub(super) fn item_can_supply_recharge(&self, item: &ItemInstance) -> bool {
         item.location == ItemLocation::Inventory
-            && self
-                .content
-                .item(&item.kind_id)
-                .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "device"))
+            && self.item_is_device(item)
             && item.charges.is_some_and(|charges| charges.current > 0)
     }
 
