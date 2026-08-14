@@ -121,6 +121,10 @@ mod chaos_patron;
 mod damage;
 mod death;
 mod environment_combat;
+// E1 establishes the authoritative selector before any player-reachable
+// generation policy is allowed to consume it.
+#[allow(dead_code)]
+mod ego;
 mod floor;
 mod gold;
 mod ground_item_effects;

@@ -20,12 +20,23 @@ pub(super) fn validate_affixes(
     all_ids: &mut BTreeSet<String>,
 ) -> Result<AffixValidationOutputs, ContentError> {
     let mut affix_ids = BTreeSet::new();
+    let mut rfb_ego_source_indices = BTreeSet::new();
     for affix in affixes.iter_mut() {
         require_schema(&affix.schema, AFFIX_SCHEMA, &affix.id)?;
         require_format_version(affix.format_version, &affix.id)?;
         validate_definition_id(&affix.id, "affix")?;
         validate_definition_text(&affix.id, &affix.name_key, &affix.description_key)?;
         validate_status_immunities(&affix.id, &mut affix.status_immunities)?;
+        if let Some(generation) = &affix.rfb_ego {
+            let unique_types = generation.types.iter().copied().collect::<BTreeSet<_>>();
+            if generation.source_index == 0
+                || generation.types.is_empty()
+                || unique_types.len() != generation.types.len()
+                || !rfb_ego_source_indices.insert(generation.source_index)
+            {
+                return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
+            }
+        }
         if affix
             .device_generation
             .as_ref()

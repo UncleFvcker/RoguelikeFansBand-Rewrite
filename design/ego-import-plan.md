@@ -164,7 +164,7 @@ rarity、标准可选性、Craft 类型、当前 importer 可表达性、物化�
 122 条 Craft 类型、121 条 Craft 标准可选、38 条非 Craft、129 条当前 importer 可表达、31 条不可
 表达和 13 条 activation。该批没有新增正式 affix，也没有改变游戏行为。
 
-### E1：RFB ego 身份与选择核
+### E1：RFB ego 身份与选择核（已完成）
 
 - 增加可选 `sourceIndex/rarity/types` 元数据及严格验证；
 - importer 正确保存 `W:` rarity 和 `T:` 类型；
@@ -173,6 +173,15 @@ rarity、标准可选性、Craft 类型、当前 importer 可表达性、物化�
 - 尚不改 `base-items` 自然掉落。
 
 提交目标：`feat: add authoritative ego selection metadata`
+
+E1 已给 affix 增加可选 `rfbEgo` 元数据；只有声明该元数据的定义才进入权威池。校验要求
+`sourceIndex` 非零且全局唯一、`types` 非空且不重复，同时允许 `rarity` 为 0，供未来显式强制路径使用。
+importer 已逐条写出 source index、rarity 和完整 `T:` 类型集合。
+
+共享选择核由调用方提供精确允许类型与生成等级，按 source index 排序后应用 3.1 的等级惩罚公式；
+标准池排除 rarity 0 和无元数据的原创 affix，有候选时只执行一次加权抽取。低于等级、区间内、超过
+最高等级、英文重名、多类型、rarity 0 与原创 affix 均有确定性测试。该批未接入 `base-items`、Craft
+或其他玩家可达入口，现有 pack 因可选字段省略而保持原 content hash。
 
 ### E2：共享实例化底座
 

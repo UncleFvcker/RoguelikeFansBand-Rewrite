@@ -325,6 +325,12 @@ impl ContentCatalog {
         self.affixes.get(id)
     }
 
+    /// All affix definitions in stable id order. Consumers needing RFB source
+    /// order must sort the optional ego metadata explicitly.
+    pub fn affix_definitions(&self) -> impl Iterator<Item = &AffixDefinition> {
+        self.affixes.values()
+    }
+
     #[must_use]
     pub fn resource(&self, id: &str) -> Option<&ResourceDefinition> {
         self.resources.get(id)

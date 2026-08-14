@@ -4588,6 +4588,13 @@ fn ego_json(
         "nameKey": format!("affix-legacy-{id}-name"),
         "descriptionKey": format!("affix-legacy-{id}-description"),
         "generationLevel": entry.level,
+        "rfbEgo": {
+            "sourceIndex": entry.index,
+            "rarity": entry.rarity,
+            "types": entry.slots.iter().map(|slot| {
+                slot.to_ascii_lowercase().replace('_', "-")
+            }).collect::<Vec<_>>(),
+        },
         "tags": tags,
     });
     if let Some(max_level) = entry.max_level {
@@ -20158,6 +20165,9 @@ F:BRAND_VAMP | HOLD_LIFE
         assert_eq!(name, "testing.json");
         assert_eq!(testing["id"], "rfb-legacy.affix.testing");
         assert_eq!(testing["generationMaxLevel"], 35);
+        assert_eq!(testing["rfbEgo"]["sourceIndex"], 1);
+        assert_eq!(testing["rfbEgo"]["rarity"], 2);
+        assert_eq!(testing["rfbEgo"]["types"], serde_json::json!(["weapon"]));
         // C: maxima fold into a deterministic ceiling; attack takes the
         // larger of to-hit/to-damage.
         assert_eq!(testing["modifiers"]["attack"], 8);
@@ -20171,6 +20181,10 @@ F:BRAND_VAMP | HOLD_LIFE
 
         let (name, bear) = &outcome.affix_files[1];
         assert_eq!(name, "the-test-bear.json");
+        assert_eq!(
+            bear["rfbEgo"]["types"],
+            serde_json::json!(["amulet", "ring"])
+        );
         assert_eq!(bear["modifiers"]["strength"], 3);
         assert_eq!(bear["modifiers"]["intelligence"], -3);
         // SPEED rides the same C: pval ceiling as the attribute flags.

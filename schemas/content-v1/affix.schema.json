@@ -2869,6 +2869,61 @@
         }
       ]
     },
+    "RfbEgoGenerationDefinition": {
+      "additionalProperties": false,
+      "description": "Identity and allocation inputs copied from one authoritative `e_info`\nrecord. Affixes without this metadata never enter the RFB ego pool.",
+      "properties": {
+        "rarity": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sourceIndex": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "types": {
+          "items": {
+            "$ref": "#/$defs/RfbEgoTypeDefinition"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "sourceIndex",
+        "rarity",
+        "types"
+      ],
+      "type": "object"
+    },
+    "RfbEgoTypeDefinition": {
+      "description": "Authoritative `T:` category used by RFB's ego allocation table.",
+      "enum": [
+        "weapon",
+        "digger",
+        "ammo",
+        "bow",
+        "harp",
+        "body-armor",
+        "dragon-armor",
+        "shield",
+        "crown",
+        "helmet",
+        "cloak",
+        "gloves",
+        "boots",
+        "robe",
+        "ring",
+        "amulet",
+        "lite",
+        "quiver",
+        "device",
+        "special"
+      ],
+      "type": "string"
+    },
     "SlayLevel": {
       "enum": [
         "slay",
@@ -3209,6 +3264,17 @@
       "default": false,
       "description": "Protects instances carrying this affix from projection-driven item destruction.",
       "type": "boolean"
+    },
+    "rfbEgo": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RfbEgoGenerationDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Optional authoritative RFB ego identity and allocation metadata."
     },
     "rollGroups": {
       "default": [],
