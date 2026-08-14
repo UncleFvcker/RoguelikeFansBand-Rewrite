@@ -100,7 +100,13 @@
   },
   "shopAdjustPercent": 115,
   "skillSetId": "rfb-legacy.skill-set.race-klackon",
-  "speedPerTenLevels": 1,
+  "levelStatScalings": [
+    {
+      "stat": "speed",
+      "multiplier": 1,
+      "divisor": 10
+    }
+  ],
   "tags": [
     "humanoid",
     "legacy-import",

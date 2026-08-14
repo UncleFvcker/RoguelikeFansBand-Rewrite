@@ -1,6 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
   "baseHp": 23,
+  "armorClass": 10,
   "bodySlots": [
     {
       "id": "right-hand",
@@ -66,10 +67,24 @@
   "descriptionKey": "race-legacy-golem-description",
   "experiencePercent": 185,
   "formatVersion": 1,
+  "holdLifeMinimumLevel": 35,
   "id": "rfb-legacy.race.golem",
+  "infravision": 4,
   "kinCategory": "kin-glyph-103",
   "legacyIndex": 23,
   "lifePercent": 105,
+  "levelStatScalings": [
+    {
+      "stat": "armor-class",
+      "multiplier": 2,
+      "divisor": 5
+    },
+    {
+      "stat": "speed",
+      "multiplier": -1,
+      "divisor": 16
+    }
+  ],
   "modifiers": {
     "constitution": 4,
     "dexterity": -2,
@@ -81,10 +96,12 @@
   "resistances": {
     "poison": "resistant"
   },
+  "seeInvisible": true,
   "shopAdjustPercent": 120,
   "skillSetId": "rfb-legacy.skill-set.race-golem",
   "statusImmunities": [
-    "rfb.status.paralysis"
+    "rfb.status.paralysis",
+    "rfb.status.stun"
   ],
   "tags": [
     "legacy-import",

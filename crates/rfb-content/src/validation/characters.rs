@@ -7,9 +7,9 @@ use crate::{
     CLASS_SCHEMA, CharacterBuildDefinition, ClassDefinition, ContentError,
     InnatePowerCostScalingCurveDefinition, ItemDefinition, LevelResistanceDefinition,
     MutationDefinition, PERSONALITY_SCHEMA, PersonalityDefinition, RACE_SCHEMA, RaceDefinition,
-    RaceMutationSelectionDefinition, SKILL_SCHEMA, SKILL_SET_SCHEMA, SkillDefinition, SkillKind,
-    SkillSetDefinition, StartingItemDefinition, StatModifiers, TerrainDefinition,
-    valid_ability_level_scaling,
+    RaceLevelStatScalingDefinition, RaceMutationSelectionDefinition, SKILL_SCHEMA,
+    SKILL_SET_SCHEMA, SkillDefinition, SkillKind, SkillSetDefinition, StartingItemDefinition,
+    StatModifiers, TerrainDefinition, valid_ability_level_scaling,
 };
 
 use super::shared::{
@@ -274,9 +274,12 @@ pub(super) fn validate_characters(
             || race
                 .reflects_bolts_minimum_level
                 .is_some_and(|level| !(1..=100).contains(&level))
+            || race
+                .hold_life_minimum_level
+                .is_some_and(|level| !(1..=100).contains(&level))
             || !(-1_000..=1_000).contains(&race.armor_class)
             || !(-1_000..=1_000).contains(&race.regeneration_rate_modifier_percent)
-            || !(-100..=100).contains(&race.speed_per_ten_levels)
+            || !race_level_stat_scalings_are_valid(&race.level_stat_scalings)
             || !(-20..=20).contains(&race.spell_capacity_bonus)
             || !level_resistances_are_valid(&mut race.level_resistances)
         {
@@ -793,6 +796,19 @@ pub(super) fn validate_characters(
         build_ids.insert(build.id.clone());
     }
     Ok(build_ids)
+}
+
+fn race_level_stat_scalings_are_valid(scalings: &[RaceLevelStatScalingDefinition]) -> bool {
+    let mut stats = BTreeSet::new();
+    scalings.len() <= 2
+        && scalings.iter().all(|scaling| {
+            scaling.multiplier != 0
+                && (1..=100).contains(&scaling.divisor)
+                && stats.insert(scaling.stat)
+                && (-1_000..=1_000).contains(
+                    &(100_i32.saturating_mul(scaling.multiplier) / i32::from(scaling.divisor)),
+                )
+        })
 }
 
 fn validate_race_level_mutation_rewards(

@@ -357,6 +357,37 @@
       ],
       "type": "object"
     },
+    "RaceLevelStatDefinition": {
+      "enum": [
+        "armor-class",
+        "speed"
+      ],
+      "type": "string"
+    },
+    "RaceLevelStatScalingDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "divisor": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "multiplier": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "stat": {
+          "$ref": "#/$defs/RaceLevelStatDefinition"
+        }
+      },
+      "required": [
+        "stat",
+        "multiplier",
+        "divisor"
+      ],
+      "type": "object"
+    },
     "RaceMutationOverrideDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -744,6 +775,16 @@
       "minimum": 0,
       "type": "integer"
     },
+    "holdLifeMinimumLevel": {
+      "description": "Character level at which this effective race gains intrinsic hold life.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "id": {
       "type": "string"
     },
@@ -782,6 +823,13 @@
       "description": "Intrinsic resistance tiers gained at a character-level threshold while\nthis is the currently effective race.",
       "items": {
         "$ref": "#/$defs/LevelResistanceDefinition"
+      },
+      "type": "array"
+    },
+    "levelStatScalings": {
+      "description": "Intrinsic derived-stat adjustments scaled from character level while\nthis is the currently effective race.",
+      "items": {
+        "$ref": "#/$defs/RaceLevelStatScalingDefinition"
       },
       "type": "array"
     },
@@ -990,12 +1038,6 @@
     },
     "skillSetId": {
       "type": "string"
-    },
-    "speedPerTenLevels": {
-      "default": 0,
-      "description": "Additive speed gained for each ten character levels while this is the\ncurrently effective race.",
-      "format": "int32",
-      "type": "integer"
     },
     "spellCapacityBonus": {
       "default": 0,

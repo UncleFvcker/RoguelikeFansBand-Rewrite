@@ -359,19 +359,62 @@ fn race_infravision_is_nonnegative_and_bounded() {
 }
 
 #[test]
-fn race_speed_growth_is_bounded() {
+fn race_level_stat_scalings_and_hold_life_threshold_are_bounded() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
-    let mut content = artifact.content;
-    let klackon = content
-        .races
-        .iter_mut()
-        .find(|race| race.id == "rfb-legacy.race.klackon")
-        .expect("Klackon race should exist");
-    klackon.speed_per_ten_levels = 101;
-    assert!(matches!(
-        validate_and_normalize(&mut content),
-        Err(ContentError::InvalidCharacterSource(id)) if id == "rfb-legacy.race.klackon"
-    ));
+    for invalid_scalings in [
+        vec![RaceLevelStatScalingDefinition {
+            stat: RaceLevelStatDefinition::Speed,
+            multiplier: 0,
+            divisor: 10,
+        }],
+        vec![RaceLevelStatScalingDefinition {
+            stat: RaceLevelStatDefinition::Speed,
+            multiplier: 1,
+            divisor: 0,
+        }],
+        vec![
+            RaceLevelStatScalingDefinition {
+                stat: RaceLevelStatDefinition::Speed,
+                multiplier: 1,
+                divisor: 10,
+            },
+            RaceLevelStatScalingDefinition {
+                stat: RaceLevelStatDefinition::Speed,
+                multiplier: -1,
+                divisor: 16,
+            },
+        ],
+        vec![RaceLevelStatScalingDefinition {
+            stat: RaceLevelStatDefinition::ArmorClass,
+            multiplier: 11,
+            divisor: 1,
+        }],
+    ] {
+        let mut content = artifact.content.clone();
+        let klackon = content
+            .races
+            .iter_mut()
+            .find(|race| race.id == "rfb-legacy.race.klackon")
+            .expect("Klackon race should exist");
+        klackon.level_stat_scalings = invalid_scalings;
+        assert!(matches!(
+            validate_and_normalize(&mut content),
+            Err(ContentError::InvalidCharacterSource(id)) if id == "rfb-legacy.race.klackon"
+        ));
+    }
+    for invalid in [0, 101] {
+        let mut content = artifact.content.clone();
+        let golem = content
+            .races
+            .iter_mut()
+            .find(|race| race.id == "rfb-legacy.race.golem")
+            .expect("Golem race should exist");
+        golem.hold_life_minimum_level = Some(invalid);
+        assert!(matches!(
+            validate_and_normalize(&mut content),
+            Err(ContentError::InvalidCharacterSource(id)) if id == "rfb-legacy.race.golem"
+        ));
+    }
 }
 
 #[test]

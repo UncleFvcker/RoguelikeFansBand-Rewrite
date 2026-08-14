@@ -802,6 +802,10 @@ impl Game {
                     .iter()
                     .any(|status| status.kind_id == STATUS_HOLD_LIFE),
             )
+            + usize::from(self.character_definitions().is_some_and(|(_, race, _, _)| {
+                race.hold_life_minimum_level
+                    .is_some_and(|minimum_level| self.progress.level >= minimum_level)
+            }))
     }
 
     pub(super) fn player_see_invisible_sources(&self) -> usize {
@@ -1710,20 +1714,32 @@ impl Game {
         let Some((_, race, class, personality)) = self.character_definitions() else {
             return;
         };
+        let level_scaling = |stat| {
+            race.level_stat_scalings
+                .iter()
+                .filter(|scaling| scaling.stat == stat)
+                .fold(0_i32, |total, scaling| {
+                    total.saturating_add(
+                        i32::from(self.progress.level).saturating_mul(scaling.multiplier)
+                            / i32::from(scaling.divisor),
+                    )
+                })
+        };
         add_nonzero_stat(
             pipeline,
             StatKind::Speed,
             StatLayer::Species,
             &race.id,
-            race.speed_per_ten_levels
-                .saturating_mul(i32::from(self.progress.level / 10)),
+            level_scaling(rfb_content::RaceLevelStatDefinition::Speed),
         );
         add_nonzero_stat(
             pipeline,
             StatKind::ArmorClass,
             StatLayer::Species,
             &race.id,
-            race.armor_class,
+            race.armor_class.saturating_add(level_scaling(
+                rfb_content::RaceLevelStatDefinition::ArmorClass,
+            )),
         );
         for (layer, source_id, modifiers) in [
             (StatLayer::Species, race.id.as_str(), &race.modifiers),

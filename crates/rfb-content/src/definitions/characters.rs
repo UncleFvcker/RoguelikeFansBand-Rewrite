@@ -75,6 +75,23 @@ pub struct StartingItemDefinition {
     pub equipped: bool,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum RaceLevelStatDefinition {
+    ArmorClass,
+    Speed,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RaceLevelStatScalingDefinition {
+    pub stat: RaceLevelStatDefinition,
+    pub multiplier: i32,
+    pub divisor: u16,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -123,16 +140,19 @@ pub struct RaceDefinition {
     /// Character level at which this effective race begins reflecting bolts.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reflects_bolts_minimum_level: Option<u16>,
+    /// Character level at which this effective race gains intrinsic hold life.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub hold_life_minimum_level: Option<u16>,
     /// Attributes this race innately prevents from being reduced.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub attribute_sustains: BTreeSet<ItemAttributeDefinition>,
     /// Additive percentage adjustment to the natural HP regeneration rate.
     #[serde(default)]
     pub regeneration_rate_modifier_percent: i32,
-    /// Additive speed gained for each ten character levels while this is the
-    /// currently effective race.
-    #[serde(default)]
-    pub speed_per_ten_levels: i32,
+    /// Intrinsic derived-stat adjustments scaled from character level while
+    /// this is the currently effective race.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub level_stat_scalings: Vec<RaceLevelStatScalingDefinition>,
     /// RFB `spell_cap` bonus in twentieths of the caster's base mana pool.
     #[serde(default)]
     pub spell_capacity_bonus: i32,

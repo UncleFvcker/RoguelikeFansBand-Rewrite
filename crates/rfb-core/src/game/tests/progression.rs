@@ -220,6 +220,108 @@ fn draconian_reward_game() -> Game {
     draconian_reward_game_for_build("demo.build.high-mage-death")
 }
 
+fn hidden_golem_catalog() -> Arc<rfb_content::ContentCatalog> {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    artifact
+        .content
+        .races
+        .iter_mut()
+        .find(|race| race.id == "rfb-legacy.race.golem")
+        .expect("hidden Golem race")
+        .tags
+        .push("rfb-compatibility".to_owned());
+    artifact
+        .content
+        .builds
+        .iter_mut()
+        .find(|build| build.id == "demo.build.warrior")
+        .expect("Warrior build")
+        .race_id = "rfb-legacy.race.golem".to_owned();
+    Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("hidden Golem test content should encode"),
+    ))
+}
+
+fn species_contribution(stat: &DerivedStat, race_id: &str) -> i32 {
+    stat.contributions
+        .iter()
+        .find(|contribution| contribution.source_id == race_id)
+        .map_or(0, |contribution| contribution.amount)
+}
+
+#[test]
+fn race_level_stat_scaling_preserves_klackon_and_enables_hidden_golem_intrinsics() {
+    let golem_catalog = hidden_golem_catalog();
+    for level in [1, 3, 5, 9, 10, 15, 16, 31, 32, 34, 35, 48, 50] {
+        let mut golem = Game::from_content_with_build(
+            358,
+            golem_catalog.clone(),
+            DEFAULT_WORLD_ID,
+            "demo.build.warrior",
+        )
+        .expect("hidden Golem should create in focused test content");
+        if level > 1 {
+            golem.apply_unscaled_player_experience(
+                experience_required_for_level(level),
+                &mut Vec::new(),
+            );
+        }
+        let stats = golem.player_derived_stats();
+        assert_eq!(
+            species_contribution(&stats.armor_class, "rfb-legacy.race.golem"),
+            10 + i32::from(level) * 2 / 5,
+            "Golem armor at level {level}"
+        );
+        assert_eq!(
+            species_contribution(&stats.speed, "rfb-legacy.race.golem"),
+            -(i32::from(level) / 16),
+            "Golem speed at level {level}"
+        );
+        assert_eq!(
+            golem.player_hold_life_sources(),
+            usize::from(level >= 35),
+            "Golem hold life at level {level}"
+        );
+        assert!(golem.player_see_invisible_sources() >= 1);
+        assert!(golem.player_status_immunities().contains(STATUS_PARALYSIS));
+        assert!(golem.player_status_immunities().contains(STATUS_STUN));
+        assert_eq!(
+            golem
+                .effective_player_resistances()
+                .level(DamageType::Poison),
+            ResistanceLevel::Resistant
+        );
+    }
+
+    for (level, expected_speed) in [(9, 0), (10, 1), (19, 1), (20, 2)] {
+        let mut klackon = Game::new_with_build_race_and_name(
+            358,
+            "demo.build.warrior",
+            "rfb-legacy.race.klackon",
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect("formal Klackon should create");
+        klackon.apply_unscaled_player_experience(
+            experience_required_for_level(level),
+            &mut Vec::new(),
+        );
+        assert_eq!(
+            species_contribution(
+                &klackon.player_derived_stats().speed,
+                "rfb-legacy.race.klackon",
+            ),
+            expected_speed,
+            "Klackon speed at level {level}"
+        );
+    }
+}
+
 #[test]
 fn draconian_subraces_are_available_to_formal_character_creation() {
     for suffix in [

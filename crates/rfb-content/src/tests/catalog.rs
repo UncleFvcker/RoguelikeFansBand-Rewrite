@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.357.0");
+    assert_eq!(catalog.pack_version(), "1.358.0");
     assert_eq!(catalog.races().count(), 55);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1380,9 +1380,16 @@ fn formal_klackon_matches_rfb_profile_speed_and_acid_spit() {
             klackon.experience_percent,
             klackon.shop_adjust_percent,
             klackon.infravision,
-            klackon.speed_per_ten_levels,
         ),
-        (105, 23, 170, 115, 2, 1)
+        (105, 23, 170, 115, 2)
+    );
+    assert_eq!(
+        klackon.level_stat_scalings,
+        [RaceLevelStatScalingDefinition {
+            stat: RaceLevelStatDefinition::Speed,
+            multiplier: 1,
+            divisor: 10,
+        }]
     );
     assert_eq!(klackon.kin_category.as_deref(), Some("kin-glyph-75"));
     assert_eq!(
@@ -1465,6 +1472,44 @@ fn formal_klackon_matches_rfb_profile_speed_and_acid_spit() {
         }
     ));
     assert_eq!(ability.level_scaling.len(), 1);
+}
+
+#[test]
+fn hidden_golem_has_authoritative_level_scaled_intrinsics() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let golem = catalog
+        .race("rfb-legacy.race.golem")
+        .expect("hidden Golem race");
+
+    assert_eq!(golem.armor_class, 10);
+    assert_eq!(golem.infravision, 4);
+    assert!(golem.see_invisible);
+    assert_eq!(golem.hold_life_minimum_level, Some(35));
+    assert_eq!(
+        golem.level_stat_scalings,
+        [
+            RaceLevelStatScalingDefinition {
+                stat: RaceLevelStatDefinition::ArmorClass,
+                multiplier: 2,
+                divisor: 5,
+            },
+            RaceLevelStatScalingDefinition {
+                stat: RaceLevelStatDefinition::Speed,
+                multiplier: -1,
+                divisor: 16,
+            },
+        ]
+    );
+    assert_eq!(
+        golem.resistances.get(&ActorDamageType::Poison),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        golem.status_immunities,
+        ["rfb.status.paralysis", "rfb.status.stun"]
+    );
+    assert!(!golem.tags.iter().any(|tag| tag == "rfb-compatibility"));
 }
 
 #[test]

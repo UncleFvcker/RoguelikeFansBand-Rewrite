@@ -6376,7 +6376,11 @@ fn race_json(
             serde_json::json!(entry.regeneration_rate_modifier_percent);
     }
     if entry.speed_per_ten_levels != 0 {
-        value["speedPerTenLevels"] = serde_json::json!(entry.speed_per_ten_levels);
+        value["levelStatScalings"] = serde_json::json!([{
+            "stat": "speed",
+            "multiplier": entry.speed_per_ten_levels,
+            "divisor": 10,
+        }]);
     }
     if entry.spell_capacity_bonus != 0 {
         value["spellCapacityBonus"] = serde_json::json!(entry.spell_capacity_bonus);
@@ -19737,7 +19741,9 @@ race_t *test_beast_get_race(void)
         );
         assert_eq!(race["regenerationRateModifierPercent"], 100);
         assert_eq!(race["modifiers"]["speed"], 3);
-        assert_eq!(race["speedPerTenLevels"], 1);
+        assert_eq!(race["levelStatScalings"][0]["stat"], "speed");
+        assert_eq!(race["levelStatScalings"][0]["multiplier"], 1);
+        assert_eq!(race["levelStatScalings"][0]["divisor"], 10);
         assert_eq!(race["spellCapacityBonus"], 3);
         assert_eq!(race["kinCategory"], "kin-glyph-112");
         let high_elf = LegacyCharacterEntry {
