@@ -3,6 +3,7 @@
 use super::*;
 
 const WAYBREAD_INTOLERANCE_MUTATION_ID: &str = "rfb.mutation.waybread-into";
+const SKELETON_RACE_ID: &str = "rfb-legacy.race.skeleton";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
@@ -94,6 +95,11 @@ pub(super) struct SettledItemUse {
 }
 
 impl Game {
+    fn player_is_skeleton(&self) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, race, _, _)| race.id == SKELETON_RACE_ID)
+    }
+
     fn resolve_item_satisfy_hunger(
         &mut self,
         source_kind_id: &str,
@@ -101,11 +107,13 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let before_state = self.nutrition_state();
-        let target = rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1;
-        let target = if preserve_higher_nutrition {
-            self.nutrition.max(target)
+        let target = if self.player_is_skeleton() {
+            self.nutrition
+        } else if preserve_higher_nutrition {
+            self.nutrition
+                .max(rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1)
         } else {
-            target
+            rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1
         };
         let noticed = self.nutrition != target;
         if target > self.nutrition {
@@ -171,8 +179,11 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let before_state = self.nutrition_state();
-        let divisor = self.player_food_nutrition_divisor();
-        let amount = amount / divisor;
+        let amount = if self.player_is_skeleton() {
+            0
+        } else {
+            amount / self.player_food_nutrition_divisor()
+        };
         let applied = self.increase_nutrition(amount);
         self.mark_item_aware(source_kind_id);
         events.push(DomainEvent::ItemNutritionIncreased {
@@ -2327,6 +2338,18 @@ impl Game {
             return Ok(());
         }
 
+        let player_is_skeleton = self.player_is_skeleton();
+        let skeleton_food_falls_through = player_is_skeleton
+            && definition.tags.iter().any(|tag| tag == "food")
+            && !definition.tags.iter().any(|tag| tag == "mushroom")
+            && !matches!(&effect, ItemUseEffectDefinition::ApplyElvishWaybread { .. });
+        let skeleton_potion_shatter =
+            if player_is_skeleton && definition.tags.iter().any(|tag| tag == "potion") {
+                definition.shatter_effect.clone()
+            } else {
+                None
+            };
+
         self.mark_item_tried(&kind_id);
         if let Some(difficulty) = difficulty {
             let ability = self.apply_impotence_device_skill_modifier(
@@ -2376,10 +2399,10 @@ impl Game {
                 .as_mut()
                 .expect("validated charged item must carry charge state")
                 .current -= cost;
-        } else if self.items[index].quantity == 1 {
+        } else if !skeleton_food_falls_through && self.items[index].quantity == 1 {
             let removed = self.items.remove(index);
             self.item_property_knowledge.remove(&removed.id);
-        } else {
+        } else if !skeleton_food_falls_through {
             self.items[index].quantity -= 1;
         }
         let device_power_bonus = difficulty
@@ -2396,7 +2419,24 @@ impl Game {
             events,
             changed,
             removed_entities,
-        )
+        )?;
+        if skeleton_food_falls_through {
+            self.drop_inventory_quantity(item_id, 1)?
+                .expect("used Skeleton food must remain droppable");
+            changed.insert(self.player.position);
+        }
+        if let Some(shatter) = skeleton_potion_shatter {
+            self.resolve_ground_item_shatter_effect(
+                &definition.id,
+                self.player.position,
+                &shatter,
+                true,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
+        Ok(())
     }
 
     fn resolve_inventory_item_effect(

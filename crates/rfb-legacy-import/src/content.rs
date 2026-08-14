@@ -6441,7 +6441,7 @@ fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentIm
         if (flag == "RACE_IS_DEMON" && legacy_race_tags(entry).contains(&"demon"))
             || (entry.id == "golem"
                 && matches!(flag.as_str(), "RACE_IS_NONLIVING" | "RACE_EATS_DEVICES"))
-            || (entry.id == "zombie"
+            || (matches!(entry.id.as_str(), "skeleton" | "zombie")
                 && matches!(
                     flag.as_str(),
                     "RACE_IS_NONLIVING"
@@ -6512,7 +6512,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             "standard-body",
         ];
     }
-    if entry.id == "zombie" {
+    if matches!(entry.id.as_str(), "skeleton" | "zombie") {
         return vec![
             "device-eater",
             "legacy-import",
@@ -21344,6 +21344,60 @@ static power_info _zombie_get_powers[] =
         assert!(zombie.hooks.is_empty());
         let mut report = ContentImportReport::default();
         character_gap_accounting(&zombie, &mut report);
+        assert!(report.unmapped_race_flags.is_empty());
+        assert!(report.race_hook_gaps.is_empty());
+    }
+
+    #[test]
+    fn skeleton_race_tags_flags_and_restore_life_power_are_mapped() {
+        const SOURCE: &str = r#"
+static power_info _skeleton_get_powers[] =
+{
+    { A_WIS, {30, 30, 70, restore_life_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+"#;
+        let mut skeleton = LegacyCharacterEntry {
+            id: "skeleton".to_owned(),
+            get_powers_fn: Some("_skeleton_get_powers".to_owned()),
+            hooks: vec!["get_powers".to_owned()],
+            flags: vec![
+                "RACE_IS_NONLIVING".to_owned(),
+                "RACE_IS_UNDEAD".to_owned(),
+                "RACE_NIGHT_START".to_owned(),
+                "RACE_EATS_DEVICES".to_owned(),
+            ],
+            ..LegacyCharacterEntry::default()
+        };
+
+        parse_race_powers(SOURCE, &mut skeleton);
+        assert_eq!(
+            legacy_race_tags(&skeleton),
+            [
+                "device-eater",
+                "legacy-import",
+                "night-start",
+                "nonliving",
+                "polymorph-candidate",
+                "rfb-compatibility",
+                "slow-digestion",
+                "standard-body",
+                "undead",
+            ]
+        );
+        assert_eq!(
+            skeleton.abilities,
+            [LegacyInnatePower {
+                governing_attribute: "wisdom".to_owned(),
+                minimum_level: 30,
+                cost: 30,
+                base_failure_percent: 70,
+                ability_id: "rfb.ability.race.restore-life".to_owned(),
+            }]
+        );
+        assert!(skeleton.hooks.is_empty());
+        let mut report = ContentImportReport::default();
+        character_gap_accounting(&skeleton, &mut report);
         assert!(report.unmapped_race_flags.is_empty());
         assert!(report.race_hook_gaps.is_empty());
     }

@@ -128,7 +128,7 @@ test("New Game exposes and submits Golem with the device absorption action", () 
 });
 
 test("New Game exposes and submits Zombie with the device absorption action", () => {
-  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.zombie");
+  assert.ok(PLAYTEST_RACE_IDS.includes("rfb-legacy.race.zombie"));
   assert.equal(
     createNewSessionRequest(
       "377",
@@ -140,6 +140,22 @@ test("New Game exposes and submits Zombie with the device absorption action", ()
   );
   const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(indexHtml, /<option value="rfb-legacy\.race\.zombie"/);
+  assert.match(indexHtml, /<button id="inventory-absorb"/);
+});
+
+test("New Game exposes and submits Skeleton with the device absorption action", () => {
+  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.skeleton");
+  assert.equal(
+    createNewSessionRequest(
+      "378",
+      "demo.build.warrior",
+      "rfb-legacy.race.skeleton",
+      "Skully",
+    ).raceId,
+    "rfb-legacy.race.skeleton",
+  );
+  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(indexHtml, /<option value="rfb-legacy\.race\.skeleton"/);
   assert.match(indexHtml, /<button id="inventory-absorb"/);
 });
 

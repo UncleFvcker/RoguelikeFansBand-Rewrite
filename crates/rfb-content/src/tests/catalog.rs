@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.366.0");
+    assert_eq!(catalog.pack_version(), "1.367.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1755,6 +1755,117 @@ fn formal_zombie_completes_the_authoritative_profile_and_restore_life_power() {
 
     let [starting_item] = zombie.starting_items.as_slice() else {
         panic!("Zombie should start with one race-specific item");
+    };
+    assert_eq!(starting_item.item_kind_id, "demo.item.staff-of-nothing");
+    assert_eq!(starting_item.quantity, 1);
+    assert!(!starting_item.equipped);
+    assert!(starting_item.fully_charged);
+}
+
+#[test]
+fn formal_skeleton_completes_the_authoritative_profile_and_restore_life_power() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let skeleton = catalog
+        .race("rfb-legacy.race.skeleton")
+        .expect("formal Skeleton race");
+
+    assert_eq!(
+        [
+            skeleton.modifiers.strength,
+            skeleton.modifiers.intelligence,
+            skeleton.modifiers.wisdom,
+            skeleton.modifiers.dexterity,
+            skeleton.modifiers.constitution,
+            skeleton.modifiers.charisma,
+        ],
+        [0, 1, -2, 0, 1, 1]
+    );
+    assert_eq!(
+        (
+            skeleton.life_percent,
+            skeleton.base_hp,
+            skeleton.experience_percent,
+            skeleton.infravision,
+            skeleton.shop_adjust_percent,
+        ),
+        (100, 21, 115, 2, 125)
+    );
+    assert!(skeleton.see_invisible);
+    assert_eq!(skeleton.hold_life_minimum_level, Some(1));
+    assert_eq!(skeleton.food_nutrition_divisor, 20);
+    assert_eq!(
+        skeleton.resistances.get(&ActorDamageType::Shards),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        skeleton.resistances.get(&ActorDamageType::Poison),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(skeleton.level_resistances.len(), 1);
+    assert_eq!(skeleton.level_resistances[0].minimum_level, 10);
+    assert_eq!(
+        skeleton.level_resistances[0]
+            .resistances
+            .get(&ActorDamageType::Cold),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    for tag in [
+        "device-eater",
+        "night-start",
+        "nonliving",
+        "rfb-compatibility",
+        "slow-digestion",
+        "undead",
+    ] {
+        assert!(
+            skeleton.tags.iter().any(|candidate| candidate == tag),
+            "{tag}"
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&skeleton.skill_set_id)
+        .expect("formal Skeleton skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [-5, 0, 3, -1, -1, 8, 10, 0]
+    );
+
+    let [activation] = skeleton.abilities.as_slice() else {
+        panic!("Skeleton should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.restore-life",
+            30,
+            TechniqueAttribute::Wisdom,
+            30,
+            70,
+        )
+    );
+    let [starting_item] = skeleton.starting_items.as_slice() else {
+        panic!("Skeleton should start with one race-specific item");
     };
     assert_eq!(starting_item.item_kind_id, "demo.item.staff-of-nothing");
     assert_eq!(starting_item.quantity, 1);

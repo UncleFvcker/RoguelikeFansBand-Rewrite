@@ -87,6 +87,7 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.mindflayer" => kinds.push(VirtueKindDto::Enlightenment),
             "rfb-legacy.race.imp" => kinds.push(VirtueKindDto::Faith),
             "rfb-legacy.race.golem" => kinds.push(VirtueKindDto::Justice),
+            "rfb-legacy.race.skeleton" => kinds.push(VirtueKindDto::Unlife),
             "rfb-legacy.race.zombie" => kinds.push(VirtueKindDto::Unlife),
             "rfb-legacy.race.draconian-red"
             | "rfb-legacy.race.draconian-white"

@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.restore-life",
+      "minimumLevel": 30,
+      "governingAttribute": "wisdom",
+      "cost": 30,
+      "baseFailurePercent": 70
+    }
+  ],
   "baseHp": 21,
   "bodySlots": [
     {
@@ -65,10 +74,21 @@
   ],
   "descriptionKey": "race-legacy-skeleton-description",
   "experiencePercent": 115,
+  "foodNutritionDivisor": 20,
   "formatVersion": 1,
+  "holdLifeMinimumLevel": 1,
   "id": "rfb-legacy.race.skeleton",
+  "infravision": 2,
   "kinCategory": "kin-glyph-115",
   "legacyIndex": 24,
+  "levelResistances": [
+    {
+      "minimumLevel": 10,
+      "resistances": {
+        "cold": "resistant"
+      }
+    }
+  ],
   "lifePercent": 100,
   "modifiers": {
     "charisma": 1,
@@ -81,10 +101,25 @@
     "poison": "resistant",
     "shards": "resistant"
   },
+  "seeInvisible": true,
   "shopAdjustPercent": 125,
   "skillSetId": "rfb-legacy.skill-set.race-skeleton",
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.staff-of-nothing",
+      "quantity": 1,
+      "fullyCharged": true
+    }
+  ],
   "tags": [
+    "device-eater",
     "legacy-import",
-    "polymorph-candidate"
+    "night-start",
+    "nonliving",
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "slow-digestion",
+    "standard-body",
+    "undead"
   ]
 }

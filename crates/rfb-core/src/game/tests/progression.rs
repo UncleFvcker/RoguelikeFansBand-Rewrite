@@ -460,6 +460,93 @@ fn formal_zombie_creation_and_temporary_form_apply_and_remove_intrinsics() {
 }
 
 #[test]
+fn formal_skeleton_creation_and_temporary_form_apply_and_remove_intrinsics() {
+    let mut skeleton = skeleton_game(381);
+    skeleton.progress.level = 9;
+    assert_eq!(
+        skeleton
+            .effective_player_resistances()
+            .level(DamageType::Shards),
+        ResistanceLevel::Resistant
+    );
+    assert_eq!(
+        skeleton
+            .effective_player_resistances()
+            .level(DamageType::Poison),
+        ResistanceLevel::Resistant
+    );
+    assert_eq!(
+        skeleton
+            .effective_player_resistances()
+            .level(DamageType::Cold),
+        ResistanceLevel::Normal
+    );
+    assert_eq!(skeleton.player_hold_life_sources(), 1);
+    assert!(skeleton.player_see_invisible_sources() >= 1);
+    assert!(skeleton.player_is_nonliving());
+    skeleton.progress.level = 10;
+    assert_eq!(
+        skeleton
+            .effective_player_resistances()
+            .level(DamageType::Cold),
+        ResistanceLevel::Resistant
+    );
+
+    let mut human = Game::new_with_build_race_and_name(
+        381,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human warrior should create");
+    human.progress.level = 30;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.skeleton-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.skeleton".to_owned());
+    human.player.statuses.push(form);
+
+    for damage_type in [DamageType::Shards, DamageType::Poison, DamageType::Cold] {
+        assert_eq!(
+            human.effective_player_resistances().level(damage_type),
+            ResistanceLevel::Resistant
+        );
+    }
+    assert_eq!(human.player_hold_life_sources(), 1);
+    assert!(human.player_see_invisible_sources() >= 1);
+    assert!(human.player_is_nonliving());
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| { ability.id == "rfb.ability.race.restore-life" && ability.can_cast })
+    );
+
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    for damage_type in [DamageType::Shards, DamageType::Poison, DamageType::Cold] {
+        assert_eq!(
+            human.effective_player_resistances().level(damage_type),
+            ResistanceLevel::Normal
+        );
+    }
+    assert_eq!(human.player_hold_life_sources(), 0);
+    assert_eq!(human.player_see_invisible_sources(), 0);
+    assert!(!human.player_is_nonliving());
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != "rfb.ability.race.restore-life")
+    );
+}
+
+#[test]
 fn draconian_subraces_are_available_to_formal_character_creation() {
     for suffix in [
         "red", "white", "blue", "black", "green", "bronze", "crystal", "gold", "shadow",

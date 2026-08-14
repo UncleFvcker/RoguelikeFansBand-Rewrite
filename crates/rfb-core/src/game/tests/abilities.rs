@@ -3134,6 +3134,55 @@ fn formal_zombie_restore_life_unlocks_at_thirty_and_restores_experience_and_life
 }
 
 #[test]
+fn formal_skeleton_restore_life_unlocks_at_thirty_and_restores_vitality() {
+    let mut game = skeleton_game(382);
+    clear_monsters(&mut game);
+    game.progress.level = 29;
+    game.player.hp = game.effective_player_max_hp();
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID)
+        .expect("Skeleton Restore Life should be projected before it unlocks");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert!(!locked.can_cast);
+
+    game.progress.level = 30;
+    game.progress.experience = 500;
+    game.progress.maximum_experience = 900;
+    game.progress.life_force = 125;
+    game.player.hp = game.effective_player_max_hp();
+    game.debug_set_ability_casts_succeed(true);
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Skeleton Restore Life should resolve");
+    assert_eq!(game.progress.experience, 900);
+    assert_eq!(game.progress.life_force, 275);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::RestoreVitality {
+                    experience_before: 500,
+                    experience_after: 900,
+                    life_force_before: 125,
+                    life_force_after: 275,
+                    ..
+                }]
+            )
+    )));
+}
+
+#[test]
 fn race_ability_follows_the_effective_race_and_projects_its_source() {
     let mut game = Game::new_with_build_race_and_name(
         0,

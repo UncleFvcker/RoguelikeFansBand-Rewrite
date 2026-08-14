@@ -191,6 +191,215 @@ fn formal_zombie_uses_undead_food_and_device_metabolism() {
 }
 
 #[test]
+fn formal_skeleton_birth_starts_at_night_without_rations_and_round_trips() {
+    let mut game = skeleton_game(378);
+    assert_eq!(game.world_tick, wilderness::WILDERNESS_NIGHT_START_TICK);
+    assert!(!game.wilderness_is_daytime());
+    assert!(game.items.iter().all(|item| item.kind_id != RATION_KIND_ID));
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+    }));
+    let staff = game
+        .items
+        .iter()
+        .find(|item| {
+            item.kind_id == "demo.item.staff-of-nothing" && item.location == ItemLocation::Inventory
+        })
+        .expect("Skeleton should carry its Staff of Nothing");
+    assert_eq!(
+        staff.charges,
+        Some(ItemChargesDto {
+            current: 21,
+            maximum: 21,
+        })
+    );
+
+    let saved = game.to_save();
+    let restored = Game::from_save(saved.clone()).expect("night-start Skeleton should restore");
+    assert_eq!(restored.to_save(), saved);
+    assert_eq!(restored.state_hash(), game.state_hash());
+
+    clear_monsters(&mut game);
+    let mut replay = game.clone();
+    let update = dispatch_next(&mut game, GameCommand::Wait);
+    let replay_update = dispatch_next(&mut replay, GameCommand::Wait);
+    assert_eq!(replay_update.events, update.events);
+    assert_eq!(replay.state_hash(), game.state_hash());
+}
+
+#[test]
+fn formal_skeleton_food_magic_drop_rules_and_potion_shatter_match_rfb() {
+    let mut game = skeleton_game(379);
+    clear_monsters(&mut game);
+    game.nutrition = 9_000;
+
+    give_inventory_item(&mut game, "test.item.skeleton-ration", RATION_KIND_ID);
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.skeleton-ration")
+        .expect("Skeleton ration")
+        .quantity = 2;
+    let ration_update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.skeleton-ration".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(game.nutrition, 9_000);
+    assert!(ration_update.events.iter().any(|event| {
+        event.kind == "item.use-food"
+            && event.args.get("amount").is_some_and(|amount| amount == "0")
+    }));
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == RATION_KIND_ID
+            && item.quantity == 1
+            && item.location == ItemLocation::Inventory
+    }));
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == RATION_KIND_ID
+            && item.quantity == 1
+            && item.location == ItemLocation::Ground(game.player.position)
+    }));
+
+    game.player.hp = 1;
+    give_inventory_item(
+        &mut game,
+        "test.item.skeleton-feast",
+        "demo.item.sunlit-feast",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.skeleton-feast".to_owned(),
+            target: None,
+        },
+    );
+    assert!(game.player.hp > 1);
+    assert_eq!(game.nutrition, 9_000);
+    assert!(game.items.iter().any(|item| {
+        item.id == "test.item.skeleton-feast"
+            && item.location == ItemLocation::Ground(game.player.position)
+    }));
+
+    game.player.hp = 1;
+    give_inventory_item(
+        &mut game,
+        "test.item.skeleton-mushroom",
+        "demo.item.fast-recovery-mushroom",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.skeleton-mushroom".to_owned(),
+            target: None,
+        },
+    );
+    assert!(game.player.hp > 1);
+    assert!(game.player_has_status_kind(STATUS_REGENERATION));
+    assert_eq!(game.nutrition, 9_000);
+    assert!(
+        game.items
+            .iter()
+            .all(|item| item.id != "test.item.skeleton-mushroom")
+    );
+
+    game.player.hp = 1;
+    give_inventory_item(
+        &mut game,
+        "test.item.skeleton-waybread",
+        "demo.item.piece-of-elvish-waybread",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.skeleton-waybread".to_owned(),
+            target: None,
+        },
+    );
+    assert!(game.player.hp > 1);
+    assert_eq!(game.nutrition, 9_000);
+    assert!(
+        game.items
+            .iter()
+            .all(|item| item.id != "test.item.skeleton-waybread")
+    );
+
+    game.player.hp = game.effective_player_max_hp();
+    game.world_tick = 75_052;
+    let hp_before = game.player.hp;
+    give_inventory_item(
+        &mut game,
+        "test.item.skeleton-potion",
+        "demo.item.venom-draught",
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.skeleton-potion".to_owned(),
+            target: None,
+        },
+    );
+    assert!(game.player.hp < hp_before, "spilled potion should shatter");
+    assert_eq!(game.nutrition, 9_000);
+    assert!(
+        game.items
+            .iter()
+            .all(|item| item.id != "test.item.skeleton-potion")
+    );
+}
+
+#[test]
+fn formal_skeleton_temporary_form_controls_food_fallthrough() {
+    let mut human = Game::new_with_build_race_and_name(
+        380,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human warrior should create");
+    clear_monsters(&mut human);
+    human.nutrition = 9_000;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.skeleton-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.skeleton".to_owned());
+    human.player.statuses.push(form);
+    give_inventory_item(&mut human, "test.item.skeleton-form-ration", RATION_KIND_ID);
+    dispatch_next(
+        &mut human,
+        GameCommand::UseItem {
+            item_id: "test.item.skeleton-form-ration".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(human.nutrition, 9_000);
+    assert!(human.items.iter().any(|item| {
+        item.id == "test.item.skeleton-form-ration"
+            && item.location == ItemLocation::Ground(human.player.position)
+    }));
+
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    give_inventory_item(&mut human, "test.item.human-ration", RATION_KIND_ID);
+    dispatch_next(
+        &mut human,
+        GameCommand::UseItem {
+            item_id: "test.item.human-ration".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(human.nutrition, 14_000);
+    assert!(
+        human
+            .items
+            .iter()
+            .all(|item| item.id != "test.item.human-ration")
+    );
+}
+
+#[test]
 fn ration_use_consumes_one_restores_food_and_pays_normal_action_cost() {
     let mut game =
         Game::new_with_build(7, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");

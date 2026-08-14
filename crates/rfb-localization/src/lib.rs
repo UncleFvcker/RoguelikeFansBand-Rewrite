@@ -539,6 +539,22 @@ mod tests {
     }
 
     #[test]
+    fn skeleton_content_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("race-legacy-skeleton-name", "骷髅"),
+            ("ability-rfb-race-restore-life-name", "恢复生命"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Skeleton content name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [
