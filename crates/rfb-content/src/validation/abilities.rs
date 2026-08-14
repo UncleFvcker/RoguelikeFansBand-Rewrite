@@ -954,6 +954,13 @@ pub(super) fn validate_abilities(
                         && (remaining_divisor.is_none() || status_kind_id == "rfb.status.bleeding")
                 }
                 AbilityEffectDefinition::SatisfyHunger => true,
+                AbilityEffectDefinition::DevourFlesh {
+                    maximum_hp_divisor,
+                    bleeding_amount,
+                } => {
+                    (1..=1_000).contains(maximum_hp_divisor)
+                        && (1..=1_000_000).contains(bleeding_amount)
+                }
                 AbilityEffectDefinition::VisibleDamage {
                     damage_dice,
                     damage_sides,
@@ -1289,6 +1296,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::Entangle { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
+            | AbilityEffectDefinition::DevourFlesh { .. }
             | AbilityEffectDefinition::CreateItem { .. }
             | AbilityEffectDefinition::Clairvoyance { .. }
             | AbilityEffectDefinition::CallSunlight { .. }

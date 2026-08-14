@@ -5640,6 +5640,31 @@
         {
           "type": "object",
           "properties": {
+            "bleedingAmount": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "maximumHpDivisor": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "devour-flesh"
+            }
+          },
+          "required": [
+            "type",
+            "maximumHpDivisor",
+            "bleedingAmount"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "damageBonus": {
               "type": "integer",
               "format": "uint16",

@@ -1503,6 +1503,16 @@ impl Game {
         if !shop_accessible(self, &shop) {
             return Err("shop-unreachable");
         }
+        if shop.category == ShopCategory::Shroomery
+            && (self
+                .character_definitions()
+                .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.snotling")
+                || self
+                    .selected_race_definition()
+                    .is_some_and(|race| race.id == "rfb-legacy.race.snotling"))
+        {
+            return Err("race-refused");
+        }
         if quantity == 0 {
             return Err("invalid-quantity");
         }

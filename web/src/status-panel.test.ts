@@ -6,6 +6,7 @@ import test from "node:test";
 
 import {
   abilityAttributeAbbreviation,
+  abilityConfirmationMessageKey,
   abilityPresentation,
   abilityStatusMessageKey,
   formatAttributeValue,
@@ -15,6 +16,14 @@ import {
   proficiencyRankMessageKey,
   wildernessClock,
 } from "./status-panel.ts";
+
+test("Snotling Devour Flesh requires its dedicated confirmation", () => {
+  assert.equal(
+    abilityConfirmationMessageKey("rfb.ability.race.devour-flesh"),
+    "confirm-ability-devour-flesh",
+  );
+  assert.equal(abilityConfirmationMessageKey("demo.ability.life-heal"), undefined);
+});
 
 test("Archer Create Ammo presents one level-gated menu", () => {
   const group = "ability-group-demo-archer-create-ammo-name";

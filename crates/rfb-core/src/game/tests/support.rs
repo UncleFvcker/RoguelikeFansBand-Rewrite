@@ -180,6 +180,16 @@ pub(super) fn sprite_game(seed: u64) -> Game {
     .expect("formal Sprite should create")
 }
 
+pub(super) fn snotling_game(seed: u64) -> Game {
+    Game::new_with_build_race_and_name(
+        seed,
+        "demo.build.warrior",
+        "rfb-legacy.race.snotling",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal Snotling should create")
+}
+
 pub(crate) fn divine_caster_game(seed: u64) -> Game {
     static CONTENT: OnceLock<Arc<rfb_content::ContentCatalog>> = OnceLock::new();
     let content = CONTENT

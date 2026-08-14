@@ -2916,6 +2916,191 @@ const RACE_THROW_BOULDER_ABILITY_ID: &str = "rfb.ability.race.throw-boulder";
 const RACE_WOOD_ELF_NATURE_AWARENESS_ABILITY_ID: &str =
     "rfb.ability.race.wood-elf-nature-awareness";
 const RACE_SPRITE_SLEEPING_DUST_ABILITY_ID: &str = "rfb.ability.race.sleeping-dust";
+const RACE_SNOTLING_DEVOUR_FLESH_ABILITY_ID: &str = "rfb.ability.race.devour-flesh";
+
+#[test]
+fn formal_snotling_devours_flesh_while_confused_and_round_trips() {
+    let mut game = snotling_game(395);
+    clear_monsters(&mut game);
+    game.debug_set_ability_casts_succeed(true);
+    game.nutrition = 500;
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_BLEEDING, 25, "test.snotling-bleeding").status);
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_CONFUSION, 20, "test.snotling-confusion").status);
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_SNOTLING_DEVOUR_FLESH_ABILITY_ID)
+        .expect("Snotling Devour Flesh should be projected");
+    assert_eq!(projected.source, AbilitySourceDto::Race);
+    assert_eq!(projected.minimum_level, 1);
+    assert_eq!(projected.base_resource_cost, 0);
+    assert_eq!(
+        projected.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Charisma),
+    );
+    assert!(projected.can_cast);
+    assert!(matches!(
+        projected.effects.as_slice(),
+        [AbilityEffectSpecDto::DevourFlesh {
+            maximum_hp_divisor: 3,
+            bleeding_amount: 100,
+        }]
+    ));
+
+    let hp_before = game.player.hp;
+    let maximum_hp = game.effective_player_max_hp();
+    let mut replay = game.clone();
+    for cast in [&mut game, &mut replay] {
+        let mut events = Vec::new();
+        cast.resolve_player_ability(
+            RACE_SNOTLING_DEVOUR_FLESH_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Devour Flesh should resolve");
+        assert!(events.iter().any(|event| matches!(
+            event,
+            DomainEvent::AbilityEffectsResolved { resolution, .. }
+                if matches!(
+                    resolution.effects.as_slice(),
+                    [
+                        AbilityEffectResolutionDto::SatisfyHunger {
+                            nutrition_before: 500,
+                            nutrition_after: 14_999,
+                            ..
+                        },
+                        AbilityEffectResolutionDto::ApplyStatus {
+                            status_kind_id,
+                            applied_duration_ticks: 100,
+                            ..
+                        },
+                        AbilityEffectResolutionDto::SelfDamage { damage, fatal: false, .. },
+                    ] if status_kind_id == STATUS_BLEEDING && *damage == maximum_hp / 3
+                )
+        )));
+    }
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+    assert_eq!(game.player.hp, hp_before - maximum_hp / 3);
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_BLEEDING)
+            .expect("Devour Flesh should retain bleeding")
+            .remaining_ticks,
+        125,
+    );
+    assert_eq!(game.state_hash(), replay.state_hash());
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Devour Flesh result should restore");
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn snotling_mushroom_boost_follows_the_effective_race() {
+    let use_mushroom = |game: &mut Game, id: &str| {
+        give_inventory_item(game, id, "demo.item.cure-poison-mushroom");
+        dispatch_next(
+            game,
+            GameCommand::UseItem {
+                item_id: id.to_owned(),
+                target: None,
+            },
+        );
+    };
+    let boosted = |game: &Game| {
+        [
+            STATUS_HASTE,
+            "rfb.status.stone-skin",
+            "rfb.status.hero",
+            STATUS_GIANT_STRENGTH,
+        ]
+        .into_iter()
+        .all(|kind_id| game.player_has_status_kind(kind_id))
+    };
+
+    let mut formal = snotling_game(396);
+    clear_monsters(&mut formal);
+    formal.progress.level = 20;
+    formal.progress.max_level = 20;
+    let mut replay = formal.clone();
+    use_mushroom(&mut formal, "test.item.snotling-mushroom");
+    use_mushroom(&mut replay, "test.item.snotling-mushroom");
+    assert_eq!(replay.state_hash(), formal.state_hash());
+    assert!(boosted(&formal));
+    let durations = formal
+        .player
+        .statuses
+        .iter()
+        .filter(|status| {
+            [
+                STATUS_HASTE,
+                "rfb.status.stone-skin",
+                "rfb.status.hero",
+                STATUS_GIANT_STRENGTH,
+            ]
+            .contains(&status.kind_id.as_str())
+        })
+        .map(|status| status.remaining_ticks)
+        .collect::<BTreeSet<_>>();
+    assert_eq!(durations.len(), 1);
+    assert!((211..=401).contains(durations.first().expect("shared duration")));
+
+    let mut persisted = snotling_game(399);
+    clear_monsters(&mut persisted);
+    give_inventory_item(
+        &mut persisted,
+        "test.item.persisted-snotling-mushroom",
+        "demo.item.cure-poison-mushroom",
+    );
+    persisted
+        .use_inventory_item(
+            "test.item.persisted-snotling-mushroom",
+            None,
+            None,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Snotling mushroom should resolve before the action tick");
+    let restored = Game::from_save_with_content(persisted.to_save(), persisted.content.clone())
+        .expect("Snotling mushroom boost should restore");
+    assert_eq!(restored.state_hash(), persisted.state_hash());
+
+    let mut temporary =
+        Game::new_with_build(397, "demo.build.warrior").expect("Human Warrior should create");
+    clear_monsters(&mut temporary);
+    temporary.progress.level = 9;
+    temporary.progress.max_level = 9;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.snotling-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.snotling".to_owned());
+    temporary.player.statuses.push(form);
+    assert_eq!(
+        temporary
+            .character_definitions()
+            .expect("temporary Snotling should retain character definitions")
+            .1
+            .id,
+        "rfb-legacy.race.snotling",
+    );
+    use_mushroom(&mut temporary, "test.item.temporary-snotling-mushroom");
+    assert!(boosted(&temporary));
+
+    let mut human =
+        Game::new_with_build(398, "demo.build.warrior").expect("Human Warrior should create");
+    clear_monsters(&mut human);
+    use_mushroom(&mut human, "test.item.human-mushroom");
+    assert!(!boosted(&human));
+}
 
 #[test]
 fn formal_sprite_sleeping_dust_switches_from_adjacent_to_visible_at_twenty_five() {

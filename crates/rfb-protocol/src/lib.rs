@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.221";
+pub const PROTOCOL_VERSION: &str = "1.222";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
 
@@ -1449,6 +1449,10 @@ pub enum AbilityEffectSpecDto {
         remaining_divisor: Option<u32>,
     },
     SatisfyHunger,
+    DevourFlesh {
+        maximum_hp_divisor: u16,
+        bleeding_amount: u32,
+    },
     VisibleDamage {
         damage_dice: u16,
         damage_sides: u16,

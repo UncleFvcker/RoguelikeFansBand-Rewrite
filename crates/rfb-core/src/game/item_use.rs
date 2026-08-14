@@ -4,6 +4,7 @@ use super::*;
 
 const WAYBREAD_INTOLERANCE_MUTATION_ID: &str = "rfb.mutation.waybread-into";
 const SKELETON_RACE_ID: &str = "rfb-legacy.race.skeleton";
+const SNOTLING_RACE_ID: &str = "rfb-legacy.race.snotling";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
@@ -98,6 +99,95 @@ impl Game {
     fn player_is_skeleton(&self) -> bool {
         self.character_definitions()
             .is_some_and(|(_, race, _, _)| race.id == SKELETON_RACE_ID)
+    }
+
+    fn player_is_snotling(&self) -> bool {
+        self.character_definitions()
+            .is_some_and(|(_, race, _, _)| race.id == SNOTLING_RACE_ID)
+    }
+
+    fn apply_snotling_mushroom_boost(
+        &mut self,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let level = i32::from(self.progress.level);
+        let source_turns = u32::from(self.progress.level)
+            + u32::try_from(self.rng.bounded(u64::from(self.progress.level)) + 1)
+                .expect("Snotling mushroom duration must fit u32");
+        let duration = source_turns.saturating_add(1).saturating_mul(10);
+        let effects = [
+            (
+                STATUS_HASTE,
+                StatModifiersDto::default(),
+                EquipmentBonusesDto::default(),
+                BTreeSet::new(),
+            ),
+            (
+                "rfb.status.stone-skin",
+                StatModifiersDto {
+                    defense: 10 + 40 * level / 50,
+                    ..StatModifiersDto::default()
+                },
+                EquipmentBonusesDto::default(),
+                BTreeSet::new(),
+            ),
+            (
+                "rfb.status.hero",
+                StatModifiersDto {
+                    max_hp: 10,
+                    ..StatModifiersDto::default()
+                },
+                EquipmentBonusesDto {
+                    melee_skill: 12,
+                    ranged_skill: 12,
+                    ..EquipmentBonusesDto::default()
+                },
+                BTreeSet::from([STATUS_FEAR.to_owned()]),
+            ),
+            (
+                STATUS_GIANT_STRENGTH,
+                StatModifiersDto {
+                    max_hp: 10 + level / 2,
+                    ..StatModifiersDto::default()
+                },
+                EquipmentBonusesDto {
+                    melee_skill: 60 * level / 50,
+                    ..EquipmentBonusesDto::default()
+                },
+                BTreeSet::new(),
+            ),
+        ];
+        for (status_kind_id, granted_modifiers, granted_equipment_bonuses, immunities) in effects {
+            let change = apply_status_application(
+                &mut self.player.statuses,
+                StatusApplication {
+                    status: StatusInstance {
+                        kind_id: status_kind_id.to_owned(),
+                        intensity: 1,
+                        remaining_ticks: duration,
+                        source_id: Some(source_kind_id.to_owned()),
+                        granted_resistances: BTreeMap::new(),
+                        granted_brands: BTreeSet::new(),
+                        granted_modifiers,
+                        granted_equipment_bonuses,
+                        granted_status_immunities: immunities,
+                        granted_race_id: None,
+                        grants_wall_passage: false,
+                        incoming_damage_percent: 100,
+                    },
+                    stacking: StatusStacking::Extend,
+                },
+            )
+            .change;
+            events.push(DomainEvent::ItemStatusResolved {
+                source_kind_id: source_kind_id.to_owned(),
+                display_name_key: self.item_display_name_key(source_kind_id),
+                status_kind_id: status_kind_id.to_owned(),
+                duration: Some(duration),
+                noticed: !matches!(change, StatusChange::Unchanged),
+            });
+        }
     }
 
     fn resolve_item_satisfy_hunger(
@@ -2339,6 +2429,8 @@ impl Game {
         }
 
         let player_is_skeleton = self.player_is_skeleton();
+        let snotling_mushroom_boost =
+            self.player_is_snotling() && definition.tags.iter().any(|tag| tag == "mushroom");
         let skeleton_food_falls_through = player_is_skeleton
             && definition.tags.iter().any(|tag| tag == "food")
             && !definition.tags.iter().any(|tag| tag == "mushroom")
@@ -2420,6 +2512,9 @@ impl Game {
             changed,
             removed_entities,
         )?;
+        if snotling_mushroom_boost {
+            self.apply_snotling_mushroom_boost(&definition.id, events);
+        }
         if skeleton_food_falls_through {
             self.drop_inventory_quantity(item_id, 1)?
                 .expect("used Skeleton food must remain droppable");

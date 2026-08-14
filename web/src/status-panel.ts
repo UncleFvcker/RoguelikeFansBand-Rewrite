@@ -110,6 +110,12 @@ export function wildernessClock(worldTick: number): WildernessClock {
   };
 }
 
+export function abilityConfirmationMessageKey(abilityId: string): MessageKey | undefined {
+  return abilityId === "rfb.ability.race.devour-flesh"
+    ? "confirm-ability-devour-flesh"
+    : undefined;
+}
+
 export function weaponProficienciesByCategory(
   proficiencies: readonly WeaponProficiencyDto[],
   category: WeaponProficiencyCategoryDto,
@@ -1143,6 +1149,11 @@ export class StatusPanel {
   }
 
   #castAbility(ability: AbilityDto, townId?: string): void {
+    const confirmationKey = abilityConfirmationMessageKey(ability.id);
+    const view = this.#dom.abilityList.ownerDocument.defaultView;
+    if (confirmationKey && view && !view.confirm(this.#localization.format(confirmationKey))) {
+      return;
+    }
     if (ability.targetSpec.modes.includes("town")) {
       if (!townId) return;
       void this.#dispatch({

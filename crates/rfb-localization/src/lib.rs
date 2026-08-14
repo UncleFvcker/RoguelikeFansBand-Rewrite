@@ -601,6 +601,22 @@ mod tests {
     }
 
     #[test]
+    fn snotling_content_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("race-legacy-snotling-name", "屁精"),
+            ("ability-rfb-race-devour-flesh-name", "吞噬血肉"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Snotling content name should format"),
+                expected,
+            );
+        }
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

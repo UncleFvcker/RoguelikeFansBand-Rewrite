@@ -5680,6 +5680,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
         let ability_id = match spell {
             "berserk_spell" => "rfb.ability.race.berserk",
             "create_food_spell" => "rfb.ability.race.create-food",
+            "_devour_flesh_spell" => "rfb.ability.race.devour-flesh",
             "detect_doors_stairs_traps_spell" => "rfb.ability.race.detect-doors-stairs-traps",
             "detect_treasure_spell" => "rfb.ability.race.detect-treasure",
             "magic_missile_spell" => "rfb.ability.race.magic-missile",
@@ -6516,6 +6517,15 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    if entry.id == "snotling" {
+        return vec![
+            "humanoid",
+            "legacy-import",
+            "polymorph-candidate",
+            "rfb-compatibility",
+            "standard-body",
+        ];
+    }
     if entry.id == "sprite" {
         return vec![
             "humanoid",
@@ -21594,6 +21604,46 @@ static void _sprite_calc_bonuses(void)
         assert_eq!(race["levelStatScalings"][0]["stat"], "speed");
         assert_eq!(race["levelStatScalings"][0]["divisor"], 10);
         assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
+    }
+
+    #[test]
+    fn snotling_power_and_formal_tags_are_mapped() {
+        const SOURCE: &str = r#"
+static power_info _snotling_get_powers[] =
+{
+    { A_CHR, {1, 0, 0, _devour_flesh_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+"#;
+        let mut snotling = LegacyCharacterEntry {
+            id: "snotling".to_owned(),
+            get_powers_fn: Some("_snotling_get_powers".to_owned()),
+            hooks: vec!["get_powers".to_owned()],
+            ..LegacyCharacterEntry::default()
+        };
+        parse_race_powers(SOURCE, &mut snotling);
+
+        assert_eq!(
+            legacy_race_tags(&snotling),
+            [
+                "humanoid",
+                "legacy-import",
+                "polymorph-candidate",
+                "rfb-compatibility",
+                "standard-body",
+            ],
+        );
+        assert_eq!(
+            snotling.abilities,
+            [LegacyInnatePower {
+                governing_attribute: "charisma".to_owned(),
+                minimum_level: 1,
+                cost: 0,
+                base_failure_percent: 0,
+                ability_id: "rfb.ability.race.devour-flesh".to_owned(),
+            }],
+        );
+        assert!(snotling.hooks.is_empty());
     }
 
     #[test]

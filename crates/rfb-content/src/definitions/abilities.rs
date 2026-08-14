@@ -818,6 +818,10 @@ pub enum AbilityEffectDefinition {
         remaining_divisor: Option<u32>,
     },
     SatisfyHunger,
+    DevourFlesh {
+        maximum_hp_divisor: u16,
+        bleeding_amount: u32,
+    },
     VisibleDamage {
         damage_dice: u16,
         damage_sides: u16,

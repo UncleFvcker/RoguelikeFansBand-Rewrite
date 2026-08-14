@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.370.0");
+    assert_eq!(catalog.pack_version(), "1.371.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -2130,6 +2130,116 @@ fn formal_sprite_completes_the_authoritative_profile_and_sleeping_dust_power() {
         }
     ));
     assert!(sprite.starting_items.is_empty());
+}
+
+#[test]
+fn formal_snotling_completes_the_authoritative_profile_power_and_birth_mushrooms() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let snotling = catalog
+        .race("rfb-legacy.race.snotling")
+        .expect("formal Snotling race");
+
+    assert_eq!(
+        [
+            snotling.modifiers.strength,
+            snotling.modifiers.intelligence,
+            snotling.modifiers.wisdom,
+            snotling.modifiers.dexterity,
+            snotling.modifiers.constitution,
+            snotling.modifiers.charisma,
+        ],
+        [-2, -2, -2, -2, -2, -5],
+    );
+    assert_eq!(
+        (
+            snotling.life_percent,
+            snotling.base_hp,
+            snotling.experience_percent,
+            snotling.infravision,
+            snotling.shop_adjust_percent,
+        ),
+        (85, 10, 45, 2, 125),
+    );
+    assert_eq!(snotling.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(
+            snotling.tags.iter().any(|candidate| candidate == tag),
+            "{tag}",
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&snotling.skill_set_id)
+        .expect("formal Snotling skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [-3, -2, -2, 2, 0, 7, -10, -5],
+    );
+
+    let [activation] = snotling.abilities.as_slice() else {
+        panic!("Snotling should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.devour-flesh",
+            1,
+            TechniqueAttribute::Charisma,
+            0,
+            0,
+        ),
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Snotling Devour Flesh ability");
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::DevourFlesh {
+            maximum_hp_divisor: 3,
+            bleeding_amount: 100,
+        }
+    ));
+    assert!(
+        ability
+            .tags
+            .iter()
+            .any(|tag| tag == "usable-while-confused")
+    );
+    assert_eq!(
+        snotling.starting_items,
+        [StartingItemDefinition {
+            item_kind_id: "demo.item.fast-recovery-mushroom".to_owned(),
+            quantity: 1,
+            maximum_quantity: Some(3),
+            equipped: false,
+            fully_charged: false,
+        }],
+    );
 }
 
 #[test]

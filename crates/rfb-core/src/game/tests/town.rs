@@ -202,6 +202,46 @@ fn shroomery_trade_maintenance_and_save_round_trip_use_existing_shop_state() {
 }
 
 #[test]
+fn shroomery_refuses_formal_and_temporary_snotlings() {
+    let prepare = |game: &mut Game| {
+        game.gold = 10_000;
+        game.player.position = Position { x: 61, y: 19 };
+        game.mark_shop_visited_at_player().unwrap();
+        game.shop_states[SHROOMERY_ID]
+            .inventory
+            .first()
+            .expect("Shroomery stock")
+            .id
+            .clone()
+    };
+
+    let mut formal = Game::new_with_build_race_and_name(
+        399,
+        "demo.build.warrior",
+        "rfb-legacy.race.snotling",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal Snotling should create");
+    let item_id = prepare(&mut formal);
+    assert_eq!(
+        formal.buy_from_shop(SHROOMERY_ID, &item_id, 1),
+        Err("race-refused"),
+    );
+
+    let mut temporary =
+        Game::new_with_build(400, "demo.build.warrior").expect("Human Warrior should create");
+    let item_id = prepare(&mut temporary);
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.snotling-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.snotling".to_owned());
+    temporary.player.statuses.push(form);
+    assert_eq!(
+        temporary.buy_from_shop(SHROOMERY_ID, &item_id, 1),
+        Err("race-refused"),
+    );
+}
+
+#[test]
 fn birth_town_starts_without_surface_monsters() {
     let game = Game::new_with_build(0, "demo.build.warrior").expect("Warrens game should start");
 

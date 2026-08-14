@@ -58,6 +58,7 @@ export const PLAYTEST_RACE_IDS = [
   "rfb-legacy.race.wood-elf",
   "rfb-legacy.race.archon",
   "rfb-legacy.race.sprite",
+  "rfb-legacy.race.snotling",
 ] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";

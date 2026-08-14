@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.devour-flesh",
+      "minimumLevel": 1,
+      "governingAttribute": "charisma",
+      "cost": 0,
+      "baseFailurePercent": 0
+    }
+  ],
   "baseHp": 10,
   "bodySlots": [
     {
@@ -67,6 +76,7 @@
   "experiencePercent": 45,
   "formatVersion": 1,
   "id": "rfb-legacy.race.snotling",
+  "infravision": 2,
   "kinCategory": "kin-glyph-111",
   "legacyIndex": 6,
   "lifePercent": 85,
@@ -81,8 +91,18 @@
   "nameKey": "race-legacy-snotling-name",
   "shopAdjustPercent": 125,
   "skillSetId": "rfb-legacy.skill-set.race-snotling",
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.fast-recovery-mushroom",
+      "quantity": 1,
+      "maximumQuantity": 3
+    }
+  ],
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

@@ -75,6 +75,34 @@ fn formal_golem_birth_replaces_rations_with_a_full_nothing_staff_and_keeps_torch
 }
 
 #[test]
+fn formal_snotling_birth_adds_one_to_three_fast_recovery_mushrooms() {
+    let mut observed_quantities = std::collections::BTreeSet::new();
+    for seed in 0..32 {
+        let game = snotling_game(seed);
+        let mushrooms = game
+            .items
+            .iter()
+            .find(|item| {
+                item.kind_id == "demo.item.fast-recovery-mushroom"
+                    && item.location == ItemLocation::Inventory
+            })
+            .expect("Snotling should carry fast recovery mushrooms");
+        assert!((1..=3).contains(&mushrooms.quantity));
+        observed_quantities.insert(mushrooms.quantity);
+        assert!(game.items.iter().any(|item| {
+            item.kind_id == RATION_KIND_ID && item.location == ItemLocation::Inventory
+        }));
+        assert!(game.items.iter().any(|item| {
+            item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+        }));
+    }
+    assert_eq!(
+        observed_quantities,
+        std::collections::BTreeSet::from([1, 2, 3])
+    );
+}
+
+#[test]
 fn formal_zombie_birth_starts_at_night_without_rations_and_round_trips() {
     let mut game = zombie_game(370);
     assert_eq!(game.world_tick, wilderness::WILDERNESS_NIGHT_START_TICK);

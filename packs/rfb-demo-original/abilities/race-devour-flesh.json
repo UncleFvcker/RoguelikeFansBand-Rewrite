@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.devour-flesh",
+  "nameKey": "ability-rfb-race-devour-flesh-name",
+  "descriptionKey": "ability-rfb-race-devour-flesh-description",
+  "abilityProgramId": "rfb.ability-program.race.devour-flesh",
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": ["race", "usable-while-confused"]
+}

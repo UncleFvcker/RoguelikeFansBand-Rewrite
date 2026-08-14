@@ -165,14 +165,21 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        if self.player_has_status_kind(STATUS_CONFUSION) {
+        let ability = self.content.ability(ability_id).cloned();
+        if self.player_has_status_kind(STATUS_CONFUSION)
+            && ability.as_ref().is_none_or(|ability| {
+                !ability
+                    .tags
+                    .iter()
+                    .any(|tag| tag == "usable-while-confused")
+            })
+        {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "confused".to_owned(),
             });
             return Ok(());
         }
-        let ability = self.content.ability(ability_id).cloned();
         let mutation_activation = self.mutation_activation_for_ability(ability_id).cloned();
         let race_activation = self.race_ability_activation(ability_id).cloned();
         let class_activation = self.class_ability_activation(ability_id).cloned();
@@ -1216,6 +1223,9 @@ impl Game {
             }
             (AbilityEffectDefinition::SatisfyHunger, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_satisfy_hunger_effect(&ability, events);
+            }
+            (AbilityEffectDefinition::DevourFlesh { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_devour_flesh_effect(&ability, events);
             }
             (AbilityEffectDefinition::IdentifyItem { .. }, AbilityTargetPlan::Item { item_id }) => {
                 self.resolve_player_identify_item_effect(&ability, &item_id, events);
@@ -4750,6 +4760,81 @@ impl Game {
                     nutrition_before,
                     nutrition_after: self.nutrition,
                 }],
+            },
+            trace: None,
+        });
+        let after_state = self.nutrition_state();
+        if after_state != before_state {
+            events.push(DomainEvent::NutritionStateChanged {
+                from: before_state,
+                to: after_state,
+                nutrition: self.nutrition,
+            });
+        }
+    }
+
+    fn resolve_player_devour_flesh_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::DevourFlesh {
+            maximum_hp_divisor,
+            bleeding_amount,
+        } = ability.effect
+        else {
+            unreachable!("devour flesh executor requires a devour-flesh effect");
+        };
+        let before_state = self.nutrition_state();
+        let nutrition_before = self.nutrition;
+        self.nutrition = rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1;
+        if self.nutrition > nutrition_before {
+            self.fasting = false;
+        }
+        let bleeding = apply_ability_status_effect(
+            &mut self.player,
+            &ability.id,
+            1,
+            STATUS_BLEEDING,
+            1,
+            bleeding_amount,
+            0,
+            0,
+            AbilityStatusStackingDefinition::Extend,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let damage = self.effective_player_max_hp() / i32::from(maximum_hp_divisor);
+        self.player.hp = self.player.hp.saturating_sub(damage);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![
+                    AbilityEffectResolutionDto::SatisfyHunger {
+                        effect_index: 0,
+                        nutrition_before,
+                        nutrition_after: self.nutrition,
+                    },
+                    bleeding,
+                    AbilityEffectResolutionDto::SelfDamage {
+                        effect_index: 2,
+                        damage,
+                        fatal: self.player_is_dead(),
+                    },
+                ],
             },
             trace: None,
         });
@@ -11143,6 +11228,7 @@ impl Game {
             | AbilityEffectDefinition::ExplodePets
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
+            | AbilityEffectDefinition::DevourFlesh { .. }
             | AbilityEffectDefinition::CreateItem { .. }
             | AbilityEffectDefinition::CreateStair { .. }
             | AbilityEffectDefinition::SelfKnowledge

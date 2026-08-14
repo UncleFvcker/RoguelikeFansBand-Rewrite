@@ -8383,6 +8383,13 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             remaining_divisor: *remaining_divisor,
         },
         AbilityEffectDefinition::SatisfyHunger => AbilityEffectSpecDto::SatisfyHunger,
+        AbilityEffectDefinition::DevourFlesh {
+            maximum_hp_divisor,
+            bleeding_amount,
+        } => AbilityEffectSpecDto::DevourFlesh {
+            maximum_hp_divisor: *maximum_hp_divisor,
+            bleeding_amount: *bleeding_amount,
+        },
         AbilityEffectDefinition::VisibleDamage {
             damage_dice,
             damage_sides,

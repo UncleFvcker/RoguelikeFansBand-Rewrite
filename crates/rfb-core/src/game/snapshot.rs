@@ -646,7 +646,11 @@ impl Game {
                         | AbilitySourceDto::Mutation
                         | AbilitySourceDto::Race => {
                             level_available
-                                && !self.player_has_status_kind(STATUS_CONFUSION)
+                                && (!self.player_has_status_kind(STATUS_CONFUSION)
+                                    || ability
+                                        .tags
+                                        .iter()
+                                        .any(|tag| tag == "usable-while-confused"))
                                 && !self.player_has_status_kind(STATUS_FEAR)
                                 && concentration_available
                                 && hit_points_available
