@@ -512,3 +512,19 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 协调版本为 pack `1.342.0` / hash
   `dea74959256bde3ccda9d728a448a121d50eb525bc4e3fa2b9f419734be4122d`、Protocol `1.204`、State Hash Schema
   v100、save v1、active baseline `contract-v303`。未运行或刷新全量 fixture。
+
+## main 当前批次：半巨魔正式内容、种族再生与新游戏入口
+
+- 正式种族复用既有 `rfb-legacy.race.half-troll` 与
+  `rfb-legacy.skill-set.race-half-troll`，并直接引用种族方向已有的
+  `rfb.ability.race.berserk`。本批不新增或占用 ability、ability program、item、material、affix、
+  resource 或玩家 actor ID。
+- `RaceDefinition.regenerationRateModifierPercent` 是默认 0 的种族再生加值，直接并入现有玩家
+  再生倍率计算并跟随当前有效种族；没有增加持久化状态或第二套再生系统。RFB master 的六维、
+  生命 107%、基础 HP 25、经验 150%、商店 135%、八项技能、3 格红外、力量维持、再生 +100%、
+  初始“勇猛”和 10 级 STR/12/50“狂暴”均已闭合；原版没有等级奖励。
+- New Game 通过既有 `raceId` 正式开放“半巨魔”，玩家 actor 与 tileset 继续由职业 build 决定。
+  聚焦测试覆盖 9/10 级能力门槛、共享狂暴执行、200% 再生倍率以及临时变形获得/失去种族被动。
+- 协调版本为 pack `1.343.0` / hash
+  `23c6ddf5d8d8080af9fab3cafd85847077cbff7db76715094eaee5b69b2ea0d3`、Protocol `1.204`、State Hash
+  Schema v100、save v1、active baseline `contract-v303`。未运行或刷新全量 fixture。

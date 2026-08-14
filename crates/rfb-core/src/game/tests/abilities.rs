@@ -3300,6 +3300,107 @@ fn formal_half_giant_stone_to_mud_does_not_grant_mining_rewards() {
 }
 
 #[test]
+fn formal_half_troll_regeneration_and_berserk_follow_the_effective_race() {
+    let mut game = Game::new_with_build_race_and_name(
+        100,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.half-troll",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Half-Troll High-Mage should create");
+    clear_monsters(&mut game);
+    assert_eq!(game.player_infravision_range(), 3);
+    assert!(game.player_sustains_attribute(AttributeKind::Strength));
+    assert_eq!(game.player_regeneration_rate_percent(), 200);
+
+    let level_nine_experience = crate::stats::experience_required_for_level(9);
+    game.apply_unscaled_player_experience(level_nine_experience, &mut Vec::new());
+    let racial = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_BERSERK_ABILITY_ID)
+        .expect("Half-Troll Berserk should be projected");
+    assert_eq!(racial.source, AbilitySourceDto::Race);
+    assert_eq!(
+        racial.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Strength)
+    );
+    assert_eq!(racial.minimum_level, 10);
+    assert_eq!(racial.base_resource_cost, 12);
+    assert!(!racial.can_cast);
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(10) - level_nine_experience,
+        &mut Vec::new(),
+    );
+    game.debug_set_ability_casts_succeed(true);
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+    let mana_before = mana.current;
+    game.resolve_player_ability(
+        RACE_BERSERK_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Half-Troll Berserk should resolve through the shared ability");
+    assert_eq!(
+        game.resources["demo.resource.mana"].current,
+        mana_before - 12
+    );
+    assert!(
+        game.player
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_BERSERK)
+    );
+
+    let mut human = Game::new_with_build_race_and_name(
+        101,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human Warrior should create");
+    human.progress.level = 10;
+    assert_eq!(human.player_regeneration_rate_percent(), 100);
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.half-troll-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.half-troll".to_owned());
+    human.player.statuses.push(form);
+    assert_eq!(human.player_regeneration_rate_percent(), 200);
+    assert!(human.player_sustains_attribute(AttributeKind::Strength));
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == RACE_BERSERK_ABILITY_ID)
+    );
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(human.player_regeneration_rate_percent(), 100);
+    assert!(!human.player_sustains_attribute(AttributeKind::Strength));
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_BERSERK_ABILITY_ID)
+    );
+}
+
+#[test]
 fn formal_dwarf_detection_failure_spills_mana_into_hp_without_revealing() {
     let mut game = Game::new_with_build_race_and_name(
         95,

@@ -46,6 +46,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.nibelung",
     "rfb-legacy.race.gnome",
     "rfb-legacy.race.half-giant",
+    "rfb-legacy.race.half-troll",
   ]);
 });
 
@@ -151,6 +152,15 @@ test("new character requests preserve the selected formal race", () => {
       "Gor",
     ).raceId,
     "rfb-legacy.race.half-giant",
+  );
+  assert.equal(
+    createNewSessionRequest(
+      "93",
+      "demo.build.warrior",
+      "rfb-legacy.race.half-troll",
+      "Grish",
+    ).raceId,
+    "rfb-legacy.race.half-troll",
   );
 });
 

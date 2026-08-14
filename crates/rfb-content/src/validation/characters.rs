@@ -189,7 +189,9 @@ pub(super) fn validate_characters(
         require_format_version(race.format_version, &race.id)?;
         validate_definition_id(&race.id, "race")?;
         validate_definition_text(&race.id, &race.name_key, &race.description_key)?;
-        if !(50..=200).contains(&race.shop_adjust_percent) || !(0..=64).contains(&race.infravision)
+        if !(50..=200).contains(&race.shop_adjust_percent)
+            || !(0..=64).contains(&race.infravision)
+            || !(-1_000..=1_000).contains(&race.regeneration_rate_modifier_percent)
         {
             return Err(ContentError::InvalidCharacterSource(race.id.clone()));
         }

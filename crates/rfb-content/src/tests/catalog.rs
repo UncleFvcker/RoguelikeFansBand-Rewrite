@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.342.0");
+    assert_eq!(catalog.pack_version(), "1.343.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -980,6 +980,85 @@ fn formal_half_giant_matches_rfb_profile_and_reuses_stone_to_mud() {
             operation: AbilityTerrainBeamOperationDefinition::StoneToMud,
         }
     ));
+}
+
+#[test]
+fn formal_half_troll_matches_rfb_profile_and_reuses_racial_berserk() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let half_troll = catalog
+        .race("rfb-legacy.race.half-troll")
+        .expect("formal Half-Troll race");
+
+    assert_eq!(
+        [
+            half_troll.modifiers.strength,
+            half_troll.modifiers.intelligence,
+            half_troll.modifiers.wisdom,
+            half_troll.modifiers.dexterity,
+            half_troll.modifiers.constitution,
+            half_troll.modifiers.charisma,
+        ],
+        [4, -4, -1, -3, 3, -2]
+    );
+    assert_eq!(half_troll.life_percent, 107);
+    assert_eq!(half_troll.base_hp, 25);
+    assert_eq!(half_troll.experience_percent, 150);
+    assert_eq!(half_troll.shop_adjust_percent, 135);
+    assert_eq!(half_troll.infravision, 3);
+    assert_eq!(half_troll.kin_category.as_deref(), Some("kin-glyph-84"));
+    assert_eq!(half_troll.regeneration_rate_modifier_percent, 100);
+    assert_eq!(
+        half_troll
+            .attribute_sustains
+            .iter()
+            .copied()
+            .collect::<Vec<_>>(),
+        [ItemAttributeDefinition::Strength]
+    );
+    assert!(half_troll.level_mutation_rewards.is_empty());
+    assert_eq!(
+        half_troll.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 10,
+            governing_attribute: TechniqueAttribute::Strength,
+            cost: 12,
+            cost_scaling: None,
+            base_failure_percent: 50,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.berserk".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(half_troll.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&half_troll.skill_set_id)
+        .expect("formal Half-Troll skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -6),
+            ("demo.skill.disarming", -5),
+            ("demo.skill.melee", 20),
+            ("demo.skill.perception", 5),
+            ("demo.skill.ranged", -6),
+            ("demo.skill.saving-throw", -5),
+            ("demo.skill.search", -1),
+            ("demo.skill.stealth", -2),
+        ]
+    );
 }
 
 #[test]

@@ -743,11 +743,14 @@ impl Game {
     }
 
     pub(super) fn player_regeneration_rate_percent(&self) -> u64 {
+        let race_modifier = self
+            .character_definitions()
+            .map_or(0, |(_, race, _, _)| race.regeneration_rate_modifier_percent);
         let modifier = self
             .content
             .mutations()
             .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
-            .fold(0_i32, |total, mutation| {
+            .fold(race_modifier, |total, mutation| {
                 total.saturating_add(mutation.regeneration_rate_modifier_percent)
             });
         let timed_regeneration = if self.player_has_status_kind(STATUS_REGENERATION) {

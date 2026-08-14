@@ -430,6 +430,12 @@
     "nameKey": {
       "type": "string"
     },
+    "regenerationRateModifierPercent": {
+      "default": 0,
+      "description": "Additive percentage adjustment to the natural HP regeneration rate.",
+      "format": "int32",
+      "type": "integer"
+    },
     "resistances": {
       "additionalProperties": false,
       "default": {},

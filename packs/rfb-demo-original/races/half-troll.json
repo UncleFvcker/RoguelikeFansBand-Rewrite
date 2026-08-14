@@ -1,5 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.berserk",
+      "minimumLevel": 10,
+      "governingAttribute": "strength",
+      "cost": 12,
+      "baseFailurePercent": 50
+    }
+  ],
+  "attributeSustains": [
+    "strength"
+  ],
   "baseHp": 25,
   "bodySlots": [
     {
@@ -67,6 +79,7 @@
   "experiencePercent": 150,
   "formatVersion": 1,
   "id": "rfb-legacy.race.half-troll",
+  "infravision": 3,
   "kinCategory": "kin-glyph-84",
   "legacyIndex": 7,
   "lifePercent": 107,
@@ -79,10 +92,14 @@
     "wisdom": -1
   },
   "nameKey": "race-legacy-half-troll-name",
+  "regenerationRateModifierPercent": 100,
   "shopAdjustPercent": 135,
   "skillSetId": "rfb-legacy.skill-set.race-half-troll",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

@@ -1109,3 +1109,20 @@ git diff --stat
   `dea74959256bde3ccda9d728a448a121d50eb525bc4e3fa2b9f419734be4122d`、Protocol `1.204`、State Hash
   Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量 fixture，
   留待合并验收。
+
+## 60. main 当前交接（半巨魔正式内容、种族再生与新游戏入口）
+
+- 种族方向继续拥有既有 `rfb-legacy.race.half-troll` 与
+  `rfb-legacy.skill-set.race-half-troll`，并直接引用已有 `rfb.ability.race.berserk`；其他方向不得
+  为半巨魔复制狂暴身份。本批不新增 ability、ability program、item、material、affix、resource
+  或玩家 actor ID。
+- 内容模型新增默认 0 的 `RaceDefinition.regenerationRateModifierPercent`，直接并入已有变异/状态
+  再生倍率函数，跟随当前有效种族且不保存重复状态。半巨魔按 RFB master 闭合六维、生命 107%、
+  基础 HP 25、经验 150%、商店 135%、八项技能、3 格红外、力量维持、再生 +100%、初始“勇猛”
+  和 10 级 STR/12/50“狂暴”；原版没有等级奖励。
+- New Game 通过既有 `raceId` 正式开放“半巨魔”，外观继续由职业 build 决定。内容、能力门槛、
+  共享狂暴、再生倍率、有效种族切换、美德与 Web 入口由新增或直接相关聚焦测试覆盖。
+- 协调点为 pack `1.343.0` / content hash
+  `23c6ddf5d8d8080af9fab3cafd85847077cbff7db76715094eaee5b69b2ea0d3`、Protocol `1.204`、State Hash
+  Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量 fixture，
+  留待合并验收。

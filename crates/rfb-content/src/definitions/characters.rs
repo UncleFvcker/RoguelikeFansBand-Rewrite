@@ -110,6 +110,9 @@ pub struct RaceDefinition {
     /// Attributes this race innately prevents from being reduced.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub attribute_sustains: BTreeSet<ItemAttributeDefinition>,
+    /// Additive percentage adjustment to the natural HP regeneration rate.
+    #[serde(default)]
+    pub regeneration_rate_modifier_percent: i32,
     pub skill_set_id: String,
     #[serde(default)]
     pub starting_items: Vec<StartingItemDefinition>,
