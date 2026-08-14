@@ -84,6 +84,7 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.dwarf" => kinds.push(VirtueKindDto::Diligence),
             "rfb-legacy.race.nibelung" => kinds.push(VirtueKindDto::Patience),
             "rfb-legacy.race.gnome" => kinds.push(VirtueKindDto::Knowledge),
+            "rfb-legacy.race.half-giant" => kinds.push(VirtueKindDto::Justice),
             _ => {}
         }
 

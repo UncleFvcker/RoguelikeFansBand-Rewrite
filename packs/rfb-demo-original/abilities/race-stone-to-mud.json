@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.stone-to-mud",
+  "nameKey": "ability-rfb-race-stone-to-mud-name",
+  "descriptionKey": "ability-rfb-race-stone-to-mud-description",
+  "abilityProgramId": "demo.ability-program.arcane-stone-to-mud",
+  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "tags": ["race", "terrain"]
+}

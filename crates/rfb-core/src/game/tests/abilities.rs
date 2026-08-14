@@ -2568,6 +2568,7 @@ const RACE_DETECT_DOORS_ABILITY_ID: &str = "rfb.ability.race.detect-doors-stairs
 const RACE_DETECT_TREASURE_ABILITY_ID: &str = "rfb.ability.race.detect-treasure";
 const RACE_PHASE_DOOR_ABILITY_ID: &str = "rfb.ability.race.phase-door";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
+const RACE_STONE_TO_MUD_ABILITY_ID: &str = "rfb.ability.race.stone-to-mud";
 
 #[test]
 fn race_ability_follows_the_effective_race_and_projects_its_source() {
@@ -3218,6 +3219,84 @@ fn formal_gnome_phase_door_is_distinct_from_the_sorcery_spell() {
     assert_ne!(game.player.position, position_before);
     assert!(game.player.position.x.abs_diff(position_before.x) <= 10);
     assert!(game.player.position.y.abs_diff(position_before.y) <= 10);
+}
+
+#[test]
+fn formal_half_giant_stone_to_mud_does_not_grant_mining_rewards() {
+    let mut game = Game::new_with_build_race_and_name(
+        99,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.half-giant",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Half-Giant High-Mage should create");
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.gold_piles.clear();
+    assert_eq!(game.player_infravision_range(), 3);
+    assert!(game.player_sustains_attribute(AttributeKind::Strength));
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Shards),
+        ResistanceLevel::Resistant
+    );
+
+    let level_nineteen_experience = crate::stats::experience_required_for_level(19);
+    game.apply_unscaled_player_experience(level_nineteen_experience, &mut Vec::new());
+    let racial = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_STONE_TO_MUD_ABILITY_ID)
+        .expect("Half-Giant Stone to Mud should be projected");
+    assert_eq!(racial.source, AbilitySourceDto::Race);
+    assert_eq!(
+        racial.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Strength)
+    );
+    assert_eq!(racial.minimum_level, 20);
+    assert_eq!(racial.base_resource_cost, 10);
+    assert!(!racial.can_cast);
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(20) - level_nineteen_experience,
+        &mut Vec::new(),
+    );
+    game.debug_set_ability_casts_succeed(true);
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana");
+    mana.current = mana.maximum;
+    let mana_before = mana.current;
+    let target = game.position_in_direction(Direction::East);
+    replace_terrain(&mut game, target, "demo.terrain.quartz-vein");
+    game.progress.mining_proficiency = 3_999;
+    let materials_before = game.progress.materials.clone();
+    let item_serial_before = game.next_item_instance_serial;
+
+    game.resolve_player_ability(
+        RACE_STONE_TO_MUD_ABILITY_ID,
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Half-Giant Stone to Mud should resolve");
+
+    assert_eq!(game.terrain_at(target), "demo.terrain.floor");
+    assert_eq!(
+        game.resources["demo.resource.mana"].current,
+        mana_before - 10
+    );
+    assert_eq!(game.progress.mining_proficiency, 3_999);
+    assert_eq!(game.progress.materials, materials_before);
+    assert!(game.gold_piles.is_empty());
+    assert!(game.items.is_empty());
+    assert_eq!(game.next_item_instance_serial, item_serial_before);
 }
 
 #[test]

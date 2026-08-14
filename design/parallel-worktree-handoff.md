@@ -1092,3 +1092,20 @@ git diff --stat
   `7d7e534496653c1a846dd461c73f245e4a9ce36fb3715b80d2976d3c659dbc47`、Protocol `1.204`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量
   fixture，留待合并验收。
+
+## 59. main 当前交接（半巨人正式内容、新游戏 UI 与验收）
+
+- 种族方向继续拥有既有 `rfb-legacy.race.half-giant` 与
+  `rfb-legacy.skill-set.race-half-giant`，并新增、拥有 `rfb.ability.race.stone-to-mud`。该能力共享
+  `demo.ability-program.arcane-stone-to-mud`；其他方向不得重复建立该能力身份。本批不占用新的
+  ability program、item、material、affix、resource 或玩家 actor ID。
+- 半巨人已按 RFB master 闭合六维、生命 108%、基础 HP 26、经验 150%、商店 125%、八项
+  技能、3 格红外、力量维持、碎片抗性、Giant kin、Standard 身体、初始“正义”和 20 级
+  STR/10/70“化石为泥”；原版没有等级奖励。
+- New Game 通过既有 `raceId` 正式开放“半巨人”，玩家 actor 与 tileset 继续由职业 build 决定。
+  化石为泥复用共享 terrain-beam 和 `Magic` 地形变更来源；普通矿脉不会因此增加挖矿熟练度或
+  生成材料、金币、物品。既有“魔法摧毁富矿只掉普通金币”的共享规则不变。
+- 协调点为 pack `1.342.0` / content hash
+  `dea74959256bde3ccda9d728a448a121d50eb525bc4e3fa2b9f419734be4122d`、Protocol `1.204`、State Hash
+  Schema v100、save v1、active baseline `contract-v303`。依用户要求不运行或刷新全量 fixture，
+  留待合并验收。

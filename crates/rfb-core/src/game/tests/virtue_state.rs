@@ -201,6 +201,22 @@ fn formal_races_receive_their_original_race_virtues() {
         ]
     );
 
+    let half_giant = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.half-giant",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Half-Giant Archer should create");
+    assert_eq!(
+        &virtue_kinds(&half_giant)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Justice,
+        ]
+    );
+
     let dunadan = Game::new_with_build_race_and_name(
         43,
         "demo.build.archer",

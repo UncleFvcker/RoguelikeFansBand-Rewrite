@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.339.0");
+    assert_eq!(catalog.pack_version(), "1.342.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -888,6 +888,97 @@ fn formal_gnome_matches_rfb_profile_and_uses_a_distinct_race_phase_door() {
     assert!(matches!(
         phase_door.effect,
         AbilityEffectDefinition::BlinkSelf { radius: 10 }
+    ));
+}
+
+#[test]
+fn formal_half_giant_matches_rfb_profile_and_reuses_stone_to_mud() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let half_giant = catalog
+        .race("rfb-legacy.race.half-giant")
+        .expect("formal Half-Giant race");
+
+    assert_eq!(
+        [
+            half_giant.modifiers.strength,
+            half_giant.modifiers.intelligence,
+            half_giant.modifiers.wisdom,
+            half_giant.modifiers.dexterity,
+            half_giant.modifiers.constitution,
+            half_giant.modifiers.charisma,
+        ],
+        [4, -2, -2, -2, 3, 0]
+    );
+    assert_eq!(half_giant.life_percent, 108);
+    assert_eq!(half_giant.base_hp, 26);
+    assert_eq!(half_giant.experience_percent, 150);
+    assert_eq!(half_giant.shop_adjust_percent, 125);
+    assert_eq!(half_giant.infravision, 3);
+    assert_eq!(half_giant.kin_category.as_deref(), Some("kin-glyph-80"));
+    assert_eq!(
+        half_giant.resistances.get(&ActorDamageType::Shards),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        half_giant
+            .attribute_sustains
+            .iter()
+            .copied()
+            .collect::<Vec<_>>(),
+        [ItemAttributeDefinition::Strength]
+    );
+    assert!(half_giant.level_mutation_rewards.is_empty());
+    assert_eq!(
+        half_giant.abilities,
+        [InnatePowerDefinition {
+            minimum_level: 20,
+            governing_attribute: TechniqueAttribute::Strength,
+            cost: 10,
+            cost_scaling: None,
+            base_failure_percent: 70,
+            minimum_failure_percent: None,
+            ability_id: "rfb.ability.race.stone-to-mud".to_owned(),
+        }]
+    );
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(half_giant.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&half_giant.skill_set_id)
+        .expect("formal Half-Giant skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", -5),
+            ("demo.skill.disarming", -6),
+            ("demo.skill.melee", 25),
+            ("demo.skill.perception", 5),
+            ("demo.skill.saving-throw", -3),
+            ("demo.skill.search", -1),
+            ("demo.skill.stealth", -2),
+        ]
+    );
+
+    let stone_to_mud = catalog
+        .ability("rfb.ability.race.stone-to-mud")
+        .expect("Half-Giant Stone to Mud ability");
+    assert!(matches!(
+        stone_to_mud.effect,
+        AbilityEffectDefinition::TerrainBeam {
+            operation: AbilityTerrainBeamOperationDefinition::StoneToMud,
+        }
     ));
 }
 

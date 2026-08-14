@@ -45,6 +45,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.dwarf",
     "rfb-legacy.race.nibelung",
     "rfb-legacy.race.gnome",
+    "rfb-legacy.race.half-giant",
   ]);
 });
 
@@ -141,6 +142,15 @@ test("new character requests preserve the selected formal race", () => {
       "Fizzwick",
     ).raceId,
     "rfb-legacy.race.gnome",
+  );
+  assert.equal(
+    createNewSessionRequest(
+      "92",
+      "demo.build.warrior",
+      "rfb-legacy.race.half-giant",
+      "Gor",
+    ).raceId,
+    "rfb-legacy.race.half-giant",
   );
 });
 

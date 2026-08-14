@@ -1,6 +1,18 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
   "baseHp": 26,
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.stone-to-mud",
+      "minimumLevel": 20,
+      "governingAttribute": "strength",
+      "cost": 10,
+      "baseFailurePercent": 70
+    }
+  ],
+  "attributeSustains": [
+    "strength"
+  ],
   "bodySlots": [
     {
       "id": "right-hand",
@@ -67,6 +79,7 @@
   "experiencePercent": 150,
   "formatVersion": 1,
   "id": "rfb-legacy.race.half-giant",
+  "infravision": 3,
   "kinCategory": "kin-glyph-80",
   "legacyIndex": 12,
   "lifePercent": 108,
@@ -84,7 +97,10 @@
   "shopAdjustPercent": 125,
   "skillSetId": "rfb-legacy.skill-set.race-half-giant",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

@@ -34,6 +34,7 @@ export const PLAYTEST_RACE_IDS = [
   "rfb-legacy.race.dwarf",
   "rfb-legacy.race.nibelung",
   "rfb-legacy.race.gnome",
+  "rfb-legacy.race.half-giant",
 ] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
