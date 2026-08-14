@@ -111,33 +111,38 @@ fn floor_replay_preserves_world_map_state() {
 }
 
 #[test]
-fn half_orc_talent_choice_is_replayable() {
-    let initial = level_thirty_half_orc(83);
-    let pending = initial
-        .snapshot()
-        .player
-        .pending_race_mutation_choice
-        .expect("level 30 Half-Orc should require a talent choice");
-    let mut recorder = ReplayRecorder::new(initial.clone());
-    recorder
-        .dispatch(GameCommand::ChooseRaceMutation {
-            reward_id: pending.reward_id,
-            mutation_id: "rfb.mutation.sacred-vitality".to_owned(),
-        })
-        .expect("Half-Orc talent choice should execute");
-    let (final_game, replay) = recorder.finish();
-
-    assert!(
-        final_game
-            .to_save()
+fn level_thirty_race_talent_choices_are_replayable() {
+    for (seed, race_id) in [
+        (83, "rfb-legacy.race.half-orc"),
+        (85, "rfb-legacy.race.dunadan"),
+    ] {
+        let initial = level_thirty_race(seed, race_id);
+        let pending = initial
+            .snapshot()
             .player
-            .locked_mutation_ids
-            .iter()
-            .any(|id| id == "rfb.mutation.sacred-vitality")
-    );
-    let verification = verify(&replay, initial).expect("Half-Orc talent replay should verify");
-    assert_eq!(verification.commands_verified, 1);
-    assert_eq!(verification.final_state_hash, final_game.state_hash());
+            .pending_race_mutation_choice
+            .expect("level 30 race should require a talent choice");
+        let mut recorder = ReplayRecorder::new(initial.clone());
+        recorder
+            .dispatch(GameCommand::ChooseRaceMutation {
+                reward_id: pending.reward_id,
+                mutation_id: "rfb.mutation.sacred-vitality".to_owned(),
+            })
+            .expect("race talent choice should execute");
+        let (final_game, replay) = recorder.finish();
+
+        assert!(
+            final_game
+                .to_save()
+                .player
+                .locked_mutation_ids
+                .iter()
+                .any(|id| id == "rfb.mutation.sacred-vitality")
+        );
+        let verification = verify(&replay, initial).expect("race talent replay should verify");
+        assert_eq!(verification.commands_verified, 1);
+        assert_eq!(verification.final_state_hash, final_game.state_hash());
+    }
 }
 
 #[test]
@@ -243,14 +248,14 @@ fn quiet_game(seed: u64) -> Game {
     Game::from_save(payload).expect("quiet replay fixture should restore")
 }
 
-fn level_thirty_half_orc(seed: u64) -> Game {
+fn level_thirty_race(seed: u64, race_id: &str) -> Game {
     let mut payload = Game::new_with_build_race_and_name(
         seed,
         "demo.build.warrior",
-        "rfb-legacy.race.half-orc",
+        race_id,
         Game::DEFAULT_PLAYER_NAME,
     )
-    .expect("formal Half-Orc should create")
+    .expect("formal level 30 race should create")
     .to_save();
     let progress = payload
         .player
@@ -268,7 +273,7 @@ fn level_thirty_half_orc(seed: u64) -> Game {
             .saturating_add(skill.growth_per_ten_levels.saturating_mul(3))
             .clamp(0, skill.maximum);
     }
-    Game::from_save(payload).expect("level 30 Half-Orc replay precondition should restore")
+    Game::from_save(payload).expect("level 30 race replay precondition should restore")
 }
 
 fn invisible_replay_game(seed: u64, race_id: &str) -> Game {

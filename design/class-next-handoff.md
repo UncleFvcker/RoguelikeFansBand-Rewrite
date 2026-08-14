@@ -352,3 +352,18 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 协调版本：pack `1.333.0` / hash
   `6cf1fcef5b2162e3ecc653c91dcc2fb5beae7d95ca89091b660ff7b96e2336fd`、Protocol `1.201`、
   State Hash Schema v100、save v1、baseline `contract-v303`。依用户要求不运行或刷新全量 fixture。
+
+## main 当前批次：登丹人正式内容与 UI
+
+- 不新增内容 ID；正式种族复用 `rfb-legacy.race.dunadan` 与
+  `rfb-legacy.skill-set.race-dunadan`。静态属性、生命/经验/商店倍率、八项技能、Standard
+  身体、Human kin、体质维持和初始“个人主义”均按 RFB master 锁定。
+- 登丹人在 30 级使用与 Human、半兽人相同的 20 项已闭环半神天赋候选；原版尚未闭环的
+  七项继续隐藏。等级奖励固定读取永久选择种族，临时变形成登丹人只取得体质维持，不会
+  获得 `dunadan-talent`。
+- New Game 列表现包含 Human、半兽人、高等精灵和登丹人；继续使用既有 `raceId`，玩家
+  actor 与三套 tileset 外观仍完全由职业构筑决定。
+- 协调版本为 pack `1.334.0` / hash
+  `902ac3141bab282d663871d70e50a80cb4c9556b347f32eeddf230943b1e7fd3`、Protocol `1.201`、
+  State Hash Schema v100、save v1、baseline `contract-v303`。只运行新增和直接相关测试；全量
+  fixture 留到合并验收。

@@ -1183,6 +1183,13 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
         Game::DEFAULT_PLAYER_NAME,
     )
     .expect("formal High-Elf should create");
+    let dunadan = Game::new_with_build_race_and_name(
+        83,
+        "demo.build.warrior",
+        "rfb-legacy.race.dunadan",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal Dunadan should create");
 
     let human_attributes = human.effective_player_attributes();
     let half_orc_attributes = half_orc.effective_player_attributes();
@@ -1204,6 +1211,22 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
     );
     assert!(half_orc.effective_player_max_hp() > human.effective_player_max_hp());
 
+    let dunadan_attributes = dunadan.effective_player_attributes();
+    for (attribute, bonus) in [
+        (AttributeKind::Strength, 1),
+        (AttributeKind::Intelligence, 2),
+        (AttributeKind::Wisdom, 2),
+        (AttributeKind::Dexterity, 2),
+        (AttributeKind::Constitution, 3),
+        (AttributeKind::Charisma, 0),
+    ] {
+        assert_eq!(
+            dunadan_attributes.index(attribute),
+            human_attributes.index(attribute) + bonus
+        );
+    }
+    assert!(dunadan.effective_player_max_hp() > human.effective_player_max_hp());
+
     let human_skills = human.effective_player_skill_progress();
     let half_orc_skills = half_orc.effective_player_skill_progress();
     assert_eq!(
@@ -1213,6 +1236,15 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
     assert_eq!(
         half_orc_skills["demo.skill.perception"].current + 5,
         human_skills["demo.skill.perception"].current
+    );
+    let dunadan_skills = dunadan.effective_player_skill_progress();
+    assert_eq!(
+        dunadan_skills["demo.skill.melee"].current,
+        human_skills["demo.skill.melee"].current + 15
+    );
+    assert_eq!(
+        dunadan_skills["demo.skill.perception"].current,
+        human_skills["demo.skill.perception"].current + 3
     );
 
     let shop_factor = |game: &Game| {
@@ -1236,6 +1268,10 @@ fn formal_race_selection_changes_the_warrior_profile_and_defaults_to_human() {
     let mut high_elf_experience = high_elf.clone();
     high_elf_experience.apply_player_experience(100, &mut Vec::new());
     assert_eq!(high_elf_experience.progress.experience, 190);
+
+    let mut dunadan_experience = dunadan.clone();
+    dunadan_experience.apply_player_experience(100, &mut Vec::new());
+    assert_eq!(dunadan_experience.progress.experience, 160);
 
     let default = Game::new_with_build(83, "demo.build.warrior")
         .expect("Warrior build should retain its Human default");
@@ -1313,6 +1349,88 @@ fn high_elf_intrinsics_and_identity_round_trip() {
     assert_eq!(restored.build, game.build);
     assert_eq!(restored.snapshot(), game.snapshot());
     assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn dunadan_sustain_talent_and_identity_are_authoritative() {
+    let mut game = Game::new_with_build_race_and_name(
+        85,
+        "demo.build.warrior",
+        "rfb-legacy.race.dunadan",
+        "Aragorn",
+    )
+    .expect("formal Dunadan should create");
+    assert!(game.player_sustains_attribute(AttributeKind::Constitution));
+    assert!(!game.player_sustains_attribute(AttributeKind::Strength));
+
+    let level_29_experience = experience_required_for_level(29);
+    game.apply_unscaled_player_experience(level_29_experience, &mut Vec::new());
+    assert_eq!(game.progress.level, 29);
+    assert!(
+        game.snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
+
+    game.apply_unscaled_player_experience(
+        experience_required_for_level(30) - level_29_experience,
+        &mut Vec::new(),
+    );
+    let pending = game
+        .snapshot()
+        .player
+        .pending_race_mutation_choice
+        .expect("Dunadan should choose a level 30 talent");
+    assert_eq!(pending.reward_id, "dunadan-talent");
+    assert_eq!(pending.candidates.len(), 20);
+    dispatch_next(
+        &mut game,
+        GameCommand::ChooseRaceMutation {
+            reward_id: pending.reward_id,
+            mutation_id: "rfb.mutation.sacred-vitality".to_owned(),
+        },
+    );
+    assert!(
+        game.progress
+            .locked_mutation_ids
+            .contains("rfb.mutation.sacred-vitality")
+    );
+    let restored = Game::from_save(game.to_save()).expect("Dunadan save should restore");
+    assert_eq!(restored.build, game.build);
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert!(
+        restored
+            .snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
+
+    let mut temporary = Game::new_with_build_race_and_name(
+        85,
+        "demo.build.warrior",
+        "rfb-legacy.race.high-elf",
+        "Finrod",
+    )
+    .expect("formal High-Elf should create");
+    temporary.apply_unscaled_player_experience(experience_required_for_level(30), &mut Vec::new());
+    let mut form = monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.setup").status;
+    form.granted_race_id = Some("rfb-legacy.race.dunadan".to_owned());
+    temporary.player.statuses.push(form);
+    assert!(temporary.player_sustains_attribute(AttributeKind::Constitution));
+    assert!(
+        temporary
+            .snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
+    temporary
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert!(!temporary.player_sustains_attribute(AttributeKind::Constitution));
 }
 
 #[test]

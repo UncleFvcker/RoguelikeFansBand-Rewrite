@@ -742,7 +742,7 @@ impl Game {
     }
 
     pub(super) fn pending_race_mutation_choice(&self) -> Option<(String, Vec<String>)> {
-        let (_, race, _, _) = self.character_definitions()?;
+        let race = self.selected_race_definition()?;
         race.level_mutation_rewards
             .iter()
             .filter(|reward| reward.minimum_level <= self.progress.level)
@@ -773,13 +773,13 @@ impl Game {
     }
 
     fn apply_race_level_mutation_rewards(&mut self, events: &mut Vec<DomainEvent>) {
-        let Some((_, race, class, _)) = self.character_definitions() else {
+        let Some(race) = self.selected_race_definition() else {
             return;
         };
         let rewards = race.level_mutation_rewards.clone();
-        let casting_attribute = class
-            .casting_profile
-            .as_ref()
+        let casting_attribute = self
+            .character_definitions()
+            .and_then(|(_, _, class, _)| class.casting_profile.as_ref())
             .map(|profile| profile.casting_attribute);
         for reward in rewards {
             if reward.minimum_level > self.progress.level
@@ -799,6 +799,12 @@ impl Game {
                 .unwrap_or(&default_mutation_id);
             self.gain_and_lock_race_mutation(mutation_id, events);
         }
+    }
+
+    fn selected_race_definition(&self) -> Option<&rfb_content::RaceDefinition> {
+        self.build
+            .as_ref()
+            .and_then(|identity| self.content.race(&identity.race_id))
     }
 
     fn race_mutation_reward_completed(

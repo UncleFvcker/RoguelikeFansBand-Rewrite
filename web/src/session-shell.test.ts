@@ -37,6 +37,7 @@ test("new character creation exposes only formal race slices", () => {
     "demo.race.rfb-human",
     "rfb-legacy.race.half-orc",
     "rfb-legacy.race.high-elf",
+    "rfb-legacy.race.dunadan",
   ]);
 });
 
@@ -63,6 +64,15 @@ test("new character requests preserve the selected formal race", () => {
       "Finrod",
     ).raceId,
     "rfb-legacy.race.high-elf",
+  );
+  assert.equal(
+    createNewSessionRequest(
+      "85",
+      "demo.build.warrior",
+      "rfb-legacy.race.dunadan",
+      "Aragorn",
+    ).raceId,
+    "rfb-legacy.race.dunadan",
   );
 });
 

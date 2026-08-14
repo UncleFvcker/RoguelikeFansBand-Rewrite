@@ -946,3 +946,18 @@ git diff --stat
   `6cf1fcef5b2162e3ecc653c91dcc2fb5beae7d95ca89091b660ff7b96e2336fd`、Protocol `1.201`、
   State Hash Schema v100、save v1、active baseline `contract-v303`。按用户要求只执行新增和直接
   相关测试，全量 fixture 留到合并验收。
+
+## 50. main 当前交接（登丹人正式内容与 UI）
+
+- 本批不新增 race、skill set、item、ability、mutation、material 或 affix ID；登丹人继续
+  使用 `rfb-legacy.race.dunadan`，其他方向不得创建重复身份。
+- RFB master 的静态属性、生命 100%、基础 HP 20、经验 160%、商店 100%、八项技能、Human
+  kin、体质维持和 30 级半神天赋已闭合。候选池与 Human 当前 20 项已实现候选完全一致；
+  七项未实现原版天赋继续隐藏。
+- 种族属性维持由有效种族派生，因此变形会获得或失去；等级奖励改为永久选择种族派生，
+  防止临时登丹人形态领取 `dunadan-talent`。New Game 通过既有 `raceId` 正式开放“登丹人”，
+  玩家 actor 与 tileset 不增加种族副本。
+- 共享协调点为 pack `1.334.0` / content hash
+  `902ac3141bab282d663871d70e50a80cb4c9556b347f32eeddf230943b1e7fd3`、Protocol `1.201`、
+  State Hash Schema v100、save v1、active baseline `contract-v303`。按用户要求不运行、不刷新
+  全量 fixture；合并验收时统一处理。
