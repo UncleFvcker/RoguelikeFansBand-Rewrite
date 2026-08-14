@@ -5301,6 +5301,157 @@ fn imp_fire_upgrade_and_demon_traits_follow_the_effective_race() {
 }
 
 #[test]
+fn draconian_breath_uses_current_hp_maturity_shape_and_deadly_upgrade() {
+    const ABILITY_ID: &str = "rfb.ability.race.draconian-red-breath";
+
+    assert!(matches!(
+        Game::new_with_build_race_and_name(
+            117,
+            "demo.build.high-mage-death",
+            "rfb-legacy.race.draconian-red",
+            Game::DEFAULT_PLAYER_NAME,
+        ),
+        Err(crate::error::CoreError::CharacterRaceUnavailable(race_id))
+            if race_id == "rfb-legacy.race.draconian-red"
+    ));
+
+    let mut base = Game::new_with_build_race_and_name(
+        117,
+        "demo.build.high-mage-death",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human High-Mage should create");
+    clear_monsters(&mut base);
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.draconian-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.draconian-red".to_owned());
+    base.player.statuses.push(form);
+
+    for (level, hp, deadly, expected_shape, expected_damage, expected_radius, expected_cost) in [
+        (19, 400, false, "bolt", 54, 0, 7),
+        (20, 400, false, "beam", 56, 0, 8),
+        (29, 400, false, "beam", 68, 0, 12),
+        (30, 400, false, "cone", 70, 2, 13),
+        (40, 400, false, "cone", 100, 3, 19),
+        (50, 1_000, false, "cone", 250, 3, 26),
+        (50, 1_000, true, "cone", 500, 3, 40),
+    ] {
+        let mut game = base.clone();
+        game.progress.level = level;
+        game.player.hp = hp;
+        if deadly {
+            game.progress
+                .active_mutation_ids
+                .insert("rfb.mutation.draconian-breath".to_owned());
+        }
+        let projected = game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == ABILITY_ID)
+            .expect("Draconian breath should be projected from the effective race");
+        assert_eq!(projected.source, AbilitySourceDto::Race);
+        assert_eq!(projected.minimum_level, 1);
+        assert_eq!(projected.base_resource_cost, 0);
+        assert_eq!(projected.resource_cost, expected_cost, "level {level}");
+        assert_eq!(
+            projected.governing_attribute,
+            Some(rfb_protocol::AttributeKindDto::Constitution)
+        );
+        let (shape, damage, radius, damage_type) = match projected.effects.as_slice() {
+            [
+                AbilityEffectSpecDto::Damage {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                    damage_type,
+                    ..
+                },
+            ] => {
+                assert_eq!((*damage_dice, *damage_sides), (0, 0));
+                ("bolt", *damage_bonus, 0, *damage_type)
+            }
+            [
+                AbilityEffectSpecDto::BeamDamage {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                    damage_type,
+                    ..
+                },
+            ] => {
+                assert_eq!((*damage_dice, *damage_sides), (0, 0));
+                ("beam", *damage_bonus, 0, *damage_type)
+            }
+            [
+                AbilityEffectSpecDto::ConeDamage {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                    damage_type,
+                    radius,
+                    ..
+                },
+            ] => {
+                assert_eq!((*damage_dice, *damage_sides), (0, 0));
+                ("cone", *damage_bonus, *radius, *damage_type)
+            }
+            effects => panic!("unexpected Draconian breath projection: {effects:?}"),
+        };
+        assert_eq!(shape, expected_shape, "level {level}");
+        assert_eq!(damage, expected_damage, "level {level}");
+        assert_eq!(radius, expected_radius, "level {level}");
+        assert_eq!(damage_type, DamageTypeDto::Fire, "level {level}");
+    }
+
+    let mut game = base;
+    game.progress.level = 30;
+    game.player.hp = 400;
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana")
+        .current = 0;
+    game.player.position = Position { x: 3, y: 3 };
+    for position in [Position { x: 3, y: 3 }, Position { x: 4, y: 3 }] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor(
+        "test.draconian-breath-target".to_owned(),
+        "demo.actor.warrens-keeper",
+        Position { x: 4, y: 3 },
+    );
+    game.debug_set_ability_casts_succeed(true);
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        ABILITY_ID,
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Draconian breath should resolve");
+
+    assert_eq!(game.player.hp, 387);
+    assert_eq!(game.entities[0].hp, 80);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityCastSucceeded { resolution }
+            if resolution.resource_cost == 13
+                && resolution.resource_paid == 0
+                && resolution.hp_paid == 13
+    )));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityConeDamage { resolution, .. }
+            if resolution.radius == 2 && resolution.base_raw_damage == 70
+    )));
+}
+
+#[test]
 fn formal_dwarf_detection_failure_spills_mana_into_hp_without_revealing() {
     let mut game = Game::new_with_build_race_and_name(
         95,

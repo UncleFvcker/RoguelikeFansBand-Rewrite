@@ -263,6 +263,7 @@ impl Game {
         }
         Self::apply_player_spell_power(&mut ability, self.effective_player_spell_power_bonus());
         self.apply_player_status_power_attribute(&mut ability);
+        self.apply_player_dynamic_effect(&mut ability);
         let unavailable_reason = match source {
             AbilitySourceDto::Mutation | AbilitySourceDto::Race => {
                 let activation =
@@ -8480,6 +8481,7 @@ impl Game {
             | AbilityEffectDefinition::TeleportSelf { .. }
             | AbilityEffectDefinition::TeleportTarget
             | AbilityEffectDefinition::BreathDamage { .. }
+            | AbilityEffectDefinition::DraconianBreathDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::BirdDrop
             | AbilityEffectDefinition::DrainResource { .. }

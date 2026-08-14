@@ -695,3 +695,26 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `9fa98c5f1f4499138f5bcc7637a2941998a009d713e8388eead4c3d57843f042`、Protocol `1.212`、
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。龙人动态
   纵切继续延期；下一静态种族为魔像 `rfb-legacy.race.golem`。
+
+## main 当前批次：龙人专项阶段 3、九个隐藏亚种与动态喷吐
+
+- 权威来源为 RFB `master:src/races_a.c`。本批新增并由种族方向拥有九组稳定身份：
+  `rfb-legacy.race.draconian-{red,white,blue,black,green,bronze,crystal,gold,shadow}`、对应
+  `rfb-legacy.skill-set.race-draconian-*`、`rfb.ability.race.draconian-*-breath` 和
+  `rfb.ability-program.race.draconian-*-breath`。本批不新增 item、material、affix、resource、actor、
+  Protocol DTO 或权威状态。
+- 九个亚种按原版闭合六维、生命/经验/商店倍率、八项技能、红外、亚种抗性、漂浮和 Standard 身体；
+  水晶亚种额外具有 AC +10 与 40 级反射。红色亚种承接 legacy race index 20，其余亚种没有虚构
+  legacy index。中文选项名逐字使用原版“红色/白色/蓝色/黑色/绿色/青铜/水晶/金色/阴影”。
+- 新的窄内容效果 `DraconianBreathDamage` 在玩家投射与执行前降低为既有单体箭、贯穿束或锥形伤害，
+  因此不扩展公共 DTO。19 级及以下为箭、20–29 级为束、30 级起为锥形，半径为
+  `1 + level / 20`；伤害先按亚种的当前 HP 百分比和上限计算，未获得
+  `rfb.mutation.draconian-breath` 时减半且至少为 1。费用精确为
+  `max(1, level / 2 + level² * 15 / 2500)`，未获得该变异时再乘 `2/3`。
+- 九个 Race 刻意不带 `rfb-compatibility` 或 `polymorph-candidate`，所以当前 New Game 请求不能进入；
+  这不是正式龙人交付。后续阶段仍需闭合 35 级龙人力量选择及其龙皮、龙之打击、致命吐息、额外
+  抗性和变形语义，再实现出生亚种选择、正式标签、UI 与完整生命周期验收。
+- 协调版本为 pack `1.354.0` / hash
+  `087d9a1edf25f204228c4efdc8f396365684912eb85df06e039ab3c6ba4b515b`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。新增的内容
+  矩阵、动态吐息、中文名测试及 source/schema 检查通过；按用户要求未运行或刷新全量 fixture。

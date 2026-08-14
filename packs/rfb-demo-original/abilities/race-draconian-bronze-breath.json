@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.race.draconian-bronze-breath",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-race-draconian-bronze-breath-description",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.draconian-bronze-breath",
+  "nameKey": "ability-rfb-race-draconian-breath-name",
+  "tags": [
+    "breath",
+    "damage",
+    "confusion",
+    "race"
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

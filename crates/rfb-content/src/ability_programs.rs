@@ -282,6 +282,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::BoltOrAreaDamage { .. }
                     | AbilityEffectDefinition::ConeDamage { .. }
                     | AbilityEffectDefinition::BreathDamage { .. }
+                    | AbilityEffectDefinition::DraconianBreathDamage { .. }
                     | AbilityEffectDefinition::CurseDamage { .. }
                     | AbilityEffectDefinition::DeathRay { .. }
                     | AbilityEffectDefinition::TeleportAway { .. }

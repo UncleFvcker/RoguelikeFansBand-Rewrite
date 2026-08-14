@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability-program.race.draconian-crystal-breath",
+  "input": "cast-target",
+  "steps": [
+    {
+      "type": "draconian-breath-damage",
+      "baseHpPercent": 20,
+      "levelCubicPercentNumerator": 30,
+      "levelCubicPercentDivisor": 125000,
+      "maxDamage": 350,
+      "damageType": "shards",
+      "enhancingMutationId": "rfb.mutation.draconian-breath"
+    }
+  ]
+}

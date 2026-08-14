@@ -7401,8 +7401,10 @@ fn spell_powered_ability_value(
 
 fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpecDto {
     match effect {
-        AbilityEffectDefinition::JumpDamage { .. } | AbilityEffectDefinition::BirdDrop => {
-            unreachable!("monster-only effects are never projected as player abilities")
+        AbilityEffectDefinition::JumpDamage { .. }
+        | AbilityEffectDefinition::BirdDrop
+        | AbilityEffectDefinition::DraconianBreathDamage { .. } => {
+            unreachable!("non-projected effects are resolved before player ability projection")
         }
         AbilityEffectDefinition::BlinkSelf { radius } => {
             AbilityEffectSpecDto::BlinkSelf { radius: *radius }

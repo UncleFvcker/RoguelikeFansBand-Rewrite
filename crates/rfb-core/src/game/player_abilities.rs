@@ -644,7 +644,83 @@ impl Game {
                     u32::try_from(scaled).unwrap_or(u32::MAX)
                 }
             });
-        activation.cost.saturating_add(extra)
+        let cost = activation.cost.saturating_add(extra);
+        let Some(AbilityEffectDefinition::DraconianBreathDamage {
+            enhancing_mutation_id,
+            ..
+        }) = self
+            .content
+            .ability(&activation.ability_id)
+            .map(|ability| &ability.effect)
+        else {
+            return cost;
+        };
+        if self.player_has_mutation(enhancing_mutation_id) {
+            cost.max(1)
+        } else {
+            cost.saturating_mul(2).checked_div(3).unwrap_or(0).max(1)
+        }
+    }
+
+    pub(super) fn apply_player_dynamic_effect(&self, ability: &mut AbilityDefinition) {
+        let AbilityEffectDefinition::DraconianBreathDamage {
+            base_hp_percent,
+            level_cubic_percent_numerator,
+            level_cubic_percent_divisor,
+            max_damage,
+            damage_type,
+            enhancing_mutation_id,
+        } = &ability.effect
+        else {
+            return;
+        };
+        let level = u64::from(self.progress.level);
+        let level_percent = level
+            .saturating_mul(level)
+            .saturating_mul(level)
+            .saturating_mul(u64::from(*level_cubic_percent_numerator))
+            / u64::from(*level_cubic_percent_divisor);
+        let hp_percent = u64::from(*base_hp_percent).saturating_add(level_percent);
+        let current_hp = u64::try_from(self.player.hp.max(0)).unwrap_or(0);
+        let capped_damage = current_hp
+            .saturating_mul(hp_percent)
+            .checked_div(100)
+            .unwrap_or(0)
+            .min(u64::from(*max_damage));
+        let damage = if self.player_has_mutation(enhancing_mutation_id) {
+            capped_damage
+        } else {
+            capped_damage / 2
+        }
+        .max(1);
+        let damage_bonus =
+            u16::try_from(damage).expect("validated Draconian breath damage cap must fit u16");
+        let damage_type = *damage_type;
+        ability.effect = if self.progress.level < 20 {
+            AbilityEffectDefinition::Damage {
+                damage_dice: 0,
+                damage_sides: 0,
+                damage_bonus,
+                damage_type,
+            }
+        } else if self.progress.level < 30 {
+            AbilityEffectDefinition::BeamDamage {
+                damage_dice: 0,
+                damage_sides: 0,
+                damage_bonus,
+                damage_type,
+                maximum_range: None,
+            }
+        } else {
+            AbilityEffectDefinition::ConeDamage {
+                damage_dice: 0,
+                damage_sides: 0,
+                damage_bonus,
+                damage_type,
+                radius: u8::try_from(1 + self.progress.level / 20)
+                    .expect("player level-derived Draconian breath radius must fit u8"),
+            }
+        };
     }
 
     pub(super) fn ability_learning_capacity(&self, profile: &CastingProfileDefinition) -> u16 {

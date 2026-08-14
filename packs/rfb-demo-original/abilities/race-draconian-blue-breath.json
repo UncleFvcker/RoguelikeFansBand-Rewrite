@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.race.draconian-blue-breath",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-race-draconian-blue-breath-description",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.draconian-blue-breath",
+  "nameKey": "ability-rfb-race-draconian-breath-name",
+  "tags": [
+    "breath",
+    "damage",
+    "electricity",
+    "race"
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

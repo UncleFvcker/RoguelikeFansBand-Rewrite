@@ -1267,3 +1267,22 @@ git diff --stat
   相关内容、倍率校验、导入器、核心、美德、本地化、Web、schema、source、协议、类型及格式检查
   通过；未运行或刷新全量 fixture。龙人动态纵切继续延期，下一静态种族为
   `rfb-legacy.race.golem`（魔像）。
+
+## 69. main 当前交接（龙人专项阶段 3：隐藏亚种与动态喷吐）
+
+- 种族方向新增并拥有九个隐藏 Race：
+  `rfb-legacy.race.draconian-{red,white,blue,black,green,bronze,crystal,gold,shadow}`，以及逐亚种
+  SkillSet、`rfb.ability.race.draconian-*-breath` 和
+  `rfb.ability-program.race.draconian-*-breath`。其他方向不得复制这些 ID。本批没有新增或占用 item、
+  material、affix、resource、actor 或公共协议 ID。
+- 九个亚种的六维、生命/经验/商店倍率、技能、红外、抗性、漂浮，以及水晶 AC +10/40 级反射均按
+  RFB `master:src/races_a.c` 落地。新增 `DraconianBreathDamage` 只存在于内容/核心内部，执行前降低
+  为现有箭、束、锥形伤害；按当前 HP、亚种上限和等级立方项计算伤害，并让既有
+  `rfb.mutation.draconian-breath` 控制减半伤害与 `2/3` 费用惩罚。
+- 九个 Race 均不带 `rfb-compatibility` 和 `polymorph-candidate`，New Game 会返回
+  `CharacterRaceUnavailable`。它们在 35 级龙人力量和出生亚种选择闭合前不是正式可选内容；后续
+  工作不得提前将其加入 `PLAYTEST_RACE_IDS` 或请求白名单。
+- 共享协调点为 pack `1.354.0` / content hash
+  `087d9a1edf25f204228c4efdc8f396365684912eb85df06e039ab3c6ba4b515b`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。新增内容、
+  核心和本地化测试以及 source/schema 检查通过；按用户要求不运行全量 fixture，留待主合并验收。

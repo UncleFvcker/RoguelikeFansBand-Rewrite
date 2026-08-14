@@ -1,0 +1,35 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/skill-set.schema.json",
+  "entries": [
+    {
+      "base": -2,
+      "skillId": "demo.skill.disarming"
+    },
+    {
+      "base": 3,
+      "skillId": "demo.skill.device"
+    },
+    {
+      "base": 2,
+      "skillId": "demo.skill.saving-throw"
+    },
+    {
+      "base": 4,
+      "skillId": "demo.skill.stealth"
+    },
+    {
+      "base": 1,
+      "skillId": "demo.skill.search"
+    },
+    {
+      "base": 10,
+      "skillId": "demo.skill.perception"
+    },
+    {
+      "base": 1,
+      "skillId": "demo.skill.ranged"
+    }
+  ],
+  "formatVersion": 1,
+  "id": "rfb-legacy.skill-set.race-draconian-shadow"
+}

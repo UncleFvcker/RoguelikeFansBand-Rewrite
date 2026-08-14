@@ -8,8 +8,8 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.353.0");
-    assert_eq!(catalog.races().count(), 46);
+    assert_eq!(catalog.pack_version(), "1.354.0");
+    assert_eq!(catalog.races().count(), 55);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
         .expect("formal Human race should exist")
@@ -1790,6 +1790,236 @@ fn formal_imp_matches_rfb_profile_demon_identity_and_fire_upgrade() {
             .tags
             .iter()
             .any(|tag| tag == "uses-casting-profile-offense")
+    );
+}
+
+#[test]
+fn hidden_draconian_subraces_match_rfb_profiles_and_breath_bindings() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let profiles = [
+        (
+            "red",
+            [3, 0, 0, 1, 2, 2],
+            (104, 190, 115, 2),
+            ActorDamageType::Fire,
+            (25, 1, 2_500, 500),
+            [-2, -2, 2, -1, 1, 10, 15, 1],
+            (0, None),
+        ),
+        (
+            "white",
+            [3, 0, 0, 1, 2, 2],
+            (104, 190, 115, 2),
+            ActorDamageType::Cold,
+            (25, 1, 2_500, 500),
+            [-2, -2, 2, -1, 1, 10, 14, 1],
+            (0, None),
+        ),
+        (
+            "blue",
+            [2, 1, 1, 1, 2, 2],
+            (103, 190, 110, 2),
+            ActorDamageType::Electricity,
+            (25, 1, 2_500, 500),
+            [-2, -1, 2, 0, 1, 10, 12, 1],
+            (0, None),
+        ),
+        (
+            "black",
+            [2, 1, 1, 1, 2, 2],
+            (103, 190, 110, 2),
+            ActorDamageType::Acid,
+            (25, 1, 2_500, 500),
+            [-2, -1, 2, 0, 1, 10, 13, 1],
+            (0, None),
+        ),
+        (
+            "green",
+            [1, 1, 1, 1, 2, 2],
+            (101, 205, 105, 2),
+            ActorDamageType::Poison,
+            (25, 1, 2_500, 500),
+            [-2, 1, 2, 1, 1, 10, 5, 1],
+            (0, None),
+        ),
+        (
+            "bronze",
+            [1, 2, 1, 1, 2, 2],
+            (101, 215, 100, 2),
+            ActorDamageType::Confusion,
+            (17, 25, 125_000, 300),
+            [-2, 6, 3, 1, 1, 10, 3, 1],
+            (0, None),
+        ),
+        (
+            "crystal",
+            [1, -1, 1, 0, 3, 2],
+            (103, 250, 105, 2),
+            ActorDamageType::Shards,
+            (20, 30, 125_000, 350),
+            [-2, -2, 2, 0, 1, 10, 12, 1],
+            (10, Some(40)),
+        ),
+        (
+            "gold",
+            [1, 1, 2, 1, 2, 2],
+            (102, 220, 95, 2),
+            ActorDamageType::Sound,
+            (20, 30, 125_000, 350),
+            [-2, 4, 5, 1, 1, 10, 5, 1],
+            (0, None),
+        ),
+        (
+            "shadow",
+            [0, 1, 1, 3, 2, 2],
+            (100, 225, 105, 4),
+            ActorDamageType::Nether,
+            (20, 35, 125_000, 400),
+            [-2, 3, 2, 4, 1, 10, 0, 1],
+            (0, None),
+        ),
+    ];
+
+    for (suffix, modifiers, profile, damage_type, breath, expected_skills, passives) in profiles {
+        let race_id = format!("rfb-legacy.race.draconian-{suffix}");
+        let race = catalog
+            .race(&race_id)
+            .unwrap_or_else(|| panic!("{race_id}"));
+        assert_eq!(
+            [
+                race.modifiers.strength,
+                race.modifiers.intelligence,
+                race.modifiers.wisdom,
+                race.modifiers.dexterity,
+                race.modifiers.constitution,
+                race.modifiers.charisma,
+            ],
+            modifiers,
+            "{suffix}"
+        );
+        assert_eq!(
+            (
+                race.life_percent,
+                race.experience_percent,
+                race.shop_adjust_percent,
+                race.infravision
+            ),
+            profile,
+            "{suffix}"
+        );
+        assert_eq!(race.base_hp, 22, "{suffix}");
+        assert_eq!(race.kin_category.as_deref(), Some("kin-glyph-100"));
+        assert_eq!(
+            race.resistances,
+            BTreeMap::from([(damage_type, ActorResistanceLevel::Resistant)]),
+            "{suffix}"
+        );
+        assert!(race.levitation, "{suffix}");
+        assert_eq!(race.armor_class, passives.0, "{suffix}");
+        assert_eq!(race.reflects_bolts_minimum_level, passives.1, "{suffix}");
+        assert_eq!(race.body_slots.len(), 15, "{suffix}");
+        assert!(race.level_mutation_rewards.is_empty(), "{suffix}");
+        assert!(race.tags.iter().any(|tag| tag == "draconian"));
+        assert!(!race.tags.iter().any(|tag| tag == "rfb-compatibility"));
+        assert!(!race.tags.iter().any(|tag| tag == "polymorph-candidate"));
+
+        let [activation] = race.abilities.as_slice() else {
+            panic!("{suffix} should have exactly one breath power");
+        };
+        assert_eq!(activation.minimum_level, 1, "{suffix}");
+        assert_eq!(
+            activation.governing_attribute,
+            TechniqueAttribute::Constitution,
+            "{suffix}"
+        );
+        assert_eq!((activation.cost, activation.base_failure_percent), (0, 70));
+        assert_eq!(
+            activation.cost_scaling,
+            Some(InnatePowerCostScalingDefinition {
+                curve: InnatePowerCostScalingCurveDefinition::Prorated,
+                start_level: 1,
+                level_interval: 1,
+                amount: 40,
+                divisor: 1,
+                round_up: false,
+                linear_weight: 5,
+                quadratic_weight: 3,
+                cubic_weight: 0,
+            }),
+            "{suffix}"
+        );
+        assert_eq!(
+            activation.ability_id,
+            format!("rfb.ability.race.draconian-{suffix}-breath")
+        );
+
+        let ability = catalog
+            .ability(&activation.ability_id)
+            .unwrap_or_else(|| panic!("{}", activation.ability_id));
+        assert!(ability.affects_ground_items, "{suffix}");
+        let AbilityEffectDefinition::DraconianBreathDamage {
+            base_hp_percent,
+            level_cubic_percent_numerator,
+            level_cubic_percent_divisor,
+            max_damage,
+            damage_type: actual_damage_type,
+            enhancing_mutation_id,
+        } = &ability.effect
+        else {
+            panic!("{suffix} should use dynamic Draconian breath damage");
+        };
+        assert_eq!(
+            (
+                *base_hp_percent,
+                *level_cubic_percent_numerator,
+                *level_cubic_percent_divisor,
+                *max_damage
+            ),
+            breath,
+            "{suffix}"
+        );
+        assert_eq!(*actual_damage_type, damage_type, "{suffix}");
+        assert_eq!(enhancing_mutation_id, "rfb.mutation.draconian-breath");
+
+        let skills = catalog
+            .skill_set(&race.skill_set_id)
+            .unwrap_or_else(|| panic!("{}", race.skill_set_id))
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<BTreeMap<_, _>>();
+        assert_eq!(
+            [
+                skills.get("demo.skill.disarming").copied().unwrap_or(0),
+                skills.get("demo.skill.device").copied().unwrap_or(0),
+                skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+                skills.get("demo.skill.stealth").copied().unwrap_or(0),
+                skills.get("demo.skill.search").copied().unwrap_or(0),
+                skills.get("demo.skill.perception").copied().unwrap_or(0),
+                skills.get("demo.skill.melee").copied().unwrap_or(0),
+                skills.get("demo.skill.ranged").copied().unwrap_or(0),
+            ],
+            expected_skills,
+            "{suffix}"
+        );
+    }
+
+    assert_eq!(
+        catalog
+            .race_by_legacy_index(20)
+            .expect("legacy Draconian index")
+            .id,
+        "rfb-legacy.race.draconian-red"
+    );
+    assert!(
+        [
+            "white", "blue", "black", "green", "bronze", "crystal", "gold", "shadow"
+        ]
+        .iter()
+        .all(|suffix| catalog
+            .race(&format!("rfb-legacy.race.draconian-{suffix}"))
+            .is_some_and(|race| race.legacy_index.is_none()))
     );
 }
 

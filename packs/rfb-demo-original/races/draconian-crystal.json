@@ -1,0 +1,113 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.draconian-crystal-breath",
+      "minimumLevel": 1,
+      "governingAttribute": "constitution",
+      "cost": 0,
+      "costScaling": {
+        "curve": "prorated",
+        "startLevel": 1,
+        "levelInterval": 1,
+        "amount": 40,
+        "linearWeight": 5,
+        "quadraticWeight": 3
+      },
+      "baseFailurePercent": 70
+    }
+  ],
+  "baseHp": 22,
+  "bodySlots": [
+    {
+      "id": "right-hand",
+      "slotType": "weapon"
+    },
+    {
+      "id": "left-hand",
+      "slotType": "shield"
+    },
+    {
+      "id": "shooting",
+      "slotType": "launcher"
+    },
+    {
+      "id": "quiver",
+      "slotType": "quiver"
+    },
+    {
+      "id": "right-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "left-ring",
+      "slotType": "ring"
+    },
+    {
+      "id": "neck",
+      "slotType": "amulet"
+    },
+    {
+      "id": "light",
+      "slotType": "light"
+    },
+    {
+      "id": "body",
+      "slotType": "body"
+    },
+    {
+      "id": "cloak",
+      "slotType": "cloak"
+    },
+    {
+      "id": "head",
+      "slotType": "head"
+    },
+    {
+      "id": "hands",
+      "slotType": "gloves"
+    },
+    {
+      "id": "feet",
+      "slotType": "boots"
+    },
+    {
+      "id": "container",
+      "slotType": "container"
+    },
+    {
+      "id": "tool",
+      "slotType": "tool"
+    }
+  ],
+  "descriptionKey": "race-legacy-draconian-description",
+  "experiencePercent": 250,
+  "formatVersion": 1,
+  "id": "rfb-legacy.race.draconian-crystal",
+  "infravision": 2,
+  "kinCategory": "kin-glyph-100",
+  "lifePercent": 103,
+  "modifiers": {
+    "strength": 1,
+    "intelligence": -1,
+    "wisdom": 1,
+    "constitution": 3,
+    "charisma": 2
+  },
+  "nameKey": "race-legacy-draconian-crystal-name",
+  "resistances": {
+    "shards": "resistant"
+  },
+  "shopAdjustPercent": 105,
+  "skillSetId": "rfb-legacy.skill-set.race-draconian-crystal",
+  "tags": [
+    "dragon",
+    "draconian",
+    "humanoid",
+    "legacy-import",
+    "standard-body"
+  ],
+  "levitation": true,
+  "armorClass": 10,
+  "reflectsBoltsMinimumLevel": 40
+}

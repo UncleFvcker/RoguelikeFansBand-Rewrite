@@ -25,6 +25,32 @@ fn set_virtue(game: &mut Game, slot: usize, kind: VirtueKindDto, value: i16) {
 }
 
 #[test]
+fn hidden_draconian_subraces_keep_the_authoritative_enchantment_virtue() {
+    let content = load_built_in_content().expect("built-in content should load");
+    for suffix in [
+        "red", "white", "blue", "black", "green", "bronze", "crystal", "gold", "shadow",
+    ] {
+        let identity = CharacterBuildIdentity {
+            build_id: "demo.build.archer".to_owned(),
+            race_id: format!("rfb-legacy.race.draconian-{suffix}"),
+            class_id: "demo.class.archer".to_owned(),
+            personality_id: "demo.personality.ordinary".to_owned(),
+        };
+        let mut rng = RfbRng::seeded(118);
+        let virtues = virtues::initial_virtues(&content, Some(&identity), &mut rng);
+        assert_eq!(
+            std::array::from_fn(|index| virtues[index].kind),
+            [
+                VirtueKindDto::Nature,
+                VirtueKindDto::Temperance,
+                VirtueKindDto::Enchantment,
+            ],
+            "{suffix}"
+        );
+    }
+}
+
+#[test]
 fn rfb_virtue_initialization_keeps_class_race_and_realm_order_then_fills_unique_slots() {
     for (build_id, expected_prefix) in [
         (

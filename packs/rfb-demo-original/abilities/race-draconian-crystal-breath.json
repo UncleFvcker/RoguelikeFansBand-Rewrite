@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.race.draconian-crystal-breath",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-race-draconian-crystal-breath-description",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.draconian-crystal-breath",
+  "nameKey": "ability-rfb-race-draconian-breath-name",
+  "tags": [
+    "breath",
+    "damage",
+    "shards",
+    "race"
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

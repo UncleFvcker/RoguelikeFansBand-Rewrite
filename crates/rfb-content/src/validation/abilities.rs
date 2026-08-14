@@ -24,7 +24,8 @@ fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
         | AbilityEffectDefinition::BeamDamage { .. }
         | AbilityEffectDefinition::BoltOrBeamDamage { .. }
         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
-        | AbilityEffectDefinition::ConeDamage { .. } => true,
+        | AbilityEffectDefinition::ConeDamage { .. }
+        | AbilityEffectDefinition::DraconianBreathDamage { .. } => true,
         AbilityEffectDefinition::Sequence { effects } => {
             effects.iter().any(effect_can_affect_ground_items)
         }
@@ -293,6 +294,20 @@ pub(super) fn validate_abilities(
                     (1..=100).contains(hp_percent)
                         && (1..=10_000).contains(max_damage)
                         && (1..=16).contains(radius)
+                }
+                AbilityEffectDefinition::DraconianBreathDamage {
+                    base_hp_percent,
+                    level_cubic_percent_numerator,
+                    level_cubic_percent_divisor,
+                    max_damage,
+                    enhancing_mutation_id,
+                    ..
+                } => {
+                    (1..=100).contains(base_hp_percent)
+                        && (1..=1_000).contains(level_cubic_percent_numerator)
+                        && (1..=1_000_000).contains(level_cubic_percent_divisor)
+                        && (1..=10_000).contains(max_damage)
+                        && enhancing_mutation_id.starts_with("rfb.mutation.")
                 }
                 AbilityEffectDefinition::CurseDamage {
                     damage_dice,
@@ -1033,6 +1048,7 @@ pub(super) fn validate_abilities(
             &ability.effect,
             AbilityEffectDefinition::ConeDamage { .. }
                 | AbilityEffectDefinition::BreathDamage { .. }
+                | AbilityEffectDefinition::DraconianBreathDamage { .. }
                 | AbilityEffectDefinition::Rodeo
                 | AbilityEffectDefinition::TerrainBeam { .. }
         ) || matches!(
@@ -1073,6 +1089,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::BoltOrBeamDamage { .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { .. }
             | AbilityEffectDefinition::ConeDamage { .. }
+            | AbilityEffectDefinition::DraconianBreathDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
             | AbilityEffectDefinition::TeleportAway { .. }
             | AbilityEffectDefinition::BirdDrop

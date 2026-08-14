@@ -86,6 +86,17 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.dark-elf" => kinds.push(VirtueKindDto::Enchantment),
             "rfb-legacy.race.mindflayer" => kinds.push(VirtueKindDto::Enlightenment),
             "rfb-legacy.race.imp" => kinds.push(VirtueKindDto::Faith),
+            "rfb-legacy.race.draconian-red"
+            | "rfb-legacy.race.draconian-white"
+            | "rfb-legacy.race.draconian-blue"
+            | "rfb-legacy.race.draconian-black"
+            | "rfb-legacy.race.draconian-green"
+            | "rfb-legacy.race.draconian-bronze"
+            | "rfb-legacy.race.draconian-crystal"
+            | "rfb-legacy.race.draconian-gold"
+            | "rfb-legacy.race.draconian-shadow" => {
+                kinds.push(VirtueKindDto::Enchantment);
+            }
             "rfb-legacy.race.nibelung" => kinds.push(VirtueKindDto::Patience),
             "rfb-legacy.race.gnome" | "rfb-legacy.race.cyclops" => {
                 kinds.push(VirtueKindDto::Knowledge);

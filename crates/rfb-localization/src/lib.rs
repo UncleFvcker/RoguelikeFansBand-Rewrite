@@ -346,6 +346,30 @@ mod tests {
     }
 
     #[test]
+    fn draconian_content_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("race-legacy-draconian-red-name", "红色"),
+            ("race-legacy-draconian-white-name", "白色"),
+            ("race-legacy-draconian-blue-name", "蓝色"),
+            ("race-legacy-draconian-black-name", "黑色"),
+            ("race-legacy-draconian-green-name", "绿色"),
+            ("race-legacy-draconian-bronze-name", "青铜"),
+            ("race-legacy-draconian-crystal-name", "水晶"),
+            ("race-legacy-draconian-gold-name", "金色"),
+            ("race-legacy-draconian-shadow-name", "阴影"),
+            ("ability-rfb-race-draconian-breath-name", "喷吐"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Draconian content name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn trouble_at_home_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

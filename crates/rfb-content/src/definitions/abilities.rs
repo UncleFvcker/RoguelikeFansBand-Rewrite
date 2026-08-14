@@ -404,6 +404,15 @@ pub enum AbilityEffectDefinition {
         damage_type: ActorDamageType,
         radius: u8,
     },
+    DraconianBreathDamage {
+        base_hp_percent: u8,
+        level_cubic_percent_numerator: u32,
+        level_cubic_percent_divisor: u32,
+        max_damage: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+        enhancing_mutation_id: String,
+    },
     CurseDamage {
         damage_dice: u16,
         damage_sides: u16,

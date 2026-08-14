@@ -388,6 +388,7 @@ impl Game {
                     self.effective_player_spell_power_bonus(),
                 );
                 self.apply_player_status_power_attribute(&mut effective_ability);
+                self.apply_player_dynamic_effect(&mut effective_ability);
                 let ability = &effective_ability;
                 let mutation_activation = mutation_activations.get(&ability_id);
                 let race_activation = race_activations.get(&ability_id);
