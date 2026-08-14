@@ -1,5 +1,8 @@
 # class-next 职业方向交接
 
+当前职业与种族导入流程、正式清单和验收规则统一见
+[`class-race-import-handoff.md`](class-race-import-handoff.md)。本文保留各批次的历史实现与版本记录。
+
 更新时间：2026-08-12
 
 分支：`codex/class-next`
