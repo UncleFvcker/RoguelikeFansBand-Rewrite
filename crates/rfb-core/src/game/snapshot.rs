@@ -955,7 +955,21 @@ impl Game {
                         .item(&item.kind_id)
                         .is_some_and(|definition| definition.capture_ball),
                     captured_actor: self.captured_actor_dto(item),
-                    use_target_spec: self.capture_ball_target_spec(item),
+                    use_target_spec: item
+                        .activation
+                        .as_ref()
+                        .map(|activation| activation.target_spec.clone())
+                        .or_else(|| self.capture_ball_target_spec(item)),
+                    usable: item.activation.as_ref().is_some_and(|activation| {
+                        item.charges
+                            .is_some_and(|state| state.current >= activation.cost)
+                    }),
+                    charges: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+                        .then_some(item.charges)
+                        .flatten(),
+                    activation: (self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware)
+                        .then(|| item.activation.clone())
+                        .flatten(),
                     quantity: item.quantity,
                     inscription: item.inscription.clone(),
                     fuel: item.fuel,

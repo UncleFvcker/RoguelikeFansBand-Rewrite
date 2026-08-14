@@ -257,6 +257,13 @@
         "instanceId": {
           "type": "string"
         },
+        "rewardArtifactItemKindId": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "rewardLootTableId": {
           "default": null,
           "type": [

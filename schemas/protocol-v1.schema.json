@@ -6049,6 +6049,16 @@
     "EquipmentItemDto": {
       "type": "object",
       "properties": {
+        "activation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemActivationDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "brands": {
           "type": "array",
           "items": {
@@ -6063,6 +6073,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/CapturedActorDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "charges": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemChargesDto"
             },
             {
               "type": "null"
@@ -6213,6 +6233,10 @@
               "type": "null"
             }
           ]
+        },
+        "usable": {
+          "type": "boolean",
+          "default": false
         },
         "useTargetSpec": {
           "anyOf": [

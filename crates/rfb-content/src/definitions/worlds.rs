@@ -537,6 +537,8 @@ pub struct DungeonGuardianDefinition {
     pub actor_kind_id: String,
     #[serde(default)]
     pub reward_loot_table_id: Option<String>,
+    #[serde(default)]
+    pub reward_artifact_item_kind_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

@@ -231,6 +231,14 @@
         }
       },
       {
+        "dungeonId": "demo.dungeon.man-cave",
+        "kind": "dungeon",
+        "position": {
+          "x": 28,
+          "y": 52
+        }
+      },
+      {
         "dungeonId": "demo.dungeon.orc-cave",
         "kind": "dungeon",
         "position": {
@@ -740,7 +748,17 @@
       "id": "demo.dungeon.hideout",
       "legacyIndex": 31,
       "rootFloorId": "demo.floor.hideout-depth-8",
-      "guardianActorKindId": "demo.actor.meng-huo-the-king-of-southerings"
+      "guardianActorKindId": "demo.actor.meng-huo-the-king-of-southerings",
+      "substitution": {
+        "alternateDungeonId": "demo.dungeon.man-cave",
+        "alternateGateOneIn": 32
+      }
+    },
+    {
+      "id": "demo.dungeon.man-cave",
+      "legacyIndex": 40,
+      "rootFloorId": "demo.floor.man-cave-depth-8",
+      "guardianActorKindId": "demo.actor.untamo-the-cruel"
     },
     {
       "id": "demo.dungeon.orc-cave",
@@ -3976,6 +3994,294 @@
       "trapTerrainId": "demo.terrain.warren-snare",
       "actorSpawns": [],
       "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.man-cave-depth-8",
+      "nameKey": "floor-demo-man-cave-depth-name",
+      "returnFloorId": "demo.floor.surface",
+      "lifecycle": "dungeon",
+      "dungeonId": "demo.dungeon.man-cave",
+      "encounterTableId": "demo.encounter-table.man-cave",
+      "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.man-cave-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.man-cave-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 8, "lootPlacements": 8, "roomPlacements": 6, "roomAreaTiles": 800, "streamerPlacements": 2, "streamerAreaTiles": 32 },
+      "layout": {
+        "rooms": { "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11, "shapes": [{ "shape": "rectangle", "weight": 1 }] },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "entryTerrainId": "demo.terrain.hideout-entrance",
+      "nextFloorId": "demo.floor.man-cave-depth-9",
+      "depth": 8, "width": 66, "height": 22,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up", "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.man-cave-depth-9", "nameKey": "floor-demo-man-cave-depth-name",
+      "returnFloorId": "demo.floor.man-cave-depth-8", "nextFloorId": "demo.floor.man-cave-depth-10",
+      "dungeonId": "demo.dungeon.man-cave", "encounterTableId": "demo.encounter-table.man-cave", "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.man-cave-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.man-cave-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 8, "lootPlacements": 8, "roomPlacements": 6, "roomAreaTiles": 800, "streamerPlacements": 2, "streamerAreaTiles": 32 },
+      "layout": {
+        "rooms": { "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11, "shapes": [{ "shape": "rectangle", "weight": 1 }] },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "depth": 9, "width": 96, "height": 33,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up", "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.man-cave-depth-10", "nameKey": "floor-demo-man-cave-depth-name",
+      "returnFloorId": "demo.floor.man-cave-depth-9", "nextFloorId": "demo.floor.man-cave-depth-11",
+      "dungeonId": "demo.dungeon.man-cave", "encounterTableId": "demo.encounter-table.man-cave", "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.man-cave-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.man-cave-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 8, "lootPlacements": 8, "roomPlacements": 6, "roomAreaTiles": 800, "streamerPlacements": 2, "streamerAreaTiles": 32 },
+      "layout": {
+        "rooms": { "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11, "shapes": [{ "shape": "rectangle", "weight": 1 }] },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "depth": 10, "width": 96, "height": 33,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up", "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.man-cave-depth-11", "nameKey": "floor-demo-man-cave-depth-name",
+      "returnFloorId": "demo.floor.man-cave-depth-10", "nextFloorId": "demo.floor.man-cave-depth-12",
+      "dungeonId": "demo.dungeon.man-cave", "encounterTableId": "demo.encounter-table.man-cave", "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.man-cave-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.man-cave-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 8, "lootPlacements": 8, "roomPlacements": 6, "roomAreaTiles": 800, "streamerPlacements": 2, "streamerAreaTiles": 32 },
+      "layout": {
+        "rooms": { "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11, "shapes": [{ "shape": "rectangle", "weight": 1 }] },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "depth": 11, "width": 96, "height": 33,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up", "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.man-cave-depth-12", "nameKey": "floor-demo-man-cave-depth-name",
+      "returnFloorId": "demo.floor.man-cave-depth-11", "nextFloorId": "demo.floor.man-cave-depth-13",
+      "dungeonId": "demo.dungeon.man-cave", "encounterTableId": "demo.encounter-table.man-cave", "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.man-cave-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.man-cave-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 8, "lootPlacements": 8, "roomPlacements": 6, "roomAreaTiles": 800, "streamerPlacements": 2, "streamerAreaTiles": 32 },
+      "layout": {
+        "rooms": { "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11, "shapes": [{ "shape": "rectangle", "weight": 1 }] },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "depth": 12, "width": 96, "height": 33,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up", "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.man-cave-depth-13", "nameKey": "floor-demo-man-cave-depth-name",
+      "returnFloorId": "demo.floor.man-cave-depth-12", "nextFloorId": "demo.floor.man-cave-depth-14",
+      "dungeonId": "demo.dungeon.man-cave", "encounterTableId": "demo.encounter-table.man-cave", "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.man-cave-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.man-cave-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 8, "lootPlacements": 8, "roomPlacements": 6, "roomAreaTiles": 800, "streamerPlacements": 2, "streamerAreaTiles": 32 },
+      "layout": {
+        "rooms": { "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11, "shapes": [{ "shape": "rectangle", "weight": 1 }] },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "depth": 13, "width": 96, "height": 33,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up", "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.man-cave-depth-14", "nameKey": "floor-demo-man-cave-depth-name",
+      "returnFloorId": "demo.floor.man-cave-depth-13", "nextFloorId": "demo.floor.man-cave-depth-15",
+      "dungeonId": "demo.dungeon.man-cave", "encounterTableId": "demo.encounter-table.man-cave", "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.man-cave-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.man-cave-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 8, "lootPlacements": 8, "roomPlacements": 6, "roomAreaTiles": 800, "streamerPlacements": 2, "streamerAreaTiles": 32 },
+      "layout": {
+        "rooms": { "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11, "shapes": [{ "shape": "rectangle", "weight": 1 }] },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "depth": 14, "width": 96, "height": 33,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up", "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.man-cave-depth-15", "nameKey": "floor-demo-man-cave-depth-name",
+      "returnFloorId": "demo.floor.man-cave-depth-14", "nextFloorId": "demo.floor.man-cave-depth-16",
+      "dungeonId": "demo.dungeon.man-cave", "encounterTableId": "demo.encounter-table.man-cave", "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.man-cave-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.man-cave-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 8, "lootPlacements": 8, "roomPlacements": 6, "roomAreaTiles": 800, "streamerPlacements": 2, "streamerAreaTiles": 32 },
+      "layout": {
+        "rooms": { "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11, "shapes": [{ "shape": "rectangle", "weight": 1 }] },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "depth": 15, "width": 96, "height": 33,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up", "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.man-cave-depth-16", "nameKey": "floor-demo-man-cave-depth-name",
+      "returnFloorId": "demo.floor.man-cave-depth-15", "nextFloorId": "demo.floor.man-cave-depth-17",
+      "dungeonId": "demo.dungeon.man-cave", "encounterTableId": "demo.encounter-table.man-cave", "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.man-cave-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.man-cave-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 8, "lootPlacements": 8, "roomPlacements": 6, "roomAreaTiles": 800, "streamerPlacements": 2, "streamerAreaTiles": 32 },
+      "layout": {
+        "rooms": { "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11, "shapes": [{ "shape": "rectangle", "weight": 1 }] },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "depth": 16, "width": 96, "height": 33,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up", "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.man-cave-depth-17", "nameKey": "floor-demo-man-cave-depth-name",
+      "returnFloorId": "demo.floor.man-cave-depth-16", "nextFloorId": "demo.floor.man-cave-depth-18",
+      "dungeonId": "demo.dungeon.man-cave", "encounterTableId": "demo.encounter-table.man-cave", "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.man-cave-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.man-cave-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 8, "lootPlacements": 8, "roomPlacements": 6, "roomAreaTiles": 800, "streamerPlacements": 2, "streamerAreaTiles": 32 },
+      "layout": {
+        "rooms": { "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11, "shapes": [{ "shape": "rectangle", "weight": 1 }] },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 }, "down": { "minimum": 4, "maximum": 5 } }
+      },
+      "depth": 17, "width": 96, "height": 33,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up", "downStairTerrainId": "demo.terrain.stairs-down",
+      "closedDoorTerrainId": "demo.terrain.door-secret", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": []
+    },
+    {
+      "id": "demo.floor.man-cave-depth-18", "nameKey": "floor-demo-man-cave-depth-name",
+      "returnFloorId": "demo.floor.man-cave-depth-17",
+      "dungeonId": "demo.dungeon.man-cave", "encounterTableId": "demo.encounter-table.man-cave", "lootTableId": "demo.loot-table.base-items",
+      "lootAllocation": { "referenceAreaTiles": 13068, "roomObjects": { "mean": 8, "standardDeviation": 3 }, "anywhereObjects": { "mean": 2, "standardDeviation": 3 } },
+      "goldAllocation": { "referenceAreaTiles": 13068, "piles": { "mean": 2, "standardDeviation": 3 } },
+      "guaranteedItems": [
+        { "id": "demo.guaranteed.man-cave-food", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.ration-of-food", "weight": 1 }] },
+        { "id": "demo.guaranteed.man-cave-light", "chanceOneIn": 2, "entries": [{ "itemKindId": "demo.item.flask-of-oil", "weight": 1 }, { "itemKindId": "demo.item.brass-lantern", "weight": 2 }] }
+      ],
+      "generationBudget": { "actorSlots": 8, "lootPlacements": 8, "roomPlacements": 6, "roomAreaTiles": 800, "streamerPlacements": 2, "streamerAreaTiles": 32 },
+      "layout": {
+        "rooms": { "placement": "free", "minWidth": 8, "maxWidth": 20, "minHeight": 7, "maxHeight": 11, "shapes": [{ "shape": "rectangle", "weight": 1 }] },
+        "streamers": [
+          { "terrainId": "demo.terrain.magma-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.magma-treasure", "hiddenTerrainId": "demo.terrain.magma-hidden-treasure", "knownOneIn": 60, "hiddenOneIn": 20 } },
+          { "terrainId": "demo.terrain.quartz-vein", "weight": 1, "treasure": { "knownTerrainId": "demo.terrain.quartz-treasure", "hiddenTerrainId": "demo.terrain.quartz-hidden-treasure", "knownOneIn": 30, "hiddenOneIn": 10 } }
+        ],
+        "stairs": { "up": { "minimum": 1, "maximum": 2 } }
+      },
+      "finalFloor": true,
+      "guardian": {
+        "instanceId": "demo.guardian.man-cave.1",
+        "actorKindId": "demo.actor.untamo-the-cruel",
+        "rewardLootTableId": "demo.loot-table.man-cave-final-replacement",
+        "rewardArtifactItemKindId": "demo.item.lotharang"
+      },
+      "depth": 18, "width": 96, "height": 33,
+      "wallTerrainId": "demo.terrain.wall", "floorTerrainId": "demo.terrain.floor",
+      "upStairTerrainId": "demo.terrain.stairs-up",
+      "closedDoorTerrainId": "demo.terrain.door-secret", "trapTerrainId": "demo.terrain.warren-snare",
+      "actorSpawns": [], "lootSpawns": []
     },
     {
       "id": "demo.floor.icky-cave-depth-10",

@@ -1856,14 +1856,16 @@ pub(super) fn validate_world(
                 ActorRole::Monster,
                 &procedural.id,
             )?;
-            if actor_levels
-                .get(&guardian.actor_kind_id)
-                .is_none_or(|level| *level > u32::from(procedural.depth))
-            {
-                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
-            }
             if let Some(table_id) = &guardian.reward_loot_table_id {
                 require_reference(loot_table_ids, table_id, &procedural.id)?;
+            }
+            if let Some(item_kind_id) = &guardian.reward_artifact_item_kind_id {
+                let artifact = items.iter().find(|item| item.id == *item_kind_id);
+                if guardian.reward_loot_table_id.is_none()
+                    || artifact.is_none_or(|item| item.artifact_generation.is_none())
+                {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
             }
         }
         if terrain_walkability

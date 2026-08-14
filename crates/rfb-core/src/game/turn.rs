@@ -371,7 +371,10 @@ impl Game {
         let world_tick = self.world_tick;
         let content = &self.content;
         for item in &mut self.items {
-            if item.location != ItemLocation::Inventory {
+            if !matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            ) {
                 continue;
             }
             let Some(recovery) = content

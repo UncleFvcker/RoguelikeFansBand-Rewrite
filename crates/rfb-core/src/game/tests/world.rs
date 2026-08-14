@@ -154,70 +154,7 @@ fn game_with_second_town(seed: u64) -> (Game, Position) {
 }
 
 fn game_with_dungeon_substitution(seed: u64) -> Game {
-    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(std::path::Path::parent)
-        .expect("core crate should be inside the workspace")
-        .join("packs/rfb-demo-original");
-    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
-    let world = artifact
-        .content
-        .worlds
-        .iter_mut()
-        .find(|world| world.id == DEFAULT_WORLD_ID)
-        .expect("Middle-earth world should remain available");
-    let primary = world
-        .dungeons
-        .iter_mut()
-        .find(|dungeon| dungeon.id == "demo.dungeon.hideout")
-        .expect("Hideout should remain available");
-    primary.legacy_index = Some(31);
-    primary.substitution = Some(rfb_content::DungeonSubstitutionDefinition {
-        alternate_dungeon_id: "demo.dungeon.tidal-cave".to_owned(),
-        alternate_gate_one_in: Some(32),
-    });
-    world
-        .dungeons
-        .iter_mut()
-        .find(|dungeon| dungeon.id == "demo.dungeon.tidal-cave")
-        .expect("Tidal Cave should remain available")
-        .legacy_index = Some(40);
-    let shared_position = rfb_content::ContentPosition { x: 28, y: 52 };
-    for location in &mut world
-        .wilderness
-        .as_mut()
-        .expect("Middle-earth should retain wilderness")
-        .locations
-    {
-        if let rfb_content::WildernessLocationDefinition::Dungeon {
-            position,
-            dungeon_id,
-        } = location
-            && matches!(
-                dungeon_id.as_str(),
-                "demo.dungeon.hideout" | "demo.dungeon.tidal-cave"
-            )
-        {
-            *position = shared_position;
-        }
-    }
-    for floor_id in [
-        "demo.floor.hideout-depth-8",
-        "demo.floor.tidal-cave-depth-15",
-    ] {
-        world
-            .procedural_floors
-            .iter_mut()
-            .find(|floor| floor.id == floor_id)
-            .expect("substituted dungeon root should remain available")
-            .entry_terrain_id = Some("demo.terrain.hideout-entrance".to_owned());
-    }
-
-    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
-        rfb_content::encode_content(artifact.content)
-            .expect("substitution test content should remain valid"),
-    ));
-    Game::from_content(seed, catalog, DEFAULT_WORLD_ID)
+    Game::new_with_build(seed, "demo.build.warrior")
         .expect("substitution test game should initialize")
 }
 
@@ -225,14 +162,14 @@ fn game_with_dungeon_substitution(seed: u64) -> Game {
 fn p89b_substitute_selection_is_seeded_persisted_and_hashed() {
     let primary = game_with_dungeon_substitution(0);
     assert!(primary.dungeon_is_active("demo.dungeon.hideout"));
-    assert!(!primary.dungeon_is_active("demo.dungeon.tidal-cave"));
+    assert!(!primary.dungeon_is_active("demo.dungeon.man-cave"));
     let failed_extra_gate = game_with_dungeon_substitution(1_528);
     assert!(failed_extra_gate.dungeon_is_active("demo.dungeon.hideout"));
-    assert!(!failed_extra_gate.dungeon_is_active("demo.dungeon.tidal-cave"));
+    assert!(!failed_extra_gate.dungeon_is_active("demo.dungeon.man-cave"));
 
     let mut alternate = game_with_dungeon_substitution(1_536);
     assert!(!alternate.dungeon_is_active("demo.dungeon.hideout"));
-    assert!(alternate.dungeon_is_active("demo.dungeon.tidal-cave"));
+    assert!(alternate.dungeon_is_active("demo.dungeon.man-cave"));
     let mut opposite_selection = alternate.clone();
     opposite_selection
         .dungeon_states
@@ -241,8 +178,8 @@ fn p89b_substitute_selection_is_seeded_persisted_and_hashed() {
         .suppressed = false;
     opposite_selection
         .dungeon_states
-        .get_mut("demo.dungeon.tidal-cave")
-        .expect("Tidal Cave state")
+        .get_mut("demo.dungeon.man-cave")
+        .expect("Man cave state")
         .suppressed = true;
     assert_ne!(alternate.state_hash(), opposite_selection.state_hash());
     let mut suppressed_conquest = alternate.clone();
@@ -255,7 +192,7 @@ fn p89b_substitute_selection_is_seeded_persisted_and_hashed() {
     assert!(suppressed_conquest.validate_loaded_state().is_err());
     alternate.advance_wilderness_generation();
     assert!(!alternate.dungeon_is_active("demo.dungeon.hideout"));
-    assert!(alternate.dungeon_is_active("demo.dungeon.tidal-cave"));
+    assert!(alternate.dungeon_is_active("demo.dungeon.man-cave"));
 
     let payload = alternate.to_save();
     assert!(
@@ -268,7 +205,7 @@ fn p89b_substitute_selection_is_seeded_persisted_and_hashed() {
         .expect("substitution state should restore");
     assert_eq!(restored.state_hash(), alternate.state_hash());
     assert!(!restored.dungeon_is_active("demo.dungeon.hideout"));
-    assert!(restored.dungeon_is_active("demo.dungeon.tidal-cave"));
+    assert!(restored.dungeon_is_active("demo.dungeon.man-cave"));
 }
 
 #[test]
@@ -279,13 +216,13 @@ fn p89c_outpost_shared_entrance_routes_only_to_the_active_dungeon() {
             "demo.dungeon.hideout",
             "demo.floor.hideout-depth-8",
             "demo.actor.meng-huo-the-king-of-southerings",
-            "demo.actor.grendel",
+            "demo.actor.untamo-the-cruel",
         ),
         (
             1_536,
-            "demo.dungeon.tidal-cave",
-            "demo.floor.tidal-cave-depth-15",
-            "demo.actor.grendel",
+            "demo.dungeon.man-cave",
+            "demo.floor.man-cave-depth-8",
+            "demo.actor.untamo-the-cruel",
             "demo.actor.meng-huo-the-king-of-southerings",
         ),
     ] {
@@ -301,7 +238,7 @@ fn p89c_outpost_shared_entrance_routes_only_to_the_active_dungeon() {
             cell.locations
                 .iter()
                 .filter(|location| location.id == "demo.dungeon.hideout"
-                    || location.id == "demo.dungeon.tidal-cave")
+                    || location.id == "demo.dungeon.man-cave")
                 .count(),
             1
         );
@@ -317,6 +254,10 @@ fn p89c_outpost_shared_entrance_routes_only_to_the_active_dungeon() {
         );
         assert!(game.actor_kind_is_dungeon_guardian(active_guardian));
         assert!(!game.actor_kind_is_dungeon_guardian(suppressed_guardian));
+        assert_eq!(
+            game.terrain_at(Position { x: 74, y: 16 }),
+            "demo.terrain.stairs-down"
+        );
 
         game.player.position = Position { x: 93, y: 29 };
         assert_eq!(
@@ -359,6 +300,209 @@ fn p89d_hideout_reward_materializes_a_nonblank_am_quest_amulet() {
         reward.rolled_affixes[0].properties,
         rfb_content::AffixPropertyBundleDefinition::default()
     );
+}
+
+fn p89_reach_shared_dungeon_guardian(seed: u64, dungeon_id: &str) -> Game {
+    let mut game = game_with_dungeon_substitution(seed);
+    game.player.position = Position { x: 93, y: 29 };
+    for depth in 8..=18 {
+        let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            update.floor_id,
+            format!("demo.floor.{dungeon_id}-depth-{depth}")
+        );
+        if depth < 18 {
+            game.entities.clear();
+            place_player_on_terrain(&mut game, "demo.terrain.stairs-down");
+        }
+    }
+    game
+}
+
+fn p89_defeat_guardian(game: &mut Game, guardian_id: &str) -> (GameUpdate, Position) {
+    game.entities.retain(|actor| actor.id == guardian_id);
+    let guardian = game
+        .entities
+        .first_mut()
+        .unwrap_or_else(|| panic!("{guardian_id} should guard the final floor"));
+    let position = guardian.position;
+    guardian.hp = 1;
+    guardian.statuses = vec![StatusInstance {
+        kind_id: STATUS_POISON.to_owned(),
+        intensity: 3,
+        remaining_ticks: 1,
+        source_id: Some(game.player.id.clone()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    }];
+    (dispatch_next(game, GameCommand::Wait), position)
+}
+
+#[test]
+fn p89f_hideout_conquest_and_am_quest_reward_are_one_shot() {
+    let mut game = p89_reach_shared_dungeon_guardian(0, "hideout");
+    let (update, guardian_position) = p89_defeat_guardian(&mut game, "demo.guardian.hideout.1");
+    assert_eq!(update.campaign.conquered_dungeons, 1);
+    assert_eq!(update.campaign.score, 10_000);
+    assert!(game.dungeon_states["demo.dungeon.hideout"].guardian_defeated);
+    let rewards = game
+        .items
+        .iter()
+        .filter(|item| {
+            item.location == ItemLocation::Ground(guardian_position)
+                && item.kind_id == "demo.item.amulet"
+                && item.affix_ids == ["rfb-legacy.affix.amulet-am-quest"]
+        })
+        .count();
+    assert_eq!(rewards, 1);
+
+    game.entities.clear();
+    let after_conquest = dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(after_conquest.campaign.conquered_dungeons, 1);
+    assert_eq!(after_conquest.campaign.score, 10_000);
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.amulet"
+                && item.affix_ids == ["rfb-legacy.affix.amulet-am-quest"])
+            .count(),
+        1
+    );
+    let hash = game.state_hash();
+    let restored = Game::from_save(game.to_save()).expect("Hideout conquest should restore");
+    assert_eq!(restored.state_hash(), hash);
+}
+
+#[test]
+fn p89f_man_cave_conquest_lotharang_activation_and_replacement_are_one_shot() {
+    let final_floor = p89_reach_shared_dungeon_guardian(1_536, "man-cave");
+
+    let mut conquered = final_floor.clone();
+    let (update, guardian_position) =
+        p89_defeat_guardian(&mut conquered, "demo.guardian.man-cave.1");
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "dungeon.guardian-defeated")
+    );
+    assert_eq!(update.campaign.status, CampaignStatusDto::Active);
+    assert_eq!(update.campaign.conquered_dungeons, 1);
+    assert_eq!(update.campaign.score, 10_000);
+    assert!(conquered.dungeon_states["demo.dungeon.man-cave"].guardian_defeated);
+    let lotharang_index = conquered
+        .items
+        .iter()
+        .position(|item| item.kind_id == "demo.item.lotharang")
+        .expect("Untamo should drop Lotharang");
+    assert_eq!(
+        conquered.items[lotharang_index].location,
+        ItemLocation::Ground(guardian_position)
+    );
+    assert_eq!(
+        conquered.items[lotharang_index].quality,
+        ItemQualityDto::Ordinary
+    );
+    assert!(conquered.items[lotharang_index].affix_ids.is_empty());
+    assert!(
+        conquered
+            .generated_artifact_ids
+            .contains("demo.item.lotharang")
+    );
+    let hash = conquered.state_hash();
+    let restored = Game::from_save(conquered.to_save()).expect("Man cave conquest should restore");
+    assert_eq!(restored.state_hash(), hash);
+    assert!(restored.dungeon_states["demo.dungeon.man-cave"].guardian_defeated);
+    assert_eq!(
+        restored
+            .items
+            .iter()
+            .filter(|item| item.kind_id == "demo.item.lotharang")
+            .count(),
+        1
+    );
+
+    let item_id = conquered.items[lotharang_index].id.clone();
+    for item in &mut conquered.items {
+        if matches!(
+            item.location,
+            ItemLocation::Equipped { ref slot_id } if slot_id == "right-hand"
+        ) {
+            item.location = ItemLocation::Inventory;
+        }
+    }
+    conquered.items[lotharang_index].location = ItemLocation::Equipped {
+        slot_id: "right-hand".to_owned(),
+    };
+    assert_eq!(
+        conquered.items[lotharang_index]
+            .activation
+            .as_ref()
+            .expect("Lotharang should carry its activation")
+            .device_check_difficulty,
+        10
+    );
+    let max_hp = conquered.player_derived_stats().max_hp.value;
+    conquered.player.hp = (max_hp - 30).max(1);
+    let hp_before = conquered.player.hp;
+    conquered.world_tick = 0;
+    let activation_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < 5
+        })
+        .expect("an automatic device success seed should exist");
+    conquered.rng = RfbRng::seeded(activation_seed);
+    let activated = dispatch_next(
+        &mut conquered,
+        GameCommand::UseItem {
+            item_id: item_id.clone(),
+            target: Some(TargetSelection::SelfTarget),
+        },
+    );
+    assert!(
+        activated
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-heal")
+    );
+    assert_eq!(conquered.player.hp, (hp_before + 30).min(max_hp));
+    assert_eq!(conquered.items[lotharang_index].charges.unwrap().current, 0);
+    for _ in 0..4 {
+        if conquered.items[lotharang_index].charges.unwrap().current == 1 {
+            break;
+        }
+        dispatch_next(&mut conquered, GameCommand::Wait);
+    }
+    assert_eq!(conquered.items[lotharang_index].charges.unwrap().current, 1);
+
+    let mut replacement = final_floor;
+    replacement
+        .generated_artifact_ids
+        .insert("demo.item.lotharang".to_owned());
+    p89_defeat_guardian(&mut replacement, "demo.guardian.man-cave.1");
+    assert!(
+        replacement
+            .items
+            .iter()
+            .all(|item| item.kind_id != "demo.item.lotharang")
+    );
+    let fallback = replacement
+        .items
+        .iter()
+        .find(|item| {
+            item.kind_id == "demo.item.battle-axe"
+                && item.quality == ItemQualityDto::Exceptional
+                && item.affix_ids == ["rfb-legacy.affix.slaying"]
+        })
+        .expect("an already-generated Lotharang should use the artifact fallback reward");
+    assert_eq!(fallback.location, ItemLocation::Ground(guardian_position));
 }
 
 #[test]

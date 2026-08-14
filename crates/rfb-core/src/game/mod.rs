@@ -4174,7 +4174,8 @@ impl Game {
             ))
         })?;
         if item.location != ItemLocation::Inventory
-            && !(matches!(item.location, ItemLocation::Equipped { .. }) && definition.capture_ball)
+            && !(matches!(item.location, ItemLocation::Equipped { .. })
+                && (definition.capture_ball || item.activation.is_some()))
         {
             return Ok(None);
         }
@@ -4204,7 +4205,9 @@ impl Game {
     ) -> Option<(&ItemUseEffectDefinition, Option<&AbilityTargetDefinition>)> {
         let item = self.items.iter().find(|item| {
             item.id == source_item_id
-                && item.location == ItemLocation::Inventory
+                && (item.location == ItemLocation::Inventory
+                    || (matches!(item.location, ItemLocation::Equipped { .. })
+                        && item.activation.is_some()))
                 && item.quantity > 0
         })?;
         let definition = self.content.item(&item.kind_id)?;
@@ -4925,7 +4928,7 @@ impl Game {
             .expect("living actor definition must remain available")
             .clone();
         let table_id = actor_definition.loot_table_id.clone();
-        let guardian_reward_table_id = self
+        let guardian_reward = self
             .content
             .world(&self.world_id)
             .and_then(|world| {
@@ -4936,7 +4939,12 @@ impl Game {
             })
             .and_then(|floor| floor.guardian.as_ref())
             .filter(|guardian| guardian.instance_id == actor.id)
-            .and_then(|guardian| guardian.reward_loot_table_id.clone());
+            .map(|guardian| {
+                (
+                    guardian.reward_loot_table_id.clone(),
+                    guardian.reward_artifact_item_kind_id.clone(),
+                )
+            });
         let floor_id = self.current_floor_id.clone();
         let depth = self.floor_depth(&floor_id);
         let mut generated = Vec::new();
@@ -5054,18 +5062,40 @@ impl Game {
                 );
             }
         }
-        if let Some(table_id) = guardian_reward_table_id {
-            generated.extend(self.generate_loot_instances(
-                &LootContext {
-                    table_id,
-                    floor_id: floor_id.clone(),
-                    depth,
-                    source: LootSource::MonsterDeath {
-                        actor_id: actor.id.clone(),
-                    },
+        if let Some((reward_table_id, reward_artifact_kind_id)) = guardian_reward {
+            let artifact_reward = reward_artifact_kind_id.is_some();
+            let context = reward_table_id.map(|table_id| LootContext {
+                table_id,
+                floor_id: floor_id.clone(),
+                depth,
+                source: LootSource::MonsterDeath {
+                    actor_id: actor.id.clone(),
                 },
-                ItemLocation::Ground(actor.position),
-            )?);
+            });
+            if let Some(kind_id) = reward_artifact_kind_id
+                && !self.generated_artifact_ids.contains(&kind_id)
+            {
+                let context = context
+                    .as_ref()
+                    .expect("validated artifact guardian reward must retain a fallback table");
+                let draft = self.fixed_artifact_draft(context, kind_id);
+                generated.push(
+                    self.commit_generated_item_draft(draft, ItemLocation::Ground(actor.position))?,
+                );
+            } else if let Some(context) = context {
+                let mode = if artifact_reward {
+                    ItemGenerationMode::Artifact
+                } else {
+                    ItemGenerationMode::Ordinary
+                };
+                generated.extend(self.generate_loot_instances_internal(
+                    &context,
+                    ItemLocation::Ground(actor.position),
+                    true,
+                    None,
+                    mode,
+                )?);
+            }
         }
         Ok((generated, gold))
     }

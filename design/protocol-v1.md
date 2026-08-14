@@ -686,3 +686,7 @@ save 容器保持 v1，不提供旧开发存档默认值。
 投影及结构化结果。`StatModifiersDto` 增加装置强度修正，`EntityDto` 与 `ActorSaveDto`
 增加必填的 0..10 `minorSlow`；后两项权威状态与 contract-v301 的怒气、友好状态共同进入
 State Hash Schema v100。save 容器保持 v1，不为缺少这些字段的旧开发存档提供兼容默认值。
+
+协议 1.202 / P89E 为 `EquipmentItemDto` 增加 `usable`、可选 `charges` 和可选
+`activation`，使已装备的固定神器可沿用现有 `UseItem` 命令与装置充能状态执行激活。
+没有新增存档字段或权威状态结构，State Hash Schema 保持 v100，save 容器保持 v1。

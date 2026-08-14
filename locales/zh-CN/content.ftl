@@ -3582,6 +3582,10 @@ terrain-demo-icky-cave-entrance-description = 恶心洞穴的入口
 terrain-demo-hideout-entrance-name = 藏身处入口
 terrain-demo-hideout-entrance-description = 一个通向叛军藏身处的阴暗入口
 floor-demo-hideout-depth-name = 藏身处
+floor-demo-man-cave-depth-name = 隐秘天地
+item-demo-lotharang-name = 『洛萨兰』
+item-demo-lotharang-description = 一把制作精良的战斗斧，带有能杀死所有大地生物的法术，并能让佩戴者从它们的打击中迅速恢复。它在北方传说中很有名，是矮人和人类之间持久友谊的象征。格威林（Gwilim）领主曾在战斗中挥舞过它，当他征服魔古尔半兽人的森林营地并单枪匹马地击退了他们邪恶的入侵时，它的双刃在夜空中歌唱。
+item-activation-demo-lotharang-heal-name = 治疗伤势
 affix-legacy-amulet-am-quest-name = AM_QUEST
 affix-legacy-amulet-am-quest-description = 具有至少一项魔法属性的 RFB 原版任务奖赏护身符。
 

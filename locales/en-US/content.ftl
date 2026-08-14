@@ -3578,6 +3578,10 @@ terrain-demo-icky-cave-entrance-description = The entrance to the Icky caves.
 terrain-demo-hideout-entrance-name = entrance to the Hideout
 terrain-demo-hideout-entrance-description = A shady entrance to a rebel hideout.
 floor-demo-hideout-depth-name = Hideout
+floor-demo-man-cave-depth-name = Man cave
+item-demo-lotharang-name = 'Lotharang'
+item-demo-lotharang-description = A finely wrought battle axe renowned in northern legend as a symbol of enduring friendship between dwarves and men.
+item-activation-demo-lotharang-heal-name = Heal wounds
 affix-legacy-amulet-am-quest-name = AM_QUEST
 affix-legacy-amulet-am-quest-description = An RFB quest-reward amulet with guaranteed magical properties.
 

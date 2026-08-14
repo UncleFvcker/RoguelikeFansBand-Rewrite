@@ -3933,6 +3933,154 @@ fn p89d_hideout_binds_depths_ecology_guardian_and_am_quest_reward() {
 }
 
 #[test]
+fn p89e_man_cave_binds_substitution_depths_guardian_and_lotharang() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.man-cave")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Man cave should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["p"]);
+    assert_eq!(policy.preferred_tags, ["thief"]);
+    assert_eq!(policy.special_div, 16);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let hideout = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.hideout")
+        .expect("Hideout should exist");
+    assert_eq!(
+        hideout.substitution,
+        Some(DungeonSubstitutionDefinition {
+            alternate_dungeon_id: "demo.dungeon.man-cave".to_owned(),
+            alternate_gate_one_in: Some(32),
+        })
+    );
+    let man_cave = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.man-cave")
+        .expect("Man cave should exist");
+    assert_eq!(man_cave.legacy_index, Some(40));
+    assert_eq!(man_cave.root_floor_id, "demo.floor.man-cave-depth-8");
+    assert_eq!(
+        man_cave.guardian_actor_kind_id,
+        "demo.actor.untamo-the-cruel"
+    );
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.man-cave"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 11);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (8..=18).collect::<Vec<_>>()
+    );
+    assert_eq!((floors[0].width, floors[0].height), (66, 22));
+    assert!(
+        floors[1..]
+            .iter()
+            .all(|floor| (floor.width, floor.height) == (96, 33))
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert!(floors.iter().all(|floor| {
+        floor
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.rooms.as_ref())
+            .is_some_and(|rooms| {
+                rooms.shapes
+                    == [ProceduralRoomShapeCandidateDefinition {
+                        shape: ProceduralRoomShape::Rectangle,
+                        weight: 1,
+                    }]
+            })
+    }));
+    let guardian = floors
+        .last()
+        .and_then(|floor| floor.guardian.as_ref())
+        .expect("Untamo should guard Man cave depth 18");
+    assert_eq!(guardian.instance_id, "demo.guardian.man-cave.1");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.untamo-the-cruel");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.man-cave-final-replacement")
+    );
+    assert_eq!(
+        guardian.reward_artifact_item_kind_id.as_deref(),
+        Some("demo.item.lotharang")
+    );
+
+    let lotharang = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.lotharang")
+        .expect("Lotharang should exist");
+    assert_eq!(lotharang.generation_level, 10);
+    assert_eq!(lotharang.weight_tenths_pound, 170);
+    assert_eq!(lotharang.base_value, 21_000);
+    assert_eq!(lotharang.modifiers.strength, 1);
+    assert_eq!(lotharang.modifiers.dexterity, 1);
+    assert_eq!(
+        lotharang.artifact_generation,
+        Some(ArtifactGenerationDefinition {
+            source_index: 104,
+            base_item_kind_id: "demo.item.battle-axe".to_owned(),
+            rarity_one_in: 5,
+            instant: false,
+        })
+    );
+    let melee = lotharang.melee_profile.as_ref().expect("Lotharang melee");
+    assert_eq!((melee.damage_dice, melee.damage_sides), (2, 9));
+    assert_eq!((melee.to_hit, melee.to_damage), (9, 8));
+    assert_eq!(
+        lotharang.slays.get(&SlayTarget::Orc),
+        Some(&SlayLevel::Slay)
+    );
+    assert_eq!(
+        lotharang.slays.get(&SlayTarget::Troll),
+        Some(&SlayLevel::Slay)
+    );
+    let generation = lotharang
+        .device_generation
+        .as_ref()
+        .expect("Lotharang should retain its activation");
+    assert_eq!(
+        generation.recovery,
+        Some(ItemDeviceRecoveryDefinition {
+            interval_ticks: 40,
+            energy_per_mille: 1_000,
+        })
+    );
+    assert!(matches!(
+        generation.activations.as_slice(),
+        [ItemDeviceActivationDefinition {
+            device_check_difficulty: 10,
+            charges: ItemDeviceChargeRangeDefinition {
+                minimum: 1,
+                maximum: 1,
+                cost: 1,
+            },
+            effect: ItemUseEffectDefinition::Heal { amount: 30 },
+            ..
+        }]
+    ));
+}
+
+#[test]
 fn p88c_icky_cave_binds_ecology_terrain_mix_depths_and_guardian() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = &artifact.content;
