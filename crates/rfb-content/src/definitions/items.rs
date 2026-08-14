@@ -73,6 +73,8 @@ pub enum EquipmentPassive {
     EspDragon,
     EspHuman,
     EspGood,
+    EspEvil,
+    EspLiving,
     SustainStrength,
     SustainIntelligence,
     SustainWisdom,

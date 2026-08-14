@@ -3,8 +3,9 @@
 use std::collections::BTreeSet;
 
 use rfb_content::{
-    ActorResistanceLevel, AffixDefinition, AffixPropertyBundleDefinition, ContentCatalog,
-    RfbEgoTypeDefinition, StatModifiers,
+    ActorDamageType, ActorResistanceLevel, AffixDefinition, AffixPropertyBundleDefinition,
+    ContentCatalog, EquipmentPassive, ItemDefinition, RfbEgoTypeDefinition, SlayLevel, SlayTarget,
+    StatModifiers, WeaponBrand,
 };
 use rfb_protocol::{
     ItemActivationDto, ItemChargesDto, ItemCurseEffectDto, ItemEnchantmentsDto, MeleeDamageDiceDto,
@@ -12,7 +13,7 @@ use rfb_protocol::{
 };
 
 use crate::{
-    rng::RfbRng,
+    rng::{RfbRng, rfb_m_bonus},
     state::{ItemInstance, RolledAffixState},
 };
 
@@ -230,6 +231,709 @@ fn merge_stat_modifiers(total: &mut StatModifiers, addition: &StatModifiers) {
         .saturating_add(addition.spell_power_bonus);
 }
 
+const TV_DIGGING: u16 = 20;
+const TV_HAFTED: u16 = 21;
+const TV_POLEARM: u16 = 22;
+const TV_SWORD: u16 = 23;
+const SV_WHIP: u16 = 2;
+
+#[derive(Debug, Default)]
+struct RfbWeaponRoll {
+    state: RolledAffixState,
+    charisma_pval: bool,
+    dexterity_pval: bool,
+    blows_pval: bool,
+}
+
+/// Materializes one selected RFB weapon/digger ego without changing item state.
+/// A rejected base-kind combination returns `None`; callers may then reselect.
+pub(crate) fn materialize_rfb_weapon_ego_with_rng(
+    rng: &mut RfbRng,
+    item: &ItemDefinition,
+    affix: &AffixDefinition,
+    generation_level: u16,
+) -> Option<EgoMaterialization> {
+    let source_index = affix.rfb_ego.as_ref()?.source_index;
+    let base_kind = item.rfb_base_kind?;
+    let profile = item.melee_profile.as_ref()?;
+    let base_dice = MeleeDamageDiceDto {
+        dice: profile.damage_dice,
+        sides: profile.damage_sides,
+    };
+    let is_digger = base_kind.tval == TV_DIGGING;
+    let is_weapon = matches!(base_kind.tval, TV_HAFTED | TV_POLEARM | TV_SWORD);
+    if !is_digger && !is_weapon {
+        return None;
+    }
+
+    let mut roll = RfbWeaponRoll {
+        state: RolledAffixState {
+            affix_id: affix.id.clone(),
+            ..RolledAffixState::default()
+        },
+        ..RfbWeaponRoll::default()
+    };
+    let mut dice = base_dice;
+
+    match source_index {
+        1 if is_weapon => {
+            roll_rfb_slaying(rng, &mut roll.state.properties, generation_level, false)
+        }
+        3 if is_weapon => {
+            roll.state.weapon_traits.insert(WeaponTraitDto::ManaBrand);
+        }
+        4 => {
+            roll.state.weapon_traits.insert(WeaponTraitDto::Blessed);
+            if is_weapon {
+                if one_in(rng, 2) {
+                    roll.state
+                        .properties
+                        .passives
+                        .insert(EquipmentPassive::EspGood);
+                }
+                if one_in(rng, 5) {
+                    add_light(&mut roll.state.properties);
+                }
+                roll_rfb_slaying(rng, &mut roll.state.properties, generation_level, false);
+            }
+        }
+        5 => {}
+        8 if is_weapon => {}
+        9 if is_weapon => {
+            roll_rfb_craft(rng, &mut roll.state, generation_level, false);
+        }
+        10 if is_weapon => {
+            roll.state.weapon_traits.insert(WeaponTraitDto::Blessed);
+            if one_in(rng, 4) {
+                add_light(&mut roll.state.properties);
+            }
+            if one_in(rng, 4) && generation_level > 40 {
+                roll.blows_pval = true;
+            } else if one_in(rng, 777) && generation_level > 80 {
+                roll.state.weapon_traits.insert(WeaponTraitDto::ManaBrand);
+            }
+        }
+        13 if is_weapon => {
+            roll.state.weapon_traits.insert(WeaponTraitDto::Blessed);
+        }
+        14 if is_weapon => {
+            roll_rfb_nature(
+                rng,
+                &mut roll.state,
+                &mut dice,
+                base_kind.tval,
+                base_kind.sval,
+            );
+        }
+        15 if is_weapon => {
+            if one_in(rng, 3) {
+                roll.charisma_pval = true;
+            }
+            if one_in(rng, 5) {
+                add_slay(
+                    &mut roll.state.properties,
+                    SlayTarget::Demon,
+                    SlayLevel::Slay,
+                );
+            }
+            if one_in(rng, 7) {
+                add_one_ability(rng, &mut roll.state.properties);
+            }
+        }
+        18 if is_weapon => {
+            roll.state.enchantment_delta.to_armor = 5;
+            roll_rfb_defender(rng, &mut roll.state.properties);
+        }
+        19 if is_weapon => {
+            if one_in(rng, 3) {
+                add_status_immunity(&mut roll.state.properties, "rfb.status.fear");
+            }
+        }
+        20 if is_weapon => {
+            if one_in(rng, 44) {
+                add_slay(
+                    &mut roll.state.properties,
+                    SlayTarget::Demon,
+                    SlayLevel::Kill,
+                );
+            } else if one_in(rng, 12) {
+                add_status_immunity(&mut roll.state.properties, "rfb.status.fear");
+            }
+            if randint1(rng, 60_u16.saturating_add(generation_level / 10)) > 56 {
+                add_slay(
+                    &mut roll.state.properties,
+                    SlayTarget::Evil,
+                    SlayLevel::Slay,
+                );
+            }
+        }
+        22 if is_weapon => {
+            if one_in(rng, 3) {
+                roll.state
+                    .properties
+                    .passives
+                    .insert(EquipmentPassive::HoldLife);
+            }
+            if one_in(rng, 3) {
+                roll.dexterity_pval = true;
+            }
+            if one_in(rng, 5) {
+                add_status_immunity(&mut roll.state.properties, "rfb.status.fear");
+            }
+        }
+        _ => return None,
+    }
+
+    if is_weapon
+        && dice == base_dice
+        && !matches!(source_index, 5 | 16 | 17)
+        && dice.dice.saturating_mul(dice.sides) > 0
+        && one_in(rng, 5_u16.saturating_add(200 / generation_level.max(1)))
+    {
+        loop {
+            dice.dice = dice.dice.saturating_add(1);
+            let odds = dice.dice.saturating_mul(dice.sides) / 2;
+            if odds == 0 || !one_in(rng, odds) {
+                break;
+            }
+        }
+    }
+
+    finalize_rfb_weapon_ego(
+        rng,
+        &mut roll,
+        affix,
+        source_index,
+        generation_level,
+        base_kind.tval,
+        base_kind.sval,
+        dice,
+    );
+    if dice != base_dice {
+        roll.state.melee_damage_dice = Some(dice);
+    }
+    let rolled_affixes = roll
+        .state
+        .has_instance_state()
+        .then_some(roll.state)
+        .into_iter()
+        .collect();
+    Some(EgoMaterialization::new(
+        vec![affix.id.clone()],
+        rolled_affixes,
+        None,
+        None,
+    ))
+}
+
+fn finalize_rfb_weapon_ego(
+    rng: &mut RfbRng,
+    roll: &mut RfbWeaponRoll,
+    affix: &AffixDefinition,
+    source_index: u32,
+    generation_level: u16,
+    tval: u16,
+    sval: u16,
+    dice: MeleeDamageDiceDto,
+) {
+    if matches!(source_index, 10 | 18) {
+        add_one_sustain(rng, &mut roll.state.properties);
+    }
+    if matches!(source_index, 4 | 16) {
+        add_one_ability(rng, &mut roll.state.properties);
+    }
+    if matches!(source_index, 15 | 16 | 22) {
+        add_one_high_resistance(rng, &mut roll.state.properties);
+        if generation_level > 0 && randint1(rng, generation_level) > 60 {
+            add_one_high_resistance(rng, &mut roll.state.properties);
+        }
+    }
+    if matches!(source_index, 8 | 16) {
+        add_one_resistance(rng, &mut roll.state.properties);
+    }
+
+    let (max_to_hit, max_to_damage, max_to_armor, max_pval) = rfb_ego_maxima(source_index);
+    roll.state.enchantment_delta.to_hit = roll
+        .state
+        .enchantment_delta
+        .to_hit
+        .saturating_add(roll_signed(rng, max_to_hit));
+    roll.state.enchantment_delta.to_damage = roll
+        .state
+        .enchantment_delta
+        .to_damage
+        .saturating_add(roll_signed(rng, max_to_damage));
+    roll.state.enchantment_delta.to_armor = roll
+        .state
+        .enchantment_delta
+        .to_armor
+        .saturating_add(roll_signed(rng, max_to_armor));
+
+    if max_pval > 0 {
+        let mut pval = match source_index {
+            5 => roll_extra_attacks_pval(rng, max_pval, generation_level, dice, tval, sval),
+            10 if roll.blows_pval => {
+                if dice.dice.saturating_mul(dice.sides) > 30 {
+                    roll.blows_pval = false;
+                    randint1(rng, max_pval)
+                } else {
+                    let mut pval = randint1(rng, 2);
+                    if tval == TV_SWORD && sval == 33 {
+                        pval = pval.saturating_add(randint1(rng, 2));
+                    }
+                    if generation_level > 60
+                        && one_in(rng, 3)
+                        && dice.dice.saturating_mul(dice.sides.saturating_add(1)) < 15
+                    {
+                        pval = pval.saturating_add(randint1(rng, 2));
+                    }
+                    pval
+                }
+            }
+            _ => randint1(rng, max_pval),
+        };
+        if tval == TV_SWORD && sval == 33 && pval > 2 && source_index != 5 {
+            pval = 2;
+        }
+        apply_rfb_pval(
+            &mut roll.state.properties,
+            source_index,
+            pval,
+            roll.charisma_pval,
+            roll.dexterity_pval,
+            roll.blows_pval,
+        );
+    }
+
+    let has_fire_brand = affix.brands.contains(&WeaponBrand::Fire)
+        || roll.state.properties.brands.contains(&WeaponBrand::Fire);
+    if has_fire_brand && affix.equipment_bonuses.light_radius == 0 {
+        add_light(&mut roll.state.properties);
+    }
+    if affix.equipment_bonuses.light_radius > 0 {
+        roll.state.properties.equipment_bonuses.light_radius = 0;
+    }
+}
+
+fn apply_rfb_pval(
+    properties: &mut AffixPropertyBundleDefinition,
+    source_index: u32,
+    pval: u16,
+    charisma_pval: bool,
+    dexterity_pval: bool,
+    blows_pval: bool,
+) {
+    let pval_i32 = i32::from(pval);
+    match source_index {
+        2 | 40 | 41 => properties.equipment_bonuses.digging_skill = pval_i32,
+        3 => {
+            properties.modifiers.intelligence = pval_i32;
+            properties.modifiers.wisdom = pval_i32;
+        }
+        4 => properties.modifiers.wisdom = pval_i32,
+        5 => properties.equipment_bonuses.melee_attacks = pval_i32,
+        10 => {
+            properties.modifiers.wisdom = pval_i32;
+            if blows_pval {
+                properties.equipment_bonuses.melee_attacks = pval_i32;
+            }
+        }
+        11 => {
+            properties.equipment_bonuses.melee_attacks = pval_i32;
+            properties.modifiers.strength = pval_i32;
+            properties.modifiers.dexterity = pval_i32;
+            properties.modifiers.wisdom = -pval_i32;
+        }
+        13 => properties.equipment_bonuses.life_percent = pval_i32.saturating_mul(3),
+        14 => properties.modifiers.intelligence = pval_i32,
+        15 => {
+            properties.equipment_bonuses.search_skill = pval_i32;
+            if charisma_pval {
+                properties.modifiers.charisma = pval_i32;
+            }
+        }
+        19 => {
+            properties.modifiers.strength = pval_i32;
+            properties.modifiers.dexterity = pval_i32;
+            properties.modifiers.constitution = pval_i32;
+        }
+        22 => {
+            properties.modifiers.strength = pval_i32;
+            properties.modifiers.constitution = pval_i32;
+            if dexterity_pval {
+                properties.modifiers.dexterity = pval_i32;
+            }
+        }
+        23 => {
+            properties.modifiers.charisma = pval_i32;
+            properties.modifiers.speed = pval_i32;
+        }
+        42 => {
+            properties.equipment_bonuses.digging_skill = pval_i32;
+            properties.modifiers.strength = pval_i32;
+        }
+        _ => {}
+    }
+}
+
+fn rfb_ego_maxima(source_index: u32) -> (i16, i16, i16, u16) {
+    match source_index {
+        2 => (0, 0, 0, 5),
+        3 => (3, 3, 0, 2),
+        4 => (0, 0, 0, 3),
+        5 => (0, 0, 0, 6),
+        7 => (0, 10, 0, 0),
+        10 => (6, 6, 0, 4),
+        11 => (0, 0, 0, 3),
+        13 => (0, 0, 0, 4),
+        14 => (0, 0, 0, 2),
+        15 => (4, 4, 0, 2),
+        18 => (4, 4, 8, 0),
+        19 => (5, 5, 0, 2),
+        20 => (8, 8, 0, 0),
+        21 => (20, 20, 10, 0),
+        22 => (6, 6, 0, 3),
+        23 => (10, 10, 0, 5),
+        24 => (5, 5, 0, 0),
+        25 => (6, 6, 0, 0),
+        26 => (7, 7, 0, 0),
+        27 => (10, 10, 0, 0),
+        40 => (0, 0, 0, 5),
+        41 => (0, 3, 0, 5),
+        42 => (0, 7, 0, 5),
+        _ => (0, 0, 0, 0),
+    }
+}
+
+fn roll_signed(rng: &mut RfbRng, maximum: i16) -> i16 {
+    if maximum == 0 {
+        0
+    } else if maximum < 0 {
+        -i16::try_from(randint1(rng, maximum.unsigned_abs())).expect("ego penalty fits i16")
+    } else {
+        i16::try_from(randint1(rng, maximum as u16)).expect("ego bonus fits i16")
+    }
+}
+
+fn roll_extra_attacks_pval(
+    rng: &mut RfbRng,
+    maximum: u16,
+    generation_level: u16,
+    dice: MeleeDamageDiceDto,
+    tval: u16,
+    sval: u16,
+) -> u16 {
+    let odds = 3_u16.saturating_add(dice.dice.saturating_mul(dice.sides) / 3);
+    let bound = maximum
+        .saturating_mul(generation_level)
+        .saturating_div(100)
+        .saturating_add(1);
+    let mut pval = randint1(rng, bound);
+    if pval > 4 && !one_in(rng, odds) {
+        pval = 4;
+    } else if pval > 5 && !one_in(rng, odds) {
+        pval = 5;
+    } else if pval > 6 {
+        pval = 6;
+    }
+    if tval == TV_SWORD && sval == 33 {
+        pval = pval.saturating_add(randint1(rng, 2));
+    }
+    if dice.dice.saturating_mul(dice.sides) > 30 {
+        pval = pval.max(3);
+    }
+    pval
+}
+
+pub(super) fn roll_rfb_slaying(
+    rng: &mut RfbRng,
+    properties: &mut AffixPropertyBundleDefinition,
+    generation_level: u16,
+    is_ammunition: bool,
+) {
+    const SLAYS: [(SlayTarget, EquipmentPassive, u16, u16); 11] = [
+        (SlayTarget::Orc, EquipmentPassive::EspOrc, 2, 20),
+        (SlayTarget::Troll, EquipmentPassive::EspTroll, 2, 30),
+        (SlayTarget::Giant, EquipmentPassive::EspGiant, 2, 40),
+        (SlayTarget::Dragon, EquipmentPassive::EspDragon, 3, 80),
+        (SlayTarget::Demon, EquipmentPassive::EspDemon, 3, 90),
+        (SlayTarget::Undead, EquipmentPassive::EspUndead, 3, 95),
+        (SlayTarget::Animal, EquipmentPassive::EspAnimal, 2, 60),
+        (SlayTarget::Human, EquipmentPassive::EspHuman, 3, 50),
+        (SlayTarget::Evil, EquipmentPassive::EspEvil, 5, 0),
+        (SlayTarget::Good, EquipmentPassive::EspGood, 5, 0),
+        (SlayTarget::Living, EquipmentPassive::EspLiving, 20, 0),
+    ];
+    let eligible = SLAYS
+        .iter()
+        .copied()
+        .filter(|(_, _, _, maximum)| *maximum == 0 || generation_level <= *maximum)
+        .collect::<Vec<_>>();
+    let total = eligible
+        .iter()
+        .map(|(_, _, rarity, _)| (255 / u32::from(*rarity)).max(1))
+        .sum::<u32>();
+    let mut rolls = 1_u16.saturating_add(rfb_m_bonus(rng, 4, generation_level));
+    if one_in(rng, 8) {
+        rolls = rolls.saturating_mul(2);
+    }
+    if is_ammunition {
+        rolls = rolls.saturating_add(1) / 2;
+    }
+    for _ in 0..rolls {
+        let mut choice = u32::try_from(rng.bounded(u64::from(total))).expect("slay roll fits u32");
+        let (target, esp, rarity, _) = eligible
+            .iter()
+            .copied()
+            .find(|(_, _, rarity, _)| {
+                let weight = (255 / u32::from(*rarity)).max(1);
+                if choice < weight {
+                    true
+                } else {
+                    choice -= weight;
+                    false
+                }
+            })
+            .expect("positive slaying weight selects a target");
+        let kill_odds = rarity
+            .saturating_mul(rarity)
+            .saturating_mul(if is_ammunition { rarity } else { 1 });
+        if one_in(rng, kill_odds) {
+            add_slay(properties, target, SlayLevel::Kill);
+            if !is_ammunition {
+                properties.passives.insert(esp);
+            }
+        } else {
+            add_slay(properties, target, SlayLevel::Slay);
+            if !is_ammunition && one_in(rng, 6) {
+                properties.passives.insert(esp);
+            }
+        }
+    }
+}
+
+pub(super) fn roll_rfb_craft(
+    rng: &mut RfbRng,
+    state: &mut RolledAffixState,
+    generation_level: u16,
+    is_ammunition: bool,
+) {
+    let mut rolls = 1_u16.saturating_add(rfb_m_bonus(rng, 4, generation_level));
+    if one_in(rng, 8) {
+        rolls = rolls.saturating_mul(2);
+    }
+    if is_ammunition {
+        rolls = rolls.saturating_add(1) / 2;
+    }
+    for roll_index in 0..rolls {
+        let (brand, resistance) = match rng.bounded(5) {
+            0 => (WeaponBrand::Acid, ActorDamageType::Acid),
+            1 => (WeaponBrand::Electricity, ActorDamageType::Electricity),
+            2 => (WeaponBrand::Fire, ActorDamageType::Fire),
+            3 => (WeaponBrand::Cold, ActorDamageType::Cold),
+            _ => (WeaponBrand::Poison, ActorDamageType::Poison),
+        };
+        state.properties.brands.insert(brand);
+        if roll_index == 0 && one_in(rng, 2) && !is_ammunition {
+            add_resistance(&mut state.properties, resistance);
+            break;
+        }
+        if one_in(rng, 3) && !is_ammunition {
+            add_resistance(&mut state.properties, resistance);
+        }
+    }
+    if one_in(rng, 6) && generation_level > 60 && !is_ammunition {
+        state.weapon_traits.insert(WeaponTraitDto::ManaBrand);
+    }
+}
+
+fn roll_rfb_nature(
+    rng: &mut RfbRng,
+    state: &mut RolledAffixState,
+    dice: &mut MeleeDamageDiceDto,
+    tval: u16,
+    sval: u16,
+) {
+    if one_in(rng, 5) {
+        add_slay(&mut state.properties, SlayTarget::Animal, SlayLevel::Kill);
+    }
+    if one_in(rng, 3) {
+        state.properties.brands.insert(WeaponBrand::Electricity);
+    }
+    if one_in(rng, 3) {
+        state.properties.brands.insert(WeaponBrand::Fire);
+        if tval == TV_HAFTED && sval == SV_WHIP {
+            dice.dice = dice.dice.saturating_add(1);
+        }
+    }
+    if one_in(rng, 3) {
+        state.properties.brands.insert(WeaponBrand::Cold);
+    }
+    for damage_type in [
+        ActorDamageType::Electricity,
+        ActorDamageType::Fire,
+        ActorDamageType::Cold,
+    ] {
+        if one_in(rng, 3) {
+            add_resistance(&mut state.properties, damage_type);
+        }
+    }
+}
+
+fn roll_rfb_defender(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
+    if one_in(rng, 4) {
+        let mut count = 2_u16;
+        while one_in(rng, 3) {
+            count = count.saturating_add(1);
+        }
+        for _ in 0..count {
+            add_one_high_resistance(rng, properties);
+        }
+    } else {
+        let mut count = 4_u16;
+        while one_in(rng, 2) {
+            count = count.saturating_add(1);
+        }
+        for _ in 0..count {
+            add_one_elemental_resistance(rng, properties);
+        }
+    }
+    if one_in(rng, 3) {
+        properties.passives.insert(EquipmentPassive::Warning);
+    }
+    if one_in(rng, 3) {
+        properties.passives.insert(EquipmentPassive::Levitation);
+    }
+    if one_in(rng, 5) {
+        properties.passives.insert(EquipmentPassive::Regeneration);
+    }
+}
+
+fn add_one_sustain(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
+    properties.passives.insert(match rng.bounded(6) {
+        0 => EquipmentPassive::SustainStrength,
+        1 => EquipmentPassive::SustainIntelligence,
+        2 => EquipmentPassive::SustainWisdom,
+        3 => EquipmentPassive::SustainDexterity,
+        4 => EquipmentPassive::SustainConstitution,
+        _ => EquipmentPassive::SustainCharisma,
+    });
+}
+
+fn add_one_high_resistance(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
+    match rng.bounded(12) {
+        0 => add_resistance(properties, ActorDamageType::Poison),
+        1 => add_resistance(properties, ActorDamageType::Light),
+        2 => add_resistance(properties, ActorDamageType::Dark),
+        3 => add_resistance(properties, ActorDamageType::Shards),
+        4 => add_status_immunity(properties, "rfb.status.blindness"),
+        5 => add_resistance(properties, ActorDamageType::Confusion),
+        6 => add_resistance(properties, ActorDamageType::Sound),
+        7 => add_resistance(properties, ActorDamageType::Nether),
+        8 => add_resistance(properties, ActorDamageType::Nexus),
+        9 => add_resistance(properties, ActorDamageType::Chaos),
+        10 => add_resistance(properties, ActorDamageType::Disenchant),
+        _ => add_status_immunity(properties, "rfb.status.fear"),
+    }
+}
+
+fn add_one_elemental_resistance(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
+    let damage_type = match rng.bounded(4) {
+        0 => ActorDamageType::Acid,
+        1 => ActorDamageType::Electricity,
+        2 => ActorDamageType::Cold,
+        _ => ActorDamageType::Fire,
+    };
+    add_resistance(properties, damage_type);
+}
+
+fn add_one_resistance(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
+    if one_in(rng, 3) {
+        add_one_elemental_resistance(rng, properties);
+    } else {
+        add_one_high_resistance(rng, properties);
+    }
+}
+
+fn add_one_ability(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
+    match rng.bounded(10) {
+        0 => {
+            properties.passives.insert(EquipmentPassive::Levitation);
+        }
+        1 => add_light(properties),
+        2 => {
+            properties.passives.insert(EquipmentPassive::SeeInvisible);
+        }
+        3 => {
+            properties.passives.insert(EquipmentPassive::Warning);
+        }
+        4 => {
+            properties.passives.insert(EquipmentPassive::SlowDigestion);
+        }
+        5 => {
+            properties.passives.insert(EquipmentPassive::Regeneration);
+        }
+        6 => add_status_immunity(properties, "rfb.status.paralysis"),
+        7 => {
+            properties.passives.insert(EquipmentPassive::HoldLife);
+        }
+        _ => add_one_low_esp(rng, properties),
+    }
+}
+
+fn add_one_low_esp(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
+    properties.passives.insert(match rng.bounded(9) {
+        0 => EquipmentPassive::EspAnimal,
+        1 => EquipmentPassive::EspUndead,
+        2 => EquipmentPassive::EspDemon,
+        3 => EquipmentPassive::EspOrc,
+        4 => EquipmentPassive::EspTroll,
+        5 => EquipmentPassive::EspGiant,
+        6 => EquipmentPassive::EspDragon,
+        7 => EquipmentPassive::EspHuman,
+        _ => EquipmentPassive::EspGood,
+    });
+}
+
+fn add_slay(properties: &mut AffixPropertyBundleDefinition, target: SlayTarget, level: SlayLevel) {
+    properties
+        .slays
+        .entry(target)
+        .and_modify(|current| *current = (*current).max(level))
+        .or_insert(level);
+}
+
+fn add_resistance(properties: &mut AffixPropertyBundleDefinition, damage_type: ActorDamageType) {
+    properties
+        .resistances
+        .entry(damage_type)
+        .or_insert(ActorResistanceLevel::Resistant);
+}
+
+fn add_status_immunity(properties: &mut AffixPropertyBundleDefinition, status_id: &str) {
+    if !properties
+        .status_immunities
+        .iter()
+        .any(|id| id == status_id)
+    {
+        properties.status_immunities.push(status_id.to_owned());
+    }
+}
+
+fn add_light(properties: &mut AffixPropertyBundleDefinition) {
+    properties.equipment_bonuses.light_radius = properties.equipment_bonuses.light_radius.max(1);
+}
+
+fn one_in(rng: &mut RfbRng, odds: u16) -> bool {
+    debug_assert!(odds > 0);
+    rng.bounded(u64::from(odds)) == 0
+}
+
+fn randint1(rng: &mut RfbRng, maximum: u16) -> u16 {
+    debug_assert!(maximum > 0);
+    u16::try_from(rng.bounded(u64::from(maximum))).expect("bounded roll fits u16") + 1
+}
+
 const fn actor_resistance_rank(level: ActorResistanceLevel) -> u8 {
     match level {
         ActorResistanceLevel::Vulnerable => 0,
@@ -302,7 +1006,8 @@ mod tests {
 
     use crate::game::Game;
     use rfb_content::{
-        AffixDefinition, EquipmentBonuses, RfbEgoGenerationDefinition, StatModifiers,
+        AffixDefinition, EquipmentBonuses, ItemDefinition, RfbBaseKindDefinition,
+        RfbEgoGenerationDefinition, StatModifiers,
     };
     use rfb_protocol::{ItemCurseEffectDto, ItemQualityDto, MeleeDamageDiceDto, WeaponTraitDto};
 
@@ -349,6 +1054,139 @@ mod tests {
             roll_groups: Vec::new(),
             tags: Vec::new(),
         }
+    }
+
+    fn rfb_weapon_item(tval: u16, sval: u16) -> ItemDefinition {
+        let game = Game::new(1);
+        let mut item = game
+            .content
+            .item("demo.item.long-sword")
+            .expect("test weapon exists")
+            .clone();
+        item.rfb_base_kind = Some(RfbBaseKindDefinition {
+            source_index: 60,
+            tval,
+            sval,
+        });
+        item
+    }
+
+    #[test]
+    fn basic_weapon_egos_materialize_fixed_seed_results() {
+        let item = rfb_weapon_item(TV_SWORD, 17);
+        for (source_index, seed) in [(1, 37), (5, 81), (9, 53), (18, 67)] {
+            let affix = ego_affix(
+                &format!("test.affix.{source_index}"),
+                source_index,
+                1,
+                0,
+                u16::MAX,
+                vec![RfbEgoTypeDefinition::Weapon],
+            );
+            let mut rng = RfbRng::seeded(seed);
+            let materialized = materialize_rfb_weapon_ego_with_rng(&mut rng, &item, &affix, 80)
+                .expect("basic weapon ego should materialize");
+            let rolled = &materialized.rolled_affixes[0];
+            match source_index {
+                1 => {
+                    assert_eq!(
+                        rolled.properties.slays,
+                        BTreeMap::from([
+                            (SlayTarget::Undead, SlayLevel::Slay),
+                            (SlayTarget::Demon, SlayLevel::Slay),
+                            (SlayTarget::Dragon, SlayLevel::Kill),
+                        ])
+                    );
+                    assert_eq!(
+                        rolled.properties.passives,
+                        BTreeSet::from([EquipmentPassive::EspDemon, EquipmentPassive::EspDragon])
+                    );
+                    assert_eq!(rng.draw_counter, 20);
+                }
+                5 => {
+                    assert_eq!(rolled.properties.equipment_bonuses.melee_attacks, 3);
+                    assert_eq!(rng.draw_counter, 1);
+                }
+                9 => {
+                    assert_eq!(
+                        rolled.properties.brands,
+                        BTreeSet::from([
+                            WeaponBrand::Electricity,
+                            WeaponBrand::Cold,
+                            WeaponBrand::Poison,
+                        ])
+                    );
+                    assert_eq!(
+                        rolled.properties.resistances,
+                        BTreeMap::from([
+                            (
+                                ActorDamageType::Electricity,
+                                ActorResistanceLevel::Resistant
+                            ),
+                            (ActorDamageType::Cold, ActorResistanceLevel::Resistant),
+                        ])
+                    );
+                    assert_eq!(rng.draw_counter, 18);
+                }
+                18 => {
+                    assert_eq!(
+                        rolled.enchantment_delta,
+                        ItemEnchantmentsDto {
+                            to_hit: 1,
+                            to_damage: 1,
+                            to_armor: 12,
+                        }
+                    );
+                    assert_eq!(
+                        rolled.properties.passives,
+                        BTreeSet::from([
+                            EquipmentPassive::Warning,
+                            EquipmentPassive::SustainIntelligence,
+                        ])
+                    );
+                    assert_eq!(
+                        rolled.properties.status_immunities,
+                        ["rfb.status.blindness"]
+                    );
+                    assert_eq!(rng.draw_counter, 12);
+                }
+                _ => unreachable!(),
+            }
+        }
+    }
+
+    #[test]
+    fn fire_brand_adds_light_and_c_rolls_are_independent() {
+        let item = rfb_weapon_item(TV_SWORD, 17);
+        let mut affix = ego_affix(
+            "test.affix.force",
+            3,
+            1,
+            0,
+            u16::MAX,
+            vec![RfbEgoTypeDefinition::Weapon],
+        );
+        affix.brands.insert(WeaponBrand::Fire);
+        let mut rng = RfbRng::seeded(29);
+        let materialized =
+            materialize_rfb_weapon_ego_with_rng(&mut rng, &item, &affix, 60).unwrap();
+        let rolled = &materialized.rolled_affixes[0];
+
+        assert_eq!(
+            rolled.enchantment_delta,
+            ItemEnchantmentsDto {
+                to_hit: 3,
+                to_damage: 2,
+                to_armor: 0,
+            }
+        );
+        assert_eq!(rolled.properties.modifiers.intelligence, 2);
+        assert_eq!(rolled.properties.modifiers.wisdom, 2);
+        assert_eq!(rolled.properties.equipment_bonuses.light_radius, 1);
+        assert_eq!(
+            rolled.weapon_traits,
+            BTreeSet::from([WeaponTraitDto::ManaBrand])
+        );
     }
 
     #[test]

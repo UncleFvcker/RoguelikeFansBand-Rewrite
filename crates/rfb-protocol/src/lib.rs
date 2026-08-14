@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.222";
+pub const PROTOCOL_VERSION: &str = "1.223";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 3;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 3;
 
@@ -602,6 +602,8 @@ pub enum EquipmentPassiveDto {
     EspDragon,
     EspHuman,
     EspGood,
+    EspEvil,
+    EspLiving,
     SustainStrength,
     SustainIntelligence,
     SustainWisdom,
@@ -633,6 +635,8 @@ where
             "esp-dragon" => Some(Ok(EquipmentPassiveDto::EspDragon)),
             "esp-human" => Some(Ok(EquipmentPassiveDto::EspHuman)),
             "esp-good" => Some(Ok(EquipmentPassiveDto::EspGood)),
+            "esp-evil" => Some(Ok(EquipmentPassiveDto::EspEvil)),
+            "esp-living" => Some(Ok(EquipmentPassiveDto::EspLiving)),
             "sustain-strength" => Some(Ok(EquipmentPassiveDto::SustainStrength)),
             "sustain-intelligence" => Some(Ok(EquipmentPassiveDto::SustainIntelligence)),
             "sustain-wisdom" => Some(Ok(EquipmentPassiveDto::SustainWisdom)),

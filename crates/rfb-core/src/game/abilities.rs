@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::ego::{roll_rfb_craft, roll_rfb_slaying};
 use super::item_use::VisibleBanishmentOutcome;
 use super::terrain::TerrainChangeSource;
 use super::*;
@@ -6126,86 +6127,19 @@ impl Game {
             < u64::from(slaying_weight)
         {
             let mut properties = AffixPropertyBundleDefinition::default();
-            let slays = [
-                (SlayTarget::Orc, 2_u32, 20_u16),
-                (SlayTarget::Troll, 2, 30),
-                (SlayTarget::Giant, 2, 40),
-                (SlayTarget::Dragon, 3, 80),
-                (SlayTarget::Demon, 3, 90),
-                (SlayTarget::Undead, 3, 95),
-                (SlayTarget::Animal, 2, 60),
-                (SlayTarget::Human, 3, 50),
-                (SlayTarget::Evil, 5, 0),
-                (SlayTarget::Good, 5, 0),
-                (SlayTarget::Living, 20, 0),
-            ];
-            let eligible = slays
-                .iter()
-                .copied()
-                .filter(|(_, _, maximum_level)| *maximum_level == 0 || level <= *maximum_level)
-                .collect::<Vec<_>>();
-            let total = eligible
-                .iter()
-                .map(|(_, rarity, _)| (255 / rarity).max(1))
-                .sum::<u32>();
-            let mut rolls = 1_u16.saturating_add(rfb_m_bonus(&mut self.rng, 4, level));
-            if self.rng.bounded(8) == 0 {
-                rolls = rolls.saturating_mul(2);
-            }
-            rolls = rolls.saturating_add(1) / 2;
-            for _ in 0..rolls {
-                let mut choice = u32::try_from(self.rng.bounded(u64::from(total)))
-                    .expect("slaying choice fits u32");
-                let (target, rarity, _) = eligible
-                    .iter()
-                    .copied()
-                    .find(|(_, rarity, _)| {
-                        let weight = (255 / rarity).max(1);
-                        if choice < weight {
-                            true
-                        } else {
-                            choice -= weight;
-                            false
-                        }
-                    })
-                    .expect("positive slaying weight must select a target");
-                let level = if self.rng.bounded(u64::from(rarity.pow(3))) == 0 {
-                    SlayLevel::Kill
-                } else {
-                    SlayLevel::Slay
-                };
-                properties
-                    .slays
-                    .entry(target)
-                    .and_modify(|current| *current = (*current).max(level))
-                    .or_insert(level);
-            }
+            roll_rfb_slaying(&mut self.rng, &mut properties, level, true);
             RolledAffixState {
                 affix_id: SLAYING_AFFIX_ID.to_owned(),
                 properties,
                 ..RolledAffixState::default()
             }
         } else {
-            let mut properties = AffixPropertyBundleDefinition::default();
-            let mut rolls = 1_u16.saturating_add(rfb_m_bonus(&mut self.rng, 4, level));
-            if self.rng.bounded(8) == 0 {
-                rolls = rolls.saturating_mul(2);
-            }
-            rolls = rolls.saturating_add(1) / 2;
-            for _ in 0..rolls {
-                properties.brands.insert(match self.rng.bounded(5) {
-                    0 => WeaponBrand::Acid,
-                    1 => WeaponBrand::Electricity,
-                    2 => WeaponBrand::Fire,
-                    3 => WeaponBrand::Cold,
-                    _ => WeaponBrand::Poison,
-                });
-            }
-            RolledAffixState {
+            let mut state = RolledAffixState {
                 affix_id: ELEMENTAL_AFFIX_ID.to_owned(),
-                properties,
                 ..RolledAffixState::default()
-            }
+            };
+            roll_rfb_craft(&mut self.rng, &mut state, level, true);
+            state
         }
     }
 

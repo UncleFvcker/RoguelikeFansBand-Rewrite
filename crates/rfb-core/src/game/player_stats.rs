@@ -913,6 +913,8 @@ impl Game {
             (EquipmentPassive::EspDragon, "dragon"),
             (EquipmentPassive::EspHuman, "human"),
             (EquipmentPassive::EspGood, "good"),
+            (EquipmentPassive::EspEvil, "evil"),
+            (EquipmentPassive::EspLiving, "living"),
         ]
         .into_iter()
         .any(|(passive, tag)| {
