@@ -667,6 +667,7 @@ fn validate_item_creation_state(
             discount_percent == 99 && (ammunition || definition.melee_profile.is_some())
         }
         Some(ItemOriginKindDto::Rubble) => discount_percent == 0,
+        Some(ItemOriginKindDto::Acquire) => discount_percent == 0,
     };
     let damage_override_is_valid =
         damage_dice_override.is_none_or(|dice| (1..=9).contains(&dice) && ammunition);

@@ -441,6 +441,10 @@ pub enum AbilityEffectDefinition {
     ConsumeTerrain {
         nutrition: u16,
     },
+    CreateItem {
+        item_kind_id: String,
+        quantity: u32,
+    },
     CreateAmmunition {
         item_kind_ids: Vec<String>,
         quantity_minimum: u32,

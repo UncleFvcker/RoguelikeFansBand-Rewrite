@@ -523,6 +523,32 @@ struct GeneratedItemDraft {
     fuel: Option<rfb_protocol::ItemFuelDto>,
 }
 
+impl GeneratedItemDraft {
+    fn into_item_instance(self, id: String, location: ItemLocation) -> ItemInstance {
+        ItemInstance {
+            id,
+            kind_id: self.kind_id,
+            quantity: self.quantity,
+            inscription: None,
+            origin_actor_kind_id: None,
+            origin_kind: self.origin_kind,
+            damage_dice_override: None,
+            discount_percent: 0,
+            quality: self.quality,
+            affix_ids: self.affix_ids,
+            rolled_affixes: self.rolled_affixes,
+            enchantments: ItemEnchantmentsDto::default(),
+            curse: self.curse,
+            activation: self.activation,
+            charges: self.charges,
+            fuel: self.fuel,
+            device_recovery_progress: 0,
+            captured_actor: None,
+            location,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum LootSource {
     MonsterCarried { actor_id: String },
@@ -5426,27 +5452,7 @@ impl Game {
     ) -> Result<ItemInstance, CoreError> {
         let id = self.allocate_item_instance_id()?;
         self.register_generated_artifact(&draft.kind_id);
-        Ok(ItemInstance {
-            id,
-            kind_id: draft.kind_id,
-            quantity: draft.quantity,
-            inscription: None,
-            origin_actor_kind_id: None,
-            origin_kind: draft.origin_kind,
-            damage_dice_override: None,
-            discount_percent: 0,
-            quality: draft.quality,
-            affix_ids: draft.affix_ids,
-            rolled_affixes: draft.rolled_affixes,
-            enchantments: ItemEnchantmentsDto::default(),
-            curse: draft.curse,
-            activation: draft.activation,
-            charges: draft.charges,
-            fuel: draft.fuel,
-            device_recovery_progress: 0,
-            captured_actor: None,
-            location,
-        })
+        Ok(draft.into_item_instance(id, location))
     }
 
     fn register_generated_artifact(&mut self, kind_id: &str) {
@@ -7352,6 +7358,13 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
                 nutrition: *nutrition,
             }
         }
+        AbilityEffectDefinition::CreateItem {
+            item_kind_id,
+            quantity,
+        } => AbilityEffectSpecDto::CreateItem {
+            item_kind_id: item_kind_id.clone(),
+            quantity: *quantity,
+        },
         AbilityEffectDefinition::CreateAmmunition {
             item_kind_ids,
             quantity_minimum,

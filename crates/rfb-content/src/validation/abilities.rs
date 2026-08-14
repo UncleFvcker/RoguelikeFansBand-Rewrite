@@ -57,6 +57,7 @@ pub(super) struct AbilityValidationOutputs {
     pub(super) ability_ids: BTreeSet<String>,
     pub(super) ability_corpse_item_ids: Vec<(String, String)>,
     pub(super) ability_created_item_ids: Vec<(String, String)>,
+    pub(super) ability_plain_created_items: Vec<(String, String, u32)>,
     pub(super) ability_race_ids: Vec<(String, String)>,
     pub(super) ability_books_by_id: BTreeMap<String, AbilityBookDefinition>,
     pub(super) ability_book_ids: BTreeSet<String>,
@@ -94,6 +95,7 @@ pub(super) fn validate_abilities(
     let mut ability_ids = BTreeSet::new();
     let mut ability_corpse_item_ids = Vec::new();
     let mut ability_created_item_ids = Vec::new();
+    let mut ability_plain_created_items = Vec::new();
     let mut ability_race_ids = Vec::new();
     for ability in definitions.abilities.iter_mut() {
         require_schema(&ability.schema, ABILITY_SCHEMA, &ability.id)?;
@@ -381,6 +383,10 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::ConsumeTerrain { nutrition } => {
                     (1..=65_535).contains(nutrition)
                 }
+                AbilityEffectDefinition::CreateItem {
+                    item_kind_id,
+                    quantity,
+                } => validate_id(item_kind_id).is_ok() && *quantity > 0,
                 AbilityEffectDefinition::CreateAmmunition {
                     item_kind_ids,
                     quantity_minimum,
@@ -1060,6 +1066,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
+            | AbilityEffectDefinition::CreateItem { .. }
             | AbilityEffectDefinition::Clairvoyance { .. }
             | AbilityEffectDefinition::Probe
             | AbilityEffectDefinition::CreateDoor { .. }
@@ -1255,6 +1262,17 @@ pub(super) fn validate_abilities(
                         .map(|item_id| (ability.id.clone(), item_id)),
                 );
             }
+            if let AbilityEffectDefinition::CreateItem {
+                item_kind_id,
+                quantity,
+            } = effect
+            {
+                ability_plain_created_items.push((
+                    ability.id.clone(),
+                    item_kind_id.clone(),
+                    *quantity,
+                ));
+            }
         }
         if let AbilityEffectDefinition::TransformTerrain {
             source_terrain_ids,
@@ -1440,6 +1458,7 @@ pub(super) fn validate_abilities(
         ability_ids,
         ability_corpse_item_ids,
         ability_created_item_ids,
+        ability_plain_created_items,
         ability_race_ids,
         ability_books_by_id,
         ability_book_ids,

@@ -516,6 +516,7 @@ pub(super) struct ItemValidationRefs<'a> {
     pub(super) actor_corpse_item_ids: Vec<(String, String)>,
     pub(super) ability_corpse_item_ids: Vec<(String, String)>,
     pub(super) ability_created_item_ids: Vec<(String, String)>,
+    pub(super) ability_plain_created_items: Vec<(String, String, u32)>,
 }
 
 pub(super) fn validate_items(
@@ -534,6 +535,7 @@ pub(super) fn validate_items(
         actor_corpse_item_ids,
         ability_corpse_item_ids,
         ability_created_item_ids,
+        ability_plain_created_items,
     } = refs;
     let valid_item_effect_target =
         |effect: &ItemUseEffectDefinition, target: &AbilityTargetDefinition| {
@@ -1170,6 +1172,24 @@ pub(super) fn validate_items(
             });
         };
         if item.ammunition_profile.is_none() {
+            return Err(ContentError::InvalidItemModifiers(item.id.clone()));
+        }
+    }
+
+    for (owner, item_kind_id, quantity) in ability_plain_created_items {
+        let Some(item) = items.iter().find(|item| item.id == item_kind_id) else {
+            return Err(ContentError::DanglingReference {
+                owner,
+                target: item_kind_id,
+            });
+        };
+        if quantity > item.max_stack
+            || item.artifact_generation.is_some()
+            || item.tags.iter().any(|tag| tag == "artifact")
+            || item.initial_curse.is_some()
+            || item.device_generation.is_some()
+            || item.fuel.is_some()
+        {
             return Err(ContentError::InvalidItemModifiers(item.id.clone()));
         }
     }

@@ -1036,6 +1036,46 @@
             "itemKindId": {
               "type": "string"
             },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "create-item"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "itemKindId",
+            "quantity",
+            "position",
+            "destinationItemIds"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "destinationItemIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "itemKindId": {
+              "type": "string"
+            },
             "quantity": {
               "type": "integer",
               "format": "uint32",
@@ -3356,6 +3396,28 @@
           "required": [
             "type",
             "nutrition"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemKindId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "create-item"
+            }
+          },
+          "required": [
+            "type",
+            "itemKindId",
+            "quantity"
           ]
         },
         {

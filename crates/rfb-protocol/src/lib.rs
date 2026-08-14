@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.203";
+pub const PROTOCOL_VERSION: &str = "1.204";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1074,6 +1074,10 @@ pub enum AbilityEffectSpecDto {
     },
     ConsumeTerrain {
         nutrition: u16,
+    },
+    CreateItem {
+        item_kind_id: String,
+        quantity: u32,
     },
     CreateAmmunition {
         item_kind_ids: Vec<String>,
@@ -2313,6 +2317,13 @@ pub enum AbilityEffectResolutionDto {
         nutrition_before: u16,
         nutrition_after: u16,
     },
+    CreateItem {
+        effect_index: u8,
+        item_kind_id: String,
+        quantity: u32,
+        position: Position,
+        destination_item_ids: Vec<String>,
+    },
     CreateAmmunition {
         effect_index: u8,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3206,6 +3217,7 @@ pub enum ItemQualityDto {
 pub enum ItemOriginKindDto {
     PlayerMade,
     Rubble,
+    Acquire,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

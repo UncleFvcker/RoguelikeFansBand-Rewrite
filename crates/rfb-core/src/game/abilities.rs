@@ -689,6 +689,9 @@ impl Game {
                 events,
                 changed,
             ),
+            (AbilityEffectDefinition::CreateItem { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_create_item_effect(&ability, events, changed)?;
+            }
             (
                 AbilityEffectDefinition::CreateAmmunition { .. },
                 AbilityTargetPlan::CreateAmmunitionFromTerrain {
@@ -4859,6 +4862,150 @@ impl Game {
         }
     }
 
+    fn resolve_player_create_item_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::CreateItem {
+            item_kind_id,
+            quantity,
+        } = &ability.effect
+        else {
+            unreachable!("item creation executor requires a create-item effect");
+        };
+        let draft = GeneratedItemDraft {
+            kind_id: item_kind_id.clone(),
+            quantity: *quantity,
+            origin_kind: Some(ItemOriginKindDto::Acquire),
+            quality: ItemQualityDto::Ordinary,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            curse: None,
+            activation: None,
+            charges: None,
+            fuel: None,
+        };
+        let mut item =
+            draft.into_item_instance(String::new(), ItemLocation::Ground(self.player.position));
+        let position = self.created_item_drop_position(&item);
+        item.location = ItemLocation::Ground(position);
+        let maximum_stack = self
+            .content
+            .item(item_kind_id)
+            .expect("validated created item must remain available")
+            .max_stack;
+        let mut stack_indices = self
+            .items
+            .iter()
+            .enumerate()
+            .filter(|(_, existing)| {
+                existing.location == ItemLocation::Ground(position)
+                    && existing.quantity < maximum_stack
+                    && super::inventory::item_instances_stack_compatible(existing, &item)
+            })
+            .map(|(index, _)| index)
+            .collect::<Vec<_>>();
+        stack_indices.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
+
+        let mut destination_item_ids = Vec::new();
+        for index in stack_indices {
+            let transferred = item
+                .quantity
+                .min(maximum_stack - self.items[index].quantity);
+            self.items[index].quantity += transferred;
+            item.quantity -= transferred;
+            destination_item_ids.push(self.items[index].id.clone());
+            if item.quantity == 0 {
+                break;
+            }
+        }
+        if item.quantity > 0 {
+            item.id = self.allocate_item_instance_id()?;
+            destination_item_ids.push(item.id.clone());
+            self.items.push(item);
+        }
+        changed.insert(position);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::CreateItem {
+                    effect_index: 0,
+                    item_kind_id: item_kind_id.clone(),
+                    quantity: *quantity,
+                    position,
+                    destination_item_ids,
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
+    fn created_item_drop_position(&mut self, item: &ItemInstance) -> Position {
+        let origin = self.player.position;
+        let maximum_stack = self
+            .content
+            .item(&item.kind_id)
+            .expect("validated created item must remain available")
+            .max_stack;
+        let mut best = None;
+        let mut ties = 0_u64;
+        for dy in -3..=3 {
+            for dx in -3..=3 {
+                let distance_squared = dx * dx + dy * dy;
+                if distance_squared > 10 {
+                    continue;
+                }
+                let position = Position {
+                    x: origin.x + dx,
+                    y: origin.y + dy,
+                };
+                if !self.is_walkable(position) || !has_line_of_effect(self, origin, position) {
+                    continue;
+                }
+                let (pile_count, combines) = self
+                    .items
+                    .iter()
+                    .filter(|existing| existing.location == ItemLocation::Ground(position))
+                    .fold((0_usize, false), |(count, combines), existing| {
+                        (
+                            count + 1,
+                            combines
+                                || (existing.quantity < maximum_stack
+                                    && super::inventory::item_instances_stack_compatible(
+                                        existing, item,
+                                    )),
+                        )
+                    });
+                let pile_count = pile_count + usize::from(!combines);
+                let score = 1_000_i64 - i64::from(distance_squared) - pile_count as i64 * 5;
+                match best {
+                    None => {
+                        best = Some((score, position));
+                        ties = 1;
+                    }
+                    Some((best_score, _)) if score > best_score => {
+                        best = Some((score, position));
+                        ties = 1;
+                    }
+                    Some((best_score, _)) if score == best_score => {
+                        ties += 1;
+                        if self.rng.bounded(ties) == 0 {
+                            best = Some((score, position));
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+        best.expect("the player's walkable grid must accept a created item")
+            .1
+    }
+
     fn resolve_player_create_ammunition_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -7539,6 +7686,7 @@ impl Game {
             | AbilityEffectDefinition::HealDice { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
+            | AbilityEffectDefinition::CreateItem { .. }
             | AbilityEffectDefinition::CreateStair { .. }
             | AbilityEffectDefinition::SelfKnowledge
             | AbilityEffectDefinition::Clairvoyance { .. }

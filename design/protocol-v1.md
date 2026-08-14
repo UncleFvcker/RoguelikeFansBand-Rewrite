@@ -696,3 +696,8 @@ Schema 保持 v100，save 容器保持 v1。
 `governingAttribute`，用于显示种族、变异及职业主动能力的当前检定属性。它只投影既有内容
 定义，不增加命令、权威状态、RNG 或 save 字段；State Hash Schema 保持 v100，save 容器
 保持 v1。
+
+协议 1.204 / active baseline contract-v303 为能力效果增加 `create-item`，并以结构化结果
+投影生成的物品种类、数量、落点和目标实例 ID；`ItemOriginKindDto` 增加 `acquire`，保存原版
+`ORIGIN_ACQUIRE` 来源。能力仍复用现有施放命令和 self 目标；没有新增权威状态或 save 字段，
+State Hash Schema 保持 v100，save 容器保持 v1。

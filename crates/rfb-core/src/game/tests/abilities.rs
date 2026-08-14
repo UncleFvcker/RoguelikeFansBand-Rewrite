@@ -2831,6 +2831,22 @@ fn mutation_ability_catalog(
     cost: u32,
     base_failure_percent: u8,
 ) -> Arc<rfb_content::ContentCatalog> {
+    mutation_ability_catalog_with_effect(
+        minimum_level,
+        cost,
+        base_failure_percent,
+        AbilityEffectDefinition::NoOp {
+            reason: "mutation-contract".to_owned(),
+        },
+    )
+}
+
+fn mutation_ability_catalog_with_effect(
+    minimum_level: u16,
+    cost: u32,
+    base_failure_percent: u8,
+    effect: AbilityEffectDefinition,
+) -> Arc<rfb_content::ContentCatalog> {
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(std::path::Path::parent)
@@ -2852,9 +2868,7 @@ fn mutation_ability_catalog(
         range: 0,
         requires_line_of_effect: false,
     };
-    ability.effect = AbilityEffectDefinition::NoOp {
-        reason: "mutation-contract".to_owned(),
-    };
+    ability.effect = effect;
     ability.level_scaling.clear();
     ability.player = None;
     artifact.content.abilities.push(ability);
@@ -2899,6 +2913,165 @@ fn mutation_cast_resolution(events: &[DomainEvent]) -> &AbilityCastResolutionDto
             _ => None,
         })
         .expect("mutation cast should produce a resolution")
+}
+
+fn create_item_ability_catalog(base_failure_percent: u8) -> Arc<rfb_content::ContentCatalog> {
+    mutation_ability_catalog_with_effect(
+        1,
+        1,
+        base_failure_percent,
+        AbilityEffectDefinition::CreateItem {
+            item_kind_id: "demo.item.ration-of-food".to_owned(),
+            quantity: 1,
+        },
+    )
+}
+
+#[test]
+fn create_item_ability_places_an_acquired_item_and_merges_repeated_casts() {
+    let mut game = mutation_ability_game(create_item_ability_catalog(0), "demo.build.warrior");
+    game.debug_set_ability_casts_succeed(true);
+    game.items
+        .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+    let position = game.player.position;
+    let serial_before = game.next_item_instance_serial;
+    let mut events = Vec::new();
+    let mut changed = BTreeSet::new();
+
+    game.resolve_player_ability(
+        MUTATION_CONTRACT_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .expect("plain item creation should resolve");
+
+    let created = game
+        .items
+        .iter()
+        .find(|item| item.origin_kind == Some(ItemOriginKindDto::Acquire))
+        .expect("a successful creation should place an acquired item");
+    let created_id = created.id.clone();
+    assert_eq!(created.kind_id, "demo.item.ration-of-food");
+    assert_eq!(created.quantity, 1);
+    assert_eq!(created.location, ItemLocation::Ground(position));
+    assert_eq!(game.next_item_instance_serial, serial_before + 1);
+    assert_eq!(changed, BTreeSet::from([position]));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::CreateItem {
+                    item_kind_id,
+                    quantity: 1,
+                    position: effect_position,
+                    destination_item_ids,
+                    ..
+                }] if item_kind_id == "demo.item.ration-of-food"
+                    && *effect_position == position
+                    && destination_item_ids == &[created_id.clone()]
+            )
+    )));
+
+    let serial_after_first = game.next_item_instance_serial;
+    events.clear();
+    changed.clear();
+    game.resolve_player_ability(
+        MUTATION_CONTRACT_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut changed,
+        &mut Vec::new(),
+    )
+    .expect("a repeated creation should resolve");
+    let merged = game
+        .items
+        .iter()
+        .find(|item| item.id == created_id)
+        .expect("the original acquired stack should remain");
+    assert_eq!(merged.quantity, 2);
+    assert_eq!(game.next_item_instance_serial, serial_after_first);
+
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("an acquired item should survive a save round trip");
+    let restored_item = restored
+        .items
+        .iter()
+        .find(|item| item.id == created_id)
+        .expect("the acquired item should be restored");
+    assert_eq!(restored_item.quantity, 2);
+    assert_eq!(restored_item.origin_kind, Some(ItemOriginKindDto::Acquire));
+}
+
+#[test]
+fn create_item_ability_uses_rfb_nearby_scoring_and_failure_creates_nothing() {
+    let prepare = |failure| {
+        let mut game =
+            mutation_ability_game(create_item_ability_catalog(failure), "demo.build.warrior");
+        game.items
+            .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+        game
+    };
+
+    let mut first = prepare(0);
+    first.debug_set_ability_casts_succeed(true);
+    let origin = first.player.position;
+    give_inventory_item(&mut first, "test.drop-blocker", "demo.item.arrow");
+    first
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.drop-blocker")
+        .expect("drop blocker should exist")
+        .location = ItemLocation::Ground(origin);
+    let mut second = first.clone();
+    let cast = |game: &mut Game| {
+        game.resolve_player_ability(
+            MUTATION_CONTRACT_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("nearby item creation should resolve");
+        game.items
+            .iter()
+            .find(|item| item.origin_kind == Some(ItemOriginKindDto::Acquire))
+            .expect("created item should exist")
+            .location
+            .clone()
+    };
+    let first_location = cast(&mut first);
+    let second_location = cast(&mut second);
+    assert_eq!(first_location, second_location);
+    let ItemLocation::Ground(created_position) = first_location else {
+        panic!("created item should be on the ground");
+    };
+    assert_ne!(created_position, origin);
+    assert_eq!(rfb_distance(created_position, origin), 1);
+
+    let mut failed = prepare(95);
+    failed.player.hp = 20;
+    failed.rng = RfbRng::seeded(0);
+    let serial_before = failed.next_item_instance_serial;
+    let item_count_before = failed.items.len();
+    let mut events = Vec::new();
+    failed
+        .resolve_player_ability(
+            MUTATION_CONTRACT_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("failed item creation should resolve");
+    assert!(matches!(
+        events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert_eq!(failed.next_item_instance_serial, serial_before);
+    assert_eq!(failed.items.len(), item_count_before);
 }
 
 #[test]

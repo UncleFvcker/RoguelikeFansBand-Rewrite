@@ -865,6 +865,29 @@
         {
           "additionalProperties": false,
           "properties": {
+            "itemKindId": {
+              "type": "string"
+            },
+            "quantity": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "create-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "itemKindId",
+            "quantity"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "itemKindIds": {
               "items": {
                 "type": "string"

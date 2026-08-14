@@ -128,6 +128,7 @@ fn item_creation_state_is_valid(
                     || definition.melee_profile.is_some())
         }
         Some(ItemOriginKindDto::Rubble) => item.discount_percent == 0,
+        Some(ItemOriginKindDto::Acquire) => item.discount_percent == 0,
     };
     let damage_override_is_valid = item.damage_dice_override.is_none_or(|dice| {
         (1..=9).contains(&dice) && definition.tags.iter().any(|tag| tag == "ammunition")

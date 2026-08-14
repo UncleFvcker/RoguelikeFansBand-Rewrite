@@ -3,6 +3,41 @@ use std::collections::BTreeSet;
 use super::*;
 
 #[test]
+fn create_item_effect_accepts_only_bounded_plain_item_references() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let make_content = |item_kind_id: &str, quantity| {
+        let mut content = artifact.content.clone();
+        content
+            .abilities
+            .iter_mut()
+            .find(|ability| ability.id == "demo.ability.arcane-satisfy-hunger")
+            .expect("Satisfy Hunger should provide a self-target fixture")
+            .effect = AbilityEffectDefinition::CreateItem {
+            item_kind_id: item_kind_id.to_owned(),
+            quantity,
+        };
+        content
+    };
+
+    validate_and_normalize(&mut make_content("demo.item.ration-of-food", 1))
+        .expect("a bounded plain item should be creatable");
+    assert!(matches!(
+        validate_and_normalize(&mut make_content("demo.item.ration-of-food", 101)),
+        Err(ContentError::InvalidItemModifiers(id)) if id == "demo.item.ration-of-food"
+    ));
+    assert!(matches!(
+        validate_and_normalize(&mut make_content("demo.item.crisdurian", 1)),
+        Err(ContentError::InvalidItemModifiers(id)) if id == "demo.item.crisdurian"
+    ));
+    assert!(matches!(
+        validate_and_normalize(&mut make_content("demo.item.missing", 1)),
+        Err(ContentError::DanglingReference { owner, target })
+            if owner == "demo.ability.arcane-satisfy-hunger"
+                && target == "demo.item.missing"
+    ));
+}
+
+#[test]
 fn abilities_validate_actor_detection_control_and_level_scaling() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 

@@ -224,6 +224,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::HealDice { .. }
                     | AbilityEffectDefinition::ReduceStatus { .. }
                     | AbilityEffectDefinition::SatisfyHunger
+                    | AbilityEffectDefinition::CreateItem { .. }
                     | AbilityEffectDefinition::RestoreVitality { .. }
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
@@ -661,6 +662,29 @@ mod tests {
             )]),
             Err(ContentError::InvalidAbilityProgram(id))
                 if id == "demo.ability-program.mixed-random"
+        ));
+    }
+
+    #[test]
+    fn create_item_program_requires_self_input() {
+        let effect = AbilityEffectDefinition::CreateItem {
+            item_kind_id: "demo.item.ration-of-food".to_owned(),
+            quantity: 1,
+        };
+        compile_ability_program_catalog(vec![ability_program(
+            "demo.ability-program.create-item",
+            AbilityProgramInputDefinition::SelfTarget,
+            vec![effect.clone()],
+        )])
+        .expect("create-item should be a self-target program");
+        assert!(matches!(
+            compile_ability_program_catalog(vec![ability_program(
+                "demo.ability-program.create-item",
+                AbilityProgramInputDefinition::CastTarget,
+                vec![effect],
+            )]),
+            Err(ContentError::InvalidAbilityProgram(id))
+                if id == "demo.ability-program.create-item"
         ));
     }
 
