@@ -203,7 +203,7 @@ pub(crate) fn valid_item_effect(
         } => {
             (1..=1_000_000).contains(base_damage)
                 && (1..=8).contains(radius)
-                && (1..=10_000).contains(backlash_sides)
+                && *backlash_sides <= 10_000
                 && *backlash_bonus <= 10_000
         }
         ItemUseEffectDefinition::ProtectionFromEvil

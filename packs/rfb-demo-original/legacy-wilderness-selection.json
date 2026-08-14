@@ -846,6 +846,43 @@
         "level": 45
       },
       "finalObject": { "tval": 75, "sval": 66 }
+    },
+    {
+      "sourceIndex": 8,
+      "sourceName": "Volcano",
+      "id": "demo.dungeon.volcano",
+      "position": { "x": 13, "y": 53 },
+      "minimumDepth": 50,
+      "maximumDepth": 60,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "CAVE",
+        "CAVERN",
+        "LAKE_LAVA",
+        "LAVA_RIVER",
+        "DESTROY"
+      ],
+      "monsterPreferences": ["IM_FIRE", "CAN_FLY", "WILD_VOLCANO"],
+      "floorTerrainDistribution": [
+        { "sourceTag": "DIRT", "percent": 40 },
+        { "sourceTag": "SHALLOW_LAVA", "percent": 40 },
+        { "sourceTag": "DEEP_LAVA", "percent": 20 }
+      ],
+      "tunnelPercent": 0,
+      "initialGuardian": {
+        "sourceIndex": 940,
+        "sourceName": "Lesser Balrog",
+        "chineseName": "次级炎魔",
+        "level": 49
+      },
+      "guardian": {
+        "sourceIndex": 972,
+        "sourceName": "Shooting Star the Red Dragon",
+        "chineseName": "红龙晨星",
+        "level": 60
+      },
+      "finalObject": { "tval": 55, "sval": 0 },
+      "finalEgoSourceIndex": 560
     }
   ]
 }

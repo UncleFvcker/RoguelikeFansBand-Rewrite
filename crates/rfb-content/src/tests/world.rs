@@ -9563,6 +9563,10 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
                 dungeon_id: "demo.dungeon.camelot".to_owned(),
             },
             WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 13, y: 53 },
+                dungeon_id: "demo.dungeon.volcano".to_owned(),
+            },
+            WildernessLocationDefinition::Dungeon {
                 position: ContentPosition { x: 17, y: 29 },
                 dungeon_id: "demo.dungeon.icky-cave".to_owned(),
             },
@@ -13327,4 +13331,150 @@ fn p96d_numenor_atlantis_bind_water_mix_veins_stairs_and_representative_layers()
             );
         }
     }
+}
+
+#[test]
+fn p103c_volcano_binds_lava_ecology_guardians_layers_and_reward() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.volcano")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Volcano should use global allocation");
+    assert_eq!(policy.preferred_movement_modes, [ActorMovementMode::Fly]);
+    assert_eq!(policy.preferred_habitats, [ActorHabitat::Volcano]);
+    assert_eq!(policy.preferred_damage_immunities, [ActorDamageType::Fire]);
+    assert_eq!((policy.special_div, policy.ambient_chance_one_in), (0, 160));
+
+    let features = content
+        .terrain_feature_tables
+        .iter()
+        .find(|table| table.id == "demo.terrain-feature-table.volcano")
+        .expect("Volcano lava distribution should exist");
+    assert_eq!(features.rolls, 480);
+    assert_eq!(
+        features
+            .entries
+            .iter()
+            .map(|entry| (entry.terrain_id.as_str(), entry.weight))
+            .collect::<BTreeMap<_, _>>(),
+        BTreeMap::from([
+            ("demo.terrain.surface-lava-deep", 1),
+            ("demo.terrain.surface-lava-shallow", 2),
+        ])
+    );
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 13, y: 53 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.volcano"
+            )
+        })
+    }));
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.volcano")
+        .expect("Volcano should exist");
+    assert_eq!(dungeon.legacy_index, Some(8));
+    assert_eq!(dungeon.root_floor_id, "demo.floor.volcano-depth-50");
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.shooting-star-the-red-dragon"
+    );
+    let entrance = dungeon
+        .entrance_guardian
+        .as_ref()
+        .expect("Lesser Balrog should guard the entrance");
+    assert_eq!(entrance.instance_id, "demo.guardian.volcano-entrance.1");
+    assert_eq!(entrance.actor_kind_id, "demo.actor.lesser-balrog");
+
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.volcano"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (50..=60).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.volcano-entrance")
+    );
+    assert!(floors.iter().all(|floor| {
+        (floor.width, floor.height) == (96, 33)
+            && floor.wall_terrain_id == "demo.terrain.wall"
+            && floor.floor_terrain_id == "demo.terrain.dirt"
+            && floor.terrain_feature_table_id.as_deref()
+                == Some("demo.terrain-feature-table.volcano")
+    }));
+    for floor in floors.iter().filter(|floor| floor.depth != 55) {
+        let river = floor
+            .layout
+            .as_ref()
+            .and_then(|layout| layout.river.as_ref())
+            .expect("ordinary Volcano layer should retain lava rivers");
+        assert_eq!(river.chance_one_in, Some(7));
+        assert_eq!(river.deep_terrain_id, "demo.terrain.surface-lava-deep");
+        assert_eq!(
+            river.shallow_terrain_id,
+            "demo.terrain.surface-lava-shallow"
+        );
+    }
+    let layout = |depth| {
+        floors
+            .iter()
+            .find(|floor| floor.depth == depth)
+            .and_then(|floor| floor.layout.as_ref())
+            .unwrap_or_else(|| panic!("depth {depth} layout"))
+    };
+    assert!(layout(55).lake.is_some());
+    assert!(layout(57).destroyed.is_some());
+    assert!(floors.iter().all(|floor| {
+        floor.layout.as_ref().is_some_and(|layout| {
+            layout.rooms.as_ref().is_some_and(|rooms| {
+                rooms
+                    .shapes
+                    .iter()
+                    .any(|shape| shape.shape == ProceduralRoomShape::Cavern && shape.weight == 9)
+            })
+        })
+    }));
+
+    let guardian = floors
+        .last()
+        .and_then(|floor| floor.guardian.as_ref())
+        .expect("Shooting Star should guard depth 60");
+    assert_eq!(guardian.instance_id, "demo.guardian.volcano.1");
+    assert_eq!(
+        guardian.actor_kind_id,
+        "demo.actor.shooting-star-the-red-dragon"
+    );
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.volcano-final-reward")
+    );
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.volcano-final-reward")
+        .expect("Volcano reward should exist");
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.mana-storm-staff");
 }

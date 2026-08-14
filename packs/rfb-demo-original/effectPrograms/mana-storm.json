@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.mana-storm",
+  "input": "self",
+  "steps": [
+    {
+      "type": "self-centered-elemental-blast",
+      "baseDamage": 792,
+      "damageType": "mana",
+      "radius": 5,
+      "backlashSides": 0,
+      "backlashBonus": 0,
+      "backlashDamageType": "mana",
+      "backlashUsesResistance": false
+    }
+  ]
+}

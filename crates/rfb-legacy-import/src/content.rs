@@ -24251,6 +24251,67 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
     }
 
     #[test]
+    fn p103a_volcano_plan_locks_ecology_layout_guardians_and_fixed_staff() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let volcano = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 8)
+            .expect("Volcano should have an implementation plan");
+
+        assert_eq!(volcano.source_name, "Volcano");
+        assert_eq!(volcano.id, "demo.dungeon.volcano");
+        assert_eq!(volcano.position, DemoWildernessPosition { x: 13, y: 53 });
+        assert_eq!((volcano.minimum_depth, volcano.maximum_depth), (50, 60));
+        assert_eq!(volcano.monster_divisor, 0);
+        assert_eq!(
+            volcano.generation_flags,
+            ["CAVE", "CAVERN", "LAKE_LAVA", "LAVA_RIVER", "DESTROY"]
+        );
+        assert_eq!(
+            volcano.monster_preferences,
+            ["IM_FIRE", "CAN_FLY", "WILD_VOLCANO"]
+        );
+        assert_eq!(
+            volcano.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "DIRT".to_owned(),
+                    percent: 40,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "SHALLOW_LAVA".to_owned(),
+                    percent: 40,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "DEEP_LAVA".to_owned(),
+                    percent: 20,
+                },
+            ]
+        );
+        assert_eq!(volcano.tunnel_percent, Some(0));
+        let entrance = volcano
+            .initial_guardian
+            .as_ref()
+            .expect("Lesser Balrog should guard the entrance");
+        assert_eq!((entrance.source_index, entrance.level), (940, 49));
+        assert_eq!(entrance.chinese_name, "次级炎魔");
+        assert_eq!(
+            (volcano.guardian.source_index, volcano.guardian.level),
+            (972, 60)
+        );
+        assert_eq!(volcano.guardian.chinese_name, "红龙晨星");
+        assert_eq!(
+            volcano.final_object,
+            Some(DemoDungeonObjectPlan { tval: 55, sval: 0 })
+        );
+        assert_eq!(volcano.final_ego_source_index, Some(560));
+    }
+
+    #[test]
     fn melee_brain_smash_reuses_psi_damage_and_status_riders() {
         let mut monsters = parse_r_info(
             "N:781:Ultimate beholder\nG:e:o\nI:120:40d100:30:80:10:100\nW:66:4:999:18000:0:0\nB:GAZE:BRAIN_SMASH(5d5)\nF:FORCE_MAXHP\n",

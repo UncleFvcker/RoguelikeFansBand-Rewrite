@@ -2911,6 +2911,90 @@ fn item_generation_modes_keep_drafts_unallocated_until_commit() {
     );
 }
 
+#[test]
+fn p103d_mana_storm_staff_hits_radius_five_without_backlash() {
+    const ITEM_ID: &str = "test.item.mana-storm-staff.1";
+    let mut game =
+        Game::new_with_build(203, "demo.build.warrior").expect("Mana Storm test should create");
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 10, y: 10 };
+    give_inventory_item(&mut game, ITEM_ID, "demo.item.mana-storm-staff");
+    let item = game
+        .items
+        .iter()
+        .find(|item| item.id == ITEM_ID)
+        .expect("Mana Storm staff should be granted");
+    assert_eq!(item.charges.expect("Mana Storm staff charges").maximum, 5);
+
+    for (id, x) in [("near", 11), ("edge", 15), ("outside", 16)] {
+        game.push_generated_actor(
+            format!("test.actor.mana-storm-{id}"),
+            "demo.actor.ancient-multi-hued-dragon",
+            Position { x, y: 10 },
+        );
+        let actor = game.entities.last_mut().expect("Mana Storm target");
+        actor.hp = 1_000;
+        actor.max_hp = 1_000;
+    }
+    let hp_before = game.player.hp;
+    let mut domain_events = Vec::new();
+    game.resolve_item_elemental_blast(
+        "demo.item.mana-storm-staff",
+        792,
+        DamageType::Mana,
+        5,
+        0,
+        0,
+        DamageType::Mana,
+        false,
+        &mut domain_events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Mana Storm should resolve");
+    let events = domain_events
+        .into_iter()
+        .map(DomainEvent::into_dto)
+        .collect::<Vec<_>>();
+
+    let resolutions = events
+        .iter()
+        .filter_map(|event| match event.outcome.as_ref() {
+            Some(GameEventOutcomeDto::Damage { resolution })
+            | Some(GameEventOutcomeDto::Death { resolution })
+                if matches!(
+                    event.kind.as_str(),
+                    "item.use-elemental-blast-hit" | "item.use-elemental-blast-slay"
+                ) =>
+            {
+                Some(resolution)
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(resolutions.len(), 2);
+    assert_eq!(
+        resolutions
+            .iter()
+            .map(|resolution| resolution.raw_damage)
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([132, 396])
+    );
+    assert!(
+        game.entities
+            .iter()
+            .any(|actor| actor.id == "test.actor.mana-storm-outside")
+    );
+    assert_eq!(game.player.hp, hp_before);
+    assert!(!events.iter().any(|event| {
+        matches!(
+            event.kind.as_str(),
+            "item.use-elemental-backlash" | "item.use-elemental-backlash-death"
+        )
+    }));
+}
+
 fn crisdurian_seed_for_test() -> u64 {
     (0..10_000)
         .find(|seed| RfbRng::seeded(*seed).bounded(15) == 0)

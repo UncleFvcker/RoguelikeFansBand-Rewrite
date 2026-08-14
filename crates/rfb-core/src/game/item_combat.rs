@@ -525,9 +525,15 @@ impl Game {
             }
         }
 
-        let backlash_raw = self
-            .roll_damage(1, backlash_sides)
-            .saturating_add(i32::from(backlash_bonus));
+        if backlash_sides == 0 && backlash_bonus == 0 {
+            return Ok(());
+        }
+        let backlash_raw = if backlash_sides == 0 {
+            0
+        } else {
+            self.roll_damage(1, backlash_sides)
+        }
+        .saturating_add(i32::from(backlash_bonus));
         let backlash_resistance = if backlash_uses_resistance {
             self.effective_player_resistances()
                 .level(backlash_damage_type)
