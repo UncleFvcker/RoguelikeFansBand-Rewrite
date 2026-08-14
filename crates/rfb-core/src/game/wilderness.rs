@@ -9,6 +9,7 @@ use rfb_content::{
 pub(super) const WILDERNESS_FLOOR_ID: &str = "core.floor.wilderness";
 pub(super) const WORLD_MAP_ACTION_MULTIPLIER: i32 = 132;
 pub(super) const WILDERNESS_DAY_TICKS: u32 = 100_000;
+pub(super) const WILDERNESS_NIGHT_START_TICK: u32 = WILDERNESS_DAY_TICKS * 3 / 4 + 1;
 pub(super) const WILDERNESS_CHUNK_WIDTH: u16 = 32;
 pub(super) const WILDERNESS_CHUNK_HEIGHT: u16 = 11;
 pub(super) const WILDERNESS_VIEW_WIDTH: u16 = WILDERNESS_WORLD_CELL_WIDTH;

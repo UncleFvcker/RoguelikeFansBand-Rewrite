@@ -112,7 +112,7 @@ test("the New Game form groups all nine formal Draconian subraces", () => {
 });
 
 test("New Game exposes and submits Golem with the device absorption action", () => {
-  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.golem");
+  assert.ok(PLAYTEST_RACE_IDS.includes("rfb-legacy.race.golem"));
   assert.equal(
     createNewSessionRequest(
       "368",
@@ -124,6 +124,22 @@ test("New Game exposes and submits Golem with the device absorption action", () 
   );
   const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(indexHtml, /<option value="rfb-legacy\.race\.golem"/);
+  assert.match(indexHtml, /<button id="inventory-absorb"/);
+});
+
+test("New Game exposes and submits Zombie with the device absorption action", () => {
+  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.zombie");
+  assert.equal(
+    createNewSessionRequest(
+      "377",
+      "demo.build.warrior",
+      "rfb-legacy.race.zombie",
+      "Morgoth",
+    ).raceId,
+    "rfb-legacy.race.zombie",
+  );
+  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(indexHtml, /<option value="rfb-legacy\.race\.zombie"/);
   assert.match(indexHtml, /<button id="inventory-absorb"/);
 });
 

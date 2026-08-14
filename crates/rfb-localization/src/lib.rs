@@ -523,6 +523,22 @@ mod tests {
     }
 
     #[test]
+    fn zombie_content_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("race-legacy-zombie-name", "僵尸"),
+            ("ability-rfb-race-restore-life-name", "恢复生命"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Zombie content name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

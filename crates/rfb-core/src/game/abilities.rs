@@ -5407,7 +5407,7 @@ impl Game {
         }
         let experience = apply_experience_restoration(&mut self.progress);
         let life_force =
-            self.restore_player_life_force(LifeForceRestorationRequest::at_least(life_force));
+            self.restore_player_life_force(LifeForceRestorationRequest::add(life_force));
         self.apply_player_experience(0, events);
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),

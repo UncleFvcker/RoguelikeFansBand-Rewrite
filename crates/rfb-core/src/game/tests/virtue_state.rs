@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use super::support::golem_game;
+use super::support::{golem_game, zombie_game};
 use super::*;
 
 fn virtue_kinds(game: &Game) -> Vec<VirtueKindDto> {
@@ -398,6 +398,19 @@ fn formal_golem_receives_the_authoritative_justice_virtue() {
             VirtueKindDto::Valour,
             VirtueKindDto::Honour,
             VirtueKindDto::Justice,
+        ]
+    );
+}
+
+#[test]
+fn formal_zombie_receives_the_authoritative_unlife_virtue() {
+    let zombie = zombie_game(376);
+    assert_eq!(
+        &virtue_kinds(&zombie)[..3],
+        [
+            VirtueKindDto::Valour,
+            VirtueKindDto::Honour,
+            VirtueKindDto::Unlife,
         ]
     );
 }

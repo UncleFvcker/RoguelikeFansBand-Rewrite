@@ -2905,6 +2905,7 @@ const RACE_MAGIC_MISSILE_ABILITY_ID: &str = "rfb.ability.race.magic-missile";
 const RACE_MIND_BLAST_ABILITY_ID: &str = "rfb.ability.race.mind-blast";
 const RACE_IMP_FIRE_ABILITY_ID: &str = "rfb.ability.race.imp-fire";
 const RACE_GOLEM_STONE_SKIN_ABILITY_ID: &str = "rfb.ability.race.golem-stone-skin";
+const RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID: &str = "rfb.ability.race.restore-life";
 const RACE_PHASE_DOOR_ABILITY_ID: &str = "rfb.ability.race.phase-door";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
 const RACE_PROBE_MONSTERS_ABILITY_ID: &str = "rfb.ability.race.probe-monsters";
@@ -3027,6 +3028,109 @@ fn formal_golem_stone_skin_unlocks_at_twenty_without_spell_power_scaling() {
             ..
         }] if granted_modifiers.defense == 50
     ));
+}
+
+#[test]
+fn formal_zombie_restore_life_unlocks_at_thirty_and_restores_experience_and_life_force() {
+    let mut game = zombie_game(374);
+    clear_monsters(&mut game);
+    game.progress.level = 29;
+    game.player.hp = game.effective_player_max_hp();
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID)
+        .expect("Zombie Restore Life should be projected before it unlocks");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Wisdom)
+    );
+    assert_eq!(locked.minimum_level, 30);
+    assert_eq!((locked.base_resource_cost, locked.resource_cost), (30, 30));
+    assert!(!locked.can_cast);
+
+    game.progress.level = 30;
+    game.player.hp = game.effective_player_max_hp();
+    let available = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID)
+        .expect("level-thirty Zombie Restore Life");
+    assert!(available.can_cast);
+    assert!(available.failure_percent >= 70);
+    assert!(matches!(
+        available.effects.as_slice(),
+        [AbilityEffectSpecDto::RestoreVitality { life_force: 150 }]
+    ));
+
+    let failure_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(available.failure_percent)
+        })
+        .expect("Zombie Restore Life should have a failing percentile seed");
+    let mut failed = game.clone();
+    failed.progress.experience = 500;
+    failed.progress.maximum_experience = 900;
+    failed.progress.life_force = 125;
+    failed.rng = RfbRng::seeded(failure_seed);
+    let failed_hp = failed.player.hp;
+    let mut failed_events = Vec::new();
+    failed
+        .resolve_player_ability(
+            RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut failed_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("failed Zombie Restore Life should resolve");
+    assert!(matches!(
+        failed_events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert_eq!(failed.player.hp, failed_hp - 30);
+    assert_eq!(failed.progress.experience, 500);
+    assert_eq!(failed.progress.life_force, 125);
+
+    game.progress.experience = 500;
+    game.progress.maximum_experience = 900;
+    game.progress.life_force = 125;
+    game.debug_set_ability_casts_succeed(true);
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        RACE_ZOMBIE_RESTORE_LIFE_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Zombie Restore Life should resolve");
+    let resolution = mutation_cast_resolution(&events);
+    assert!(resolution.succeeded);
+    assert_eq!(resolution.hp_paid, 30);
+    assert_eq!(game.progress.experience, 900);
+    assert_eq!(game.progress.maximum_experience, 900);
+    assert_eq!(game.progress.life_force, 275);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::RestoreVitality {
+                    experience_before: 500,
+                    experience_after: 900,
+                    life_force_before: 125,
+                    life_force_after: 275,
+                    ..
+                }]
+            )
+    )));
 }
 
 #[test]

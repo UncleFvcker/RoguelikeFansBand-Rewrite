@@ -75,6 +75,122 @@ fn formal_golem_birth_replaces_rations_with_a_full_nothing_staff_and_keeps_torch
 }
 
 #[test]
+fn formal_zombie_birth_starts_at_night_without_rations_and_round_trips() {
+    let mut game = zombie_game(370);
+    assert_eq!(game.world_tick, wilderness::WILDERNESS_NIGHT_START_TICK);
+    assert!(!game.wilderness_is_daytime());
+    assert!(
+        game.items.iter().all(|item| item.kind_id != RATION_KIND_ID),
+        "Zombie birth should not create ordinary rations"
+    );
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+    }));
+    let staff = game
+        .items
+        .iter()
+        .find(|item| {
+            item.kind_id == "demo.item.staff-of-nothing" && item.location == ItemLocation::Inventory
+        })
+        .expect("Zombie should carry its Staff of Nothing");
+    assert_eq!(
+        staff.charges,
+        Some(ItemChargesDto {
+            current: 21,
+            maximum: 21,
+        })
+    );
+
+    let saved = game.to_save();
+    let restored = Game::from_save(saved.clone()).expect("night-start Zombie should restore");
+    assert_eq!(restored.to_save(), saved);
+    assert_eq!(restored.state_hash(), game.state_hash());
+
+    clear_monsters(&mut game);
+    let mut replay = game.clone();
+    let update = dispatch_next(&mut game, GameCommand::Wait);
+    let replay_update = dispatch_next(&mut replay, GameCommand::Wait);
+    assert_eq!(replay_update.events, update.events);
+    assert_eq!(replay.state_hash(), game.state_hash());
+}
+
+#[test]
+fn formal_zombie_uses_undead_food_and_device_metabolism() {
+    let mut digestion = zombie_game(371);
+    digestion.nutrition = 9_000;
+    digestion.world_tick = 75_050;
+    digestion.process_hunger(&mut Vec::new());
+    assert_eq!(digestion.nutrition, 8_995);
+
+    digestion.nutrition = rfb_protocol::PLAYER_NUTRITION_MAXIMUM;
+    digestion.world_tick = 75_060;
+    digestion.process_hunger(&mut Vec::new());
+    assert_eq!(digestion.nutrition, 14_900);
+
+    let mut mushroom = zombie_game(372);
+    clear_monsters(&mut mushroom);
+    mushroom.nutrition = 9_000;
+    mushroom.player.hp = 1;
+    give_inventory_item(
+        &mut mushroom,
+        "test.item.zombie-mushroom",
+        "demo.item.fast-recovery-mushroom",
+    );
+    dispatch_next(
+        &mut mushroom,
+        GameCommand::UseItem {
+            item_id: "test.item.zombie-mushroom".to_owned(),
+            target: None,
+        },
+    );
+    assert_eq!(mushroom.nutrition, 9_025);
+    assert!(mushroom.player.hp > 1);
+    assert!(mushroom.player_has_status_kind(STATUS_REGENERATION));
+
+    let mut absorption = zombie_game(373);
+    clear_monsters(&mut absorption);
+    absorption.nutrition = 1_000;
+    give_inventory_item(
+        &mut absorption,
+        "test.item.zombie-device",
+        "demo.item.detect-objects-staff",
+    );
+    absorption
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.item.zombie-device")
+        .and_then(|item| item.charges.as_mut())
+        .expect("Zombie device charges")
+        .current = 2;
+    assert!(
+        absorption
+            .snapshot()
+            .inventory
+            .iter()
+            .find(|item| item.id == "test.item.zombie-device")
+            .expect("projected Zombie device")
+            .absorbable
+    );
+    dispatch_next(
+        &mut absorption,
+        GameCommand::AbsorbDevice {
+            item_id: "test.item.zombie-device".to_owned(),
+        },
+    );
+    assert_eq!(absorption.nutrition, 6_000);
+    assert_eq!(
+        absorption
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.zombie-device")
+            .and_then(|item| item.charges)
+            .expect("absorbed Zombie device remains")
+            .current,
+        0
+    );
+}
+
+#[test]
 fn ration_use_consumes_one_restores_food_and_pays_normal_action_cost() {
     let mut game =
         Game::new_with_build(7, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");

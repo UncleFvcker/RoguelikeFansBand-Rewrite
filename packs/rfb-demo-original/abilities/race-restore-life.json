@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.restore-life",
+  "nameKey": "ability-rfb-race-restore-life-name",
+  "descriptionKey": "ability-rfb-race-restore-life-description",
+  "abilityProgramId": "rfb.ability-program.race.restore-life",
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": ["race", "restoration"]
+}

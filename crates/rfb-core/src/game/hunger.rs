@@ -4,6 +4,7 @@ use super::*;
 
 pub(super) const RATION_ITEM_KIND_ID: &str = "demo.item.ration-of-food";
 const GOLEM_RACE_ID: &str = "rfb-legacy.race.golem";
+const ZOMBIE_RACE_ID: &str = "rfb-legacy.race.zombie";
 
 const WORLD_PROCESS_INTERVAL_TICKS: u32 = 10;
 const NORMAL_DIGESTION_INTERVAL_TICKS: u32 = 50;
@@ -21,7 +22,9 @@ pub(super) fn starting_ration_quantity(
     rng: &mut RfbRng,
 ) -> Option<u32> {
     build
-        .is_some_and(|identity| identity.race_id != GOLEM_RACE_ID)
+        .is_some_and(|identity| {
+            !matches!(identity.race_id.as_str(), GOLEM_RACE_ID | ZOMBIE_RACE_ID)
+        })
         .then(|| u32::try_from(rng.bounded(5) + 5).expect("birth ration quantity must fit u32"))
 }
 

@@ -1209,6 +1209,12 @@ impl Game {
             build_id.or(world.player_build_id.as_deref()),
             race_id,
         )?;
+        let starting_world_tick = build
+            .as_ref()
+            .and_then(|identity| content.race(&identity.race_id))
+            .is_some_and(|race| race.tags.iter().any(|tag| tag == "night-start"))
+            .then_some(wilderness::WILDERNESS_NIGHT_START_TICK)
+            .unwrap_or(0);
         let width = world.width;
         let height = world.height;
         let mut terrain =
@@ -1480,7 +1486,7 @@ impl Game {
             rng,
             revision: 0,
             turn: 0,
-            world_tick: 0,
+            world_tick: starting_world_tick,
             last_non_melee_fear_aura_tick: None,
             last_command_seq: 0,
             debug_ability_casts_succeed: false,

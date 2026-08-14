@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.365.0");
+    assert_eq!(catalog.pack_version(), "1.366.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1638,6 +1638,128 @@ fn formal_golem_completes_the_authoritative_profile_stone_skin_and_birth_staff()
         staff_activation.effect,
         ItemUseEffectDefinition::NoNumericEffect
     ));
+}
+
+#[test]
+fn formal_zombie_completes_the_authoritative_profile_and_restore_life_power() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let zombie = catalog
+        .race("rfb-legacy.race.zombie")
+        .expect("formal Zombie race");
+
+    assert_eq!(
+        [
+            zombie.modifiers.strength,
+            zombie.modifiers.intelligence,
+            zombie.modifiers.wisdom,
+            zombie.modifiers.dexterity,
+            zombie.modifiers.constitution,
+            zombie.modifiers.charisma,
+        ],
+        [2, -6, -6, 1, 4, -3]
+    );
+    assert_eq!(
+        (
+            zombie.life_percent,
+            zombie.base_hp,
+            zombie.experience_percent,
+            zombie.infravision,
+            zombie.shop_adjust_percent,
+        ),
+        (108, 24, 180, 2, 140)
+    );
+    assert!(zombie.see_invisible);
+    assert_eq!(zombie.hold_life_minimum_level, Some(1));
+    assert_eq!(zombie.food_nutrition_divisor, 20);
+    assert_eq!(
+        zombie.resistances.get(&ActorDamageType::Nether),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(
+        zombie.resistances.get(&ActorDamageType::Poison),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    assert_eq!(zombie.level_resistances.len(), 1);
+    assert_eq!(zombie.level_resistances[0].minimum_level, 5);
+    assert_eq!(
+        zombie.level_resistances[0]
+            .resistances
+            .get(&ActorDamageType::Cold),
+        Some(&ActorResistanceLevel::Resistant)
+    );
+    for tag in [
+        "device-eater",
+        "night-start",
+        "nonliving",
+        "rfb-compatibility",
+        "slow-digestion",
+        "undead",
+    ] {
+        assert!(
+            zombie.tags.iter().any(|candidate| candidate == tag),
+            "{tag}"
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&zombie.skill_set_id)
+        .expect("formal Zombie skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [-5, -5, 5, -1, -1, 5, 15, 0]
+    );
+
+    let [activation] = zombie.abilities.as_slice() else {
+        panic!("Zombie should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.restore-life",
+            30,
+            TechniqueAttribute::Wisdom,
+            30,
+            70,
+        )
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Zombie Restore Life ability");
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::RestoreVitality {
+            life_force: 150,
+            restore_attributes: false,
+        }
+    ));
+
+    let [starting_item] = zombie.starting_items.as_slice() else {
+        panic!("Zombie should start with one race-specific item");
+    };
+    assert_eq!(starting_item.item_kind_id, "demo.item.staff-of-nothing");
+    assert_eq!(starting_item.quantity, 1);
+    assert!(!starting_item.equipped);
+    assert!(starting_item.fully_charged);
 }
 
 #[test]
