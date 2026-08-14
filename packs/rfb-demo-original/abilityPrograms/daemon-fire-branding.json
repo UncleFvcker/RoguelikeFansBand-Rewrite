@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-program.daemon-fire-branding",
+  "input": "item",
+  "steps": [
+    { "type": "brand-weapon", "affixId": "rfb-legacy.affix.slaying", "brand": "fire", "resistance": "fire" }
+  ]
+}

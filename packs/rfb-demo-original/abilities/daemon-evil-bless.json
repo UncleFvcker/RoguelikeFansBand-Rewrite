@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.daemon-evil-bless",
+  "nameKey": "ability-demo-daemon-evil-bless-name",
+  "descriptionKey": "ability-demo-daemon-evil-bless-description",
+  "abilityProgramId": "demo.ability-program.daemon-evil-bless",
+  "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "status-duration-ticks" },
+    { "effectIndex": 0, "field": "status-duration-sides" }
+  ],
+  "tags": ["blessing", "daemon", "spell"]
+}

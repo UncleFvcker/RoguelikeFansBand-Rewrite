@@ -724,7 +724,9 @@ impl Game {
                     .any(|status| {
                         matches!(
                             status.kind_id.as_str(),
-                            STATUS_HOLD_LIFE | STATUS_ULTIMATE_RESISTANCE
+                            STATUS_HOLD_LIFE
+                                | STATUS_ULTIMATE_RESISTANCE
+                                | STATUS_DEMON_LORD_TRANSFORMATION
                         )
                     }),
             )
@@ -786,6 +788,7 @@ impl Game {
     pub(super) fn player_levitates(&self) -> bool {
         self.player_has_status_kind(STATUS_LEVITATION)
             || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
+            || self.player_has_status_kind(STATUS_DEMON_LORD_TRANSFORMATION)
             || self.content.mutations().any(|mutation| {
                 mutation.levitation && self.progress.active_mutation_ids.contains(&mutation.id)
             })
@@ -794,6 +797,7 @@ impl Game {
     pub(super) fn player_has_telepathy(&self) -> bool {
         self.player_has_status_kind(STATUS_TELEPATHY)
             || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
+            || self.player_has_status_kind(STATUS_DEMON_LORD_TRANSFORMATION)
             || self.player_has_permanent_telepathy()
     }
 

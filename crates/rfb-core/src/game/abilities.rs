@@ -10,6 +10,7 @@ const DEATH_RAISE_DEAD_ABILITY_ID: &str = "demo.ability.death-raise-dead";
 const DEATH_VAMPIRIC_DRAIN_ABILITY_ID: &str = "demo.ability.death-vampiric-drain";
 const DEATH_VAMPIRIC_BRANDING_ABILITY_ID: &str = "demo.ability.death-vampiric-branding";
 const DEATH_VAMPIRISM_TRUE_ABILITY_ID: &str = "demo.ability.death-vampirism-true";
+const CRUSADE_HOLY_BLADE_ABILITY_ID: &str = "demo.ability.crusade-holy-blade";
 const NATURE_WRATH_ABILITY_ID: &str = "demo.ability.nature-natures-wrath";
 
 enum EarthquakeSource {
@@ -105,6 +106,11 @@ pub(super) enum AbilityTargetPlan {
     SummonCategory {
         friendly_candidate_kind_ids: Vec<String>,
         hostile_candidate_kind_ids: Vec<String>,
+        positions: Vec<Position>,
+    },
+    GreaterDemonSacrifice {
+        item_id: String,
+        candidate_kind_ids: Vec<String>,
         positions: Vec<Position>,
     },
     Rodeo {
@@ -894,6 +900,71 @@ impl Game {
             (AbilityEffectDefinition::NatureGate { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_nature_gate_effect(&ability, events, changed);
             }
+            (AbilityEffectDefinition::DemonSummoning, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_demon_summoning_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::AngelSummoning, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_angel_summoning_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::BanishEvil, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_banish_evil_effect(&ability, events, changed);
+            }
+            (
+                AbilityEffectDefinition::WrathOfGod,
+                AbilityTargetPlan::Projectile {
+                    path,
+                    stop_at_actor,
+                },
+            ) => self.resolve_player_wrath_of_god_effect(
+                &ability,
+                path,
+                stop_at_actor,
+                events,
+                changed,
+                removed_entities,
+            )?,
+            (AbilityEffectDefinition::DivineIntervention, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_divine_intervention_effect(
+                    &ability,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (AbilityEffectDefinition::Crusade, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_crusade_effect(&ability, events, changed);
+            }
+            (AbilityEffectDefinition::InsanityCircle { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_insanity_circle_effect(
+                    &ability,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (AbilityEffectDefinition::ExplodePets, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_explode_pets_effect(
+                    &ability,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::SummonGreaterDemon { .. },
+                AbilityTargetPlan::GreaterDemonSacrifice {
+                    item_id,
+                    candidate_kind_ids,
+                    positions,
+                },
+            ) => self.resolve_player_greater_demon_effect(
+                &ability,
+                &item_id,
+                candidate_kind_ids,
+                positions,
+                events,
+                changed,
+            ),
             (AbilityEffectDefinition::Detect { .. }, AbilityTargetPlan::Detect) => {
                 self.resolve_player_detection_effect(&ability, events, changed);
             }
@@ -997,6 +1068,32 @@ impl Game {
                     removed_entities,
                 )?;
             }
+            (AbilityEffectDefinition::LavaFlow { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_lava_flow_effect(&ability, events, changed, removed_entities)?;
+            }
+            (AbilityEffectDefinition::DoomHand, AbilityTargetPlan::Projectile { path, .. }) => {
+                self.resolve_player_doom_hand_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::Hellfire { .. },
+                AbilityTargetPlan::Projectile {
+                    path,
+                    stop_at_actor,
+                },
+            ) => self.resolve_player_hellfire_effect(
+                &ability,
+                path,
+                stop_at_actor,
+                events,
+                changed,
+                removed_entities,
+            )?,
             (
                 AbilityEffectDefinition::BeamDamage { .. },
                 AbilityTargetPlan::Projectile { path, .. },
@@ -1026,6 +1123,18 @@ impl Game {
                 AbilityTargetPlan::Projectile { path, .. },
             ) => {
                 self.resolve_player_bolt_or_beam_damage_effect(
+                    &ability,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
+            (
+                AbilityEffectDefinition::Stardust { .. },
+                AbilityTargetPlan::Projectile { path, .. },
+            ) => {
+                self.resolve_player_stardust_effect(
                     &ability,
                     path,
                     events,
@@ -1123,6 +1232,9 @@ impl Game {
             }
             (AbilityEffectDefinition::MassSleepOrStasis { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_mass_sleep_or_stasis_effect(&ability, events, changed)
+            }
+            (AbilityEffectDefinition::Sanctuary { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_sanctuary_effect(&ability, events, changed)
             }
             (AbilityEffectDefinition::AggravateMonsters, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_aggravate_monsters_effect(&ability, events, changed);
@@ -1639,6 +1751,171 @@ impl Game {
         )
     }
 
+    fn resolve_player_lava_flow_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::LavaFlow {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            radius,
+            target_terrain_id,
+        } = &ability.effect
+        else {
+            unreachable!("lava flow executor requires a lava-flow effect");
+        };
+        let base_raw_damage = self
+            .roll_damage(*damage_dice, *damage_sides)
+            .saturating_add(i32::from(*damage_bonus))
+            .max(0);
+        let base_raw_damage = i32::try_from(spell_powered_ability_value(
+            ability,
+            0,
+            AbilitySpellPowerField::FinalDamage,
+            u64::try_from(base_raw_damage).expect("lava-flow damage must be non-negative"),
+        ))
+        .expect("spell-powered lava-flow damage must fit i32");
+        self.resolve_player_area_damage_with_base(
+            &ability.id,
+            Vec::new(),
+            false,
+            DamageType::Fire,
+            *radius,
+            None,
+            base_raw_damage,
+            ability.affects_ground_items,
+            events,
+            changed,
+            removed_entities,
+        )?;
+
+        // The original rolls 3 or 4 as the hidden terrain projection's
+        // power. Both values create deep lava, but the draw is observable in
+        // subsequent RNG and therefore remains part of the cast.
+        let _terrain_power = self.rng.bounded(2) + 3;
+        let connections = self
+            .floor_connections
+            .iter()
+            .map(|connection| connection.position)
+            .collect::<BTreeSet<_>>();
+        let transformed_positions = self
+            .area_damage_cells(self.player.position, *radius)
+            .into_iter()
+            .map(|(_, position)| position)
+            .filter(|position| !connections.contains(position))
+            .filter(|position| {
+                let index = self
+                    .index(*position)
+                    .expect("lava-flow footprint must remain in bounds");
+                self.terrain[index] != *target_terrain_id
+                    && self
+                        .content
+                        .terrain(&self.terrain[index])
+                        .is_some_and(|terrain| !terrain.tags.iter().any(|tag| tag == "permanent"))
+            })
+            .collect::<Vec<_>>();
+        let source_terrain_ids = transformed_positions
+            .iter()
+            .filter_map(|position| {
+                self.index(*position)
+                    .map(|index| self.terrain[index].clone())
+            })
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .collect::<Vec<_>>();
+        for position in &transformed_positions {
+            self.replace_terrain_from_source(
+                *position,
+                target_terrain_id,
+                TerrainChangeSource::Magic,
+                events,
+                changed,
+            );
+        }
+        events.push(DomainEvent::AbilityTerrainTransformed {
+            ability_id: ability.id.clone(),
+            resolution: AbilityTerrainTransformResolutionDto {
+                center: self.player.position,
+                radius: *radius,
+                source_terrain_ids,
+                target_terrain_id: target_terrain_id.clone(),
+                transformed_positions,
+            },
+        });
+        Ok(())
+    }
+
+    fn resolve_player_doom_hand_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::DoomHand = ability.effect else {
+            unreachable!("doom-hand executor requires a doom-hand effect");
+        };
+        let (trace, target_index) = self.trace_projectile_path(path);
+        let Some(index) = target_index else {
+            events.push(DomainEvent::AbilityLanded {
+                ability_id: ability.id.clone(),
+                trace,
+            });
+            return Ok(());
+        };
+        let definition = self
+            .actor_runtime_definition(&self.entities[index])
+            .expect("doom-hand target definition must remain available")
+            .clone();
+        let unique = definition.tags.iter().any(|tag| tag == "unique");
+        let power = spell_power_value(
+            u64::from(self.progress.level.saturating_mul(3)),
+            ability.spell_power_bonus,
+        )
+        .max(1);
+        let succeeded = if unique {
+            false
+        } else {
+            let power_roll = self.rng.bounded(power) + 1;
+            let resistance_roll = u64::from(definition.level) + self.rng.bounded(20) + 1;
+            power_roll >= resistance_roll
+        };
+        if !succeeded {
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: Some(self.entities[index].id.clone()),
+                    target_kind_id: Some(definition.id),
+                    effects: vec![AbilityEffectResolutionDto::NoOp {
+                        effect_index: 0,
+                        reason: if unique { "unique" } else { "resisted" }.to_owned(),
+                    }],
+                },
+                trace: Some(trace),
+            });
+            return Ok(());
+        }
+        let percent =
+            i32::try_from(self.rng.bounded(20) + 41).expect("doom-hand percentage must fit i32");
+        let raw_damage = self.entities[index].hp.saturating_mul(percent) / 100;
+        self.resolve_ability_damage_to_entity(
+            index,
+            &ability.id,
+            DamageType::Curse,
+            raw_damage,
+            trace,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        Ok(())
+    }
+
     #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve_player_area_damage_with_base(
         &mut self,
@@ -1689,7 +1966,7 @@ impl Game {
         let (trace, _) = self.trace_projectile_path_with_actor_policy(path, stop_at_actor);
         let center = trace.landing;
         let (affected_positions, targets) =
-            self.area_damage_targets(center, radius, target_category);
+            self.area_damage_targets_for_type(center, radius, target_category, damage_type);
         if affects_terrain {
             self.resolve_projectile_terrain_effects(&affected_positions, damage_type, changed);
         }
@@ -2284,6 +2561,64 @@ impl Game {
                 damage_type,
                 base_raw_damage,
                 trace,
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        Ok(())
+    }
+
+    fn resolve_player_stardust_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::Stardust {
+            damage_dice,
+            damage_sides,
+            count,
+            deviation,
+        } = ability.effect
+        else {
+            unreachable!("stardust executor requires a stardust effect");
+        };
+        let Some(aim) = path.last().copied() else {
+            unreachable!("validated stardust target path must not be empty");
+        };
+        let spread = u32::from(deviation).max(1);
+        for _ in 0..count {
+            let destination = loop {
+                let width = u64::from(spread.saturating_mul(2).saturating_add(1));
+                let x = aim.x
+                    + i32::try_from(self.rng.bounded(width)).expect("spread draw must fit i32")
+                    - i32::try_from(spread).expect("validated spread must fit i32");
+                let y = aim.y
+                    + i32::try_from(self.rng.bounded(width)).expect("spread draw must fit i32")
+                    - i32::try_from(spread).expect("validated spread must fit i32");
+                let candidate = Position { x, y };
+                if candidate != self.player.position && rfb_distance(aim, candidate) <= spread {
+                    break candidate;
+                }
+            };
+            let path = self
+                .untargeted_projectile_path(destination, ability.target.range)
+                .unwrap_or_else(|| path.clone());
+            let raw_damage = self.roll_damage(damage_dice, damage_sides).max(0);
+            let impact = self.trace_projectile_path(path.clone()).0.impact;
+            if let Some(index) = self.index(impact) {
+                self.glow[index] = true;
+                changed.insert(impact);
+            }
+            self.resolve_player_projectile_damage_with_base(
+                &ability.id,
+                path,
+                DamageType::Light,
+                raw_damage,
+                false,
                 events,
                 changed,
                 removed_entities,
@@ -3061,7 +3396,8 @@ impl Game {
             .actor(&target_kind_id)
             .expect("controlled actor definition must remain available");
         let target_level = definition.level;
-        let eligible = definition.tags.iter().any(|tag| tag == category);
+        let eligible =
+            category == "any-monster" || definition.tags.iter().any(|tag| tag == category);
         let already_controlled = self.entity_is_player_aligned(target_index);
         let (roll, outcome) = if already_controlled {
             (None, AbilityControlOutcomeDto::AlreadyControlled)
@@ -3251,6 +3587,16 @@ impl Game {
                 };
                 let target_entity_id = self.entities[target_index].id.clone();
                 let target_kind_id = self.entities[target_index].kind_id.clone();
+                if ability.id == CRUSADE_ARREST_ABILITY_ID {
+                    self.resolve_crusade_arrest_effect(
+                        ability,
+                        target_index,
+                        trace,
+                        events,
+                        changed,
+                    );
+                    return;
+                }
                 let resolution = match &ability.effect {
                     AbilityEffectDefinition::ApplyStatus {
                         status_kind_id,
@@ -3326,6 +3672,106 @@ impl Game {
         }
     }
 
+    fn resolve_crusade_arrest_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        target_index: usize,
+        trace: ProjectileTrace,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::ApplyStatus {
+            status_kind_id,
+            intensity,
+            duration_ticks,
+            duration_dice,
+            duration_sides,
+            stacking,
+            power: Some(power),
+            granted_resistances,
+            granted_brands,
+            granted_modifiers,
+            granted_equipment_bonuses,
+            granted_status_immunities,
+            granted_race_id,
+            grants_wall_passage,
+            incoming_damage_percent,
+            ..
+        } = &ability.effect
+        else {
+            unreachable!("Arrest requires a powered status effect");
+        };
+        let target_entity_id = self.entities[target_index].id.clone();
+        let target_kind_id = self.entities[target_index].kind_id.clone();
+        let definition = self
+            .content
+            .actor(&target_kind_id)
+            .expect("an Arrest target must have an actor definition");
+        let target_level = definition.level;
+        let eligible = !definition.tags.iter().any(|tag| tag == "unique")
+            && actor_matches_category(definition, "evil");
+        let threshold = eligible.then(|| {
+            let sides = power.saturating_sub(10).max(1);
+            u16::try_from(self.rng.bounded(u64::from(sides)) + 11)
+                .expect("Arrest threshold must fit u16")
+        });
+        let succeeded = threshold.is_some_and(|roll| target_level <= u32::from(roll));
+        let forced_resistances = ResistanceProfile::default();
+        let forced_immunities = BTreeSet::from([status_kind_id.clone()]);
+        let mut resolution = apply_ability_status_effect(
+            &mut self.entities[target_index],
+            &ability.id,
+            0,
+            status_kind_id,
+            *intensity,
+            *duration_ticks,
+            *duration_dice,
+            *duration_sides,
+            *stacking,
+            None,
+            if succeeded { None } else { Some(*power) },
+            granted_resistances,
+            granted_brands,
+            granted_modifiers,
+            granted_equipment_bonuses,
+            granted_status_immunities,
+            granted_race_id.as_deref(),
+            *grants_wall_passage,
+            *incoming_damage_percent,
+            succeeded.then_some(target_level),
+            (!succeeded).then_some((&forced_resistances, &forced_immunities)),
+            &mut self.rng,
+        );
+        if let AbilityEffectResolutionDto::ApplyStatus {
+            power: resolved_power,
+            target_level: resolved_target_level,
+            power_roll,
+            target_roll,
+            change,
+            ..
+        } = &mut resolution
+        {
+            *resolved_power = Some(*power);
+            *resolved_target_level = Some(target_level);
+            *power_roll = threshold;
+            *target_roll = None;
+            if eligible && !succeeded {
+                *change = AbilityStatusChangeDto::Resisted;
+            }
+        }
+        self.entities[target_index].alerted = true;
+        changed.insert(self.entities[target_index].position);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(target_entity_id),
+                target_kind_id: Some(target_kind_id),
+                effects: vec![resolution],
+            },
+            trace: Some(trace),
+        });
+    }
+
     pub(super) fn resolve_player_ordered_sequence_effect(
         &mut self,
         ability: &AbilityDefinition,
@@ -3349,9 +3795,16 @@ impl Game {
                 )
             })
         {
-            for effect in effects {
+            for (index, effect) in effects.iter().enumerate() {
                 let mut step = ability.clone();
                 step.effect = effect.clone();
+                let effect_index =
+                    u8::try_from(index).expect("validated ability effect index must fit u8");
+                step.spell_power_fields
+                    .retain(|definition| definition.effect_index == effect_index);
+                for definition in &mut step.spell_power_fields {
+                    definition.effect_index = 0;
+                }
                 let plan = match effect {
                     AbilityEffectDefinition::AreaDamage { .. } => AbilityTargetPlan::Projectile {
                         path: Vec::new(),
@@ -3678,6 +4131,8 @@ impl Game {
             status_kind_id,
             intensity,
             duration_ticks,
+            duration_dice,
+            duration_sides,
             stacking,
             resistance_type,
             power,
@@ -3723,8 +4178,8 @@ impl Game {
                 status_kind_id,
                 *intensity,
                 *duration_ticks,
-                0,
-                0,
+                *duration_dice,
+                *duration_sides,
                 *stacking,
                 *resistance_type,
                 *power,
@@ -3788,10 +4243,7 @@ impl Game {
                 continue;
             };
             let target_level = definition.level;
-            let unique = definition
-                .tags
-                .iter()
-                .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
+            let unique = definition.tags.iter().any(|tag| tag == "unique");
             let contest_roll = (!unique).then(|| {
                 let sides = power.saturating_sub(10).max(1);
                 u16::try_from(self.rng.bounded(u64::from(sides)) + 1)
@@ -3982,6 +4434,89 @@ impl Game {
                     status.remaining_ticks = status.remaining_ticks.saturating_add(10);
                 }
             }
+            changed.insert(self.entities[index].position);
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: Some(entity_id),
+                    target_kind_id: Some(target_kind_id),
+                    effects: vec![resolution],
+                },
+                trace: None,
+            });
+        }
+    }
+
+    fn resolve_player_sanctuary_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::Sanctuary { power, radius } = ability.effect else {
+            unreachable!("sanctuary executor requires a sanctuary effect");
+        };
+        let target_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && rfb_distance(self.player.position, entity.position) <= u32::from(radius)
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        for entity_id in target_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let target_kind_id = self.entities[index].kind_id.clone();
+            let target_level = self
+                .content
+                .actor(&target_kind_id)
+                .map(|definition| definition.level);
+            let resistance_profile = self.entities[index].resistances.clone();
+            let unique = self
+                .actor_runtime_definition(&self.entities[index])
+                .is_some_and(|definition| {
+                    definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "unique" | "unique2"))
+                });
+            let status_immunities = if unique || self.actor_has_status_immunity(index, STATUS_SLEEP)
+            {
+                BTreeSet::from([STATUS_SLEEP.to_owned()])
+            } else {
+                BTreeSet::new()
+            };
+            let resolution = apply_ability_status_effect(
+                &mut self.entities[index],
+                &ability.id,
+                0,
+                STATUS_SLEEP,
+                1,
+                500,
+                0,
+                0,
+                AbilityStatusStackingDefinition::KeepStrongest,
+                None,
+                Some(power),
+                &BTreeMap::new(),
+                &BTreeSet::new(),
+                &StatModifiers::default(),
+                &EquipmentBonuses::default(),
+                &BTreeSet::new(),
+                None,
+                false,
+                100,
+                target_level,
+                Some((&resistance_profile, &status_immunities)),
+                &mut self.rng,
+            );
             changed.insert(self.entities[index].position);
             events.push(DomainEvent::AbilityEffectsResolved {
                 ability_id: ability.id.clone(),
@@ -4677,7 +5212,9 @@ impl Game {
         );
         if matches!(
             ability.id.as_str(),
-            DEATH_POISON_BRANDING_ABILITY_ID | DEATH_VAMPIRIC_BRANDING_ABILITY_ID
+            DEATH_POISON_BRANDING_ABILITY_ID
+                | DEATH_VAMPIRIC_BRANDING_ABILITY_ID
+                | CRUSADE_HOLY_BLADE_ABILITY_ID
         ) {
             self.add_virtue(VirtueKindDto::Enchantment, 2);
         }
@@ -6982,12 +7519,26 @@ impl Game {
         let AbilityEffectDefinition::TeleportAway {
             minimum_distance,
             power,
+            stop_at_actor,
+            ref target_category,
         } = ability.effect
         else {
             unreachable!("teleport-away executor requires a teleport-away effect");
         };
-        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, false);
-        let target_ids = self.beam_damage_targets(&trace.traversed);
+        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, stop_at_actor);
+        let target_ids = self
+            .beam_damage_targets(&trace.traversed)
+            .into_iter()
+            .filter(|target_entity_id| {
+                target_category.as_ref().is_none_or(|category| {
+                    self.entities
+                        .iter()
+                        .find(|entity| entity.id == *target_entity_id && entity.hp > 0)
+                        .and_then(|entity| self.actor_runtime_definition(entity))
+                        .is_some_and(|definition| actor_matches_category(definition, category))
+                })
+            })
+            .collect::<Vec<_>>();
         let mut resolutions = Vec::new();
         for target_entity_id in target_ids {
             let Some(index) = self
@@ -6997,82 +7548,13 @@ impl Game {
             else {
                 continue;
             };
-            let from = self.entities[index].position;
-            let definition = self
-                .actor_runtime_definition(&self.entities[index])
-                .expect("teleport-away target definition must remain available");
-            let has_tag = |tag: &str| definition.tags.iter().any(|candidate| candidate == tag);
-            let target_level = definition.level;
-            let resistant = has_tag("resist-teleport");
-            let always_resisted =
-                has_tag("guardian") || (resistant && (has_tag("unique") || has_tag("resist-all")));
-            let resistance_roll = if resistant && !always_resisted {
-                Some(
-                    u8::try_from(self.rng.bounded(100) + 1)
-                        .expect("teleport resistance roll must fit u8"),
-                )
-            } else {
-                None
-            };
-            let resisted = always_resisted
-                || resistance_roll.is_some_and(|roll| target_level > u32::from(roll));
-            let mut to = None;
-            if !resisted {
-                let distance = u32::from(power.max(u16::from(minimum_distance)));
-                let mut minimum = distance / 2;
-                let mut maximum = distance.max(1);
-                for _ in 0..8 {
-                    let candidates =
-                        (0..self.height)
-                            .flat_map(|y| {
-                                (0..self.width).map(move |x| Position {
-                                    x: i32::from(x),
-                                    y: i32::from(y),
-                                })
-                            })
-                            .filter(|position| {
-                                let distance = rfb_distance(from, *position);
-                                distance >= minimum
-                                    && distance <= maximum
-                                    && *position != self.player.position
-                                    && self.actor_can_enter_position(index, *position)
-                                    && !self.entities.iter().enumerate().any(
-                                        |(other_index, entity)| {
-                                            other_index != index
-                                                && entity.hp > 0
-                                                && entity.position == *position
-                                        },
-                                    )
-                            })
-                            .collect::<Vec<_>>();
-                    if !candidates.is_empty() {
-                        let candidate_index = if candidates.len() == 1 {
-                            0
-                        } else {
-                            usize::try_from(self.rng.bounded(candidates.len() as u64))
-                                .expect("bounded teleport destination index must fit usize")
-                        };
-                        to = Some(candidates[candidate_index]);
-                        break;
-                    }
-                    minimum /= 2;
-                    maximum = maximum.saturating_mul(2);
-                }
-            }
-            if let Some(destination) = to {
-                self.entities[index].position = destination;
-                changed.insert(from);
-                changed.insert(destination);
-            }
-            resolutions.push(AbilityEffectResolutionDto::TeleportAway {
-                effect_index: 0,
-                target_entity_id,
+            resolutions.push(self.resolve_teleport_away_target(
+                index,
+                0,
+                minimum_distance,
                 power,
-                resistance_roll,
-                resisted,
-                from,
-                to,
-            });
+                changed,
+            ));
         }
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
@@ -7083,6 +7565,94 @@ impl Game {
             },
             trace: Some(trace),
         });
+    }
+
+    fn resolve_teleport_away_target(
+        &mut self,
+        index: usize,
+        effect_index: u8,
+        minimum_distance: u8,
+        power: u16,
+        changed: &mut BTreeSet<Position>,
+    ) -> AbilityEffectResolutionDto {
+        let target_entity_id = self.entities[index].id.clone();
+        let from = self.entities[index].position;
+        let definition = self
+            .actor_runtime_definition(&self.entities[index])
+            .expect("teleport-away target definition must remain available");
+        let has_tag = |tag: &str| definition.tags.iter().any(|candidate| candidate == tag);
+        let target_level = definition.level;
+        let resistant = has_tag("resist-teleport");
+        let always_resisted =
+            has_tag("guardian") || (resistant && (has_tag("unique") || has_tag("resist-all")));
+        let resistance_roll = if resistant && !always_resisted {
+            Some(
+                u8::try_from(self.rng.bounded(100) + 1)
+                    .expect("teleport resistance roll must fit u8"),
+            )
+        } else {
+            None
+        };
+        let resisted =
+            always_resisted || resistance_roll.is_some_and(|roll| target_level > u32::from(roll));
+        let mut to = None;
+        if !resisted {
+            let distance = u32::from(power.max(u16::from(minimum_distance)));
+            let mut minimum = distance / 2;
+            let mut maximum = distance.max(1);
+            for _ in 0..8 {
+                let candidates = (0..self.height)
+                    .flat_map(|y| {
+                        (0..self.width).map(move |x| Position {
+                            x: i32::from(x),
+                            y: i32::from(y),
+                        })
+                    })
+                    .filter(|position| {
+                        let distance = rfb_distance(from, *position);
+                        distance >= minimum
+                            && distance <= maximum
+                            && *position != self.player.position
+                            && self.actor_can_enter_position(index, *position)
+                            && !self
+                                .entities
+                                .iter()
+                                .enumerate()
+                                .any(|(other_index, entity)| {
+                                    other_index != index
+                                        && entity.hp > 0
+                                        && entity.position == *position
+                                })
+                    })
+                    .collect::<Vec<_>>();
+                if !candidates.is_empty() {
+                    let candidate_index = if candidates.len() == 1 {
+                        0
+                    } else {
+                        usize::try_from(self.rng.bounded(candidates.len() as u64))
+                            .expect("bounded teleport destination index must fit usize")
+                    };
+                    to = Some(candidates[candidate_index]);
+                    break;
+                }
+                minimum /= 2;
+                maximum = maximum.saturating_mul(2);
+            }
+        }
+        if let Some(destination) = to {
+            self.entities[index].position = destination;
+            changed.insert(from);
+            changed.insert(destination);
+        }
+        AbilityEffectResolutionDto::TeleportAway {
+            effect_index,
+            target_entity_id,
+            power,
+            resistance_roll,
+            resisted,
+            from,
+            to,
+        }
     }
 
     fn resolve_player_recharge_effect(
@@ -7932,6 +8502,1386 @@ impl Game {
             ability_id: ability.id.clone(),
             resolution,
         });
+    }
+
+    pub(super) fn resolve_player_demon_summoning_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::DemonSummoning = &ability.effect else {
+            unreachable!("demon summoning executor requires a demon summoning effect");
+        };
+        let hostile = self.rng.bounded(3) == 0;
+        let level = self.progress.level;
+        let maximum_level_roll = self.rng.bounded(u64::from(level / 2)).saturating_add(1);
+        let maximum_level = spell_power_value(
+            u64::from(level.saturating_mul(2) / 3).saturating_add(maximum_level_roll),
+            ability.spell_power_bonus,
+        )
+        .min(u64::from(u16::MAX)) as u16;
+        self.resolve_player_group_summoning_effect(
+            ability,
+            "demon",
+            maximum_level,
+            hostile,
+            events,
+            changed,
+        );
+    }
+
+    pub(super) fn resolve_player_angel_summoning_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::AngelSummoning = &ability.effect else {
+            unreachable!("angel summoning executor requires an angel summoning effect");
+        };
+        let hostile = self.rng.bounded(3) == 0;
+        let maximum_level = self.progress.level.saturating_mul(3) / 2;
+        self.resolve_player_group_summoning_effect(
+            ability,
+            "angel",
+            maximum_level,
+            hostile,
+            events,
+            changed,
+        );
+    }
+
+    pub(super) fn casting_spell_damage_bonus(&self) -> u16 {
+        let level = self.progress.level;
+        self.casting_profile().map_or(0, |profile| {
+            profile.spell_damage_bonus_base.saturating_add(
+                profile
+                    .spell_damage_bonus_per_level
+                    .saturating_mul(level / u16::from(profile.spell_damage_bonus_level_divisor)),
+            )
+        })
+    }
+
+    fn resolve_player_banish_evil_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::BanishEvil = ability.effect else {
+            unreachable!("banish-evil executor requires a banish-evil effect");
+        };
+        let power =
+            spell_power_value(100, ability.spell_power_bonus).min(u64::from(u16::MAX)) as u16;
+        let target_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && self.entity_is_visible_to_player(entity)
+                    && self
+                        .actor_runtime_definition(entity)
+                        .is_some_and(|definition| actor_matches_category(definition, "evil"))
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        let mut resolutions = Vec::with_capacity(target_ids.len());
+        for target_id in target_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            resolutions.push(self.resolve_teleport_away_target(index, 0, 0, power, changed));
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: resolutions,
+            },
+            trace: None,
+        });
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn resolve_player_wrath_of_god_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        stop_at_actor: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::WrathOfGod = ability.effect else {
+            unreachable!("Wrath of the God executor requires its dedicated effect");
+        };
+        let (trace, _) = self.trace_projectile_path_with_actor_policy(path, stop_at_actor);
+        let target = trace.landing;
+        let raw_damage = self
+            .progress
+            .level
+            .saturating_mul(3)
+            .saturating_add(25)
+            .saturating_add(self.casting_spell_damage_bonus());
+        let damage = i32::try_from(spell_power_value(
+            u64::from(raw_damage),
+            ability.spell_power_bonus,
+        ))
+        .expect("Wrath of the God damage must fit i32");
+        let count =
+            u8::try_from(self.rng.bounded(10) + 11).expect("Wrath of the God count must fit u8");
+        for _ in 0..count {
+            let mut center = None;
+            for _ in 0..20 {
+                let x = target.x.saturating_add(
+                    i32::try_from(self.rng.bounded(11)).expect("bounded offset must fit i32") - 5,
+                );
+                let y = target.y.saturating_add(
+                    i32::try_from(self.rng.bounded(11)).expect("bounded offset must fit i32") - 5,
+                );
+                let candidate = Position { x, y };
+                if rfb_distance(target, candidate) < 5 {
+                    center = Some(candidate);
+                    break;
+                }
+            }
+            let Some(center) = center else {
+                continue;
+            };
+            let Some(index) = self.index(center) else {
+                continue;
+            };
+            let permanent = self
+                .content
+                .terrain(&self.terrain[index])
+                .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "permanent"));
+            if permanent || !has_disintegration_line_of_effect(self, target, center) {
+                continue;
+            }
+            self.resolve_player_area_damage_with_base(
+                &ability.id,
+                vec![center],
+                false,
+                DamageType::Disintegrate,
+                2,
+                None,
+                damage,
+                ability.affects_ground_items,
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn apply_crusade_actor_status(
+        &mut self,
+        index: usize,
+        ability_id: &str,
+        status_kind_id: &str,
+        duration_ticks: u32,
+        stacking: AbilityStatusStackingDefinition,
+        power: u16,
+        power_roll: Option<u16>,
+        target_roll: Option<u32>,
+        rejection: Option<AbilityStatusChangeDto>,
+    ) -> AbilityEffectResolutionDto {
+        let target_level = self
+            .actor_runtime_definition(&self.entities[index])
+            .map_or(0, |definition| definition.level);
+        if let Some(change) = rejection {
+            return AbilityEffectResolutionDto::ApplyStatus {
+                effect_index: 0,
+                status_kind_id: status_kind_id.to_owned(),
+                intensity: 1,
+                requested_duration_ticks: duration_ticks,
+                applied_duration_ticks: 0,
+                stacking: ability_status_stacking_dto(stacking),
+                resistance_type: None,
+                resistance: None,
+                power: Some(power),
+                target_level: Some(target_level),
+                power_roll,
+                target_roll,
+                granted_resistances: Vec::new(),
+                granted_brands: Vec::new(),
+                granted_race_id: None,
+                grants_wall_passage: false,
+                incoming_damage_percent: 100,
+                change,
+            };
+        }
+        let mut resolution = apply_ability_status_effect(
+            &mut self.entities[index],
+            ability_id,
+            0,
+            status_kind_id,
+            1,
+            duration_ticks,
+            0,
+            0,
+            stacking,
+            None,
+            None,
+            &BTreeMap::new(),
+            &BTreeSet::new(),
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        if let AbilityEffectResolutionDto::ApplyStatus {
+            power: resolved_power,
+            target_level: resolved_level,
+            power_roll: resolved_power_roll,
+            target_roll: resolved_target_roll,
+            ..
+        } = &mut resolution
+        {
+            *resolved_power = Some(power);
+            *resolved_level = Some(target_level);
+            *resolved_power_roll = power_roll;
+            *resolved_target_roll = target_roll;
+        }
+        resolution
+    }
+
+    fn push_actor_effect_resolution(
+        &self,
+        ability_id: &str,
+        index: usize,
+        resolution: AbilityEffectResolutionDto,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability_id.to_owned(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.entities[index].id.clone()),
+                target_kind_id: Some(self.entities[index].kind_id.clone()),
+                effects: vec![resolution],
+            },
+            trace: None,
+        });
+    }
+
+    fn divine_intervention_targets(&self) -> Vec<String> {
+        self.entities
+            .iter()
+            .filter(|entity| entity.hp > 0 && self.entity_is_visible_to_player(entity))
+            .map(|entity| entity.id.clone())
+            .collect()
+    }
+
+    #[allow(clippy::too_many_lines)]
+    fn resolve_player_divine_intervention_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::DivineIntervention = ability.effect else {
+            unreachable!("Divine Intervention executor requires its dedicated effect");
+        };
+        let level = self.progress.level;
+        let powered = |value: u64| spell_power_value(value, ability.spell_power_bonus);
+        let adjacent_damage = i32::try_from(powered(u64::from(level).saturating_mul(11)))
+            .expect("Divine Intervention adjacent damage must fit i32");
+        let visible_damage = i32::try_from(powered(
+            u64::from(level)
+                .saturating_mul(4)
+                .saturating_add(u64::from(self.casting_spell_damage_bonus())),
+        ))
+        .expect("Divine Intervention visible damage must fit i32");
+        let healing =
+            i32::try_from(powered(100)).expect("Divine Intervention healing must fit i32");
+        let power = powered(u64::from(level).saturating_mul(4)).min(u64::from(u16::MAX)) as u16;
+
+        self.resolve_player_area_damage_with_base_policy(
+            &ability.id,
+            Vec::new(),
+            false,
+            DamageType::HolyFire,
+            1,
+            None,
+            adjacent_damage,
+            false,
+            false,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        self.resolve_player_visible_damage_with_base(
+            &ability.id,
+            DamageType::Mana,
+            None,
+            visible_damage,
+            events,
+            changed,
+            removed_entities,
+        )?;
+
+        for target_id in self.divine_intervention_targets() {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_id)
+            else {
+                continue;
+            };
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .expect("Divine Intervention target definition must remain available");
+            let unique = definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
+            let target_level = definition.level;
+            let threshold = (!unique).then(|| {
+                let sides = power.saturating_sub(10).max(1);
+                u16::try_from(self.rng.bounded(u64::from(sides)) + 11)
+                    .expect("slow threshold must fit u16")
+            });
+            let resisted = unique || threshold.is_some_and(|roll| target_level > u32::from(roll));
+            let resolution = self.apply_crusade_actor_status(
+                index,
+                &ability.id,
+                STATUS_SLOW,
+                50,
+                AbilityStatusStackingDefinition::Extend,
+                power,
+                threshold,
+                threshold.map(u32::from),
+                resisted.then_some(if unique {
+                    AbilityStatusChangeDto::Immune
+                } else {
+                    AbilityStatusChangeDto::Resisted
+                }),
+            );
+            changed.insert(self.entities[index].position);
+            self.push_actor_effect_resolution(&ability.id, index, resolution, events);
+        }
+
+        for target_id in self.divine_intervention_targets() {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_id)
+            else {
+                continue;
+            };
+            let immune = self.actor_has_status_immunity(index, STATUS_STUN);
+            let resolution = self.apply_crusade_actor_status(
+                index,
+                &ability.id,
+                STATUS_STUN,
+                u32::from(5_u16.saturating_add(level / 5)),
+                AbilityStatusStackingDefinition::Extend,
+                power,
+                None,
+                None,
+                immune.then_some(AbilityStatusChangeDto::Immune),
+            );
+            changed.insert(self.entities[index].position);
+            self.push_actor_effect_resolution(&ability.id, index, resolution, events);
+        }
+
+        for target_id in self.divine_intervention_targets() {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_id)
+            else {
+                continue;
+            };
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .expect("Divine Intervention target definition must remain available");
+            let unique_bonus = u32::from(
+                definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "unique" | "unique2")),
+            ) * 3;
+            let target_level = definition.level.saturating_add(unique_bonus);
+            let confusion_power =
+                u16::try_from(u32::from(level / 2).max(u32::from(power.min(100))))
+                    .expect("confusion power must fit u16");
+            let duration_sides = u64::from((confusion_power / 2).max(1));
+            let duration = (0..3).fold(1_u32, |total, _| {
+                total.saturating_add(
+                    u32::try_from(self.rng.bounded(duration_sides) + 1)
+                        .expect("confusion duration must fit u32"),
+                )
+            });
+            let immune = self.actor_has_status_immunity(index, STATUS_CONFUSION);
+            let power_roll = (!immune).then(|| {
+                u16::try_from(self.rng.bounded(u64::from(confusion_power.max(1))) + 1)
+                    .expect("confusion power roll must fit u16")
+            });
+            let target_roll = power_roll.map(|_| {
+                u32::try_from(self.rng.bounded(u64::from(target_level.max(1))) + 1)
+                    .expect("confusion target roll must fit u32")
+            });
+            let resisted = power_roll
+                .zip(target_roll)
+                .is_some_and(|(left, right)| right >= u32::from(left));
+            let resolution = self.apply_crusade_actor_status(
+                index,
+                &ability.id,
+                STATUS_CONFUSION,
+                duration,
+                AbilityStatusStackingDefinition::Extend,
+                confusion_power,
+                power_roll,
+                target_roll,
+                if immune {
+                    Some(AbilityStatusChangeDto::Immune)
+                } else if resisted {
+                    Some(AbilityStatusChangeDto::Resisted)
+                } else {
+                    None
+                },
+            );
+            changed.insert(self.entities[index].position);
+            self.push_actor_effect_resolution(&ability.id, index, resolution, events);
+        }
+
+        const CHARISMA_SAVE_ADJUSTMENT: [i32; 38] = [
+            -25, -15, -10, -7, -6, -5, -4, -3, -2, -2, -1, -1, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8,
+            9, 10, 12, 14, 16, 18, 20, 23, 26, 29, 33, 37, 42, 50,
+        ];
+        let charisma_index = usize::from(
+            self.effective_player_attributes()
+                .index(AttributeKind::Charisma),
+        )
+        .min(CHARISMA_SAVE_ADJUSTMENT.len() - 1);
+        let fear_power = i32::from(level)
+            .saturating_add(CHARISMA_SAVE_ADJUSTMENT[charisma_index])
+            .max(1) as u16;
+        for target_id in self.divine_intervention_targets() {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_id)
+            else {
+                continue;
+            };
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .expect("Divine Intervention target definition must remain available");
+            let target_level = definition.level;
+            let resist_all = definition.tags.iter().any(|tag| tag == "resist-all");
+            let duration_sides = u64::from((power / 2).max(1));
+            let duration = (0..3).fold(1_u32, |total, _| {
+                total.saturating_add(
+                    u32::try_from(self.rng.bounded(duration_sides) + 1)
+                        .expect("fear duration must fit u32"),
+                )
+            });
+            let immune = resist_all || self.actor_has_status_immunity(index, STATUS_FEAR);
+            let power_roll = (!immune && target_level > 1).then(|| {
+                u16::try_from(self.rng.bounded(u64::from(fear_power)) + 1)
+                    .expect("fear power roll must fit u16")
+            });
+            let target_roll = power_roll.map(|_| {
+                u32::try_from(self.rng.bounded(u64::from(target_level.max(1))) + 1)
+                    .expect("fear target roll must fit u32")
+            });
+            let resisted = target_level <= 1
+                || power_roll
+                    .zip(target_roll)
+                    .is_some_and(|(left, right)| u32::from(left) <= right);
+            let resolution = self.apply_crusade_actor_status(
+                index,
+                &ability.id,
+                STATUS_FEAR,
+                duration,
+                AbilityStatusStackingDefinition::Extend,
+                power,
+                power_roll,
+                target_roll,
+                if immune {
+                    Some(AbilityStatusChangeDto::Immune)
+                } else if resisted {
+                    Some(AbilityStatusChangeDto::Resisted)
+                } else {
+                    None
+                },
+            );
+            changed.insert(self.entities[index].position);
+            self.push_actor_effect_resolution(&ability.id, index, resolution, events);
+        }
+
+        for target_id in self.divine_intervention_targets() {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_id)
+            else {
+                continue;
+            };
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .expect("Divine Intervention target definition must remain available");
+            let unique = definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
+            let target_level = definition.level;
+            let stasis_power = (power / 3).max(1);
+            let threshold = (!unique).then(|| {
+                u16::try_from(self.rng.bounded(u64::from(stasis_power)) + 1)
+                    .expect("stasis threshold must fit u16")
+            });
+            let resisted = unique || threshold.is_some_and(|roll| target_level > u32::from(roll));
+            let duration = 2 + u32::from(!resisted && self.rng.bounded(15) == 0);
+            let resolution = self.apply_crusade_actor_status(
+                index,
+                &ability.id,
+                STATUS_PARALYSIS,
+                duration,
+                AbilityStatusStackingDefinition::Extend,
+                stasis_power,
+                threshold,
+                threshold.map(u32::from),
+                resisted.then_some(if unique {
+                    AbilityStatusChangeDto::Immune
+                } else {
+                    AbilityStatusChangeDto::Resisted
+                }),
+            );
+            changed.insert(self.entities[index].position);
+            self.push_actor_effect_resolution(&ability.id, index, resolution, events);
+        }
+
+        let outcome = self.apply_player_healing(healing);
+        events.push(DomainEvent::AbilityHealed {
+            ability_id: ability.id.clone(),
+            resolution: HealingResolutionDto {
+                requested: outcome.requested,
+                applied: outcome.applied,
+            },
+        });
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::Heal {
+                    effect_index: 0,
+                    resolution: HealingResolutionDto {
+                        requested: outcome.requested,
+                        applied: outcome.applied,
+                    },
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
+    #[allow(clippy::too_many_lines)]
+    fn resolve_player_crusade_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::Crusade = ability.effect else {
+            unreachable!("Crusade executor requires its dedicated effect");
+        };
+        let level = self.progress.level;
+        let base_power = level.saturating_mul(4);
+        let target_ids = self
+            .entities
+            .iter()
+            .filter(|entity| entity.hp > 0 && self.entity_is_visible_to_player(entity))
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        for target_id in target_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let definition = self
+                .actor_runtime_definition(&self.entities[index])
+                .expect("Crusade target definition must remain available")
+                .clone();
+            let good = actor_matches_category(&definition, "good");
+            let no_confusion = self.actor_has_status_immunity(index, STATUS_CONFUSION);
+            let power = if no_confusion {
+                base_power.saturating_sub(50).max(1)
+            } else {
+                base_power
+            };
+            let already_controlled =
+                self.entities[index].controller_id.as_deref() == Some(self.player.id.as_str());
+            let forbidden = definition.tags.iter().any(|tag| {
+                matches!(
+                    tag.as_str(),
+                    "unique" | "unique2" | "questor" | "guardian" | "no-pet"
+                )
+            });
+            let roll = (good && !already_controlled && !forbidden).then(|| {
+                u16::try_from(self.rng.bounded(u64::from(power.max(1))) + 1)
+                    .expect("Crusade charm roll must fit u16")
+            });
+            let controlled = already_controlled
+                || (good
+                    && !forbidden
+                    && roll.is_some_and(|roll| {
+                        definition.level.saturating_add(10) <= u32::from(roll)
+                    }));
+            if controlled && !already_controlled {
+                let pack = self.entities[index].pack.clone();
+                if let Some(pack) = pack {
+                    if pack.role == MonsterPackRoleDto::Leader || pack.leader_id == target_id {
+                        for entity in &mut self.entities {
+                            if entity
+                                .pack
+                                .as_ref()
+                                .is_some_and(|identity| identity.id == pack.id)
+                            {
+                                entity.pack = None;
+                            }
+                        }
+                    } else {
+                        self.entities[index].pack = None;
+                    }
+                }
+                self.entities[index].controller_id = Some(self.player.id.clone());
+            }
+            self.entities[index].alerted = true;
+            changed.insert(self.entities[index].position);
+            let outcome = if already_controlled {
+                AbilityControlOutcomeDto::AlreadyControlled
+            } else if !good {
+                AbilityControlOutcomeDto::Ineligible
+            } else if controlled {
+                AbilityControlOutcomeDto::Controlled
+            } else {
+                AbilityControlOutcomeDto::Resisted
+            };
+            let mut effects = vec![AbilityEffectResolutionDto::Control {
+                effect_index: 0,
+                category: "good".to_owned(),
+                power,
+                target_entity_id: target_id.clone(),
+                target_kind_id: definition.id.clone(),
+                target_level: definition.level,
+                roll,
+                outcome,
+            }];
+            if controlled {
+                effects.push(self.apply_crusade_actor_status(
+                    index,
+                    &ability.id,
+                    STATUS_HASTE,
+                    100,
+                    AbilityStatusStackingDefinition::Extend,
+                    power,
+                    None,
+                    None,
+                    None,
+                ));
+            } else {
+                let duration = 10_u32.saturating_add(
+                    u32::try_from(self.rng.bounded(90) + 1)
+                        .expect("Crusade fear duration must fit u32"),
+                );
+                let immune = self.actor_has_status_immunity(index, STATUS_FEAR);
+                effects.push(self.apply_crusade_actor_status(
+                    index,
+                    &ability.id,
+                    STATUS_FEAR,
+                    duration,
+                    AbilityStatusStackingDefinition::Extend,
+                    power,
+                    None,
+                    None,
+                    immune.then_some(AbilityStatusChangeDto::Immune),
+                ));
+            }
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: Some(target_id),
+                    target_kind_id: Some(definition.id),
+                    effects,
+                },
+                trace: None,
+            });
+        }
+
+        let mut all_entity_ids = Vec::new();
+        let mut all_kind_ids = Vec::new();
+        let mut all_positions = Vec::new();
+        for _ in 0..12 {
+            let candidates = self.summon_category_candidate_kind_ids("knight", None, level, false);
+            let leader_positions =
+                self.open_positions_around_for_actor_kinds(self.player.position, 4, &candidates);
+            if candidates.is_empty() || leader_positions.is_empty() {
+                continue;
+            }
+            let leader_position =
+                leader_positions[usize::try_from(self.rng.bounded(leader_positions.len() as u64))
+                    .expect("bounded knight position must fit usize")];
+            let eligible = candidates
+                .into_iter()
+                .filter(|kind_id| {
+                    self.actor_kind_available_instance_count(kind_id) > 0
+                        && self.actor_kind_can_enter_position(kind_id, leader_position)
+                })
+                .collect::<Vec<_>>();
+            if eligible.is_empty() {
+                continue;
+            }
+            let kind_id = eligible[usize::try_from(self.rng.bounded(eligible.len() as u64))
+                .expect("bounded knight kind must fit usize")]
+            .clone();
+            let definition = self
+                .content
+                .actor(&kind_id)
+                .expect("selected knight definition must remain available")
+                .clone();
+            let group = definition
+                .allocation
+                .as_ref()
+                .is_some_and(|allocation| allocation.friends.is_some());
+            let count = if group {
+                self.original_friend_total(&definition, self.floor_depth(&self.current_floor_id))
+            } else {
+                1
+            };
+            let mut positions = vec![leader_position];
+            positions.extend(
+                self.open_positions_around_for_actor_kind(leader_position, 2, &kind_id)
+                    .into_iter()
+                    .take(usize::from(count.saturating_sub(1))),
+            );
+            let owner_id = self.player.id.clone();
+            let resolution = self.resolve_category_summon(
+                CategorySummonSpec {
+                    source_id: &ability.id,
+                    owner_id: &owner_id,
+                    category: "knight",
+                    count_dice: 0,
+                    count_sides: 0,
+                    count_bonus: 1,
+                    maximum_count: None,
+                    hostile: false,
+                    group_chance_percent: u8::from(group).saturating_mul(100),
+                    group_count_dice: 0,
+                    group_count_sides: 0,
+                    group_count_bonus: u8::try_from(count).unwrap_or(u8::MAX),
+                    duration_turns: 0,
+                },
+                vec![kind_id],
+                positions,
+                changed,
+            );
+            for entity_id in &resolution.entity_ids {
+                let Some(index) = self
+                    .entities
+                    .iter()
+                    .position(|entity| &entity.id == entity_id)
+                else {
+                    continue;
+                };
+                let status = self.apply_crusade_actor_status(
+                    index,
+                    &ability.id,
+                    STATUS_HASTE,
+                    100,
+                    AbilityStatusStackingDefinition::Extend,
+                    base_power,
+                    None,
+                    None,
+                    None,
+                );
+                self.push_actor_effect_resolution(&ability.id, index, status, events);
+            }
+            all_entity_ids.extend(resolution.entity_ids);
+            all_kind_ids.extend(resolution.summoned_kind_ids);
+            all_positions.extend(resolution.positions);
+        }
+        events.push(DomainEvent::AbilitySummoned {
+            ability_id: ability.id.clone(),
+            resolution: AbilitySummonResolutionDto {
+                owner_id: self.player.id.clone(),
+                actor_kind_id: "knight".to_owned(),
+                entity_ids: all_entity_ids,
+                positions: all_positions,
+                duration_turns: 0,
+                hostile: false,
+                group: true,
+                summoned_kind_ids: all_kind_ids,
+            },
+        });
+
+        let empty_resistances = BTreeMap::new();
+        let empty_brands = BTreeSet::new();
+        let hero = apply_ability_status_effect(
+            &mut self.player,
+            &ability.id,
+            0,
+            "rfb.status.hero",
+            1,
+            25,
+            1,
+            25,
+            AbilityStatusStackingDefinition::Replace,
+            None,
+            None,
+            &empty_resistances,
+            &empty_brands,
+            &StatModifiers {
+                max_hp: 10,
+                ..StatModifiers::default()
+            },
+            &EquipmentBonuses {
+                melee_skill: 12,
+                ranged_skill: 12,
+                ..EquipmentBonuses::default()
+            },
+            &BTreeSet::from([STATUS_FEAR.to_owned()]),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let blessed = apply_ability_status_effect(
+            &mut self.player,
+            &ability.id,
+            0,
+            "rfb.status.blessed",
+            1,
+            25,
+            1,
+            25,
+            AbilityStatusStackingDefinition::Replace,
+            None,
+            None,
+            &empty_resistances,
+            &empty_brands,
+            &StatModifiers {
+                defense: 5,
+                ..StatModifiers::default()
+            },
+            &EquipmentBonuses {
+                melee_skill: 10,
+                ranged_skill: 10,
+                ..EquipmentBonuses::default()
+            },
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let haste = apply_ability_status_effect(
+            &mut self.player,
+            &ability.id,
+            0,
+            STATUS_HASTE,
+            1,
+            u32::from(level),
+            1,
+            u32::from(level.saturating_add(20)),
+            AbilityStatusStackingDefinition::Replace,
+            None,
+            None,
+            &empty_resistances,
+            &empty_brands,
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let protection = apply_ability_status_effect(
+            &mut self.player,
+            &ability.id,
+            0,
+            STATUS_PROTECTION_FROM_EVIL,
+            1,
+            25,
+            1,
+            25,
+            AbilityStatusStackingDefinition::Replace,
+            None,
+            None,
+            &empty_resistances,
+            &empty_brands,
+            &StatModifiers::default(),
+            &EquipmentBonuses::default(),
+            &BTreeSet::new(),
+            None,
+            false,
+            100,
+            None,
+            None,
+            &mut self.rng,
+        );
+        let fear_removed = remove_ability_status_effect(&mut self.player, 0, STATUS_FEAR);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![hero, blessed, haste, protection, fear_removed],
+            },
+            trace: None,
+        });
+        self.refresh_player_resource_maxima();
+        self.clamp_player_hp_to_effective_max();
+    }
+
+    fn resolve_player_group_summoning_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        category: &str,
+        maximum_level: u16,
+        hostile: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let level = self.progress.level;
+        let candidates =
+            self.summon_category_candidate_kind_ids(category, None, maximum_level, false);
+        let owner_id = self.player.id.clone();
+        let Some(kind_id) = (!candidates.is_empty()).then(|| {
+            let choice = usize::try_from(self.rng.bounded(candidates.len() as u64))
+                .expect("bounded group summon candidate index must fit usize");
+            candidates[choice].clone()
+        }) else {
+            events.push(DomainEvent::AbilitySummoned {
+                ability_id: ability.id.clone(),
+                resolution: AbilitySummonResolutionDto {
+                    owner_id,
+                    actor_kind_id: category.to_owned(),
+                    entity_ids: Vec::new(),
+                    positions: Vec::new(),
+                    duration_turns: 0,
+                    hostile,
+                    group: false,
+                    summoned_kind_ids: Vec::new(),
+                },
+            });
+            return;
+        };
+        let definition = self
+            .content
+            .actor(&kind_id)
+            .expect("selected group summon candidate must remain available")
+            .clone();
+        let group = (hostile || level >= 50)
+            && definition
+                .allocation
+                .as_ref()
+                .is_some_and(|allocation| allocation.friends.is_some());
+        let count = if group {
+            let depth = self.floor_depth(&self.current_floor_id);
+            self.original_friend_total(&definition, depth)
+        } else {
+            1
+        };
+        let positions = self
+            .open_positions_around_for_actor_kind(self.player.position, 2, &kind_id)
+            .into_iter()
+            .take(usize::from(count))
+            .collect::<Vec<_>>();
+        let resolution = self.resolve_category_summon(
+            CategorySummonSpec {
+                source_id: &ability.id,
+                owner_id: &owner_id,
+                category,
+                count_dice: 0,
+                count_sides: 0,
+                count_bonus: 1,
+                maximum_count: None,
+                hostile,
+                group_chance_percent: u8::from(group).saturating_mul(100),
+                group_count_dice: 0,
+                group_count_sides: 0,
+                group_count_bonus: u8::try_from(count).unwrap_or(u8::MAX),
+                duration_turns: 0,
+            },
+            vec![kind_id],
+            positions,
+            changed,
+        );
+        events.push(DomainEvent::AbilitySummoned {
+            ability_id: ability.id.clone(),
+            resolution,
+        });
+    }
+
+    fn resolve_player_insanity_circle_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::InsanityCircle {
+            damage_bonus,
+            control_power,
+            radius,
+        } = ability.effect
+        else {
+            unreachable!("insanity-circle executor requires an insanity-circle effect");
+        };
+        let base_raw_damage = i32::from(damage_bonus);
+        self.resolve_player_area_damage_with_base(
+            &ability.id,
+            Vec::new(),
+            false,
+            DamageType::Chaos,
+            radius,
+            None,
+            base_raw_damage,
+            ability.affects_ground_items,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        self.resolve_player_area_damage_with_base(
+            &ability.id,
+            Vec::new(),
+            false,
+            DamageType::Confusion,
+            radius,
+            None,
+            base_raw_damage,
+            ability.affects_ground_items,
+            events,
+            changed,
+            removed_entities,
+        )?;
+
+        let target_ids = self
+            .area_damage_targets(self.player.position, radius, None)
+            .1
+            .into_iter()
+            .map(|(entity_id, _)| entity_id)
+            .collect::<Vec<_>>();
+        for target_entity_id in target_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == target_entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let target_kind_id = self.entities[index].kind_id.clone();
+            let target_level = self
+                .content
+                .actor(&target_kind_id)
+                .map(|definition| definition.level);
+            let resistance_profile = self.entities[index].resistances.clone();
+            let immunities = if self.actor_has_status_immunity(index, STATUS_CONFUSION) {
+                BTreeSet::from([STATUS_CONFUSION.to_owned()])
+            } else {
+                BTreeSet::new()
+            };
+            self.entities[index].alerted = true;
+            changed.insert(self.entities[index].position);
+            let confusion = apply_ability_status_effect(
+                &mut self.entities[index],
+                &ability.id,
+                1,
+                STATUS_CONFUSION,
+                1,
+                10,
+                1,
+                15,
+                AbilityStatusStackingDefinition::Extend,
+                Some(ActorDamageType::Confusion),
+                Some(self.progress.level),
+                &BTreeMap::new(),
+                &BTreeSet::new(),
+                &StatModifiers::default(),
+                &EquipmentBonuses::default(),
+                &BTreeSet::new(),
+                None,
+                false,
+                100,
+                target_level,
+                Some((&resistance_profile, &immunities)),
+                &mut self.rng,
+            );
+            let control = self.resolve_ability_control(index, 2, "any-monster", control_power);
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: Some(target_entity_id),
+                    target_kind_id: Some(target_kind_id),
+                    effects: vec![confusion, control],
+                },
+                trace: None,
+            });
+        }
+        Ok(())
+    }
+
+    fn resolve_player_explode_pets_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        debug_assert!(matches!(
+            ability.effect,
+            AbilityEffectDefinition::ExplodePets
+        ));
+        let pet_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0 && entity.controller_id.as_deref() == Some(self.player.id.as_str())
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        let mut exploded_entity_ids = Vec::new();
+        let mut escaped_entity_ids = Vec::new();
+        for entity_id in pet_ids {
+            let Some(index) = self.entities.iter().position(|entity| {
+                entity.id == entity_id
+                    && entity.hp > 0
+                    && entity.controller_id.as_deref() == Some(self.player.id.as_str())
+            }) else {
+                continue;
+            };
+            let entity = self.entities[index].clone();
+            let definition = self
+                .actor_runtime_definition(&entity)
+                .expect("pet definition must remain available")
+                .clone();
+            let unique = definition
+                .tags
+                .iter()
+                .any(|tag| matches!(tag.as_str(), "unique" | "unique2"));
+            self.remove_pet_at(index, changed, removed_entities);
+            if unique {
+                escaped_entity_ids.push(entity_id);
+                continue;
+            }
+            exploded_entity_ids.push(entity_id);
+            let mut damage = entity.max_hp / 2;
+            if damage > 100 {
+                damage = (damage - 100) / 2 + 100;
+            }
+            if damage > 400 {
+                damage = (damage - 400) / 2 + 400;
+            }
+            damage = damage.min(800);
+            let radius =
+                2_u8.saturating_add(u8::try_from(definition.level / 20).unwrap_or(u8::MAX));
+            self.resolve_player_area_damage_with_base(
+                &ability.id,
+                vec![entity.position],
+                false,
+                DamageType::Plasma,
+                radius,
+                None,
+                damage,
+                true,
+                events,
+                changed,
+                removed_entities,
+            )?;
+        }
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::ExplodePets {
+                    effect_index: 0,
+                    exploded_entity_ids,
+                    escaped_entity_ids,
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
+    pub(super) fn resolve_player_greater_demon_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        item_id: &str,
+        candidates: Vec<String>,
+        positions: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::SummonGreaterDemon { .. } = ability.effect else {
+            unreachable!("greater-demon executor requires a greater-demon effect");
+        };
+        let owner_id = self.player.id.clone();
+        let selected = (!candidates.is_empty()).then(|| {
+            let choice = usize::try_from(self.rng.bounded(candidates.len() as u64))
+                .expect("bounded greater-demon candidate index must fit usize");
+            candidates[choice].clone()
+        });
+        let resolution = if let Some(kind_id) = selected {
+            let definition = self
+                .content
+                .actor(&kind_id)
+                .expect("selected greater demon must remain available")
+                .clone();
+            let group = definition
+                .allocation
+                .as_ref()
+                .is_some_and(|allocation| allocation.friends.is_some());
+            let count = if group {
+                let depth = self.floor_depth(&self.current_floor_id);
+                self.original_friend_total(&definition, depth)
+            } else {
+                1
+            };
+            self.resolve_category_summon(
+                CategorySummonSpec {
+                    source_id: &ability.id,
+                    owner_id: &owner_id,
+                    category: "greater-demon",
+                    count_dice: 0,
+                    count_sides: 0,
+                    count_bonus: 1,
+                    maximum_count: None,
+                    hostile: false,
+                    group_chance_percent: u8::from(group).saturating_mul(100),
+                    group_count_dice: 0,
+                    group_count_sides: 0,
+                    group_count_bonus: u8::try_from(count).unwrap_or(u8::MAX),
+                    duration_turns: 0,
+                },
+                vec![kind_id],
+                positions,
+                changed,
+            )
+        } else {
+            AbilitySummonResolutionDto {
+                owner_id,
+                actor_kind_id: "greater-demon".to_owned(),
+                entity_ids: Vec::new(),
+                positions: Vec::new(),
+                duration_turns: 0,
+                hostile: false,
+                group: false,
+                summoned_kind_ids: Vec::new(),
+            }
+        };
+        let consumed = !resolution.entity_ids.is_empty();
+        if consumed && let Some(index) = self.items.iter().position(|item| item.id == item_id) {
+            if self.items[index].quantity > 1 {
+                self.items[index].quantity -= 1;
+            } else {
+                self.items.remove(index);
+                self.item_property_knowledge.remove(item_id);
+            }
+        }
+        events.push(DomainEvent::AbilitySummoned {
+            ability_id: ability.id.clone(),
+            resolution,
+        });
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::SacrificeCorpse {
+                    effect_index: 0,
+                    item_id: item_id.to_owned(),
+                    consumed,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_hellfire_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        path: Vec<Position>,
+        stop_at_actor: bool,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let AbilityEffectDefinition::Hellfire {
+            damage_bonus,
+            radius,
+            backlash_dice,
+            backlash_sides,
+            backlash_bonus,
+        } = ability.effect
+        else {
+            unreachable!("hellfire executor requires a hellfire effect");
+        };
+        self.resolve_player_area_damage_with_base(
+            &ability.id,
+            path,
+            stop_at_actor,
+            DamageType::HellFire,
+            radius,
+            None,
+            i32::from(damage_bonus),
+            ability.affects_ground_items,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        let backlash = self
+            .roll_damage(backlash_dice, backlash_sides)
+            .saturating_add(i32::from(backlash_bonus));
+        let damage = resolve_damage(
+            DamagePacket::new(backlash, DamageType::Physical),
+            ResistanceLevel::Normal,
+        );
+        let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::SelfDamage {
+                    effect_index: 0,
+                    damage: application.damage.applied,
+                    fatal: self.player_is_dead(),
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
     }
 
     pub(super) fn resolve_player_genocide_effect(
@@ -8807,7 +10757,6 @@ impl Game {
                 count_sides,
                 count_bonus,
                 maximum_count,
-                hostile_chance_percent,
                 group_count_dice,
                 group_count_sides,
                 group_count_bonus,
@@ -8843,11 +10792,6 @@ impl Game {
                     maximum_level,
                     allow_unique_hostile,
                 );
-                if (hostile_chance_percent < 100 && friendly_candidate_kind_ids.is_empty())
-                    || (hostile_chance_percent > 0 && hostile_candidate_kind_ids.is_empty())
-                {
-                    return None;
-                }
                 let normal_maximum = (usize::from(count_dice) * usize::from(count_sides)
                     + usize::from(count_bonus))
                 .min(maximum_count.map_or(usize::MAX, usize::from));
@@ -8871,7 +10815,7 @@ impl Game {
                     .into_iter()
                     .take(normal_maximum.max(group_maximum))
                     .collect::<Vec<_>>();
-                (!positions.is_empty()).then_some(AbilityTargetPlan::SummonCategory {
+                Some(AbilityTargetPlan::SummonCategory {
                     friendly_candidate_kind_ids,
                     hostile_candidate_kind_ids,
                     positions,
@@ -8884,6 +10828,52 @@ impl Game {
                         .modes
                         .contains(&AbilityTargetModeDefinition::SelfTarget))
                 .then_some(AbilityTargetPlan::SelfTarget)
+            }
+            AbilityEffectDefinition::SummonGreaterDemon {
+                ref corpse_item_kind_id,
+                radius,
+            } => {
+                let TargetSelection::Item { item_id } = target else {
+                    return None;
+                };
+                let corpse = self.items.iter().find(|item| {
+                    item.id == *item_id
+                        && item.kind_id == *corpse_item_kind_id
+                        && item.quantity > 0
+                        && match item.location {
+                            ItemLocation::Inventory => true,
+                            ItemLocation::Ground(position) => position == self.player.position,
+                            _ => false,
+                        }
+                })?;
+                let corpse_actor = self
+                    .content
+                    .actor(corpse.origin_actor_kind_id.as_deref()?)?;
+                if !matches!(corpse_actor.glyph.as_str(), "p" | "h" | "t") {
+                    return None;
+                }
+                let maximum_level = u16::try_from(corpse_actor.level)
+                    .unwrap_or(u16::MAX)
+                    .saturating_add(self.progress.level.saturating_mul(2) / 3);
+                let candidate_kind_ids = self
+                    .summon_category_candidate_kind_ids("demon", None, maximum_level, false)
+                    .into_iter()
+                    .filter(|kind_id| {
+                        self.content
+                            .actor(kind_id)
+                            .is_some_and(|actor| matches!(actor.glyph.as_str(), "U" | "H" | "B"))
+                    })
+                    .collect::<Vec<_>>();
+                let positions = self.open_positions_around_for_actor_kinds(
+                    self.player.position,
+                    radius,
+                    &candidate_kind_ids,
+                );
+                Some(AbilityTargetPlan::GreaterDemonSacrifice {
+                    item_id: item_id.clone(),
+                    candidate_kind_ids,
+                    positions,
+                })
             }
             AbilityEffectDefinition::IdentifyItem { .. } => {
                 let TargetSelection::Item { item_id } = target else {
@@ -9040,6 +11030,13 @@ impl Game {
             | AbilityEffectDefinition::CureMutation
             | AbilityEffectDefinition::CreateCurrentTerrain { .. }
             | AbilityEffectDefinition::NatureGate { .. }
+            | AbilityEffectDefinition::DemonSummoning
+            | AbilityEffectDefinition::AngelSummoning
+            | AbilityEffectDefinition::BanishEvil
+            | AbilityEffectDefinition::DivineIntervention
+            | AbilityEffectDefinition::Crusade
+            | AbilityEffectDefinition::InsanityCircle { .. }
+            | AbilityEffectDefinition::ExplodePets
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::CreateItem { .. }
@@ -9054,7 +11051,8 @@ impl Game {
             | AbilityEffectDefinition::Banish { .. }
             | AbilityEffectDefinition::Invulnerability { .. }
             | AbilityEffectDefinition::LightArea { .. }
-            | AbilityEffectDefinition::MassSleepOrStasis { .. } => {
+            | AbilityEffectDefinition::MassSleepOrStasis { .. }
+            | AbilityEffectDefinition::Sanctuary { .. } => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
                         .target
@@ -9093,6 +11091,8 @@ impl Game {
             AbilityEffectDefinition::Damage { .. }
             | AbilityEffectDefinition::Malediction { .. }
             | AbilityEffectDefinition::DeathRay { .. }
+            | AbilityEffectDefinition::DoomHand
+            | AbilityEffectDefinition::Hellfire { .. }
             | AbilityEffectDefinition::PolymorphTarget => {
                 self.ability_path(ability, target)
                     .map(|path| AbilityTargetPlan::Projectile {
@@ -9119,10 +11119,26 @@ impl Game {
                         })
                 }
             }
+            AbilityEffectDefinition::WrathOfGod => {
+                self.ability_path(ability, target)
+                    .map(|path| AbilityTargetPlan::Projectile {
+                        path,
+                        stop_at_actor: matches!(target, TargetSelection::Direction { .. }),
+                    })
+            }
+            AbilityEffectDefinition::LavaFlow { .. } => {
+                (matches!(target, TargetSelection::SelfTarget)
+                    && ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget))
+                .then_some(AbilityTargetPlan::SelfTarget)
+            }
             AbilityEffectDefinition::BeamDamage { .. }
             | AbilityEffectDefinition::LightLine { .. }
             | AbilityEffectDefinition::TerrainBeam { .. }
-            | AbilityEffectDefinition::BoltOrBeamDamage { .. } => self
+            | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+            | AbilityEffectDefinition::Stardust { .. } => self
                 .beam_ability_path(ability, target)
                 .map(|path| AbilityTargetPlan::Projectile {
                     path,

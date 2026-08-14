@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json","formatVersion":1,"id":"demo.ability-program.crusade-holy-orb","input":"cast-target","steps":[{"type":"area-damage","damageDice":3,"damageSides":6,"damageBonus":0,"damageType":"holy-fire","radius":2}]}

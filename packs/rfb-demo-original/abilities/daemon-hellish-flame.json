@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.daemon-hellish-flame",
+  "nameKey": "ability-demo-daemon-hellish-flame-name",
+  "descriptionKey": "ability-demo-daemon-hellish-flame-description",
+  "abilityProgramId": "demo.ability-program.daemon-hellish-flame",
+  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "affectsGroundItems": true,
+  "levelScaling": [
+    { "effectIndex": 0, "field": "damage-bonus", "multiplier": 3, "divisor": 2 },
+    { "effectIndex": 0, "field": "radius", "multiplier": 1, "divisor": 30 }
+  ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "final-damage" }
+  ],
+  "tags": ["area", "daemon", "hell-fire", "spell"]
+}

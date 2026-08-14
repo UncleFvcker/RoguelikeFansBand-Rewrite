@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.immortal-rituals",
+  "nameKey": "item-demo-immortal-rituals-name",
+  "descriptionKey": "item-demo-immortal-rituals-description",
+  "glyph": "?",
+  "weightTenthsPound": 30,
+  "baseValue": 1000,
+  "generationLevel": 20,
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "elementalDestructionVulnerabilities": ["fire"],
+  "abilityBookId": "demo.ability-book.immortal-rituals",
+  "tags": ["book", "daemon", "spellbook"]
+}

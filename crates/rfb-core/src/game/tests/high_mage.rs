@@ -13,6 +13,8 @@ const SORCERY_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-sorcery";
 const ARMAGEDDON_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-armageddon";
 const NATURE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-nature";
 const LIFE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-life";
+const DAEMON_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-daemon";
+const CRUSADE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-crusade";
 
 fn high_mage_game(seed: u64) -> Game {
     Game::new_with_build(seed, HIGH_MAGE_BUILD_ID).expect("Death High-Mage build should create")
@@ -229,6 +231,7 @@ fn life_high_mage_game(seed: u64, level: u16) -> Game {
         .into_iter()
         .map(str::to_owned),
     );
+    game.bonus_spell_learning_capacity = 32;
     give_inventory_item(&mut game, "test.high-mass", "demo.item.high-mass");
     give_inventory_item(
         &mut game,
@@ -245,6 +248,128 @@ fn life_high_mage_game(seed: u64, level: u16) -> Game {
         .get_mut("demo.resource.mana")
         .expect("Life High-Mage should have mana")
         .current = 1_000;
+    game.debug_ability_casts_succeed = true;
+    game
+}
+
+fn daemon_high_mage_game(seed: u64, level: u16) -> Game {
+    let mut game = Game::new_with_build(seed, DAEMON_HIGH_MAGE_BUILD_ID)
+        .expect("Daemon High-Mage build should create");
+    game.progress.level = level;
+    game.progress.max_level = level;
+    game.learned_abilities.extend(
+        [
+            "demo.ability.daemon-magic-missile",
+            "demo.ability.daemon-detect-unlife",
+            "demo.ability.daemon-evil-bless",
+            "demo.ability.daemon-resist-fire",
+            "demo.ability.daemon-horrify",
+            "demo.ability.daemon-nether-bolt",
+            "demo.ability.daemon-summon-manes",
+            "demo.ability.daemon-hellish-flame",
+            "demo.ability.daemon-dominate-demon",
+            "demo.ability.daemon-vision",
+            "demo.ability.daemon-resist-nether",
+            "demo.ability.daemon-plasma-bolt",
+            "demo.ability.daemon-fire-ball",
+            "demo.ability.daemon-fire-branding",
+            "demo.ability.daemon-nether-ball",
+            "demo.ability.daemon-summon-demon",
+            "demo.ability.daemon-devilish-eye",
+            "demo.ability.daemon-devilish-cloak",
+            "demo.ability.daemon-flow-of-lava",
+            "demo.ability.daemon-plasma-ball",
+            "demo.ability.daemon-polymorph-demon",
+            "demo.ability.daemon-nether-wave",
+            "demo.ability.daemon-kiss-of-succubus",
+            "demo.ability.daemon-doom-hand",
+            "demo.ability.daemon-raise-the-morale",
+            "demo.ability.daemon-immortal-body",
+            "demo.ability.daemon-insanity-circle",
+            "demo.ability.daemon-explode-pets",
+            "demo.ability.daemon-summon-greater-demon",
+            "demo.ability.daemon-hellfire",
+            "demo.ability.daemon-send-to-hell",
+            "demo.ability.daemon-polymorph-demonlord",
+        ]
+        .into_iter()
+        .map(str::to_owned),
+    );
+    give_inventory_item(
+        &mut game,
+        "test.immortal-rituals",
+        "demo.item.immortal-rituals",
+    );
+    give_inventory_item(&mut game, "test.demonthoughts", "demo.item.demonthoughts");
+    give_inventory_item(&mut game, "test.hellfire-tome", "demo.item.hellfire-tome");
+    game.refresh_player_resource_maxima();
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Daemon High-Mage should have mana");
+    mana.current = 1_000;
+    mana.maximum = 1_000;
+    game.debug_ability_casts_succeed = true;
+    game
+}
+
+fn crusade_high_mage_game(seed: u64, level: u16) -> Game {
+    let mut game = Game::new_with_build(seed, CRUSADE_HIGH_MAGE_BUILD_ID)
+        .expect("Crusade High-Mage build should create");
+    game.progress.level = level;
+    game.progress.max_level = level;
+    game.learned_abilities.extend(
+        [
+            "demo.ability.crusade-punishment",
+            "demo.ability.crusade-detect-evil",
+            "demo.ability.crusade-remove-fear",
+            "demo.ability.crusade-scare-monster",
+            "demo.ability.crusade-sanctuary",
+            "demo.ability.crusade-portal",
+            "demo.ability.crusade-star-dust",
+            "demo.ability.crusade-purification",
+            "demo.ability.crusade-scatter-evil",
+            "demo.ability.crusade-holy-orb",
+            "demo.ability.crusade-exorcism",
+            "demo.ability.crusade-remove-curse",
+            "demo.ability.crusade-sense-unseen",
+            "demo.ability.crusade-protection-from-evil",
+            "demo.ability.crusade-judgment-thunder",
+            "demo.ability.crusade-holy-word",
+            "demo.ability.crusade-unbarring-ways",
+            "demo.ability.crusade-arrest",
+            "demo.ability.crusade-angelic-cloak",
+            "demo.ability.crusade-dispel-undead-and-demons",
+            "demo.ability.crusade-dispel-evil",
+            "demo.ability.crusade-holy-blade",
+            "demo.ability.crusade-star-burst",
+            "demo.ability.crusade-summon-angel",
+            "demo.ability.crusade-heroism",
+            "demo.ability.crusade-dispel-curse",
+            "demo.ability.crusade-banish-evil",
+            "demo.ability.crusade-armageddon",
+            "demo.ability.crusade-an-eye-for-an-eye",
+            "demo.ability.crusade-wrath-of-the-god",
+            "demo.ability.crusade-divine-intervention",
+            "demo.ability.crusade-crusade",
+        ]
+        .into_iter()
+        .map(str::to_owned),
+    );
+    give_inventory_item(&mut game, "test.ways-of-war", "demo.item.ways-of-war");
+    give_inventory_item(
+        &mut game,
+        "test.exorcism-and-dispelling",
+        "demo.item.exorcism-and-dispelling",
+    );
+    give_inventory_item(&mut game, "test.wrath-of-god", "demo.item.wrath-of-god");
+    game.refresh_player_resource_maxima();
+    let mana = game
+        .resources
+        .get_mut("demo.resource.mana")
+        .expect("Crusade High-Mage should have mana");
+    mana.current = 1_000;
+    mana.maximum = 1_000;
     game.debug_ability_casts_succeed = true;
     game
 }
@@ -387,6 +512,7 @@ fn life_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         assert!(carried.contains(expected));
     }
     for excluded in [
+        "demo.item.immortal-rituals",
         "demo.item.black-prayers",
         "demo.item.cantrips-for-beginners",
         "demo.item.beginners-handbook",
@@ -412,6 +538,2845 @@ fn life_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
             .iter()
             .all(|ability| ability.id.starts_with("demo.ability.life-"))
     );
+}
+
+#[test]
+fn daemon_high_mage_birth_keeps_the_common_kit_and_only_dark_incantations() {
+    let game = Game::new_with_build(0x4441_454d_4f4e_3031, DAEMON_HIGH_MAGE_BUILD_ID)
+        .expect("Daemon High-Mage build should create");
+    let carried = game
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        })
+        .map(|item| item.kind_id.as_str())
+        .collect::<BTreeSet<_>>();
+    for expected in [
+        "demo.item.dark-incantations",
+        "demo.item.dagger",
+        "demo.item.robe",
+        "demo.item.clarity-draught",
+        "demo.item.magic-missile-wand",
+    ] {
+        assert!(carried.contains(expected));
+    }
+    for excluded in [
+        "demo.item.black-prayers",
+        "demo.item.cantrips-for-beginners",
+        "demo.item.beginners-handbook",
+        "demo.item.book-of-elements",
+        "demo.item.call-of-the-wild",
+        "demo.item.book-of-common-prayer",
+        "demo.item.immortal-rituals",
+        "demo.item.demonthoughts",
+        "demo.item.hellfire-tome",
+    ] {
+        assert!(!carried.contains(excluded));
+    }
+
+    let learned = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .filter(|ability| ability.source == AbilitySourceDto::Learned)
+        .collect::<Vec<_>>();
+    assert_eq!(learned.len(), 32);
+    assert!(
+        learned
+            .iter()
+            .all(|ability| ability.id.starts_with("demo.ability.daemon-"))
+    );
+
+    let mut death = high_mage_game(0x4441_454d_4f4e_464f);
+    death.progress.level = 100;
+    death.progress.max_level = 100;
+    give_inventory_item(
+        &mut death,
+        "test.foreign-dark-incantations",
+        "demo.item.dark-incantations",
+    );
+    assert_eq!(
+        death.study_player_ability(
+            "test.foreign-dark-incantations",
+            "demo.ability.daemon-magic-missile",
+        ),
+        Err("ability-not-supported")
+    );
+}
+
+#[test]
+fn crusade_high_mage_birth_keeps_the_common_kit_and_only_rites_of_initiation() {
+    let game = Game::new_with_build(0x4352_5553_4144_4531, CRUSADE_HIGH_MAGE_BUILD_ID)
+        .expect("Crusade High-Mage build should create");
+    let carried = game
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        })
+        .map(|item| item.kind_id.as_str())
+        .collect::<BTreeSet<_>>();
+    for expected in [
+        "demo.item.rites-of-initiation",
+        "demo.item.dagger",
+        "demo.item.robe",
+        "demo.item.clarity-draught",
+        "demo.item.magic-missile-wand",
+    ] {
+        assert!(carried.contains(expected));
+    }
+    for excluded in [
+        "demo.item.dark-incantations",
+        "demo.item.immortal-rituals",
+        "demo.item.demonthoughts",
+        "demo.item.hellfire-tome",
+        "demo.item.book-of-common-prayer",
+    ] {
+        assert!(!carried.contains(excluded));
+    }
+    let learned = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .filter(|ability| ability.source == AbilitySourceDto::Learned)
+        .collect::<Vec<_>>();
+    assert_eq!(learned.len(), 32);
+    assert!(
+        learned
+            .iter()
+            .all(|ability| ability.id.starts_with("demo.ability.crusade-"))
+    );
+}
+
+#[test]
+fn daemon_first_book_projects_original_level_and_spell_power_formulas() {
+    for (level, missile_dice, nether_dice, flame_bonus, flame_radius, summon_level) in [
+        (1, 3, 6, 6, 2, 1),
+        (25, 7, 11, 47, 2, 37),
+        (50, 12, 17, 90, 3, 75),
+    ] {
+        let projected = daemon_high_mage_game(0x4441_454d_5000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        assert!(matches!(
+            projected["demo.ability.daemon-magic-missile"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::BoltOrBeamDamage {
+                damage_dice,
+                damage_sides: 4,
+                final_damage_spell_power_bonus: None,
+                ..
+            }] if *damage_dice == missile_dice
+        ));
+        assert!(matches!(
+            projected["demo.ability.daemon-nether-bolt"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::BoltOrBeamDamage {
+                damage_dice,
+                damage_sides: 8,
+                final_damage_spell_power_bonus: None,
+                ..
+            }] if *damage_dice == nether_dice
+        ));
+        assert!(matches!(
+            projected["demo.ability.daemon-hellish-flame"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::AreaDamage {
+                damage_dice: 3,
+                damage_sides: 6,
+                damage_bonus,
+                radius,
+                final_damage_spell_power_bonus: None,
+                ..
+            }] if *damage_bonus == flame_bonus && *radius == flame_radius
+        ));
+        assert!(matches!(
+            projected["demo.ability.daemon-summon-manes"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::SummonCategory {
+                maximum_level,
+                friendly_group_chance_percent: 100,
+                group_count_dice: 1,
+                group_count_sides: 10,
+                duration_turns: 0,
+                ..
+            }] if *maximum_level == summon_level
+        ));
+    }
+
+    for (bonus, expected_maximum_level) in [(-7_i32, 6), (0, 13), (7, 20)] {
+        let mut game = daemon_high_mage_game(0x4441_454d_5350 + bonus.unsigned_abs() as u64, 9);
+        if bonus != 0 {
+            grant_spell_power(&mut game, bonus);
+        }
+        let summon = game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == "demo.ability.daemon-summon-manes")
+            .expect("Summon Manes should be projected");
+        assert!(matches!(
+            summon.effects.as_slice(),
+            [AbilityEffectSpecDto::SummonCategory { maximum_level, .. }]
+                if *maximum_level == expected_maximum_level
+        ));
+    }
+
+    let cast_missile = |bonus: i32| {
+        let mut game = daemon_high_mage_game(0x4441_454d_4441_4d47, 25);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        if bonus != 0 {
+            grant_spell_power(&mut game, bonus);
+        }
+        let target = Position {
+            x: game.player.position.x + 2,
+            y: game.player.position.y,
+        };
+        game.entities.push(actor_from_runtime_spawn(
+            "test.daemon-missile-target",
+            "demo.actor.small-kobold",
+            target,
+            1_000,
+            100,
+            100,
+            true,
+        ));
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.daemon-magic-missile",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Magic Missile should resolve");
+        events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilityHit {
+                    ability_id, damage, ..
+                } if ability_id == "demo.ability.daemon-magic-missile" => Some(damage.raw),
+                _ => None,
+            })
+            .expect("Magic Missile should hit the target")
+    };
+    let unpowered = cast_missile(0);
+    assert_eq!(
+        cast_missile(-7),
+        spell_power_value(unpowered as u64, -7) as i32
+    );
+    assert_eq!(
+        cast_missile(7),
+        spell_power_value(unpowered as u64, 7) as i32
+    );
+}
+
+#[test]
+fn crusade_first_book_projects_original_level_and_spell_power_formulas() {
+    for (level, punishment_dice, portal_radius, stardust_dice) in
+        [(1, 3, 25, 3), (25, 7, 37, 5), (50, 12, 50, 8)]
+    {
+        let projected = crusade_high_mage_game(0x4352_5553_5000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        assert!(matches!(
+            projected["demo.ability.crusade-punishment"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::BoltOrBeamDamage {
+                damage_dice,
+                damage_sides: 4,
+                final_damage_spell_power_bonus: None,
+                ..
+            }] if *damage_dice == punishment_dice
+        ));
+        assert!(matches!(
+            projected["demo.ability.crusade-sanctuary"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::Sanctuary { power, radius: 1 }]
+                if *power == level
+        ));
+        assert!(matches!(
+            projected["demo.ability.crusade-portal"].effects.as_slice(),
+            [AbilityEffectSpecDto::BlinkSelf { radius }]
+                if *radius == portal_radius
+        ));
+        assert!(matches!(
+            projected["demo.ability.crusade-star-dust"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::Stardust {
+                damage_dice,
+                damage_sides: 2,
+                count: 10,
+                deviation: 3,
+            }] if *damage_dice == stardust_dice
+        ));
+    }
+
+    for bonus in [-7_i32, 0, 7] {
+        let mut game = crusade_high_mage_game(0x4352_5553_5350 + bonus.unsigned_abs() as u64, 25);
+        if bonus != 0 {
+            grant_spell_power(&mut game, bonus);
+        }
+        let stardust = game
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .find(|ability| ability.id == "demo.ability.crusade-star-dust")
+            .expect("Star Dust should be projected");
+        assert!(matches!(
+            stardust.effects.as_slice(),
+            [AbilityEffectSpecDto::Stardust { damage_dice, .. }]
+                if *damage_dice == spell_power_value(5, bonus) as u16
+        ));
+    }
+}
+
+#[test]
+fn crusade_second_book_projects_original_level_damage_duration_and_spell_power() {
+    let projected = crusade_high_mage_game(0x4352_5553_3250_524f, 30)
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert!(matches!(
+        projected["demo.ability.crusade-scatter-evil"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::TeleportAway {
+            minimum_distance: 1,
+            power: 100,
+            stop_at_actor: true,
+            target_category: Some(category),
+        }] if category == "evil"
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-holy-orb"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::AreaDamage {
+            damage_dice: 3,
+            damage_sides: 6,
+            damage_bonus: 56,
+            damage_type: DamageTypeDto::HolyFire,
+            radius: 3,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-exorcism"]
+            .effects
+            .as_slice(),
+        [
+            AbilityEffectSpecDto::VisibleDamage {
+                damage_dice: 1,
+                damage_sides: 30,
+                damage_bonus: 11,
+                target_category: Some(undead),
+                ..
+            },
+            AbilityEffectSpecDto::VisibleDamage {
+                damage_dice: 1,
+                damage_sides: 30,
+                damage_bonus: 11,
+                target_category: Some(demon),
+                ..
+            },
+            AbilityEffectSpecDto::VisibleApplyStatus {
+                status_kind_id,
+                duration_ticks: 1,
+                duration_dice: 3,
+                duration_sides: 15,
+                power: Some(30),
+                target_category: Some(evil),
+                ..
+            }
+        ] if undead == "undead"
+            && demon == "demon"
+            && evil == "evil"
+            && status_kind_id == STATUS_FEAR
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-protection-from-evil"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 90,
+            duration_dice: 1,
+            duration_sides: 90,
+            ..
+        }] if status_kind_id == STATUS_PROTECTION_FROM_EVIL
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-judgment-thunder"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::Damage {
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_bonus: 160,
+            damage_type: DamageTypeDto::Electricity,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-holy-word"]
+            .effects
+            .as_slice(),
+        [
+            AbilityEffectSpecDto::VisibleDamage {
+                damage_dice: 1,
+                damage_sides: 180,
+                damage_bonus: 11,
+                target_category: Some(evil),
+                ..
+            },
+            AbilityEffectSpecDto::Heal { amount: 100 },
+            AbilityEffectSpecDto::RemoveStatus { status_kind_id: stun },
+            AbilityEffectSpecDto::RemoveStatus { status_kind_id: bleeding },
+            AbilityEffectSpecDto::RemoveStatus { status_kind_id: poison },
+        ] if evil == "evil"
+            && stun == STATUS_STUN
+            && bleeding == STATUS_BLEEDING
+            && poison == STATUS_POISON
+    ));
+
+    let mut powered = crusade_high_mage_game(0x4352_5553_3250_4f57, 30);
+    grant_spell_power(&mut powered, 7);
+    let projected = powered
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert!(matches!(
+        projected["demo.ability.crusade-exorcism"]
+            .effects
+            .as_slice(),
+        [
+            AbilityEffectSpecDto::VisibleDamage {
+                final_damage_spell_power_bonus: Some(7),
+                ..
+            },
+            AbilityEffectSpecDto::VisibleDamage {
+                final_damage_spell_power_bonus: Some(7),
+                ..
+            },
+            _
+        ]
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-holy-word"]
+            .effects
+            .as_slice(),
+        [
+            AbilityEffectSpecDto::VisibleDamage {
+                final_damage_spell_power_bonus: Some(7),
+                ..
+            },
+            AbilityEffectSpecDto::Heal { amount },
+            ..
+        ] if *amount == spell_power_value(100, 7) as u32
+    ));
+}
+
+#[test]
+fn crusade_third_book_projects_original_power_damage_duration_and_summoning() {
+    let mut game = crusade_high_mage_game(0x4352_5553_3350_524f, 50);
+    grant_spell_power(&mut game, 7);
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert!(matches!(
+        projected["demo.ability.crusade-unbarring-ways"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::TerrainBeam {
+            operation: AbilityTerrainBeamOperationDto::DestroyTrapsAndDoors,
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-arrest"].effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 3,
+            power: Some(153),
+            ..
+        }] if status_kind_id == STATUS_PARALYSIS
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-angelic-cloak"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 20,
+            duration_dice: 1,
+            duration_sides: 20,
+            ..
+        }] if status_kind_id == STATUS_HOLY_AURA
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-dispel-undead-and-demons"]
+            .effects
+            .as_slice(),
+        [
+            AbilityEffectSpecDto::VisibleDamage {
+                damage_bonus: 165,
+                target_category: Some(undead),
+                final_damage_spell_power_bonus: Some(7),
+                ..
+            },
+            AbilityEffectSpecDto::VisibleDamage {
+                damage_bonus: 165,
+                target_category: Some(demon),
+                final_damage_spell_power_bonus: Some(7),
+                ..
+            }
+        ] if undead == "undead" && demon == "demon"
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-star-burst"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::AreaDamage {
+            damage_bonus: 315,
+            damage_type: DamageTypeDto::Light,
+            radius: 6,
+            final_damage_spell_power_bonus: Some(7),
+            ..
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-summon-angel"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::AngelSummoning]
+    ));
+}
+
+#[test]
+fn crusade_fourth_book_projects_original_compound_formulas() {
+    let mut game = crusade_high_mage_game(0x4352_5553_3450_524f, 50);
+    grant_spell_power(&mut game, 7);
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    assert!(matches!(
+        projected["demo.ability.crusade-banish-evil"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::BanishEvil { power }]
+            if *power == spell_power_value(100, 7) as u16
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-wrath-of-the-god"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::WrathOfGod {
+            damage,
+            radius: 2,
+            minimum_count: 11,
+            maximum_count: 20,
+        }] if *damage == spell_power_value(190, 7) as u16
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-divine-intervention"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::DivineIntervention {
+            adjacent_damage,
+            visible_damage,
+            healing,
+            control_power,
+            stun_duration_ticks: 15,
+        }] if *adjacent_damage == spell_power_value(550, 7) as u16
+            && *visible_damage == spell_power_value(215, 7) as u16
+            && *healing == spell_power_value(100, 7) as u16
+            && *control_power == spell_power_value(200, 7) as u16
+    ));
+    assert!(matches!(
+        projected["demo.ability.crusade-crusade"].effects.as_slice(),
+        [AbilityEffectSpecDto::Crusade {
+            charm_power: 200,
+            summon_attempts: 12,
+        }]
+    ));
+}
+
+#[test]
+fn crusade_banish_evil_filters_visible_targets_and_uses_teleport_resistance_path() {
+    let mut game = crusade_high_mage_game(0x4241_4e49_5348_4556, 50);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let origin = game.player.position;
+    let evil = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    let neutral = Position {
+        x: origin.x,
+        y: origin.y + 1,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.crusade.banish.evil",
+        "demo.actor.small-kobold",
+        evil,
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    game.entities.push(actor_from_runtime_spawn(
+        "test.crusade.banish.neutral",
+        "demo.actor.giant-white-mouse",
+        neutral,
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.crusade-banish-evil",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Banish Evil should resolve");
+    assert_ne!(game.entities[0].position, evil);
+    assert_eq!(game.entities[1].position, neutral);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::TeleportAway {
+                target_entity_id,
+                power: 100,
+                ..
+            }] if target_entity_id == "test.crusade.banish.evil")
+    )));
+}
+
+#[test]
+fn crusade_wrath_of_the_god_drops_eleven_to_twenty_disintegration_balls() {
+    let mut game = crusade_high_mage_game(0x5752_4154_4847_4f44, 50);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let target = Position {
+        x: game.player.position.x + 5,
+        y: game.player.position.y,
+    };
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.crusade-wrath-of-the-god",
+        TargetSelection::Position { position: target },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Wrath of the God should resolve");
+    let balls = events
+        .iter()
+        .filter(|event| {
+            matches!(
+                event,
+                DomainEvent::AbilityAreaDamage { resolution, .. }
+                    if resolution.damage_type == DamageTypeDto::Disintegrate
+                        && resolution.radius == 2
+            )
+        })
+        .count();
+    assert!((11..=20).contains(&balls));
+}
+
+#[test]
+fn crusade_divine_intervention_resolves_damage_controls_then_healing() {
+    let mut game = crusade_high_mage_game(0x4449_5649_4e45_4954, 50);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let target = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.crusade.divine-target",
+        "demo.actor.small-kobold",
+        target,
+        100_000,
+        100,
+        100,
+        true,
+    ));
+    game.player.hp = 1;
+    game.player.max_hp = 1_000;
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.crusade-divine-intervention",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Divine Intervention should resolve");
+    let area = events
+        .iter()
+        .position(|event| matches!(event, DomainEvent::AbilityAreaDamage { .. }))
+        .expect("adjacent damage should resolve first");
+    let visible = events
+        .iter()
+        .position(|event| matches!(event, DomainEvent::AbilityVisibleDamage { .. }))
+        .expect("visible damage should resolve second");
+    let status_indices = [STATUS_SLOW, STATUS_STUN, STATUS_CONFUSION, STATUS_FEAR, STATUS_PARALYSIS]
+        .map(|status_kind_id| {
+            events
+                .iter()
+                .position(|event| matches!(
+                    event,
+                    DomainEvent::AbilityEffectsResolved { resolution, .. }
+                        if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::ApplyStatus {
+                            status_kind_id: resolved,
+                            ..
+                        }] if resolved == status_kind_id)
+                ))
+                .unwrap_or_else(|| panic!("{status_kind_id} should resolve"))
+        });
+    let healing = events
+        .iter()
+        .position(|event| matches!(event, DomainEvent::AbilityHealed { .. }))
+        .expect("healing should resolve last");
+    assert!(area < visible);
+    assert!(status_indices.windows(2).all(|pair| pair[0] < pair[1]));
+    assert!(visible < status_indices[0] && status_indices[4] < healing);
+    assert_eq!(game.player.hp, 101);
+}
+
+#[test]
+fn crusade_final_spell_hastens_good_pets_scares_failures_and_grants_battle_buffs() {
+    let mut game = crusade_high_mage_game(0x4352_5553_4144_4534, 50);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let origin = game.player.position;
+    let mut angel = actor_from_runtime_spawn(
+        "test.crusade.good-pet",
+        "demo.actor.angel",
+        Position {
+            x: origin.x + 1,
+            y: origin.y,
+        },
+        10_000,
+        100,
+        100,
+        true,
+    );
+    angel.controller_id = Some(game.player.id.clone());
+    game.entities.push(angel);
+    game.entities.push(actor_from_runtime_spawn(
+        "test.crusade.failed-target",
+        "demo.actor.small-kobold",
+        Position {
+            x: origin.x,
+            y: origin.y + 1,
+        },
+        10_000,
+        100,
+        100,
+        true,
+    ));
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.crusade-crusade",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Crusade should resolve");
+    let good_pet = game
+        .entities
+        .iter()
+        .find(|entity| entity.id == "test.crusade.good-pet")
+        .expect("good pet should remain");
+    assert!(
+        good_pet
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_HASTE)
+    );
+    let failed = game
+        .entities
+        .iter()
+        .find(|entity| entity.id == "test.crusade.failed-target")
+        .expect("failed target should remain");
+    assert!(
+        failed
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_FEAR)
+    );
+    for status_kind_id in [
+        "rfb.status.hero",
+        "rfb.status.blessed",
+        STATUS_HASTE,
+        STATUS_PROTECTION_FROM_EVIL,
+    ] {
+        assert!(
+            game.player
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == status_kind_id)
+        );
+    }
+    let summoned = events
+        .iter()
+        .find_map(|event| match event {
+            DomainEvent::AbilitySummoned { resolution, .. }
+                if resolution.actor_kind_id == "knight" =>
+            {
+                Some(resolution)
+            }
+            _ => None,
+        })
+        .expect("Crusade should emit its knight summons");
+    assert!(!summoned.entity_ids.is_empty());
+    assert!(summoned.summoned_kind_ids.iter().all(|kind_id| {
+        game.content
+            .actor(kind_id)
+            .is_some_and(|definition| actor_matches_category(definition, "knight"))
+    }));
+}
+
+#[test]
+fn crusade_arrest_uses_raw_power_and_only_rolls_for_non_unique_evil_targets() {
+    let cast = |kind_id: &str| {
+        let mut game = crusade_high_mage_game(0x4152_5245_5354_0000, 13);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        grant_spell_power(&mut game, 7);
+        let target = Position {
+            x: game.player.position.x + 1,
+            y: game.player.position.y,
+        };
+        game.entities.push(actor_from_runtime_spawn(
+            "test.arrest-target",
+            kind_id,
+            target,
+            1_000,
+            100,
+            100,
+            true,
+        ));
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.crusade-arrest",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Arrest should resolve");
+        let resolution = events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
+                    resolution.effects.first().cloned()
+                }
+                _ => None,
+            })
+            .expect("Arrest should emit a status resolution");
+        (game, resolution)
+    };
+
+    let (evil, evil_resolution) = cast("demo.actor.agent-of-black-market");
+    assert!(
+        evil.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_PARALYSIS && status.remaining_ticks == 3)
+    );
+    assert!(matches!(
+        evil_resolution,
+        AbilityEffectResolutionDto::ApplyStatus {
+            power: Some(26),
+            power_roll: Some(11..=26),
+            target_roll: None,
+            change: AbilityStatusChangeDto::Added,
+            ..
+        }
+    ));
+
+    for kind_id in [
+        "demo.actor.novice-mage",
+        "demo.actor.alberich-the-nibelung-king",
+    ] {
+        let (game, resolution) = cast(kind_id);
+        assert!(
+            game.entities[0]
+                .statuses
+                .iter()
+                .all(|status| status.kind_id != STATUS_PARALYSIS)
+        );
+        assert!(matches!(
+            resolution,
+            AbilityEffectResolutionDto::ApplyStatus {
+                power: Some(26),
+                power_roll: None,
+                target_roll: None,
+                change: AbilityStatusChangeDto::Immune,
+                ..
+            }
+        ));
+    }
+}
+
+#[test]
+fn crusade_angelic_cloak_grants_resistances_and_harms_only_evil_contact_attackers() {
+    let prepared = |kind_id: &str| {
+        let mut game = crusade_high_mage_game(0x414e_4745_4c49_4300, 15);
+        grant_spell_power(&mut game, 7);
+        game.resolve_player_ability(
+            "demo.ability.crusade-angelic-cloak",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Angelic Cloak should resolve");
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.hp = 10_000;
+        game.player.max_hp = 10_000;
+        let position = Position {
+            x: game.player.position.x + 1,
+            y: game.player.position.y,
+        };
+        game.entities.push(actor_from_runtime_spawn(
+            "test.angelic-cloak-contact",
+            kind_id,
+            position,
+            1_000,
+            100,
+            100,
+            true,
+        ));
+        game.entities[0].power_per_mille = 10_000;
+        game
+    };
+
+    let mut evil = prepared("demo.actor.agent-of-black-market");
+    let cloak = evil
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_HOLY_AURA)
+        .expect("Angelic Cloak should apply its holy aura status");
+    assert!((21..=40).contains(&cloak.remaining_ticks));
+    for damage_type in [DamageType::Acid, DamageType::Cold, DamageType::Electricity] {
+        assert_eq!(
+            evil.effective_player_resistances().level(damage_type),
+            ResistanceLevel::Resistant
+        );
+    }
+    let evil_hp = evil.entities[0].hp;
+    let mut events = Vec::new();
+    evil.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .expect("evil contact should resolve");
+    assert!(evil.entities[0].hp < evil_hp);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MutationAuraHit { damage, .. }
+            if damage.damage_type == DamageType::Mana && damage.applied > 0
+    )));
+
+    let mut neutral = prepared("demo.actor.novice-mage");
+    let neutral_hp = neutral.entities[0].hp;
+    neutral
+        .resolve_monster_melee(0, &mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+        .expect("neutral contact should resolve");
+    assert_eq!(neutral.entities[0].hp, neutral_hp);
+}
+
+#[test]
+fn crusade_holy_blade_adds_a_permanent_slay_evil_affix() {
+    let mut game = crusade_high_mage_game(0x484f_4c59_424c_4144, 28);
+    let dagger_id = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.dagger")
+        .expect("Crusade High-Mage should carry a dagger")
+        .id
+        .clone();
+    let virtue_before = game.virtue_current(VirtueKindDto::Enchantment);
+    game.resolve_player_ability(
+        "demo.ability.crusade-holy-blade",
+        TargetSelection::Item {
+            item_id: dagger_id.clone(),
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Holy Blade should resolve");
+    let dagger = game
+        .items
+        .iter()
+        .find(|item| item.id == dagger_id)
+        .expect("the branded dagger should remain available");
+    assert_eq!(dagger.affix_ids, ["demo.affix.holy-blade"]);
+    assert_eq!(dagger.origin_kind, Some(ItemOriginKindDto::PlayerMade));
+    assert_eq!(dagger.discount_percent, 99);
+    assert_eq!(
+        game.virtue_current(VirtueKindDto::Enchantment),
+        virtue_before + 2
+    );
+    assert_eq!(
+        game.content
+            .affix("demo.affix.holy-blade")
+            .and_then(|affix| affix.slays.get(&SlayTarget::Evil)),
+        Some(&SlayLevel::Slay)
+    );
+}
+
+#[test]
+fn crusade_summon_angel_preserves_one_in_three_hostility_and_fixed_level_cap() {
+    let prepared = |hostile: bool| {
+        (0..2_000_u64)
+            .find_map(|seed| {
+                let mut game = crusade_high_mage_game(0x414e_4745_4c00_0000 + seed, 38);
+                clear_monsters(&mut game);
+                game.terrain.fill("demo.terrain.floor".to_owned());
+                let mut expected_rng = game.rng.clone();
+                let _ = expected_rng.bounded(100);
+                if (expected_rng.bounded(3) == 0) != hostile {
+                    return None;
+                }
+                let candidates = game.summon_category_candidate_kind_ids("angel", None, 57, false);
+                if candidates.is_empty() {
+                    return None;
+                }
+                let choice = usize::try_from(expected_rng.bounded(candidates.len() as u64))
+                    .expect("bounded expected angel choice must fit usize");
+                let expected_kind_id = candidates[choice].clone();
+                (!game
+                    .open_positions_around_for_actor_kind(
+                        game.player.position,
+                        2,
+                        &expected_kind_id,
+                    )
+                    .is_empty())
+                .then_some((game, expected_kind_id))
+            })
+            .expect("a deterministic seed should satisfy the angel summon branch")
+    };
+
+    for hostile in [false, true] {
+        let (mut game, expected_kind_id) = prepared(hostile);
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.crusade-summon-angel",
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Summon Angel should resolve");
+        assert_eq!(game.entities[0].kind_id, expected_kind_id);
+        assert!(game.content.actor(&expected_kind_id).unwrap().level <= 57);
+        assert_eq!(game.entities[0].controller_id.is_none(), hostile);
+        assert!(events.iter().any(|event| matches!(
+            event,
+            DomainEvent::AbilitySummoned { resolution, .. }
+                if resolution.hostile == hostile
+        )));
+    }
+}
+
+#[test]
+fn crusade_scatter_evil_stops_at_the_first_actor_and_filters_non_evil_targets() {
+    let mut game = crusade_high_mage_game(0x4352_5553_5343_4154, 20);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let origin = game.player.position;
+    let blocker = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    let evil = Position {
+        x: origin.x + 2,
+        y: origin.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.crusade.scatter.blocker",
+        "demo.actor.giant-white-mouse",
+        blocker,
+        100,
+        100,
+        100,
+        true,
+    ));
+    game.entities.push(actor_from_runtime_spawn(
+        "test.crusade.scatter.evil",
+        "demo.actor.small-kobold",
+        evil,
+        100,
+        100,
+        100,
+        true,
+    ));
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.crusade-scatter-evil",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Scatter Evil should resolve against a non-evil blocker");
+    assert_eq!(game.entities[0].position, blocker);
+    assert_eq!(game.entities[1].position, evil);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if resolution.effects.is_empty()
+    )));
+
+    game.entities.remove(0);
+    game.resolve_player_ability(
+        "demo.ability.crusade-scatter-evil",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Scatter Evil should teleport an evil first target");
+    assert_ne!(game.entities[0].position, evil);
+}
+
+#[test]
+fn crusade_holy_orb_uses_original_alignment_damage() {
+    let mut game = crusade_high_mage_game(0x4352_5553_484f_4c59, 30);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let origin = game.player.position;
+    let center = Position {
+        x: origin.x + 2,
+        y: origin.y,
+    };
+    for (id, kind_id, position) in [
+        ("test.crusade.holy.good", "demo.actor.angel", center),
+        (
+            "test.crusade.holy.evil",
+            "demo.actor.small-kobold",
+            Position {
+                x: center.x,
+                y: center.y + 1,
+            },
+        ),
+        (
+            "test.crusade.holy.neutral",
+            "demo.actor.giant-white-mouse",
+            Position {
+                x: center.x,
+                y: center.y - 1,
+            },
+        ),
+    ] {
+        game.entities.push(actor_from_runtime_spawn(
+            id, kind_id, position, 1_000, 100, 100, true,
+        ));
+    }
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.crusade-holy-orb",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Holy Orb should resolve");
+    let base = events
+        .iter()
+        .find_map(|event| match event {
+            DomainEvent::AbilityAreaDamage { resolution, .. } => Some(resolution.base_raw_damage),
+            _ => None,
+        })
+        .expect("Holy Orb should emit its base damage");
+    assert_eq!(game.entities[0].hp, 1_000);
+    let distance_one_damage = rfb_area_damage(base, 1);
+    assert_eq!(game.entities[1].hp, 1_000 - 2 * distance_one_damage);
+    let neutral_damage = 1_000 - game.entities[2].hp;
+    assert!((distance_one_damage * 3 / 12..=distance_one_damage * 3 / 7).contains(&neutral_damage));
+}
+
+#[test]
+fn crusade_exorcism_rolls_undead_and_demon_damage_independently() {
+    let mut game = crusade_high_mage_game(0x4352_5553_4558_4f52, 15);
+    clear_monsters(&mut game);
+    grant_spell_power(&mut game, 7);
+    let mut expected_rng = game.rng.clone();
+    let _ = expected_rng.bounded(100);
+    let expected = [
+        spell_power_value(expected_rng.bounded(15) + 1 + 8, 7) as i32,
+        spell_power_value(expected_rng.bounded(15) + 1 + 8, 7) as i32,
+    ];
+    let draws_before = game.rng.draw_counter;
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.crusade-exorcism",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Exorcism should resolve without visible targets");
+    assert_eq!(game.rng.draw_counter, draws_before + 3);
+    assert_eq!(
+        events
+            .iter()
+            .filter_map(|event| match event {
+                DomainEvent::AbilityVisibleDamage { resolution, .. } => {
+                    Some(resolution.base_raw_damage)
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>(),
+        expected
+    );
+}
+
+#[test]
+fn crusade_holy_word_resolves_damage_then_healing_then_status_cures() {
+    let mut game = crusade_high_mage_game(0x4352_5553_574f_5244, 36);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let target = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.crusade.holy-word-target",
+        "demo.actor.small-kobold",
+        target,
+        10_000,
+        100,
+        100,
+        true,
+    ));
+    let status = |kind_id: &str| StatusInstance {
+        kind_id: kind_id.to_owned(),
+        intensity: 1,
+        remaining_ticks: 50,
+        source_id: Some("test.crusade.holy-word".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    game.player.statuses.extend([
+        status(STATUS_STUN),
+        status(STATUS_BLEEDING),
+        status(STATUS_POISON),
+    ]);
+    game.player.hp = 1;
+    game.player.max_hp = 300;
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.crusade-holy-word",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Holy Word should resolve");
+    assert_eq!(game.player.hp, 101);
+    assert!(game.player.statuses.iter().all(|status| !matches!(
+        status.kind_id.as_str(),
+        STATUS_STUN | STATUS_BLEEDING | STATUS_POISON
+    )));
+    let damage_index = events
+        .iter()
+        .position(|event| matches!(event, DomainEvent::AbilityVisibleDamage { .. }))
+        .expect("Holy Word should damage first");
+    let healing_index = events
+        .iter()
+        .position(|event| matches!(event, DomainEvent::AbilityHealed { .. }))
+        .expect("Holy Word should heal second");
+    let removal_indices = events
+        .iter()
+        .enumerate()
+        .filter_map(|(index, event)| match event {
+            DomainEvent::AbilityEffectsResolved { resolution, .. }
+                if matches!(
+                    resolution.effects.as_slice(),
+                    [AbilityEffectResolutionDto::RemoveStatus { .. }]
+                ) =>
+            {
+                Some(index)
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(removal_indices.len(), 3);
+    assert!(damage_index < healing_index && healing_index < removal_indices[0]);
+    assert!(removal_indices.windows(2).all(|pair| pair[0] < pair[1]));
+}
+
+#[test]
+fn crusade_sanctuary_reaches_unseen_adjacent_monsters_but_not_distant_or_immune_ones() {
+    let mut game = crusade_high_mage_game(0x4352_5553_5341_4e43, 50);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let origin = game.player.position;
+    for (id, kind_id, position) in [
+        (
+            "test.crusade.unseen-adjacent",
+            "demo.actor.clear-icky-thing",
+            Position {
+                x: origin.x + 1,
+                y: origin.y,
+            },
+        ),
+        (
+            "test.crusade.distant",
+            "demo.actor.small-kobold",
+            Position {
+                x: origin.x + 2,
+                y: origin.y,
+            },
+        ),
+        (
+            "test.crusade.immune",
+            "demo.actor.air-spirit",
+            Position {
+                x: origin.x,
+                y: origin.y + 1,
+            },
+        ),
+        (
+            "test.crusade.unique",
+            "demo.actor.bloodfang-the-wolf",
+            Position {
+                x: origin.x - 1,
+                y: origin.y,
+            },
+        ),
+    ] {
+        game.entities.push(actor_from_runtime_spawn(
+            id, kind_id, position, 1_000, 100, 100, true,
+        ));
+    }
+    assert!(!game.entity_is_visible_to_player(&game.entities[0]));
+
+    game.resolve_player_ability(
+        "demo.ability.crusade-sanctuary",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Sanctuary should resolve");
+
+    let has_sleep = |id: &str| {
+        game.entities
+            .iter()
+            .find(|entity| entity.id == id)
+            .expect("test monster should remain")
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_SLEEP)
+    };
+    assert!(has_sleep("test.crusade.unseen-adjacent"));
+    assert!(!has_sleep("test.crusade.distant"));
+    assert!(!has_sleep("test.crusade.immune"));
+    assert!(!has_sleep("test.crusade.unique"));
+}
+
+#[test]
+fn crusade_stardust_resolves_ten_independent_reflectable_light_bolts() {
+    let mut game = crusade_high_mage_game(0x4352_5553_5354_4152, 25);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let target = Position {
+        x: game.player.position.x + 2,
+        y: game.player.position.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.crusade.stardust-target",
+        "demo.actor.small-kobold",
+        target,
+        10_000,
+        100,
+        100,
+        true,
+    ));
+    let draws_before = game.rng.draw_counter;
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.crusade-star-dust",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Star Dust should resolve");
+
+    let raw_damage = events
+        .iter()
+        .filter_map(|event| match event {
+            DomainEvent::AbilityHit {
+                ability_id, damage, ..
+            } if ability_id == "demo.ability.crusade-star-dust" => Some(damage.raw),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(raw_damage.len(), 10);
+    assert!(raw_damage.iter().all(|damage| (5..=10).contains(damage)));
+    assert!(game.rng.draw_counter >= draws_before + 70);
+    assert!(game.glow[game.index(target).expect("target should be in bounds")]);
+
+    let mut reflected = crusade_high_mage_game(0x4352_5553_5245_464c, 25);
+    clear_monsters(&mut reflected);
+    reflected.terrain.fill("demo.terrain.floor".to_owned());
+    let reflector = Position {
+        x: reflected.player.position.x + 2,
+        y: reflected.player.position.y,
+    };
+    reflected.entities.push(actor_from_runtime_spawn(
+        "test.crusade.stardust-reflector",
+        "demo.actor.a-plain-gold-ring",
+        reflector,
+        10_000,
+        100,
+        100,
+        true,
+    ));
+    let mut reflection_events = Vec::new();
+    reflected
+        .resolve_player_ability(
+            "demo.ability.crusade-star-dust",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut reflection_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Star Dust should resolve against a reflector");
+    assert!(reflection_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::BoltReflected { source_kind_id, .. }
+            if source_kind_id == "demo.ability.crusade-star-dust"
+    )));
+}
+
+#[test]
+fn crusade_purification_uses_the_original_poison_reduction_and_cures_cut_and_stun() {
+    let mut game = crusade_high_mage_game(0x4352_5553_5055_5245, 10);
+    let status = |kind_id: &str, remaining_ticks| StatusInstance {
+        kind_id: kind_id.to_owned(),
+        intensity: 1,
+        remaining_ticks,
+        source_id: Some("test.crusade.purification".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    game.player.statuses.extend([
+        status(STATUS_POISON, 300),
+        status(STATUS_STUN, 40),
+        status(STATUS_BLEEDING, 60),
+    ]);
+    game.resolve_player_ability(
+        "demo.ability.crusade-purification",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Purification should resolve");
+    assert_eq!(
+        game.player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_POISON)
+            .map(|status| status.remaining_ticks),
+        Some(200)
+    );
+    assert!(
+        game.player
+            .statuses
+            .iter()
+            .all(|status| !matches!(status.kind_id.as_str(), STATUS_STUN | STATUS_BLEEDING))
+    );
+}
+
+#[test]
+fn daemon_second_book_projects_and_resolves_original_damage_formulas() {
+    for (level, plasma_dice, fire_bonus, nether_bonus, nether_radius) in [
+        (21, 15, 85, 140, 3),
+        (28, 16, 93, 152, 3),
+        (50, 22, 120, 190, 4),
+    ] {
+        let projected = daemon_high_mage_game(0x494d_4d4f_5000 + u64::from(level), level)
+            .snapshot()
+            .player
+            .abilities
+            .into_iter()
+            .map(|ability| (ability.id.clone(), ability))
+            .collect::<BTreeMap<_, _>>();
+        assert!(matches!(
+            projected["demo.ability.daemon-plasma-bolt"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::BoltOrBeamDamage {
+                damage_dice,
+                damage_sides: 8,
+                damage_bonus,
+                beam_chance_percent,
+                final_damage_spell_power_bonus: None,
+                ..
+            }] if *damage_dice == plasma_dice
+                && *damage_bonus == 5 + level / 5
+                && *beam_chance_percent == level as u8
+        ));
+        assert!(matches!(
+            projected["demo.ability.daemon-fire-ball"].effects.as_slice(),
+            [AbilityEffectSpecDto::AreaDamage {
+                damage_dice: 0,
+                damage_sides: 0,
+                damage_bonus,
+                radius: 2,
+                final_damage_spell_power_bonus: None,
+                ..
+            }] if *damage_bonus == fire_bonus
+        ));
+        assert!(matches!(
+            projected["demo.ability.daemon-nether-ball"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::AreaDamage {
+                damage_dice: 0,
+                damage_sides: 0,
+                damage_bonus,
+                radius,
+                final_damage_spell_power_bonus: None,
+                ..
+            }] if *damage_bonus == nether_bonus && *radius == nether_radius
+        ));
+        assert!(matches!(
+            projected["demo.ability.daemon-summon-demon"]
+                .effects
+                .as_slice(),
+            [AbilityEffectSpecDto::DemonSummoning]
+        ));
+    }
+
+    let cast_fire_ball = |bonus: i32| {
+        let mut game = daemon_high_mage_game(0x4649_5245_4241_4c4c, 22);
+        clear_monsters(&mut game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        if bonus != 0 {
+            grant_spell_power(&mut game, bonus);
+        }
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            "demo.ability.daemon-fire-ball",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Fire Ball should resolve");
+        events
+            .iter()
+            .find_map(|event| match event {
+                DomainEvent::AbilityAreaDamage { resolution, .. } => {
+                    Some(resolution.base_raw_damage)
+                }
+                _ => None,
+            })
+            .unwrap_or_else(|| panic!("Fire Ball events: {events:#?}"))
+    };
+    assert_eq!(cast_fire_ball(0), 86);
+    assert_eq!(cast_fire_ball(-7), spell_power_value(86, -7) as i32);
+    assert_eq!(cast_fire_ball(7), spell_power_value(86, 7) as i32);
+
+    let mut resistance = daemon_high_mage_game(0x4e45_5448_4552, 17);
+    resistance
+        .resolve_player_ability(
+            "demo.ability.daemon-resist-nether",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Resist Nether should resolve");
+    let status = resistance
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.resist-nether")
+        .expect("Resist Nether should apply its status");
+    assert!((21..=40).contains(&status.remaining_ticks));
+    assert_eq!(
+        status.granted_resistances.get(&DamageType::Nether),
+        Some(&ResistanceLevel::Resistant)
+    );
+}
+
+#[test]
+fn daemon_third_book_projects_original_formulas_and_high_mage_parameters() {
+    let mut game = daemon_high_mage_game(0x4445_4d4f_4e03_5000, 40);
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    for (id, minimum_level, mana) in [
+        ("demo.ability.daemon-devilish-eye", 9, 10),
+        ("demo.ability.daemon-devilish-cloak", 12, 15),
+        ("demo.ability.daemon-flow-of-lava", 22, 19),
+        ("demo.ability.daemon-plasma-ball", 31, 26),
+        ("demo.ability.daemon-polymorph-demon", 32, 35),
+        ("demo.ability.daemon-nether-wave", 33, 32),
+        ("demo.ability.daemon-kiss-of-succubus", 34, 35),
+        ("demo.ability.daemon-doom-hand", 40, 70),
+    ] {
+        assert_eq!(
+            (
+                projected[id].minimum_level,
+                projected[id].base_resource_cost,
+                projected[id].book_rank,
+            ),
+            (minimum_level, mana, Some(3))
+        );
+    }
+    assert!(matches!(
+        projected["demo.ability.daemon-devilish-eye"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 25,
+            duration_dice: 1,
+            duration_sides: 30,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-devilish-cloak"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 20,
+            duration_dice: 1,
+            duration_sides: 20,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-flow-of-lava"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::LavaFlow {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 216,
+            radius: 3,
+            target_terrain_id,
+            final_damage_spell_power_bonus: None,
+        }] if target_terrain_id == "demo.terrain.surface-lava-deep"
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-plasma-ball"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::AreaDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 153,
+            radius: 3,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-polymorph-demon"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 30,
+            duration_dice: 1,
+            duration_sides: 30,
+            granted_race_id: Some(race_id),
+            ..
+        }] if race_id == "demo.race.demon"
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-nether-wave"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::VisibleDamage {
+            damage_dice: 1,
+            damage_sides: 80,
+            damage_bonus: 13,
+            target_category: None,
+            ..
+        }, AbilityEffectSpecDto::VisibleDamage {
+            damage_dice: 1,
+            damage_sides: 80,
+            damage_bonus: 13,
+            target_category: Some(category),
+            ..
+        }] if category == "good"
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-kiss-of-succubus"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::AreaDamage {
+            damage_bonus: 208,
+            damage_type: DamageTypeDto::Nexus,
+            radius: 4,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-doom-hand"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::DoomHand]
+    ));
+
+    game.resolve_player_ability(
+        "demo.ability.daemon-polymorph-demon",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Polymorph Demon should resolve");
+    let breath = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == "demo.ability.daemon-breath")
+        .expect("the demon form should project its innate breath");
+    assert_eq!(
+        (
+            breath.source,
+            breath.minimum_level,
+            breath.base_resource_cost,
+            breath.resource_cost,
+        ),
+        (AbilitySourceDto::Race, 15, 10, 23)
+    );
+    assert!(matches!(
+        breath.effects.as_slice(),
+        [AbilityEffectSpecDto::RandomChoice {
+            roll_sides: 2,
+            branches,
+            ..
+        }] if branches.len() == 2
+            && branches.iter().all(|branch| matches!(
+                branch.effect.as_ref(),
+                AbilityEffectSpecDto::ConeDamage {
+                    damage_dice: 0,
+                    damage_sides: 0,
+                    damage_bonus: 120,
+                    radius: 3,
+                    ..
+                }
+            ))
+    ));
+}
+
+#[test]
+fn daemon_devilish_cloak_grants_three_resistances_and_a_fire_contact_aura() {
+    let mut game = daemon_high_mage_game(0x4445_5649_4c43_4c4f, 12);
+    game.resolve_player_ability(
+        "demo.ability.daemon-devilish-cloak",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Devilish Cloak should resolve");
+    let cloak = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_FIRE_AURA)
+        .expect("Devilish Cloak should apply its fire aura status");
+    assert!((21..=40).contains(&cloak.remaining_ticks));
+    for damage_type in [DamageType::Acid, DamageType::Fire, DamageType::Poison] {
+        assert_eq!(
+            game.effective_player_resistances().level(damage_type),
+            ResistanceLevel::Resistant
+        );
+    }
+
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.devilish-cloak-contact",
+        "demo.actor.agent-of-black-market",
+        position,
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    let hp_before = game.entities[0].hp;
+    let mut events = Vec::new();
+    for _ in 0..20 {
+        game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .expect("the contact attack should resolve");
+        if game.entities[0].hp < hp_before {
+            break;
+        }
+    }
+    assert!(game.entities[0].hp < hp_before, "{events:?}");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MutationAuraHit { damage, .. }
+            if damage.damage_type == DamageType::Fire && damage.applied > 0
+    )));
+}
+
+#[test]
+fn daemon_flow_of_lava_centers_damage_and_rewrites_non_permanent_terrain() {
+    let mut game = daemon_high_mage_game(0x4c41_5641_464c_4f57, 22);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let origin = game.player.position;
+    let ordinary_wall = Position {
+        x: origin.x + 1,
+        y: origin.y,
+    };
+    let permanent_wall = Position {
+        x: origin.x,
+        y: origin.y + 1,
+    };
+    replace_terrain(&mut game, ordinary_wall, "demo.terrain.wall");
+    replace_terrain(&mut game, permanent_wall, "demo.terrain.permanent-wall");
+    let target = Position {
+        x: origin.x - 1,
+        y: origin.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.lava-flow-target",
+        "demo.actor.small-kobold",
+        target,
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    let draws_before = game.rng_draw_counter();
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.daemon-flow-of-lava",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("The Flow of Lava should resolve");
+    assert_eq!(game.rng_draw_counter(), draws_before + 2);
+    assert_eq!(game.entities[0].hp, 914);
+    for position in [origin, ordinary_wall, target] {
+        assert_eq!(
+            game.terrain[game
+                .index(position)
+                .expect("test position should be in bounds")],
+            "demo.terrain.surface-lava-deep"
+        );
+    }
+    assert_eq!(
+        game.terrain[game
+            .index(permanent_wall)
+            .expect("permanent test position should be in bounds")],
+        "demo.terrain.permanent-wall"
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityAreaDamage { resolution, .. }
+            if resolution.center == origin && resolution.radius == 3
+                && resolution.base_raw_damage == 172
+    )));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityTerrainTransformed { resolution, .. }
+            if resolution.center == origin
+                && resolution.radius == 3
+                && resolution.target_terrain_id == "demo.terrain.surface-lava-deep"
+                && resolution.transformed_positions.contains(&ordinary_wall)
+                && !resolution.transformed_positions.contains(&permanent_wall)
+    )));
+}
+
+#[test]
+fn daemon_polymorph_demon_overlays_race_preserves_body_and_enables_breath() {
+    let mut game = daemon_high_mage_game(0x504f_4c59_4445_4d4f, 32);
+    let body_slots = game.body_slots.clone();
+    game.resolve_player_ability(
+        "demo.ability.daemon-polymorph-demon",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Polymorph Demon should resolve");
+    let status = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.demon-transformation")
+        .expect("Polymorph Demon should apply its transformation status");
+    assert!((27..=52).contains(&status.remaining_ticks));
+    assert_eq!(game.body_slots, body_slots);
+    assert_eq!(
+        game.character_definitions()
+            .expect("the transformed character should retain definitions")
+            .1
+            .id,
+        "demo.race.demon"
+    );
+    assert_eq!(game.player_see_invisible_sources(), 1);
+    assert_eq!(game.player_infravision_range(), 5);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Fire),
+        ResistanceLevel::Strong
+    );
+    for damage_type in [DamageType::Chaos, DamageType::Nether] {
+        assert_eq!(
+            game.effective_player_resistances().level(damage_type),
+            ResistanceLevel::Resistant
+        );
+    }
+
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let target = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.demon-breath-target",
+        "demo.actor.small-kobold",
+        target,
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.daemon-breath",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("the demon breath should resolve");
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityHit {
+            ability_id,
+            damage,
+            ..
+        } if ability_id == "demo.ability.daemon-breath"
+            && damage.raw == 96
+            && matches!(damage.damage_type, DamageType::Fire | DamageType::Nether)
+    )));
+}
+
+#[test]
+fn daemon_doom_hand_preserves_unique_immunity_save_rng_and_current_hp_percentage() {
+    let target_position = |game: &Game| Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    let mut unique = daemon_high_mage_game(0x444f_4f4d_554e_4951, 40);
+    clear_monsters(&mut unique);
+    unique.terrain.fill("demo.terrain.floor".to_owned());
+    unique.entities.push(actor_from_runtime_spawn(
+        "test.doom-hand-unique",
+        "demo.actor.serpent-of-chaos",
+        target_position(&unique),
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    let draws_before = unique.rng_draw_counter();
+    let mut unique_events = Vec::new();
+    unique
+        .resolve_player_ability(
+            "demo.ability.daemon-doom-hand",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut unique_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Doom Hand should resolve against a unique");
+    assert_eq!(unique.entities[0].hp, 1_000);
+    assert_eq!(unique.rng_draw_counter(), draws_before + 1);
+    assert!(unique_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::NoOp { reason, .. }] if reason == "unique")
+    )));
+
+    let prepared = |want_success: bool| {
+        (0..10_000_u64)
+            .find_map(|seed| {
+                let mut game = daemon_high_mage_game(0x444f_4f4d_0000 + seed, 40);
+                clear_monsters(&mut game);
+                game.terrain.fill("demo.terrain.floor".to_owned());
+                game.entities.push(actor_from_runtime_spawn(
+                    "test.doom-hand-normal",
+                    "demo.actor.small-kobold",
+                    target_position(&game),
+                    1_000,
+                    100,
+                    100,
+                    true,
+                ));
+                let level = u64::from(
+                    game.content
+                        .actor("demo.actor.small-kobold")
+                        .expect("small kobold should exist")
+                        .level,
+                );
+                let mut expected_rng = game.rng.clone();
+                let _ability_roll = expected_rng.bounded(100);
+                let power_roll = expected_rng.bounded(120) + 1;
+                let resistance_roll = level + expected_rng.bounded(20) + 1;
+                let succeeded = power_roll >= resistance_roll;
+                if succeeded != want_success {
+                    return None;
+                }
+                let damage = succeeded.then(|| {
+                    let percent = expected_rng.bounded(20) + 41;
+                    i32::try_from(1_000 * percent / 100)
+                        .expect("Doom Hand test damage should fit i32")
+                });
+                Some((game, expected_rng, damage))
+            })
+            .expect("a bounded seed should produce the requested Doom Hand result")
+    };
+
+    let (mut resisted, expected_rng, _) = prepared(false);
+    let mut resisted_events = Vec::new();
+    resisted
+        .resolve_player_ability(
+            "demo.ability.daemon-doom-hand",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut resisted_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("a resisted Doom Hand should still resolve");
+    assert_eq!(resisted.rng, expected_rng);
+    assert_eq!(resisted.entities[0].hp, 1_000);
+    assert!(resisted_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::NoOp { reason, .. }] if reason == "resisted")
+    )));
+
+    let (mut succeeded, expected_rng, expected_damage) = prepared(true);
+    succeeded
+        .resolve_player_ability(
+            "demo.ability.daemon-doom-hand",
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("a successful Doom Hand should resolve");
+    assert_eq!(succeeded.rng, expected_rng);
+    let expected_damage = expected_damage.expect("successful Doom Hand should roll damage");
+    assert!((410..=600).contains(&expected_damage));
+    assert_eq!(succeeded.entities[0].hp, 1_000 - expected_damage);
+    assert!(succeeded.entities[0].hp > 0);
+}
+
+#[test]
+fn daemon_fourth_book_projects_original_formulas_and_support_effects() {
+    let mut game = daemon_high_mage_game(0x4445_4d4f_4e04_5000, 50);
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .map(|ability| (ability.id.clone(), ability))
+        .collect::<BTreeMap<_, _>>();
+    for (id, minimum_level, mana) in [
+        ("demo.ability.daemon-raise-the-morale", 8, 8),
+        ("demo.ability.daemon-immortal-body", 23, 20),
+        ("demo.ability.daemon-insanity-circle", 33, 30),
+        ("demo.ability.daemon-explode-pets", 36, 44),
+        ("demo.ability.daemon-summon-greater-demon", 38, 90),
+        ("demo.ability.daemon-hellfire", 42, 85),
+        ("demo.ability.daemon-send-to-hell", 43, 75),
+        ("demo.ability.daemon-polymorph-demonlord", 46, 70),
+    ] {
+        assert_eq!(
+            (
+                projected[id].minimum_level,
+                projected[id].base_resource_cost,
+                projected[id].book_rank,
+            ),
+            (minimum_level, mana, Some(4))
+        );
+    }
+    assert!(matches!(
+        projected["demo.ability.daemon-raise-the-morale"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 25,
+            duration_dice: 1,
+            duration_sides: 25,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-immortal-body"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 20,
+            duration_dice: 1,
+            duration_sides: 20,
+            ..
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-insanity-circle"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::InsanityCircle {
+            damage_bonus: 115,
+            control_power: 70,
+            radius: 5,
+        }]
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-explode-pets"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::ExplodePets]
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-summon-greater-demon"]
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::SummonGreaterDemon { corpse_item_kind_id, radius: 2 }]
+            if corpse_item_kind_id == "demo.item.corpse-remains"
+    ));
+    assert!(matches!(
+        projected["demo.ability.daemon-hellfire"].effects.as_slice(),
+        [AbilityEffectSpecDto::Hellfire {
+            damage_bonus: 681,
+            radius: 3,
+            backlash_dice: 1,
+            backlash_sides: 30,
+            backlash_bonus: 20,
+        }]
+    ));
+
+    let max_hp_before = game.effective_player_max_hp();
+    game.resolve_player_ability(
+        "demo.ability.daemon-raise-the-morale",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Raise the Morale should resolve");
+    let hero = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.hero")
+        .expect("Raise the Morale should apply heroism");
+    assert!((26..=50).contains(&hero.remaining_ticks));
+    assert_eq!(hero.granted_modifiers.max_hp, 10);
+    assert_eq!(hero.granted_equipment_bonuses.melee_skill, 12);
+    assert!(hero.granted_status_immunities.contains(STATUS_FEAR));
+    assert_eq!(game.effective_player_max_hp(), max_hp_before + 10);
+
+    game.resolve_player_ability(
+        "demo.ability.daemon-immortal-body",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Immortal Body should resolve");
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Time),
+        ResistanceLevel::Resistant
+    );
+}
+
+#[test]
+fn daemon_insanity_circle_applies_both_balls_then_confusion_and_charm() {
+    let mut game = daemon_high_mage_game(0x494e_5341_4e49_5459, 50);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let target_position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.insanity-target",
+        "demo.actor.small-kobold",
+        target_position,
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.daemon-insanity-circle",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Insanity Circle should resolve");
+    assert_eq!(game.entities[0].hp, 884);
+    assert_eq!(game.entities[0].controller_id, Some(game.player.id.clone()));
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_CONFUSION)
+    );
+    let balls = events
+        .iter()
+        .filter_map(|event| match event {
+            DomainEvent::AbilityAreaDamage { resolution, .. } => Some(resolution.damage_type),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(balls, [DamageTypeDto::Chaos, DamageTypeDto::Confusion]);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(resolution.effects.as_slice(), [_, AbilityEffectResolutionDto::Control { outcome: AbilityControlOutcomeDto::Controlled, power: 70, .. }])
+    )));
+}
+
+#[test]
+fn daemon_explode_pets_processes_instance_order_and_lets_uniques_escape() {
+    let mut game = daemon_high_mage_game(0x4558_504c_4f44_4500, 50);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let origin = game.player.position;
+    let mut ordinary = actor_from_runtime_spawn(
+        "test.exploding-pet",
+        "demo.actor.small-kobold",
+        Position {
+            x: origin.x + 2,
+            y: origin.y,
+        },
+        1_000,
+        100,
+        100,
+        true,
+    );
+    ordinary.controller_id = Some(game.player.id.clone());
+    game.entities.push(ordinary);
+    game.entities.push(actor_from_runtime_spawn(
+        "test.explosion-target",
+        "demo.actor.small-kobold",
+        Position {
+            x: origin.x + 3,
+            y: origin.y,
+        },
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    let mut unique = actor_from_runtime_spawn(
+        "test.escaping-pet",
+        "demo.actor.serpent-of-chaos",
+        Position {
+            x: origin.x + 12,
+            y: origin.y,
+        },
+        1_000,
+        100,
+        100,
+        true,
+    );
+    unique.controller_id = Some(game.player.id.clone());
+    game.entities.push(unique);
+    let mut events = Vec::new();
+    let mut removed = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.daemon-explode-pets",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut removed,
+    )
+    .expect("Explode Pets should resolve");
+    assert_eq!(game.entities.len(), 1);
+    assert_eq!(game.entities[0].id, "test.explosion-target");
+    assert_eq!(game.entities[0].hp, 850);
+    assert_eq!(
+        removed,
+        [
+            "test.exploding-pet".to_owned(),
+            "test.escaping-pet".to_owned()
+        ]
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::ExplodePets { exploded_entity_ids, escaped_entity_ids, .. }]
+                if exploded_entity_ids == &["test.exploding-pet"] && escaped_entity_ids == &["test.escaping-pet"])
+    )));
+}
+
+#[test]
+fn daemon_greater_demon_consumes_only_a_successful_humanoid_sacrifice() {
+    let mut game = daemon_high_mage_game(0x5341_4352_4946_4943, 50);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    give_inventory_item(
+        &mut game,
+        "test.humanoid-corpse",
+        "demo.item.corpse-remains",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.humanoid-corpse")
+        .expect("test corpse should exist")
+        .origin_actor_kind_id = Some("demo.actor.anti-paladin".to_owned());
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.daemon-summon-greater-demon",
+        TargetSelection::Item {
+            item_id: "test.humanoid-corpse".to_owned(),
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("a humanoid corpse should summon a greater demon");
+    assert!(
+        game.items
+            .iter()
+            .all(|item| item.id != "test.humanoid-corpse")
+    );
+    assert!(!game.entities.is_empty());
+    assert!(game.entities.iter().all(|entity| {
+        entity.controller_id.as_deref() == Some(game.player.id.as_str())
+            && game.content.actor(&entity.kind_id).is_some_and(|actor| {
+                actor.tags.iter().any(|tag| tag == "demon")
+                    && matches!(actor.glyph.as_str(), "U" | "H" | "B")
+            })
+    }));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::SacrificeCorpse { item_id, consumed: true, .. }] if item_id == "test.humanoid-corpse")
+    )));
+
+    give_inventory_item(
+        &mut game,
+        "test.retained-corpse",
+        "demo.item.corpse-remains",
+    );
+    let ability = game
+        .content
+        .ability("demo.ability.daemon-summon-greater-demon")
+        .expect("greater demon ability should compile")
+        .clone();
+    let mut failed_events = Vec::new();
+    game.resolve_player_greater_demon_effect(
+        &ability,
+        "test.retained-corpse",
+        Vec::new(),
+        Vec::new(),
+        &mut failed_events,
+        &mut BTreeSet::new(),
+    );
+    assert!(
+        game.items
+            .iter()
+            .any(|item| item.id == "test.retained-corpse")
+    );
+    assert!(failed_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::SacrificeCorpse { item_id, consumed: false, .. }] if item_id == "test.retained-corpse")
+    )));
+}
+
+#[test]
+fn daemon_hellfire_resolves_good_target_damage_before_life_backlash() {
+    let mut game = daemon_high_mage_game(0x4845_4c4c_4649_5245, 50);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.max_hp = 2_000;
+    game.player.hp = 2_000;
+    game.entities.push(actor_from_runtime_spawn(
+        "test.hellfire-good-target",
+        "demo.actor.angel",
+        Position {
+            x: game.player.position.x + 1,
+            y: game.player.position.y,
+        },
+        2_000,
+        100,
+        100,
+        true,
+    ));
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.daemon-hellfire",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Hellfire should resolve");
+    assert_eq!(game.entities[0].hp, 638);
+    assert!((1_950..=1_979).contains(&game.player.hp));
+    let area_index = events
+        .iter()
+        .position(|event| matches!(event, DomainEvent::AbilityAreaDamage { .. }))
+        .expect("Hellfire should emit area damage");
+    let backlash_index = events
+        .iter()
+        .position(|event| matches!(
+            event,
+            DomainEvent::AbilityEffectsResolved { resolution, .. }
+                if matches!(resolution.effects.as_slice(), [AbilityEffectResolutionDto::SelfDamage { damage: 21..=50, fatal: false, .. }])
+        ))
+        .expect("Hellfire should emit life backlash");
+    assert!(area_index < backlash_index);
+}
+
+#[test]
+fn daemon_send_to_hell_and_demonlord_form_keep_their_terminal_semantics() {
+    let mut game = daemon_high_mage_game(0x4845_4c4c_4c4f_5244, 50);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.entities.push(actor_from_runtime_spawn(
+        "test.send-to-hell-target",
+        "demo.actor.small-kobold",
+        Position {
+            x: game.player.position.x + 1,
+            y: game.player.position.y,
+        },
+        100,
+        100,
+        100,
+        true,
+    ));
+    game.resolve_player_ability(
+        "demo.ability.daemon-send-to-hell",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Send to Hell should resolve");
+    assert!(game.entities.is_empty());
+
+    let body_slots = game.body_slots.clone();
+    game.resolve_player_ability(
+        "demo.ability.daemon-polymorph-demonlord",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Polymorph Demonlord should resolve");
+    let status = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == STATUS_DEMON_LORD_TRANSFORMATION)
+        .expect("the demon lord transformation should be active");
+    assert!((16..=30).contains(&status.remaining_ticks));
+    assert_eq!(game.body_slots, body_slots);
+    assert_eq!(
+        game.character_definitions()
+            .expect("the transformed character should retain definitions")
+            .1
+            .id,
+        "demo.race.demon-lord"
+    );
+    assert!(game.player_can_pass_walls());
+    assert!(game.player_has_telepathy());
+    assert!(game.player_levitates());
+    assert!(game.player_hold_life_sources() > 0);
+    assert_eq!(game.player_see_invisible_sources(), 1);
+    assert_eq!(game.player_infravision_range(), 20);
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Fire),
+        ResistanceLevel::Immune
+    );
+}
+
+#[test]
+fn daemon_summon_demon_preserves_one_in_three_dynamic_level_and_group_boundary() {
+    let prepared = |level: u16, bonus: i32, hostile: bool, require_friends: bool| {
+        (0..2_000_u64)
+            .find_map(|seed| {
+                let mut game = daemon_high_mage_game(0x4445_4d4f_4e00 + seed, level);
+                clear_monsters(&mut game);
+                game.terrain.fill("demo.terrain.floor".to_owned());
+                if bonus != 0 {
+                    grant_spell_power(&mut game, bonus);
+                }
+                let mut expected_rng = game.rng.clone();
+                let _ = expected_rng.bounded(100);
+                if (expected_rng.bounded(3) == 0) != hostile {
+                    return None;
+                }
+                let raw_maximum = u64::from(level.saturating_mul(2) / 3)
+                    + expected_rng.bounded(u64::from(level / 2))
+                    + 1;
+                let maximum_level =
+                    spell_power_value(raw_maximum, bonus).min(u64::from(u16::MAX)) as u16;
+                let candidates =
+                    game.summon_category_candidate_kind_ids("demon", None, maximum_level, false);
+                if candidates.is_empty() {
+                    return None;
+                }
+                let choice = usize::try_from(expected_rng.bounded(candidates.len() as u64))
+                    .expect("bounded expected summon choice must fit usize");
+                let expected_kind_id = candidates[choice].clone();
+                if game
+                    .open_positions_around_for_actor_kind(
+                        game.player.position,
+                        2,
+                        &expected_kind_id,
+                    )
+                    .is_empty()
+                {
+                    return None;
+                }
+                let has_friends = game
+                    .content
+                    .actor(&expected_kind_id)
+                    .and_then(|actor| actor.allocation.as_ref())
+                    .is_some_and(|allocation| allocation.friends.is_some());
+                (!require_friends || has_friends).then_some((game, expected_kind_id, maximum_level))
+            })
+            .expect("a deterministic seed should satisfy the summon branch")
+    };
+
+    let (mut friendly, expected_kind_id, maximum_level) = prepared(33, 7, false, false);
+    let mut friendly_events = Vec::new();
+    friendly
+        .resolve_player_ability(
+            "demo.ability.daemon-summon-demon",
+            TargetSelection::SelfTarget,
+            &mut friendly_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("friendly Summon Demon should resolve");
+    assert_eq!(
+        friendly
+            .entities
+            .first()
+            .unwrap_or_else(|| panic!("friendly summon events: {friendly_events:#?}"))
+            .kind_id,
+        expected_kind_id
+    );
+    assert!(friendly.content.actor(&expected_kind_id).unwrap().level <= u32::from(maximum_level));
+    assert!(friendly.entities.iter().all(|entity| {
+        entity.controller_id.as_deref() == Some(friendly.player.id.as_str())
+            && entity.summon.is_none()
+    }));
+    assert!(friendly_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilitySummoned { resolution, .. }
+            if !resolution.hostile && !resolution.group
+    )));
+
+    let (mut hostile, expected_kind_id, _) = prepared(33, 0, true, false);
+    let mut hostile_events = Vec::new();
+    hostile
+        .resolve_player_ability(
+            "demo.ability.daemon-summon-demon",
+            TargetSelection::SelfTarget,
+            &mut hostile_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("hostile Summon Demon should resolve");
+    assert_eq!(hostile.entities[0].kind_id, expected_kind_id);
+    assert!(hostile_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilitySummoned { resolution, .. } if resolution.hostile
+    )));
+
+    let (mut level_fifty, _, _) = prepared(50, 0, false, true);
+    let mut level_fifty_events = Vec::new();
+    level_fifty
+        .resolve_player_ability(
+            "demo.ability.daemon-summon-demon",
+            TargetSelection::SelfTarget,
+            &mut level_fifty_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("level-fifty friendly Summon Demon should resolve");
+    assert!(level_fifty_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilitySummoned { resolution, .. }
+            if !resolution.hostile && resolution.group
+    )));
+}
+
+#[test]
+fn daemon_summon_manes_preserves_group_pet_and_failed_summon_semantics() {
+    let mut game = daemon_high_mage_game(0x4d41_4e45_535f_4752, 9);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let mut events = Vec::new();
+    game.resolve_player_ability(
+        "demo.ability.daemon-summon-manes",
+        TargetSelection::SelfTarget,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Summon Manes should resolve");
+    assert!((1..=10).contains(&game.entities.len()));
+    assert!(game.entities.iter().all(|entity| {
+        entity.kind_id == "demo.actor.manes"
+            && entity.controller_id.as_deref() == Some(game.player.id.as_str())
+            && entity.summon.is_none()
+    }));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilitySummoned { resolution, .. }
+            if resolution.group
+                && resolution.entity_ids.len() == game.entities.len()
+                && resolution
+                    .summoned_kind_ids
+                    .iter()
+                    .all(|kind_id| kind_id == "demo.actor.manes")
+    )));
+
+    let mut failed = daemon_high_mage_game(0x4d41_4e45_535f_4e4f, 9);
+    clear_monsters(&mut failed);
+    failed.terrain.fill("demo.terrain.floor".to_owned());
+    grant_spell_power(&mut failed, -7);
+    let mana_before = failed.resources["demo.resource.mana"].current;
+    let mut failed_events = Vec::new();
+    failed
+        .resolve_player_ability(
+            "demo.ability.daemon-summon-manes",
+            TargetSelection::SelfTarget,
+            &mut failed_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("an underpowered summon should still consume the cast");
+    assert!(failed.entities.is_empty());
+    assert!(failed.resources["demo.resource.mana"].current < mana_before);
+    assert!(failed_events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilitySummoned { resolution, .. }
+            if resolution.entity_ids.is_empty()
+    )));
+}
+
+#[test]
+fn daemon_hellish_flame_doubles_good_damage_destroys_curses_and_cancels_atomically() {
+    fn resolved_damage(kind_id: &str) -> i32 {
+        let mut game = daemon_high_mage_game(0x4845_4c4c_4649_5245, 11);
+        clear_monsters(&mut game);
+        let target = Position {
+            x: game.player.position.x + 1,
+            y: game.player.position.y,
+        };
+        game.entities.push(actor_from_runtime_spawn(
+            "test.hell-fire-target",
+            kind_id,
+            target,
+            1_000,
+            100,
+            100,
+            true,
+        ));
+        game.resolve_ability_damage_to_entity(
+            0,
+            "demo.ability.daemon-hellish-flame",
+            DamageType::HellFire,
+            100,
+            ProjectileTrace {
+                origin: game.player.position,
+                impact: target,
+                landing: target,
+                traversed: vec![target],
+            },
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("hell fire damage should resolve");
+        1_000 - game.entities[0].hp
+    }
+    assert_eq!(resolved_damage("demo.actor.small-kobold"), 100);
+    assert_eq!(resolved_damage("demo.actor.angel"), 200);
+
+    let mut game = daemon_high_mage_game(0x4845_4c4c_4241_4c4c, 11);
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    let target = Position {
+        x: game.player.position.x + 2,
+        y: game.player.position.y,
+    };
+    game.entities.push(actor_from_runtime_spawn(
+        "test.hellish-flame-angel",
+        "demo.actor.angel",
+        target,
+        1_000,
+        100,
+        100,
+        true,
+    ));
+    give_inventory_item(&mut game, "test.cursed-dagger", "demo.item.dagger");
+    let cursed = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.cursed-dagger")
+        .expect("cursed test item should exist");
+    cursed.curse = Some(ItemCurseSeverityDto::Normal);
+    cursed.location = ItemLocation::Ground(target);
+    game.resolve_player_ability(
+        "demo.ability.daemon-hellish-flame",
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Hellish Flame should resolve");
+    assert!((52..=82).contains(&(1_000 - game.entities[0].hp)));
+    assert!(
+        !game
+            .items
+            .iter()
+            .any(|item| item.id == "test.cursed-dagger")
+    );
+
+    let mut cancelled = daemon_high_mage_game(0x4845_4c4c_4341_4e43, 11);
+    let mana_before = cancelled.resources["demo.resource.mana"].current;
+    let draws_before = cancelled.rng_draw_counter();
+    cancelled
+        .resolve_player_ability(
+            "demo.ability.daemon-hellish-flame",
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("a cancelled Hellish Flame target should be rejected cleanly");
+    assert_eq!(
+        cancelled.resources["demo.resource.mana"].current,
+        mana_before
+    );
+    assert_eq!(cancelled.rng_draw_counter(), draws_before);
 }
 
 #[test]

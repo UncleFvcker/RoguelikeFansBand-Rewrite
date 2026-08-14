@@ -609,6 +609,8 @@ impl Game {
                                 u8::try_from(index)
                                     .expect("validated ability effect index must fit u8"),
                                 effect,
+                                self.progress.level,
+                                self.casting_spell_damage_bonus(),
                             )
                         })
                         .collect(),

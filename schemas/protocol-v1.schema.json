@@ -976,6 +976,94 @@
         {
           "type": "object",
           "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "escapedEntityIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "explodedEntityIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "explode-pets"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "explodedEntityIds",
+            "escapedEntityIds"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "consumed": {
+              "type": "boolean"
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "sacrifice-corpse"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "itemId",
+            "consumed"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "damage": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "fatal": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "self-damage"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "damage",
+            "fatal"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "change": {
               "$ref": "#/$defs/AbilityStatusChangeDto"
             },
@@ -3126,6 +3214,46 @@
         {
           "type": "object",
           "properties": {
+            "count": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "deviation": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "stardust"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "count",
+            "deviation"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "areaFromLevel": {
               "type": "integer",
               "format": "uint16",
@@ -3343,6 +3471,16 @@
               "default": 0,
               "maximum": 65535,
               "minimum": 0
+            },
+            "stopAtActor": {
+              "type": "boolean",
+              "default": false
+            },
+            "targetCategory": {
+              "type": [
+                "string",
+                "null"
+              ]
             },
             "type": {
               "type": "string",
@@ -4241,6 +4379,365 @@
             "entActorKindId",
             "radius",
             "durationTurns"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "demon-summoning"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "angel-summoning"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "banish-evil"
+            }
+          },
+          "required": [
+            "type",
+            "power"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "damage": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "maximumCount": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "minimumCount": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "wrath-of-god"
+            }
+          },
+          "required": [
+            "type",
+            "damage",
+            "radius",
+            "minimumCount",
+            "maximumCount"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "adjacentDamage": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "controlPower": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "healing": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "stunDurationTicks": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "divine-intervention"
+            },
+            "visibleDamage": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            }
+          },
+          "required": [
+            "type",
+            "adjacentDamage",
+            "visibleDamage",
+            "healing",
+            "controlPower",
+            "stunDurationTicks"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "charmPower": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "summonAttempts": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "crusade"
+            }
+          },
+          "required": [
+            "type",
+            "charmPower",
+            "summonAttempts"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "controlPower": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageBonus": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "insanity-circle"
+            }
+          },
+          "required": [
+            "type",
+            "damageBonus",
+            "controlPower",
+            "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "explode-pets"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "corpseItemKindId": {
+              "type": "string"
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "summon-greater-demon"
+            }
+          },
+          "required": [
+            "type",
+            "corpseItemKindId",
+            "radius"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "backlashBonus": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "backlashDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "backlashSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageBonus": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "hellfire"
+            }
+          },
+          "required": [
+            "type",
+            "damageBonus",
+            "radius",
+            "backlashDice",
+            "backlashSides",
+            "backlashBonus"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "damageBonus": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "damageSides": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "finalDamageSpellPowerBonus": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "int32"
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "lava-flow"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "damageBonus",
+            "radius",
+            "targetTerrainId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "doom-hand"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "radius": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "sanctuary"
+            }
+          },
+          "required": [
+            "type",
+            "power",
+            "radius"
           ]
         },
         {
@@ -5200,6 +5697,17 @@
         {
           "type": "object",
           "properties": {
+            "durationDice": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "durationSides": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
             "durationTicks": {
               "type": "integer",
               "format": "uint32",
@@ -5252,6 +5760,8 @@
             "statusKindId",
             "intensity",
             "durationTicks",
+            "durationDice",
+            "durationSides",
             "stacking"
           ]
         },

@@ -721,7 +721,7 @@ fn validate_character_source(
         || !(-100..=100).contains(&source.modifiers.speed)
         || attribute_modifiers_out_of_range(source.modifiers)
         || !(25..=400).contains(&source.life_percent)
-        || !(25..=500).contains(&source.experience_percent)
+        || !(25..=2_000).contains(&source.experience_percent)
         || !(-1_000..=1_000).contains(&source.base_hp)
     {
         return Err(ContentError::InvalidCharacterSource(owner_id.to_owned()));

@@ -1,0 +1,1 @@
+{"$schema":"https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/player-ability-binding.schema.json","formatVersion":1,"abilityId":"demo.ability.crusade-holy-blade","minimumLevel":28,"resourceId":"demo.resource.mana","resourceCost":65,"baseFailurePercent":80,"firstSuccessExperience":100}

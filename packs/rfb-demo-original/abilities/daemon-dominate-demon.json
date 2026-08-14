@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.daemon-dominate-demon",
+  "nameKey": "ability-demo-daemon-dominate-demon-name",
+  "descriptionKey": "ability-demo-daemon-dominate-demon-description",
+  "target": { "modes": ["position", "entity"], "range": 8, "requiresLineOfEffect": true },
+  "abilityProgramId": "demo.ability-program.daemon-dominate-demon",
+  "levelScaling": [
+    { "effectIndex": 0, "field": "control-power", "levelOffset": 1, "multiplier": 2, "divisor": 1 }
+  ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "control-power" }
+  ],
+  "tags": ["control", "daemon", "demon", "spell"]
+}

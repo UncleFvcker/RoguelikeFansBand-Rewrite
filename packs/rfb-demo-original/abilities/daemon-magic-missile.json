@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.daemon-magic-missile",
+  "nameKey": "ability-demo-daemon-magic-missile-name",
+  "descriptionKey": "ability-demo-daemon-magic-missile-description",
+  "abilityProgramId": "demo.ability-program.daemon-magic-missile",
+  "target": { "modes": ["direction"], "range": 8, "requiresLineOfEffect": true },
+  "levelScaling": [
+    { "effectIndex": 0, "field": "damage-dice", "levelOffset": 1, "multiplier": 1, "divisor": 5 }
+  ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "final-damage" }
+  ],
+  "tags": ["beam", "bolt", "daemon", "missile", "spell"]
+}

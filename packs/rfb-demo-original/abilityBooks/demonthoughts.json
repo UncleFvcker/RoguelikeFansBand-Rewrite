@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-book.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability-book.demonthoughts",
+  "nameKey": "ability-book-demo-demonthoughts-name",
+  "descriptionKey": "ability-book-demo-demonthoughts-description",
+  "realmId": "daemon",
+  "rank": 3,
+  "abilityIds": [
+    "demo.ability.daemon-devilish-eye",
+    "demo.ability.daemon-devilish-cloak",
+    "demo.ability.daemon-flow-of-lava",
+    "demo.ability.daemon-plasma-ball",
+    "demo.ability.daemon-polymorph-demon",
+    "demo.ability.daemon-nether-wave",
+    "demo.ability.daemon-kiss-of-succubus",
+    "demo.ability.daemon-doom-hand"
+  ],
+  "tags": ["daemon", "spellbook"]
+}

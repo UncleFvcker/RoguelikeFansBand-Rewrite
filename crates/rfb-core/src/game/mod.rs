@@ -21,14 +21,15 @@ use crate::{
     effect::{
         DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_ANTI_MAGIC,
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
-        STATUS_CONFUSION, STATUS_DEVICE_MASTERY, STATUS_FEAR, STATUS_GIANT_STRENGTH,
-        STATUS_HALLUCINATION, STATUS_HASTE, STATUS_HOLD_LIFE, STATUS_INVENTORY_PROTECTION,
-        STATUS_INVULNERABILITY, STATUS_LEVITATION, STATUS_NO_AIR, STATUS_PARALYSIS,
-        STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION,
-        STATUS_SEE_INVISIBLE, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
-        STATUS_SUSTAIN_CHARISMA, STATUS_SUSTAIN_CONSTITUTION, STATUS_SUSTAIN_DEXTERITY,
-        STATUS_SUSTAIN_INTELLIGENCE, STATUS_SUSTAIN_STRENGTH, STATUS_SUSTAIN_WISDOM,
-        STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TRANSCENDENCE, STATUS_TSUYOSHI,
+        STATUS_CONFUSION, STATUS_DEMON_LORD_TRANSFORMATION, STATUS_DEVICE_MASTERY, STATUS_FEAR,
+        STATUS_FIRE_AURA, STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE,
+        STATUS_HOLD_LIFE, STATUS_HOLY_AURA, STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY,
+        STATUS_LEVITATION, STATUS_NO_AIR, STATUS_PARALYSIS, STATUS_PLAYER_POLYMORPH, STATUS_POISON,
+        STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT,
+        STATUS_SLEEP, STATUS_SLOW, STATUS_STUN, STATUS_SUSTAIN_CHARISMA,
+        STATUS_SUSTAIN_CONSTITUTION, STATUS_SUSTAIN_DEXTERITY, STATUS_SUSTAIN_INTELLIGENCE,
+        STATUS_SUSTAIN_STRENGTH, STATUS_SUSTAIN_WISDOM, STATUS_TELEPATHY,
+        STATUS_THERMAL_RESISTANCE, STATUS_TRANSCENDENCE, STATUS_TSUYOSHI,
         STATUS_ULTIMATE_RESISTANCE, STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE,
         STATUS_WRAITHFORM, StatusApplication, StatusChange, StatusInstance, StatusStacking,
         apply_effect, apply_status, resolve_damage,
@@ -160,6 +161,8 @@ mod virtues;
 mod weapon_proficiency;
 mod wilderness;
 mod world;
+
+const CRUSADE_ARREST_ABILITY_ID: &str = "demo.ability.crusade-arrest";
 
 const HUMAN_STR_MUTATION_ID: &str = "rfb.mutation.human-str";
 const HUMAN_INT_MUTATION_ID: &str = "rfb.mutation.human-int";
@@ -4111,7 +4114,17 @@ impl Game {
         radius: u8,
         target_category: Option<&str>,
     ) -> (Vec<Position>, Vec<(String, u32)>) {
-        let cells = self.area_damage_cells(center, radius);
+        self.area_damage_targets_for_type(center, radius, target_category, DamageType::Physical)
+    }
+
+    fn area_damage_targets_for_type(
+        &self,
+        center: Position,
+        radius: u8,
+        target_category: Option<&str>,
+        damage_type: DamageType,
+    ) -> (Vec<Position>, Vec<(String, u32)>) {
+        let cells = self.area_damage_cells_for_type(center, radius, damage_type);
         let affected_positions = cells.iter().map(|(_, position)| *position).collect();
         let targets = cells
             .iter()
@@ -4136,6 +4149,15 @@ impl Game {
     }
 
     fn area_damage_cells(&self, center: Position, radius: u8) -> Vec<(u32, Position)> {
+        self.area_damage_cells_for_type(center, radius, DamageType::Physical)
+    }
+
+    fn area_damage_cells_for_type(
+        &self,
+        center: Position,
+        radius: u8,
+        damage_type: DamageType,
+    ) -> Vec<(u32, Position)> {
         let mut cells = Vec::new();
         let radius_limit = u32::from(radius);
         let radius = i32::from(radius);
@@ -4144,9 +4166,13 @@ impl Game {
                 let position = Position { x, y };
                 let distance = rfb_distance(center, position);
                 if distance > radius_limit
-                    || !self
-                        .index(position)
-                        .is_some_and(|_| has_line_of_effect(self, center, position))
+                    || !self.index(position).is_some_and(|_| {
+                        if damage_type == DamageType::Disintegrate {
+                            has_disintegration_line_of_effect(self, center, position)
+                        } else {
+                            has_line_of_effect(self, center, position)
+                        }
+                    })
                 {
                     continue;
                 }
@@ -6876,8 +6902,10 @@ fn apply_ability_level_scaling(
             AbilityEffectDefinition::Damage { damage_dice, .. }
             | AbilityEffectDefinition::Malediction { damage_dice, .. }
             | AbilityEffectDefinition::AreaDamage { damage_dice, .. }
+            | AbilityEffectDefinition::LavaFlow { damage_dice, .. }
             | AbilityEffectDefinition::BeamDamage { damage_dice, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_dice, .. }
+            | AbilityEffectDefinition::Stardust { damage_dice, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { damage_dice, .. }
             | AbilityEffectDefinition::ConeDamage { damage_dice, .. }
             | AbilityEffectDefinition::CurseDamage { damage_dice, .. }
@@ -6896,6 +6924,7 @@ fn apply_ability_level_scaling(
             AbilityEffectDefinition::Damage { damage_sides, .. }
             | AbilityEffectDefinition::Malediction { damage_sides, .. }
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
+            | AbilityEffectDefinition::LavaFlow { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::LightArea { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
@@ -6917,6 +6946,9 @@ fn apply_ability_level_scaling(
             AbilityEffectDefinition::Damage { damage_bonus, .. }
             | AbilityEffectDefinition::Malediction { damage_bonus, .. }
             | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::LavaFlow { damage_bonus, .. }
+            | AbilityEffectDefinition::InsanityCircle { damage_bonus, .. }
+            | AbilityEffectDefinition::Hellfire { damage_bonus, .. }
             | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { damage_bonus, .. }
@@ -6986,6 +7018,9 @@ fn apply_ability_level_scaling(
         }
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::LavaFlow { radius, .. }
+            | AbilityEffectDefinition::InsanityCircle { radius, .. }
+            | AbilityEffectDefinition::Hellfire { radius, .. }
             | AbilityEffectDefinition::LightArea { radius, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
             | AbilityEffectDefinition::ConeDamage { radius, .. }
@@ -7035,7 +7070,8 @@ fn apply_ability_level_scaling(
             .expect("validated level-scaled status duration must fit u32");
         }
         (
-            AbilityEffectDefinition::ApplyStatus { duration_sides, .. },
+            AbilityEffectDefinition::ApplyStatus { duration_sides, .. }
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_sides, .. },
             AbilityLevelScalingField::StatusDurationSides,
         ) => {
             *duration_sides = u32::try_from(scaled_ability_level_value(
@@ -7066,12 +7102,17 @@ fn apply_ability_level_scaling(
             | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
             }
+            | AbilityEffectDefinition::Sanctuary { power, .. }
             | AbilityEffectDefinition::Entangle { power, .. }
             | AbilityEffectDefinition::TurnUndead { power },
             AbilityLevelScalingField::StatusPower,
         )
         | (
-            AbilityEffectDefinition::Control { power, .. },
+            AbilityEffectDefinition::Control { power, .. }
+            | AbilityEffectDefinition::InsanityCircle {
+                control_power: power,
+                ..
+            },
             AbilityLevelScalingField::ControlPower,
         )
         | (
@@ -7198,9 +7239,17 @@ fn apply_ability_spell_power(
     let scaled = |value| spell_power_value(value, bonus);
     match (effect, definition.field) {
         (
+            AbilityEffectDefinition::Stardust { damage_dice, .. },
+            AbilitySpellPowerField::DamageDice,
+        ) => {
+            *damage_dice = u16::try_from(scaled(u64::from(*damage_dice)))
+                .expect("spell-powered damage dice must fit u16");
+        }
+        (
             AbilityEffectDefinition::Damage { damage_sides, .. }
             | AbilityEffectDefinition::Malediction { damage_sides, .. }
             | AbilityEffectDefinition::AreaDamage { damage_sides, .. }
+            | AbilityEffectDefinition::LavaFlow { damage_sides, .. }
             | AbilityEffectDefinition::BeamDamage { damage_sides, .. }
             | AbilityEffectDefinition::LightArea { damage_sides, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_sides, .. }
@@ -7225,6 +7274,9 @@ fn apply_ability_spell_power(
             AbilityEffectDefinition::Damage { damage_bonus, .. }
             | AbilityEffectDefinition::Malediction { damage_bonus, .. }
             | AbilityEffectDefinition::AreaDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::LavaFlow { damage_bonus, .. }
+            | AbilityEffectDefinition::InsanityCircle { damage_bonus, .. }
+            | AbilityEffectDefinition::Hellfire { damage_bonus, .. }
             | AbilityEffectDefinition::BeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { damage_bonus, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { damage_bonus, .. }
@@ -7238,6 +7290,9 @@ fn apply_ability_spell_power(
         }
         (
             AbilityEffectDefinition::AreaDamage { radius, .. }
+            | AbilityEffectDefinition::LavaFlow { radius, .. }
+            | AbilityEffectDefinition::InsanityCircle { radius, .. }
+            | AbilityEffectDefinition::Hellfire { radius, .. }
             | AbilityEffectDefinition::LightArea { radius, .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { radius, .. }
             | AbilityEffectDefinition::ConeDamage { radius, .. }
@@ -7261,7 +7316,8 @@ fn apply_ability_spell_power(
                 .expect("spell-powered status duration must fit u32");
         }
         (
-            AbilityEffectDefinition::ApplyStatus { duration_sides, .. },
+            AbilityEffectDefinition::ApplyStatus { duration_sides, .. }
+            | AbilityEffectDefinition::VisibleApplyStatus { duration_sides, .. },
             AbilitySpellPowerField::StatusDurationSides,
         ) => {
             *duration_sides = u32::try_from(scaled(u64::from(*duration_sides)))
@@ -7279,11 +7335,25 @@ fn apply_ability_spell_power(
         )
         | (AbilityEffectDefinition::Control { power, .. }, AbilitySpellPowerField::ControlPower)
         | (
+            AbilityEffectDefinition::InsanityCircle {
+                control_power: power,
+                ..
+            },
+            AbilitySpellPowerField::ControlPower,
+        )
+        | (
             AbilityEffectDefinition::Genocide { power, .. },
             AbilitySpellPowerField::GenocidePower,
         ) => {
             *power = u16::try_from(scaled(u64::from(*power)))
                 .expect("spell-powered effect power must fit u16");
+        }
+        (
+            AbilityEffectDefinition::SummonCategory { maximum_level, .. },
+            AbilitySpellPowerField::SummonMaximumLevel,
+        ) => {
+            *maximum_level = u16::try_from(scaled(u64::from(*maximum_level)))
+                .expect("spell-powered summon maximum level must fit u16");
         }
         (
             AbilityEffectDefinition::IdentifyItem {
@@ -7502,6 +7572,17 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             beam_chance_percent: *beam_chance_percent,
             final_damage_spell_power_bonus: None,
         },
+        AbilityEffectDefinition::Stardust {
+            damage_dice,
+            damage_sides,
+            count,
+            deviation,
+        } => AbilityEffectSpecDto::Stardust {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            count: *count,
+            deviation: *deviation,
+        },
         AbilityEffectDefinition::BoltOrAreaDamage {
             damage_dice,
             damage_sides,
@@ -7562,9 +7643,13 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
         AbilityEffectDefinition::TeleportAway {
             minimum_distance,
             power,
+            stop_at_actor,
+            target_category,
         } => AbilityEffectSpecDto::TeleportAway {
             minimum_distance: *minimum_distance,
             power: *power,
+            stop_at_actor: *stop_at_actor,
+            target_category: target_category.clone(),
         },
         AbilityEffectDefinition::RechargeFromPlayer { power } => {
             AbilityEffectSpecDto::RechargeFromPlayer { power: *power }
@@ -7798,6 +7883,75 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             ent_actor_kind_id: ent_actor_kind_id.clone(),
             radius: *radius,
             duration_turns: *duration_turns,
+        },
+        AbilityEffectDefinition::DemonSummoning => AbilityEffectSpecDto::DemonSummoning,
+        AbilityEffectDefinition::AngelSummoning => AbilityEffectSpecDto::AngelSummoning,
+        AbilityEffectDefinition::BanishEvil => AbilityEffectSpecDto::BanishEvil { power: 0 },
+        AbilityEffectDefinition::WrathOfGod => AbilityEffectSpecDto::WrathOfGod {
+            damage: 0,
+            radius: 2,
+            minimum_count: 11,
+            maximum_count: 20,
+        },
+        AbilityEffectDefinition::DivineIntervention => AbilityEffectSpecDto::DivineIntervention {
+            adjacent_damage: 0,
+            visible_damage: 0,
+            healing: 0,
+            control_power: 0,
+            stun_duration_ticks: 0,
+        },
+        AbilityEffectDefinition::Crusade => AbilityEffectSpecDto::Crusade {
+            charm_power: 0,
+            summon_attempts: 12,
+        },
+        AbilityEffectDefinition::InsanityCircle {
+            damage_bonus,
+            control_power,
+            radius,
+        } => AbilityEffectSpecDto::InsanityCircle {
+            damage_bonus: *damage_bonus,
+            control_power: *control_power,
+            radius: *radius,
+        },
+        AbilityEffectDefinition::ExplodePets => AbilityEffectSpecDto::ExplodePets,
+        AbilityEffectDefinition::SummonGreaterDemon {
+            corpse_item_kind_id,
+            radius,
+        } => AbilityEffectSpecDto::SummonGreaterDemon {
+            corpse_item_kind_id: corpse_item_kind_id.clone(),
+            radius: *radius,
+        },
+        AbilityEffectDefinition::Hellfire {
+            damage_bonus,
+            radius,
+            backlash_dice,
+            backlash_sides,
+            backlash_bonus,
+        } => AbilityEffectSpecDto::Hellfire {
+            damage_bonus: *damage_bonus,
+            radius: *radius,
+            backlash_dice: *backlash_dice,
+            backlash_sides: *backlash_sides,
+            backlash_bonus: *backlash_bonus,
+        },
+        AbilityEffectDefinition::LavaFlow {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            radius,
+            target_terrain_id,
+        } => AbilityEffectSpecDto::LavaFlow {
+            damage_dice: *damage_dice,
+            damage_sides: *damage_sides,
+            damage_bonus: *damage_bonus,
+            radius: *radius,
+            target_terrain_id: target_terrain_id.clone(),
+            final_damage_spell_power_bonus: None,
+        },
+        AbilityEffectDefinition::DoomHand => AbilityEffectSpecDto::DoomHand,
+        AbilityEffectDefinition::Sanctuary { power, radius } => AbilityEffectSpecDto::Sanctuary {
+            power: *power,
+            radius: *radius,
         },
         AbilityEffectDefinition::Detect {
             subject,
@@ -8049,6 +8203,8 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             status_kind_id,
             intensity,
             duration_ticks,
+            duration_dice,
+            duration_sides,
             stacking,
             resistance_type,
             power,
@@ -8057,6 +8213,8 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             status_kind_id: status_kind_id.clone(),
             intensity: *intensity,
             duration_ticks: *duration_ticks,
+            duration_dice: *duration_dice,
+            duration_sides: *duration_sides,
             stacking: ability_status_stacking_dto(*stacking),
             resistance_type: resistance_type.map(DamageType::from).map(Into::into),
             power: *power,
@@ -8078,6 +8236,8 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
                 },
                 intensity: 1,
                 duration_ticks: if *stasis { 20 } else { 500 },
+                duration_dice: 0,
+                duration_sides: 0,
                 stacking: if *stasis {
                     AbilityStatusStackingDto::Extend
                 } else {
@@ -8135,8 +8295,65 @@ fn player_ability_effect_spec_dto(
     ability: &AbilityDefinition,
     effect_index: u8,
     effect: &AbilityEffectDefinition,
+    level: u16,
+    spell_damage_bonus: u16,
 ) -> AbilityEffectSpecDto {
     let mut spec = ability_effect_spec_dto(effect);
+    match &mut spec {
+        AbilityEffectSpecDto::BanishEvil { power } => {
+            *power =
+                spell_power_value(100, ability.spell_power_bonus).min(u64::from(u16::MAX)) as u16;
+        }
+        AbilityEffectSpecDto::WrathOfGod { damage, .. } => {
+            let raw = level
+                .saturating_mul(3)
+                .saturating_add(25)
+                .saturating_add(spell_damage_bonus);
+            *damage = spell_power_value(u64::from(raw), ability.spell_power_bonus)
+                .min(u64::from(u16::MAX)) as u16;
+        }
+        AbilityEffectSpecDto::DivineIntervention {
+            adjacent_damage,
+            visible_damage,
+            healing,
+            control_power,
+            stun_duration_ticks,
+        } => {
+            *adjacent_damage = spell_power_value(
+                u64::from(level.saturating_mul(11)),
+                ability.spell_power_bonus,
+            )
+            .min(u64::from(u16::MAX)) as u16;
+            *visible_damage = spell_power_value(
+                u64::from(level.saturating_mul(4).saturating_add(spell_damage_bonus)),
+                ability.spell_power_bonus,
+            )
+            .min(u64::from(u16::MAX)) as u16;
+            *healing =
+                spell_power_value(100, ability.spell_power_bonus).min(u64::from(u16::MAX)) as u16;
+            *control_power = spell_power_value(
+                u64::from(level.saturating_mul(4)),
+                ability.spell_power_bonus,
+            )
+            .min(u64::from(u16::MAX)) as u16;
+            *stun_duration_ticks = u32::from(5_u16.saturating_add(level / 5));
+        }
+        AbilityEffectSpecDto::Crusade { charm_power, .. } => {
+            *charm_power = level.saturating_mul(4);
+        }
+        _ => {}
+    }
+    if ability.id == CRUSADE_ARREST_ABILITY_ID
+        && let AbilityEffectSpecDto::ApplyStatus {
+            power: Some(power), ..
+        } = &mut spec
+    {
+        *power = u16::try_from(spell_power_value(
+            u64::from(*power),
+            ability.spell_power_bonus,
+        ))
+        .expect("validated Arrest display power must fit u16");
+    }
     if ability.spell_power_bonus == 0 {
         return spec;
     }
@@ -8148,6 +8365,10 @@ fn player_ability_effect_spec_dto(
                 ..
             }
             | AbilityEffectSpecDto::AreaDamage {
+                final_damage_spell_power_bonus,
+                ..
+            }
+            | AbilityEffectSpecDto::LavaFlow {
                 final_damage_spell_power_bonus,
                 ..
             }
@@ -8179,6 +8400,49 @@ fn player_ability_effect_spec_dto(
                 final_damage_spell_power_bonus,
                 ..
             } => *final_damage_spell_power_bonus = bonus,
+            AbilityEffectSpecDto::RandomChoice { branches, .. } => {
+                for branch in branches {
+                    match branch.effect.as_mut() {
+                        AbilityEffectSpecDto::Damage {
+                            final_damage_spell_power_bonus,
+                            ..
+                        }
+                        | AbilityEffectSpecDto::AreaDamage {
+                            final_damage_spell_power_bonus,
+                            ..
+                        }
+                        | AbilityEffectSpecDto::BeamDamage {
+                            final_damage_spell_power_bonus,
+                            ..
+                        }
+                        | AbilityEffectSpecDto::LightArea {
+                            final_damage_spell_power_bonus,
+                            ..
+                        }
+                        | AbilityEffectSpecDto::BoltOrBeamDamage {
+                            final_damage_spell_power_bonus,
+                            ..
+                        }
+                        | AbilityEffectSpecDto::BoltOrAreaDamage {
+                            final_damage_spell_power_bonus,
+                            ..
+                        }
+                        | AbilityEffectSpecDto::ConeDamage {
+                            final_damage_spell_power_bonus,
+                            ..
+                        }
+                        | AbilityEffectSpecDto::DrainLife {
+                            final_damage_spell_power_bonus,
+                            ..
+                        }
+                        | AbilityEffectSpecDto::VisibleDamage {
+                            final_damage_spell_power_bonus,
+                            ..
+                        } => *final_damage_spell_power_bonus = bonus,
+                        _ => unreachable!("validated random damage branch must project damage"),
+                    }
+                }
+            }
             _ => unreachable!("validated final damage marker must project a damage effect"),
         }
     }

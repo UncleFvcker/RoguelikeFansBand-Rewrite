@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "demo.ability.crusade-star-dust",
+  "nameKey": "ability-demo-crusade-star-dust-name",
+  "descriptionKey": "ability-demo-crusade-star-dust-description",
+  "abilityProgramId": "demo.ability-program.crusade-star-dust",
+  "target": { "modes": ["direction"], "range": 20, "requiresLineOfEffect": true },
+  "levelScaling": [
+    { "effectIndex": 0, "field": "damage-dice", "levelOffset": 1, "multiplier": 1, "divisor": 9 }
+  ],
+  "spellPowerFields": [
+    { "effectIndex": 0, "field": "damage-dice" }
+  ],
+  "tags": ["crusade", "light", "spell"]
+}

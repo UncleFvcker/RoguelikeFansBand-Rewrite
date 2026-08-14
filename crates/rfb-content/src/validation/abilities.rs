@@ -24,7 +24,12 @@ fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
         | AbilityEffectDefinition::BeamDamage { .. }
         | AbilityEffectDefinition::BoltOrBeamDamage { .. }
         | AbilityEffectDefinition::BoltOrAreaDamage { .. }
-        | AbilityEffectDefinition::ConeDamage { .. } => true,
+        | AbilityEffectDefinition::ConeDamage { .. }
+        | AbilityEffectDefinition::LavaFlow { .. }
+        | AbilityEffectDefinition::InsanityCircle { .. }
+        | AbilityEffectDefinition::ExplodePets
+        | AbilityEffectDefinition::Hellfire { .. }
+        | AbilityEffectDefinition::WrathOfGod => true,
         AbilityEffectDefinition::Sequence { effects } => {
             effects.iter().any(effect_can_affect_ground_items)
         }
@@ -174,8 +179,8 @@ pub(super) fn validate_abilities(
                     target_category,
                     ..
                 } => {
-                    (1..=100).contains(damage_dice)
-                        && (1..=10_000).contains(damage_sides)
+                    (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
+                        || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
                         && *damage_bonus <= 10_000
                         && (1..=16).contains(radius)
                         && target_category.as_ref().is_none_or(|category| {
@@ -188,6 +193,23 @@ pub(super) fn validate_abilities(
                                 })
                                 && actor_tag_values.contains(category)
                         })
+                }
+                AbilityEffectDefinition::LavaFlow {
+                    damage_dice,
+                    damage_sides,
+                    damage_bonus,
+                    radius,
+                    target_terrain_id,
+                } => {
+                    (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
+                        || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
+                        && *damage_bonus <= 10_000
+                        && (1..=16).contains(radius)
+                        && validate_id(target_terrain_id).is_ok()
+                }
+                AbilityEffectDefinition::DoomHand => true,
+                AbilityEffectDefinition::Sanctuary { power, radius } => {
+                    (1..=1_000).contains(power) && (1..=8).contains(radius)
                 }
                 AbilityEffectDefinition::JumpDamage {
                     damage_dice,
@@ -253,6 +275,17 @@ pub(super) fn validate_abilities(
                         && *beam_chance_percent <= 100
                         && (-100..=100).contains(beam_chance_modifier)
                 }
+                AbilityEffectDefinition::Stardust {
+                    damage_dice,
+                    damage_sides,
+                    count,
+                    deviation,
+                } => {
+                    (1..=100).contains(damage_dice)
+                        && (1..=10_000).contains(damage_sides)
+                        && (1..=32).contains(count)
+                        && (1..=20).contains(deviation)
+                }
                 AbilityEffectDefinition::BoltOrAreaDamage {
                     damage_dice,
                     damage_sides,
@@ -274,8 +307,8 @@ pub(super) fn validate_abilities(
                     radius,
                     ..
                 } => {
-                    (1..=100).contains(damage_dice)
-                        && (1..=10_000).contains(damage_sides)
+                    (((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides))
+                        || (*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0))
                         && *damage_bonus <= 10_000
                         && (1..=16).contains(radius)
                 }
@@ -314,7 +347,15 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::TeleportAway {
                     minimum_distance,
                     power,
-                } => (1..=64).contains(minimum_distance) && *power <= 1_000,
+                    target_category,
+                    ..
+                } => {
+                    (1..=64).contains(minimum_distance)
+                        && *power <= 1_000
+                        && target_category
+                            .as_ref()
+                            .is_none_or(|category| actor_tag_values.contains(category))
+                }
                 AbilityEffectDefinition::RechargeFromPlayer { power } => {
                     (1..=1_000).contains(power)
                         || (*power == 0
@@ -592,10 +633,10 @@ pub(super) fn validate_abilities(
                                 && *group_count_bonus == 0
                         } else {
                             (1..=8).contains(group_count_dice)
-                                && (1..=8).contains(group_count_sides)
+                                && (1..=16).contains(group_count_sides)
                                 && u16::from(*group_count_dice) * u16::from(*group_count_sides)
                                     + u16::from(*group_count_bonus)
-                                    <= 8
+                                    <= 16
                         }
                         && (1..=64).contains(radius)
                         && *duration_turns <= 10_000
@@ -614,6 +655,39 @@ pub(super) fn validate_abilities(
                         && validate_id(ent_actor_kind_id).is_ok()
                         && (1..=64).contains(radius)
                         && *duration_turns == 0
+                }
+                AbilityEffectDefinition::DemonSummoning
+                | AbilityEffectDefinition::AngelSummoning
+                | AbilityEffectDefinition::BanishEvil
+                | AbilityEffectDefinition::WrathOfGod
+                | AbilityEffectDefinition::DivineIntervention
+                | AbilityEffectDefinition::Crusade => true,
+                AbilityEffectDefinition::InsanityCircle {
+                    damage_bonus,
+                    control_power,
+                    radius,
+                } => {
+                    (1..=10_000).contains(damage_bonus)
+                        && (1..=1_000).contains(control_power)
+                        && (1..=16).contains(radius)
+                }
+                AbilityEffectDefinition::ExplodePets => true,
+                AbilityEffectDefinition::SummonGreaterDemon {
+                    corpse_item_kind_id,
+                    radius,
+                } => validate_id(corpse_item_kind_id).is_ok() && (1..=8).contains(radius),
+                AbilityEffectDefinition::Hellfire {
+                    damage_bonus,
+                    radius,
+                    backlash_dice,
+                    backlash_sides,
+                    backlash_bonus,
+                } => {
+                    (1..=10_000).contains(damage_bonus)
+                        && (1..=16).contains(radius)
+                        && (1..=100).contains(backlash_dice)
+                        && (1..=10_000).contains(backlash_sides)
+                        && *backlash_bonus <= 10_000
                 }
                 AbilityEffectDefinition::Detect {
                     subject,
@@ -881,6 +955,8 @@ pub(super) fn validate_abilities(
                     status_kind_id,
                     intensity,
                     duration_ticks,
+                    duration_dice,
+                    duration_sides,
                     power,
                     target_category,
                     ..
@@ -888,7 +964,18 @@ pub(super) fn validate_abilities(
                     validate_id(status_kind_id).is_ok()
                         && (1..=1_000).contains(intensity)
                         && (1..=1_000_000).contains(duration_ticks)
-                        && power.is_none_or(|power| (1..=1_000).contains(&power))
+                        && ((*duration_dice == 0 && *duration_sides == 0)
+                            || ((1..=100).contains(duration_dice)
+                                && ((1..=1_000_000).contains(duration_sides)
+                                    || (*duration_sides == 0
+                                        && has_level_scaling(
+                                            AbilityLevelScalingField::StatusDurationSides,
+                                        )))))
+                        && power.is_none_or(|power| {
+                            (1..=1_000).contains(&power)
+                                || (power == 0
+                                    && has_level_scaling(AbilityLevelScalingField::StatusPower))
+                        })
                         && target_category
                             .as_ref()
                             .is_none_or(|category| actor_tag_values.contains(category))
@@ -1004,6 +1091,7 @@ pub(super) fn validate_abilities(
                                                 | AbilityEffectDefinition::BeamDamage { .. }
                                                 | AbilityEffectDefinition::LightLine { .. }
                                                 | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                                                | AbilityEffectDefinition::ConeDamage { .. }
                                                 | AbilityEffectDefinition::ApplyStatus { .. }
                                                 | AbilityEffectDefinition::DrainLife { .. }
                                                 | AbilityEffectDefinition::Genocide { .. }
@@ -1036,6 +1124,13 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::BreathDamage { .. }
                 | AbilityEffectDefinition::Rodeo
                 | AbilityEffectDefinition::TerrainBeam { .. }
+        ) || matches!(
+            &ability.effect,
+            AbilityEffectDefinition::RandomChoice { branches, .. }
+                if branches.iter().any(|branch| matches!(
+                    branch.effect.as_ref(),
+                    AbilityEffectDefinition::ConeDamage { .. }
+                ))
         ) || matches!(
             &ability.effect,
             AbilityEffectDefinition::CreateAmmunition {
@@ -1072,6 +1167,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::LightLine { .. }
             | AbilityEffectDefinition::TerrainBeam { .. }
             | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+            | AbilityEffectDefinition::Stardust { .. }
             | AbilityEffectDefinition::BoltOrAreaDamage { .. }
             | AbilityEffectDefinition::ConeDamage { .. }
             | AbilityEffectDefinition::CurseDamage { .. }
@@ -1084,6 +1180,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::SniperShot { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
+            AbilityEffectDefinition::WrathOfGod => projectile_target_rule,
             AbilityEffectDefinition::TeleportLevel => self_target_rule || projectile_target_rule,
             AbilityEffectDefinition::DimensionDoor { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]
@@ -1121,6 +1218,13 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::AreaDamage { .. } => {
                 self_target_rule || projectile_target_rule
             }
+            AbilityEffectDefinition::LavaFlow { .. } => self_target_rule,
+            AbilityEffectDefinition::InsanityCircle { .. }
+            | AbilityEffectDefinition::ExplodePets
+            | AbilityEffectDefinition::Sanctuary { .. } => self_target_rule,
+            AbilityEffectDefinition::SummonGreaterDemon { .. } => item_target_rule,
+            AbilityEffectDefinition::Hellfire { .. } => projectile_target_rule,
+            AbilityEffectDefinition::DoomHand => projectile_target_rule,
             AbilityEffectDefinition::JumpDamage { .. } => self_target_rule,
             AbilityEffectDefinition::Control { .. } => projectile_target_rule,
             AbilityEffectDefinition::Rodeo => projectile_target_rule && ability.target.range == 1,
@@ -1137,6 +1241,11 @@ pub(super) fn validate_abilities(
             AbilityEffectDefinition::Summon { .. }
             | AbilityEffectDefinition::SummonCategory { .. }
             | AbilityEffectDefinition::NatureGate { .. }
+            | AbilityEffectDefinition::DemonSummoning
+            | AbilityEffectDefinition::AngelSummoning
+            | AbilityEffectDefinition::BanishEvil
+            | AbilityEffectDefinition::DivineIntervention
+            | AbilityEffectDefinition::Crusade
             | AbilityEffectDefinition::AnimateDead { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::SelfTarget]
                     && ability.target.range == 0
@@ -1309,6 +1418,12 @@ pub(super) fn validate_abilities(
             if let AbilityEffectDefinition::BrandWeapon { affix_id, .. } = effect {
                 require_reference(affix_ids, affix_id, &ability.id)?;
             }
+            if let AbilityEffectDefinition::LavaFlow {
+                target_terrain_id, ..
+            } = effect
+            {
+                require_reference(terrain_ids, target_terrain_id, &ability.id)?;
+            }
             if let AbilityEffectDefinition::ApplyStatus {
                 granted_race_id: Some(race_id),
                 ..
@@ -1356,6 +1471,13 @@ pub(super) fn validate_abilities(
             } = effect
             {
                 require_actor_role(actor_roles, actor_kind_id, ActorRole::Monster, &ability.id)?;
+                ability_corpse_item_ids.push((ability.id.clone(), corpse_item_kind_id.clone()));
+            }
+            if let AbilityEffectDefinition::SummonGreaterDemon {
+                corpse_item_kind_id,
+                ..
+            } = effect
+            {
                 ability_corpse_item_ids.push((ability.id.clone(), corpse_item_kind_id.clone()));
             }
             if let AbilityEffectDefinition::CreateAmmunition { item_kind_ids, .. } = effect {
@@ -1474,6 +1596,7 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::AreaDamage { .. }
                 | AbilityEffectDefinition::BeamDamage { .. }
                 | AbilityEffectDefinition::BoltOrBeamDamage { .. }
+                | AbilityEffectDefinition::Stardust { .. }
                 | AbilityEffectDefinition::CurseDamage { .. }
                 | AbilityEffectDefinition::TeleportAway { .. }
                 | AbilityEffectDefinition::BirdDrop
@@ -1481,6 +1604,7 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::Amnesia
                 | AbilityEffectDefinition::TeleportLevel
                 | AbilityEffectDefinition::PolymorphTarget => projectile_target,
+                AbilityEffectDefinition::DoomHand => projectile_target,
                 AbilityEffectDefinition::DarkenRoom => room_target,
                 AbilityEffectDefinition::ConeDamage { .. }
                 | AbilityEffectDefinition::BreathDamage { .. } => {
@@ -1492,7 +1616,9 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::Summon { .. }
                 | AbilityEffectDefinition::SummonCategory { .. }
                 | AbilityEffectDefinition::JumpDamage { .. }
+                | AbilityEffectDefinition::Sanctuary { .. }
                 | AbilityEffectDefinition::NoOp { .. } => self_target,
+                AbilityEffectDefinition::LavaFlow { .. } => self_target,
                 AbilityEffectDefinition::ApplyStatus { .. }
                 | AbilityEffectDefinition::RemoveStatus { .. } => self_target || projectile_target,
                 AbilityEffectDefinition::BlinkSelf { .. }

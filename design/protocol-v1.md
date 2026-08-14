@@ -1,6 +1,6 @@
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.163、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.218、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -738,3 +738,38 @@ State Hash Schema v103；save 容器保持 v1，旧开发存档不兼容。
 同时为 `DungeonStateSaveDto` 增加必填 `suppressed`，持久化共享入口地牢的替代选择；该状态
 及合并后的状态增量进入 State Hash Schema v104，save header/payload schema 升至 v2，
 二进制容器格式仍为 v1；不为缺少新字段的旧开发存档提供兼容默认值。
+
+协议 1.212 为恶魔领域第二册增加无参数 `demon-summoning` 能力投影。该复合效果固定原版的
+`1/3` 敌对判定、动态召唤等级与 50 级友好群组边界；不增加命令或持久状态，State Hash
+Schema 保持 v104，save header/payload schema 保持 v2。
+
+协议 1.213 为恶魔领域第三册增加 `lava-flow` 与 `doom-hand` 能力投影，并允许
+`random-choice` 分支承载锥形伤害。前者在以施法者为中心造成火焰伤害后，用一次独立随机值
+决定深熔岩地形强度；后者保留唯一怪免疫、抗性检定与按当前生命百分比扣血。恶魔变形继续
+复用临时种族覆盖，火焰光环复用通用状态和接触反伤；不增加持久字段，State Hash Schema
+保持 v104，save header/payload schema 保持 v2。
+
+协议 1.214 为恶魔领域第四册增加 `insanity-circle`、`explode-pets`、
+`summon-greater-demon` 与 `hellfire` 能力投影，以及宠物爆炸、尸体献祭和玩家自伤的结构化
+结算。送入地狱复用单体灭绝，恶魔领主变形复用临时种族覆盖和穿墙状态；没有新增持久字段，
+State Hash Schema 保持 v104，save header/payload schema 保持 v2。
+
+协议 1.215 为圣战领域第一册增加 `stardust` 与 `sanctuary` 能力投影。前者固定十次独立散射、
+伤害掷骰、可反射光属性投射和命中网格照明；后者对半径 1 内怪物结算睡眠且不要求目标可见。
+其余六个法术复用既有投射、探测、状态清除、恐惧、传送和有序状态事务；没有新增持久字段，
+State Hash Schema 保持 v104，save header/payload schema 保持 v2。
+
+协议 1.216 为圣战领域第二册扩充既有瞬时效果投影：`teleport-away` 增加 `stopAtActor` 与可选
+`targetCategory`，用于表达半径 0 的邪恶目标定向传送；`visible-apply-status` 增加持续时间骰，
+用于表达驱魔的 `1+3d(level/2)` 恐惧。驱魔的两次视野伤害与圣言的伤害、治疗、状态清除仍使用
+有序效果事务；没有新增持久字段，State Hash Schema 保持 v104，save header/payload schema保持 v2。
+
+协议 1.217 为圣战领域第三册增加 `angel-summoning` 能力投影，固定 `1/3` 敌对、敌对群组、
+50 级友好群组和原始 `3*level/2` 召唤等级边界。拘捕继续投影为标准 `apply-status`，运行时保留面板
+spell power 与实际原始 power 的源码差异；天使斗篷复用通用状态，神圣之刃复用永久物品词缀。
+没有新增持久字段，State Hash Schema 保持 v104，save header/payload schema 保持 v2。
+
+协议 1.218 为圣战领域第四册增加 `banish-evil`、`wrath-of-god`、`divine-intervention` 与
+`crusade` 能力投影，分别公开驱逐强度、分解球伤害与数量、神圣干预的两段伤害/控制/治疗参数，
+以及圣战的魅惑强度和十二次召唤尝试。英雄气概、驱除诅咒、末日审判和以眼还眼继续复用既有
+投影；没有新增持久字段，State Hash Schema 保持 v104，save header/payload schema 保持 v2。

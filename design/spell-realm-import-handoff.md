@@ -13,17 +13,48 @@ Death 绑定到 `tval=100` 的内容已经过期，不能作为新导入的身�
 | 项目 | 当前值 |
 | --- | --- |
 | main 基线 | `1defe3183` |
-| 本分支法术实现 tip | `83541be2b`（完整 Life 第四册） |
-| demo pack | `1.347.0` |
-| content hash | `bf3d322ef4b1f2f0048b1a032276ecf12f025620b3401ac53e17f0f1465e06b7` |
-| Protocol | `1.211` |
+| 本分支法术实现基线 | `83541be2b`（完整 Life 第四册） |
+| 当前批次 | Crusade 四册完成 |
+| demo pack | `1.355.0` |
+| content hash | `a8f810c399fe5d9197500070cba8a6d7587bb64996d01ba88a4ca8bdb0390380` |
+| Protocol | `1.218` |
 | State Hash Schema | v104 |
 | save header / payload | v2 / v2 |
 | active contract baseline | `contract-v303` |
 
 `main@1defe3183` 已包含 Death、Arcane、Sorcery、Armageddon、Nature，以及 Life 前三册。
-`codex/items-next@83541be2b` 又完成了 Life 第四册，因此该分支目前有六个完整 High Mage 领域、
-24 本能力书和 192 个可学习法术。后续工作不得重做 Life 第四册；应先确认该提交是否已进入新的 main。
+`codex/items-next@83541be2b` 又完成了 Life 第四册；当前工作树继续完成了 Daemon 与 Crusade 四册，
+因此该分支目前有八个完整 High Mage 领域、32 本能力书和 256 个可学习法术。后续工作不得重做
+Life 第四册、Daemon 或 Crusade 领域；应先确认对应提交
+是否已进入新的 main。
+
+Daemon 第四册新增四个窄复合效果：`insanity-circle` 依次结算混沌、混乱与魅惑球；`explode-pets`
+按宠物实例顺序引爆并让独特宠物逃离；`summon-greater-demon` 只在召唤成功后消耗所选人形尸体；
+`hellfire` 在范围伤害后结算 `20+1d30` 生命反噬。送入地狱复用单体灭绝，提振士气与不朽之躯复用
+临时状态，恶魔领主形态复用临时种族覆盖和穿墙状态。该投影使 Protocol 升至 `1.214`；没有新增持久
+字段，State Hash Schema 与 save schema 均保持不变。
+
+Crusade 第一册新增两个窄效果：`stardust` 保留十次独立散射、独立伤害掷骰、光照网格和可反射投射；
+`sanctuary` 对半径 1 的怪物结算睡眠，不要求目标可见，并使用原始等级而非 spell power。该投影使
+Protocol 升至 `1.215`；没有新增持久字段，State Hash Schema 与 save schema 均保持不变。完整 32
+法术参数、源码差异和后续专用机制见 [`crusade-realm-audit.md`](crusade-realm-audit.md)。
+
+Crusade 第二册复用区域伤害、视野伤害、状态、治疗与诅咒清除，只扩充了既有 `teleport-away` 的
+遇怪停止/类别过滤，以及 `visible-apply-status` 的持续时间骰。神圣火焰按善良免疫、邪恶双倍、
+其余目标随机减伤结算；驱魔保留不死与恶魔两次独立伤害 RNG；圣言严格按伤害、治疗、清状态顺序。
+Protocol 升至 `1.216`；没有新增持久字段，State Hash Schema 与 save schema 均保持不变。
+
+Crusade 第三册复用地形射线、视野伤害、武器烙印与大型光球，只新增 `holy-aura` 通用状态和窄化的
+`angel-summoning` 投影。拘捕保留面板 `spell_power(2*level)`、实际原始 `2*level` 的源码差异；
+天使斗篷只对邪恶近战接触者反伤；神圣之刃永久赋予杀戮词缀与 `slay-evil`；召唤天使保留 `1/3`
+敌对、敌对允许群组、友好仅 50 级允许群组。Protocol 升至 `1.217`；没有新增持久字段，State Hash
+Schema 与 save schema 均保持不变。
+
+Crusade 第四册复用英雄、诅咒清除、区域毁灭与 Vengeance，只为无法由既有投影准确表达的驱逐邪恶、
+神之愤怒、神圣干预和圣战增加窄复合效果。神之愤怒保留 `10+1d10` 个分解球、半径 4 散射、20 次
+选点上限和永久墙阻挡；神圣干预严格按近身伤害、全屏伤害、减速、震慑、混乱、恐惧、冻结、治疗
+结算；圣战保留善良怪魅惑、失败者恐惧、十二次骑士群组召唤及四种玩家增益。Protocol 升至
+`1.218`；没有新增持久字段，State Hash Schema 与 save schema 均保持不变。
 
 ## 2. 唯一权威来源
 
@@ -65,19 +96,18 @@ git -C D:/codex/Frogcomposband grep -n "目标文本" master -- src localization
 | Trump | 5 | 95 | 520–523 | 未导入 |
 | Arcane | 6 | 96 | 524–527 | 完整 |
 | Craft | 7 | 97 | 528–531 | 未导入 |
-| Daemon | 8 | 98 | 532–535 | 未导入；原版 `m_info` 注释拼作 `Deamon` |
-| Crusade | 9 | 99 | 536–539 | 未导入 |
+| Daemon | 8 | 98 | 532–535 | 完整；原版 `m_info` 注释拼作 `Deamon` |
+| Crusade | 9 | 99 | 536–539 | 完整 |
 | Necromancy | 10 | 100 | 540–543 | High Mage 的 `R:10:0`，不得导入为 High Mage 领域 |
 | Armageddon | 11 | 101 | 544–547 | 完整 |
 
-五个待导入通用领域的四册权威身份是：
+三个未开始领域及已完成圣战领域的四册权威身份是：
 
 | Realm | 第一册 | 第二册 | 第三册 | 第四册 |
 | --- | --- | --- | --- | --- |
 | Chaos | Sign of Chaos／混沌的标志 | Chaos Mastery／混沌精通 | Chaos Channels／混沌通道 | Armageddon Tome／末日巨著 |
 | Trump | Conjurings & Tricks／戏法与把戏 | Deck of Many Things／万象无常牌 | Trumps of Doom／末日王牌 | Five Aces／五张王牌 |
 | Craft | Handbook for Pupils／学徒手册 | Grade Holder's Book／持阶者之书 | Note of Acting Master／代理宗师笔记 | Spiritual Enlightenment／灵性启迪 |
-| Daemon | Dark Incantations／黑暗咒语 | Immortal Rituals／不朽仪式 | Demonthoughts／恶魔之思 | Hellfire Tome／地狱火巨著 |
 | Crusade | Rites of Initiation／入会仪式 | Ways of War／战争之道 | Exorcism and Dispelling／驱魔与净除 | Wrath of God／神之怒 |
 
 不要因为 Chaos 第四册英文名含 `Armageddon`，就把它绑定到 Armageddon realm；物品身份始终由

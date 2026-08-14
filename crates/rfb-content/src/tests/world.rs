@@ -9292,7 +9292,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 330);
+    assert_eq!(base_items.entries.len(), 339);
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -9340,7 +9340,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 306);
+    assert_eq!(active_source_items.len(), 315);
 
     let source_items_without_allocations =
         BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
@@ -9354,7 +9354,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 296);
+    assert_eq!(expected_item_ids.len(), 305);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -9995,13 +9995,17 @@ fn bookstore_stocks_original_town_books() {
             "demo.item.book-of-elements",
             "demo.item.call-of-the-wild",
             "demo.item.cantrips-for-beginners",
+            "demo.item.dark-incantations",
             "demo.item.earth-wind-and-fire",
             "demo.item.high-mass",
+            "demo.item.immortal-rituals",
             "demo.item.major-arcana",
             "demo.item.manual-of-mastery",
             "demo.item.master-sorcerers-handbook",
             "demo.item.minor-arcana",
             "demo.item.nature-mastery",
+            "demo.item.rites-of-initiation",
+            "demo.item.ways-of-war",
         ])
     );
     let values = artifact
@@ -10020,6 +10024,7 @@ fn bookstore_stocks_original_town_books() {
     assert_eq!(values["demo.item.earth-wind-and-fire"], 1_000);
     assert_eq!(values["demo.item.minor-arcana"], 250);
     assert_eq!(values["demo.item.manual-of-mastery"], 2_500);
+    assert_eq!(values["demo.item.rites-of-initiation"], 100);
 }
 
 #[test]
@@ -10042,8 +10047,10 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
             .collect::<BTreeSet<_>>(),
         BTreeSet::from([
             "demo.item.black-channels",
+            "demo.item.blessings-of-the-grail",
             "demo.item.book-of-the-unicorn",
             "demo.item.day-of-ragnarok",
+            "demo.item.demonthoughts",
             "demo.item.disease-mushroom",
             "demo.item.necronomicon",
             "demo.item.natures-gifts",
@@ -10057,9 +10064,12 @@ fn black_market_stocks_original_non_town_books_and_priced_p3_consumables() {
             "demo.item.giant-strength-potion",
             "demo.item.great-clarity-potion",
             "demo.item.grimoire-of-power",
+            "demo.item.hellfire-tome",
+            "demo.item.wrath-of-god",
             "demo.item.understanding-scroll",
             "demo.item.inventory-protection-scroll",
             "demo.item.enlightenment-potion",
+            "demo.item.exorcism-and-dispelling",
             "demo.item.star-enlightenment-potion",
             "demo.item.self-knowledge-potion",
             "demo.item.experience-potion",
