@@ -146,6 +146,7 @@ impl Game {
                 break;
             }
             self.process_natural_hp_regeneration(resting);
+            self.process_fasting(events);
             self.process_minor_slow_recovery();
             if local_floor_active {
                 self.process_monster_regeneration();

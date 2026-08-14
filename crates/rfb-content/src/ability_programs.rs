@@ -245,6 +245,10 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::CallSunlight { .. }
                     | AbilityEffectDefinition::NatureWrath
                     | AbilityEffectDefinition::CreateAdjacentTerrain { .. }
+                    | AbilityEffectDefinition::CreateCurrentTerrain { .. }
+                    | AbilityEffectDefinition::RemoveEquippedCurses { .. }
+                    | AbilityEffectDefinition::BeginFasting
+                    | AbilityEffectDefinition::TurnUndead { .. }
                     | AbilityEffectDefinition::MeleeAdjacent
                     | AbilityEffectDefinition::ProbeMonsters
                     | AbilityEffectDefinition::Concentrate

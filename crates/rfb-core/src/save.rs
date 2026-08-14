@@ -715,6 +715,7 @@ pub(crate) fn player_to_save(
         hp: player.hp,
         gold: 0,
         nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
+        fasting: false,
         base_max_hp: player.max_hp,
         base_speed: player.speed,
         energy_need: player.energy_need,

@@ -774,6 +774,91 @@
               "maximum": 255,
               "minimum": 0
             },
+            "resolution": {
+              "$ref": "#/$defs/ItemCurseRemovalResolutionDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "remove-equipped-curses"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "resolution"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "nutritionAfter": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "nutritionBefore": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "begin-fasting"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "nutritionBefore",
+            "nutritionAfter"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "position": {
+              "$ref": "#/$defs/Position"
+            },
+            "terrainId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "create-current-terrain"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "position"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
             "targets": {
               "type": "array",
               "items": {
@@ -4194,6 +4279,29 @@
         {
           "type": "object",
           "properties": {
+            "sourceTerrainIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "create-current-terrain"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "operation": {
               "$ref": "#/$defs/AbilityTerrainBeamOperationDto"
             },
@@ -4829,6 +4937,53 @@
             "type",
             "dice",
             "sides"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "includeHeavy": {
+              "type": "boolean"
+            },
+            "type": {
+              "type": "string",
+              "const": "remove-equipped-curses"
+            }
+          },
+          "required": [
+            "type",
+            "includeHeavy"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "begin-fasting"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "power": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "turn-undead"
+            }
+          },
+          "required": [
+            "type",
+            "power"
           ]
         },
         {
@@ -10275,6 +10430,9 @@
             "wisdom": 0
           }
         },
+        "fasting": {
+          "type": "boolean"
+        },
         "gold": {
           "type": "integer",
           "format": "uint32",
@@ -10505,6 +10663,7 @@
         "position",
         "hp",
         "maxHp",
+        "fasting",
         "virtues"
       ]
     },

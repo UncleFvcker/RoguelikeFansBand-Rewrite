@@ -534,6 +534,19 @@ fn rescale_u32(current: u32, previous_maximum: u32, next_maximum: u32) -> u32 {
 }
 
 impl Game {
+    pub(super) fn restore_player_attribute(
+        &mut self,
+        attribute: AttributeKind,
+    ) -> AttributeMutationOutcome {
+        let previous_max_hp = self.effective_player_max_hp();
+        let previous_resource_maxima = self.player_resource_maxima();
+        let outcome = apply_attribute_restoration(&mut self.progress, attribute);
+        if outcome.changed {
+            self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
+        }
+        outcome
+    }
+
     pub(super) fn restore_player_life_force(
         &mut self,
         request: LifeForceRestorationRequest,

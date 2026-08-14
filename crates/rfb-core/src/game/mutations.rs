@@ -528,6 +528,9 @@ impl Game {
             MutationPeriodicEffectDefinition::Nausea => {
                 if self.rng.bounded(9_000) == 0 {
                     let before = self.nutrition_state();
+                    if NUTRITION_WEAK > self.nutrition {
+                        self.fasting = false;
+                    }
                     self.nutrition = NUTRITION_WEAK;
                     let after = self.nutrition_state();
                     if before != after {

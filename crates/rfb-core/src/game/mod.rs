@@ -217,7 +217,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 102;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 103;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -899,6 +899,7 @@ pub struct Game {
     items: Vec<ItemInstance>,
     gold: u32,
     nutrition: u16,
+    fasting: bool,
     gold_piles: Vec<GoldPile>,
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
     item_property_knowledge: BTreeMap<String, ItemPropertyKnowledgeState>,
@@ -1247,6 +1248,7 @@ impl Game {
             items,
             gold,
             nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
+            fasting: false,
             gold_piles: Vec::new(),
             item_knowledge: BTreeMap::new(),
             item_property_knowledge: BTreeMap::new(),
@@ -1503,6 +1505,11 @@ impl Game {
         };
         let unavailable_local_travel =
             matches!(&action, GameAction::TravelLocal { .. }) && local_travel_direction.is_none();
+        let zero_time_unavailable_ability = matches!(
+            &action,
+            GameAction::CastAbility { ability_id, .. }
+                if self.ability_state_unavailable_reason(ability_id).is_some()
+        );
         if let Some(direction) = local_travel_direction {
             action = GameAction::Move { direction };
         }
@@ -1525,6 +1532,7 @@ impl Game {
             && !unavailable_recharging_item
             && !unavailable_world_travel
             && !unavailable_local_travel
+            && !zero_time_unavailable_ability
             && !matches!(
                 &action,
                 GameAction::Retire
@@ -6885,7 +6893,8 @@ fn apply_ability_level_scaling(
             | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
             }
-            | AbilityEffectDefinition::Entangle { power, .. },
+            | AbilityEffectDefinition::Entangle { power, .. }
+            | AbilityEffectDefinition::TurnUndead { power },
             AbilityLevelScalingField::StatusPower,
         )
         | (
@@ -7649,6 +7658,13 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             source_terrain_ids: source_terrain_ids.clone(),
             target_terrain_id: target_terrain_id.clone(),
         },
+        AbilityEffectDefinition::CreateCurrentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+        } => AbilityEffectSpecDto::CreateCurrentTerrain {
+            source_terrain_ids: source_terrain_ids.clone(),
+            target_terrain_id: target_terrain_id.clone(),
+        },
         AbilityEffectDefinition::TerrainBeam { operation } => AbilityEffectSpecDto::TerrainBeam {
             operation: match operation {
                 AbilityTerrainBeamOperationDefinition::JamDoors => {
@@ -7810,6 +7826,15 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             sides: *sides,
             final_healing_spell_power_bonus: None,
         },
+        AbilityEffectDefinition::RemoveEquippedCurses { include_heavy } => {
+            AbilityEffectSpecDto::RemoveEquippedCurses {
+                include_heavy: *include_heavy,
+            }
+        }
+        AbilityEffectDefinition::BeginFasting => AbilityEffectSpecDto::BeginFasting,
+        AbilityEffectDefinition::TurnUndead { power } => {
+            AbilityEffectSpecDto::TurnUndead { power: *power }
+        }
         AbilityEffectDefinition::ReduceStatus {
             status_kind_id,
             amount,

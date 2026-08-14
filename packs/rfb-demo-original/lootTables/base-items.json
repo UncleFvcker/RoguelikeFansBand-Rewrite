@@ -1753,6 +1753,13 @@
       "maxDepth": 30
     },
     {
+      "itemKindId": "demo.item.high-mass",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 20,
+      "maxDepth": 50
+    },
+    {
       "itemKindId": "demo.item.call-of-the-wild",
       "weight": 100,
       "quantity": 1,

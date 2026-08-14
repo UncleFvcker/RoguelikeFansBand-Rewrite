@@ -280,7 +280,8 @@
       {
         "realmId": "life",
         "abilityBookIds": [
-          "demo.ability-book.book-of-common-prayer"
+          "demo.ability-book.book-of-common-prayer",
+          "demo.ability-book.high-mass"
         ],
         "learningCapacityBonus": 4,
         "abilityOverrides": [
@@ -291,7 +292,15 @@
           { "abilityId": "demo.ability.life-detect-doors-and-traps", "minimumLevel": 5, "resourceCost": 5, "baseFailurePercent": 25 },
           { "abilityId": "demo.ability.life-cure-medium-wounds", "minimumLevel": 6, "resourceCost": 5, "baseFailurePercent": 30 },
           { "abilityId": "demo.ability.life-cure-poison", "minimumLevel": 9, "resourceCost": 9, "baseFailurePercent": 30 },
-          { "abilityId": "demo.ability.life-satisfy-hunger", "minimumLevel": 12, "resourceCost": 10, "baseFailurePercent": 35 }
+          { "abilityId": "demo.ability.life-satisfy-hunger", "minimumLevel": 12, "resourceCost": 10, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.life-remove-curse", "minimumLevel": 14, "resourceCost": 12, "baseFailurePercent": 35 },
+          { "abilityId": "demo.ability.life-fasting", "minimumLevel": 15, "resourceCost": 14, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-cure-critical-wounds", "minimumLevel": 15, "resourceCost": 15, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-resist-heat-and-cold", "minimumLevel": 17, "resourceCost": 15, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-sense-surroundings", "minimumLevel": 19, "resourceCost": 17, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-turn-undead", "minimumLevel": 21, "resourceCost": 19, "baseFailurePercent": 40 },
+          { "abilityId": "demo.ability.life-healing", "minimumLevel": 25, "resourceCost": 25, "baseFailurePercent": 45 },
+          { "abilityId": "demo.ability.life-glyph-of-warding", "minimumLevel": 30, "resourceCost": 50, "baseFailurePercent": 55 }
         ]
       }
     ]

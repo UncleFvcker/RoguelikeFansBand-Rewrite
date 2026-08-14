@@ -1795,6 +1795,30 @@
         {
           "additionalProperties": false,
           "properties": {
+            "sourceTerrainIds": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "targetTerrainId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "create-current-terrain",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "sourceTerrainIds",
+            "targetTerrainId"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "operation": {
               "$ref": "#/$defs/AbilityTerrainBeamOperationDefinition"
             },
@@ -2352,6 +2376,56 @@
             "type",
             "dice",
             "sides"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "includeHeavy": {
+              "type": "boolean"
+            },
+            "type": {
+              "const": "remove-equipped-curses",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "includeHeavy"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "begin-fasting",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "power": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "turn-undead",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "power"
           ],
           "type": "object"
         },

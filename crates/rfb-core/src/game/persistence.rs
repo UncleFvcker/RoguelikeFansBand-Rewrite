@@ -1050,6 +1050,7 @@ impl Game {
         };
         let gold = payload.player.gold;
         let nutrition = payload.player.nutrition;
+        let fasting = payload.player.fasting;
         let player_name =
             normalize_player_name(&payload.player.name).ok_or(CoreError::InvalidPlayerName)?;
         let player = actor_from_player(payload.player, &content)?;
@@ -1375,6 +1376,7 @@ impl Game {
             riding_bond,
             gold,
             nutrition,
+            fasting,
             build,
             body_slots,
             progress,
@@ -1625,6 +1627,7 @@ impl Game {
         );
         player.gold = self.gold;
         player.nutrition = self.nutrition;
+        player.fasting = self.fasting;
         player.resources = self
             .resources
             .iter()

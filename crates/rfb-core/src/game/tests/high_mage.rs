@@ -5,7 +5,7 @@ use super::support::{
     give_inventory_item, replace_terrain,
 };
 use super::*;
-use rfb_protocol::{DamageTypeDto, ItemDestructionElementDto};
+use rfb_protocol::{DamageTypeDto, ItemCurseSeverityDto, ItemDestructionElementDto};
 
 const HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-death";
 const ARCANE_HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-arcane";
@@ -201,10 +201,19 @@ fn life_high_mage_game(seed: u64, level: u16) -> Game {
             "demo.ability.life-cure-medium-wounds",
             "demo.ability.life-cure-poison",
             "demo.ability.life-satisfy-hunger",
+            "demo.ability.life-remove-curse",
+            "demo.ability.life-fasting",
+            "demo.ability.life-cure-critical-wounds",
+            "demo.ability.life-resist-heat-and-cold",
+            "demo.ability.life-sense-surroundings",
+            "demo.ability.life-turn-undead",
+            "demo.ability.life-healing",
+            "demo.ability.life-glyph-of-warding",
         ]
         .into_iter()
         .map(str::to_owned),
     );
+    give_inventory_item(&mut game, "test.high-mass", "demo.item.high-mass");
     game.refresh_player_resource_maxima();
     game.resources
         .get_mut("demo.resource.mana")
@@ -357,6 +366,7 @@ fn life_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
         "demo.item.beginners-handbook",
         "demo.item.book-of-elements",
         "demo.item.call-of-the-wild",
+        "demo.item.high-mass",
     ] {
         assert!(!carried.contains(excluded));
     }
@@ -378,9 +388,7 @@ fn life_high_mage_birth_keeps_the_common_kit_and_only_its_first_book() {
 
 #[test]
 fn life_first_book_projects_final_healing_light_and_status_formulas() {
-    for (level, expected_sides, expected_radius) in
-        [(1, 0, 1), (25, 12, 3), (50, 25, 6)]
-    {
+    for (level, expected_sides, expected_radius) in [(1, 0, 1), (25, 12, 3), (50, 25, 6)] {
         let projected = life_high_mage_game(0x4c49_4645_5000 + u64::from(level), level)
             .snapshot()
             .player
@@ -600,6 +608,352 @@ fn life_first_book_applies_blessing_regeneration_and_cures() {
     )
     .expect("Satisfy Hunger should resolve");
     assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+}
+
+fn fasting_restoration_seed(branch: u64) -> u64 {
+    (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(7) == 0 && {
+                let _ = rng.bounded(2_000);
+                rng.bounded(8) == branch
+            }
+        })
+        .expect("each fasting restoration branch should have a deterministic seed")
+}
+
+#[test]
+fn life_fasting_starts_atomically_persists_and_recasts_for_free() {
+    let mut game = life_high_mage_game(0x4c49_4645_4641_5354, 50);
+    game.nutrition = 9_999;
+    let hash_before = game.state_hash();
+    game.resolve_player_ability(
+        "demo.ability.life-fasting",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Fasting should resolve");
+    assert!(game.fasting);
+    assert_eq!(game.nutrition, 4_999);
+    assert!(game.snapshot().player.fasting);
+    assert_ne!(game.state_hash(), hash_before);
+    game.refresh_character_skills();
+    let restored = Game::from_save(game.to_save()).expect("fasting should round-trip");
+    assert!(restored.fasting);
+    assert_eq!(restored.state_hash(), game.state_hash());
+
+    choose_human_talent_if_pending(&mut game);
+    let mana_before = game.resources["demo.resource.mana"].current;
+    let world_tick_before = game.world_tick;
+    let energy_before = game.player.energy_need;
+    let draws_before = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::CastAbility {
+            ability_id: "demo.ability.life-fasting".to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+    assert!(update.events.iter().any(|event| {
+        event.kind == "ability.cast-unavailable"
+            && event
+                .args
+                .get("reason")
+                .is_some_and(|reason| reason == "already-fasting")
+    }));
+    assert_eq!(game.resources["demo.resource.mana"].current, mana_before);
+    assert_eq!(game.world_tick, world_tick_before);
+    assert_eq!(game.player.energy_need, energy_before);
+    assert_eq!(game.rng_draw_counter(), draws_before);
+}
+
+#[test]
+fn life_fasting_uses_the_original_three_roll_gate_and_all_eight_restorations() {
+    for branch in 0..8 {
+        let mut game = life_high_mage_game(0x4c49_4645_5238 + branch, 50);
+        game.world_tick = 10;
+        game.fasting = true;
+        game.nutrition = 0;
+        game.progress.attributes = AttributeSet {
+            strength: 1,
+            intelligence: 1,
+            wisdom: 1,
+            dexterity: 1,
+            constitution: 1,
+            charisma: 1,
+        };
+        game.progress.experience = 0;
+        game.progress.maximum_experience = 1_000;
+        game.progress.life_force = 100;
+        game.rng = RfbRng::seeded(fasting_restoration_seed(branch));
+        let draws_before = game.rng_draw_counter();
+        game.process_fasting(&mut Vec::new());
+        assert_eq!(game.rng_draw_counter(), draws_before + 3);
+        match branch {
+            0..=5 => {
+                let attribute = [
+                    AttributeKind::Strength,
+                    AttributeKind::Intelligence,
+                    AttributeKind::Wisdom,
+                    AttributeKind::Dexterity,
+                    AttributeKind::Constitution,
+                    AttributeKind::Charisma,
+                ][usize::try_from(branch).expect("branch must fit usize")];
+                assert_eq!(
+                    game.progress.attributes.value(attribute),
+                    game.progress.maximum_attributes.value(attribute)
+                );
+            }
+            6 => assert_eq!(game.progress.experience, 1_000),
+            7 => assert_eq!(game.progress.life_force, 250),
+            _ => unreachable!(),
+        }
+    }
+
+    let mut gated = life_high_mage_game(0x4c49_4645_4741_5445, 50);
+    gated.world_tick = 10;
+    gated.fasting = true;
+    gated.nutrition = 2_000;
+    gated.rng = RfbRng::seeded(fasting_restoration_seed(0));
+    let draws_before = gated.rng_draw_counter();
+    gated.process_fasting(&mut Vec::new());
+    assert_eq!(gated.rng_draw_counter(), draws_before + 2);
+}
+
+#[test]
+fn life_fasting_ends_on_every_real_nutrition_increase() {
+    let mut game = life_high_mage_game(0x4c49_4645_464f_4f44, 50);
+    game.fasting = true;
+    game.nutrition = 100;
+    assert_eq!(game.increase_nutrition(1), 1);
+    assert!(!game.fasting);
+
+    game.fasting = true;
+    game.nutrition = rfb_protocol::PLAYER_NUTRITION_MAXIMUM;
+    assert_eq!(game.increase_nutrition(1), 0);
+    assert!(game.fasting, "a capped no-op is not a nutrition increase");
+}
+
+#[test]
+fn life_second_book_reuses_curse_healing_resistance_mapping_and_glyph_transactions() {
+    let mut game = life_high_mage_game(0x4c49_4645_5345_434f, 50);
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 1_000;
+    game.items
+        .iter_mut()
+        .find(|item| item.kind_id == "demo.item.robe")
+        .expect("starting robe")
+        .curse = Some(ItemCurseSeverityDto::Normal);
+    game.items
+        .iter_mut()
+        .find(|item| item.kind_id == "demo.item.dagger")
+        .expect("starting dagger")
+        .curse = Some(ItemCurseSeverityDto::Heavy);
+    game.resolve_player_ability(
+        "demo.ability.life-remove-curse",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Remove Curse should resolve");
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.kind_id == "demo.item.robe")
+            .and_then(|item| item.curse),
+        None
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.kind_id == "demo.item.dagger")
+            .and_then(|item| item.curse),
+        Some(ItemCurseSeverityDto::Heavy)
+    );
+
+    let status = |kind_id: &str| StatusInstance {
+        kind_id: kind_id.to_owned(),
+        intensity: 1,
+        remaining_ticks: 500,
+        source_id: Some("test.life-second-book".to_owned()),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    game.player.max_hp = 2_000;
+    game.player.hp = 1;
+    game.player.statuses.push(status(STATUS_STUN));
+    game.player.statuses.push(status(STATUS_BLEEDING));
+    let expected_healing_hp = game.effective_player_max_hp().min(301);
+    game.resolve_player_ability(
+        "demo.ability.life-cure-critical-wounds",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Cure Critical Wounds should resolve");
+    assert!(game.player.hp > 1);
+    assert!(!game.player_has_status_kind(STATUS_STUN));
+    assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+
+    game.player.hp = 1;
+    game.player.statuses.push(status(STATUS_STUN));
+    game.player.statuses.push(status(STATUS_BLEEDING));
+    game.resolve_player_ability(
+        "demo.ability.life-healing",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Healing should resolve");
+    assert_eq!(game.player.hp, expected_healing_hp);
+    assert!(!game.player_has_status_kind(STATUS_STUN));
+    assert!(!game.player_has_status_kind(STATUS_BLEEDING));
+
+    let resistance_draws = game.rng_draw_counter();
+    game.resolve_player_ability(
+        "demo.ability.life-resist-heat-and-cold",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Resist Heat and Cold should resolve");
+    assert_eq!(
+        game.rng_draw_counter(),
+        resistance_draws + 2,
+        "one cast roll plus one duration roll should serve both resistances"
+    );
+    let resistance = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.resist-heat-and-cold")
+        .expect("the shared resistance status should be applied");
+    assert!((21..=40).contains(&resistance.remaining_ticks));
+    assert_eq!(
+        resistance
+            .granted_resistances
+            .keys()
+            .copied()
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([DamageType::Cold, DamageType::Fire])
+    );
+
+    game.resolve_player_ability(
+        "demo.ability.life-sense-surroundings",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Sense Surroundings should resolve");
+    assert!(game.explored.iter().filter(|explored| **explored).count() > 1);
+
+    let player_position = game.player.position;
+    replace_terrain(&mut game, player_position, "demo.terrain.floor");
+    game.floor_connections.clear();
+    clear_monsters(&mut game);
+    game.items.retain(
+        |item| !matches!(item.location, ItemLocation::Ground(position) if position == player_position),
+    );
+    game.gold_piles
+        .retain(|pile| pile.position != player_position);
+    assert!(
+        game.current_terrain_creation_replacement(
+            &["demo.terrain.floor".to_owned()],
+            "demo.terrain.warding-glyph",
+        )
+        .is_some()
+    );
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("Life High-Mage should have mana")
+        .current = 100;
+    game.resolve_player_ability(
+        "demo.ability.life-glyph-of-warding",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Glyph of Warding should resolve");
+    assert_eq!(
+        game.terrain[game.index(game.player.position).expect("player position")],
+        "demo.terrain.warding-glyph"
+    );
+}
+
+#[test]
+fn life_turn_undead_uses_level_power_and_only_changes_unlife_after_success() {
+    let mut game = life_high_mage_game(0x4c49_4645_5455_524e, 50);
+    clear_monsters(&mut game);
+    let position = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, position, "demo.terrain.floor");
+    game.entities.push(actor_from_runtime_spawn(
+        "test.turn-undead",
+        "demo.actor.zombified-kobold",
+        position,
+        27,
+        110,
+        100,
+        true,
+    ));
+    game.virtues[0].kind = VirtueKindDto::Unlife;
+    game.virtues[0].value = 0;
+    let seed = (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            for _ in 0..3 {
+                let _ = rng.bounded(25);
+            }
+            let power_roll = rng.bounded(50) + 1;
+            let target_roll = rng.bounded(7) + 1;
+            target_roll < power_roll
+        })
+        .expect("Turn Undead should have a successful deterministic seed");
+    game.rng = RfbRng::seeded(seed);
+    game.resolve_player_ability(
+        "demo.ability.life-turn-undead",
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Turn Undead should resolve");
+    assert!(
+        game.entities[0]
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == STATUS_FEAR)
+    );
+    assert_eq!(game.virtue_current(VirtueKindDto::Unlife), -1);
+    assert!(matches!(
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "demo.ability.life-turn-undead")
+            .expect("Turn Undead should project")
+            .effects
+            .as_slice(),
+        [AbilityEffectSpecDto::TurnUndead { power: 50 }]
+    ));
 }
 
 #[test]

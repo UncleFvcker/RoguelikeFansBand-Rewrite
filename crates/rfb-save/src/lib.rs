@@ -203,6 +203,7 @@ mod tests {
                 hp: 10,
                 gold: 0,
                 nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
+                fasting: false,
                 base_max_hp: 10,
                 base_speed: 110,
                 energy_need: 0,

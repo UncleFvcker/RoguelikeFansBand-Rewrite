@@ -96,6 +96,7 @@ impl Game {
             max_hp: stats.max_hp.value,
             gold: self.gold,
             nutrition: self.nutrition,
+            fasting: self.fasting,
             nutrition_state: self.nutrition_state(),
             speed: derived_speed(&stats.speed),
             energy_need: self.player.energy_need,

@@ -307,6 +307,127 @@ fn life_first_book_keeps_the_original_spell_table_allocation_and_final_scaling()
 }
 
 #[test]
+fn life_second_book_keeps_the_original_identity_allocation_and_spell_table() {
+    let content = compile_pack_dir(&original_pack_path())
+        .expect("original pack should compile")
+        .content;
+    let book = content
+        .ability_books
+        .iter()
+        .find(|book| book.id == "demo.ability-book.high-mass")
+        .expect("High Mass should compile");
+    assert_eq!(book.realm_id.as_deref(), Some("life"));
+    assert_eq!(book.rank, Some(2));
+    assert_eq!(book.ability_ids.len(), 8);
+
+    let item = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.high-mass")
+        .expect("High Mass item should compile");
+    assert_eq!(
+        (
+            item.generation_level,
+            item.weight_tenths_pound,
+            item.base_value,
+            item.ability_book_id.as_deref(),
+        ),
+        (20, 30, 1_000, Some("demo.ability-book.high-mass"))
+    );
+    let allocation = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .and_then(|table| {
+            table
+                .entries
+                .iter()
+                .find(|entry| entry.item_kind_id == item.id)
+        })
+        .expect("High Mass should use its original allocation");
+    assert_eq!(
+        (
+            allocation.min_depth,
+            allocation.max_depth,
+            allocation.weight
+        ),
+        (20, 50, 100)
+    );
+    assert_eq!(
+        content
+            .shops
+            .iter()
+            .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
+            .count(),
+        2
+    );
+
+    let expected = [
+        ("demo.ability.life-remove-curse", 14, 12, 35, 4),
+        ("demo.ability.life-fasting", 15, 14, 40, 4),
+        ("demo.ability.life-cure-critical-wounds", 15, 15, 40, 4),
+        ("demo.ability.life-resist-heat-and-cold", 17, 15, 40, 4),
+        ("demo.ability.life-sense-surroundings", 19, 17, 40, 4),
+        ("demo.ability.life-turn-undead", 21, 19, 40, 4),
+        ("demo.ability.life-healing", 25, 25, 45, 5),
+        ("demo.ability.life-glyph-of-warding", 30, 50, 55, 5),
+    ];
+    for (id, level, mana, failure, experience) in expected {
+        let player = content
+            .abilities
+            .iter()
+            .find(|ability| ability.id == id)
+            .and_then(|ability| ability.player.as_ref())
+            .unwrap_or_else(|| panic!("{id} should have a player binding"));
+        assert_eq!(
+            (
+                player.minimum_level,
+                player.resource_cost,
+                player.base_failure_percent,
+                player.first_success_experience,
+            ),
+            (level, mana, failure, experience)
+        );
+    }
+
+    let cure = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.life-cure-critical-wounds")
+        .expect("Cure Critical Wounds should compile");
+    assert_eq!(
+        cure.spell_power_fields
+            .iter()
+            .map(|field| (field.effect_index, field.field))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([(0, AbilitySpellPowerField::FinalHealing)])
+    );
+    let healing = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.life-healing")
+        .expect("Healing should compile");
+    assert_eq!(
+        healing
+            .spell_power_fields
+            .iter()
+            .map(|field| (field.effect_index, field.field))
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([(0, AbilitySpellPowerField::HealingAmount)])
+    );
+    let turn = content
+        .abilities
+        .iter()
+        .find(|ability| ability.id == "demo.ability.life-turn-undead")
+        .expect("Turn Undead should compile");
+    assert!(matches!(
+        turn.effect,
+        AbilityEffectDefinition::TurnUndead { power: 0 }
+    ));
+    assert_eq!(turn.level_scaling.len(), 1);
+}
+
+#[test]
 fn nature_first_book_keeps_the_original_spell_table_and_allocation() {
     let content = compile_pack_dir(&original_pack_path())
         .expect("original pack should compile")

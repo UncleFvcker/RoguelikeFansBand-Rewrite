@@ -669,6 +669,10 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::CreateAdjacentTerrain {
                     source_terrain_ids,
                     target_terrain_id,
+                }
+                | AbilityEffectDefinition::CreateCurrentTerrain {
+                    source_terrain_ids,
+                    target_terrain_id,
                 } => {
                     !source_terrain_ids.is_empty()
                         && source_terrain_ids.len() <= 32
@@ -679,6 +683,9 @@ pub(super) fn validate_abilities(
                             .all(|source_id| source_id != target_terrain_id)
                 }
                 AbilityEffectDefinition::TerrainBeam { .. } => true,
+                AbilityEffectDefinition::RemoveEquippedCurses { .. }
+                | AbilityEffectDefinition::BeginFasting => true,
+                AbilityEffectDefinition::TurnUndead { power } => *power <= 1_000,
                 AbilityEffectDefinition::ApplyStatus {
                     status_kind_id,
                     intensity,
@@ -1121,6 +1128,10 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::CallSunlight { .. }
             | AbilityEffectDefinition::NatureWrath
             | AbilityEffectDefinition::CreateAdjacentTerrain { .. }
+            | AbilityEffectDefinition::CreateCurrentTerrain { .. }
+            | AbilityEffectDefinition::RemoveEquippedCurses { .. }
+            | AbilityEffectDefinition::BeginFasting
+            | AbilityEffectDefinition::TurnUndead { .. }
             | AbilityEffectDefinition::Probe
             | AbilityEffectDefinition::CreateDoor { .. }
             | AbilityEffectDefinition::DeviceMastery { .. }
@@ -1344,6 +1355,10 @@ pub(super) fn validate_abilities(
             require_reference(terrain_ids, target_terrain_id, &ability.id)?;
         }
         if let AbilityEffectDefinition::CreateAdjacentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+        }
+        | AbilityEffectDefinition::CreateCurrentTerrain {
             source_terrain_ids,
             target_terrain_id,
         } = &ability.effect

@@ -23,15 +23,14 @@ pub(super) fn nature_wrath_direction_roll(events: &[DomainEvent]) -> Option<u8> 
             ability_id,
             resolution,
             ..
-        } if ability_id == NATURE_WRATH_ABILITY_ID =>
+        } if ability_id == NATURE_WRATH_ABILITY_ID => {
             resolution.effects.iter().find_map(|effect| match effect {
-                AbilityEffectResolutionDto::RandomChoice { roll, .. }
-                    if matches!(*roll, 2 | 6) =>
-                {
+                AbilityEffectResolutionDto::RandomChoice { roll, .. } if matches!(*roll, 2 | 6) => {
                     u8::try_from(*roll).ok()
                 }
                 _ => None,
-            }),
+            })
+        }
         _ => None,
     })
 }
@@ -140,6 +139,18 @@ fn set_attribute_value(attributes: &mut AttributeSet, kind: AttributeKind, value
 }
 
 impl Game {
+    pub(super) fn ability_state_unavailable_reason(
+        &self,
+        ability_id: &str,
+    ) -> Option<&'static str> {
+        self.content
+            .ability(ability_id)
+            .is_some_and(|ability| {
+                matches!(ability.effect, AbilityEffectDefinition::BeginFasting) && self.fasting
+            })
+            .then_some("already-fasting")
+    }
+
     pub(super) fn resolve_player_ability(
         &mut self,
         ability_id: &str,
@@ -263,7 +274,9 @@ impl Game {
                 }
             }
         };
-        if let Some(reason) = unavailable_reason {
+        if let Some(reason) =
+            unavailable_reason.or_else(|| self.ability_state_unavailable_reason(ability_id))
+        {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: reason.to_owned(),
@@ -1031,6 +1044,20 @@ impl Game {
             (AbilityEffectDefinition::HealDice { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_healing_dice_effect(&ability, events);
             }
+            (
+                AbilityEffectDefinition::RemoveEquippedCurses { .. },
+                AbilityTargetPlan::SelfTarget,
+            ) => self.resolve_player_remove_equipped_curses_effect(&ability, events),
+            (AbilityEffectDefinition::BeginFasting, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_begin_fasting_effect(&ability, events);
+            }
+            (AbilityEffectDefinition::TurnUndead { .. }, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_turn_undead_effect(&ability, events, changed);
+            }
+            (
+                AbilityEffectDefinition::CreateCurrentTerrain { .. },
+                AbilityTargetPlan::SelfTarget,
+            ) => self.resolve_player_create_current_terrain_effect(&ability, events, changed),
             (AbilityEffectDefinition::ReduceStatus { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_status_reduction_effect(&ability, events);
             }
@@ -2892,10 +2919,14 @@ impl Game {
                 let nutrition = u16::try_from(raw_damage.saturating_mul(100).min(5_000))
                     .expect("bounded vampiric nutrition must fit u16");
                 if self.nutrition < rfb_protocol::PLAYER_NUTRITION_MAXIMUM {
+                    let before = self.nutrition;
                     self.nutrition = self
                         .nutrition
                         .saturating_add(nutrition)
                         .min(rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+                    if self.nutrition > before {
+                        self.fasting = false;
+                    }
                 }
             }
             events.push(DomainEvent::AbilityEffectsResolved {
@@ -3968,6 +3999,9 @@ impl Game {
     ) {
         let before_state = self.nutrition_state();
         let nutrition_before = self.nutrition;
+        if rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1 > self.nutrition {
+            self.fasting = false;
+        }
         self.nutrition = rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1;
         events.push(DomainEvent::AbilityEffectsResolved {
             ability_id: ability.id.clone(),
@@ -3990,6 +4024,192 @@ impl Game {
                 nutrition: self.nutrition,
             });
         }
+    }
+
+    fn resolve_player_remove_equipped_curses_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let AbilityEffectDefinition::RemoveEquippedCurses { include_heavy } = ability.effect else {
+            unreachable!("curse removal executor requires a curse removal effect");
+        };
+        let outcome = self.remove_equipped_curses(RemoveEquippedCursesRequest::new(include_heavy));
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::RemoveEquippedCurses {
+                    effect_index: 0,
+                    resolution: ItemCurseRemovalResolutionDto {
+                        include_heavy: outcome.include_heavy,
+                        removed_item_ids: outcome.removed_item_ids,
+                        retained_permanent_item_ids: outcome.retained_permanent_item_ids,
+                    },
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_begin_fasting_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        debug_assert!(!self.fasting);
+        let before_state = self.nutrition_state();
+        let nutrition_before = self.nutrition;
+        self.nutrition /= 2;
+        self.fasting = true;
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::BeginFasting {
+                    effect_index: 0,
+                    nutrition_before,
+                    nutrition_after: self.nutrition,
+                }],
+            },
+            trace: None,
+        });
+        let after_state = self.nutrition_state();
+        if after_state != before_state {
+            events.push(DomainEvent::NutritionStateChanged {
+                from: before_state,
+                to: after_state,
+                nutrition: self.nutrition,
+            });
+        }
+    }
+
+    fn resolve_player_turn_undead_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::TurnUndead { power } = ability.effect else {
+            unreachable!("turn undead executor requires a turn undead effect");
+        };
+        let target_ids = self
+            .entities
+            .iter()
+            .filter(|entity| {
+                entity.hp > 0
+                    && self.entity_is_visible_to_player(entity)
+                    && self
+                        .content
+                        .actor(&entity.kind_id)
+                        .is_some_and(|definition| actor_matches_category(definition, "undead"))
+            })
+            .map(|entity| entity.id.clone())
+            .collect::<Vec<_>>();
+        let mut affected = false;
+        for entity_id in target_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let target_kind_id = self.entities[index].kind_id.clone();
+            let target_level = self
+                .content
+                .actor(&target_kind_id)
+                .map(|definition| definition.level);
+            let resolution = apply_ability_status_effect(
+                &mut self.entities[index],
+                &ability.id,
+                0,
+                STATUS_FEAR,
+                1,
+                1,
+                3,
+                u32::from((power / 2).max(1)),
+                AbilityStatusStackingDefinition::Extend,
+                None,
+                Some(power),
+                &BTreeMap::new(),
+                &BTreeSet::new(),
+                &StatModifiers::default(),
+                &EquipmentBonuses::default(),
+                &BTreeSet::new(),
+                None,
+                false,
+                100,
+                target_level,
+                None,
+                &mut self.rng,
+            );
+            affected |= matches!(
+                &resolution,
+                AbilityEffectResolutionDto::ApplyStatus {
+                    change: AbilityStatusChangeDto::Added
+                        | AbilityStatusChangeDto::Replaced
+                        | AbilityStatusChangeDto::Extended
+                        | AbilityStatusChangeDto::Strengthened,
+                    ..
+                }
+            );
+            changed.insert(self.entities[index].position);
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: ability.id.clone(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: Some(entity_id),
+                    target_kind_id: Some(target_kind_id),
+                    effects: vec![resolution],
+                },
+                trace: None,
+            });
+        }
+        if affected {
+            self.add_virtue(VirtueKindDto::Unlife, -1);
+        }
+    }
+
+    fn resolve_player_create_current_terrain_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let AbilityEffectDefinition::CreateCurrentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+        } = &ability.effect
+        else {
+            unreachable!("current terrain executor requires a current terrain effect");
+        };
+        let position = self.player.position;
+        let terrain_id = self
+            .current_terrain_creation_replacement(source_terrain_ids, target_terrain_id)
+            .map(|(position, terrain_id)| {
+                let index = self
+                    .index(position)
+                    .expect("planned current terrain creation must remain in bounds");
+                self.terrain[index] = terrain_id.clone();
+                self.revealed_terrain.remove(&position);
+                changed.insert(position);
+                terrain_id
+            });
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::CreateCurrentTerrain {
+                    effect_index: 0,
+                    position,
+                    terrain_id,
+                }],
+            },
+            trace: None,
+        });
     }
 
     fn resolve_player_refuel_equipped_light_effect(
@@ -8496,6 +8716,10 @@ impl Game {
             }
             AbilityEffectDefinition::Heal { .. }
             | AbilityEffectDefinition::HealDice { .. }
+            | AbilityEffectDefinition::RemoveEquippedCurses { .. }
+            | AbilityEffectDefinition::BeginFasting
+            | AbilityEffectDefinition::TurnUndead { .. }
+            | AbilityEffectDefinition::CreateCurrentTerrain { .. }
             | AbilityEffectDefinition::NatureGate { .. }
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger

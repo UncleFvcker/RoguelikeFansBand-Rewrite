@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.high-mass",
+  "nameKey": "item-demo-high-mass-name",
+  "descriptionKey": "item-demo-high-mass-description",
+  "glyph": "?",
+  "weightTenthsPound": 30,
+  "baseValue": 1000,
+  "generationLevel": 20,
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "elementalDestructionVulnerabilities": ["fire"],
+  "abilityBookId": "demo.ability-book.high-mass",
+  "tags": ["book", "life", "spellbook"]
+}

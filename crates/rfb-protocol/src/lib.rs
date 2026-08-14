@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.206";
+pub const PROTOCOL_VERSION: &str = "1.207";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 1;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 1;
 
@@ -1219,6 +1219,10 @@ pub enum AbilityEffectSpecDto {
         source_terrain_ids: Vec<String>,
         target_terrain_id: String,
     },
+    CreateCurrentTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
+    },
     TerrainBeam {
         operation: AbilityTerrainBeamOperationDto,
     },
@@ -1332,6 +1336,13 @@ pub enum AbilityEffectSpecDto {
         sides: u16,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         final_healing_spell_power_bonus: Option<i32>,
+    },
+    RemoveEquippedCurses {
+        include_heavy: bool,
+    },
+    BeginFasting,
+    TurnUndead {
+        power: u16,
     },
     ReduceStatus {
         status_kind_id: String,
@@ -2320,6 +2331,21 @@ pub enum AbilityEffectResolutionDto {
         effect_index: u8,
         resolution: HealingResolutionDto,
     },
+    RemoveEquippedCurses {
+        effect_index: u8,
+        resolution: ItemCurseRemovalResolutionDto,
+    },
+    BeginFasting {
+        effect_index: u8,
+        nutrition_before: u16,
+        nutrition_after: u16,
+    },
+    CreateCurrentTerrain {
+        effect_index: u8,
+        position: Position,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        terrain_id: Option<String>,
+    },
     Probe {
         effect_index: u8,
         targets: Vec<AbilityProbeTargetDto>,
@@ -2973,6 +2999,7 @@ pub struct PlayerDto {
     pub gold: u32,
     #[serde(default = "default_player_nutrition")]
     pub nutrition: u16,
+    pub fasting: bool,
     #[serde(default)]
     pub nutrition_state: NutritionStateDto,
     #[serde(default = "default_actor_speed")]
@@ -4091,6 +4118,7 @@ pub struct PlayerSaveDto {
     pub gold: u32,
     #[serde(default = "default_player_nutrition")]
     pub nutrition: u16,
+    pub fasting: bool,
     #[serde(default)]
     pub base_max_hp: i32,
     #[serde(default = "default_actor_speed")]
@@ -5096,6 +5124,7 @@ mod tests {
                 max_hp: 14,
                 gold: 0,
                 nutrition: PLAYER_NUTRITION_BIRTH,
+                fasting: false,
                 nutrition_state: NutritionStateDto::Normal,
                 speed: 110,
                 energy_need: 0,
@@ -5351,6 +5380,7 @@ mod tests {
             hp: 10,
             gold: 0,
             nutrition: PLAYER_NUTRITION_BIRTH,
+            fasting: false,
             base_max_hp: 10,
             base_speed: 110,
             energy_need: 0,

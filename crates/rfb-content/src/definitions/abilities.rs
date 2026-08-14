@@ -608,6 +608,10 @@ pub enum AbilityEffectDefinition {
         source_terrain_ids: Vec<String>,
         target_terrain_id: String,
     },
+    CreateCurrentTerrain {
+        source_terrain_ids: Vec<String>,
+        target_terrain_id: String,
+    },
     TerrainBeam {
         operation: AbilityTerrainBeamOperationDefinition,
     },
@@ -700,6 +704,13 @@ pub enum AbilityEffectDefinition {
     HealDice {
         dice: u16,
         sides: u16,
+    },
+    RemoveEquippedCurses {
+        include_heavy: bool,
+    },
+    BeginFasting,
+    TurnUndead {
+        power: u16,
     },
     ReduceStatus {
         status_kind_id: String,
@@ -912,7 +923,8 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::VisibleApplyStatus {
                 power: Some(power), ..
             }
-            | AbilityEffectDefinition::Entangle { power, .. },
+            | AbilityEffectDefinition::Entangle { power, .. }
+            | AbilityEffectDefinition::TurnUndead { power },
             AbilityLevelScalingField::StatusPower,
         ) => Some((u64::from(*power), 1_000)),
         (

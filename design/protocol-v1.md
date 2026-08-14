@@ -712,3 +712,7 @@ v101；save 容器保持 v1，不为缺少该字段的旧开发存档提供兼�
 `light-area` 声明整次伤害的 `spell_power`。两者只增加可观察公式元数据，运行时继续复用既有
 治疗、照明与区域伤害事务；不增加命令、持久状态或 State Hash 输入。State Hash Schema
 保持 v102，save 容器保持 v1。
+
+协议 1.207 为生命领域第二册增加普通装备解咒、开始禁食、亡灵退散和脚下地形创建的
+能力投影，并在 `PlayerDto` 与 `PlayerSaveDto` 增加必填 `fasting`。禁食状态进入
+State Hash Schema v103；save 容器保持 v1，旧开发存档不兼容。
