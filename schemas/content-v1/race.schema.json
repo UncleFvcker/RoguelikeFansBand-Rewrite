@@ -617,6 +617,9 @@
           "default": false,
           "type": "boolean"
         },
+        "fullyCharged": {
+          "type": "boolean"
+        },
         "itemKindId": {
           "type": "string"
         },

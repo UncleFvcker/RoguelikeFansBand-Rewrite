@@ -58,24 +58,28 @@ pub(super) fn enable_test_caster(content: &mut rfb_content::CompiledContentV1) {
             quantity: 1,
             maximum_quantity: None,
             equipped: false,
+            fully_charged: false,
         },
         rfb_content::StartingItemDefinition {
             item_kind_id: "demo.item.black-mass".to_owned(),
             quantity: 1,
             maximum_quantity: None,
             equipped: false,
+            fully_charged: false,
         },
         rfb_content::StartingItemDefinition {
             item_kind_id: "demo.item.black-channels".to_owned(),
             quantity: 1,
             maximum_quantity: None,
             equipped: false,
+            fully_charged: false,
         },
         rfb_content::StartingItemDefinition {
             item_kind_id: "demo.item.necronomicon".to_owned(),
             quantity: 1,
             maximum_quantity: None,
             equipped: false,
+            fully_charged: false,
         },
     ]);
     content.classes.push(class);

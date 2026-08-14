@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.golem-stone-skin",
+  "nameKey": "ability-rfb-race-golem-stone-skin-name",
+  "descriptionKey": "ability-rfb-race-golem-stone-skin-description",
+  "abilityProgramId": "demo.ability-program.nature-stone-skin",
+  "target": {
+    "modes": [
+      "self"
+    ],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "levelScaling": [
+    {
+      "effectIndex": 0,
+      "field": "status-defense",
+      "multiplier": 40,
+      "divisor": 50
+    }
+  ],
+  "tags": [
+    "defense",
+    "golem",
+    "race"
+  ]
+}

@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.golem-stone-skin",
+      "minimumLevel": 20,
+      "governingAttribute": "constitution",
+      "cost": 20,
+      "baseFailurePercent": 50
+    }
+  ],
   "baseHp": 23,
   "armorClass": 10,
   "bodySlots": [
@@ -100,6 +109,13 @@
   "seeInvisible": true,
   "shopAdjustPercent": 120,
   "skillSetId": "rfb-legacy.skill-set.race-golem",
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.staff-of-nothing",
+      "quantity": 1,
+      "fullyCharged": true
+    }
+  ],
   "statusImmunities": [
     "rfb.status.paralysis",
     "rfb.status.stun"

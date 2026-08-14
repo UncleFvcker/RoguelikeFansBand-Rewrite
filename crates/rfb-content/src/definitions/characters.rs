@@ -73,6 +73,8 @@ pub struct StartingItemDefinition {
     pub maximum_quantity: Option<u32>,
     #[serde(default)]
     pub equipped: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub fully_charged: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]

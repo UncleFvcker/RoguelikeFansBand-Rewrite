@@ -77,7 +77,11 @@ pub(super) fn validate_characters(
         .map(|item| {
             (
                 item.id.clone(),
-                (item.max_stack, item.equipment_slot.clone()),
+                (
+                    item.max_stack,
+                    item.equipment_slot.clone(),
+                    item.device_generation.is_some(),
+                ),
             )
         })
         .collect::<BTreeMap<_, _>>();
@@ -872,7 +876,7 @@ fn validate_character_source(
     owner_id: &str,
     source: CharacterSourceValidation<'_>,
     skill_sets: &BTreeMap<String, SkillSetDefinition>,
-    item_metadata: &BTreeMap<String, (u32, Option<String>)>,
+    item_metadata: &BTreeMap<String, (u32, Option<String>, bool)>,
 ) -> Result<(), ContentError> {
     if source.modifiers.max_hp < -1_000_000
         || source.modifiers.max_hp > 1_000_000
@@ -900,7 +904,7 @@ fn validate_character_source(
 fn validate_starting_items(
     owner_id: &str,
     starting_items: &mut Vec<StartingItemDefinition>,
-    item_metadata: &BTreeMap<String, (u32, Option<String>)>,
+    item_metadata: &BTreeMap<String, (u32, Option<String>, bool)>,
 ) -> Result<(), ContentError> {
     starting_items.sort_by(|left, right| {
         left.item_kind_id
@@ -913,7 +917,8 @@ fn validate_starting_items(
     let mut item_ids = BTreeSet::new();
     let mut equipment_slots = BTreeSet::new();
     for item in starting_items {
-        let Some((max_stack, slot)) = item_metadata.get(&item.item_kind_id) else {
+        let Some((max_stack, slot, device_generated)) = item_metadata.get(&item.item_kind_id)
+        else {
             return Err(ContentError::DanglingReference {
                 owner: owner_id.to_owned(),
                 target: item.item_kind_id.clone(),
@@ -923,6 +928,7 @@ fn validate_starting_items(
         if item.quantity == 0
             || maximum_quantity < item.quantity
             || maximum_quantity > *max_stack
+            || (item.fully_charged && !device_generated)
             || !item_ids.insert(item.item_kind_id.clone())
             || (item.equipped
                 && (item.quantity != 1
@@ -940,14 +946,14 @@ fn validate_starting_items(
 fn validate_combined_starting_items<'a>(
     owner_id: &str,
     items: impl Iterator<Item = &'a StartingItemDefinition>,
-    item_metadata: &BTreeMap<String, (u32, Option<String>)>,
+    item_metadata: &BTreeMap<String, (u32, Option<String>, bool)>,
 ) -> Result<(), ContentError> {
     let mut quantities = BTreeMap::<&str, u32>::new();
     let mut equipment_slots = BTreeSet::new();
     let mut count = 0_usize;
     for item in items {
         count += 1;
-        let Some((max_stack, slot)) = item_metadata.get(&item.item_kind_id) else {
+        let Some((max_stack, slot, _)) = item_metadata.get(&item.item_kind_id) else {
             return Err(ContentError::DanglingReference {
                 owner: owner_id.to_owned(),
                 target: item.item_kind_id.clone(),

@@ -36,6 +36,7 @@
     { "sourceIndex": 312, "sourceName": "Wand", "sourceId": "wand", "itemId": "demo.item.magic-missile-wand", "status": "active", "contract": "contract-v163-walled-outpost-magic-shop" },
     { "sourceIndex": 313, "sourceName": "Staff", "sourceId": "staff", "itemId": "demo.item.detect-objects-staff", "status": "active", "contract": "contract-v163-walled-outpost-magic-shop" },
     { "sourceIndex": 313, "sourceName": "Staff", "sourceId": "staff", "itemId": "demo.item.identify-staff", "status": "active", "contract": "contract-v163-walled-outpost-magic-shop" },
+    { "sourceIndex": 313, "sourceName": "Staff", "sourceId": "staff", "itemId": "demo.item.staff-of-nothing", "status": "active", "adaptation": "fixed-effect-nothing:birth-charge-21", "contract": "race-golem-birth-device" },
     { "sourceIndex": 314, "sourceName": "Rod", "sourceId": "rod", "itemId": "demo.item.resonance-rod", "status": "active", "contract": "contract-v109-dynamic-devices" },
     { "sourceIndex": 315, "sourceName": "Darkness:fapay doea", "sourceId": "darkness-fapay-doea", "itemId": "demo.item.darkness-scroll", "status": "active", "adaptation": "floor-lighting-only:no-weak-darkness-actor-damage", "contract": "phase-19-p3-4-map-region-rules" },
     { "sourceIndex": 316, "sourceName": "Aggravate Monster:itemar habyt", "sourceId": "aggravate-monster-itemar-habyt", "itemId": "demo.item.clamor-scroll", "status": "active", "contract": "contract-v124-scroll-aggravation" },

@@ -1,0 +1,52 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "appearanceNameKey": "item-demo-unfamiliar-staff-name",
+  "baseValue": 1,
+  "descriptionKey": "item-demo-staff-of-nothing-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 21,
+          "minimum": 21
+        },
+        "deviceCheckDifficulty": 1,
+        "effectProgramId": "demo.effect.staff-of-nothing",
+        "id": "demo.device-activation.nothing",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-demo-nothing-name",
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ],
+    "recovery": {
+      "energyPerMille": 10,
+      "intervalTicks": 10
+    }
+  },
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 1,
+  "glyph": "_",
+  "id": "demo.item.staff-of-nothing",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-staff-of-nothing-name",
+  "tags": [
+    "device",
+    "rfb",
+    "staff"
+  ],
+  "weightTenthsPound": 50
+}

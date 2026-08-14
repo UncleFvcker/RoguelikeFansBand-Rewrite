@@ -346,6 +346,23 @@ mod tests {
     }
 
     #[test]
+    fn golem_content_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("race-legacy-golem-name", "魔像"),
+            ("ability-rfb-race-golem-stone-skin-name", "石肤术"),
+            ("item-demo-staff-of-nothing-name", "空手法杖"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Golem content name should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

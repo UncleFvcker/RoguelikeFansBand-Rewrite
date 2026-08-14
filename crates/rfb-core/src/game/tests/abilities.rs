@@ -2902,6 +2902,7 @@ const RACE_DETECT_TREASURE_ABILITY_ID: &str = "rfb.ability.race.detect-treasure"
 const RACE_MAGIC_MISSILE_ABILITY_ID: &str = "rfb.ability.race.magic-missile";
 const RACE_MIND_BLAST_ABILITY_ID: &str = "rfb.ability.race.mind-blast";
 const RACE_IMP_FIRE_ABILITY_ID: &str = "rfb.ability.race.imp-fire";
+const RACE_GOLEM_STONE_SKIN_ABILITY_ID: &str = "rfb.ability.race.golem-stone-skin";
 const RACE_PHASE_DOOR_ABILITY_ID: &str = "rfb.ability.race.phase-door";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
 const RACE_PROBE_MONSTERS_ABILITY_ID: &str = "rfb.ability.race.probe-monsters";
@@ -2909,6 +2910,86 @@ const RACE_SCARE_MONSTER_ABILITY_ID: &str = "rfb.ability.race.scare-monster";
 const RACE_SPIT_ACID_ABILITY_ID: &str = "rfb.ability.race.spit-acid";
 const RACE_STONE_TO_MUD_ABILITY_ID: &str = "rfb.ability.race.stone-to-mud";
 const RACE_THROW_BOULDER_ABILITY_ID: &str = "rfb.ability.race.throw-boulder";
+
+#[test]
+fn hidden_golem_stone_skin_unlocks_at_twenty_without_spell_power_scaling() {
+    let mut game = hidden_golem_game(365);
+    clear_monsters(&mut game);
+    game.progress.level = 19;
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_GOLEM_STONE_SKIN_ABILITY_ID)
+        .expect("Golem Stone Skin should be projected before it unlocks");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Constitution)
+    );
+    assert_eq!(locked.minimum_level, 20);
+    assert_eq!((locked.base_resource_cost, locked.resource_cost), (20, 20));
+    assert!(!locked.can_cast);
+
+    game.progress.level = 20;
+    let available = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_GOLEM_STONE_SKIN_ABILITY_ID)
+        .expect("level-twenty Golem Stone Skin");
+    assert!(available.can_cast);
+    assert!(matches!(
+        available.effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 20,
+            duration_dice: 1,
+            duration_sides: 30,
+            granted_modifiers,
+            ..
+        }] if granted_modifiers.defense == 26
+    ));
+
+    game.debug_set_ability_casts_succeed(true);
+    let hp_before = game.player.hp;
+    game.resolve_player_ability(
+        RACE_GOLEM_STONE_SKIN_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Golem Stone Skin should resolve");
+    assert_eq!(game.player.hp, hp_before - 20);
+    let stone_skin = game
+        .player
+        .statuses
+        .iter()
+        .find(|status| status.kind_id == "rfb.status.stone-skin")
+        .expect("Golem Stone Skin status");
+    assert!((21..=50).contains(&stone_skin.remaining_ticks));
+    assert_eq!(stone_skin.granted_modifiers.defense, 26);
+
+    game.progress.level = 50;
+    let level_fifty = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_GOLEM_STONE_SKIN_ABILITY_ID)
+        .expect("level-fifty Golem Stone Skin");
+    assert!(matches!(
+        level_fifty.effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            duration_ticks: 20,
+            duration_sides: 30,
+            granted_modifiers,
+            ..
+        }] if granted_modifiers.defense == 50
+    ));
+}
 
 #[test]
 fn race_ability_follows_the_effective_race_and_projects_its_source() {

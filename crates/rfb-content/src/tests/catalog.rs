@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.359.0");
+    assert_eq!(catalog.pack_version(), "1.360.0");
     assert_eq!(catalog.races().count(), 55);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1524,6 +1524,120 @@ fn hidden_golem_declares_construct_metabolism_tags() {
     for tag in ["device-eater", "nonliving", "slow-digestion"] {
         assert!(golem.tags.iter().any(|candidate| candidate == tag));
     }
+}
+
+#[test]
+fn hidden_golem_completes_the_authoritative_profile_stone_skin_and_birth_staff() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let golem = catalog
+        .race("rfb-legacy.race.golem")
+        .expect("hidden Golem race");
+
+    assert_eq!(
+        [
+            golem.modifiers.strength,
+            golem.modifiers.intelligence,
+            golem.modifiers.wisdom,
+            golem.modifiers.dexterity,
+            golem.modifiers.constitution,
+            golem.modifiers.charisma,
+        ],
+        [4, -5, -5, -2, 4, 0]
+    );
+    assert_eq!(
+        (
+            golem.life_percent,
+            golem.base_hp,
+            golem.experience_percent,
+            golem.infravision,
+            golem.shop_adjust_percent,
+        ),
+        (105, 23, 185, 4, 120)
+    );
+    assert!(!golem.tags.iter().any(|tag| tag == "rfb-compatibility"));
+    let [activation] = golem.abilities.as_slice() else {
+        panic!("Golem should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.golem-stone-skin",
+            20,
+            TechniqueAttribute::Constitution,
+            20,
+            50,
+        )
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Golem Stone Skin ability");
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::ApplyStatus {
+            ref status_kind_id,
+            intensity: 1,
+            duration_ticks: 20,
+            duration_dice: 1,
+            duration_sides: 30,
+            ref granted_modifiers,
+            ..
+        } if status_kind_id == "rfb.status.stone-skin" && granted_modifiers.defense == 10
+    ));
+    assert!(ability.spell_power_fields.is_empty());
+    assert!(matches!(
+        ability.level_scaling.as_slice(),
+        [AbilityLevelScalingDefinition {
+            effect_index: 0,
+            field: AbilityLevelScalingField::StatusDefense,
+            multiplier: 40,
+            divisor: 50,
+            ..
+        }]
+    ));
+
+    let [starting_item] = golem.starting_items.as_slice() else {
+        panic!("Golem should start with one race-specific item");
+    };
+    assert_eq!(starting_item.item_kind_id, "demo.item.staff-of-nothing");
+    assert_eq!(starting_item.quantity, 1);
+    assert!(!starting_item.equipped);
+    assert!(starting_item.fully_charged);
+    let staff = catalog
+        .item(&starting_item.item_kind_id)
+        .expect("Golem birth staff");
+    let generation = staff
+        .device_generation
+        .as_ref()
+        .expect("birth staff should use the device lifecycle");
+    assert_eq!(
+        generation.recovery,
+        Some(ItemDeviceRecoveryDefinition {
+            interval_ticks: 10,
+            energy_per_mille: 10,
+        })
+    );
+    let [staff_activation] = generation.activations.as_slice() else {
+        panic!("birth staff should have one activation");
+    };
+    assert_eq!(
+        staff_activation.charges,
+        ItemDeviceChargeRangeDefinition {
+            minimum: 21,
+            maximum: 21,
+            cost: 1,
+        }
+    );
+    assert!(matches!(
+        staff_activation.effect,
+        ItemUseEffectDefinition::NoNumericEffect
+    ));
 }
 
 #[test]

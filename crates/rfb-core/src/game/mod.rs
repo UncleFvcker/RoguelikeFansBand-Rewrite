@@ -845,8 +845,14 @@ fn append_starting_item(
     *next_serial = next_serial
         .checked_add(1)
         .ok_or(CoreError::ItemIdExhausted)?;
-    let (activation, charges) =
+    let (activation, mut charges) =
         initial_item_runtime_state(content, rng, &starting_item.item_kind_id, &[], 1);
+    if starting_item.fully_charged {
+        let charges = charges
+            .as_mut()
+            .expect("validated fully charged starting item must be a device");
+        charges.current = charges.maximum;
+    }
     let quantity = starting_item
         .maximum_quantity
         .map_or(starting_item.quantity, |maximum| {
@@ -1334,6 +1340,7 @@ impl Game {
                     quantity,
                     maximum_quantity: None,
                     equipped: false,
+                    fully_charged: false,
                 },
                 &body_slots,
                 &mut items,
@@ -1350,6 +1357,7 @@ impl Game {
                         quantity: 1,
                         maximum_quantity: None,
                         equipped: false,
+                        fully_charged: false,
                     },
                     &body_slots,
                     &mut items,

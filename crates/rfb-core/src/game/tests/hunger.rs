@@ -45,6 +45,36 @@ fn warrior_birth_rolls_five_to_nine_rations_after_gold() {
 }
 
 #[test]
+fn hidden_golem_birth_replaces_rations_with_a_full_nothing_staff_and_keeps_torches() {
+    let game = hidden_golem_game(366);
+    assert!(
+        game.items.iter().all(|item| item.kind_id != RATION_KIND_ID),
+        "Golem birth should not create ordinary rations"
+    );
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+    }));
+    let staff = game
+        .items
+        .iter()
+        .find(|item| {
+            item.kind_id == "demo.item.staff-of-nothing" && item.location == ItemLocation::Inventory
+        })
+        .expect("Golem should carry its Staff of Nothing");
+    assert_eq!(
+        staff.charges,
+        Some(ItemChargesDto {
+            current: 21,
+            maximum: 21,
+        })
+    );
+    let activation = staff.activation.as_ref().expect("birth staff activation");
+    assert_eq!(activation.profile_id, "demo.device-activation.nothing");
+    assert_eq!(activation.cost, 1);
+    assert_eq!(staff.device_recovery_progress, 0);
+}
+
+#[test]
 fn ration_use_consumes_one_restores_food_and_pays_normal_action_cost() {
     let mut game =
         Game::new_with_build(7, RFB_WARRIOR_BUILD_ID).expect("Warrens Warrior should create");

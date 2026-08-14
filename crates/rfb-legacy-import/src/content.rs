@@ -5445,6 +5445,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "probing_spell" => "rfb.ability.race.probe-monsters",
             "scare_monster_spell" => "rfb.ability.race.scare-monster",
             "spit_acid_spell" => "rfb.ability.race.spit-acid",
+            "stone_skin_spell" => "rfb.ability.race.golem-stone-skin",
             "stone_to_mud_spell" => "rfb.ability.race.stone-to-mud",
             "throw_boulder_spell" => "rfb.ability.race.throw-boulder",
             _ => {
@@ -6211,7 +6212,10 @@ fn character_skill_set_json(entry: &LegacyCharacterEntry, id: &str) -> serde_jso
 
 fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentImportReport) {
     for flag in &entry.flags {
-        if flag == "RACE_IS_DEMON" && legacy_race_tags(entry).contains(&"demon") {
+        if (flag == "RACE_IS_DEMON" && legacy_race_tags(entry).contains(&"demon"))
+            || (entry.id == "golem"
+                && matches!(flag.as_str(), "RACE_IS_NONLIVING" | "RACE_EATS_DEVICES"))
+        {
             continue;
         }
         *report.unmapped_race_flags.entry(flag.clone()).or_default() += 1;
@@ -6256,6 +6260,14 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    if entry.id == "golem" {
+        return vec![
+            "device-eater",
+            "legacy-import",
+            "nonliving",
+            "slow-digestion",
+        ];
+    }
     if entry.id == "imp" {
         return vec![
             "demon",
@@ -19959,6 +19971,26 @@ race_t *test_beast_get_race(void)
         let mut report = ContentImportReport::default();
         character_gap_accounting(&imp, &mut report);
         assert!(!report.unmapped_race_flags.contains_key("RACE_IS_DEMON"));
+        let golem = LegacyCharacterEntry {
+            id: "golem".to_owned(),
+            flags: vec![
+                "RACE_IS_NONLIVING".to_owned(),
+                "RACE_EATS_DEVICES".to_owned(),
+            ],
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&golem),
+            [
+                "device-eater",
+                "legacy-import",
+                "nonliving",
+                "slow-digestion",
+            ]
+        );
+        let mut report = ContentImportReport::default();
+        character_gap_accounting(&golem, &mut report);
+        assert!(report.unmapped_race_flags.is_empty());
     }
 
     #[test]
@@ -19980,6 +20012,7 @@ static power_info _barbarian_get_powers[] =
     { A_INT, {1, 2, 30, magic_missile_spell}},
     { A_INT, {5, 3, 50, mind_blast_spell}},
     { A_INT, {9, 8, 50, imp_fire_spell}},
+    { A_CON, {20, 20, 50, stone_skin_spell}},
     { A_WIS, {12, 7, 40, mystery_spell}},
     { -1, {-1, -1, -1, NULL} }
 };
@@ -20111,6 +20144,13 @@ race_t *barbarian_get_race(void)
                     base_failure_percent: 50,
                     ability_id: "rfb.ability.race.imp-fire".to_owned(),
                 },
+                LegacyInnatePower {
+                    governing_attribute: "constitution".to_owned(),
+                    minimum_level: 20,
+                    cost: 20,
+                    base_failure_percent: 50,
+                    ability_id: "rfb.ability.race.golem-stone-skin".to_owned(),
+                },
             ]
         );
         assert!(!barbarian.hooks.iter().any(|hook| hook == "get_powers"));
@@ -20179,7 +20219,11 @@ race_t *barbarian_get_race(void)
             race["abilities"][13]["abilityId"],
             "rfb.ability.race.imp-fire"
         );
-        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(14));
+        assert_eq!(
+            race["abilities"][14]["abilityId"],
+            "rfb.ability.race.golem-stone-skin"
+        );
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(15));
         assert_eq!(race["resistances"]["fear"], "resistant");
         assert!(
             race["tags"]
