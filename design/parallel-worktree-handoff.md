@@ -1,7 +1,7 @@
 # 并行 worktree 通用交接说明
 
 更新时间：2026-08-15
-当前工作批次起点：`main@7dafd6c6f`
+当前工作批次起点：`main@638bab21c`
 
 本说明供新的 Codex 对话接手独立方向时使用。每个写入方向必须使用自己的
 worktree 和分支；`main` 只负责集成、版本与发布收口。
@@ -1456,3 +1456,19 @@ git diff --stat
   `ca4c7b26e1bf204efefadedd2f116f95f2d4d713aeec543c417947033a68542b`、Protocol `1.221`、
   State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
   Web 共 6 项聚焦测试通过，含 save/state-hash；按用户要求未运行全量测试或刷新 fixture。
+
+## 80. main 当前交接（小妖精正式内容、睡眠粉与等级速度）
+
+- 种族方向继续拥有 `rfb-legacy.race.sprite` 与 `rfb-legacy.skill-set.race-sprite`，并新增、拥有
+  `rfb.ability.race.sleeping-dust` 和 `rfb.ability-program.race.sleeping-dust`。飞行、光抗、等级速度及
+  两种睡眠结算都复用既有路径，其他方向不得复制这些身份或另建第二套睡眠事务。
+- 小妖精完整行为包括权威属性/生命/HP/经验/红外/商店/技能矩阵、光抗、飞行、每 10 级速度 +1、
+  标准身体/出生、初始“自然”和 12 级“睡眠粉”。临时小妖精形态按当前有效种族获得并失去相同被动。
+- 内部 `sleeping-dust` 步骤只负责 25 级边界：低等级变为半径 1 `Sanctuary`，高等级变为
+  `VisibleApplyStatus`；协议投影仍是既有类型。没有新增 Protocol、save 或 State Hash 字段。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 34。
+- 实现提交为 `638bab21c`（`Import Sprite race`）。共享协调点为 pack `1.370.0` / content hash
+  `6923cb3c4cf41abd17e2ab03046b38dc0a027027b08a58c1ea648ec83fd510d5`、Protocol `1.221`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
+  Web 共 7 项聚焦测试通过，含 save/state-hash；schema/source lock/格式检查通过。按用户要求未运行
+  全量测试或刷新 fixture。

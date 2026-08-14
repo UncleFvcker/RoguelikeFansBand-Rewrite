@@ -5,7 +5,7 @@
 
 更新时间：2026-08-15
 
-当前 main 实现基线：`7dafd6c6f`（神使正式 New Game 开放）
+当前 main 实现基线：`638bab21c`（小妖精正式 New Game 开放）
 
 分支：`codex/class-next`
 
@@ -922,3 +922,24 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 新增聚焦测试共 6 项：内容 1、中文名 1、importer 1、核心 2、Web 1，覆盖静态矩阵、永久/临时形态
   的飞行、看破隐形、红外、美德及 save/state-hash 往返。`verify-source`、格式和 diff 检查通过；按用户
   要求未运行全量测试或刷新 fixture。
+
+## main 当前批次：小妖精正式内容、睡眠粉与等级速度
+
+- 权威来源为 RFB `master:src/races_k.c`、`master:src/spells_s.c`、`master:src/spells2.c`、
+  `master:src/virtue.c` 和 `master:src/py_birth.c`。种族方向继续拥有既有 `rfb-legacy.race.sprite` 与
+  `rfb-legacy.skill-set.race-sprite`，新增并拥有 `rfb.ability.race.sleeping-dust` 和
+  `rfb.ability-program.race.sleeping-dust`；本批不新增 item、material、affix、resource 或 actor ID。
+- 小妖精按原版闭合六维 `-4/+3/+3/+3/-2/-2`、生命 92%、基础 HP 14、经验 135%、4 格红外、商店
+  90%、八项技能、光抗、飞行、每 10 级速度 +1、标准身体/出生和初始“自然”。没有职业过滤；临时
+  小妖精形态获得并在解除后失去同一组被动和种族能力。
+- 12 级智力能力“睡眠粉”消耗 12、基础失败率 50%。内容内部 `sleeping-dust` 步骤在等级结算时，
+  24 级及以下直接变为已有半径 1 `Sanctuary`，25 级起变为已有 `VisibleApplyStatus`；两者都使用当前
+  等级作为睡眠强度。协议投影只包含既有类型，没有新增睡眠执行器、命令或协议 DTO。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数从 33 增至 34；
+  请求继续使用既有 `{ buildId, raceId, playerName, seed }`，不增加玩家 Actor、tileset 或重复 Build。
+- 实现提交为 `638bab21c`（`Import Sprite race`）。最终协调点为 pack `1.370.0` / content hash
+  `6923cb3c4cf41abd17e2ab03046b38dc0a027027b08a58c1ea648ec83fd510d5`、Protocol `1.221`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。
+- 新增聚焦测试共 7 项：内容 1、中文名 1、importer 1、核心 3、Web 1，覆盖静态矩阵、等级速度、
+  永久/临时被动、能力等级/目标边界、资源支付、美德及 save/state-hash 往返。`verify-source`、schema、
+  Rust check/format 和 diff 检查通过；按用户要求未运行全量测试或刷新 fixture。

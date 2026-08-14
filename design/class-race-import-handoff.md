@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-15
-当前实现基线：`7dafd6c6f`（神使正式 New Game 开放；本次文档提交只做交接封板）
+当前实现基线：`638bab21c`（小妖精正式 New Game 开放；本次文档提交只做交接封板）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,14 +10,14 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.369.0`
-- content hash：`ca4c7b26e1bf204efefadedd2f116f95f2d4d713aeec543c417947033a68542b`
+- demo pack：`1.370.0`
+- content hash：`6923cb3c4cf41abd17e2ab03046b38dc0a027027b08a58c1ea648ec83fd510d5`
 - Protocol：`1.221`
 - State Hash Schema：`v104`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v303`，26 个 exact fixture
 - 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 33 个种族。
+  6 个职业构筑和 34 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -75,6 +75,7 @@ New Game 当前按以下稳定 ID 开放：
 - `rfb-legacy.race.skeleton`
 - `rfb-legacy.race.wood-elf`
 - `rfb-legacy.race.archon`
+- `rfb-legacy.race.sprite`
 
 种族通过新游戏请求中的独立 `raceId` 覆盖 Build 的默认 Human。不要生成
 “职业 × 种族”的重复 Build JSON。玩家外观目前由职业 Build 决定，新增普通种族不复制玩家 Actor 或
@@ -103,6 +104,9 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
 神使 `rfb-legacy.race.archon` 也已正式开放：飞行和看破隐形复用既有当前有效种族被动路径，没有
 主动能力。原作 `p_ptr->align += 200` 仍没有统一玩家阵营模型；本批没有发明内容标签或局部状态替代，
 导入审计继续把该语句保留为 `calc_bonuses` gap，等待真正的通用阵营系统。
+小妖精 `rfb-legacy.race.sprite` 已正式开放：飞行、光抗和每 10 级速度 +1 复用既有当前有效种族
+派生；12 级智力能力“睡眠粉”在 24 级及以下复用邻近睡眠，25 级起复用视野内状态结算。内容层只
+新增内部动态步骤，等级结算后投影为既有协议效果，不增加新命令、Protocol、save 或 State Hash 字段。
 
 ### 龙人专项最终证据
 
@@ -192,6 +196,25 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
 - 只运行了本批新增聚焦测试：内容 1 项、本地化 1 项、导入器 1 项、核心 2 项、Web 1 项，均通过；
   核心覆盖永久/临时形态的飞行、看破隐形、红外、美德及 save/state-hash 往返。`verify-source`、
   Rust format 和 diff 检查通过。按用户要求未运行全量测试，也未刷新 fixture。
+
+### 小妖精导入最终证据
+
+- 实现提交：`638bab21c`（`Import Sprite race`）。最终协调点为 pack `1.370.0` / content hash
+  `6923cb3c4cf41abd17e2ab03046b38dc0a027027b08a58c1ea648ec83fd510d5`；Protocol `1.221`、
+  State Hash Schema v104、save v2 和 `contract-v303` fixture baseline 均未改变。正式 New Game 种族数
+  从 33 增至 34，ability 数从 1831 增至 1832。
+- 小妖精闭合六维 `-4/+3/+3/+3/-2/-2`、生命 92%、基础 HP 14、经验 135%、4 格红外、商店 90%、
+  八项技能、光抗、飞行、每 10 级速度 +1、标准身体/出生与初始“自然”。临时小妖精形态按同一当前
+  有效种族路径获得并在解除后失去飞行、光抗、速度与种族能力。
+- 新增并由种族方向拥有 `rfb.ability.race.sleeping-dust` 和
+  `rfb.ability-program.race.sleeping-dust`。12 级智力能力“睡眠粉”消耗 12、基础失败率 50%；24 级及
+  以下影响半径 1 内怪物，25 级起影响视野内怪物，睡眠强度使用当前等级。内部 `sleeping-dust` 步骤
+  在等级结算时直接变为既有 `Sanctuary` 或 `VisibleApplyStatus`，没有新增协议效果类型或第二套睡眠事务。
+- importer 映射飞行、光抗、等级速度和睡眠粉；粗粒度 `calc_bonuses` hook 仍保留审计记录，但没有
+  未表达的 Sprite 回调语句。只运行本批新增聚焦测试：内容 1、本地化 1、importer 1、核心 3、Web 1，
+  均通过，覆盖静态矩阵、9/10/19/20 级速度、永久/临时被动、11/12 与 24/25 级能力边界、资源支付、
+  目标集合、美德及 save/state-hash 往返。`verify-source`、schema、Rust check/format 和 diff 检查通过；
+  按用户要求未运行全量测试，也未刷新 fixture。
 
 ## 2. 权威来源与不可变规则
 
