@@ -31,6 +31,22 @@ fn sniper_explosion_radius(concentration: u8) -> u8 {
     (concentration.saturating_add(1) / 2).saturating_add(1)
 }
 
+fn mana_brand_cost(damage_dice: u16, damage_sides: u16) -> u32 {
+    1_u32.saturating_add(
+        u32::from(damage_dice)
+            .saturating_mul(u32::from(damage_sides))
+            .saturating_div(7),
+    )
+}
+
+fn mana_brand_multiplier(multiplier: i32) -> i32 {
+    multiplier
+        .saturating_mul(3)
+        .saturating_div(2)
+        .saturating_add(14)
+        .min(150)
+}
+
 fn roll_sniper_needle_vital_hit(
     rng: &mut RfbRng,
     target_level: u32,
@@ -1594,7 +1610,7 @@ impl Game {
                                     .contains(&EquipmentPassive::Vampiric)
                             })
                     });
-            let damage_multiplier = self.draconian_strike_damage_multiplier(
+            let base_damage_multiplier = self.draconian_strike_damage_multiplier(
                 &profile,
                 &self.entities[index],
                 &definition,
@@ -1626,11 +1642,45 @@ impl Game {
                     continue;
                 }
 
-                let weapon_damage = self.roll_damage(profile.damage_dice, profile.damage_sides);
+                let source_weapon_index = profile
+                    .source_item_id
+                    .as_deref()
+                    .and_then(|item_id| self.items.iter().position(|item| item.id == item_id));
+                let has_trait = |trait_| {
+                    source_weapon_index.is_some_and(|item_index| {
+                        Self::item_has_weapon_trait(&self.items[item_index], trait_)
+                    })
+                };
+                let order = has_trait(WeaponTraitDto::Order);
+                let vorpal_chance = if has_trait(WeaponTraitDto::Vorpal2) {
+                    Some(2_u64)
+                } else if has_trait(WeaponTraitDto::Vorpal) {
+                    Some(4_u64)
+                } else {
+                    None
+                };
+                let mut damage_multiplier = base_damage_multiplier;
+                if has_trait(WeaponTraitDto::ManaBrand)
+                    && let Some(resource_id) = self
+                        .casting_profile()
+                        .map(|profile| profile.resource_id.clone())
+                    && let Some(pool) = self.resources.get_mut(&resource_id)
+                {
+                    let cost = mana_brand_cost(profile.damage_dice, profile.damage_sides);
+                    if pool.current >= cost {
+                        pool.current -= cost;
+                        damage_multiplier = mana_brand_multiplier(damage_multiplier);
+                    }
+                }
+                let weapon_damage = if order {
+                    i32::from(profile.damage_dice).saturating_mul(i32::from(profile.damage_sides))
+                } else {
+                    self.roll_damage(profile.damage_dice, profile.damage_sides)
+                };
                 let mut base_damage = weapon_damage
                     .saturating_mul(damage_multiplier)
                     .saturating_div(10);
-                if let Some(weight) = profile.critical_weight_tenths_pound {
+                if !order && let Some(weight) = profile.critical_weight_tenths_pound {
                     base_damage = base_damage
                         .saturating_mul(self.roll_player_melee_critical_multiplier(
                             weight,
@@ -1638,6 +1688,15 @@ impl Game {
                             &mut allow_criticals,
                         ))
                         .saturating_div(100);
+                }
+                if let Some(chance) = vorpal_chance
+                    && self.rng.bounded(chance.saturating_mul(3).saturating_div(2)) == 0
+                {
+                    let mut multiplier = 2;
+                    while self.rng.bounded(chance) == 0 {
+                        multiplier += 1;
+                    }
+                    base_damage = base_damage.saturating_mul(multiplier);
                 }
                 let mut rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
                 if matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vorpal))

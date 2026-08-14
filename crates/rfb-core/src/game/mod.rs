@@ -111,7 +111,7 @@ use rfb_protocol::{
     RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, SniperShotModeDto, StatModifiersDto,
     SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto, TargetModeDto,
     TargetSelection, TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, VirtueDto, VirtueKindDto,
-    WeaponBrandDto,
+    WeaponBrandDto, WeaponTraitDto,
 };
 
 mod abilities;

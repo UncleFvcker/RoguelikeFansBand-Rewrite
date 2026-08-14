@@ -1068,21 +1068,36 @@ impl Game {
         self.content
             .item(&item.kind_id)
             .and_then(|definition| definition.melee_profile.as_ref())
-            .map(|profile| AttackProfileDto {
-                attacks: profile.attacks,
-                to_hit: profile
-                    .to_hit
-                    .saturating_add(i32::from(item.enchantments.to_hit)),
-                to_damage: profile
-                    .to_damage
-                    .saturating_add(i32::from(item.enchantments.to_damage)),
-                damage: DamageDiceDto {
-                    dice: profile.damage_dice,
-                    sides: profile.damage_sides,
-                    damage_type: DamageType::from(profile.damage_type).into(),
-                },
-                source_item_id: Some(item.id.clone()),
+            .map(|profile| {
+                let damage = item
+                    .rolled_affixes
+                    .iter()
+                    .find_map(|rolled| rolled.melee_damage_dice)
+                    .map_or((profile.damage_dice, profile.damage_sides), |damage| {
+                        (damage.dice, damage.sides)
+                    });
+                AttackProfileDto {
+                    attacks: profile.attacks,
+                    to_hit: profile
+                        .to_hit
+                        .saturating_add(i32::from(item.enchantments.to_hit)),
+                    to_damage: profile
+                        .to_damage
+                        .saturating_add(i32::from(item.enchantments.to_damage)),
+                    damage: DamageDiceDto {
+                        dice: damage.0,
+                        sides: damage.1,
+                        damage_type: DamageType::from(profile.damage_type).into(),
+                    },
+                    source_item_id: Some(item.id.clone()),
+                }
             })
+    }
+
+    pub(super) fn item_has_weapon_trait(item: &ItemInstance, trait_: WeaponTraitDto) -> bool {
+        item.rolled_affixes
+            .iter()
+            .any(|rolled| rolled.weapon_traits.contains(&trait_))
     }
 
     pub(super) fn item_projectile_profile(
@@ -1409,45 +1424,75 @@ impl Game {
                             item.kind_id.clone(),
                             profile,
                             item_definition.riding_weapon_kind,
+                            item_definition.weight_tenths_pound,
+                            item.enchantments.to_hit,
+                            item.rolled_affixes
+                                .iter()
+                                .find_map(|rolled| rolled.melee_damage_dice),
                         )
                     })
                 })
         });
-        let (source_item_id, source_kind_id, dice, sides, damage_type, to_hit, mounted_to_hit) =
-            equipped_weapon.map_or_else(
-                || {
-                    (
-                        None,
-                        None,
-                        definition.damage_dice,
-                        definition.damage_sides,
-                        definition.damage_type,
-                        0,
-                        0,
-                    )
-                },
-                |(item_id, kind_id, profile, riding_weapon_kind)| {
-                    let (mounted_to_hit, mounted_dice) =
-                        self.riding_mount_level().map_or((0, 0), |mount_level| {
-                            riding_proficiency::mounted_melee_adjustment(
-                                self.character_definitions()
-                                    .is_some_and(|(_, _, class, _)| class.riding_combat_expert),
-                                riding_weapon_kind,
-                                mount_level,
-                                self.progress.riding_proficiency,
-                            )
-                        });
-                    (
-                        Some(item_id),
-                        Some(kind_id),
-                        profile.damage_dice.saturating_add(mounted_dice),
-                        profile.damage_sides,
-                        profile.damage_type,
-                        profile.to_hit.saturating_add(mounted_to_hit),
-                        mounted_to_hit,
-                    )
-                },
-            );
+        let (
+            source_item_id,
+            source_kind_id,
+            dice,
+            sides,
+            damage_type,
+            to_hit,
+            mounted_to_hit,
+            critical_weight_tenths_pound,
+        ) = equipped_weapon.map_or_else(
+            || {
+                (
+                    None,
+                    None,
+                    definition.damage_dice,
+                    definition.damage_sides,
+                    definition.damage_type,
+                    0,
+                    0,
+                    None,
+                )
+            },
+            |(
+                item_id,
+                kind_id,
+                profile,
+                riding_weapon_kind,
+                weight,
+                enchantment_to_hit,
+                rolled_damage,
+            )| {
+                let (mounted_to_hit, mounted_dice) =
+                    self.riding_mount_level().map_or((0, 0), |mount_level| {
+                        riding_proficiency::mounted_melee_adjustment(
+                            self.character_definitions()
+                                .is_some_and(|(_, _, class, _)| class.riding_combat_expert),
+                            riding_weapon_kind,
+                            mount_level,
+                            self.progress.riding_proficiency,
+                        )
+                    });
+                let (damage_dice, damage_sides) = rolled_damage
+                    .map_or((profile.damage_dice, profile.damage_sides), |damage| {
+                        (damage.dice, damage.sides)
+                    });
+                (
+                    Some(item_id),
+                    Some(kind_id),
+                    damage_dice.saturating_add(mounted_dice),
+                    damage_sides,
+                    profile.damage_type,
+                    profile
+                        .to_hit
+                        .saturating_add(i32::from(enchantment_to_hit))
+                        .saturating_add(mounted_to_hit),
+                    mounted_to_hit,
+                    Some(weight),
+                )
+            },
+        );
         let mut melee_skill = source_kind_id
             .as_deref()
             .and_then(|kind_id| self.weapon_proficiency_hit_modifier(kind_id))
@@ -1487,7 +1532,7 @@ impl Game {
             source_item_id,
             source_mutation_id: None,
             attack_name: None,
-            critical_weight_tenths_pound: None,
+            critical_weight_tenths_pound,
         }
     }
 

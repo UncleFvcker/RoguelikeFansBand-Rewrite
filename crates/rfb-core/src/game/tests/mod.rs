@@ -45,4 +45,5 @@ mod tasks;
 mod town;
 mod virtue_state;
 mod weapon_proficiency;
+mod weapon_traits;
 mod world;
