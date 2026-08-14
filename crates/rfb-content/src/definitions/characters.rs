@@ -111,6 +111,9 @@ pub struct RaceDefinition {
     /// intrinsic see-invisible source.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub see_invisible_minimum_level: Option<u16>,
+    /// Character level at which this effective race grants permanent telepathy.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub telepathy_minimum_level: Option<u16>,
     /// Attributes this race innately prevents from being reduced.
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub attribute_sustains: BTreeSet<ItemAttributeDefinition>,

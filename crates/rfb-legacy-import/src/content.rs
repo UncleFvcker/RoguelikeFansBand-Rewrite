@@ -816,6 +816,7 @@ pub struct LegacyCharacterEntry {
     pub free_act: bool,
     pub see_invisible: bool,
     pub see_invisible_minimum_level: Option<u16>,
+    pub telepathy_minimum_level: Option<u16>,
     pub attribute_sustains: Vec<String>,
     pub regeneration_rate_modifier_percent: i32,
     pub speed: i32,
@@ -848,6 +849,7 @@ impl Default for LegacyCharacterEntry {
             free_act: false,
             see_invisible: false,
             see_invisible_minimum_level: None,
+            telepathy_minimum_level: None,
             attribute_sustains: Vec::new(),
             regeneration_rate_modifier_percent: 0,
             speed: 0,
@@ -5000,13 +5002,15 @@ fn find_power_info_body<'a>(text: &'a str, name: &str) -> Option<&'a str> {
 
 /// Extracts the statically expressible defensive surface from a race's
 /// calc_bonuses hook: top-level `res_add` family calls, literal level-gated
-/// resistance calls, `free_act++`, `see_inv++`, unconditional attribute
-/// sustains and literal `pspeed`, `spell_cap` and regeneration adjustments.
+/// resistance calls, `free_act++`, `see_inv++`, permanent telepathy,
+/// unconditional attribute sustains and literal `pspeed`, `spell_cap` and
+/// regeneration adjustments.
 pub type CalcBonusesDefenses = (
     Vec<(String, String)>,
     Vec<(u16, String, String)>,
     bool,
     bool,
+    Option<u16>,
     Option<u16>,
     Vec<String>,
     i32,
@@ -5041,6 +5045,7 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
             false,
             false,
             None,
+            None,
             Vec::new(),
             0,
             0,
@@ -5054,6 +5059,7 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
     let mut free_act = false;
     let mut see_invisible = false;
     let mut see_invisible_minimum_level: Option<u16> = None;
+    let mut telepathy_minimum_level: Option<u16> = None;
     let mut attribute_sustains = BTreeSet::new();
     let mut regeneration_rate_modifier_percent = 0_i32;
     let mut speed = 0_i32;
@@ -5101,6 +5107,13 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
                 );
                 continue;
             }
+            if line == "p_ptr->telepathy = TRUE;" {
+                telepathy_minimum_level = Some(
+                    telepathy_minimum_level
+                        .map_or(minimum_level, |current| current.min(minimum_level)),
+                );
+                continue;
+            }
             let (rest, level) = if let Some(rest) = line.strip_prefix("res_add_immune(") {
                 (rest, "immune")
             } else if let Some(rest) = line.strip_prefix("res_add_vuln(") {
@@ -5144,6 +5157,8 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
             free_act = true;
         } else if line == "p_ptr->see_inv++;" {
             see_invisible = true;
+        } else if line == "p_ptr->telepathy = TRUE;" {
+            telepathy_minimum_level = Some(1);
         } else if let Some(attribute) = line
             .strip_prefix("p_ptr->sustain_")
             .and_then(|line| line.strip_suffix(" = TRUE;"))
@@ -5201,6 +5216,7 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
         free_act,
         see_invisible,
         see_invisible_minimum_level,
+        telepathy_minimum_level,
         attribute_sustains.into_iter().collect(),
         speed,
         speed_per_ten_levels,
@@ -5422,6 +5438,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "detect_doors_stairs_traps_spell" => "rfb.ability.race.detect-doors-stairs-traps",
             "detect_treasure_spell" => "rfb.ability.race.detect-treasure",
             "magic_missile_spell" => "rfb.ability.race.magic-missile",
+            "mind_blast_spell" => "rfb.ability.race.mind-blast",
             "phase_door_spell" => "rfb.ability.race.phase-door",
             "poison_dart_spell" => "rfb.ability.race.poison-dart",
             "probing_spell" => "rfb.ability.race.probe-monsters",
@@ -6256,6 +6273,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             | "half-titan"
             | "half-troll"
             | "hobbit"
+            | "mindflayer"
             | "klackon"
             | "kobold"
             | "nibelung"
@@ -6334,6 +6352,9 @@ fn race_json(
     }
     if let Some(minimum_level) = entry.see_invisible_minimum_level {
         value["seeInvisibleMinimumLevel"] = serde_json::json!(minimum_level);
+    }
+    if let Some(minimum_level) = entry.telepathy_minimum_level {
+        value["telepathyMinimumLevel"] = serde_json::json!(minimum_level);
     }
     if !entry.attribute_sustains.is_empty() {
         value["attributeSustains"] = serde_json::json!(entry.attribute_sustains);
@@ -12306,6 +12327,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                     free_act,
                     see_invisible,
                     see_invisible_minimum_level,
+                    telepathy_minimum_level,
                     attribute_sustains,
                     speed,
                     speed_per_ten_levels,
@@ -12317,6 +12339,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                 entry.free_act = free_act;
                 entry.see_invisible = see_invisible;
                 entry.see_invisible_minimum_level = see_invisible_minimum_level;
+                entry.telepathy_minimum_level = telepathy_minimum_level;
                 entry.attribute_sustains = attribute_sustains;
                 entry.speed = speed;
                 entry.speed_per_ten_levels = speed_per_ten_levels;
@@ -13102,6 +13125,7 @@ fn legacy_races_by_id(
                     free_act,
                     see_invisible,
                     see_invisible_minimum_level,
+                    telepathy_minimum_level,
                     attribute_sustains,
                     speed,
                     speed_per_ten_levels,
@@ -13113,6 +13137,7 @@ fn legacy_races_by_id(
                 entry.free_act = free_act;
                 entry.see_invisible = see_invisible;
                 entry.see_invisible_minimum_level = see_invisible_minimum_level;
+                entry.telepathy_minimum_level = telepathy_minimum_level;
                 entry.attribute_sustains = attribute_sustains;
                 entry.speed = speed;
                 entry.speed_per_ten_levels = speed_per_ten_levels;
@@ -19519,6 +19544,7 @@ static void _test_calc_bonuses(void)
     p_ptr->spell_cap += 3;
     if (p_ptr->lev >= 45) res_add(RES_COLD);
     if (p_ptr->lev >= 40) p_ptr->see_inv++;
+    if (p_ptr->lev >= 30) p_ptr->telepathy = TRUE;
     if (p_ptr->lev >= 35) p_ptr->sustain_str = TRUE;
     if (p_ptr->lev >= 10)
         res_add(RES_POIS);
@@ -19601,6 +19627,7 @@ race_t *test_beast_get_race(void)
             free_act,
             see_invisible,
             see_invisible_minimum_level,
+            telepathy_minimum_level,
             attribute_sustains,
             speed,
             speed_per_ten_levels,
@@ -19618,6 +19645,7 @@ race_t *test_beast_get_race(void)
         assert!(free_act);
         assert!(see_invisible);
         assert_eq!(see_invisible_minimum_level, Some(40));
+        assert_eq!(telepathy_minimum_level, Some(30));
         assert_eq!(attribute_sustains, ["constitution"]);
         assert_eq!(speed, 3);
         assert_eq!(speed_per_ten_levels, 1);
@@ -19636,6 +19664,7 @@ race_t *test_beast_get_race(void)
             _,
             conditional_see_invisible,
             conditional_see_invisible_minimum_level,
+            conditional_telepathy_minimum_level,
             conditional_sustains,
             _,
             _,
@@ -19644,6 +19673,7 @@ race_t *test_beast_get_race(void)
         ) = parse_calc_bonuses_defenses(SYNTHETIC_SOURCE, "_conditional_calc_bonuses");
         assert!(!conditional_see_invisible);
         assert_eq!(conditional_see_invisible_minimum_level, Some(40));
+        assert_eq!(conditional_telepathy_minimum_level, None);
         assert!(conditional_sustains.is_empty());
         let mut folk = folk;
         folk.resistances = resistances;
@@ -19651,6 +19681,7 @@ race_t *test_beast_get_race(void)
         folk.free_act = free_act;
         folk.see_invisible = see_invisible;
         folk.see_invisible_minimum_level = see_invisible_minimum_level;
+        folk.telepathy_minimum_level = telepathy_minimum_level;
         folk.attribute_sustains = attribute_sustains;
         folk.speed = speed;
         folk.speed_per_ten_levels = speed_per_ten_levels;
@@ -19687,6 +19718,7 @@ race_t *test_beast_get_race(void)
         assert_eq!(race["statusImmunities"][0], "rfb.status.paralysis");
         assert_eq!(race["seeInvisible"], true);
         assert_eq!(race["seeInvisibleMinimumLevel"], 40);
+        assert_eq!(race["telepathyMinimumLevel"], 30);
         assert_eq!(
             race["attributeSustains"],
             serde_json::json!(["constitution"])
@@ -19879,6 +19911,19 @@ race_t *test_beast_get_race(void)
                 "standard-body",
             ]
         );
+        let mindflayer = LegacyCharacterEntry {
+            id: "mindflayer".to_owned(),
+            ..LegacyCharacterEntry::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&mindflayer),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body",
+            ]
+        );
     }
 
     #[test]
@@ -19898,6 +19943,7 @@ static power_info _barbarian_get_powers[] =
     { A_WIS, {15, 15, 50, scare_monster_spell}},
     { A_DEX, {9, 9, 50, spit_acid_spell}},
     { A_INT, {1, 2, 30, magic_missile_spell}},
+    { A_INT, {5, 3, 50, mind_blast_spell}},
     { A_WIS, {12, 7, 40, mystery_spell}},
     { -1, {-1, -1, -1, NULL} }
 };
@@ -19923,7 +19969,7 @@ race_t *barbarian_get_race(void)
             .next()
             .expect("synthetic Barbarian should parse");
         let mut barbarian = parse_character_block(&name, &body);
-        let (resistances, _, _, _, _, _, _, _, _, _) =
+        let (resistances, _, _, _, _, _, _, _, _, _, _) =
             parse_calc_bonuses_defenses(SOURCE, "_barbarian_calc_bonuses");
         barbarian.resistances = resistances;
         parse_race_powers(SOURCE, &mut barbarian);
@@ -20015,6 +20061,13 @@ race_t *barbarian_get_race(void)
                     base_failure_percent: 30,
                     ability_id: "rfb.ability.race.magic-missile".to_owned(),
                 },
+                LegacyInnatePower {
+                    governing_attribute: "intelligence".to_owned(),
+                    minimum_level: 5,
+                    cost: 3,
+                    base_failure_percent: 50,
+                    ability_id: "rfb.ability.race.mind-blast".to_owned(),
+                },
             ]
         );
         assert!(!barbarian.hooks.iter().any(|hook| hook == "get_powers"));
@@ -20075,7 +20128,11 @@ race_t *barbarian_get_race(void)
             race["abilities"][11]["abilityId"],
             "rfb.ability.race.magic-missile"
         );
-        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(12));
+        assert_eq!(
+            race["abilities"][12]["abilityId"],
+            "rfb.ability.race.mind-blast"
+        );
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(13));
         assert_eq!(race["resistances"]["fear"], "resistant");
         assert!(
             race["tags"]

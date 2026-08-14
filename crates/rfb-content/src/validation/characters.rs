@@ -208,6 +208,9 @@ pub(super) fn validate_characters(
             || race
                 .see_invisible_minimum_level
                 .is_some_and(|level| !(1..=100).contains(&level))
+            || race
+                .telepathy_minimum_level
+                .is_some_and(|level| !(1..=100).contains(&level))
             || !(-1_000..=1_000).contains(&race.regeneration_rate_modifier_percent)
             || !(-100..=100).contains(&race.speed_per_ten_levels)
             || !(-20..=20).contains(&race.spell_capacity_bonus)

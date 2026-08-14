@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.350.0");
+    assert_eq!(catalog.pack_version(), "1.351.0");
     assert_eq!(catalog.races().count(), 46);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -1560,6 +1560,114 @@ fn formal_dark_elf_matches_rfb_profile_passives_and_magic_missile() {
         }
     ));
     assert_eq!(ability.level_scaling.len(), 2);
+    assert_eq!(ability.spell_power_fields.len(), 1);
+    assert!(
+        ability
+            .tags
+            .iter()
+            .any(|tag| tag == "uses-casting-profile-offense")
+    );
+}
+
+#[test]
+fn formal_mindflayer_matches_rfb_profile_senses_and_mind_blast() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let mindflayer = catalog
+        .race("rfb-legacy.race.mindflayer")
+        .expect("formal Mindflayer race");
+
+    assert_eq!(
+        [
+            mindflayer.modifiers.strength,
+            mindflayer.modifiers.intelligence,
+            mindflayer.modifiers.wisdom,
+            mindflayer.modifiers.dexterity,
+            mindflayer.modifiers.constitution,
+            mindflayer.modifiers.charisma,
+        ],
+        [-3, 4, 4, 0, -2, -1]
+    );
+    assert_eq!(
+        (
+            mindflayer.life_percent,
+            mindflayer.base_hp,
+            mindflayer.experience_percent,
+            mindflayer.shop_adjust_percent,
+            mindflayer.infravision,
+            mindflayer.see_invisible_minimum_level,
+            mindflayer.telepathy_minimum_level,
+        ),
+        (97, 18, 150, 115, 4, Some(15), Some(30))
+    );
+    assert_eq!(mindflayer.kin_category.as_deref(), Some("kin-glyph-104"));
+    assert_eq!(
+        mindflayer
+            .attribute_sustains
+            .iter()
+            .copied()
+            .collect::<Vec<_>>(),
+        [
+            ItemAttributeDefinition::Intelligence,
+            ItemAttributeDefinition::Wisdom,
+        ]
+    );
+    assert!(mindflayer.level_mutation_rewards.is_empty());
+    assert_eq!(mindflayer.abilities.len(), 1);
+    let activation = &mindflayer.abilities[0];
+    assert_eq!(activation.minimum_level, 5);
+    assert_eq!(
+        activation.governing_attribute,
+        TechniqueAttribute::Intelligence
+    );
+    assert_eq!(activation.cost, 3);
+    assert_eq!(activation.base_failure_percent, 50);
+    assert_eq!(activation.ability_id, "rfb.ability.race.mind-blast");
+    for tag in [
+        "humanoid",
+        "legacy-import",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(mindflayer.tags.iter().any(|candidate| candidate == tag));
+    }
+
+    let skills = catalog
+        .skill_set(&mindflayer.skill_set_id)
+        .expect("formal Mindflayer skill set");
+    assert_eq!(
+        skills
+            .entries
+            .iter()
+            .map(|entry| (entry.skill_id.as_str(), entry.base))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.skill.device", 11),
+            ("demo.skill.disarming", 10),
+            ("demo.skill.melee", -10),
+            ("demo.skill.perception", 12),
+            ("demo.skill.ranged", -5),
+            ("demo.skill.saving-throw", 9),
+            ("demo.skill.search", 5),
+            ("demo.skill.stealth", 2),
+        ]
+    );
+
+    let ability = catalog
+        .ability("rfb.ability.race.mind-blast")
+        .expect("Mindflayer mind-blast ability");
+    assert!(ability.affects_ground_items);
+    assert!(matches!(
+        ability.effect,
+        AbilityEffectDefinition::Damage {
+            damage_dice: 3,
+            damage_sides: 3,
+            damage_bonus: 0,
+            damage_type: ActorDamageType::Psi,
+        }
+    ));
+    assert_eq!(ability.level_scaling.len(), 1);
     assert_eq!(ability.spell_power_fields.len(), 1);
     assert!(
         ability

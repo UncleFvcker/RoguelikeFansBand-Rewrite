@@ -789,7 +789,10 @@ impl Game {
     }
 
     pub(super) fn player_has_permanent_telepathy(&self) -> bool {
-        self.content.mutations().any(|mutation| {
+        self.character_definitions().is_some_and(|(_, race, _, _)| {
+            race.telepathy_minimum_level
+                .is_some_and(|minimum_level| self.progress.level >= minimum_level)
+        }) || self.content.mutations().any(|mutation| {
             mutation.telepathy && self.progress.active_mutation_ids.contains(&mutation.id)
         })
     }

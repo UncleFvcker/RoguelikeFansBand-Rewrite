@@ -1233,3 +1233,20 @@ git diff --stat
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。新增和直接
   相关内容、导入器、核心、美德、Web、schema、source 与协议检查通过；按用户要求停止完整 Rust
   回归，未运行或刷新全量 fixture。下一普通顺序项为龙人，必须先规划动态亚种与 35 级天赋纵切。
+
+## 67. main 当前交接（夺心魔、心灵震爆与等级心灵感应）
+
+- 种族方向继续拥有既有 `rfb-legacy.race.mindflayer` 与
+  `rfb-legacy.skill-set.race-mindflayer`；本批新增并拥有 `rfb.ability.race.mind-blast`，复用既有
+  `rfb.ability-program.mutation.mind-blast`。其他方向不得复制该能力身份。
+- Race 内容表达 5 级 INT/3/50“心灵震爆”、智力/感知维持、15 级看破隐形、30 级永久心灵感应、
+  初始“启蒙”与正式选择标签。心灵震爆继续使用共享 psi 伤害和施法攻击加值路径，伤害为
+  `3 + (level - 1) / 5` 个 d3。
+- 默认空值的 `RaceDefinition.telepathyMinimumLevel` 直接接入既有永久心灵感应消费者，并按当前有效
+  种族派生；临时变形因此会获得并在解除时失去属性维持、红外、等级视隐、等级心灵感应与心灵震爆。
+- 本批不新增 ability program、item、material、affix、resource 或 actor ID。共享协调点为 pack
+  `1.351.0` / content hash `e8970160ca2e3d84732228d705014b132f855cb2cabb829abbb82cbfa4f68d7e`、
+  Protocol `1.212`、State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact
+  fixture）。仅新增和直接相关内容、导入器、核心、美德、Web、schema、source、协议、类型及格式
+  检查通过；未运行或刷新全量 fixture。龙人动态纵切继续延期，下一静态种族为
+  `rfb-legacy.race.imp`（小恶魔）。

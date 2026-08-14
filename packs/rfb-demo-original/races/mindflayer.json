@@ -1,5 +1,18 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.mind-blast",
+      "minimumLevel": 5,
+      "governingAttribute": "intelligence",
+      "cost": 3,
+      "baseFailurePercent": 50
+    }
+  ],
+  "attributeSustains": [
+    "intelligence",
+    "wisdom"
+  ],
   "baseHp": 18,
   "bodySlots": [
     {
@@ -67,6 +80,7 @@
   "experiencePercent": 150,
   "formatVersion": 1,
   "id": "rfb-legacy.race.mindflayer",
+  "infravision": 4,
   "kinCategory": "kin-glyph-104",
   "legacyIndex": 21,
   "lifePercent": 97,
@@ -79,9 +93,14 @@
   },
   "nameKey": "race-legacy-mindflayer-name",
   "shopAdjustPercent": 115,
+  "seeInvisibleMinimumLevel": 15,
   "skillSetId": "rfb-legacy.skill-set.race-mindflayer",
+  "telepathyMinimumLevel": 30,
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.mutation.mind-blast",
+  "affectsGroundItems": true,
+  "descriptionKey": "ability-rfb-race-mind-blast-description",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.mind-blast",
+  "levelScaling": [
+    {
+      "divisor": 5,
+      "effectIndex": 0,
+      "field": "damage-dice",
+      "levelOffset": 1,
+      "multiplier": 1
+    }
+  ],
+  "nameKey": "ability-rfb-race-mind-blast-name",
+  "spellPowerFields": [
+    {
+      "effectIndex": 0,
+      "field": "final-damage"
+    }
+  ],
+  "tags": [
+    "damage",
+    "psi",
+    "race",
+    "uses-casting-profile-offense"
+  ],
+  "target": {
+    "modes": [
+      "direction"
+    ],
+    "range": 8,
+    "requiresLineOfEffect": true
+  }
+}

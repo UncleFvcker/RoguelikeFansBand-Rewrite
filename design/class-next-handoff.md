@@ -648,3 +648,26 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   `3db290a0ff990486082f7710691d0050d5176fa3464a50f93e8d17a02355a494`、Protocol `1.212`、
   State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。下一普通
   顺序项为龙人；其动态亚种、喷吐/抗性、漂浮和 35 级天赋应作为完整纵切单独规划。
+
+## main 当前批次：夺心魔正式内容、心灵震爆与等级心灵感应
+
+- 权威来源为 RFB `master:src/races_k.c`、`master:src/spells_m.c`、`master:src/spells3.c` 与
+  `master:src/virtue.c`。正式种族复用 `rfb-legacy.race.mindflayer` 和
+  `rfb-legacy.skill-set.race-mindflayer`；新增并由种族方向拥有 `rfb.ability.race.mind-blast`，复用
+  既有 `rfb.ability-program.mutation.mind-blast`。本批不新增 ability program、item、material、affix、
+  resource 或 actor ID。
+- 夺心魔按原版闭合六维 `[-3,4,4,0,-2,-1]`、生命 97%、基础 HP 18、经验 150%、商店 115%、
+  八项技能、4 格红外、智力/感知维持、Mindflayer kin、Standard 身体、初始“启蒙”和 5 级
+  INT/3/50“心灵震爆”；15 级获得看破隐形，30 级获得永久心灵感应，原版没有等级奖励。New Game
+  通过既有 `raceId` 正式开放，玩家 actor 与 tileset 继续由职业 build 决定。
+- 心灵震爆沿方向造成 `3 + (level - 1) / 5` 个 d3 psi 伤害，并复用黑暗精灵批次已接入的职业法术
+  伤害与最终 spell power 路径。内容模型新增默认空值的 `RaceDefinition.telepathyMinimumLevel`，在
+  既有永久心灵感应消费者中按当前有效种族和等级派生，没有增加状态或持久字段。
+- 聚焦验证覆盖静态内容、等级感知字段边界、4/5 级能力门槛、5/50 级伤害、职业伤害加值、失败
+  支付、save/replay、15/30 级感知、属性维持、变形切换、初始美德、导入器和 Web `raceId`；内容
+  schema、source lock、协议绑定、TypeScript typecheck、格式及 diff 检查已同步。按要求只运行新增
+  和直接相关测试，未运行或刷新全量 fixture。
+- 协调版本为 pack `1.351.0` / hash
+  `e8970160ca2e3d84732228d705014b132f855cb2cabb829abbb82cbfa4f68d7e`、Protocol `1.212`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。龙人动态
+  纵切继续延期；下一静态种族为小恶魔 `rfb-legacy.race.imp`。

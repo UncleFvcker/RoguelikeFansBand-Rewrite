@@ -788,6 +788,16 @@
         "type": "string"
       },
       "type": "array"
+    },
+    "telepathyMinimumLevel": {
+      "description": "Character level at which this effective race grants permanent telepathy.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
     }
   },
   "required": [

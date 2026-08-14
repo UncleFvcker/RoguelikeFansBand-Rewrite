@@ -307,7 +307,7 @@ fn race_speed_growth_is_bounded() {
 }
 
 #[test]
-fn race_level_see_invisible_and_spell_capacity_are_bounded() {
+fn race_level_senses_and_spell_capacity_are_bounded() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     for invalid in [0, 101] {
         let mut content = artifact.content.clone();
@@ -333,6 +333,19 @@ fn race_level_see_invisible_and_spell_capacity_are_bounded() {
         assert!(matches!(
             validate_and_normalize(&mut content),
             Err(ContentError::InvalidCharacterSource(id)) if id == "rfb-legacy.race.dark-elf"
+        ));
+    }
+    for invalid in [0, 101] {
+        let mut content = artifact.content.clone();
+        let mindflayer = content
+            .races
+            .iter_mut()
+            .find(|race| race.id == "rfb-legacy.race.mindflayer")
+            .expect("Mindflayer race should exist");
+        mindflayer.telepathy_minimum_level = Some(invalid);
+        assert!(matches!(
+            validate_and_normalize(&mut content),
+            Err(ContentError::InvalidCharacterSource(id)) if id == "rfb-legacy.race.mindflayer"
         ));
     }
 }

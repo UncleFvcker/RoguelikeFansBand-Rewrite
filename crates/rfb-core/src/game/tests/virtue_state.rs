@@ -313,6 +313,22 @@ fn formal_races_receive_their_original_race_virtues() {
         ]
     );
 
+    let mindflayer = Game::new_with_build_race_and_name(
+        43,
+        "demo.build.archer",
+        "rfb-legacy.race.mindflayer",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Mindflayer Archer should create");
+    assert_eq!(
+        &virtue_kinds(&mindflayer)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Enlightenment,
+        ]
+    );
+
     let dunadan = Game::new_with_build_race_and_name(
         43,
         "demo.build.archer",

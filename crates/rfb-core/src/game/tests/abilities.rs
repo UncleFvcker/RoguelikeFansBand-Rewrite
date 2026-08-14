@@ -2900,6 +2900,7 @@ const RACE_CREATE_FOOD_ABILITY_ID: &str = "rfb.ability.race.create-food";
 const RACE_DETECT_DOORS_ABILITY_ID: &str = "rfb.ability.race.detect-doors-stairs-traps";
 const RACE_DETECT_TREASURE_ABILITY_ID: &str = "rfb.ability.race.detect-treasure";
 const RACE_MAGIC_MISSILE_ABILITY_ID: &str = "rfb.ability.race.magic-missile";
+const RACE_MIND_BLAST_ABILITY_ID: &str = "rfb.ability.race.mind-blast";
 const RACE_PHASE_DOOR_ABILITY_ID: &str = "rfb.ability.race.phase-door";
 const RACE_POISON_DART_ABILITY_ID: &str = "rfb.ability.race.poison-dart";
 const RACE_PROBE_MONSTERS_ABILITY_ID: &str = "rfb.ability.race.probe-monsters";
@@ -4791,6 +4792,220 @@ fn dark_elf_magic_missile_capacity_and_sight_follow_the_effective_race() {
             .abilities
             .iter()
             .all(|ability| ability.id != RACE_MAGIC_MISSILE_ABILITY_ID)
+    );
+}
+
+#[test]
+fn mindflayer_mind_blast_sustains_and_senses_follow_the_effective_race() {
+    fn cast_mind_blast(game: &mut Game) -> Vec<DomainEvent> {
+        let mut events = Vec::new();
+        game.resolve_player_ability(
+            RACE_MIND_BLAST_ABILITY_ID,
+            TargetSelection::Direction {
+                direction: Direction::East,
+            },
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Mindflayer mind blast should resolve");
+        events
+    }
+
+    let mut game = Game::new_with_build_race_and_name(
+        112,
+        "demo.build.high-mage-death",
+        "rfb-legacy.race.mindflayer",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Mindflayer High-Mage should create");
+    clear_monsters(&mut game);
+    assert_eq!(game.player_infravision_range(), 4);
+    assert!(game.player_sustains_attribute(AttributeKind::Intelligence));
+    assert!(game.player_sustains_attribute(AttributeKind::Wisdom));
+    assert!(!game.player_sustains_attribute(AttributeKind::Strength));
+    assert_eq!(game.player_see_invisible_sources(), 0);
+    assert!(!game.player_has_permanent_telepathy());
+
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_MIND_BLAST_ABILITY_ID)
+        .expect("Mindflayer mind blast should be projected");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Intelligence)
+    );
+    assert_eq!(locked.minimum_level, 5);
+    assert!(!locked.can_cast);
+
+    game.apply_unscaled_player_experience(
+        crate::stats::experience_required_for_level(5),
+        &mut Vec::new(),
+    );
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_MIND_BLAST_ABILITY_ID)
+        .expect("level-five Mindflayer mind blast");
+    assert_eq!(
+        (projected.base_resource_cost, projected.resource_cost),
+        (3, 3)
+    );
+    assert!(projected.can_cast);
+    assert!(matches!(
+        projected.effects.as_slice(),
+        [AbilityEffectSpecDto::Damage {
+            damage_dice: 3,
+            damage_sides: 3,
+            damage_bonus: 6,
+            damage_type: DamageTypeDto::Psi,
+            ..
+        }]
+    ));
+
+    game.player.position = Position { x: 3, y: 3 };
+    for position in [Position { x: 3, y: 3 }, Position { x: 4, y: 3 }] {
+        replace_terrain(&mut game, position, "demo.terrain.floor");
+    }
+    game.push_generated_actor(
+        "test.mindflayer-blast-target".to_owned(),
+        "demo.actor.warrens-keeper",
+        Position { x: 4, y: 3 },
+    );
+    let maximum_mana = game.resources["demo.resource.mana"].maximum;
+    game.resources
+        .get_mut("demo.resource.mana")
+        .expect("High-Mage should have mana")
+        .current = maximum_mana;
+
+    let failure_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(projected.failure_percent)
+        })
+        .expect("Mindflayer mind blast should have a failing percentile seed");
+    let mut failed = game.clone();
+    failed.rng = RfbRng::seeded(failure_seed);
+    let failed_mana = failed.resources["demo.resource.mana"].current;
+    let failed_events = cast_mind_blast(&mut failed);
+    assert!(matches!(
+        failed_events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert_eq!(
+        failed.resources["demo.resource.mana"].current,
+        failed_mana - 3
+    );
+    assert_eq!(failed.entities[0].hp, 150);
+
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Mindflayer mind-blast setup should reload");
+    game.debug_set_ability_casts_succeed(true);
+    restored.debug_set_ability_casts_succeed(true);
+    let events = cast_mind_blast(&mut game);
+    let restored_events = cast_mind_blast(&mut restored);
+    assert_eq!(restored_events, events);
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert!(game.entities[0].hp < 150);
+
+    game.progress.level = 14;
+    assert_eq!(game.player_see_invisible_sources(), 0);
+    game.progress.level = 15;
+    assert_eq!(game.player_see_invisible_sources(), 1);
+    game.progress.level = 29;
+    assert!(!game.player_has_permanent_telepathy());
+    game.progress.level = 30;
+    assert!(game.player_has_permanent_telepathy());
+
+    let mut high_mage_fifty = game.clone();
+    high_mage_fifty.progress.level = 50;
+    let high_mage_blast = high_mage_fifty
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_MIND_BLAST_ABILITY_ID)
+        .expect("level-fifty Mindflayer High-Mage mind blast");
+    assert!(matches!(
+        high_mage_blast.effects.as_slice(),
+        [AbilityEffectSpecDto::Damage {
+            damage_dice: 12,
+            damage_bonus: 15,
+            ..
+        }]
+    ));
+
+    let mut warrior = Game::new_with_build_race_and_name(
+        113,
+        "demo.build.warrior",
+        "rfb-legacy.race.mindflayer",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Mindflayer Warrior should create");
+    warrior.progress.level = 50;
+    let warrior_blast = warrior
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_MIND_BLAST_ABILITY_ID)
+        .expect("level-fifty Mindflayer Warrior mind blast");
+    assert!(matches!(
+        warrior_blast.effects.as_slice(),
+        [AbilityEffectSpecDto::Damage {
+            damage_dice: 12,
+            damage_bonus: 0,
+            ..
+        }]
+    ));
+
+    let mut human = Game::new_with_build_race_and_name(
+        114,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human Warrior should create");
+    human.progress.level = 30;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.mindflayer-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.mindflayer".to_owned());
+    human.player.statuses.push(form);
+    assert_eq!(human.player_infravision_range(), 4);
+    assert_eq!(human.player_see_invisible_sources(), 1);
+    assert!(human.player_has_permanent_telepathy());
+    assert!(human.player_sustains_attribute(AttributeKind::Intelligence));
+    assert!(human.player_sustains_attribute(AttributeKind::Wisdom));
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .any(|ability| ability.id == RACE_MIND_BLAST_ABILITY_ID)
+    );
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(human.player_infravision_range(), 0);
+    assert_eq!(human.player_see_invisible_sources(), 0);
+    assert!(!human.player_has_permanent_telepathy());
+    assert!(!human.player_sustains_attribute(AttributeKind::Intelligence));
+    assert!(!human.player_sustains_attribute(AttributeKind::Wisdom));
+    assert!(
+        human
+            .snapshot()
+            .player
+            .abilities
+            .iter()
+            .all(|ability| ability.id != RACE_MIND_BLAST_ABILITY_ID)
     );
 }
 
