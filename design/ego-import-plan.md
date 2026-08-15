@@ -216,10 +216,12 @@ Mana/Vorpal/Order/Wild/Impact/Stun/Blessed、装备副作用、具体重诅咒�
 
 ### E4：弹药、发射器与竖琴 16 条
 
-- 对齐 ammo、bow、harp 的独立选择和实例化分支；
-- 闭合 extra shots/might、Returning、Exploding、Endurance、Holy Might 等行为；
-- 对堆叠弹药验证一次 ego 选择、一次实例化结果和整堆共享状态；
-- 复用 Archer 已有弹药制造测试，但不把其中的小候选池当完整 ego 生成。
+逐 index 审查与提交级实施方案见
+[`design/ammo-launcher-harp-ego-import-plan.md`](ammo-launcher-harp-ego-import-plan.md)。审查确认 8 条
+`BOW`、6 条 `AMMO`、2 条 `HARP`，16 条 rarity 均大于 0 且没有显式 activation。本批先补齐 18 个
+基础物品身份和 Harp 的生成期 pval，再闭合发射器倍率/射程/额外射击、完整六候选弹药池，以及
+Returning、Exploding、Endurance 的发射与毁坏时点。整堆弹药只选择和物化一次；Archer 迁移到共享
+选择器后才开放 `BOW/AMMO/HARP` 自然生成。
 
 ### E5：护甲 76 条
 
