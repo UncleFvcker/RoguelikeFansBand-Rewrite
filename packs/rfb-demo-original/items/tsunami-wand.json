@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.tsunami-wand",
+  "nameKey": "item-demo-tsunami-wand-name",
+  "appearanceNameKey": "item-demo-unfamiliar-wand-name",
+  "descriptionKey": "item-demo-tsunami-wand-description",
+  "glyph": "-",
+  "generationLevel": 50,
+  "weightTenthsPound": 2,
+  "maxStack": 1,
+  "baseValue": 6000,
+  "elementalDestructionVulnerabilities": ["electricity"],
+  "deviceGeneration": {
+    "recovery": { "intervalTicks": 10, "energyPerMille": 10 },
+    "activations": [{
+      "id": "demo.device-activation.tsunami",
+      "nameKey": "device-activation-demo-tsunami-name",
+      "weight": 1,
+      "minDepth": 1,
+      "maxDepth": 100,
+      "deviceCheckDifficulty": 65,
+      "charges": { "minimum": 16, "maximum": 16, "cost": 2 },
+      "target": { "modes": ["direction", "position", "entity"], "range": 18, "requiresLineOfEffect": true },
+      "effectProgramId": "demo.effect.tsunami"
+    }]
+  },
+  "tags": ["device", "legacy-import", "task-reward", "wand"]
+}

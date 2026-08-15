@@ -1879,6 +1879,17 @@ impl Game {
         else {
             return Err("item-unavailable");
         };
+        if self
+            .content
+            .town_facility(facility_id)
+            .is_some_and(|facility| facility.reject_artifact_deposits)
+            && self
+                .content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.artifact_generation.is_some())
+        {
+            return Err("artifact-rejected");
+        }
         if quantity > available_quantity {
             return Err("insufficient-quantity");
         }
@@ -2571,6 +2582,12 @@ impl Game {
                 let mut deposit_items = if player_at_entrance {
                     grouped_inventory_for_home(self)
                         .into_iter()
+                        .filter(|(item, _)| {
+                            !facility.reject_artifact_deposits
+                                || self.content.item(&item.kind_id).is_some_and(|definition| {
+                                    definition.artifact_generation.is_none()
+                                })
+                        })
                         .map(|(item, quantity)| {
                             let definition = self
                                 .content

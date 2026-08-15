@@ -425,7 +425,13 @@ fn validate_town_surface_placement(
             return Err(ContentError::InvalidTown(town_id.to_owned()));
         }
     }
-    if road_count == 0 {
+    if road_count == 0
+        && (!wilderness_legend_at(wilderness, world_position).is_some_and(|entry| entry.road)
+            || !reached.contains(&ContentPosition {
+                x: center_x,
+                y: center_y,
+            }))
+    {
         return Err(ContentError::InvalidTown(town_id.to_owned()));
     }
     Ok(())
@@ -816,7 +822,6 @@ pub(super) fn validate_world(
                     || procedural.max_retakes.is_some()
                     || procedural.retake_floor_policy != RetakeFloorPolicy::PreserveFloor
                     || procedural.task_id.is_some()
-                    || procedural.next_floor_id.is_some()
                     || !procedural.connections.is_empty()))
         {
             return Err(ContentError::InvalidWorldDimensions(world.id.clone()));
@@ -2764,11 +2769,15 @@ pub(super) fn validate_world(
                 .iter()
                 .find(|floor| floor.id == *next_id)
                 .expect("validated next floor must remain available");
-            if next.return_floor_id != procedural.id
-                || next.depth != procedural.depth.saturating_add(1)
-                || next.lifecycle != procedural.lifecycle
-                || next.dungeon_id != procedural.dungeon_id
-            {
+            let embedded_town_dungeon = procedural.lifecycle == FloorLifecycle::Town
+                && next.lifecycle == FloorLifecycle::Dungeon
+                && next.return_floor_id == procedural.id
+                && next.entry_terrain_id == procedural.down_stair_terrain_id;
+            let ordinary_chain = next.return_floor_id == procedural.id
+                && next.depth == procedural.depth.saturating_add(1)
+                && next.lifecycle == procedural.lifecycle
+                && next.dungeon_id == procedural.dungeon_id;
+            if !embedded_town_dungeon && !ordinary_chain {
                 return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
             }
         }
@@ -2799,7 +2808,14 @@ pub(super) fn validate_world(
             .collect::<Vec<_>>();
         let roots = members
             .iter()
-            .filter(|floor| floor.return_floor_id == world.initial_floor_id)
+            .filter(|floor| {
+                floor.return_floor_id == world.initial_floor_id
+                    || world.procedural_floors.iter().any(|town| {
+                        town.lifecycle == FloorLifecycle::Town
+                            && town.id == floor.return_floor_id
+                            && town.next_floor_id.as_deref() == Some(floor.id.as_str())
+                    })
+            })
             .copied()
             .collect::<Vec<_>>();
         let Some(root) = members
@@ -2821,7 +2837,8 @@ pub(super) fn validate_world(
         let mut final_count = 0usize;
         for floor in &members {
             let mut parents = if floor.connections.is_empty() {
-                (floor.return_floor_id != world.initial_floor_id)
+                member_ids
+                    .contains(floor.return_floor_id.as_str())
                     .then_some(floor.return_floor_id.as_str())
                     .into_iter()
                     .collect::<Vec<_>>()

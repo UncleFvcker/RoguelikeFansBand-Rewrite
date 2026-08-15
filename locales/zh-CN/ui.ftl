@@ -557,6 +557,7 @@ task-status-taken = 已接取
 action-task-abandon = 放弃任务
 action-task-accept = 接取任务
 action-task-claim = 领取奖励
+action-task-conclude = 结束任务
 task-service-eyebrow = 城镇设施
 task-service-owner = 负责人：{ $owner } · 身份：{ $membership }
 facility-membership-visitor = 访客

@@ -145,7 +145,7 @@ export type TerrainInteractionDto = { kind: TerrainInteractionKindDto, direction
 
 export type TaskStatusKindDto = "abandoned" | "available" | "active" | "completed" | "failed" | "locked" | "paused" | "reward-available" | "taken";
 
-export type TaskStatusDto = { taskId: string, floorId: string, nameKey: string, descriptionKey?: string | null, sourceFacilityId?: string | null, status: TaskStatusKindDto, current: number, required: number, stage: number, stages: number, retakesUsed: number, maxRetakes?: number | null, };
+export type TaskStatusDto = { taskId: string, floorId: string, nameKey: string, descriptionKey?: string | null, sourceFacilityId?: string | null, hasItemReward: boolean, status: TaskStatusKindDto, current: number, required: number, stage: number, stages: number, retakesUsed: number, maxRetakes?: number | null, };
 
 export type CellDto = { position: Position, terrainId: string, itemId: string | null, actorId: string | null, dangerLevel?: number | null, locations?: Array<WildernessLocationDto>, };
 

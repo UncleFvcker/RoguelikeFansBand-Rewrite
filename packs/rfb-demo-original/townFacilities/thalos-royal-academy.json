@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.thalos-royal-academy",
+  "nameKey": "town-facility-demo-thalos-royal-academy-name",
+  "descriptionKey": "town-facility-demo-thalos-royal-academy-description",
+  "townId": "demo.town.thalos",
+  "category": "quest-giver",
+  "ownerNameKey": "town-facility-demo-thalos-royal-academy-owner-name",
+  "taskIds": [
+    "demo.task.thalos-mushrooms",
+    "demo.task.thalos-tidy-laboratory",
+    "demo.task.thalos-basilisk-cave",
+    "demo.task.thalos-staff-recovery-first",
+    "demo.task.thalos-staff-recovery",
+    "demo.task.thalos-dark-academy",
+    "demo.task.thalos-renegade-sorcerer"
+  ],
+  "entrancePosition": { "x": 21, "y": 9 },
+  "entranceTerrainId": "demo.terrain.royal-academy-entrance"
+}

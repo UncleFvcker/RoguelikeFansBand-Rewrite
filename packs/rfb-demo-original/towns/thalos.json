@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town.thalos",
+  "nameKey": "town-demo-thalos-name",
+  "descriptionKey": "town-demo-thalos-description",
+  "floorId": "demo.floor.thalos",
+  "facilityIds": [
+    "demo.town-facility.thalos-archer-guild",
+    "demo.town-facility.thalos-bounty-office",
+    "demo.town-facility.thalos-home",
+    "demo.town-facility.thalos-library",
+    "demo.town-facility.thalos-life-temple",
+    "demo.town-facility.thalos-museum",
+    "demo.town-facility.thalos-palace",
+    "demo.town-facility.thalos-paladin-guild",
+    "demo.town-facility.thalos-royal-academy",
+    "demo.town-facility.thalos-warrior-guild",
+    "demo.town-facility.thalos-weapon-master"
+  ],
+  "shopIds": [
+    "demo.shop.thalos-alchemist",
+    "demo.shop.thalos-armoury",
+    "demo.shop.thalos-black-market",
+    "demo.shop.thalos-bookstore",
+    "demo.shop.thalos-general-store",
+    "demo.shop.thalos-inn",
+    "demo.shop.thalos-magic-shop",
+    "demo.shop.thalos-shroomery",
+    "demo.shop.thalos-temple",
+    "demo.shop.thalos-weaponsmith"
+  ]
+}

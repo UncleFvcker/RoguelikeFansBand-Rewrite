@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.seeing",
+  "nameKey": "affix-legacy-seeing-name",
+  "descriptionKey": "affix-legacy-seeing-description",
+  "generationLevel": 0,
+  "generationMaxLevel": 60,
+  "rfbEgo": { "sourceIndex": 56, "rarity": 2, "types": ["helmet", "crown"] },
+  "equipmentBonuses": { "searchSkill": 6 },
+  "resistances": { "blindness": "resistant" },
+  "passives": ["see-invisible"],
+  "tags": ["headgear", "legacy-import", "task-reward"]
+}

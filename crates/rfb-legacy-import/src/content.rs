@@ -396,6 +396,7 @@ struct DemoWildernessSelection {
     town_plans: Vec<DemoWildernessTownPlan>,
     bounty_offices: Vec<DemoBountyOfficePlan>,
     anambar_task_plan: DemoTaskImportPlan,
+    thalos_task_plan: DemoTaskImportPlan,
     dungeon_plans: Vec<DemoWildernessDungeonPlan>,
 }
 
@@ -423,13 +424,8 @@ struct DemoWildernessTownPlan {
     position: DemoWildernessPosition,
     source_file: String,
     standard_facilities: Vec<DemoTownFacilityPlan>,
-    inn: DemoTownBuildingPlan,
-    library: DemoTownBuildingPlan,
-    weapon_master: DemoTownBuildingPlan,
-    warrior_guild: DemoTownBuildingPlan,
-    mammon_temple: DemoTownBuildingPlan,
-    archer_guild: DemoTownBuildingPlan,
-    trump_tower: DemoTownBuildingPlan,
+    special_facilities: Vec<DemoTownSpecialFacilityPlan>,
+    buildings: Vec<DemoTownBuildingPlan>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -488,6 +484,8 @@ struct DemoTaskSubstitutionPlan {
     alternate_source_index: u32,
     random_modulus: u32,
     alternate_minimum: u32,
+    #[serde(default)]
+    alternate_maximum: Option<u32>,
 }
 
 #[derive(Debug, Default)]
@@ -503,6 +501,15 @@ struct LegacyQuestRecord {
 struct DemoTownFacilityPlan {
     symbol: char,
     source_tag: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTownSpecialFacilityPlan {
+    symbol: char,
+    source_index: u32,
+    source_tag: String,
+    source_name: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -14361,6 +14368,177 @@ fn validate_demo_task_plan(
     Ok(())
 }
 
+fn validate_demo_thalos_task_plan(
+    source: &Path,
+    source_commit: &str,
+    selection: &DemoWildernessSelection,
+) -> Result<(), LegacyImportError> {
+    let plan = &selection.thalos_task_plan;
+    if plan.town_id != "demo.town.thalos"
+        || plan.facilities.len() != 2
+        || plan.tasks.len() != 12
+        || plan.substitutions.len() != 2
+    {
+        return Err(invalid_wilderness_selection(
+            "Thalos task plan must retain two facilities, twelve source tasks, and two substitutions",
+        ));
+    }
+    let town_source = read_legacy_object_at(source, source_commit, &plan.town_source_file)?;
+    let quest_info = read_legacy_object_at(source, source_commit, &plan.quest_info_source_file)?;
+    let quest_records = parse_quest_records(&quest_info)?;
+
+    let mut facility_ids = BTreeSet::new();
+    let mut logical_source_indexes = BTreeSet::new();
+    for facility in &plan.facilities {
+        let identity = format!(
+            "B:{}:N:{}:{}:{}",
+            facility.building_index, facility.name, facility.owner_name, facility.owner_race
+        );
+        let request_action = format!(
+            "B:{}:A:{}:请求任务:0:0:q:6:0",
+            facility.building_index, facility.request_action_index
+        );
+        if !facility_ids.insert(facility.facility_id.as_str())
+            || !facility
+                .logical_source_task_indexes
+                .iter()
+                .all(|index| logical_source_indexes.insert(*index))
+            || !town_source.lines().any(|line| line.trim() == identity)
+            || !town_source
+                .lines()
+                .any(|line| line.trim() == request_action)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos task facility {} drifted",
+                facility.facility_id
+            )));
+        }
+    }
+    if logical_source_indexes != BTreeSet::from([33, 61, 63, 64, 65, 66, 69, 70, 71, 76]) {
+        return Err(invalid_wilderness_selection(
+            "Thalos task facilities must expose ten logical tasks",
+        ));
+    }
+
+    let mut source_indexes = BTreeSet::new();
+    let mut task_ids = BTreeSet::new();
+    for task in &plan.tasks {
+        let Some(record) = quest_records.get(&task.source_index) else {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos task {} is absent from q_info",
+                task.source_index
+            )));
+        };
+        if !source_indexes.insert(task.source_index)
+            || !task_ids.insert(task.task_id.as_str())
+            || !facility_ids.contains(task.facility_id.as_str())
+            || record.name != task.source_name
+            || record.level != task.level
+            || format!("lib/edit/{}", record.source_file) != task.source_file
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos task {} identity or source drifted",
+                task.source_index
+            )));
+        }
+        read_legacy_object_at(source, source_commit, &task.source_file)?;
+        if let Some(prerequisite) = task.prerequisite_source_index
+            && (prerequisite == task.source_index
+                || !plan.tasks.iter().any(|candidate| {
+                    candidate.source_index == prerequisite
+                        && candidate.facility_id == task.facility_id
+                })
+                || !task.unlock_when_prerequisite_failed)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos task {} prerequisite drifted",
+                task.source_index
+            )));
+        }
+    }
+    if plan
+        .tasks
+        .iter()
+        .filter(|task| !task.reward_required)
+        .map(|task| task.source_index)
+        .collect::<Vec<_>>()
+        != [76]
+    {
+        return Err(invalid_wilderness_selection(
+            "Staff Recovery must remain the sole Thalos task without a separate reward",
+        ));
+    }
+
+    for substitution in &plan.substitutions {
+        let primary = plan
+            .tasks
+            .iter()
+            .find(|task| task.source_index == substitution.primary_source_index)
+            .ok_or_else(|| invalid_wilderness_selection("Thalos substitution primary is absent"))?;
+        let alternate = plan
+            .tasks
+            .iter()
+            .find(|task| task.source_index == substitution.alternate_source_index);
+        let record = quest_records
+            .get(&substitution.primary_source_index)
+            .expect("planned Thalos task should retain its q_info record");
+        let source_text = read_legacy_object_at(source, source_commit, &primary.source_file)?;
+        let minimum = format!(
+            "GEQ [MOD $RANDOM0 {}] {}",
+            substitution.random_modulus, substitution.alternate_minimum
+        );
+        let maximum = substitution.alternate_maximum.map(|maximum| {
+            format!(
+                "LEQ [MOD $RANDOM0 {}] {maximum}",
+                substitution.random_modulus
+            )
+        });
+        if alternate.is_none_or(|alternate| alternate.facility_id != primary.facility_id)
+            || !record.flags.contains(&format!(
+                "SUBSTITUTE_{}",
+                substitution.alternate_source_index
+            ))
+            || !source_text.contains(&minimum)
+            || maximum
+                .as_ref()
+                .is_some_and(|maximum| !source_text.contains(maximum))
+            || !source_text
+                .lines()
+                .any(|line| line.trim() == format!("K:{}", substitution.alternate_source_index))
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos task substitution {} drifted",
+                substitution.primary_source_index
+            )));
+        }
+    }
+
+    for (from, to) in [(71, 70), (70, 69), (69, 33), (33, 61)] {
+        if !town_source.contains(&format!("$QUEST{from} Finished FailedDone"))
+            || !town_source.contains(&format!("BUILDING_1({to})"))
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos palace chain {from} -> {to} drifted"
+            )));
+        }
+    }
+    for index in [63, 65, 66, 76, 64] {
+        if !town_source.contains(&format!("BUILDING_13({index})")) {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos academy task {index} drifted"
+            )));
+        }
+    }
+    if !town_source.contains("$QUEST66 Finished FailedDone")
+        || !town_source.contains("$QUEST76 Finished FailedDone")
+    {
+        return Err(invalid_wilderness_selection(
+            "Thalos academy order decision drifted",
+        ));
+    }
+    Ok(())
+}
+
 fn validate_demo_wilderness_plans(
     source: &Path,
     source_commit: &str,
@@ -14371,8 +14549,14 @@ fn validate_demo_wilderness_plans(
     let t_info = read_legacy_object_at(source, source_commit, T_INFO_SOURCE)?;
     let t_pref = read_legacy_object_at(source, source_commit, T_PREF_SOURCE)?;
     let feature_tags = town_feature_tags(&t_pref);
+    let terrain = parse_f_info(&read_legacy_object_at(
+        source,
+        source_commit,
+        F_INFO_SOURCE,
+    )?)?;
 
     validate_demo_task_plan(source, source_commit, selection)?;
+    validate_demo_thalos_task_plan(source, source_commit, selection)?;
 
     for town in &selection.town_plans {
         if !selection
@@ -14422,16 +14606,27 @@ fn validate_demo_wilderness_plans(
                 )));
             }
         }
+        for facility in &town.special_facilities {
+            let feature = terrain
+                .iter()
+                .find(|entry| entry.index == facility.source_index);
+            if !symbols.insert(facility.symbol)
+                || feature_tags.get(&facility.symbol) != Some(&facility.source_tag)
+                || !source_has_town_symbol(&town_source, facility.symbol)
+                || !feature.is_some_and(|entry| {
+                    entry.tag == facility.source_tag
+                        && entry.display_name.as_deref() == Some(facility.source_name.as_str())
+                        && entry.flags.iter().any(|flag| flag == "STORE")
+                })
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "town plan {} special facility {}:{} drifted",
+                    town.id, facility.symbol, facility.source_tag
+                )));
+            }
+        }
 
-        for building in [
-            &town.inn,
-            &town.library,
-            &town.weapon_master,
-            &town.warrior_guild,
-            &town.mammon_temple,
-            &town.archer_guild,
-            &town.trump_tower,
-        ] {
+        for building in &town.buildings {
             let building_name = format!(
                 "B:{}:N:{}:{}:{}",
                 building.building_index, building.name, building.owner_name, building.owner_race
@@ -14706,15 +14901,15 @@ pub fn sync_demo_wilderness(
         ));
     }
     let selection: DemoWildernessSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
-    if selection.schema_version != 8
+    if selection.schema_version != 11
         || selection.towns.is_empty()
         || selection.dungeons.is_empty()
         || selection.town_plans.is_empty()
-        || selection.bounty_offices.len() != 2
+        || selection.bounty_offices.len() != 3
         || selection.dungeon_plans.is_empty()
     {
         return Err(LegacyImportError::InvalidDemoWildernessSelection(
-            "selection must use schemaVersion 8 and contain active towns, town plans, two bounty offices, the Anambar task plan, active dungeons, and dungeon plans"
+            "selection must use schemaVersion 11 and contain active towns, town plans, three bounty offices, the Anambar and Thalos task plans, active dungeons, and dungeon plans"
                 .to_owned(),
         ));
     }
@@ -27606,7 +27801,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 8);
+        assert_eq!(selection.schema_version, 11);
         let anambar = selection
             .town_plans
             .iter()
@@ -27618,15 +27813,18 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
                 .iter()
                 .any(|facility| { facility.symbol == '0' && facility.source_tag == "SHROOMERY" })
         );
-        assert_eq!(anambar.library.building_index, 0);
-        assert_eq!(anambar.library.name, "图书馆");
-        assert_eq!(anambar.library.owner_name, "托妮卡");
-        assert_eq!(anambar.library.owner_race, "人类");
-        assert_eq!(anambar.library.access, None);
-        assert_eq!(anambar.library.services.len(), 4);
+        let library = anambar
+            .buildings
+            .iter()
+            .find(|building| building.building_index == 0)
+            .expect("Anambar library should be planned");
+        assert_eq!(library.name, "图书馆");
+        assert_eq!(library.owner_name, "托妮卡");
+        assert_eq!(library.owner_race, "人类");
+        assert_eq!(library.access, None);
+        assert_eq!(library.services.len(), 4);
         assert_eq!(
-            anambar
-                .library
+            library
                 .services
                 .iter()
                 .map(|service| (
@@ -27654,26 +27852,26 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 8);
+        assert_eq!(selection.schema_version, 11);
         let anambar = selection
             .town_plans
             .iter()
             .find(|plan| plan.id == "demo.town.anambar")
             .expect("Anambar should have an implementation plan");
         assert_eq!(
-            [
-                &anambar.weapon_master,
-                &anambar.warrior_guild,
-                &anambar.mammon_temple,
-                &anambar.archer_guild,
-                &anambar.trump_tower,
-            ]
-            .map(|building| (
-                building.building_index,
-                building.name.as_str(),
-                building.owner_name.as_str(),
-                building.owner_race.as_str(),
-            )),
+            [6, 7, 9, 11, 14].map(|index| {
+                let building = anambar
+                    .buildings
+                    .iter()
+                    .find(|building| building.building_index == index)
+                    .expect("Anambar building should be planned");
+                (
+                    building.building_index,
+                    building.name.as_str(),
+                    building.owner_name.as_str(),
+                    building.owner_race.as_str(),
+                )
+            }),
             [
                 (6, "武器大师", "锤趾汤姆泰克", "精灵"),
                 (7, "战士公会", "扼龙者罗伯塔", "仿生人"),
@@ -27684,7 +27882,10 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         );
         assert_eq!(
             anambar
-                .mammon_temple
+                .buildings
+                .iter()
+                .find(|building| building.building_index == 9)
+                .expect("Temple of Mammon should be planned")
                 .services
                 .iter()
                 .map(|service| (
@@ -27702,7 +27903,10 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         );
         assert_eq!(
             anambar
-                .archer_guild
+                .buildings
+                .iter()
+                .find(|building| building.building_index == 11)
+                .expect("Archers' Guild should be planned")
                 .services
                 .iter()
                 .map(|service| (
@@ -27714,32 +27918,39 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
                 .collect::<Vec<_>>(),
             [("强化弹药", 22, 44, 30), ("强化弓", 0, 0, 31)]
         );
-        assert!(anambar.warrior_guild.memberships.iter().any(|membership| {
+        let building = |index| {
+            anambar
+                .buildings
+                .iter()
+                .find(|building| building.building_index == index)
+                .expect("Anambar building should be planned")
+        };
+        assert!(building(7).memberships.iter().any(|membership| {
             membership.source_tag == 'C'
                 && membership.identity == "Warrior"
                 && membership.role == "Owner"
         }));
-        assert!(anambar.mammon_temple.memberships.iter().any(|membership| {
+        assert!(building(9).memberships.iter().any(|membership| {
             membership.source_tag == 'C'
                 && membership.identity == "Paladin"
                 && membership.role == "Member"
         }));
-        assert!(anambar.trump_tower.memberships.iter().any(|membership| {
+        assert!(building(14).memberships.iter().any(|membership| {
             membership.source_tag == 'M'
                 && membership.identity == "Trump"
                 && membership.role == "Owner"
         }));
-        assert_eq!(anambar.trump_tower.services[0].action_id, 33);
+        assert_eq!(building(14).services[0].action_id, 33);
     }
 
     #[test]
-    fn p106a_bounty_office_plan_locks_both_source_buildings() {
+    fn p106a_bounty_office_plan_locks_source_buildings() {
         let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 8);
-        assert_eq!(selection.bounty_offices.len(), 2);
+        assert_eq!(selection.schema_version, 11);
+        assert_eq!(selection.bounty_offices.len(), 3);
         let office = |town_id: &str| {
             selection
                 .bounty_offices
@@ -27777,6 +27988,10 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
                 .collect::<Vec<_>>(),
             [38, 39, 37, 40, 6, 65]
         );
+        let thalos = office("demo.town.thalos");
+        assert_eq!(thalos.source_file, "lib/edit/t_thalos.txt");
+        assert_eq!(thalos.building.building_index, 5);
+        assert_eq!(thalos.building.owner_name, "卡利尔");
     }
 
     #[test]
@@ -27785,7 +28000,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 8);
+        assert_eq!(selection.schema_version, 11);
         let plan = &selection.anambar_task_plan;
         assert_eq!(plan.town_id, "demo.town.anambar");
         assert_eq!(plan.town_source_file, "lib/edit/t_ana.txt");
@@ -27863,6 +28078,201 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
                 ("demo.task-substitution.anambar-mayor-line", 60, 99, 64, 32,),
                 ("demo.task-substitution.anambar-mayor-line", 75, 83, 64, 32,),
             ]
+        );
+    }
+
+    #[test]
+    fn p108a_thalos_plan_locks_town_buildings_and_embedded_icky_cave_position() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 11);
+        assert!(selection.towns.iter().any(|town| {
+            town.source_index == 6 && town.source_name == "萨洛斯" && town.id == "demo.town.thalos"
+        }));
+        let thalos = selection
+            .town_plans
+            .iter()
+            .find(|plan| plan.id == "demo.town.thalos")
+            .expect("Thalos should have an implementation plan");
+        assert_eq!(thalos.position, DemoWildernessPosition { x: 17, y: 29 });
+        assert_eq!(thalos.source_file, "lib/edit/t_thalos.txt");
+        assert_eq!(thalos.standard_facilities.len(), 10);
+        assert_eq!(thalos.buildings.len(), 14);
+        let building = |index| {
+            thalos
+                .buildings
+                .iter()
+                .find(|building| building.building_index == index)
+                .expect("Thalos building should be planned")
+        };
+        assert_eq!(
+            [0, 4, 5, 6, 7, 8, 9, 11, 12, 13].map(|index| (
+                building(index).name.as_str(),
+                building(index).owner_name.as_str()
+            )),
+            [
+                ("图书馆", "伊本·赫勒敦"),
+                ("旅店", "巴尔萨泽"),
+                ("赏金事务所", "卡利尔"),
+                ("武器大师", "托瓦尔德"),
+                ("战士公会", "阿拉肖"),
+                ("巫术之塔", "津达尼"),
+                ("生命神殿", "雷德尔·菲纳希尔"),
+                ("弓箭手公会", "伊克兰"),
+                ("圣武士公会", "基亚拉"),
+                ("皇家书院", "伊祖卡玛领主"),
+            ]
+        );
+        assert_eq!(
+            building(9)
+                .services
+                .iter()
+                .map(|service| (
+                    service.action_id,
+                    service.minimum_cost,
+                    service.maximum_cost
+                ))
+                .collect::<Vec<_>>(),
+            [(28, 0, 150), (29, 400, 1_500)]
+        );
+        assert_eq!(
+            building(12)
+                .services
+                .iter()
+                .map(|service| service.action_id)
+                .collect::<Vec<_>>(),
+            [24, 28]
+        );
+        assert!(selection.dungeons.iter().any(|dungeon| {
+            dungeon.source_index == 21 && dungeon.id == "demo.dungeon.icky-cave"
+        }));
+    }
+
+    #[test]
+    fn p109a_thalos_plan_locks_museum_and_town_travel() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 11);
+        let thalos = selection
+            .town_plans
+            .iter()
+            .find(|plan| plan.id == "demo.town.thalos")
+            .expect("Thalos should have an implementation plan");
+        assert_eq!(
+            thalos.special_facilities,
+            [DemoTownSpecialFacilityPlan {
+                symbol: 'M',
+                source_index: 95,
+                source_tag: "MUSEUM".to_owned(),
+                source_name: "博物馆".to_owned(),
+            }]
+        );
+        let inn = thalos
+            .buildings
+            .iter()
+            .find(|building| building.building_index == 4)
+            .expect("Thalos Inn should be planned");
+        assert!(inn.services.iter().any(|service| {
+            service.action_id == 42
+                && service.name == "传送到其他城镇"
+                && service.minimum_cost == 500
+                && service.maximum_cost == 500
+        }));
+    }
+
+    #[test]
+    fn p110a_thalos_plan_locks_palace_and_academy_task_lines() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 11);
+        let plan = &selection.thalos_task_plan;
+        assert_eq!(plan.town_id, "demo.town.thalos");
+        assert_eq!(plan.facilities.len(), 2);
+        assert_eq!(plan.tasks.len(), 12);
+        assert_eq!(
+            plan.facilities
+                .iter()
+                .map(|facility| (
+                    facility.building_index,
+                    facility.name.as_str(),
+                    facility.owner_name.as_str(),
+                    facility.logical_source_task_indexes.as_slice(),
+                ))
+                .collect::<Vec<_>>(),
+            [
+                (1, "宫殿", "苏丹·伊德里斯", [71, 70, 69, 33, 61].as_slice()),
+                (
+                    13,
+                    "皇家书院",
+                    "伊祖卡玛领主",
+                    [63, 65, 66, 76, 64].as_slice()
+                ),
+            ]
+        );
+        assert_eq!(
+            plan.tasks
+                .iter()
+                .map(|task| (task.source_index, task.source_file.as_str()))
+                .collect::<Vec<_>>(),
+            [
+                (71, "lib/edit/q_fairy.txt"),
+                (70, "lib/edit/q_djinni.txt"),
+                (89, "lib/edit/q_cyclo.txt"),
+                (69, "lib/edit/q_wtower.txt"),
+                (33, "lib/edit/q_cloning_pits.txt"),
+                (61, "lib/edit/q_shipwreck.txt"),
+                (63, "lib/edit/q_mushrooms.txt"),
+                (65, "lib/edit/q_tidy.txt"),
+                (66, "lib/edit/q_basilisk.txt"),
+                (90, "lib/edit/q_acadmy.txt"),
+                (76, "lib/edit/q_staff.txt"),
+                (64, "lib/edit/q_sorcerer.txt"),
+            ]
+        );
+        assert_eq!(
+            plan.substitutions
+                .iter()
+                .map(|substitution| (
+                    substitution.group_id.as_str(),
+                    substitution.primary_source_index,
+                    substitution.alternate_source_index,
+                    substitution.random_modulus,
+                    substitution.alternate_minimum,
+                    substitution.alternate_maximum,
+                ))
+                .collect::<Vec<_>>(),
+            [
+                (
+                    "demo.task-substitution.thalos-palace-line",
+                    70,
+                    89,
+                    98,
+                    49,
+                    None
+                ),
+                (
+                    "demo.task-substitution.thalos-academy-line",
+                    66,
+                    90,
+                    64,
+                    1,
+                    Some(32)
+                ),
+            ]
+        );
+        assert_eq!(
+            plan.tasks
+                .iter()
+                .filter(|task| !task.reward_required)
+                .map(|task| task.source_index)
+                .collect::<Vec<_>>(),
+            [76]
         );
     }
 

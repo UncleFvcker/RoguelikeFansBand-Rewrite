@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.thalos-palace",
+  "nameKey": "town-facility-demo-thalos-palace-name",
+  "descriptionKey": "town-facility-demo-thalos-palace-description",
+  "townId": "demo.town.thalos",
+  "category": "quest-giver",
+  "ownerNameKey": "town-facility-demo-thalos-palace-owner-name",
+  "taskIds": [
+    "demo.task.thalos-shadow-fairies",
+    "demo.task.thalos-djinnis-cavern",
+    "demo.task.thalos-cyclops-lair",
+    "demo.task.thalos-old-watchtower",
+    "demo.task.thalos-cloning-pits",
+    "demo.task.thalos-clear-wreckage"
+  ],
+  "entrancePosition": { "x": 1, "y": 9 },
+  "entranceTerrainId": "demo.terrain.palace-entrance"
+}

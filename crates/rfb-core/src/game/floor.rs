@@ -576,10 +576,18 @@ impl Game {
             .iter()
             .find(|floor| floor.id == target.floor_id);
         let logical_from_floor_id = source_floor_id.unwrap_or(&self.current_floor_id).to_owned();
+        let source_definition = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == logical_from_floor_id);
+        let source_is_surface = logical_from_floor_id == *initial_floor_id
+            || source_definition.is_some_and(|floor| floor.lifecycle == FloorLifecycle::Town);
+        let target_is_surface = target.floor_id == *initial_floor_id
+            || target_definition.is_some_and(|floor| floor.lifecycle == FloorLifecycle::Town);
         let continuous_wilderness_source = self.is_wilderness_floor()
             && logical_from_floor_id == *initial_floor_id
             && self.current_town().is_none();
-        if logical_from_floor_id == *initial_floor_id
+        if source_is_surface
             && let Some(target_floor) =
                 target_definition.filter(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
         {
@@ -617,10 +625,6 @@ impl Game {
         }
 
         let from_dungeon_instance_id = self.current_dungeon_instance_id.clone();
-        let source_definition = world
-            .procedural_floors
-            .iter()
-            .find(|floor| floor.id == logical_from_floor_id);
         let mut retained_instance_action = RetainedInstanceAction::None;
         let mut allocated_dungeon_instance = None;
         let target_dungeon_instance_id = if let Some(target_floor) =
@@ -640,7 +644,7 @@ impl Game {
                 .is_some_and(|source| source.dungeon_id.as_deref() == Some(dungeon_id))
             {
                 from_dungeon_instance_id.clone()
-            } else if logical_from_floor_id == *initial_floor_id {
+            } else if source_is_surface {
                 let (action, retained_instance_id) = plan_retained_instance_action(
                     dungeon_id,
                     lifecycle,
@@ -693,7 +697,7 @@ impl Game {
                 return Ok(None);
             }
             let reward_claim_required = task_definition(world, &task_id)
-                .is_some_and(|task| task.source_facility_id.is_some() && task.reward.is_some());
+                .is_some_and(|task| task.source_facility_id.is_some());
             let resolution = task_resolution_for_departure(
                 Some(source.retakeable),
                 abandon_task,
@@ -773,7 +777,7 @@ impl Game {
             return Err(CoreError::InvalidSave("return floor state is missing"));
         }
 
-        let expedition_end = if target.floor_id == *initial_floor_id
+        let expedition_end = if target_is_surface
             && source_definition.is_some_and(|floor| floor.lifecycle == FloorLifecycle::Dungeon)
         {
             let instance_id = from_dungeon_instance_id
@@ -899,7 +903,11 @@ impl Game {
         else {
             return Ok(None);
         };
-        if source_floor_id == world.initial_floor_id
+        let source_is_surface = source_floor_id == world.initial_floor_id
+            || world.procedural_floors.iter().any(|floor| {
+                floor.id == source_floor_id && floor.lifecycle == FloorLifecycle::Town
+            });
+        if source_is_surface
             && let Some(target_floor) = world.procedural_floors.iter().find(|floor| {
                 floor.id == target.floor_id && floor.lifecycle == FloorLifecycle::Dungeon
             })

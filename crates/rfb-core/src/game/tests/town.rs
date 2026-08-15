@@ -17,6 +17,8 @@ const WHITE_HORSE_INN_ID: &str = "demo.shop.outpost-white-horse";
 const HOME_ID: &str = "demo.town-facility.outpost-home";
 const ANAMBAR_HOME_ID: &str = "demo.town-facility.anambar-home";
 const ANAMBAR_INN_ID: &str = "demo.shop.anambar-inn";
+const THALOS_INN_ID: &str = "demo.shop.thalos-inn";
+const THALOS_MUSEUM_ID: &str = "demo.town-facility.thalos-museum";
 const ANAMBAR_LIBRARY_ID: &str = "demo.town-facility.anambar-library";
 const ANAMBAR_WEAPON_MASTER_ID: &str = "demo.town-facility.anambar-weapon-master";
 const ANAMBAR_WARRIOR_GUILD_ID: &str = "demo.town-facility.anambar-warrior-guild";
@@ -56,6 +58,25 @@ fn anambar_inn_game(seed: u64) -> Game {
     game.player.position = Position { x: 45, y: 15 };
     game.mark_shop_visited_at_player().unwrap();
     assert!(projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).player_at_entrance);
+    game
+}
+
+fn thalos_game(seed: u64) -> Game {
+    let mut game =
+        Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth game should start");
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 17, y: 29 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    assert_eq!(
+        game.current_town().map(|town| town.id.as_str()),
+        Some("demo.town.thalos")
+    );
     game
 }
 
@@ -218,6 +239,163 @@ fn outpost_shops_are_projected_from_authoritative_content() {
             .iter()
             .all(|shop| !shop.visited && !shop.player_at_entrance)
     );
+}
+
+#[test]
+fn p108c_thalos_projects_its_embedded_icky_cave_and_returns_to_town() {
+    let mut game =
+        Game::new_with_build(108, "demo.build.warrior").expect("Middle-earth game should start");
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    let thalos_position = Position { x: 17, y: 29 };
+    game.wilderness_position = Some(thalos_position);
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.wilderness_position, Some(thalos_position));
+    assert_eq!(
+        game.current_town().map(|town| town.id.as_str()),
+        Some("demo.town.thalos")
+    );
+    assert!(game.town_states["demo.town.thalos"].visited);
+    let entrance = Position { x: 55, y: 15 };
+    assert_eq!(game.terrain_at(entrance), "demo.terrain.icky-cave-entrance");
+    assert_eq!(
+        game.terrain
+            .iter()
+            .filter(|terrain| terrain.as_str() == "demo.terrain.icky-cave-entrance")
+            .count(),
+        1
+    );
+
+    game.player.position = entrance;
+    let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(entered.floor_id, "demo.floor.icky-cave-depth-10");
+    assert_eq!(game.current_floor_id, "demo.floor.icky-cave-depth-10");
+
+    let upstairs_index = game
+        .terrain
+        .iter()
+        .position(|terrain| terrain == "demo.terrain.stairs-up")
+        .expect("Icky Cave root should have an upstairs");
+    game.player.position = Position {
+        x: (upstairs_index % usize::from(game.width)) as i32,
+        y: (upstairs_index / usize::from(game.width)) as i32,
+    };
+    let returned = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(returned.floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.wilderness_position, Some(thalos_position));
+    assert_eq!(
+        game.current_town().map(|town| town.id.as_str()),
+        Some("demo.town.thalos")
+    );
+    assert_eq!(game.terrain_at(entrance), "demo.terrain.icky-cave-entrance");
+}
+
+#[test]
+fn p109c_thalos_inn_travels_to_a_visited_town_for_five_hundred_gold() {
+    let mut game = thalos_game(109);
+    game.player.position = Position { x: 57, y: 7 };
+    game.mark_shop_visited_at_player().unwrap();
+    game.gold = 500;
+
+    let inn = projected_shop(&game.snapshot().shops, THALOS_INN_ID).clone();
+    assert!(inn.player_at_entrance);
+    assert_eq!(inn.inn_stay_cost, Some(20));
+    assert_eq!(inn.inn_travel_destinations.len(), 1);
+    assert_eq!(inn.inn_travel_destinations[0].town_id, "demo.town.outpost");
+    assert_eq!(inn.inn_travel_destinations[0].cost, 500);
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::TravelFromInn {
+            facility_id: THALOS_INN_ID.to_owned(),
+            destination_town_id: "demo.town.outpost".to_owned(),
+        },
+    );
+    assert_eq!(update.events[0].kind, "inn.travel");
+    assert_eq!(update.events[0].args["cost"], "500");
+    assert_eq!(game.gold, 0);
+    assert_eq!(game.wilderness_position, Some(Position { x: 28, y: 52 }));
+    assert_eq!(game.player.position, Position { x: 63, y: 13 });
+}
+
+#[test]
+fn p109d_thalos_museum_stores_ordinary_items_and_rejects_true_artifacts() {
+    let mut game = thalos_game(109);
+    game.player.position = Position { x: 57, y: 15 };
+    game.mark_shop_visited_at_player().unwrap();
+    support::give_inventory_item(&mut game, "test.museum.dagger", "demo.item.dagger");
+    support::give_inventory_item(
+        &mut game,
+        "test.museum.arkenstone",
+        "demo.item.arkenstone-of-thrain",
+    );
+
+    let museum = game
+        .snapshot()
+        .homes
+        .into_iter()
+        .find(|home| home.id == THALOS_MUSEUM_ID)
+        .expect("Thalos Museum should be projected");
+    assert!(museum.player_at_entrance);
+    assert!(
+        museum
+            .deposit_items
+            .iter()
+            .any(|item| item.id == "test.museum.dagger")
+    );
+    assert!(
+        museum
+            .deposit_items
+            .iter()
+            .all(|item| item.id != "test.museum.arkenstone")
+    );
+
+    let rejected = dispatch_next(
+        &mut game,
+        GameCommand::DepositAtHome {
+            facility_id: THALOS_MUSEUM_ID.to_owned(),
+            item_id: "test.museum.arkenstone".to_owned(),
+            quantity: 1,
+        },
+    );
+    assert_eq!(rejected.events[0].kind, "home.transfer-unavailable");
+    assert_eq!(rejected.events[0].args["reason"], "artifact-rejected");
+
+    let deposited = dispatch_next(
+        &mut game,
+        GameCommand::DepositAtHome {
+            facility_id: THALOS_MUSEUM_ID.to_owned(),
+            item_id: "test.museum.dagger".to_owned(),
+            quantity: 1,
+        },
+    );
+    assert_eq!(deposited.events[0].kind, "home.deposit");
+    let stored = game
+        .snapshot()
+        .homes
+        .into_iter()
+        .find(|home| home.id == THALOS_MUSEUM_ID)
+        .expect("Thalos Museum should remain projected")
+        .stored_items
+        .into_iter()
+        .find(|item| item.kind_id == "demo.item.dagger")
+        .expect("donated dagger should be displayed");
+    let withdrawn = dispatch_next(
+        &mut game,
+        GameCommand::WithdrawFromHome {
+            facility_id: THALOS_MUSEUM_ID.to_owned(),
+            item_id: stored.id,
+            quantity: 1,
+        },
+    );
+    assert_eq!(withdrawn.events[0].kind, "home.withdraw");
 }
 
 #[test]

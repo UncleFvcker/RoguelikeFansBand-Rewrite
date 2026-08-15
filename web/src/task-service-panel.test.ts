@@ -11,6 +11,7 @@ import {
   facilityServiceActionKey,
   facilityServiceUsesItem,
   taskActionForStatus,
+  taskActionLabelKey,
 } from "./task-service-panel.ts";
 
 test("task service actions are limited to acceptance and reward claims", () => {
@@ -59,4 +60,10 @@ test("p106d bounty mission controls follow the authoritative mission state", () 
   assert.equal(bountyMissionAction(undefined), "request-mission");
   assert.equal(bountyMissionAction("active"), "abandon-mission");
   assert.equal(bountyMissionAction("reward-available"), "claim-mission-reward");
+});
+
+test("p107k rewardless task conclusions use a distinct action label", () => {
+  assert.equal(taskActionLabelKey("accept", false), "action-task-accept");
+  assert.equal(taskActionLabelKey("claim", true), "action-task-claim");
+  assert.equal(taskActionLabelKey("claim", false), "action-task-conclude");
 });

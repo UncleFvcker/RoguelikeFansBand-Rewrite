@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "formatVersion": 1,
+  "id": "demo.shop.thalos-inn",
+  "nameKey": "shop-demo-thalos-inn-name",
+  "descriptionKey": "shop-demo-thalos-inn-description",
+  "townId": "demo.town.thalos",
+  "category": "general-store",
+  "entrancePosition": { "x": 20, "y": 1 },
+  "entranceTerrainId": "demo.terrain.inn-entrance",
+  "innStayCost": 20,
+  "owner": {
+    "id": "demo.shop-owner.thalos-balthazar",
+    "nameKey": "shop-owner-demo-thalos-balthazar-name",
+    "raceId": "demo.race.rfb-human",
+    "greedPercent": 108,
+    "purchasePriceCap": 500
+  },
+  "stock": [
+    { "itemKindId": "demo.item.ration-of-food", "initialMinimum": 1, "initialMaximum": 5, "maintenanceMinimum": 1, "maintenanceMaximum": 5 },
+    { "itemKindId": "demo.item.water-potion", "initialMinimum": 1, "initialMaximum": 5, "maintenanceMinimum": 1, "maintenanceMaximum": 5 },
+    { "itemKindId": "demo.item.apple-juice", "initialMinimum": 1, "initialMaximum": 5, "maintenanceMinimum": 1, "maintenanceMaximum": 5 },
+    { "itemKindId": "demo.item.pint-of-fine-ale", "initialMinimum": 1, "initialMaximum": 5, "maintenanceMinimum": 1, "maintenanceMaximum": 5 },
+    { "itemKindId": "demo.item.pint-of-fine-wine", "initialMinimum": 1, "initialMaximum": 5, "maintenanceMinimum": 1, "maintenanceMaximum": 5 }
+  ],
+  "maintenance": { "intervalWorldTicks": 10000 }
+}

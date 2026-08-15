@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.thalos-warrior-guild",
+  "nameKey": "town-facility-demo-thalos-warrior-guild-name",
+  "descriptionKey": "town-facility-demo-thalos-warrior-guild-description",
+  "townId": "demo.town.thalos",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-thalos-warrior-guild-owner-name",
+  "ownerClassIds": ["demo.class.warrior", "demo.class.cavalry"],
+  "serviceActions": [
+    { "kind": "enchant-weapon", "ownerCost": 0, "otherCost": 0 },
+    { "kind": "enchant-armor", "ownerCost": 0, "otherCost": 0 }
+  ],
+  "entrancePosition": { "x": 10, "y": 9 },
+  "entranceTerrainId": "demo.terrain.warrior-guild-entrance"
+}

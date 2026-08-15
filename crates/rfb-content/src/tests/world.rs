@@ -9545,6 +9545,11 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         wilderness.locations,
         [
             WildernessLocationDefinition::Town {
+                position: ContentPosition { x: 17, y: 29 },
+                map_origin: ContentPosition { x: 37, y: 6 },
+                town_id: "demo.town.thalos".to_owned(),
+            },
+            WildernessLocationDefinition::Town {
                 position: ContentPosition { x: 26, y: 39 },
                 map_origin: ContentPosition { x: 27, y: 6 },
                 town_id: "demo.town.anambar".to_owned(),
@@ -13965,6 +13970,450 @@ fn p107d_crystal_castle_binds_glass_layers_guardians_and_diamond_edge() {
 }
 
 #[test]
+fn p108b_thalos_core_binds_fixed_town_services_and_embedded_icky_cave() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let town = content
+        .towns
+        .iter()
+        .find(|town| town.id == "demo.town.thalos")
+        .expect("Thalos should exist");
+    assert_eq!(town.floor_id, "demo.floor.thalos");
+    assert_eq!(town.shop_ids.len(), 10);
+    assert_eq!(town.facility_ids.len(), 11);
+    for id in [
+        "demo.town-facility.thalos-home",
+        "demo.town-facility.thalos-library",
+        "demo.town-facility.thalos-bounty-office",
+        "demo.town-facility.thalos-weapon-master",
+        "demo.town-facility.thalos-warrior-guild",
+        "demo.town-facility.thalos-life-temple",
+        "demo.town-facility.thalos-archer-guild",
+        "demo.town-facility.thalos-paladin-guild",
+        "demo.town-facility.thalos-palace",
+        "demo.town-facility.thalos-royal-academy",
+    ] {
+        assert!(town.facility_ids.contains(&id.to_owned()), "missing {id}");
+    }
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let wilderness = world.wilderness.as_ref().expect("wilderness should exist");
+    assert!(wilderness.locations.iter().any(|location| {
+        matches!(
+            location,
+            WildernessLocationDefinition::Town {
+                position: ContentPosition { x: 17, y: 29 },
+                map_origin: ContentPosition { x: 37, y: 6 },
+                town_id,
+            } if town_id == "demo.town.thalos"
+        )
+    }));
+    assert!(wilderness.locations.iter().any(|location| {
+        matches!(
+            location,
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 17, y: 29 },
+                dungeon_id,
+            } if dungeon_id == "demo.dungeon.icky-cave"
+        )
+    }));
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == town.floor_id)
+        .expect("Thalos floor should exist");
+    assert_eq!((floor.width, floor.height), (23, 11));
+    assert_eq!(
+        floor.next_floor_id.as_deref(),
+        Some("demo.floor.icky-cave-depth-10")
+    );
+    assert_eq!(
+        floor.down_stair_terrain_id.as_deref(),
+        Some("demo.terrain.icky-cave-entrance")
+    );
+    let inline = floor
+        .inline_map
+        .as_ref()
+        .expect("Thalos should use a fixed map");
+    assert_eq!(inline.player_position, ContentPosition { x: 11, y: 9 });
+    let has_terrain = |terrain_id: &str, position: ContentPosition| {
+        inline.terrain_overrides.iter().any(|override_| {
+            override_.terrain_id == terrain_id && override_.positions.contains(&position)
+        })
+    };
+    for shop_id in &town.shop_ids {
+        let shop = content
+            .shops
+            .iter()
+            .find(|shop| &shop.id == shop_id)
+            .unwrap_or_else(|| panic!("{shop_id} should exist"));
+        assert!(has_terrain(
+            &shop.entrance_terrain_id,
+            shop.entrance_position
+        ));
+    }
+    for facility_id in &town.facility_ids {
+        let facility = content
+            .town_facilities
+            .iter()
+            .find(|facility| &facility.id == facility_id)
+            .unwrap_or_else(|| panic!("{facility_id} should exist"));
+        assert!(has_terrain(
+            &facility.entrance_terrain_id,
+            facility.entrance_position
+        ));
+    }
+    assert!(has_terrain(
+        "demo.terrain.icky-cave-entrance",
+        ContentPosition { x: 18, y: 9 }
+    ));
+    assert!(has_terrain(
+        "demo.terrain.outpost-gate",
+        ContentPosition { x: 11, y: 10 }
+    ));
+    let icky_root = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.icky-cave-depth-10")
+        .expect("Icky Cave root should exist");
+    assert_eq!(icky_root.return_floor_id, "demo.floor.thalos");
+
+    let facility = |id: &str| {
+        content
+            .town_facilities
+            .iter()
+            .find(|facility| facility.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    assert_eq!(
+        facility("demo.town-facility.thalos-home")
+            .storage_id
+            .as_deref(),
+        Some("demo.town-facility.outpost-home")
+    );
+    assert_eq!(
+        facility("demo.town-facility.thalos-life-temple").owner_realm_ids,
+        ["life"]
+    );
+    assert_eq!(
+        facility("demo.town-facility.thalos-life-temple")
+            .service_actions
+            .iter()
+            .map(|service| (service.kind, service.owner_cost, service.other_cost))
+            .collect::<Vec<_>>(),
+        [
+            (TownFacilityServiceKind::Heal, 0, 150),
+            (TownFacilityServiceKind::RestoreVitality, 400, 1_500),
+        ]
+    );
+    assert_eq!(
+        facility("demo.town-facility.thalos-paladin-guild").owner_class_ids,
+        ["demo.class.paladin"]
+    );
+    assert_eq!(
+        facility("demo.town-facility.thalos-paladin-guild")
+            .service_actions
+            .iter()
+            .map(|service| (service.kind, service.owner_cost, service.other_cost))
+            .collect::<Vec<_>>(),
+        [
+            (TownFacilityServiceKind::Heal, 0, 150),
+            (TownFacilityServiceKind::EnchantArmor, 300, 600),
+        ]
+    );
+
+    for deferred in [
+        "demo.town-facility.thalos-arena",
+        "demo.town-facility.thalos-casino",
+        "demo.town-facility.thalos-sorcery-tower",
+        "demo.town-facility.thalos-rogue-guild",
+    ] {
+        assert!(!town.facility_ids.contains(&deferred.to_owned()));
+    }
+}
+
+#[test]
+fn p109b_thalos_binds_town_travel_and_museum() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let town = content
+        .towns
+        .iter()
+        .find(|town| town.id == "demo.town.thalos")
+        .expect("Thalos should exist");
+    assert!(
+        town.facility_ids
+            .contains(&"demo.town-facility.thalos-museum".to_owned())
+    );
+    let inn = content
+        .shops
+        .iter()
+        .find(|shop| shop.id == "demo.shop.thalos-inn")
+        .expect("Thalos Inn should exist");
+    assert_eq!(inn.inn_stay_cost, Some(20));
+
+    let museum = content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.thalos-museum")
+        .expect("Thalos Museum should exist");
+    assert_eq!(museum.category, TownFacilityCategory::Home);
+    assert_eq!(museum.storage_id.as_deref(), Some(museum.id.as_str()));
+    assert!(museum.reject_artifact_deposits);
+    assert_eq!(museum.entrance_position, ContentPosition { x: 20, y: 9 });
+    assert_eq!(museum.entrance_terrain_id, "demo.terrain.museum-entrance");
+}
+
+#[test]
+fn p110b_thalos_palace_and_academy_define_ten_logical_tasks() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let town = content
+        .towns
+        .iter()
+        .find(|town| town.id == "demo.town.thalos")
+        .expect("Thalos should exist");
+    let facility = |id: &str| {
+        content
+            .town_facilities
+            .iter()
+            .find(|facility| facility.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    let palace = facility("demo.town-facility.thalos-palace");
+    let academy = facility("demo.town-facility.thalos-royal-academy");
+    assert!(town.facility_ids.contains(&palace.id));
+    assert!(town.facility_ids.contains(&academy.id));
+    assert_eq!(palace.entrance_position, ContentPosition { x: 1, y: 9 });
+    assert_eq!(academy.entrance_position, ContentPosition { x: 21, y: 9 });
+    assert_eq!(palace.task_ids.len(), 6);
+    assert_eq!(academy.task_ids.len(), 7);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let task = |id: &str| {
+        world
+            .tasks
+            .iter()
+            .find(|task| task.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    assert_eq!(
+        world
+            .tasks
+            .iter()
+            .filter(|task| task.id.starts_with("demo.task.thalos-"))
+            .count(),
+        13
+    );
+
+    let djinni = task("demo.task.thalos-djinnis-cavern");
+    let palace_substitution = djinni
+        .substitution
+        .as_ref()
+        .expect("Djinni's Cavern should select the palace alternate");
+    assert_eq!(
+        palace_substitution.group_id,
+        "demo.task-substitution.thalos-palace-line"
+    );
+    assert_eq!(
+        palace_substitution.alternate_task_id,
+        "demo.task.thalos-cyclops-lair"
+    );
+    assert_eq!(
+        task("demo.task.thalos-old-watchtower")
+            .prerequisite_task_id
+            .as_deref(),
+        Some("demo.task.thalos-djinnis-cavern")
+    );
+
+    let basilisk = task("demo.task.thalos-basilisk-cave");
+    let basilisk_substitution = basilisk
+        .substitution
+        .as_ref()
+        .expect("Basilisk Cave should select the academy ordering");
+    assert_eq!(
+        basilisk_substitution.group_id,
+        "demo.task-substitution.thalos-academy-line"
+    );
+    assert_eq!(
+        basilisk_substitution.alternate_task_id,
+        "demo.task.thalos-staff-recovery-first"
+    );
+    let staff = task("demo.task.thalos-staff-recovery");
+    let staff_substitution = staff
+        .substitution
+        .as_ref()
+        .expect("Staff Recovery should select the academy fourth task");
+    assert_eq!(staff_substitution.group_id, basilisk_substitution.group_id);
+    assert_eq!(
+        staff_substitution.alternate_task_id,
+        "demo.task.thalos-dark-academy"
+    );
+    assert_eq!(
+        task("demo.task.thalos-renegade-sorcerer")
+            .prerequisite_task_id
+            .as_deref(),
+        Some("demo.task.thalos-staff-recovery")
+    );
+
+    let mushrooms = task("demo.task.thalos-mushrooms");
+    assert!(matches!(
+        &mushrooms.location,
+        TaskLocationDefinition::DungeonDepth { dungeon_id, depth }
+            if dungeon_id == "demo.dungeon.icky-cave" && *depth == 10
+    ));
+    assert_eq!(mushrooms.target_placements[0].spawn_count, 5);
+    for staff_task_id in [
+        "demo.task.thalos-staff-recovery-first",
+        "demo.task.thalos-staff-recovery",
+    ] {
+        let staff_task = task(staff_task_id);
+        assert!(staff_task.reward.is_none());
+        assert!(matches!(
+            staff_task.objectives.as_slice(),
+            [TaskObjectiveDefinition {
+                kind: TaskObjectiveKind::CollectItem,
+                item_kind_id: Some(item_kind_id),
+                ..
+            }] if item_kind_id == "demo.item.wizardstaff-of-mokomagi"
+        ));
+    }
+}
+
+#[test]
+fn p110c_thalos_fixed_task_maps_preserve_source_geometry_and_rosters() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let expected = [
+        ("shadow-fairies", 33, 19, 3),
+        ("djinnis-cavern", 15, 11, 7),
+        ("cyclops-lair", 46, 28, 7),
+        ("old-watchtower", 20, 17, 15),
+        ("cloning-pits", 80, 31, 60),
+        ("clear-wreckage", 65, 33, 19),
+        ("tidy-laboratory", 42, 15, 16),
+        ("basilisk-cave", 58, 15, 12),
+        ("staff-recovery-first", 33, 24, 8),
+        ("staff-recovery", 33, 24, 8),
+        ("dark-academy", 74, 28, 14),
+        ("renegade-sorcerer", 25, 16, 1),
+    ];
+    for (slug, width, height, actor_count) in expected {
+        let floor_id = format!("demo.floor.thalos-{slug}");
+        let floor = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == floor_id)
+            .unwrap_or_else(|| panic!("{floor_id} should exist"));
+        assert_eq!(floor.lifecycle, FloorLifecycle::OneShot);
+        assert_eq!((floor.width, floor.height), (width, height));
+        assert_eq!(floor.return_floor_id, "demo.floor.surface");
+        assert_eq!(
+            floor.task_id.as_deref(),
+            Some(format!("demo.task.thalos-{slug}").as_str())
+        );
+        assert_eq!(
+            floor
+                .inline_map
+                .as_ref()
+                .expect("task floor should use the authoritative fixed map")
+                .actor_spawns
+                .len(),
+            actor_count
+        );
+        assert_eq!(
+            floor.available_entry_terrain_id.as_deref(),
+            Some(format!("demo.terrain.thalos-{slug}-entry-available").as_str())
+        );
+    }
+}
+
+#[test]
+fn p110d_thalos_task_rewards_reuse_exact_device_effects_and_mokomagi_artifact() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let item = |id: &str| {
+        content
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    let mokomagi = item("demo.item.wizardstaff-of-mokomagi");
+    let artifact_generation = mokomagi
+        .artifact_generation
+        .as_ref()
+        .expect("Mokomagi should be a fixed artifact");
+    assert_eq!(artifact_generation.source_index, 340);
+    assert_eq!(
+        artifact_generation.base_item_kind_id,
+        "demo.item.wizardstaff"
+    );
+    assert_eq!(artifact_generation.rarity_one_in, 20);
+    assert_eq!(mokomagi.modifiers.intelligence, 3);
+    assert!(mokomagi.tags.contains(&"mana-efficient".to_owned()));
+    assert!(mokomagi.tags.contains(&"easy-spell".to_owned()));
+
+    let drain_life = &item("demo.item.drain-life-wand")
+        .device_generation
+        .as_ref()
+        .expect("drain life wand should have an activation")
+        .activations[0]
+        .effect;
+    assert!(matches!(
+        drain_life,
+        ItemUseEffectDefinition::AbilityEffect { effect, .. }
+            if matches!(
+                effect.as_ref(),
+                AbilityEffectDefinition::DrainLife {
+                    damage_bonus: 90,
+                    damage_type: ActorDamageType::Nether,
+                    target_category,
+                    repeat: 1,
+                    feeds: false,
+                    ..
+                } if target_category == "living"
+            )
+    ));
+
+    let tsunami = &item("demo.item.tsunami-wand")
+        .device_generation
+        .as_ref()
+        .expect("tsunami wand should have an activation")
+        .activations[0]
+        .effect;
+    assert!(matches!(
+        tsunami,
+        ItemUseEffectDefinition::AbilityEffect {
+            effect,
+            affects_ground_items: true,
+        } if matches!(
+            effect.as_ref(),
+            AbilityEffectDefinition::ConeDamage {
+                damage_bonus: 154,
+                damage_type: ActorDamageType::Water,
+                radius: 2,
+                ..
+            }
+        )
+    ));
+}
+
+#[test]
 fn p107g_anambar_mayor_line_binds_substitutions_rewards_and_crystal_targets() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let content = &artifact.content;
@@ -14274,6 +14723,139 @@ fn p107h_anambar_mayor_fixed_maps_preserve_source_geometry_and_one_shot_entries(
         assert!(anambar.terrain_overrides.iter().any(|override_| {
             override_.terrain_id == format!("demo.terrain.anambar-{id}-entry-available")
                 && override_.positions == [ContentPosition { x, y: 9 }]
+        }));
+    }
+}
+
+#[test]
+fn p107i_anambar_police_line_preserves_rewards_fixed_maps_and_entry_order() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let police = content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.anambar-police-station")
+        .expect("Anambar police station should exist");
+    assert!(police.bounty_office.is_some());
+    assert_eq!(
+        police.task_ids,
+        [
+            "demo.task.anambar-cop-quest",
+            "demo.task.anambar-smugglers-den",
+            "demo.task.anambar-cellar-killer",
+        ]
+    );
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let task = |id: &str| {
+        world
+            .tasks
+            .iter()
+            .find(|task| task.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    let cop = task("demo.task.anambar-cop-quest");
+    let smugglers = task("demo.task.anambar-smugglers-den");
+    let cellar = task("demo.task.anambar-cellar-killer");
+    assert!(cop.reward.is_none());
+    assert_eq!(
+        smugglers.prerequisite_task_id.as_deref(),
+        Some(cop.id.as_str())
+    );
+    assert_eq!(
+        cellar.prerequisite_task_id.as_deref(),
+        Some(smugglers.id.as_str())
+    );
+    assert!(smugglers.unlock_when_prerequisite_failed);
+    assert!(cellar.unlock_when_prerequisite_failed);
+    assert_eq!(
+        smugglers.reward.as_ref().unwrap().entries[0].item_kind_id,
+        "demo.item.sixfold-provision"
+    );
+    assert_eq!(
+        cellar.reward.as_ref().unwrap().entries[0].item_kind_id,
+        "demo.item.destruction-staff"
+    );
+
+    for (id, depth, width, height, actor_count, covered_tiles, player_position) in [
+        (
+            "cop-quest",
+            12,
+            25,
+            24,
+            32,
+            363,
+            ContentPosition { x: 9, y: 1 },
+        ),
+        (
+            "smugglers-den",
+            30,
+            20,
+            18,
+            16,
+            223,
+            ContentPosition { x: 4, y: 16 },
+        ),
+        (
+            "cellar-killer",
+            70,
+            11,
+            10,
+            1,
+            63,
+            ContentPosition { x: 9, y: 8 },
+        ),
+    ] {
+        let floor_id = format!("demo.floor.anambar-{id}");
+        let floor = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == floor_id)
+            .unwrap_or_else(|| panic!("{floor_id} should exist"));
+        assert_eq!(floor.lifecycle, FloorLifecycle::OneShot);
+        assert_eq!(
+            (floor.depth, floor.width, floor.height),
+            (depth, width, height)
+        );
+        assert_eq!(
+            floor.task_id.as_deref(),
+            Some(format!("demo.task.anambar-{id}").as_str())
+        );
+        assert_eq!(
+            floor.available_entry_terrain_id.as_deref(),
+            Some(format!("demo.terrain.anambar-{id}-entry-available").as_str())
+        );
+        let inline = floor.inline_map.as_ref().expect("fixed map should exist");
+        assert_eq!(inline.player_position, player_position);
+        assert_eq!(inline.actor_spawns.len(), actor_count);
+        assert_eq!(
+            inline
+                .terrain_overrides
+                .iter()
+                .map(|override_| override_.positions.len())
+                .sum::<usize>(),
+            covered_tiles
+        );
+    }
+
+    let anambar = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.anambar")
+        .and_then(|floor| floor.inline_map.as_ref())
+        .expect("Anambar fixed map should exist");
+    for (id, position) in [
+        ("cop-quest", ContentPosition { x: 19, y: 9 }),
+        ("smugglers-den", ContentPosition { x: 11, y: 1 }),
+        ("cellar-killer", ContentPosition { x: 13, y: 1 }),
+    ] {
+        assert!(anambar.terrain_overrides.iter().any(|override_| {
+            override_.terrain_id == format!("demo.terrain.anambar-{id}-entry-available")
+                && override_.positions == [position]
         }));
     }
 }

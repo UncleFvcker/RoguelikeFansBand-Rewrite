@@ -1180,9 +1180,8 @@ impl Game {
                 }
                 TaskStatusKindDto::RewardAvailable => {
                     state.active_floor_id.is_none()
-                        && task_definition(world, task_id).is_some_and(|task| {
-                            task.source_facility_id.is_some() && task.reward.is_some()
-                        })
+                        && task_definition(world, task_id)
+                            .is_some_and(|task| task.source_facility_id.is_some())
                         && usize::try_from(state.stage_index)
                             .ok()
                             .is_some_and(|stage| stage + 1 == objectives.len())

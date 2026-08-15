@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.wizardstaff-of-mokomagi",
+  "nameKey": "item-demo-wizardstaff-of-mokomagi-name",
+  "descriptionKey": "item-demo-wizardstaff-of-mokomagi-description",
+  "glyph": "\\",
+  "generationLevel": 42,
+  "weightTenthsPound": 40,
+  "maxStack": 1,
+  "baseValue": 30000,
+  "equipmentSlot": "weapon",
+  "weaponProficiencyBaseItemId": "demo.item.wizardstaff",
+  "artifactGeneration": { "sourceIndex": 340, "baseItemKindId": "demo.item.wizardstaff", "rarityOneIn": 20, "instant": false },
+  "modifiers": { "intelligence": 3 },
+  "meleeProfile": { "attacks": 1, "toHit": 12, "toDamage": 10, "damageDice": 2, "damageSides": 2 },
+  "resistances": { "confusion": "resistant", "blindness": "resistant" },
+  "passives": ["sustain-intelligence"],
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "tags": ["artifact", "easy-spell", "equipment", "mana-efficient", "quest-item", "weapon"]
+}

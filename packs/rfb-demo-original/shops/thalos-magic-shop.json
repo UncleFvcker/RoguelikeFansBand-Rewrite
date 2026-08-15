@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "formatVersion": 1,
+  "id": "demo.shop.thalos-magic-shop",
+  "nameKey": "shop-demo-anambar-magic-shop-name",
+  "descriptionKey": "shop-demo-anambar-magic-shop-description",
+  "townId": "demo.town.thalos",
+  "category": "magic-shop",
+  "entrancePosition": { "x": 12, "y": 1 },
+  "entranceTerrainId": "demo.terrain.magic-shop-entrance",
+  "owner": {
+    "id": "demo.shop-owner.thalos-edrin-sol",
+    "nameKey": "shop-owner-demo-outpost-edrin-sol-name",
+    "raceId": "demo.race.rfb-human",
+    "greedPercent": 110,
+    "purchasePriceCap": 20000
+  },
+  "stock": [
+    { "itemKindId": "demo.item.magic-missile-wand", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.detect-objects-staff", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.identify-staff", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 }
+  ],
+  "maintenance": { "intervalWorldTicks": 10000 }
+}
