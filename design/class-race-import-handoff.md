@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-15
-当前实现基线：`33addaf2d`（库塔正式 New Game 开放；本次文档提交只做交接封板）
+当前实现基线：`503893dd4`（安珀人正式 New Game 开放；本次文档提交只做交接封板）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,15 +10,15 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.374.0`
-- content hash：`0a6076df6cfbf9fa35a784935592c610161fe5bb4c74b6358f9d0231d7c9a78f`
-- Protocol：`1.224`
+- demo pack：`1.375.0`
+- content hash：`31b8d0c0f3c2824bc5a6cabd36d5661bcac3e5133fdb3d59c02353b6707c0719`
+- Protocol：`1.225`
 - State Hash Schema：`v105`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v303`，26 个 exact fixture；现有 fixture 仍是 v104，按用户要求本批
   未运行全量测试或刷新，主合并验收需统一迁移到 v105
 - 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 38 个种族。
+  6 个职业构筑和 39 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -302,6 +302,30 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
   能力解锁/失败/成功/消耗/持续/AC/豁免覆盖、美德及 save/state-hash/replay。`verify-source`、schema、
   Protocol bindings、Web typecheck、Rust check/format 和 diff 检查通过。按用户要求未运行全量测试，
   也未刷新 `contract-v303` fixture；主合并验收必须把现有 v104 fixture 统一刷新到 v105。
+
+### 安珀人导入最终证据
+
+- 实现提交：`503893dd4`（`Import Amberite race`）。最终协调点为 pack `1.375.0` / content hash
+  `31b8d0c0f3c2824bc5a6cabd36d5661bcac3e5133fdb3d59c02353b6707c0719`；Protocol `1.225`、
+  State Hash Schema v105、save v2。正式 New Game 种族数从 38 增至 39，ability 数从 1835 增至 1837。
+- 安珀人闭合六维 `+1/+2/+2/+2/+3/0`、生命 100%、基础 HP 20、经验 190%、0 格红外、商店
+  100%、八项技能、体质维持、再生 +100%、标准身体/出生和初始“荣誉”。`rfb-compatibility`、
+  Web option 与稳定 `raceId` 请求均已加入；临时安珀人形态按当前有效种族获得并在解除后失去被动与
+  能力。
+- 新增并由种族方向拥有 `rfb.ability.race.amberite-shadow-shifting`、
+  `rfb.ability-program.race.amberite-shadow-shifting`、
+  `rfb.ability.race.amberite-pattern-mindwalk` 和
+  `rfb.ability-program.race.amberite-pattern-mindwalk`。“阴影位移”为 30 级智力能力，消耗 50、基础
+  失败率 70%，启动 15..35 回合现实重构倒计时，再次施放会取消；新增通用 `alter-reality` 效果及
+  协议投影，因此 Protocol 推进到 1.225。
+- “漫步全知阵”为 40 级感知能力，消耗 75、基础失败率 75%，清除中毒、幻觉、震慑、流血、失明与
+  恐惧，恢复六维损伤、经验等级和 1000 生命力。原版 `lp_player(1000)` 不直接治疗 HP，也不清除
+  混乱；实现复用既有状态清除与 `RestoreVitality` 原语，没有伪造治疗事件。
+- 只运行本批新增聚焦测试：内容 1、本地化 1、importer 1、核心 2、Web 1，均通过，覆盖静态矩阵、
+  能力门槛/投影/支付、倒计时启动与取消、恢复范围、临时形态、美德及 save/state-hash/replay。
+  `verify-source`、schema、Protocol bindings、Web typecheck、Rust check/format 和 diff 检查通过。按
+  用户要求未运行全量测试，也未刷新 `contract-v303` fixture；现有 v104 fixture 仍留给主合并验收
+  统一迁移到 v105。
 
 ## 2. 权威来源与不可变规则
 

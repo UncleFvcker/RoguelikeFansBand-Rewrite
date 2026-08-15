@@ -5,7 +5,7 @@
 
 更新时间：2026-08-15
 
-当前 main 实现基线：`33addaf2d`（库塔正式 New Game 开放）
+当前 main 实现基线：`503893dd4`（安珀人正式 New Game 开放）
 
 分支：`codex/class-next`
 
@@ -1039,5 +1039,33 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   State Hash Schema v105、save v2。
 - 新增聚焦测试共 6 项：内容 1、中文名 1、importer 1、核心 2、Web 1，覆盖静态矩阵、能力等级、
   成功/失败支付、持续时间、AC、豁免固定值、美德及 save/state-hash/replay。`verify-source`、schema、
+  Protocol bindings、Web typecheck、Rust check/format 和 diff 检查通过；按用户要求未运行全量测试，
+  也未刷新 `contract-v303` fixture。现有 fixture 仍是 v104，主合并验收必须统一迁移到 v105。
+
+## main 当前批次：安珀人正式内容、阴影位移与漫步全知阵
+
+- 权威来源为 RFB `master:src/races_a.c`、`master:src/spells_s.c`、`master:src/spells_m.c`、
+  `master:src/effects.c` 和 `master:src/virtue.c`。种族方向继续拥有既有 `rfb-legacy.race.amberite` 与
+  `rfb-legacy.skill-set.race-amberite`，新增并拥有
+  `rfb.ability.race.amberite-shadow-shifting`、
+  `rfb.ability-program.race.amberite-shadow-shifting`、
+  `rfb.ability.race.amberite-pattern-mindwalk` 和
+  `rfb.ability-program.race.amberite-pattern-mindwalk`；本批不新增 item、material、affix、resource 或
+  actor ID。
+- 安珀人按原版闭合六维 `+1/+2/+2/+2/+3/0`、生命 100%、基础 HP 20、经验 190%、0 格红外、
+  商店 100%、八项技能、体质维持、再生 +100%、标准身体/出生和初始“荣誉”。临时安珀人形态通过
+  当前有效种族路径获得同一被动与能力。
+- 30 级智力能力“阴影位移”消耗 50、基础失败率 70%，启动随机 15..35 回合现实重构倒计时；已有
+  倒计时时再次施放会取消。最窄通用 `alter-reality` 效果复用现有倒计时状态并投影前后值，Protocol
+  因共享 DTO 推进到 `1.225`，State Hash Schema 保持 v105，save schema 保持 v2。
+- 40 级感知能力“漫步全知阵”消耗 75、基础失败率 75%，清除中毒、幻觉、震慑、流血、失明和恐惧，
+  恢复六维损伤、经验等级与 1000 生命力。权威实现中的 `lp_player(1000)` 不是 HP 治疗，也不清除
+  混乱；本批以既有状态清除及 `RestoreVitality` 组合表达，未新增专用恢复事务。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数从 38 增至 39。
+  实现提交为 `503893dd4`（`Import Amberite race`）。最终协调点为 pack `1.375.0` / content hash
+  `31b8d0c0f3c2824bc5a6cabd36d5661bcac3e5133fdb3d59c02353b6707c0719`、Protocol `1.225`、
+  State Hash Schema v105、save v2。
+- 新增聚焦测试共 6 项：内容 1、中文名 1、importer 1、核心 2、Web 1，覆盖静态矩阵、能力门槛与
+  支付、倒计时启动/取消、恢复范围、临时形态、美德及 save/state-hash/replay。`verify-source`、schema、
   Protocol bindings、Web typecheck、Rust check/format 和 diff 检查通过；按用户要求未运行全量测试，
   也未刷新 `contract-v303` fixture。现有 fixture 仍是 v104，主合并验收必须统一迁移到 v105。

@@ -1547,3 +1547,24 @@ git diff --stat
   State Hash Schema v105、save v2。新增内容、本地化、importer、核心和 Web 共 6 项聚焦测试通过，
   含 save/state-hash/replay；schema/source lock、bindings、typecheck、格式和 diff 检查通过。按用户要求
   未运行全量测试或刷新 `contract-v303` fixture；现有 v104 fixture 留给主合并验收统一迁移。
+
+## 85. main 当前交接（安珀人正式内容、阴影位移与漫步全知阵）
+
+- 种族方向继续拥有 `rfb-legacy.race.amberite` 与 `rfb-legacy.skill-set.race-amberite`，并新增、拥有
+  `rfb.ability.race.amberite-shadow-shifting`、
+  `rfb.ability-program.race.amberite-shadow-shifting`、
+  `rfb.ability.race.amberite-pattern-mindwalk` 和
+  `rfb.ability-program.race.amberite-pattern-mindwalk`。其他方向不得复制或改名这些身份。
+- 通用能力效果新增 `alter-reality`，直接切换现有现实重构倒计时：0 时启动 15..35，非 0 时取消；
+  协议投影记录前后值。Protocol 因共享 DTO 推进到 `1.225`，State Hash Schema 保持 v105，save schema
+  保持 v2。
+- 安珀人完整行为包括权威属性/生命/HP/经验/红外/商店/技能矩阵、体质维持、再生 +100%、标准
+  身体/出生、初始“荣誉”，以及 30 级智力能力“阴影位移”和 40 级感知能力“漫步全知阵”。后者
+  清除中毒、幻觉、震慑、流血、失明、恐惧并恢复六维损伤、经验等级和 1000 生命力；原版不直接
+  治疗 HP，也不清除混乱。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 39。
+- 实现提交为 `503893dd4`（`Import Amberite race`）。共享协调点为 pack `1.375.0` / content hash
+  `31b8d0c0f3c2824bc5a6cabd36d5661bcac3e5133fdb3d59c02353b6707c0719`、Protocol `1.225`、
+  State Hash Schema v105、save v2。新增内容、本地化、importer、核心和 Web 共 6 项聚焦测试通过，
+  含 save/state-hash/replay；schema/source lock、bindings、typecheck、格式和 diff 检查通过。按用户要求
+  未运行全量测试或刷新 `contract-v303` fixture；现有 v104 fixture 留给主合并验收统一迁移。
