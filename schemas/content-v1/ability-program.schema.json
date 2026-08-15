@@ -2976,6 +2976,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "vomit",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "damageBonus": {
               "default": 0,
               "format": "uint16",

@@ -2797,6 +2797,20 @@ impl Game {
                     });
                 }
             }
+            let vomit_extra_energy = events.iter().find_map(|event| match event {
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => {
+                    resolution.effects.iter().find_map(|effect| match effect {
+                        AbilityEffectResolutionDto::Vomit {
+                            extra_energy_cost, ..
+                        } => Some(*extra_energy_cost),
+                        _ => None,
+                    })
+                }
+                _ => None,
+            });
+            if let Some(extra_energy_cost) = vomit_extra_energy {
+                action_cost = action_cost.saturating_add(i32::from(extra_energy_cost));
+            }
             spend_energy(&mut self.player.energy_need, action_cost);
             self.advance_until_player_ready(
                 false,
@@ -8390,6 +8404,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
             maximum_hp_divisor: *maximum_hp_divisor,
             bleeding_amount: *bleeding_amount,
         },
+        AbilityEffectDefinition::Vomit => AbilityEffectSpecDto::Vomit,
         AbilityEffectDefinition::VisibleDamage {
             damage_dice,
             damage_sides,

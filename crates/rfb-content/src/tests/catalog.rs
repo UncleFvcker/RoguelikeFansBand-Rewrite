@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.371.0");
+    assert_eq!(catalog.pack_version(), "1.372.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -2240,6 +2240,100 @@ fn formal_snotling_completes_the_authoritative_profile_power_and_birth_mushrooms
             fully_charged: false,
         }],
     );
+}
+
+#[test]
+fn formal_boit_completes_the_authoritative_profile_throwing_bonus_and_vomit_power() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let boit = catalog
+        .race("rfb-legacy.race.boit")
+        .expect("formal Boit race");
+
+    assert_eq!(
+        [
+            boit.modifiers.strength,
+            boit.modifiers.intelligence,
+            boit.modifiers.wisdom,
+            boit.modifiers.dexterity,
+            boit.modifiers.constitution,
+            boit.modifiers.charisma,
+        ],
+        [-1, -2, -2, -2, 0, -2],
+    );
+    assert_eq!(boit.modifiers.speed, 2);
+    assert_eq!(
+        (
+            boit.life_percent,
+            boit.base_hp,
+            boit.experience_percent,
+            boit.infravision,
+            boit.shop_adjust_percent,
+        ),
+        (95, 15, 80, 1, 105),
+    );
+    assert_eq!(boit.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(boit.tags.iter().any(|candidate| candidate == tag), "{tag}");
+    }
+
+    let skills = catalog
+        .skill_set(&boit.skill_set_id)
+        .expect("formal Boit skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+            skills.get("demo.skill.throwing").copied().unwrap_or(0),
+        ],
+        [2, -5, -1, 0, 0, 10, -8, -8, 25],
+    );
+
+    let [activation] = boit.abilities.as_slice() else {
+        panic!("Boit should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.vomit",
+            1,
+            TechniqueAttribute::Strength,
+            0,
+            0,
+        ),
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Boit Vomit ability");
+    assert!(matches!(ability.effect, AbilityEffectDefinition::Vomit));
+    for tag in ["usable-while-afraid", "usable-while-confused"] {
+        assert!(
+            ability.tags.iter().any(|candidate| candidate == tag),
+            "{tag}",
+        );
+    }
+    assert!(boit.starting_items.is_empty());
 }
 
 #[test]

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.vomit",
+  "nameKey": "ability-rfb-race-vomit-name",
+  "descriptionKey": "ability-rfb-race-vomit-description",
+  "abilityProgramId": "rfb.ability-program.race.vomit",
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  },
+  "tags": ["race", "usable-while-afraid", "usable-while-confused"]
+}

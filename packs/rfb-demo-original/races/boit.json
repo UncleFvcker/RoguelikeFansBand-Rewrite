@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.vomit",
+      "baseFailurePercent": 0,
+      "cost": 0,
+      "governingAttribute": "strength",
+      "minimumLevel": 1
+    }
+  ],
   "baseHp": 15,
   "bodySlots": [
     {
@@ -67,6 +76,7 @@
   "experiencePercent": 80,
   "formatVersion": 1,
   "id": "rfb-legacy.race.boit",
+  "infravision": 1,
   "kinCategory": "kin-glyph-121",
   "legacyIndex": 67,
   "lifePercent": 95,
@@ -82,7 +92,10 @@
   "shopAdjustPercent": 105,
   "skillSetId": "rfb-legacy.skill-set.race-boit",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

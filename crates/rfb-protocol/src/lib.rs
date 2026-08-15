@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.222";
+pub const PROTOCOL_VERSION: &str = "1.223";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
 
@@ -1453,6 +1453,7 @@ pub enum AbilityEffectSpecDto {
         maximum_hp_divisor: u16,
         bleeding_amount: u32,
     },
+    Vomit,
     VisibleDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -2715,6 +2716,18 @@ pub enum AbilityEffectResolutionDto {
         effect_index: u8,
         nutrition_before: u16,
         nutrition_after: u16,
+    },
+    Vomit {
+        effect_index: u8,
+        nutrition_before: u16,
+        nutrition_after: u16,
+        poison_before: u32,
+        poison_damage: i32,
+        poison_removed: bool,
+        empty_stomach: bool,
+        self_damage: i32,
+        fatal: bool,
+        extra_energy_cost: u16,
     },
     RefuelEquippedLight {
         effect_index: u8,

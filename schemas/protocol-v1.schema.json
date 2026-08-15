@@ -2273,6 +2273,74 @@
         {
           "type": "object",
           "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "emptyStomach": {
+              "type": "boolean"
+            },
+            "extraEnergyCost": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "fatal": {
+              "type": "boolean"
+            },
+            "nutritionAfter": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "nutritionBefore": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "poisonBefore": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "poisonDamage": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "poisonRemoved": {
+              "type": "boolean"
+            },
+            "selfDamage": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "type": {
+              "type": "string",
+              "const": "vomit"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "nutritionBefore",
+            "nutritionAfter",
+            "poisonBefore",
+            "poisonDamage",
+            "poisonRemoved",
+            "emptyStomach",
+            "selfDamage",
+            "fatal",
+            "extraEnergyCost"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "after": {
               "type": "integer",
               "format": "uint16",
@@ -5660,6 +5728,18 @@
             "type",
             "maximumHpDivisor",
             "bleedingAmount"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "vomit"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {

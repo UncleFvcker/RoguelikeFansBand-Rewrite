@@ -2917,6 +2917,7 @@ const RACE_WOOD_ELF_NATURE_AWARENESS_ABILITY_ID: &str =
     "rfb.ability.race.wood-elf-nature-awareness";
 const RACE_SPRITE_SLEEPING_DUST_ABILITY_ID: &str = "rfb.ability.race.sleeping-dust";
 const RACE_SNOTLING_DEVOUR_FLESH_ABILITY_ID: &str = "rfb.ability.race.devour-flesh";
+const RACE_BOIT_VOMIT_ABILITY_ID: &str = "rfb.ability.race.vomit";
 
 #[test]
 fn formal_snotling_devours_flesh_while_confused_and_round_trips() {
@@ -3002,6 +3003,160 @@ fn formal_snotling_devours_flesh_while_confused_and_round_trips() {
     let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
         .expect("Devour Flesh result should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn formal_boit_vomits_poison_while_afraid_or_confused_and_pays_empty_stomach_energy() {
+    let mut game = boit_game(401);
+    clear_monsters(&mut game);
+    game.debug_set_ability_casts_succeed(true);
+    game.nutrition = 600;
+    let target = game.position_in_direction(Direction::East);
+    replace_terrain(&mut game, target, "demo.terrain.floor");
+    game.push_generated_actor(
+        "test.boit-vomit-target".to_owned(),
+        "demo.actor.sheep",
+        target,
+    );
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_POISON, 35, "test.boit-poison").status);
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_FEAR, 20, "test.boit-fear").status);
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_CONFUSION, 20, "test.boit-confusion").status);
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_BOIT_VOMIT_ABILITY_ID)
+        .expect("Boit Vomit should be projected");
+    assert_eq!(projected.source, AbilitySourceDto::Race);
+    assert_eq!(projected.minimum_level, 1);
+    assert_eq!(projected.base_resource_cost, 0);
+    assert_eq!(
+        projected.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Strength),
+    );
+    assert!(projected.can_cast);
+    assert!(matches!(
+        projected.effects.as_slice(),
+        [AbilityEffectSpecDto::Vomit]
+    ));
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == "demo.item.ration-of-food" && item.location == ItemLocation::Inventory
+    }));
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+    }));
+
+    let hp_before = game.player.hp;
+    let target_hp_before = game.entities[0].hp;
+    let mut replay = game.clone();
+    for cast in [&mut game, &mut replay] {
+        let mut events = Vec::new();
+        cast.resolve_player_ability(
+            RACE_BOIT_VOMIT_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Vomit should resolve");
+        assert!(events.iter().any(|event| matches!(
+            event,
+            DomainEvent::AbilityAreaDamage { resolution, .. }
+                if resolution.center == cast.player.position
+                    && resolution.radius == 1
+                    && resolution.base_raw_damage == 10
+                    && resolution.damage_type == DamageTypeDto::Poison
+        )));
+        assert!(events.iter().any(|event| matches!(
+            event,
+            DomainEvent::AbilityEffectsResolved { resolution, .. }
+                if matches!(
+                    resolution.effects.as_slice(),
+                    [AbilityEffectResolutionDto::Vomit {
+                        nutrition_before: 600,
+                        nutrition_after: 500,
+                        poison_before: 35,
+                        poison_damage: 10,
+                        poison_removed: true,
+                        empty_stomach: false,
+                        self_damage: 0,
+                        fatal: false,
+                        extra_energy_cost: 0,
+                        ..
+                    }]
+                )
+        )));
+        assert!(
+            !events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::AbilityCastUnavailable { .. }))
+        );
+    }
+    assert_eq!(game.nutrition, 500);
+    assert_eq!(game.player.hp, hp_before);
+    assert!(game.entities[0].hp < target_hp_before);
+    assert!(!game.player_has_status_kind(STATUS_POISON));
+    assert!(game.player_has_status_kind(STATUS_FEAR));
+    assert!(game.player_has_status_kind(STATUS_CONFUSION));
+    assert_eq!(game.state_hash(), replay.state_hash());
+
+    let mut empty = boit_game(402);
+    clear_monsters(&mut empty);
+    empty.debug_set_ability_casts_succeed(true);
+    empty.nutrition = 500;
+    let hp_before = empty.player.hp;
+    let mut events = Vec::new();
+    empty
+        .resolve_player_ability(
+            RACE_BOIT_VOMIT_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("empty-stomach Vomit should resolve");
+    assert_eq!(empty.nutrition, 400);
+    assert_eq!(empty.player.hp, hp_before - 10);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityEffectsResolved { resolution, .. }
+            if matches!(
+                resolution.effects.as_slice(),
+                [AbilityEffectResolutionDto::Vomit {
+                    empty_stomach: true,
+                    self_damage: 10,
+                    extra_energy_cost: 15,
+                    ..
+                }]
+            )
+    )));
+    let restored = Game::from_save_with_content(empty.to_save(), empty.content.clone())
+        .expect("Vomit result should restore");
+    assert_eq!(restored.state_hash(), empty.state_hash());
+
+    let mut action = boit_game(403);
+    clear_monsters(&mut action);
+    action.debug_set_ability_casts_succeed(true);
+    action.nutrition = 500;
+    let gain = energy_gain(derived_speed(&action.player_derived_stats().speed));
+    let expected_ticks = u32::try_from((STANDARD_ACTION_COST + 15 + gain - 1) / gain)
+        .expect("Vomit action ticks should fit u32");
+    let tick_before = action.world_tick;
+    dispatch_next(
+        &mut action,
+        GameCommand::CastAbility {
+            ability_id: RACE_BOIT_VOMIT_ABILITY_ID.to_owned(),
+            target: TargetSelection::SelfTarget,
+        },
+    );
+    assert_eq!(action.world_tick - tick_before, expected_ticks);
 }
 
 #[test]

@@ -961,6 +961,7 @@ pub(super) fn validate_abilities(
                     (1..=1_000).contains(maximum_hp_divisor)
                         && (1..=1_000_000).contains(bleeding_amount)
                 }
+                AbilityEffectDefinition::Vomit => true,
                 AbilityEffectDefinition::VisibleDamage {
                     damage_dice,
                     damage_sides,
@@ -1297,6 +1298,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::DevourFlesh { .. }
+            | AbilityEffectDefinition::Vomit
             | AbilityEffectDefinition::CreateItem { .. }
             | AbilityEffectDefinition::Clairvoyance { .. }
             | AbilityEffectDefinition::CallSunlight { .. }

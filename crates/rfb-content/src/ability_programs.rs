@@ -239,6 +239,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::ReduceStatus { .. }
                     | AbilityEffectDefinition::SatisfyHunger
                     | AbilityEffectDefinition::DevourFlesh { .. }
+                    | AbilityEffectDefinition::Vomit
                     | AbilityEffectDefinition::RestoreVitality { .. }
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }

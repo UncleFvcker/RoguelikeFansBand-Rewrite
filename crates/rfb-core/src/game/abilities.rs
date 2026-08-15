@@ -233,7 +233,10 @@ impl Game {
             AbilitySourceDto::Race => race_activation.as_ref(),
             AbilitySourceDto::Class | AbilitySourceDto::Learned => None,
         };
-        if source != AbilitySourceDto::Learned && self.player_has_status_kind(STATUS_FEAR) {
+        if source != AbilitySourceDto::Learned
+            && self.player_has_status_kind(STATUS_FEAR)
+            && !ability.tags.iter().any(|tag| tag == "usable-while-afraid")
+        {
             events.push(DomainEvent::AbilityCastUnavailable {
                 ability_id: ability_id.to_owned(),
                 reason: "afraid".to_owned(),
@@ -1226,6 +1229,9 @@ impl Game {
             }
             (AbilityEffectDefinition::DevourFlesh { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_devour_flesh_effect(&ability, events);
+            }
+            (AbilityEffectDefinition::Vomit, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_vomit_effect(&ability, events, changed, removed_entities)?;
             }
             (AbilityEffectDefinition::IdentifyItem { .. }, AbilityTargetPlan::Item { item_id }) => {
                 self.resolve_player_identify_item_effect(&ability, &item_id, events);
@@ -4846,6 +4852,96 @@ impl Game {
                 nutrition: self.nutrition,
             });
         }
+    }
+
+    fn resolve_player_vomit_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        debug_assert!(matches!(ability.effect, AbilityEffectDefinition::Vomit));
+        const EMPTY_STOMACH_THRESHOLD: u16 = 524;
+        const MAXIMUM_NUTRITION_AFTER_VOMITING: u16 = 512;
+        const EMPTY_STOMACH_DAMAGE: i32 = 10;
+        const EMPTY_STOMACH_EXTRA_ENERGY: u16 = 15;
+
+        let before_state = self.nutrition_state();
+        let nutrition_before = self.nutrition;
+        let poison_before = self
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_POISON)
+            .map_or(0, |status| status.remaining_ticks);
+        let poison_damage = i32::try_from(poison_before.saturating_mul(2) / 7).unwrap_or(i32::MAX);
+        let empty_stomach = nutrition_before < EMPTY_STOMACH_THRESHOLD;
+        let self_damage = if empty_stomach {
+            let damage = resolve_damage(
+                DamagePacket::new(EMPTY_STOMACH_DAMAGE, DamageType::Physical),
+                ResistanceLevel::Normal,
+            );
+            self.apply_final_player_damage(damage, FatalityPolicy::BelowZero)
+                .damage
+                .applied
+        } else {
+            0
+        };
+
+        self.nutrition = nutrition_before
+            .saturating_sub(100)
+            .min(MAXIMUM_NUTRITION_AFTER_VOMITING)
+            .max(1);
+        self.resolve_player_area_damage_with_base(
+            &ability.id,
+            Vec::new(),
+            false,
+            DamageType::Poison,
+            1,
+            None,
+            poison_damage,
+            false,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        self.player
+            .statuses
+            .retain(|status| status.kind_id != STATUS_POISON);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::Vomit {
+                    effect_index: 0,
+                    nutrition_before,
+                    nutrition_after: self.nutrition,
+                    poison_before,
+                    poison_damage,
+                    poison_removed: poison_before > 0,
+                    empty_stomach,
+                    self_damage,
+                    fatal: self.player_is_dead(),
+                    extra_energy_cost: if empty_stomach {
+                        EMPTY_STOMACH_EXTRA_ENERGY
+                    } else {
+                        0
+                    },
+                }],
+            },
+            trace: None,
+        });
+        let after_state = self.nutrition_state();
+        if after_state != before_state {
+            events.push(DomainEvent::NutritionStateChanged {
+                from: before_state,
+                to: after_state,
+                nutrition: self.nutrition,
+            });
+        }
+        Ok(())
     }
 
     fn resolve_player_remove_equipped_curses_effect(
@@ -11229,6 +11325,7 @@ impl Game {
             | AbilityEffectDefinition::ReduceStatus { .. }
             | AbilityEffectDefinition::SatisfyHunger
             | AbilityEffectDefinition::DevourFlesh { .. }
+            | AbilityEffectDefinition::Vomit
             | AbilityEffectDefinition::CreateItem { .. }
             | AbilityEffectDefinition::CreateStair { .. }
             | AbilityEffectDefinition::SelfKnowledge

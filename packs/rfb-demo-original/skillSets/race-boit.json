@@ -24,6 +24,10 @@
     {
       "base": -8,
       "skillId": "demo.skill.ranged"
+    },
+    {
+      "base": 25,
+      "skillId": "demo.skill.throwing"
     }
   ],
   "formatVersion": 1,

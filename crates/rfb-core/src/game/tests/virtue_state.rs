@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::support::{
-    archon_game, golem_game, skeleton_game, sprite_game, wood_elf_game, zombie_game,
+    archon_game, boit_game, golem_game, skeleton_game, sprite_game, wood_elf_game, zombie_game,
 };
 use super::*;
 
@@ -407,6 +407,19 @@ fn formal_snotling_receives_the_original_honour_virtue() {
             VirtueKindDto::Temperance,
             VirtueKindDto::Honour,
         ],
+    );
+}
+
+#[test]
+fn formal_boit_receives_the_authoritative_sacrifice_virtue() {
+    let boit = boit_game(405);
+    assert_eq!(
+        &virtue_kinds(&boit)[..3],
+        [
+            VirtueKindDto::Valour,
+            VirtueKindDto::Honour,
+            VirtueKindDto::Sacrifice,
+        ]
     );
 }
 

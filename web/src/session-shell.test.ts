@@ -70,6 +70,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.archon",
     "rfb-legacy.race.sprite",
     "rfb-legacy.race.snotling",
+    "rfb-legacy.race.boit",
   ]);
 });
 
@@ -227,6 +228,21 @@ test("New Game exposes and submits Snotling", () => {
   );
   const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(indexHtml, /<option value="rfb-legacy\.race\.snotling"/);
+});
+
+test("New Game exposes and submits Boit", () => {
+  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.boit");
+  assert.equal(
+    createNewSessionRequest(
+      "401",
+      "demo.build.warrior",
+      "rfb-legacy.race.boit",
+      "Boit",
+    ).raceId,
+    "rfb-legacy.race.boit",
+  );
+  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(indexHtml, /<option value="rfb-legacy\.race\.boit"/);
 });
 
 test("new character requests preserve the selected formal race", () => {

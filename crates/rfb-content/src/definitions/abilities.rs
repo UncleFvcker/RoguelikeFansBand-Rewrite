@@ -822,6 +822,7 @@ pub enum AbilityEffectDefinition {
         maximum_hp_divisor: u16,
         bleeding_amount: u32,
     },
+    Vomit,
     VisibleDamage {
         damage_dice: u16,
         damage_sides: u16,

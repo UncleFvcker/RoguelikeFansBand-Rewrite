@@ -877,6 +877,7 @@ pub struct LegacyCharacterEntry {
     pub speed: i32,
     pub speed_per_ten_levels: i32,
     pub spell_capacity_bonus: i32,
+    pub throwing_skill_bonus: i32,
 }
 
 impl Default for LegacyCharacterEntry {
@@ -911,6 +912,7 @@ impl Default for LegacyCharacterEntry {
             speed: 0,
             speed_per_ten_levels: 0,
             spell_capacity_bonus: 0,
+            throwing_skill_bonus: 0,
         }
     }
 }
@@ -5230,8 +5232,8 @@ fn find_power_info_body<'a>(text: &'a str, name: &str) -> Option<&'a str> {
 /// Extracts the statically expressible defensive surface from a race's
 /// calc_bonuses hook: top-level `res_add` family calls, literal level-gated
 /// resistance calls, `free_act++`, `see_inv++`, permanent telepathy,
-/// unconditional attribute sustains and literal `pspeed`, `spell_cap` and
-/// regeneration adjustments.
+/// unconditional attribute sustains and literal `pspeed`, `spell_cap`,
+/// `skill_tht` and regeneration adjustments.
 pub type CalcBonusesDefenses = (
     Vec<(String, String)>,
     Vec<(u16, String, String)>,
@@ -5240,6 +5242,7 @@ pub type CalcBonusesDefenses = (
     Option<u16>,
     Option<u16>,
     Vec<String>,
+    i32,
     i32,
     i32,
     i32,
@@ -5278,6 +5281,7 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
             0,
             0,
             0,
+            0,
         );
     };
     let mut adds: BTreeMap<&'static str, i32> = BTreeMap::new();
@@ -5292,6 +5296,7 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
     let mut speed = 0_i32;
     let mut speed_per_ten_levels = 0_i32;
     let mut spell_capacity_bonus = 0_i32;
+    let mut throwing_skill_bonus = 0_i32;
     let mut depth = 0_i32;
     let mut suppressed = false;
     let mut pending_minimum_level = None;
@@ -5414,6 +5419,8 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
             regeneration_rate_modifier_percent += amount;
         } else if let Some(amount) = literal_adjustment(line, "p_ptr->spell_cap") {
             spell_capacity_bonus += amount;
+        } else if let Some(amount) = literal_adjustment(line, "p_ptr->skill_tht") {
+            throwing_skill_bonus += amount;
         }
     }
     let mut resistances = Vec::new();
@@ -5449,6 +5456,7 @@ pub fn parse_calc_bonuses_defenses(text: &str, hook: &str) -> CalcBonusesDefense
         speed_per_ten_levels,
         regeneration_rate_modifier_percent,
         spell_capacity_bonus,
+        throwing_skill_bonus,
     )
 }
 
@@ -5680,6 +5688,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
         let ability_id = match spell {
             "berserk_spell" => "rfb.ability.race.berserk",
             "create_food_spell" => "rfb.ability.race.create-food",
+            "_boit_vomit_spell" => "rfb.ability.race.vomit",
             "_devour_flesh_spell" => "rfb.ability.race.devour-flesh",
             "detect_doors_stairs_traps_spell" => "rfb.ability.race.detect-doors-stairs-traps",
             "detect_treasure_spell" => "rfb.ability.race.detect-treasure",
@@ -6432,7 +6441,7 @@ fn character_modifiers(entry: &LegacyCharacterEntry) -> serde_json::Map<String, 
 }
 
 fn character_skill_set_json(entry: &LegacyCharacterEntry, id: &str) -> serde_json::Value {
-    let entries: Vec<serde_json::Value> = LEGACY_SKILL_ROSTER
+    let mut entries: Vec<serde_json::Value> = LEGACY_SKILL_ROSTER
         .iter()
         .enumerate()
         .filter_map(|(index, (suffix, _))| {
@@ -6451,6 +6460,12 @@ fn character_skill_set_json(entry: &LegacyCharacterEntry, id: &str) -> serde_jso
             Some(value)
         })
         .collect();
+    if entry.throwing_skill_bonus != 0 {
+        entries.push(serde_json::json!({
+            "skillId": "rfb-legacy.skill.throwing",
+            "base": entry.throwing_skill_bonus,
+        }));
+    }
     serde_json::json!({
         "$schema": format!("{SCHEMA_BASE}/skill-set.schema.json"),
         "formatVersion": 1,
@@ -6597,6 +6612,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
     if matches!(
         entry.id.as_str(),
         "barbarian"
+            | "boit"
             | "cyclops"
             | "dark-elf"
             | "dunadan"
@@ -7926,6 +7942,8 @@ fn vampire_lord_race_json() -> serde_json::Value {
 fn legacy_skill_files() -> Vec<(String, serde_json::Value)> {
     LEGACY_SKILL_ROSTER
         .iter()
+        .copied()
+        .chain([("throwing", "throwing")])
         .map(|(suffix, kind)| {
             (
                 format!("{suffix}.json"),
@@ -12684,6 +12702,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                     speed_per_ten_levels,
                     regeneration_rate_modifier_percent,
                     spell_capacity_bonus,
+                    throwing_skill_bonus,
                 ) = parse_calc_bonuses_defenses(text, &hook);
                 entry.resistances = resistances;
                 entry.level_resistances = level_resistances;
@@ -12696,6 +12715,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
                 entry.speed_per_ten_levels = speed_per_ten_levels;
                 entry.regeneration_rate_modifier_percent = regeneration_rate_modifier_percent;
                 entry.spell_capacity_bonus = spell_capacity_bonus;
+                entry.throwing_skill_bonus = throwing_skill_bonus;
                 entry.levitation = parse_calc_bonuses_levitation(text, &hook);
             }
             parse_race_powers(text, &mut entry);
@@ -13522,6 +13542,7 @@ fn legacy_races_by_id(
                     speed_per_ten_levels,
                     regeneration_rate_modifier_percent,
                     spell_capacity_bonus,
+                    throwing_skill_bonus,
                 ) = parse_calc_bonuses_defenses(text, &hook);
                 entry.resistances = resistances;
                 entry.level_resistances = level_resistances;
@@ -13534,6 +13555,7 @@ fn legacy_races_by_id(
                 entry.speed_per_ten_levels = speed_per_ten_levels;
                 entry.regeneration_rate_modifier_percent = regeneration_rate_modifier_percent;
                 entry.spell_capacity_bonus = spell_capacity_bonus;
+                entry.throwing_skill_bonus = throwing_skill_bonus;
                 entry.levitation = parse_calc_bonuses_levitation(text, &hook);
             }
             parse_race_powers(text, &mut entry);
@@ -21025,6 +21047,7 @@ race_t *test_beast_get_race(void)
             speed_per_ten_levels,
             regeneration_rate_modifier_percent,
             spell_capacity_bonus,
+            _,
         ) = parse_calc_bonuses_defenses(SYNTHETIC_SOURCE, "_test_calc_bonuses");
         assert_eq!(
             resistances,
@@ -21058,6 +21081,7 @@ race_t *test_beast_get_race(void)
             conditional_see_invisible_minimum_level,
             conditional_telepathy_minimum_level,
             conditional_sustains,
+            _,
             _,
             _,
             _,
@@ -21570,7 +21594,7 @@ static void _sprite_calc_bonuses(void)
             hooks: vec!["calc_bonuses".to_owned(), "get_powers".to_owned()],
             ..LegacyCharacterEntry::default()
         };
-        let (resistances, _, _, _, _, _, _, _, speed_per_ten_levels, _, _) =
+        let (resistances, _, _, _, _, _, _, _, speed_per_ten_levels, _, _, _) =
             parse_calc_bonuses_defenses(SOURCE, "_sprite_calc_bonuses");
         sprite.resistances = resistances;
         sprite.speed_per_ten_levels = speed_per_ten_levels;
@@ -21647,6 +21671,73 @@ static power_info _snotling_get_powers[] =
     }
 
     #[test]
+    fn boit_speed_throwing_power_and_formal_tags_are_mapped() {
+        const SOURCE: &str = r#"
+static void _boit_calc_bonuses(void)
+{
+    p_ptr->pspeed += 2;
+    p_ptr->skill_tht += 25;
+}
+static power_info _boit_get_powers[] =
+{
+    { A_STR, {1, 0, 0, _boit_vomit_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+"#;
+        let mut boit = LegacyCharacterEntry {
+            id: "boit".to_owned(),
+            calc_bonuses_fn: Some("_boit_calc_bonuses".to_owned()),
+            get_powers_fn: Some("_boit_get_powers".to_owned()),
+            hooks: vec!["calc_bonuses".to_owned(), "get_powers".to_owned()],
+            ..LegacyCharacterEntry::default()
+        };
+        let (_, _, _, _, _, _, _, speed, _, _, _, throwing_skill_bonus) =
+            parse_calc_bonuses_defenses(SOURCE, "_boit_calc_bonuses");
+        boit.speed = speed;
+        boit.throwing_skill_bonus = throwing_skill_bonus;
+        parse_race_powers(SOURCE, &mut boit);
+
+        assert_eq!(boit.speed, 2);
+        assert_eq!(boit.throwing_skill_bonus, 25);
+        assert_eq!(
+            legacy_race_tags(&boit),
+            [
+                "humanoid",
+                "legacy-import",
+                "rfb-compatibility",
+                "standard-body",
+            ],
+        );
+        assert_eq!(
+            boit.abilities,
+            [LegacyInnatePower {
+                governing_attribute: "strength".to_owned(),
+                minimum_level: 1,
+                cost: 0,
+                base_failure_percent: 0,
+                ability_id: "rfb.ability.race.vomit".to_owned(),
+            }],
+        );
+        let skill_set = character_skill_set_json(&boit, "race-boit");
+        assert!(
+            skill_set["entries"]
+                .as_array()
+                .is_some_and(|entries| entries.iter().any(|entry| {
+                    entry["skillId"] == "rfb-legacy.skill.throwing" && entry["base"] == 25
+                }))
+        );
+        assert!(
+            legacy_skill_files()
+                .iter()
+                .any(|(_, skill)| skill["id"] == "rfb-legacy.skill.throwing")
+        );
+        let mut report = ContentImportReport::default();
+        let race = race_json(&boit, &[], &mut report);
+        assert_eq!(race["modifiers"]["speed"], 2);
+        assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
+    }
+
+    #[test]
     fn literal_race_power_tables_map_known_spells_and_report_unknown_ones() {
         const SOURCE: &str = r#"
 static power_info _barbarian_get_powers[] =
@@ -21691,7 +21782,7 @@ race_t *barbarian_get_race(void)
             .next()
             .expect("synthetic Barbarian should parse");
         let mut barbarian = parse_character_block(&name, &body);
-        let (resistances, _, _, _, _, _, _, _, _, _, _) =
+        let (resistances, _, _, _, _, _, _, _, _, _, _, _) =
             parse_calc_bonuses_defenses(SOURCE, "_barbarian_calc_bonuses");
         barbarian.resistances = resistances;
         parse_race_powers(SOURCE, &mut barbarian);

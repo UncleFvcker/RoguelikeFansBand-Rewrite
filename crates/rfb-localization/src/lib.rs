@@ -617,6 +617,22 @@ mod tests {
     }
 
     #[test]
+    fn boit_content_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("race-legacy-boit-name", "博伊特人"),
+            ("ability-rfb-race-vomit-name", "呕吐"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Boit content should format"),
+                expected,
+            );
+        }
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

@@ -651,7 +651,8 @@ impl Game {
                                         .tags
                                         .iter()
                                         .any(|tag| tag == "usable-while-confused"))
-                                && !self.player_has_status_kind(STATUS_FEAR)
+                                && (!self.player_has_status_kind(STATUS_FEAR)
+                                    || ability.tags.iter().any(|tag| tag == "usable-while-afraid"))
                                 && concentration_available
                                 && hit_points_available
                                 && resource_available
