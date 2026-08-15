@@ -1,0 +1,667 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-hell-lance-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "floorTerrainId": "demo.terrain.floor",
+            "magmaTerrainId": "demo.terrain.magma-vein",
+            "maximumRadius": 17,
+            "minimumRadius": 13,
+            "quartzTerrainId": "demo.terrain.quartz-vein",
+            "type": "area-destruction",
+            "wallTerrainId": "demo.terrain.granite-wall"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-destruction",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2500
+        },
+        "rfbBiases": [
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 42
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "power": 100,
+            "type": "recharge-from-player"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-recharge-from-device",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "mage",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 90,
+        "effect": {
+          "effect": {
+            "power": 190,
+            "type": "recharge-from-player"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-recharge-from-player",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "mage",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 15
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "fire": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-fire",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-resist-fire",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "fire",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 24,
+            "durationTicks": 6,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.blessed",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-bless",
+        "maxDepth": 32,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "priestly",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationTicks": 25,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.heroism",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-heroism",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "priestly",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 66,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "demon",
+            "countDice": 1,
+            "countSides": 1,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 67,
+            "hostileGroupChancePercent": 100,
+            "maximumLevel": 66,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-summon-demon",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 6660
+        },
+        "rfbBiases": [
+          "chaos",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "category": "demon",
+            "power": 50,
+            "type": "control"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-charm-demon",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "chaos",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 9,
+            "damageSides": 8,
+            "damageType": "fire",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-bolt-fire",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "fire",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 13,
+            "damageSides": 8,
+            "damageType": "nether",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-bolt-nether",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 250
+        },
+        "rfbBiases": [
+          "necromantic",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 26,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "fire",
+            "type": "beam-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-beam-fire",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "fire",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 57,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "fire",
+            "radius": 2,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-ball-fire",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "fire",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 137,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "nether",
+            "radius": 3,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-ball-nether",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "necromantic",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 250,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "nether",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-breathe-nether",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 750
+        },
+        "rfbBiases": [
+          "necromantic",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 232,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "rocket",
+            "radius": 2,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-rocket",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effect": {
+          "effect": {
+            "type": "aggravate-monsters"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-25-biased-aggravate",
+        "maxDepth": 32,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-hell-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.hell-lance",
+  "nameKey": "affix-legacy-hell-lance-name",
+  "namePlacement": "full-name",
+  "rfbEgo": {
+    "rarity": 2,
+    "sourceIndex": 25,
+    "types": [
+      "weapon"
+    ]
+  },
+  "slays": {
+    "good": "slay"
+  },
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

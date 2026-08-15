@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-fauchard-name",
+  "rfbBaseKind": {
+    "sourceIndex": 90,
+    "sval": 6,
+    "tval": 22
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",

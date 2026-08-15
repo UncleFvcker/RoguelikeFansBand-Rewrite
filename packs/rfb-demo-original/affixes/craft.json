@@ -1,0 +1,1135 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-craft-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "acid": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-acid",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-resist-acid",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "acid"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "electricity": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-electricity",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-resist-elec",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "electricity"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "fire": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-fire",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-resist-fire",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "fire",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "cold": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-cold",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-resist-cold",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "cold"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "poison": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-poison",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-resist-pois",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "poison"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-cure-pois",
+        "maxDepth": 32,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "poison",
+          "priestly",
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 8,
+            "damageSides": 8,
+            "damageType": "acid",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-bolt-acid",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "acid"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 5,
+            "damageSides": 8,
+            "damageType": "electricity",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-bolt-elec",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "electricity"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 9,
+            "damageSides": 8,
+            "damageType": "fire",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-bolt-fire",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "fire",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 6,
+            "damageSides": 8,
+            "damageType": "cold",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-bolt-cold",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "cold"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 6,
+            "damageSides": 8,
+            "damageType": "poison",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-bolt-pois",
+        "maxDepth": 32,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 100
+        },
+        "rfbBiases": [
+          "poison"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 30,
+            "damageDice": 1,
+            "damageSides": 115,
+            "damageType": "ice",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-bolt-ice",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage",
+          "cold"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 40,
+            "damageDice": 1,
+            "damageSides": 115,
+            "damageType": "plasma",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-bolt-plasma",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "fire"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 26,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "acid",
+            "type": "beam-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-beam-acid",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "acid"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 24,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "electricity",
+            "type": "beam-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-beam-elec",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "electricity"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 26,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "fire",
+            "type": "beam-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-beam-fire",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "fire",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 25,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "cold",
+            "type": "beam-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-beam-cold",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "cold"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 52,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "acid",
+            "radius": 2,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-ball-acid",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "acid"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 46,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "electricity",
+            "radius": 2,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-ball-elec",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "electricity"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 57,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "fire",
+            "radius": 2,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-ball-fire",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "fire",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 48,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "cold",
+            "radius": 2,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-ball-cold",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "cold"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 14,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "poison",
+            "radius": 2,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-ball-pois",
+        "maxDepth": 32,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 50
+        },
+        "rfbBiases": [
+          "poison"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 220,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "acid",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-breathe-acid",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "acid"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 190,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "electricity",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-breathe-elec",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "electricity"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 160,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "fire",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-breathe-fire",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "fire"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 150,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "cold",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-breathe-cold",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "cold"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 140,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "poison",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-9-biased-breathe-pois",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-craft-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "poison"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "generationMaxLevel": 70,
+  "id": "rfb-legacy.affix.craft",
+  "nameKey": "affix-legacy-craft-name",
+  "rfbEgo": {
+    "rarity": 2,
+    "sourceIndex": 9,
+    "types": [
+      "weapon"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

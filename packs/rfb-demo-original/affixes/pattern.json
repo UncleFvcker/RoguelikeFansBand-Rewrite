@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-pattern-description",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "id": "rfb-legacy.affix.pattern",
+  "nameKey": "affix-legacy-pattern-name",
+  "passives": [
+    "see-invisible"
+  ],
+  "rfbEgo": {
+    "rarity": 6,
+    "sourceIndex": 22,
+    "types": [
+      "weapon"
+    ]
+  },
+  "slays": {
+    "demon": "slay",
+    "evil": "slay",
+    "undead": "slay"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-zweihander-name",
+  "rfbBaseKind": {
+    "sourceIndex": 72,
+    "sval": 29,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

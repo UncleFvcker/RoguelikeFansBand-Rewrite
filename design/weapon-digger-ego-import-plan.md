@@ -223,6 +223,13 @@ persisted DTO、Protocol、save 或 state-hash schema；正式 30 条 affix 与�
 
 ### E3.7：导入内容并开放自然生成
 
+状态：已完成。importer 从 RFB `master` Git 对象生成 30 条正式 affix、权威中英文名称，并为 62 条
+已选普通武器/挖掘工具回灌 `rfbBaseKind`；Arcane 与 Disruption 保留定义，但当前缺少 Wizardstaff /
+Mattock 时由共同选择器拒绝重试。`base-items` 仅在 Exceptional 的 WEAPON/DIGGER 上启用 RFB ego
+policy，其他装备仍走原 affix policy；Slaying 与 Death 的显式法术引用也统一走 source-index 物化器。
+pack 推进至 `1.366.0` 并刷新 content lock；本阶段没有新增持久字段，因此 Protocol、save 与 State
+Hash schema 均未推进。
+
 - importer 生成 30 条正式 affix 和 30 条权威中英文消息；
 - Arcane 与 Disruption 定义照常存在；当前缺少魔术师法杖/鹤嘴锄时只会按原版走拒绝重试，不会产生
   不相容实例；

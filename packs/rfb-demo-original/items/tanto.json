@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-tanto-name",
+  "rfbBaseKind": {
+    "sourceIndex": 49,
+    "sval": 6,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

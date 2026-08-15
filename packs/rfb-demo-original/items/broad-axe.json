@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-broad-axe-name",
+  "rfbBaseKind": {
+    "sourceIndex": 95,
+    "sval": 11,
+    "tval": 22
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

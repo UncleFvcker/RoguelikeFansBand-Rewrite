@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-gondolin-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "formatVersion": 1,
+  "generationLevel": 25,
+  "id": "rfb-legacy.affix.gondolin",
+  "nameKey": "affix-legacy-gondolin-name",
+  "passives": [
+    "see-invisible"
+  ],
+  "resistances": {
+    "dark": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 3,
+    "sourceIndex": 20,
+    "types": [
+      "weapon"
+    ]
+  },
+  "slays": {
+    "demon": "slay",
+    "dragon": "slay",
+    "orc": "slay",
+    "troll": "slay"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

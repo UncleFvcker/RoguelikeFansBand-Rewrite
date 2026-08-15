@@ -327,7 +327,7 @@ impl ContentCatalog {
 
     /// All affix definitions in stable id order. Consumers needing RFB source
     /// order must sort the optional ego metadata explicitly.
-    pub fn affix_definitions(&self) -> impl Iterator<Item = &AffixDefinition> {
+    pub fn affix_definitions(&self) -> impl Iterator<Item = &AffixDefinition> + Clone {
         self.affixes.values()
     }
 

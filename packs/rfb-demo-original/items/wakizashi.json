@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-wakizashi-name",
+  "rfbBaseKind": {
+    "sourceIndex": 56,
+    "sval": 13,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

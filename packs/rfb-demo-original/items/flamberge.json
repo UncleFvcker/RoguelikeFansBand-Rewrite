@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-flamberge-name",
+  "rfbBaseKind": {
+    "sourceIndex": 69,
+    "sval": 26,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

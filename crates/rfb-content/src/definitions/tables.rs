@@ -63,6 +63,13 @@ pub enum LootQualityPolicyDefinition {
     },
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum LootRfbEgoPolicyDefinition {
+    WeaponDigger,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -90,6 +97,8 @@ pub struct LootTableDefinition {
     pub quality_weights: Vec<LootQualityWeightDefinition>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub quality_policy: Option<LootQualityPolicyDefinition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rfb_ego_policy: Option<LootRfbEgoPolicyDefinition>,
     pub affix_weights: Vec<LootAffixWeightDefinition>,
 }
 

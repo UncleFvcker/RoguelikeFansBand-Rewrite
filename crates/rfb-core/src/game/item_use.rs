@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use super::*;
+use super::{abilities::AbilityTargetPlan, *};
 
 const WAYBREAD_INTOLERANCE_MUTATION_ID: &str = "rfb.mutation.waybread-into";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
+    AbilityEffect {
+        ability: AbilityDefinition,
+        target_plan: AbilityTargetPlan,
+    },
     SelfTarget,
     Acquirement {
         source_item_id: String,
@@ -2425,6 +2429,19 @@ impl Game {
         } = settled;
         match (effect, plan) {
             (
+                ItemUseEffectDefinition::AbilityEffect { .. },
+                ItemUsePlan::AbilityEffect {
+                    ability,
+                    target_plan,
+                },
+            ) => self.resolve_player_ability_effect(
+                ability,
+                target_plan,
+                events,
+                changed,
+                removed_entities,
+            )?,
+            (
                 effect @ (ItemUseEffectDefinition::Heal { .. }
                 | ItemUseEffectDefinition::NoNumericEffect
                 | ItemUseEffectDefinition::IncreaseNutrition { .. }
@@ -2839,6 +2856,34 @@ impl Game {
         }
         let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
         match effect {
+            ItemUseEffectDefinition::AbilityEffect {
+                effect,
+                affects_ground_items,
+            } => {
+                let target_definition = target_definition?.clone();
+                let selection = target.cloned().unwrap_or(TargetSelection::SelfTarget);
+                let ability = AbilityDefinition {
+                    schema: rfb_content::ABILITY_SCHEMA.to_owned(),
+                    format_version: rfb_content::CONTENT_FORMAT_VERSION,
+                    id: format!("rfb.item-activation.{source_item_id}"),
+                    name_key: "device-activation-rfb-ego-name".to_owned(),
+                    description_key: "device-activation-rfb-ego-description".to_owned(),
+                    target: target_definition,
+                    effect: (**effect).clone(),
+                    affects_ground_items: *affects_ground_items,
+                    level_scaling: Vec::new(),
+                    status_power_attribute: None,
+                    spell_power_fields: Vec::new(),
+                    spell_power_bonus: 0,
+                    player: None,
+                    tags: vec!["item-activation".to_owned()],
+                };
+                let target_plan = self.ability_target_plan(&ability, &selection)?;
+                Some(ItemUsePlan::AbilityEffect {
+                    ability,
+                    target_plan,
+                })
+            }
             ItemUseEffectDefinition::NoNumericEffect
             | ItemUseEffectDefinition::IncreaseNutrition { .. }
             | ItemUseEffectDefinition::SatisfyHunger
@@ -5033,7 +5078,8 @@ impl Game {
             ItemUseEffectDefinition::SelfKnowledge => {
                 self.resolve_item_self_knowledge(source_kind_id, events)
             }
-            ItemUseEffectDefinition::Damage { .. }
+            ItemUseEffectDefinition::AbilityEffect { .. }
+            | ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::BeamDamage { .. }
             | ItemUseEffectDefinition::TerrainBeam { .. }
             | ItemUseEffectDefinition::RidingCharge

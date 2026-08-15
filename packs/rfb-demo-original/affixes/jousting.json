@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-jousting-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effectProgramId": "rfb.effect.ego-riding-charge",
+        "id": "rfb.device-activation.ego-24-charge",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-jousting-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "target": {
+          "modes": [
+            "direction",
+            "entity"
+          ],
+          "range": 7,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "id": "rfb-legacy.affix.jousting",
+  "nameKey": "affix-legacy-jousting-name",
+  "rfbEgo": {
+    "rarity": 1,
+    "sourceIndex": 24,
+    "types": [
+      "weapon"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

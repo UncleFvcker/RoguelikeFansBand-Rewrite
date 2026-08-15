@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-armageddon-description",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "id": "rfb-legacy.affix.armageddon",
+  "nameKey": "affix-legacy-armageddon-name",
+  "rfbEgo": {
+    "rarity": 3,
+    "sourceIndex": 7,
+    "types": [
+      "weapon"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

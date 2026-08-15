@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-blessed-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 60,
+  "id": "rfb-legacy.affix.blessed",
+  "nameKey": "affix-legacy-blessed-name",
+  "rfbEgo": {
+    "rarity": 8,
+    "sourceIndex": 4,
+    "types": [
+      "weapon",
+      "digger"
+    ]
+  },
+  "tags": [
+    "digger",
+    "legacy-import",
+    "weapon"
+  ]
+}

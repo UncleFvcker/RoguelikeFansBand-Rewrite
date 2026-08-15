@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-war-hammer-name",
+  "rfbBaseKind": {
+    "sourceIndex": 127,
+    "sval": 8,
+    "tval": 21
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",

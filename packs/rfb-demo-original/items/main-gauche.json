@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-main-gauche-name",
+  "rfbBaseKind": {
+    "sourceIndex": 48,
+    "sval": 5,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

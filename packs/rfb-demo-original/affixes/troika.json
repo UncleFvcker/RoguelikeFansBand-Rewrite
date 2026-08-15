@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-troika-description",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "id": "rfb-legacy.affix.troika",
+  "nameKey": "affix-legacy-troika-name",
+  "rfbEgo": {
+    "rarity": 24,
+    "sourceIndex": 27,
+    "types": [
+      "weapon"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

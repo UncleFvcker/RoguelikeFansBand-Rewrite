@@ -24,6 +24,11 @@
   "resistances": {
     "chaos": "resistant"
   },
+  "rfbBaseKind": {
+    "sourceIndex": 73,
+    "sval": 30,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

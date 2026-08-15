@@ -182,7 +182,10 @@ use damage::{
     FatalityPolicy, commit_damage_application, commit_final_player_damage, plan_damage_application,
     process_actor_status_tick, process_actor_status_tick_with, scale_damage_outcome,
 };
-use ego::{EgoMaterialization, materialize_ego_with_rng};
+use ego::{
+    EgoMaterialization, materialize_ego_with_rng,
+    roll_and_materialize_rfb_ego_from_affixes_with_rng,
+};
 use environment_combat::PlayerTrapOutcome;
 use floor::{
     FloorTransitionTarget, RecallUseAction, dungeon_instance_id, dungeon_instance_storage_key,
@@ -4516,7 +4519,8 @@ impl Game {
             || matches!(effect, ItemUseEffectDefinition::Genocide { .. })
             || matches!(
                 effect,
-                ItemUseEffectDefinition::IdentifyItem { .. }
+                ItemUseEffectDefinition::AbilityEffect { .. }
+                    | ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. }
                     | ItemUseEffectDefinition::RechargeFromDevice { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }
@@ -5605,26 +5609,30 @@ impl Game {
                     minimum_quality,
                 ),
             };
-            let eligible_affixes = table
-                .affix_weights
-                .iter()
-                .filter(|affix_weight| {
-                    affix_weight.affix_id.as_ref().is_none_or(|affix_id| {
-                        self.content.affix(affix_id).is_some_and(|affix| {
-                            self.content.item(&entry.item_kind_id).is_some_and(|item| {
-                                affix_is_compatible_with_item(affix, item, generation_depth)
+            let preselected_generic_affix_id = (table.rfb_ego_policy
+                != Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger))
+            .then(|| {
+                let eligible_affixes = table
+                    .affix_weights
+                    .iter()
+                    .filter(|affix_weight| {
+                        affix_weight.affix_id.as_ref().is_none_or(|affix_id| {
+                            self.content.affix(affix_id).is_some_and(|affix| {
+                                self.content.item(&entry.item_kind_id).is_some_and(|item| {
+                                    affix_is_compatible_with_item(affix, item, generation_depth)
+                                })
                             })
                         })
                     })
+                    .collect::<Vec<_>>();
+                let affix_weights = eligible_affixes
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                (!eligible_affixes.is_empty()).then(|| {
+                    let affix_index = self.roll_weighted_index(&affix_weights);
+                    eligible_affixes[affix_index].affix_id.clone()
                 })
-                .collect::<Vec<_>>();
-            let affix_weights = eligible_affixes
-                .iter()
-                .map(|entry| entry.weight)
-                .collect::<Vec<_>>();
-            let rolled_affix_id = (!eligible_affixes.is_empty()).then(|| {
-                let affix_index = self.roll_weighted_index(&affix_weights);
-                eligible_affixes[affix_index].affix_id.clone()
             });
             let supports_quality = self.content.item(&entry.item_kind_id).is_some_and(|item| {
                 item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1
@@ -5634,31 +5642,81 @@ impl Game {
             } else {
                 ItemQualityDto::Ordinary
             };
-            let affix_is_required = table
-                .affix_weights
-                .iter()
-                .all(|entry| entry.affix_id.is_some());
-            let affix_ids = if affix_is_required
-                || quality_allows_natural_affix(table.quality_policy, quality)
-            {
-                rolled_affix_id.flatten().iter().cloned().collect()
-            } else {
-                Vec::new()
-            };
+            let rfb_materialization = (table.rfb_ego_policy
+                == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
+                && quality_allows_natural_affix(table.quality_policy, quality))
+            .then(|| {
+                self.content.item(&entry.item_kind_id).and_then(|item| {
+                    roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                        &mut self.rng,
+                        item,
+                        self.content.affix_definitions(),
+                        generation_depth,
+                    )
+                })
+            })
+            .flatten();
+            let materialization = rfb_materialization.unwrap_or_else(|| {
+                let rolled_affix_id = preselected_generic_affix_id.unwrap_or_else(|| {
+                    let eligible_affixes = table
+                        .affix_weights
+                        .iter()
+                        .filter(|affix_weight| {
+                            affix_weight.affix_id.as_ref().is_none_or(|affix_id| {
+                                self.content.affix(affix_id).is_some_and(|affix| {
+                                    self.content.item(&entry.item_kind_id).is_some_and(|item| {
+                                        affix_is_compatible_with_item(affix, item, generation_depth)
+                                    })
+                                })
+                            })
+                        })
+                        .collect::<Vec<_>>();
+                    let affix_weights = eligible_affixes
+                        .iter()
+                        .map(|entry| entry.weight)
+                        .collect::<Vec<_>>();
+                    (!eligible_affixes.is_empty()).then(|| {
+                        let affix_index = self.roll_weighted_index(&affix_weights);
+                        eligible_affixes[affix_index].affix_id.clone()
+                    })
+                });
+                let affix_is_required = table
+                    .affix_weights
+                    .iter()
+                    .all(|entry| entry.affix_id.is_some());
+                let affix_ids = if affix_is_required
+                    || quality_allows_natural_affix(table.quality_policy, quality)
+                {
+                    rolled_affix_id.flatten().iter().cloned().collect()
+                } else {
+                    Vec::new()
+                };
+                materialize_ego_with_rng(
+                    &self.content,
+                    &mut self.rng,
+                    &entry.item_kind_id,
+                    affix_ids,
+                    |_| generation_depth,
+                    generation_depth,
+                )
+            });
             let EgoMaterialization {
                 affix_ids,
                 rolled_affixes,
                 enchantment_delta,
+                curse,
                 activation,
                 charges,
                 ..
-            } = materialize_ego_with_rng(
-                &self.content,
-                &mut self.rng,
-                &entry.item_kind_id,
-                affix_ids,
-                |_| generation_depth,
-                generation_depth,
+            } = materialization;
+            let curse = curse.map_or_else(
+                || initial_item_curse(&self.content, &entry.item_kind_id),
+                |generated| {
+                    Some(
+                        initial_item_curse(&self.content, &entry.item_kind_id)
+                            .map_or(generated, |initial| initial.max(generated)),
+                    )
+                },
             );
             generated.push(GeneratedItemDraft {
                 kind_id: entry.item_kind_id.clone(),
@@ -5671,7 +5729,7 @@ impl Game {
                 affix_ids,
                 rolled_affixes,
                 enchantments: enchantment_delta,
-                curse: initial_item_curse(&self.content, &entry.item_kind_id),
+                curse,
                 activation,
                 charges,
                 fuel: initial_item_fuel(&self.content, &entry.item_kind_id),

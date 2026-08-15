@@ -22,6 +22,11 @@
   "mogaminatorRare": false,
   "nameKey": "item-demo-trifurcate-spear-name",
   "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 105,
+    "sval": 26,
+    "tval": 22
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",

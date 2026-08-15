@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-broken-dagger-name",
+  "rfbBaseKind": {
+    "sourceIndex": 45,
+    "sval": 1,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

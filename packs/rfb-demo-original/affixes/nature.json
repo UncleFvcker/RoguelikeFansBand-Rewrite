@@ -1,0 +1,425 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-nature-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "operation": "stone-to-mud",
+            "type": "terrain-beam"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-14-biased-stone-to-mud",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-nature-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbBiases": [
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 5,
+        "effect": {
+          "effect": {
+            "type": "satisfy-hunger"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-14-biased-satisfy-hunger",
+        "maxDepth": 17,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-nature-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "durationBonus": 20,
+            "durationDice": 1,
+            "durationSides": 20,
+            "type": "resist-elements"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-14-biased-resistance",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-nature-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "hound",
+            "countDice": 1,
+            "countSides": 3,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 25,
+            "hostileGroupChancePercent": 100,
+            "maximumLevel": 35,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-14-biased-summon-hounds",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-nature-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "ant",
+            "countDice": 1,
+            "countSides": 3,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 33,
+            "hostileGroupChancePercent": 100,
+            "maximumLevel": 20,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-14-biased-summon-ants",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-nature-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "hydra",
+            "countDice": 1,
+            "countSides": 3,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 33,
+            "hostileGroupChancePercent": 100,
+            "maximumLevel": 40,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-14-biased-summon-hydras",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-nature-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "category": "animal",
+            "power": 30,
+            "type": "control"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-14-biased-charm-animal",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-nature-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-14-biased-cure-pois",
+        "maxDepth": 32,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-nature-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "poison",
+          "priestly",
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 240,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "physical",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-14-biased-arrow",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-nature-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "effect": {
+            "durationTicks": 3,
+            "intensity": 1,
+            "power": 25,
+            "stacking": "replace",
+            "statusKindId": "rfb.status.slow",
+            "type": "visible-apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-14-biased-slow-monsters",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-nature-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "id": "rfb-legacy.affix.nature",
+  "nameKey": "affix-legacy-nature-name",
+  "passives": [
+    "regeneration"
+  ],
+  "rfbEgo": {
+    "rarity": 2,
+    "sourceIndex": 14,
+    "types": [
+      "weapon"
+    ]
+  },
+  "slays": {
+    "animal": "slay"
+  },
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

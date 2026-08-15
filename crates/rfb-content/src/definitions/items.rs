@@ -7,9 +7,9 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    AbilityDetectSubjectDefinition, AbilityStatusStackingDefinition, AbilityTargetDefinition,
-    AbilityTerrainBeamOperationDefinition, ActorDamageType, ActorResistanceLevel, EquipmentBonuses,
-    ItemAttributeDefinition, StatModifiers,
+    AbilityDetectSubjectDefinition, AbilityEffectDefinition, AbilityStatusStackingDefinition,
+    AbilityTargetDefinition, AbilityTerrainBeamOperationDefinition, ActorDamageType,
+    ActorResistanceLevel, EquipmentBonuses, ItemAttributeDefinition, StatModifiers,
 };
 
 const fn default_incoming_damage_percent() -> u8 {
@@ -425,6 +425,11 @@ pub enum ItemSummonSelectorDefinition {
     deny_unknown_fields
 )]
 pub enum ItemUseEffectDefinition {
+    AbilityEffect {
+        effect: Box<AbilityEffectDefinition>,
+        #[serde(default)]
+        affects_ground_items: bool,
+    },
     NoNumericEffect,
     IncreaseNutrition {
         amount: u16,

@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-heavy-lance-name",
+  "rfbBaseKind": {
+    "sourceIndex": 107,
+    "sval": 29,
+    "tval": 22
+  },
   "ridingWeaponKind": "lance",
   "tags": [
     "equipment",

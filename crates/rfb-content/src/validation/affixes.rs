@@ -87,6 +87,7 @@ pub(super) fn validate_affixes(
             || affix.resists_monster_destruction
             || affix.protects_quiver_ammunition
             || affix.device_generation.is_some()
+            || affix.rfb_ego.is_some()
             || roll_substance;
         if !has_substance
             || affix.generation_level > affix.generation_max_level
@@ -146,6 +147,22 @@ fn valid_affix_device_generation(generation: &ItemDeviceGenerationDefinition) ->
                 && (1..=64).contains(&activation.target.range)
                 && activation.target.requires_line_of_effect;
             let valid_effect_target = match activation.effect {
+                ItemUseEffectDefinition::AbilityEffect { .. } => {
+                    let item_target = activation.target.modes.as_slice()
+                        == [AbilityTargetModeDefinition::Item]
+                        && activation.target.range == 0
+                        && !activation.target.requires_line_of_effect;
+                    let ability_target = !activation
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget)
+                        && !activation
+                            .target
+                            .modes
+                            .contains(&AbilityTargetModeDefinition::Item)
+                        && (1..=64).contains(&activation.target.range);
+                    self_target || item_target || ability_target
+                }
                 ItemUseEffectDefinition::ApplyBerserkStrength {
                     duration_dice: 1..=100,
                     duration_sides: 1..=1_000_000,

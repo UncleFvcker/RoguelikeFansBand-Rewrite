@@ -196,7 +196,7 @@ fn roll_affix_properties_with_rng(
     rolled_affixes
 }
 
-fn merge_affix_properties(
+pub(super) fn merge_affix_properties(
     total: &mut AffixPropertyBundleDefinition,
     addition: &AffixPropertyBundleDefinition,
 ) {
@@ -776,10 +776,10 @@ fn materialize_rfb_activation(
     )
 }
 
-fn roll_and_materialize_rfb_ego_from_affixes_with_rng(
+pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
     rng: &mut RfbRng,
     item: &ItemDefinition,
-    affixes: &[AffixDefinition],
+    affixes: impl Iterator<Item = &'a AffixDefinition> + Clone,
     generation_level: u16,
 ) -> Option<EgoMaterialization> {
     let base_kind = item.rfb_base_kind?;
@@ -790,7 +790,7 @@ fn roll_and_materialize_rfb_ego_from_affixes_with_rng(
     } else {
         return None;
     };
-    if !affixes.iter().any(|affix| {
+    if !affixes.clone().any(|affix| {
         affix.rfb_ego.as_ref().is_some_and(|ego| {
             ego.types.contains(&allowed_type)
                 && rfb_ego_can_apply_to_base(ego.source_index, base_kind.tval, base_kind.sval, item)
@@ -801,13 +801,13 @@ fn roll_and_materialize_rfb_ego_from_affixes_with_rng(
 
     loop {
         let affix_id = roll_rfb_ego_from_affixes(
-            affixes.iter(),
+            affixes.clone(),
             rng,
             generation_level,
             std::slice::from_ref(&allowed_type),
         )?;
         let affix = affixes
-            .iter()
+            .clone()
             .find(|affix| affix.id == affix_id)
             .expect("selected ego affix remains available");
         if let Some(materialized) =
@@ -2455,7 +2455,7 @@ mod tests {
         let materialized = roll_and_materialize_rfb_ego_from_affixes_with_rng(
             &mut rng,
             &item,
-            &[disruption, digging],
+            [disruption, digging].iter(),
             70,
         )
         .expect("compatible fallback ego should eventually materialize");

@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-short-sword-name",
+  "rfbBaseKind": {
+    "sourceIndex": 53,
+    "sval": 10,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

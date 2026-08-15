@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "brands": [
+    "acid"
+  ],
+  "descriptionKey": "affix-legacy-disruption-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effectProgramId": "rfb.effect.ego-stone-to-mud",
+        "id": "rfb.device-activation.ego-42-stone-to-mud",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-disruption-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 50
+        },
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.disruption",
+  "nameKey": "affix-legacy-disruption-name",
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 42,
+    "types": [
+      "digger"
+    ]
+  },
+  "tags": [
+    "digger",
+    "legacy-import"
+  ]
+}

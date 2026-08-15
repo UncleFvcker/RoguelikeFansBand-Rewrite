@@ -26,6 +26,7 @@ pub(crate) fn valid_item_effect(
     loot_table_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
+        ItemUseEffectDefinition::AbilityEffect { .. } => true,
         ItemUseEffectDefinition::NoNumericEffect => true,
         ItemUseEffectDefinition::IncreaseNutrition { amount } => (1..=15_000).contains(amount),
         ItemUseEffectDefinition::SatisfyHunger => true,
@@ -587,6 +588,13 @@ pub(super) fn validate_items(
                 && target.requires_line_of_effect;
             modes_are_unique
                 && match effect {
+                    ItemUseEffectDefinition::AbilityEffect { .. } => {
+                        let item_target = target.modes.as_slice()
+                            == [AbilityTargetModeDefinition::Item]
+                            && target.range == 0
+                            && !target.requires_line_of_effect;
+                        self_target || projectile_target || item_target
+                    }
                     ItemUseEffectDefinition::IncreaseNutrition { .. }
                     | ItemUseEffectDefinition::SatisfyHunger
                     | ItemUseEffectDefinition::Heal { .. }

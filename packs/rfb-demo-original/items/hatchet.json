@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-hatchet-name",
+  "rfbBaseKind": {
+    "sourceIndex": 85,
+    "sval": 1,
+    "tval": 22
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

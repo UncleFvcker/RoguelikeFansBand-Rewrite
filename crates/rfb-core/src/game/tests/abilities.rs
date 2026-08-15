@@ -892,8 +892,12 @@ fn death_weapon_branding_targets_plain_weapons_across_player_locations() {
         assert_eq!(game.virtue_current(VirtueKindDto::Enchantment), 2);
         assert!((0..=6).contains(&item.enchantments.to_hit));
         assert!((0..=6).contains(&item.enchantments.to_damage));
+        assert_eq!(item.rolled_affixes.len(), 1);
         if ability_id.ends_with("poison-branding") {
-            assert_eq!(item.rolled_affixes.len(), 1);
+            assert!(
+                !item.rolled_affixes[0].properties.slays.is_empty(),
+                "explicit Slaying references must use the shared source-index 1 materializer"
+            );
             assert!(
                 item.rolled_affixes[0]
                     .properties
@@ -908,7 +912,14 @@ fn death_weapon_branding_targets_plain_weapons_across_player_locations() {
                 Some(&ActorResistanceLevel::Resistant)
             );
         } else {
-            assert!(item.rolled_affixes.is_empty());
+            assert_eq!(item.rolled_affixes[0].affix_id, expected_affix_id);
+            assert!(
+                game.content
+                    .affix(expected_affix_id)
+                    .expect("Death affix")
+                    .passives
+                    .contains(&EquipmentPassive::Vampiric)
+            );
         }
         let expected_attempts = events
             .iter()

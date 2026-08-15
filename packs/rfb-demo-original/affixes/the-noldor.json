@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "brands": [
+    "cold"
+  ],
+  "descriptionKey": "affix-legacy-the-noldor-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {
+    "lightRadius": 1
+  },
+  "formatVersion": 1,
+  "generationLevel": 70,
+  "id": "rfb-legacy.affix.the-noldor",
+  "nameKey": "affix-legacy-the-noldor-name",
+  "passives": [
+    "regeneration",
+    "see-invisible"
+  ],
+  "resistances": {
+    "light": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 50,
+    "sourceIndex": 23,
+    "types": [
+      "weapon"
+    ]
+  },
+  "slays": {
+    "demon": "slay",
+    "evil": "slay",
+    "undead": "slay"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

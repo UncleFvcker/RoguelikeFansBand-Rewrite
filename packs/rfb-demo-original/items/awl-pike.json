@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-awl-pike-name",
+  "rfbBaseKind": {
+    "sourceIndex": 88,
+    "sval": 4,
+    "tval": 22
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

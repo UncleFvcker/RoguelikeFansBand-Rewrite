@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-bastard-sword-name",
+  "rfbBaseKind": {
+    "sourceIndex": 64,
+    "sval": 21,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

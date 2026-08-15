@@ -5,10 +5,10 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 use crate::{
     ActorRole, AffixDefinition, ContentError, ContentPosition, ENCOUNTER_TABLE_SCHEMA,
     EncounterTableDefinition, ItemDefinition, LOOT_TABLE_SCHEMA, LootQualityPolicyDefinition,
-    LootTableDefinition, MonsterPackBehavior, REGION_TABLE_SCHEMA, RegionTableDefinition,
-    TERRAIN_FEATURE_TABLE_SCHEMA, THEME_TABLE_SCHEMA, TerrainDefinition, TerrainFeaturePlacement,
-    TerrainFeatureTableDefinition, ThemeTableDefinition, VAULT_SCHEMA, VaultDefinition,
-    affix_is_compatible_with_item,
+    LootRfbEgoPolicyDefinition, LootTableDefinition, MonsterPackBehavior, REGION_TABLE_SCHEMA,
+    RegionTableDefinition, TERRAIN_FEATURE_TABLE_SCHEMA, THEME_TABLE_SCHEMA, TerrainDefinition,
+    TerrainFeaturePlacement, TerrainFeatureTableDefinition, ThemeTableDefinition, VAULT_SCHEMA,
+    VaultDefinition, affix_is_compatible_with_item,
 };
 
 use super::shared::{
@@ -97,6 +97,12 @@ pub(super) fn validate_tables(
                     good_cap_percent,
                     great_cap_percent,
                 } => good_cap_percent > 100 || great_cap_percent > 100,
+            })
+            || table.rfb_ego_policy.is_some_and(|policy| match policy {
+                LootRfbEgoPolicyDefinition::WeaponDigger => !matches!(
+                    table.quality_policy,
+                    Some(LootQualityPolicyDefinition::RfbDepth { .. })
+                ),
             })
             || table.affix_weights.is_empty()
             || table.affix_weights.len() > 64

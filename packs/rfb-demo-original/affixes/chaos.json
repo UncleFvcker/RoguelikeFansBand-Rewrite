@@ -1,11 +1,490 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "brands": [
+    "chaos"
+  ],
+  "descriptionKey": "affix-legacy-chaos-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 66,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "demon",
+            "countDice": 1,
+            "countSides": 1,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 67,
+            "hostileGroupChancePercent": 100,
+            "maximumLevel": 66,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-8-biased-summon-demon",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 6660
+        },
+        "rfbBiases": [
+          "chaos",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 90,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "cyber",
+            "countDice": 1,
+            "countSides": 1,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 0,
+            "hostileGroupChancePercent": 0,
+            "maximumLevel": 90,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-8-biased-summon-cyberdemon",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 9000
+        },
+        "rfbBiases": [
+          "chaos"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 15
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "category": "demon",
+            "power": 50,
+            "type": "control"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-8-biased-charm-demon",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "chaos",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 15,
+            "damageSides": 8,
+            "damageType": "chaos",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-8-biased-bolt-chaos",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "chaos"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 55,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 16,
+            "damageSides": 8,
+            "damageType": "chaos",
+            "type": "beam-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-8-biased-beam-chaos",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "chaos"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 65,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 150,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "chaos",
+            "radius": 5,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-8-biased-ball-chaos",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "chaos"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 75,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 225,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "chaos",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-8-biased-breathe-chaos",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2500
+        },
+        "rfbBiases": [
+          "chaos"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 60,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.confused",
+                "type": "visible-apply-status"
+              },
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 60,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.blind",
+                "type": "visible-apply-status"
+              },
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 60,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.stun",
+                "type": "visible-apply-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-8-biased-confusing-lite",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "chaos"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 42
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "type": "polymorph-self"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-8-biased-poly-self",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "chaos"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "effect": {
+            "durationTicks": 3,
+            "intensity": 1,
+            "power": 25,
+            "stacking": "replace",
+            "statusKindId": "rfb.status.confused",
+            "type": "visible-apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-8-biased-confuse-monsters",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "chaos"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "type": "polymorph-target"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-8-biased-polymorph",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "chaos"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire"
+  ],
   "formatVersion": 1,
-  "id": "demo.affix.chaos",
-  "nameKey": "affix-demo-chaos-name",
-  "descriptionKey": "affix-demo-chaos-description",
   "generationLevel": 30,
-  "resistances": { "chaos": "resistant" },
-  "brands": ["chaos"],
-  "tags": ["chaos", "offense", "resistance"]
+  "id": "rfb-legacy.affix.chaos",
+  "nameKey": "affix-legacy-chaos-name",
+  "resistances": {
+    "chaos": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 8,
+    "types": [
+      "weapon"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
 }

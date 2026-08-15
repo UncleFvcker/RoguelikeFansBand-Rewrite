@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-defender-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "id": "rfb-legacy.affix.defender",
+  "nameKey": "affix-legacy-defender-name",
+  "passives": [
+    "see-invisible"
+  ],
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 18,
+    "types": [
+      "weapon"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

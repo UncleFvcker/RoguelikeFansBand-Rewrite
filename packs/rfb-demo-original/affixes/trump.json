@@ -1,0 +1,60 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-trump-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effectProgramId": "demo.effect.random-teleport-long",
+        "id": "rfb.device-activation.ego-15-teleport",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-trump-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 250
+        },
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.trump",
+  "nameKey": "affix-legacy-trump-name",
+  "passives": [
+    "regeneration"
+  ],
+  "resistances": {
+    "nexus": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 6,
+    "sourceIndex": 15,
+    "types": [
+      "weapon"
+    ]
+  },
+  "slays": {
+    "evil": "slay"
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

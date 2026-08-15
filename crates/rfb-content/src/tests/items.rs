@@ -773,6 +773,82 @@ fn rfb_ego_affix_metadata_requires_identity_unique_source_and_distinct_types() {
 }
 
 #[test]
+fn weapon_and_digger_ego_batch_is_formal_and_complete() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let base_kinds = artifact
+        .content
+        .items
+        .iter()
+        .filter_map(|item| item.rfb_base_kind)
+        .filter(|kind| matches!(kind.tval, 20..=23))
+        .collect::<Vec<_>>();
+    assert_eq!(base_kinds.len(), 62);
+    assert_eq!(
+        base_kinds
+            .iter()
+            .map(|kind| kind.source_index)
+            .collect::<BTreeSet<_>>()
+            .len(),
+        base_kinds.len()
+    );
+    assert_eq!(
+        base_kinds
+            .iter()
+            .map(|kind| (kind.tval, kind.sval))
+            .collect::<BTreeSet<_>>()
+            .len(),
+        base_kinds.len()
+    );
+
+    let expected = (1_u32..=27).chain(40..=42).collect::<Vec<_>>();
+    let mut actual = artifact
+        .content
+        .affixes
+        .iter()
+        .filter_map(|affix| affix.rfb_ego.as_ref().map(|ego| (ego.source_index, affix)))
+        .filter(|(source_index, _)| expected.contains(source_index))
+        .collect::<Vec<_>>();
+    actual.sort_by_key(|(source_index, _)| *source_index);
+    assert_eq!(
+        actual
+            .iter()
+            .map(|(source_index, _)| *source_index)
+            .collect::<Vec<_>>(),
+        expected
+    );
+    assert!(actual.iter().all(|(_, affix)| affix.roll_groups.is_empty()));
+
+    let arcane = actual
+        .iter()
+        .find(|(source_index, _)| *source_index == 6)
+        .map(|(_, affix)| *affix)
+        .expect("Arcane should remain formally defined");
+    assert_eq!(
+        arcane
+            .device_generation
+            .as_ref()
+            .expect("Arcane should carry Mage activation candidates")
+            .activations
+            .len(),
+        32
+    );
+    let disruption = actual
+        .iter()
+        .find(|(source_index, _)| *source_index == 42)
+        .map(|(_, affix)| *affix)
+        .expect("Disruption should remain formally defined");
+    assert_eq!(
+        disruption
+            .device_generation
+            .as_ref()
+            .expect("Disruption should retain Stone to Mud")
+            .activations
+            .len(),
+        1
+    );
+}
+
+#[test]
 fn weapon_proficiency_content_rejects_invalid_bounds_and_base_aliases() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 

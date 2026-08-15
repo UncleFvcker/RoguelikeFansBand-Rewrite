@@ -6,6 +6,9 @@ use super::*;
 const AFFIX_ID: &str = "test.affix.riding-charge";
 const ACTIVATION_ID: &str = "test.device-activation.riding-charge";
 const ITEM_ID: &str = "test.item.riding-charge";
+const ABILITY_EFFECT_AFFIX_ID: &str = "test.affix.ability-effect";
+const ABILITY_EFFECT_ACTIVATION_ID: &str = "test.device-activation.ability-effect";
+const ABILITY_EFFECT_ITEM_ID: &str = "test.item.ability-effect";
 
 fn riding_charge_game(seed: u64) -> Game {
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -122,6 +125,75 @@ fn place_charge_target(game: &mut Game) -> Position {
     target
 }
 
+fn ability_effect_game(seed: u64) -> Game {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    let mut affix = artifact
+        .content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.craft")
+        .expect("Craft should expose biased activation candidates")
+        .clone();
+    let mut activation = affix
+        .device_generation
+        .as_ref()
+        .expect("Craft activation candidates")
+        .activations
+        .iter()
+        .find(|activation| activation.id.ends_with("resist-fire"))
+        .expect("Craft should include Resist Fire")
+        .clone();
+    assert!(matches!(
+        activation.effect,
+        ItemUseEffectDefinition::AbilityEffect { .. }
+    ));
+    activation.id = ABILITY_EFFECT_ACTIVATION_ID.to_owned();
+    activation.device_check_difficulty = 1;
+    activation.min_depth = 1;
+    activation.max_depth = 100;
+    affix.id = ABILITY_EFFECT_AFFIX_ID.to_owned();
+    affix.name_key = "test-affix-ability-effect-name".to_owned();
+    affix.description_key = "test-affix-ability-effect-description".to_owned();
+    affix.rfb_ego = None;
+    affix.device_generation = Some(rfb_content::ItemDeviceGenerationDefinition {
+        activations: vec![activation.clone()],
+        recovery: None,
+    });
+    artifact.content.affixes.push(affix);
+    let content = Arc::new(ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("ability-effect test content should remain valid"),
+    ));
+    let mut game =
+        Game::from_content_with_build(seed, content, DEFAULT_WORLD_ID, RFB_WARRIOR_BUILD_ID)
+            .expect("ability-effect test game should create");
+    give_inventory_item(&mut game, ABILITY_EFFECT_ITEM_ID, "demo.item.dagger");
+    let item = game
+        .items
+        .iter_mut()
+        .find(|item| item.id == ABILITY_EFFECT_ITEM_ID)
+        .expect("test weapon should exist");
+    item.affix_ids = vec![ABILITY_EFFECT_AFFIX_ID.to_owned()];
+    item.activation = Some(ItemActivationDto {
+        profile_id: activation.id,
+        name_key: activation.name_key,
+        power: 1,
+        cost: activation.charges.cost,
+        device_check_difficulty: activation.device_check_difficulty,
+        target_spec: target_spec_dto(&activation.target),
+    });
+    item.charges = Some(ItemChargesDto {
+        current: 1,
+        maximum: 1,
+    });
+    game
+}
+
 #[test]
 fn riding_charge_cancellation_preserves_charge_and_rng() {
     let mut game = riding_charge_game(0xE3_6001);
@@ -232,5 +304,35 @@ fn riding_charge_moves_mount_attacks_and_uses_profile_recovery() {
         events
             .iter()
             .any(|event| matches!(event, DomainEvent::DeviceEnergyRecovered { amount: 1, .. }))
+    );
+}
+
+#[test]
+fn biased_ego_activation_reuses_the_ability_effect_resolver() {
+    let mut game = ability_effect_game(0xE3_7001);
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        ABILITY_EFFECT_ITEM_ID,
+        Some(&TargetSelection::SelfTarget),
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("biased ego activation should resolve");
+
+    assert!(
+        game.player
+            .statuses
+            .iter()
+            .any(|status| status.kind_id == "rfb.status.resist-fire")
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == ABILITY_EFFECT_ITEM_ID)
+            .and_then(|item| item.charges)
+            .map(|charges| charges.current),
+        Some(0)
     );
 }

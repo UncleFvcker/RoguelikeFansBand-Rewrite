@@ -17,6 +17,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-orcish-pick-name",
+  "rfbBaseKind": {
+    "sourceIndex": 154,
+    "sval": 5,
+    "tval": 20
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

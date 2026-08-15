@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-jo-staff-name",
+  "rfbBaseKind": {
+    "sourceIndex": 126,
+    "sval": 7,
+    "tval": 21
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

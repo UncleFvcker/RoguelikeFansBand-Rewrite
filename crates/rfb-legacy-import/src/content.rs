@@ -4659,28 +4659,47 @@ fn ego_json(
     id: &str,
     report: &mut ContentImportReport,
 ) -> serde_json::Value {
+    ego_json_with_activation_candidates(entry, id, report, &[])
+}
+
+fn ego_json_with_activation_candidates(
+    entry: &LegacyEgoEntry,
+    id: &str,
+    report: &mut ContentImportReport,
+    activation_candidates: &[LegacyEgoActivationCandidate],
+) -> serde_json::Value {
+    let shared_weapon_materialization = matches!(entry.index, 1..=27 | 40..=42);
     // C: maxima become fixed modifiers unless a recipe below materializes the
     // original generation-time roll.
     let mut modifiers = serde_json::Map::new();
-    let attack = entry.max_to_hit.max(entry.max_to_damage);
+    let attack = if shared_weapon_materialization {
+        0
+    } else {
+        entry.max_to_hit.max(entry.max_to_damage)
+    };
     if attack != 0 {
         modifiers.insert("attack".to_owned(), serde_json::json!(attack));
     }
-    if entry.max_to_armor != 0 && entry.index != 50 {
+    if !shared_weapon_materialization && entry.max_to_armor != 0 && entry.index != 50 {
         modifiers.insert("defense".to_owned(), serde_json::json!(entry.max_to_armor));
     }
-    attribute_modifiers_from_flags(&entry.flags, entry.max_pval, &mut modifiers);
+    let fixed_pval = if shared_weapon_materialization {
+        0
+    } else {
+        entry.max_pval
+    };
+    attribute_modifiers_from_flags(&entry.flags, fixed_pval, &mut modifiers);
     // Defensive flags ride the same generation-time ceiling as attributes:
     // SPEED folds the max pval, resistances and free action are binary.
-    let fold = defensive_fold(&entry.flags, entry.max_pval);
+    let fold = defensive_fold(&entry.flags, fixed_pval);
     let offense = offensive_fold(&entry.flags);
-    let mut equipment = equipment_fold(&entry.flags, entry.max_pval);
+    let mut equipment = equipment_fold(&entry.flags, fixed_pval);
     if fold.speed != 0 {
         modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
     }
-    fold_spell_power_modifier(&entry.flags, entry.max_pval, &mut modifiers, &mut equipment);
-    let fixed_device_generation = fixed_weapon_ego_device_generation(entry);
-    if entry.has_activation && fixed_device_generation.is_none() {
+    fold_spell_power_modifier(&entry.flags, fixed_pval, &mut modifiers, &mut equipment);
+    let device_generation = weapon_ego_device_generation(entry, activation_candidates);
+    if entry.has_activation && device_generation.is_none() {
         *report
             .item_behavior_gaps
             .entry("ego-activation".to_owned())
@@ -4745,7 +4764,7 @@ fn ego_json(
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
     apply_ego_roll_recipe(&mut value, entry);
-    if let Some(device_generation) = fixed_device_generation {
+    if let Some(device_generation) = device_generation {
         value["deviceGeneration"] = device_generation;
     }
     let destruction_immunities = item_destruction_immunities(&entry.flags);
@@ -4757,6 +4776,31 @@ fn ego_json(
         value["resistsProjectionDestruction"] = serde_json::json!(true);
     }
     value
+}
+
+fn weapon_ego_device_generation(
+    entry: &LegacyEgoEntry,
+    candidates: &[LegacyEgoActivationCandidate],
+) -> Option<serde_json::Value> {
+    let fixed = fixed_weapon_ego_device_generation(entry);
+    let biased = biased_weapon_ego_device_generation(entry, candidates);
+    match (fixed, biased) {
+        (None, None) => None,
+        (Some(value), None) | (None, Some(value)) => Some(value),
+        (Some(mut fixed), Some(biased)) => {
+            fixed["activations"]
+                .as_array_mut()
+                .expect("fixed ego activation list")
+                .extend(
+                    biased["activations"]
+                        .as_array()
+                        .expect("biased ego activation list")
+                        .iter()
+                        .cloned(),
+                );
+            Some(fixed)
+        }
+    }
 }
 
 fn ego_json_has_substance(value: &serde_json::Value) -> bool {
@@ -4774,6 +4818,7 @@ fn ego_json_has_substance(value: &serde_json::Value) -> bool {
         "resistsMonsterDestruction",
         "deviceGeneration",
         "rollGroups",
+        "rfbEgo",
     ]
     .iter()
     .any(|field| value.get(field).is_some())
@@ -4817,10 +4862,11 @@ fn fixed_weapon_ego_device_generation(entry: &LegacyEgoEntry) -> Option<serde_js
         _ => return None,
     };
     let token = activation.token.to_ascii_lowercase().replace('_', "-");
+    let affix_id = kebab(entry.name.trim_start_matches("of "));
     Some(serde_json::json!({
         "activations": [{
             "id": format!("rfb.device-activation.ego-{}-{token}", entry.index),
-            "nameKey": format!("device-activation-rfb-ego-{token}-name"),
+            "nameKey": format!("affix-legacy-{affix_id}-name"),
             "weight": 1,
             "minDepth": 1,
             "maxDepth": 100,
@@ -4836,26 +4882,761 @@ fn fixed_weapon_ego_device_generation(entry: &LegacyEgoEntry) -> Option<serde_js
     }))
 }
 
+fn biased_weapon_ego_device_generation(
+    entry: &LegacyEgoEntry,
+    candidates: &[LegacyEgoActivationCandidate],
+) -> Option<serde_json::Value> {
+    let branch_biases: &[&str] = match entry.index {
+        6 => &["BIAS_MAGE"],
+        8 => &["BIAS_CHAOS"],
+        9 => &[
+            "BIAS_ACID",
+            "BIAS_ELEC",
+            "BIAS_FIRE",
+            "BIAS_COLD",
+            "BIAS_POIS",
+        ],
+        10 | 26 => &["BIAS_PRIESTLY"],
+        11 | 25 => &["BIAS_DEMON"],
+        12 => &["BIAS_NECROMANTIC"],
+        14 => &["BIAS_RANGER"],
+        _ => return None,
+    };
+    if candidates.is_empty() {
+        return None;
+    }
+    let affix_id = kebab(entry.name.trim_start_matches("of "));
+    let minimum_effect_level = entry.level / 3;
+    let activations = candidates
+        .iter()
+        .filter(|candidate| {
+            candidate.rarity > 0
+                && candidate.level >= minimum_effect_level
+                && candidate
+                    .biases
+                    .iter()
+                    .any(|bias| branch_biases.contains(&bias.as_str()))
+        })
+        .map(|candidate| {
+            let (effect, target, affects_ground_items) = legacy_device_item_effect(candidate)
+                .unwrap_or_else(|| {
+                    panic!(
+                        "weapon ego activation {} needs an implemented effect",
+                        candidate.token
+                    )
+                });
+            let biases = candidate
+                .biases
+                .iter()
+                .filter_map(|bias| match bias.as_str() {
+                    "BIAS_MAGE" => Some("mage"),
+                    "BIAS_CHAOS" => Some("chaos"),
+                    "BIAS_ACID" => Some("acid"),
+                    "BIAS_ELEC" => Some("electricity"),
+                    "BIAS_FIRE" => Some("fire"),
+                    "BIAS_COLD" => Some("cold"),
+                    "BIAS_POIS" => Some("poison"),
+                    "BIAS_PRIESTLY" => Some("priestly"),
+                    "BIAS_DEMON" => Some("demon"),
+                    "BIAS_NECROMANTIC" => Some("necromantic"),
+                    "BIAS_RANGER" => Some("ranger"),
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            let mut effect = effect;
+            if affects_ground_items && let Some(object) = effect.as_object_mut() {
+                object.insert("affectsGroundItems".to_owned(), serde_json::json!(true));
+            }
+            let token = candidate.token.to_ascii_lowercase().replace('_', "-");
+            serde_json::json!({
+                "id": format!("rfb.device-activation.ego-{}-biased-{token}", entry.index),
+                "nameKey": format!("affix-legacy-{affix_id}-name"),
+                "weight": (255 / u32::from(candidate.rarity)).max(1),
+                "minDepth": 1,
+                "maxDepth": candidate.level.saturating_mul(3).saturating_add(2).min(100),
+                "deviceCheckDifficulty": candidate.level,
+                "rfbBiases": biases,
+                "charges": { "minimum": 1, "maximum": 1, "cost": 1 },
+                "recovery": {
+                    "intervalTicks": candidate.recovery_turns.saturating_mul(10),
+                    "energyPerMille": 1000,
+                },
+                "target": target,
+                "effect": effect,
+            })
+        })
+        .collect::<Vec<_>>();
+    (!activations.is_empty()).then(|| serde_json::json!({ "activations": activations }))
+}
+
+fn device_self_target() -> serde_json::Value {
+    serde_json::json!({
+        "modes": ["self"],
+        "range": 0,
+        "requiresLineOfEffect": false,
+    })
+}
+
+fn device_projectile_target() -> serde_json::Value {
+    serde_json::json!({
+        "modes": ["direction", "position", "entity"],
+        "range": 18,
+        "requiresLineOfEffect": true,
+    })
+}
+
+fn device_item_target() -> serde_json::Value {
+    serde_json::json!({
+        "modes": ["item"],
+        "range": 0,
+        "requiresLineOfEffect": false,
+    })
+}
+
+fn device_ability_effect(effect: serde_json::Value) -> serde_json::Value {
+    serde_json::json!({ "type": "ability-effect", "effect": effect })
+}
+
+fn device_power_curve(amount: u32, level: u16, start: u16) -> u16 {
+    let maximum = u64::from(100_u16.saturating_sub(start));
+    let level = u64::from(
+        level
+            .saturating_sub(start)
+            .min(100_u16.saturating_sub(start)),
+    );
+    if level == maximum {
+        return u16::try_from(amount).unwrap_or(u16::MAX);
+    }
+    let amount = u64::from(amount);
+    let result = amount * level / (maximum * 3)
+        + amount * level * level / (maximum * maximum * 3)
+        + (amount * level * level / maximum) * level / (maximum * maximum * 3);
+    u16::try_from(result).unwrap_or(u16::MAX)
+}
+
+fn device_damage_effect(
+    shape: &str,
+    damage_type: &str,
+    dice: u16,
+    sides: u16,
+    bonus: u16,
+    radius: u8,
+) -> serde_json::Value {
+    let mut effect = serde_json::json!({
+        "type": shape,
+        "damageDice": dice,
+        "damageSides": sides,
+        "damageBonus": bonus,
+        "damageType": damage_type,
+    });
+    if radius > 0 {
+        effect["radius"] = serde_json::json!(radius);
+    }
+    device_ability_effect(effect)
+}
+
+fn device_status_effect(
+    status: &str,
+    duration_dice: u16,
+    duration_sides: u32,
+    duration_bonus: u32,
+) -> serde_json::Value {
+    device_ability_effect(serde_json::json!({
+        "type": "apply-status",
+        "statusKindId": status,
+        "intensity": 1,
+        "durationTicks": duration_bonus,
+        "durationDice": duration_dice,
+        "durationSides": duration_sides,
+        "stacking": "extend",
+    }))
+}
+
+fn legacy_device_item_effect(
+    candidate: &LegacyEgoActivationCandidate,
+) -> Option<(serde_json::Value, serde_json::Value, bool)> {
+    let level = candidate.level;
+    let projectile = device_projectile_target();
+    let self_target = device_self_target();
+    let item_target = device_item_target();
+
+    let bolt = match candidate.token.as_str() {
+        "BOLT_ACID" => Some(("acid", 6 + level / 7, 8, 0)),
+        "BOLT_ELEC" => Some(("electricity", 4 + level / 9, 8, 0)),
+        "BOLT_FIRE" => Some(("fire", 7 + level / 6, 8, 0)),
+        "BOLT_COLD" => Some(("cold", 5 + level / 8, 8, 0)),
+        "BOLT_POIS" => Some(("poison", 5 + level / 8, 8, 0)),
+        "BOLT_DARK" => Some(("dark", 5 + level / 8, 8, 0)),
+        "BOLT_NETHER" => Some(("nether", 10 + level / 6, 8, 0)),
+        "BOLT_CHAOS" => Some(("chaos", 7 + level / 6, 8, 0)),
+        "BOLT_WATER" => Some(("water", 1, device_power_curve(400, level, 0), 20)),
+        "BOLT_MANA" => Some(("mana", 1, device_power_curve(500, level, 0), 50)),
+        "BOLT_ICE" => Some(("ice", 1, device_power_curve(400, level, 0), 30)),
+        "BOLT_PLASMA" => Some(("plasma", 1, device_power_curve(400, level, 0), 40)),
+        _ => None,
+    };
+    if let Some((damage_type, dice, sides, bonus)) = bolt {
+        return Some((
+            device_damage_effect("damage", damage_type, dice, sides, bonus, 0),
+            projectile,
+            true,
+        ));
+    }
+
+    let beam = match candidate.token.as_str() {
+        "BEAM_ACID" => Some(("acid", 0, 0, 5 + device_power_curve(270, level, 0))),
+        "BEAM_ELEC" => Some(("electricity", 0, 0, 5 + device_power_curve(250, level, 0))),
+        "BEAM_FIRE" => Some(("fire", 0, 0, 5 + device_power_curve(280, level, 0))),
+        "BEAM_COLD" => Some(("cold", 0, 0, 5 + device_power_curve(260, level, 0))),
+        "BEAM_CHAOS" => Some(("chaos", 7 + level / 6, 8, 0)),
+        _ => None,
+    };
+    if let Some((damage_type, dice, sides, bonus)) = beam {
+        return Some((
+            device_damage_effect("beam-damage", damage_type, dice, sides, bonus, 0),
+            projectile,
+            true,
+        ));
+    }
+
+    let ball = match candidate.token.as_str() {
+        "BALL_ACID" => Some(("acid", 20 + device_power_curve(300, level, 0), 2)),
+        "BALL_ELEC" => Some(("electricity", 20 + device_power_curve(250, level, 0), 2)),
+        "BALL_FIRE" => Some(("fire", 20 + device_power_curve(350, level, 0), 2)),
+        "BALL_COLD" => Some(("cold", 20 + device_power_curve(275, level, 0), 2)),
+        "BALL_POIS" => Some(("poison", 12 + level / 4, 2)),
+        "BALL_DARK" => Some(("dark", 100 + 7 * level / 2, 4)),
+        "BALL_NETHER" => Some(("nether", 125 + device_power_curve(250, level, 30), 3)),
+        "BALL_CHAOS" => Some(("chaos", 150 + device_power_curve(350, level, 70), 5)),
+        "BALL_WATER" => Some(("water", 150 + device_power_curve(200, level, 50), 4)),
+        "BALL_MANA" => Some(("mana", 150 + device_power_curve(300, level, 60), 2)),
+        _ => None,
+    };
+    if let Some((damage_type, damage, radius)) = ball {
+        return Some((
+            device_damage_effect("area-damage", damage_type, 0, 0, damage, radius),
+            projectile,
+            true,
+        ));
+    }
+
+    let breath = match candidate.token.as_str() {
+        "BREATHE_ACID" => Some(("acid", 100 + level * 3)),
+        "BREATHE_ELEC" => Some(("electricity", 70 + level * 3)),
+        "BREATHE_FIRE" => Some(("fire", 160 + device_power_curve(300, level, 40))),
+        "BREATHE_COLD" => Some(("cold", 150 + device_power_curve(300, level, 40))),
+        "BREATHE_POIS" => Some(("poison", 60 + level * 2)),
+        "BREATHE_DARK" => Some(("dark", 50 + level * 2)),
+        "BREATHE_NETHER" => Some(("nether", 100 + level * 3)),
+        "BREATHE_CHAOS" => Some(("chaos", 75 + level * 2)),
+        "BREATHE_WATER" => Some(("water", 41 + level * 7 / 4)),
+        _ => None,
+    };
+    if let Some((damage_type, damage)) = breath {
+        return Some((
+            device_damage_effect("cone-damage", damage_type, 0, 0, damage, 2),
+            projectile,
+            true,
+        ));
+    }
+
+    let result = match candidate.token.as_str() {
+        "AGGRAVATE" => (
+            device_ability_effect(serde_json::json!({"type": "aggravate-monsters"})),
+            self_target,
+            false,
+        ),
+        "ALCHEMY" => (
+            device_ability_effect(
+                serde_json::json!({"type": "transmute-item-to-gold", "valueDivisor": 3, "unitValueCap": 30000}),
+            ),
+            item_target,
+            false,
+        ),
+        "ANIMATE_DEAD" => (
+            device_ability_effect(
+                serde_json::json!({"type": "animate-dead", "actorKindId": "demo.actor.risen-thrall", "corpseItemKindId": "demo.item.corpse-remains", "radius": 8, "count": 8}),
+            ),
+            self_target,
+            false,
+        ),
+        "ARROW" => (
+            device_damage_effect("damage", "physical", 0, 0, 150 + level * 3, 0),
+            projectile,
+            true,
+        ),
+        "BANISH_ALL" => (
+            device_ability_effect(serde_json::json!({"type": "banish", "maximumDistance": 100})),
+            self_target,
+            false,
+        ),
+        "BANISH_EVIL" => (
+            device_ability_effect(serde_json::json!({"type": "banish-evil"})),
+            self_target,
+            false,
+        ),
+        "BLESS" => (
+            device_status_effect("rfb.status.blessed", 1, 24, 6),
+            self_target,
+            false,
+        ),
+        "CHARM_ANIMAL" | "CHARM_DEMON" | "CHARM_MONSTER" | "CHARM_UNDEAD" => {
+            let category = match candidate.token.as_str() {
+                "CHARM_ANIMAL" => "animal",
+                "CHARM_DEMON" => "demon",
+                "CHARM_UNDEAD" => "undead",
+                _ => "monster",
+            };
+            (
+                device_ability_effect(
+                    serde_json::json!({"type": "control", "category": category, "power": level}),
+                ),
+                projectile,
+                false,
+            )
+        }
+        "CLAIRVOYANCE" => (
+            device_ability_effect(
+                serde_json::json!({"type": "clairvoyance", "telepathyDurationTicks": 25, "telepathyDurationDice": 1, "telepathyDurationSides": 30, "grantsVirtues": false}),
+            ),
+            self_target,
+            false,
+        ),
+        "CLARITY" => (
+            serde_json::json!({"type": "restore-resource", "resourceId": "demo.resource.mana", "amount": 10}),
+            self_target,
+            false,
+        ),
+        "GREAT_CLARITY" => (
+            serde_json::json!({"type": "restore-resource", "resourceId": "demo.resource.mana", "amount": 30}),
+            self_target,
+            false,
+        ),
+        "CONFUSE_MONSTERS" | "SCARE_MONSTERS" | "SLOW_MONSTERS" | "STASIS_MONSTERS" => {
+            let (status, power) = match candidate.token.as_str() {
+                "CONFUSE_MONSTERS" => ("rfb.status.confused", level),
+                "SCARE_MONSTERS" => ("rfb.status.fear", level),
+                "SLOW_MONSTERS" => ("rfb.status.slow", level),
+                _ => ("rfb.status.paralysis", level * 2),
+            };
+            (
+                device_ability_effect(
+                    serde_json::json!({"type": "visible-apply-status", "statusKindId": status, "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": power}),
+                ),
+                self_target,
+                false,
+            )
+        }
+        "CONFUSING_LITE" => (
+            device_ability_effect(serde_json::json!({"type": "sequence", "effects": [
+                {"type": "visible-apply-status", "statusKindId": "rfb.status.confused", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level},
+                {"type": "visible-apply-status", "statusKindId": "rfb.status.blind", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level},
+                {"type": "visible-apply-status", "statusKindId": "rfb.status.stun", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level}
+            ]})),
+            self_target,
+            false,
+        ),
+        "CURE_FEAR" | "CURE_FEAR_POIS" | "CURE_POIS" | "CURING" => {
+            let mut effects = Vec::new();
+            if candidate.token != "CURE_POIS" {
+                effects.push(
+                    serde_json::json!({"type": "remove-status", "statusKindId": "rfb.status.fear"}),
+                );
+            }
+            if candidate.token != "CURE_FEAR" {
+                effects.push(serde_json::json!({"type": "remove-status", "statusKindId": "rfb.status.poison"}));
+            }
+            if candidate.token == "CURING" {
+                for status in [
+                    "rfb.status.blind",
+                    "rfb.status.confused",
+                    "rfb.status.stun",
+                    "rfb.status.bleeding",
+                ] {
+                    effects
+                        .push(serde_json::json!({"type": "remove-status", "statusKindId": status}));
+                }
+            }
+            (
+                device_ability_effect(serde_json::json!({"type": "sequence", "effects": effects})),
+                self_target,
+                false,
+            )
+        }
+        "DARKNESS_STORM" => (
+            device_damage_effect(
+                "area-damage",
+                "dark",
+                0,
+                0,
+                2 * (375 + device_power_curve(200, level, 80)),
+                5,
+            ),
+            self_target,
+            true,
+        ),
+        "DESTRUCTION" => (
+            device_ability_effect(
+                serde_json::json!({"type": "area-destruction", "minimumRadius": 13, "maximumRadius": 17, "floorTerrainId": "demo.terrain.floor", "wallTerrainId": "demo.terrain.granite-wall", "quartzTerrainId": "demo.terrain.quartz-vein", "magmaTerrainId": "demo.terrain.magma-vein"}),
+            ),
+            self_target,
+            true,
+        ),
+        "DETECT_EVIL" => (
+            device_ability_effect(
+                serde_json::json!({"type": "detect", "subject": "actor", "category": "evil", "radius": 18, "persistent": true, "throughWalls": true}),
+            ),
+            self_target,
+            false,
+        ),
+        "DIMENSION_DOOR" => (
+            device_ability_effect(
+                serde_json::json!({"type": "dimension-door", "range": level / 2 + 10}),
+            ),
+            serde_json::json!({"modes": ["position"], "range": level / 2 + 10, "requiresLineOfEffect": false}),
+            false,
+        ),
+        "DISPEL_EVIL" | "DISPEL_EVIL_HERO" | "DISPEL_GOOD" | "DISPEL_LIFE" | "DISPEL_UNDEAD" => {
+            let category = match candidate.token.as_str() {
+                "DISPEL_EVIL" | "DISPEL_EVIL_HERO" => "evil",
+                "DISPEL_GOOD" => "good",
+                "DISPEL_LIFE" => "living",
+                _ => "undead",
+            };
+            let damage = if candidate.token == "DISPEL_UNDEAD" {
+                100 + device_power_curve(400, level, 50)
+            } else {
+                50 + device_power_curve(250, level, 50)
+            };
+            let mut effects = vec![
+                serde_json::json!({"type": "visible-damage", "damageDice": 0, "damageSides": 0, "damageBonus": damage, "damageType": "mana", "targetCategory": category}),
+            ];
+            if candidate.token == "DISPEL_EVIL_HERO" {
+                effects.push(serde_json::json!({"type": "apply-status", "statusKindId": "rfb.status.heroism", "intensity": 1, "durationTicks": 25, "durationDice": 1, "durationSides": 25, "stacking": "extend"}));
+            }
+            (
+                device_ability_effect(serde_json::json!({"type": "sequence", "effects": effects})),
+                self_target,
+                false,
+            )
+        }
+        "DRAIN_LIFE" => (
+            device_ability_effect(
+                serde_json::json!({"type": "drain-life", "damageDice": 0, "damageSides": 0, "damageBonus": 50 + level, "damageType": "nether", "targetCategory": "living"}),
+            ),
+            projectile,
+            false,
+        ),
+        "ENLIGHTENMENT" => (
+            device_ability_effect(
+                serde_json::json!({"type": "detect", "subject": "terrain", "category": "all", "radius": 18, "persistent": true, "throughWalls": true}),
+            ),
+            self_target,
+            false,
+        ),
+        "GENOCIDE" => (
+            serde_json::json!({"type": "genocide", "power": level * 3}),
+            self_target,
+            false,
+        ),
+        "GENOCIDE_ONE" => (
+            device_ability_effect(
+                serde_json::json!({"type": "genocide", "scope": "single", "power": 50 + level * 3, "fatigue": false}),
+            ),
+            projectile,
+            false,
+        ),
+        "HEAL" | "HEAL_CURING" | "HEAL_CURING_HERO" => {
+            let amount = match candidate.token.as_str() {
+                "HEAL" => 25 + u32::from(level),
+                "HEAL_CURING" => 30 + 4 * u32::from(level),
+                _ => 300 + u32::from(device_power_curve(477, level, 70)),
+            };
+            let mut effects = vec![serde_json::json!({"type": "heal", "amount": amount})];
+            if candidate.token != "HEAL" {
+                for status in [
+                    "rfb.status.blind",
+                    "rfb.status.confused",
+                    "rfb.status.poison",
+                    "rfb.status.stun",
+                    "rfb.status.bleeding",
+                ] {
+                    effects
+                        .push(serde_json::json!({"type": "remove-status", "statusKindId": status}));
+                }
+            }
+            if candidate.token == "HEAL_CURING_HERO" {
+                effects.push(serde_json::json!({"type": "apply-status", "statusKindId": "rfb.status.heroism", "intensity": 1, "durationTicks": 25, "durationDice": 1, "durationSides": 25, "stacking": "extend"}));
+            }
+            (
+                device_ability_effect(serde_json::json!({"type": "sequence", "effects": effects})),
+                self_target,
+                false,
+            )
+        }
+        "HEROISM" => (
+            device_status_effect("rfb.status.heroism", 1, 25, 25),
+            self_target,
+            false,
+        ),
+        "HOLINESS" => (
+            device_ability_effect(serde_json::json!({"type": "sequence", "effects": [
+                {"type": "visible-damage", "damageDice": 0, "damageSides": 0, "damageBonus": level * 2, "damageType": "holy-fire", "targetCategory": "evil"},
+                {"type": "heal", "amount": level * 2},
+                {"type": "remove-status", "statusKindId": "rfb.status.poison"},
+                {"type": "remove-status", "statusKindId": "rfb.status.stun"},
+                {"type": "remove-status", "statusKindId": "rfb.status.bleeding"},
+                {"type": "remove-status", "statusKindId": "rfb.status.fear"}
+            ]})),
+            self_target,
+            false,
+        ),
+        "HOLY_GRAIL" => (
+            device_ability_effect(serde_json::json!({"type": "sequence", "effects": [
+                {"type": "heal", "amount": 250},
+                {"type": "apply-status", "statusKindId": "rfb.status.magic-resistance", "intensity": 1, "durationTicks": 50, "durationDice": 1, "durationSides": 50, "stacking": "extend"}
+            ]})),
+            self_target,
+            false,
+        ),
+        "IDENTIFY_FULL" => (
+            device_ability_effect(
+                serde_json::json!({"type": "identify-item", "fullIdentifyPower": 1, "fullIdentifyRollSides": 1}),
+            ),
+            item_target,
+            false,
+        ),
+        "INVULNERABILITY" => (
+            device_ability_effect(
+                serde_json::json!({"type": "invulnerability", "durationDice": 1, "durationSides": 8, "durationBonus": 8}),
+            ),
+            self_target,
+            false,
+        ),
+        "MANA_STORM" => (
+            device_damage_effect(
+                "area-damage",
+                "mana",
+                0,
+                0,
+                2 * (375 + device_power_curve(200, level, 80)),
+                5,
+            ),
+            self_target,
+            true,
+        ),
+        "MASS_GENOCIDE" => (
+            serde_json::json!({"type": "mass-genocide", "power": 100 + level * 3, "radius": 20}),
+            self_target,
+            false,
+        ),
+        "POLY_SELF" => (
+            device_ability_effect(serde_json::json!({"type": "polymorph-self"})),
+            self_target,
+            false,
+        ),
+        "POLYMORPH" => (
+            device_ability_effect(serde_json::json!({"type": "polymorph-target"})),
+            projectile,
+            false,
+        ),
+        "PROBING" => (
+            device_ability_effect(serde_json::json!({"type": "probe"})),
+            self_target,
+            false,
+        ),
+        "PROT_EVIL" => (
+            device_status_effect("rfb.status.protection-from-evil", 1, 25, 100),
+            self_target,
+            false,
+        ),
+        "RECALL" => (
+            device_ability_effect(
+                serde_json::json!({"type": "recall", "delayDice": 1, "delaySides": 20, "delayBonus": 15}),
+            ),
+            self_target,
+            false,
+        ),
+        "RECHARGE_FROM_DEVICE" => (
+            device_ability_effect(
+                serde_json::json!({"type": "recharge-from-player", "power": 100}),
+            ),
+            item_target,
+            false,
+        ),
+        "RECHARGE_FROM_PLAYER" => (
+            device_ability_effect(
+                serde_json::json!({"type": "recharge-from-player", "power": 100 + level}),
+            ),
+            item_target,
+            false,
+        ),
+        "REMOVE_ALL_CURSE" => (
+            device_ability_effect(
+                serde_json::json!({"type": "remove-equipped-curses", "includeHeavy": true}),
+            ),
+            self_target,
+            false,
+        ),
+        "REMOVE_CURSE" => (
+            device_ability_effect(
+                serde_json::json!({"type": "remove-equipped-curses", "includeHeavy": false}),
+            ),
+            self_target,
+            false,
+        ),
+        "RESIST_ACID" | "RESIST_ELEC" | "RESIST_FIRE" | "RESIST_COLD" | "RESIST_POIS" => {
+            let element = match candidate.token.as_str() {
+                "RESIST_ACID" => "acid",
+                "RESIST_ELEC" => "electricity",
+                "RESIST_FIRE" => "fire",
+                "RESIST_COLD" => "cold",
+                _ => "poison",
+            };
+            (
+                device_ability_effect(
+                    serde_json::json!({"type": "apply-status", "statusKindId": format!("rfb.status.resist-{element}"), "intensity": 1, "durationTicks": 20, "durationDice": 1, "durationSides": 20, "stacking": "extend", "grantedResistances": {element: "resistant"}}),
+                ),
+                self_target,
+                false,
+            )
+        }
+        "RESISTANCE" => (
+            device_ability_effect(
+                serde_json::json!({"type": "resist-elements", "durationDice": 1, "durationSides": 20, "durationBonus": 20}),
+            ),
+            self_target,
+            false,
+        ),
+        "RESTORE_EXP" => (
+            device_ability_effect(
+                serde_json::json!({"type": "restore-vitality", "lifeForce": 1000, "restoreAttributes": false}),
+            ),
+            self_target,
+            false,
+        ),
+        "RESTORE_MANA" => (
+            serde_json::json!({"type": "restore-resource-full", "resourceId": "demo.resource.mana"}),
+            self_target,
+            false,
+        ),
+        "RESTORE_STATS" => (
+            device_ability_effect(
+                serde_json::json!({"type": "restore-vitality", "lifeForce": 1, "restoreAttributes": true}),
+            ),
+            self_target,
+            false,
+        ),
+        "RESTORING" => (
+            device_ability_effect(
+                serde_json::json!({"type": "restore-vitality", "lifeForce": 1000, "restoreAttributes": true}),
+            ),
+            self_target,
+            false,
+        ),
+        "ROCKET" => (
+            device_damage_effect(
+                "area-damage",
+                "rocket",
+                0,
+                0,
+                200 + device_power_curve(300, level, 60),
+                2,
+            ),
+            projectile,
+            true,
+        ),
+        "RUNE_EXPLOSIVE" | "RUNE_PROTECTION" => (
+            device_ability_effect(
+                serde_json::json!({"type": "create-current-terrain", "sourceTerrainIds": ["demo.terrain.floor"], "targetTerrainId": "demo.terrain.warding-glyph"}),
+            ),
+            self_target,
+            false,
+        ),
+        "SATISFY_HUNGER" => (
+            device_ability_effect(serde_json::json!({"type": "satisfy-hunger"})),
+            self_target,
+            false,
+        ),
+        "SELF_KNOWLEDGE" => (
+            device_ability_effect(serde_json::json!({"type": "self-knowledge"})),
+            self_target,
+            false,
+        ),
+        "SPEED" => (
+            device_status_effect("rfb.status.haste", 1, 20, 20),
+            self_target,
+            false,
+        ),
+        "STONE_TO_MUD" => (
+            device_ability_effect(
+                serde_json::json!({"type": "terrain-beam", "operation": "stone-to-mud"}),
+            ),
+            projectile,
+            false,
+        ),
+        "SUMMON_ANGEL" | "SUMMON_ANTS" | "SUMMON_CYBERDEMON" | "SUMMON_DEMON" | "SUMMON_DRAGON"
+        | "SUMMON_ELEMENTAL" | "SUMMON_HOUNDS" | "SUMMON_HYDRAS" | "SUMMON_MONSTERS"
+        | "SUMMON_PHANTASMAL" | "SUMMON_UNDEAD" => {
+            let (category, hostile_chance, hostile_group, count_sides) =
+                match candidate.token.as_str() {
+                    "SUMMON_ANGEL" => ("angel", 0, 0, 1),
+                    "SUMMON_ANTS" => ("ant", 33, 100, 3),
+                    "SUMMON_CYBERDEMON" => ("cyber", 0, 0, 1),
+                    "SUMMON_DEMON" => ("demon", 67, 100, 1),
+                    "SUMMON_DRAGON" => ("dragon", 0, 0, 1),
+                    "SUMMON_ELEMENTAL" => ("elemental", 67, 100, 1),
+                    "SUMMON_HOUNDS" => ("hound", 25, 100, 3),
+                    "SUMMON_HYDRAS" => ("hydra", 33, 100, 3),
+                    "SUMMON_MONSTERS" => ("monster", 10, 100, 3),
+                    "SUMMON_PHANTASMAL" => ("phantom", 0, 0, 1),
+                    _ => ("undead", 67, 100, 1),
+                };
+            (
+                device_ability_effect(
+                    serde_json::json!({"type": "summon-category", "category": category, "maximumLevel": level, "countDice": 1, "countSides": count_sides, "hostileChancePercent": hostile_chance, "hostileGroupChancePercent": hostile_group, "groupCountDice": 1, "groupCountSides": 3, "groupCountBonus": 1, "allowUniqueHostile": true, "radius": 2, "durationTurns": 0}),
+                ),
+                self_target,
+                false,
+            )
+        }
+        "TELEKINESIS" => (
+            device_ability_effect(
+                serde_json::json!({"type": "fetch-item", "maximumWeightTenthsPound": level * 150}),
+            ),
+            projectile,
+            false,
+        ),
+        "TELEPATHY" => (
+            device_status_effect("rfb.status.telepathy", 1, 30, 25),
+            self_target,
+            false,
+        ),
+        "TELEPORT_AWAY" => (
+            device_ability_effect(
+                serde_json::json!({"type": "teleport-away", "minimumDistance": 10, "power": level}),
+            ),
+            projectile,
+            false,
+        ),
+        "WRAITHFORM" => (
+            device_ability_effect(
+                serde_json::json!({"type": "apply-status", "statusKindId": "rfb.status.wraithform", "intensity": 1, "durationTicks": level, "durationDice": 1, "durationSides": level, "stacking": "extend", "grantsWallPassage": true, "incomingDamagePercent": 50}),
+            ),
+            self_target,
+            false,
+        ),
+        _ => return None,
+    };
+    Some(result)
+}
+
 fn ego_roll_recipe_consumes(entry: &LegacyEgoEntry, flag: &str) -> bool {
     matches!(entry.index, 148 | 209) && flag == "SPEED"
 }
 
 fn apply_ego_roll_recipe(value: &mut serde_json::Value, entry: &LegacyEgoEntry) {
     let groups = match entry.index {
-        // Original `_ego_create_weapon_slaying`: weighted target choice with
-        // rare kill upgrades. The original roll count is level-scaled; this
-        // first content recipe fixes it at two while retaining depth filters
-        // and relative target/upgrade rarity.
-        1 => vec![serde_json::json!({
-            "rolls": 2,
-            "candidates": slaying_roll_candidates(),
-        })],
-        // Original craft rolls one of five elemental brands and sometimes
-        // grants the matching resistance.
-        9 => vec![serde_json::json!({
-            "rolls": 2,
-            "candidates": elemental_craft_roll_candidates(),
-        })],
         // Original `of Protection` rolls a uniform +1..+10 armor bonus.
         50 => vec![serde_json::json!({
             "rolls": 1,
@@ -4897,63 +5678,6 @@ fn combat_ring_roll_candidates() -> Vec<serde_json::Value> {
         serde_json::json!({"weight": 20, "properties": {"equipmentBonuses": {"meleeSkill": 4, "meleeDamage": 4}}}),
         serde_json::json!({"weight": 10, "properties": {"statusImmunities": ["rfb.status.fear"]}}),
     ]
-}
-
-fn slaying_roll_candidates() -> Vec<serde_json::Value> {
-    [
-        ("orc", 2_u32, 20_u16),
-        ("troll", 2, 30),
-        ("giant", 2, 40),
-        ("dragon", 3, 80),
-        ("demon", 3, 90),
-        ("undead", 3, 95),
-        ("animal", 2, 60),
-        ("human", 3, 50),
-        ("evil", 5, u16::MAX),
-        ("good", 5, u16::MAX),
-        ("living", 20, u16::MAX),
-    ]
-    .into_iter()
-    .flat_map(|(target, rarity, max_depth)| {
-        let base = (255 / rarity).max(1);
-        let scale = 400_u32;
-        let kill_weight = base.saturating_mul(scale) / rarity.saturating_mul(rarity);
-        let slay_weight = base.saturating_mul(scale).saturating_sub(kill_weight);
-        [
-            serde_json::json!({
-                "weight": slay_weight.max(1),
-                "maxDepth": max_depth,
-                "properties": {"slays": {target: "slay"}}
-            }),
-            serde_json::json!({
-                "weight": kill_weight.max(1),
-                "maxDepth": max_depth,
-                "properties": {"slays": {target: "kill"}}
-            }),
-        ]
-    })
-    .collect()
-}
-
-fn elemental_craft_roll_candidates() -> Vec<serde_json::Value> {
-    ["acid", "electricity", "fire", "cold", "poison"]
-        .into_iter()
-        .flat_map(|element| {
-            [
-                serde_json::json!({
-                    "weight": 2,
-                    "properties": {"brands": [element]}
-                }),
-                serde_json::json!({
-                    "weight": 1,
-                    "properties": {
-                        "brands": [element],
-                        "resistances": {element: "resistant"}
-                    }
-                }),
-            ]
-        })
-        .collect()
 }
 
 fn speed_roll_candidates(ring: bool) -> Vec<serde_json::Value> {
@@ -11319,6 +12043,7 @@ pub fn convert_content(
         artifacts,
         characters,
         LEGACY_CONTENT_REFERENCE,
+        &[],
     )
 }
 
@@ -11330,6 +12055,7 @@ fn convert_content_from(
     artifacts: &[LegacyArtifactEntry],
     characters: &LegacyCharacterSources,
     source_commit: &str,
+    activation_candidates: &[LegacyEgoActivationCandidate],
 ) -> ContentImportOutcome {
     let mut report = ContentImportReport {
         schema_version: CONTENT_IMPORT_SCHEMA_VERSION,
@@ -11768,7 +12494,8 @@ fn convert_content_from(
             id = format!("{id}-{}", entry.index);
         }
         *duplicates += 1;
-        let value = ego_json(entry, &id, &mut report);
+        let value =
+            ego_json_with_activation_candidates(entry, &id, &mut report, activation_candidates);
         // Egos whose entire power set lives in unmappable flags produce no
         // substance at all, which the affix contract rejects; skip them but
         // keep their flags visible in the gap report above.
@@ -12647,6 +13374,12 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
     let bodies = parse_b_info(&b_info)?;
     let magic_profiles = parse_m_info(&m_info)?;
     let proficiency_profiles = parse_s_info(&s_info)?;
+    let activation_candidates = parse_effect_info_activation_candidates(&read_legacy_object_at(
+        source,
+        &source_commit,
+        DEVICES_C_SOURCE,
+    )?)?;
+    validate_weapon_ego_activation_contract(&activation_candidates)?;
     let mut class_registrations = parse_class_registrations(&defines, &classes_source);
     let mut registered_indices = class_registrations
         .iter()
@@ -12767,6 +13500,7 @@ pub fn import_content(source: &Path, output: &Path) -> Result<PathBuf, LegacyImp
         &artifacts,
         &characters,
         &source_commit,
+        &activation_candidates,
     );
     let effect_program_files = extract_item_effect_programs(&mut outcome.item_files)
         .map_err(|error| std::io::Error::new(std::io::ErrorKind::InvalidData, error))?;
@@ -15985,6 +16719,159 @@ pub fn audit_egos(source: &Path) -> Result<EgoAuditReport, LegacyImportError> {
     validate_weapon_digger_ego_contract(&egos, &chinese_names)?;
     validate_weapon_ego_activation_contract(&activation_candidates)?;
     audit_ego_sources(source_commit, &egos, &chinese_names)
+}
+
+fn write_weapon_ego_locale_block(
+    path: &Path,
+    entries: &[(String, String, String)],
+    chinese: bool,
+) -> Result<(), LegacyImportError> {
+    const START: &str = "# E3 weapon and digger egos (generated)";
+    const END: &str = "# /E3 weapon and digger egos";
+    let mut source = fs::read_to_string(path)?;
+    if let Some(start) = source.find(START) {
+        let end = source[start..]
+            .find(END)
+            .map(|offset| start + offset + END.len())
+            .ok_or_else(|| {
+                LegacyImportError::InvalidEgoAudit(format!(
+                    "{} has an unterminated E3 ego locale block",
+                    path.display()
+                ))
+            })?;
+        source.replace_range(start..end, "");
+    }
+    let prefixes = entries
+        .iter()
+        .flat_map(|(id, _, _)| {
+            [
+                format!("affix-legacy-{id}-name ="),
+                format!("affix-legacy-{id}-description ="),
+            ]
+        })
+        .collect::<Vec<_>>();
+    source = source
+        .lines()
+        .filter(|line| !prefixes.iter().any(|prefix| line.starts_with(prefix)))
+        .collect::<Vec<_>>()
+        .join("\n")
+        .trim_end()
+        .to_owned();
+    source.push_str("\n\n");
+    source.push_str(START);
+    source.push('\n');
+    for (id, english_name, chinese_name) in entries {
+        let (name, description) = if chinese {
+            (chinese_name, "RFB 武器或挖掘工具的权威 ego 属性。")
+        } else {
+            (english_name, "An authoritative RFB weapon or digger ego.")
+        };
+        source.push_str(&format!(
+            "affix-legacy-{id}-name = {name}\naffix-legacy-{id}-description = {description}\n"
+        ));
+    }
+    source.push_str(END);
+    source.push('\n');
+    fs::write(path, source)?;
+    Ok(())
+}
+
+fn sync_demo_weapon_digger_base_kinds(
+    source: &Path,
+    source_commit: &str,
+    pack_root: &Path,
+) -> Result<(), LegacyImportError> {
+    let entries = parse_k_info(&read_legacy_object_at(
+        source,
+        source_commit,
+        K_INFO_SOURCE,
+    )?)?;
+    let selection: DemoItemSelection =
+        serde_json::from_slice(&fs::read(pack_root.join("legacy-item-selection.json"))?)?;
+    let selected = selected_demo_items(&selection, &entries)?;
+    for (selected_entry, entry) in selected
+        .into_iter()
+        .filter(|(_, entry)| matches!(entry.tval, 20..=23))
+    {
+        let path = pack_root
+            .join("items")
+            .join(format!("{}.json", selected_entry.id));
+        let mut value: serde_json::Value = serde_json::from_slice(&fs::read(&path)?)?;
+        value["rfbBaseKind"] = serde_json::json!({
+            "sourceIndex": entry.index,
+            "tval": entry.tval,
+            "sval": entry.sval,
+        });
+        fs::write(path, serde_json::to_string_pretty(&value)? + "\n")?;
+    }
+    Ok(())
+}
+
+/// Regenerates the completed E3 weapon/digger ego batch and its authoritative
+/// display names and base-kind identities directly from the legacy master Git
+/// objects.
+pub fn sync_demo_weapon_digger_egos(
+    source: &Path,
+    pack_root: &Path,
+) -> Result<usize, LegacyImportError> {
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let egos = parse_e_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        E_INFO_SOURCE,
+    )?)?;
+    let chinese_names = parse_chinese_name_table(
+        &read_legacy_object_at(source, &source_commit, E_NAME_ZH_SOURCE)?,
+        E_NAME_ZH_SOURCE,
+    )?;
+    let candidates = parse_effect_info_activation_candidates(&read_legacy_object_at(
+        source,
+        &source_commit,
+        DEVICES_C_SOURCE,
+    )?)?;
+    validate_weapon_digger_ego_contract(&egos, &chinese_names)?;
+    validate_weapon_ego_activation_contract(&candidates)?;
+    sync_demo_weapon_digger_base_kinds(source, &source_commit, pack_root)?;
+
+    let affixes_output = pack_root.join("affixes");
+    fs::create_dir_all(&affixes_output)?;
+    let mut report = ContentImportReport::default();
+    let mut locale_entries = Vec::with_capacity(WEAPON_DIGGER_EGO_EXPECTATIONS.len());
+    for expectation in WEAPON_DIGGER_EGO_EXPECTATIONS {
+        let entry = egos
+            .iter()
+            .find(|entry| entry.index == expectation.index)
+            .expect("validated E3 ego source must remain available");
+        let id = kebab(entry.name.trim_start_matches("of "));
+        let value = ego_json_with_activation_candidates(entry, &id, &mut report, &candidates);
+        fs::write(
+            affixes_output.join(format!("{id}.json")),
+            serde_json::to_string_pretty(&value)? + "\n",
+        )?;
+        locale_entries.push((
+            id,
+            entry.name.clone(),
+            chinese_names[entry.index as usize]
+                .clone()
+                .expect("validated E3 ego Chinese name must remain available"),
+        ));
+    }
+
+    let workspace_root = pack_root
+        .parent()
+        .and_then(Path::parent)
+        .unwrap_or(pack_root);
+    write_weapon_ego_locale_block(
+        &workspace_root.join("locales/en-US/content.ftl"),
+        &locale_entries,
+        false,
+    )?;
+    write_weapon_ego_locale_block(
+        &workspace_root.join("locales/zh-CN/content.ftl"),
+        &locale_entries,
+        true,
+    )?;
+    Ok(locale_entries.len())
 }
 
 fn singular_chinese_kind_name(template: &str) -> String {
@@ -22847,6 +23734,27 @@ static cptr _ego_name_zh[] =
             assert_eq!(activation["recovery"]["energyPerMille"], 1_000);
         }
         assert!(!report.item_behavior_gaps.contains_key("ego-activation"));
+    }
+
+    #[test]
+    fn weapon_ego_json_defers_instance_rolls_to_the_shared_materializer() {
+        let egos = parse_e_info(
+            "N:1:of Slaying\nT:WEAPON\nW:0:*:2\nC:5:7:0:0\n\
+             N:3:of Force\nT:WEAPON\nW:20:*:4\nC:3:3:0:2\nF:INT | BRAND_MANA | SEE_INVIS\n",
+        )
+        .expect("weapon egos should parse");
+        let mut report = ContentImportReport::default();
+
+        let slaying = ego_json(&egos[0], "slaying", &mut report);
+        assert_eq!(slaying["rfbEgo"]["sourceIndex"], 1);
+        assert!(slaying.get("modifiers").is_none());
+        assert!(slaying.get("rollGroups").is_none());
+
+        let force = ego_json(&egos[1], "force", &mut report);
+        assert_eq!(force["rfbEgo"]["sourceIndex"], 3);
+        assert!(force.get("modifiers").is_none());
+        assert!(force.get("rollGroups").is_none());
+        assert_eq!(force["passives"], serde_json::json!(["see-invisible"]));
     }
 
     #[test]

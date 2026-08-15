@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "brands": [
+    "acid"
+  ],
+  "descriptionKey": "affix-legacy-dissolving-description",
+  "elementalDestructionImmunities": [
+    "acid"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "id": "rfb-legacy.affix.dissolving",
+  "nameKey": "affix-legacy-dissolving-name",
+  "rfbEgo": {
+    "rarity": 2,
+    "sourceIndex": 41,
+    "types": [
+      "digger"
+    ]
+  },
+  "tags": [
+    "digger",
+    "legacy-import"
+  ]
+}

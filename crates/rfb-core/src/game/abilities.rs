@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use super::ego::{roll_rfb_craft, roll_rfb_slaying};
+use super::ego::{
+    materialize_rfb_weapon_ego_with_rng, merge_affix_properties, roll_rfb_craft, roll_rfb_slaying,
+};
 use super::item_use::VisibleBanishmentOutcome;
 use super::terrain::TerrainChangeSource;
 use super::*;
@@ -651,7 +653,7 @@ impl Game {
 }
 
 impl Game {
-    fn resolve_player_ability_effect(
+    pub(super) fn resolve_player_ability_effect(
         &mut self,
         ability: AbilityDefinition,
         target_plan: AbilityTargetPlan,
@@ -5301,18 +5303,48 @@ impl Game {
                 .resistances
                 .insert(*resistance, ActorResistanceLevel::Resistant);
         }
-        let item = &mut self.items[item_index];
-        item.affix_ids.push(affix_id.clone());
-        item.affix_ids.sort();
-        if properties != AffixPropertyBundleDefinition::default() {
-            item.rolled_affixes.push(RolledAffixState {
-                affix_id: affix_id.clone(),
-                properties,
-                ..RolledAffixState::default()
-            });
-            item.rolled_affixes
-                .sort_by(|left, right| left.affix_id.cmp(&right.affix_id));
+        let affix = self
+            .content
+            .affix(affix_id)
+            .expect("validated branding affix must remain available")
+            .clone();
+        if affix.rfb_ego.is_some() {
+            let item_definition = self
+                .content
+                .item(&item_kind_id)
+                .expect("planned branding item kind must remain available")
+                .clone();
+            let mut materialization = materialize_rfb_weapon_ego_with_rng(
+                &mut self.rng,
+                &item_definition,
+                &affix,
+                self.progress.level,
+            )
+            .expect("planned branding target must accept its RFB weapon ego");
+            if properties != AffixPropertyBundleDefinition::default() {
+                let rolled = materialization
+                    .rolled_affixes
+                    .iter_mut()
+                    .find(|rolled| rolled.affix_id == *affix_id)
+                    .expect("branded RFB ego must record its generated properties");
+                merge_affix_properties(&mut rolled.properties, &properties);
+            }
+            materialization.apply_to(&mut self.items[item_index]);
+        } else {
+            let item = &mut self.items[item_index];
+            item.affix_ids.push(affix_id.clone());
+            item.affix_ids.sort();
+            if properties != AffixPropertyBundleDefinition::default() {
+                item.rolled_affixes.push(RolledAffixState {
+                    affix_id: affix_id.clone(),
+                    properties,
+                    ..RolledAffixState::default()
+                });
+                item.rolled_affixes
+                    .sort_by(|left, right| left.affix_id.cmp(&right.affix_id));
+            }
         }
+        let item = &mut self.items[item_index];
         if item.quality == ItemQualityDto::Ordinary {
             item.quality = ItemQualityDto::Fine;
         }

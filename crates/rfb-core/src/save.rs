@@ -635,6 +635,10 @@ fn validate_item_runtime_state(
                             .contains(&charges.maximum)
                         && charges.current <= charges.maximum
                 }),
+            (None, None) => generation
+                .activations
+                .iter()
+                .all(|profile| !profile.rfb_biases.is_empty()),
             _ => false,
         }
     } else {

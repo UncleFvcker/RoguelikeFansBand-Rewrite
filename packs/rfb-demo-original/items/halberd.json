@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-halberd-name",
+  "rfbBaseKind": {
+    "sourceIndex": 99,
+    "sval": 15,
+    "tval": 22
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

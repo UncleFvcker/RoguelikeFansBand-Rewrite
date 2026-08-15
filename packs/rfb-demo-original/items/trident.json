@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-trident-name",
+  "rfbBaseKind": {
+    "sourceIndex": 89,
+    "sval": 5,
+    "tval": 22
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",

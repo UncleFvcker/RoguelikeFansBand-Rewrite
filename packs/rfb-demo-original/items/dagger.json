@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-dagger-name",
+  "rfbBaseKind": {
+    "sourceIndex": 47,
+    "sval": 4,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

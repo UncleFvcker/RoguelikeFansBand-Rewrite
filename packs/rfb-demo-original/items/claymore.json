@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-claymore-name",
+  "rfbBaseKind": {
+    "sourceIndex": 66,
+    "sval": 23,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

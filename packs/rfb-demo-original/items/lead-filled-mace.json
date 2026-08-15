@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-lead-filled-mace-name",
+  "rfbBaseKind": {
+    "sourceIndex": 132,
+    "sval": 15,
+    "tval": 21
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

@@ -47,7 +47,7 @@ fn direct_warrens_death_drops(
 }
 
 #[test]
-fn orc_cave_natural_affixes_never_cross_item_slots() {
+fn base_item_natural_egos_use_the_weapon_digger_policy_only() {
     let mut game =
         Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).expect("Orc Cave loot test should create");
     let context = LootContext {
@@ -58,7 +58,8 @@ fn orc_cave_natural_affixes_never_cross_item_slots() {
             actor_id: "test.orc-cave.loot-source".to_owned(),
         },
     };
-    let mut saw_slaying = false;
+    let mut saw_rfb_weapon_or_digger_ego = false;
+    let mut saw_rolled_rfb_weapon_or_digger_ego = false;
     let mut saw_protection = false;
     let mut saw_fine_incompatible_fallback = false;
     for _ in 0..20_000 {
@@ -70,9 +71,26 @@ fn orc_cave_natural_affixes_never_cross_item_slots() {
                 .content
                 .item(&item.kind_id)
                 .expect("generated item definition should exist");
-            if item.affix_ids == ["rfb-legacy.affix.slaying"] {
-                saw_slaying = true;
-                assert_eq!(definition.equipment_slot.as_deref(), Some("weapon"));
+            let rfb_ego = item
+                .affix_ids
+                .first()
+                .and_then(|affix_id| game.content.affix(affix_id))
+                .and_then(|affix| affix.rfb_ego.as_ref());
+            if let Some(rfb_ego) = rfb_ego {
+                saw_rfb_weapon_or_digger_ego = true;
+                assert_eq!(item.quality, ItemQualityDto::Exceptional);
+                assert_eq!(item.affix_ids.len(), 1);
+                assert!(item.rolled_affixes.len() <= 1);
+                if let Some(rolled) = item.rolled_affixes.first() {
+                    saw_rolled_rfb_weapon_or_digger_ego = true;
+                    assert_eq!(rolled.affix_id, item.affix_ids[0]);
+                }
+                let base_kind = definition
+                    .rfb_base_kind
+                    .expect("RFB ego target should retain source base identity");
+                assert!(matches!(base_kind.tval, 20..=23));
+                assert_ne!(rfb_ego.source_index, 6, "Arcane requires a Wizardstaff");
+                assert_ne!(rfb_ego.source_index, 42, "Disruption requires a Mattock");
             } else if item.affix_ids == ["rfb-legacy.affix.protection"] {
                 saw_protection = true;
                 assert!(matches!(
@@ -89,7 +107,8 @@ fn orc_cave_natural_affixes_never_cross_item_slots() {
             }
         }
     }
-    assert!(saw_slaying);
+    assert!(saw_rfb_weapon_or_digger_ego);
+    assert!(saw_rolled_rfb_weapon_or_digger_ego);
     assert!(saw_protection);
     assert!(saw_fine_incompatible_fallback);
 }
