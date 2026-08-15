@@ -9887,7 +9887,10 @@ fn thieves_hideout_uses_the_original_fixed_map_and_formation_contract() {
         task.source_facility_id.as_deref(),
         Some("demo.town-facility.outpost-count")
     );
-    assert_eq!(task.reward.entries[0].item_kind_id, "demo.item.broad-sword");
+    assert_eq!(
+        task.reward.as_ref().unwrap().entries[0].item_kind_id,
+        "demo.item.broad-sword"
+    );
 
     let floor = world
         .procedural_floors
@@ -9967,15 +9970,15 @@ fn trouble_at_home_uses_the_original_map_targets_items_and_warrior_reward() {
         Some("demo.actor.mean-looking-mercenary")
     );
     assert_eq!(
-        task.reward.entries[0].item_kind_id,
+        task.reward.as_ref().unwrap().entries[0].item_kind_id,
         "demo.item.hard-studded-leather"
     );
     assert_eq!(
-        task.reward.class_overrides[0].class_id,
+        task.reward.as_ref().unwrap().class_overrides[0].class_id,
         "demo.class.warrior"
     );
     assert_eq!(
-        task.reward.class_overrides[0].entries[0].item_kind_id,
+        task.reward.as_ref().unwrap().class_overrides[0].entries[0].item_kind_id,
         "demo.item.set-of-studded-leather-gloves"
     );
 
@@ -10134,7 +10137,7 @@ fn crows_nest_uses_the_original_map_clear_goal_birds_scramble_and_reward() {
     assert_eq!(task.objectives.len(), 1);
     assert_eq!(task.objectives[0].kind, TaskObjectiveKind::ClearFloor);
     assert_eq!(
-        task.reward.entries[0].item_kind_id,
+        task.reward.as_ref().unwrap().entries[0].item_kind_id,
         "demo.item.enlightenment-staff"
     );
 
@@ -10243,9 +10246,12 @@ fn old_man_willow_uses_the_original_map_formation_target_and_elemental_ring() {
         task.objectives[0].actor_kind_id.as_deref(),
         Some("demo.actor.old-man-willow")
     );
-    assert_eq!(task.reward.entries[0].item_kind_id, "demo.item.ring");
     assert_eq!(
-        task.reward.entries[0].affix_ids,
+        task.reward.as_ref().unwrap().entries[0].item_kind_id,
+        "demo.item.ring"
+    );
+    assert_eq!(
+        task.reward.as_ref().unwrap().entries[0].affix_ids,
         ["rfb-legacy.affix.elemental-jewelry"]
     );
 
@@ -10358,7 +10364,7 @@ fn vapor_quest_uses_the_original_map_formation_jewelry_and_detection_rod() {
     );
     assert_eq!(task.objectives[0].kind, TaskObjectiveKind::ClearFloor);
     assert_eq!(
-        task.reward.entries[0].item_kind_id,
+        task.reward.as_ref().unwrap().entries[0].item_kind_id,
         "demo.item.detection-rod"
     );
 
@@ -10505,10 +10511,13 @@ fn old_castle_uses_the_original_map_fixed_formation_and_warrior_artifact_pool() 
         Some("demo.task.vapor-quest")
     );
     assert_eq!(task.objectives[0].kind, TaskObjectiveKind::ClearFloor);
-    assert_eq!(task.reward.entries[0].item_kind_id, "demo.item.crisdurian");
-    assert_eq!(task.reward.class_overrides.len(), 1);
     assert_eq!(
-        task.reward.class_overrides[0]
+        task.reward.as_ref().unwrap().entries[0].item_kind_id,
+        "demo.item.crisdurian"
+    );
+    assert_eq!(task.reward.as_ref().unwrap().class_overrides.len(), 1);
+    assert_eq!(
+        task.reward.as_ref().unwrap().class_overrides[0]
             .entries
             .iter()
             .map(|entry| (entry.item_kind_id.as_str(), entry.weight))
@@ -12228,7 +12237,10 @@ fn pest_control_matches_the_original_warrens_contract() {
         task.completion_exit_terrain_id.as_deref(),
         Some("demo.terrain.stairs-down")
     );
-    assert_eq!(task.reward.entries[0].item_kind_id, "demo.item.fur-cloak");
+    assert_eq!(
+        task.reward.as_ref().unwrap().entries[0].item_kind_id,
+        "demo.item.fur-cloak"
+    );
 
     let reward = artifact
         .content

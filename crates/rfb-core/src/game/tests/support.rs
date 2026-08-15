@@ -390,7 +390,7 @@ pub(super) fn game_with_actor_definition(
         .expect("custom actor definition should create a game")
 }
 
-pub(super) fn task_service_game(seed: u64) -> Game {
+fn task_service_artifact() -> rfb_content::CompiledArtifact {
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .and_then(std::path::Path::parent)
@@ -409,8 +409,12 @@ pub(super) fn task_service_game(seed: u64) -> Game {
         id: task_id.to_owned(),
         name_key: "test-task-name".to_owned(),
         description_key: "test-task-description".to_owned(),
+        completed_description_key: None,
+        failed_description_key: None,
         source_facility_id: Some(facility_id.to_owned()),
         prerequisite_task_id: None,
+        unlock_when_prerequisite_failed: false,
+        substitution: None,
         location: rfb_content::TaskLocationDefinition::DungeonDepth {
             dungeon_id: "demo.dungeon.warrens".to_owned(),
             depth: 1,
@@ -426,7 +430,7 @@ pub(super) fn task_service_game(seed: u64) -> Game {
         }],
         target_placements: Vec::new(),
         completion_exit_terrain_id: None,
-        reward: rfb_content::TaskRewardDefinition {
+        reward: Some(rfb_content::TaskRewardDefinition {
             item_instance_id: "demo.task.test-warrens-depth.reward.1".to_owned(),
             entries: vec![
                 rfb_content::TaskRewardEntryDefinition {
@@ -443,15 +447,19 @@ pub(super) fn task_service_game(seed: u64) -> Game {
                 },
             ],
             class_overrides: Vec::new(),
-        },
+        }),
     });
     let prerequisite_task_id = "demo.task.test-prerequisite";
     world.tasks.push(rfb_content::TaskDefinition {
         id: prerequisite_task_id.to_owned(),
         name_key: "test-prerequisite-name".to_owned(),
         description_key: "test-prerequisite-description".to_owned(),
+        completed_description_key: None,
+        failed_description_key: None,
         source_facility_id: Some(facility_id.to_owned()),
         prerequisite_task_id: Some(task_id.to_owned()),
+        unlock_when_prerequisite_failed: false,
+        substitution: None,
         location: rfb_content::TaskLocationDefinition::DungeonDepth {
             dungeon_id: "demo.dungeon.warrens".to_owned(),
             depth: 1,
@@ -467,7 +475,7 @@ pub(super) fn task_service_game(seed: u64) -> Game {
         }],
         target_placements: Vec::new(),
         completion_exit_terrain_id: None,
-        reward: rfb_content::TaskRewardDefinition {
+        reward: Some(rfb_content::TaskRewardDefinition {
             item_instance_id: "demo.task.test-prerequisite.reward.1".to_owned(),
             entries: vec![rfb_content::TaskRewardEntryDefinition {
                 item_kind_id: "demo.item.water-potion".to_owned(),
@@ -484,7 +492,7 @@ pub(super) fn task_service_game(seed: u64) -> Game {
                     affix_ids: vec!["rfb-legacy.affix.combat".to_owned()],
                 }],
             }],
-        },
+        }),
     });
     let facility = artifact
         .content
@@ -495,10 +503,91 @@ pub(super) fn task_service_game(seed: u64) -> Game {
     facility
         .task_ids
         .extend([task_id.to_owned(), prerequisite_task_id.to_owned()]);
+    rfb_content::encode_content(artifact.content)
+        .expect("custom task service definition should remain valid")
+}
+
+pub(super) fn task_service_game(seed: u64) -> Game {
     let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
-        rfb_content::encode_content(artifact.content)
-            .expect("custom task service definition should remain valid"),
+        task_service_artifact(),
     ));
     Game::from_content(seed, catalog, DEFAULT_WORLD_ID)
         .expect("custom task service game should create")
+}
+
+pub(super) fn p107_task_service_game(seed: u64) -> Game {
+    let mut artifact = task_service_artifact();
+    let world = artifact
+        .content
+        .worlds
+        .iter_mut()
+        .find(|world| world.id == DEFAULT_WORLD_ID)
+        .expect("Middle-earth world should remain available");
+    let primary_id = "demo.task.test-warrens-depth";
+    let primary = world
+        .tasks
+        .iter_mut()
+        .find(|task| task.id == primary_id)
+        .expect("task service primary should remain available");
+    primary.completed_description_key = Some("test-task-completed-description".to_owned());
+    primary.failed_description_key = Some("test-task-failed-description".to_owned());
+    primary.reward = None;
+    primary.substitution = Some(rfb_content::TaskSubstitutionDefinition {
+        group_id: "demo.task-substitution.test-line".to_owned(),
+        alternate_task_id: "demo.task.test-warrens-depth-alternate".to_owned(),
+    });
+    let mut alternate = primary.clone();
+    alternate.id = "demo.task.test-warrens-depth-alternate".to_owned();
+    alternate.name_key = "test-task-alternate-name".to_owned();
+    alternate.substitution = None;
+    alternate.location = rfb_content::TaskLocationDefinition::DungeonDepth {
+        dungeon_id: "demo.dungeon.warrens".to_owned(),
+        depth: 2,
+    };
+    alternate.objectives[0].floor_id = Some("demo.floor.warrens-depth-2".to_owned());
+
+    let followup_id = "demo.task.test-prerequisite";
+    let followup = world
+        .tasks
+        .iter_mut()
+        .find(|task| task.id == followup_id)
+        .expect("task service follow-up should remain available");
+    followup.unlock_when_prerequisite_failed = true;
+    followup.substitution = Some(rfb_content::TaskSubstitutionDefinition {
+        group_id: "demo.task-substitution.test-line".to_owned(),
+        alternate_task_id: "demo.task.test-prerequisite-alternate".to_owned(),
+    });
+    let mut alternate_followup = followup.clone();
+    alternate_followup.id = "demo.task.test-prerequisite-alternate".to_owned();
+    alternate_followup.name_key = "test-prerequisite-alternate-name".to_owned();
+    alternate_followup.substitution = None;
+    alternate_followup.location = rfb_content::TaskLocationDefinition::DungeonDepth {
+        dungeon_id: "demo.dungeon.warrens".to_owned(),
+        depth: 3,
+    };
+    alternate_followup.objectives[0].floor_id = Some("demo.floor.warrens-depth-3".to_owned());
+    alternate_followup
+        .reward
+        .as_mut()
+        .expect("alternate follow-up should retain its reward")
+        .item_instance_id = "demo.task.test-prerequisite-alternate.reward.1".to_owned();
+    world.tasks.extend([alternate, alternate_followup]);
+
+    artifact
+        .content
+        .town_facilities
+        .iter_mut()
+        .find(|facility| facility.id == "demo.town-facility.outpost-count")
+        .expect("task service facility should remain available")
+        .task_ids
+        .extend([
+            "demo.task.test-warrens-depth-alternate".to_owned(),
+            "demo.task.test-prerequisite-alternate".to_owned(),
+        ]);
+    let catalog = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content)
+            .expect("P107 task service definition should remain valid"),
+    ));
+    Game::from_content(seed, catalog, DEFAULT_WORLD_ID)
+        .expect("P107 task service game should create")
 }

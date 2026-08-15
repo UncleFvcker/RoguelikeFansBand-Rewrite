@@ -394,6 +394,7 @@ struct DemoWildernessSelection {
     dungeons: Vec<DemoWildernessLocationSelection>,
     town_plans: Vec<DemoWildernessTownPlan>,
     bounty_offices: Vec<DemoBountyOfficePlan>,
+    anambar_task_plan: DemoTaskImportPlan,
     dungeon_plans: Vec<DemoWildernessDungeonPlan>,
 }
 
@@ -436,6 +437,64 @@ struct DemoBountyOfficePlan {
     town_id: String,
     source_file: String,
     building: DemoTownBuildingPlan,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTaskImportPlan {
+    town_id: String,
+    town_source_file: String,
+    quest_info_source_file: String,
+    facilities: Vec<DemoTaskFacilityPlan>,
+    tasks: Vec<DemoTaskPlan>,
+    substitutions: Vec<DemoTaskSubstitutionPlan>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTaskFacilityPlan {
+    facility_id: String,
+    building_index: u16,
+    name: String,
+    owner_name: String,
+    owner_race: String,
+    entrance_position: DemoWildernessPosition,
+    request_action_index: u16,
+    logical_source_task_indexes: Vec<u32>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTaskPlan {
+    source_index: u32,
+    source_name: String,
+    level: u16,
+    source_file: String,
+    task_id: String,
+    facility_id: String,
+    prerequisite_source_index: Option<u32>,
+    #[serde(default)]
+    unlock_when_prerequisite_failed: bool,
+    #[serde(default)]
+    reward_required: bool,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTaskSubstitutionPlan {
+    group_id: String,
+    primary_source_index: u32,
+    alternate_source_index: u32,
+    random_modulus: u32,
+    alternate_minimum: u32,
+}
+
+#[derive(Debug, Default)]
+struct LegacyQuestRecord {
+    name: String,
+    level: u16,
+    source_file: String,
+    flags: BTreeSet<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -12975,6 +13034,292 @@ fn dungeon_final_object(record: &LegacyDungeonRecord) -> Option<DemoDungeonObjec
     })
 }
 
+fn parse_quest_records(text: &str) -> Result<BTreeMap<u32, LegacyQuestRecord>, LegacyImportError> {
+    let mut records = BTreeMap::new();
+    let mut current = None;
+    for line in text.lines().map(str::trim) {
+        if let Some(rest) = line.strip_prefix("N:") {
+            let mut fields = rest.splitn(3, ':');
+            let source_index = fields
+                .next()
+                .and_then(|value| value.parse::<u32>().ok())
+                .ok_or_else(|| invalid_wilderness_selection("invalid q_info quest index"))?;
+            let level = fields
+                .next()
+                .and_then(|value| value.parse::<u16>().ok())
+                .ok_or_else(|| invalid_wilderness_selection("invalid q_info quest level"))?;
+            let name = fields
+                .next()
+                .ok_or_else(|| invalid_wilderness_selection("missing q_info quest name"))?;
+            if records
+                .insert(
+                    source_index,
+                    LegacyQuestRecord {
+                        name: name.to_owned(),
+                        level,
+                        ..LegacyQuestRecord::default()
+                    },
+                )
+                .is_some()
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "duplicate q_info quest {source_index}"
+                )));
+            }
+            current = Some(source_index);
+        } else if let Some(rest) = line.strip_prefix("T:") {
+            let Some(record) = current.and_then(|index| records.get_mut(&index)) else {
+                return Err(invalid_wilderness_selection(
+                    "q_info task flags precede their quest record",
+                ));
+            };
+            record.flags.extend(
+                rest.split('|')
+                    .map(str::trim)
+                    .filter(|flag| !flag.is_empty())
+                    .map(str::to_owned),
+            );
+        } else if let Some(source_file) = line.strip_prefix("F:") {
+            let Some(record) = current.and_then(|index| records.get_mut(&index)) else {
+                return Err(invalid_wilderness_selection(
+                    "q_info task source precedes its quest record",
+                ));
+            };
+            record.source_file = source_file.to_owned();
+        }
+    }
+    Ok(records)
+}
+
+fn validate_demo_task_plan(
+    source: &Path,
+    source_commit: &str,
+    selection: &DemoWildernessSelection,
+) -> Result<(), LegacyImportError> {
+    let plan = &selection.anambar_task_plan;
+    if !selection.towns.iter().any(|town| town.id == plan.town_id)
+        || plan.facilities.len() != 2
+        || plan.tasks.len() != 10
+        || plan.substitutions.len() != 2
+    {
+        return Err(invalid_wilderness_selection(
+            "Anambar task plan must retain two facilities, ten source tasks, and two substitutions",
+        ));
+    }
+    let town_source = read_legacy_object_at(source, source_commit, &plan.town_source_file)?;
+    let quest_info = read_legacy_object_at(source, source_commit, &plan.quest_info_source_file)?;
+    let quest_records = parse_quest_records(&quest_info)?;
+
+    let mut facility_ids = BTreeSet::new();
+    let mut building_indexes = BTreeSet::new();
+    let mut entrance_positions = BTreeSet::new();
+    let mut logical_source_indexes = BTreeSet::new();
+    for facility in &plan.facilities {
+        if !facility_ids.insert(facility.facility_id.as_str())
+            || !building_indexes.insert(facility.building_index)
+            || !entrance_positions
+                .insert((facility.entrance_position.x, facility.entrance_position.y))
+            || !facility
+                .logical_source_task_indexes
+                .iter()
+                .all(|index| logical_source_indexes.insert(*index))
+        {
+            return Err(invalid_wilderness_selection(
+                "Anambar task facility plan contains duplicates",
+            ));
+        }
+        let identity = format!(
+            "B:{}:N:{}:{}:{}",
+            facility.building_index, facility.name, facility.owner_name, facility.owner_race
+        );
+        let request_action = format!(
+            "B:{}:A:{}:请求任务:0:0:q:6:0",
+            facility.building_index, facility.request_action_index
+        );
+        if !town_source.lines().any(|line| line.trim() == identity)
+            || !town_source
+                .lines()
+                .any(|line| line.trim() == request_action)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Anambar task facility {} drifted",
+                facility.facility_id
+            )));
+        }
+    }
+    if logical_source_indexes.len() != 8 {
+        return Err(invalid_wilderness_selection(
+            "Anambar task facilities must expose eight logical tasks",
+        ));
+    }
+
+    let mut source_indexes = BTreeSet::new();
+    let mut task_ids = BTreeSet::new();
+    let mut source_files = BTreeSet::new();
+    for task in &plan.tasks {
+        let Some(record) = quest_records.get(&task.source_index) else {
+            return Err(invalid_wilderness_selection(format!(
+                "Anambar task {} is absent from q_info",
+                task.source_index
+            )));
+        };
+        let expected_source_file = format!("lib/edit/{}", record.source_file);
+        if !source_indexes.insert(task.source_index)
+            || !task_ids.insert(task.task_id.as_str())
+            || !source_files.insert(task.source_file.as_str())
+            || !facility_ids.contains(task.facility_id.as_str())
+            || record.name != task.source_name
+            || record.level != task.level
+            || expected_source_file != task.source_file
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Anambar task {} identity or source drifted",
+                task.source_index
+            )));
+        }
+        read_legacy_object_at(source, source_commit, &task.source_file)?;
+        if let Some(prerequisite) = task.prerequisite_source_index {
+            if prerequisite == task.source_index
+                || !plan.tasks.iter().any(|candidate| {
+                    candidate.source_index == prerequisite
+                        && candidate.facility_id == task.facility_id
+                })
+                || !task.unlock_when_prerequisite_failed
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "Anambar task {} prerequisite drifted",
+                    task.source_index
+                )));
+            }
+        } else if task.unlock_when_prerequisite_failed {
+            return Err(invalid_wilderness_selection(format!(
+                "Anambar root task {} cannot unlock after failure",
+                task.source_index
+            )));
+        }
+    }
+    if plan
+        .tasks
+        .iter()
+        .filter(|task| !task.reward_required)
+        .map(|task| task.source_index)
+        .collect::<Vec<_>>()
+        != [74]
+    {
+        return Err(invalid_wilderness_selection(
+            "Anambar Cop Quest must remain the sole rewardless task",
+        ));
+    }
+
+    let alternate_indexes = plan
+        .substitutions
+        .iter()
+        .map(|substitution| substitution.alternate_source_index)
+        .collect::<BTreeSet<_>>();
+    for facility in &plan.facilities {
+        for source_index in &facility.logical_source_task_indexes {
+            let task = plan
+                .tasks
+                .iter()
+                .find(|task| task.source_index == *source_index)
+                .ok_or_else(|| {
+                    invalid_wilderness_selection(format!(
+                        "Anambar facility {} references unknown task {source_index}",
+                        facility.facility_id
+                    ))
+                })?;
+            if task.facility_id != facility.facility_id || alternate_indexes.contains(source_index)
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "Anambar facility {} task list drifted",
+                    facility.facility_id
+                )));
+            }
+            if let Some(prerequisite) = task.prerequisite_source_index {
+                let prerequisite_line = format!("$QUEST{prerequisite}");
+                let advances_after_finish = town_source
+                    .lines()
+                    .any(|line| line.contains(&prerequisite_line) && line.contains("Finished"));
+                let advances_after_failure = town_source
+                    .lines()
+                    .any(|line| line.contains(&prerequisite_line) && line.contains("FailedDone"));
+                let target = format!("BUILDING_{}({source_index})", facility.building_index);
+                if !advances_after_finish
+                    || !advances_after_failure
+                    || !town_source.contains(&target)
+                {
+                    return Err(invalid_wilderness_selection(format!(
+                        "Anambar task chain {} -> {source_index} drifted",
+                        prerequisite
+                    )));
+                }
+            }
+        }
+    }
+
+    let mut primary_indexes = BTreeSet::new();
+    let mut substitution_alternates = BTreeSet::new();
+    let mut group_decisions = BTreeMap::new();
+    for substitution in &plan.substitutions {
+        let Some(primary) = plan
+            .tasks
+            .iter()
+            .find(|task| task.source_index == substitution.primary_source_index)
+        else {
+            return Err(invalid_wilderness_selection(
+                "Anambar task substitution primary is absent",
+            ));
+        };
+        let alternate = plan
+            .tasks
+            .iter()
+            .find(|task| task.source_index == substitution.alternate_source_index);
+        let source_record = quest_records
+            .get(&substitution.primary_source_index)
+            .expect("planned primary task record should remain available");
+        let substitute_flag = format!("SUBSTITUTE_{}", substitution.alternate_source_index);
+        let source_text = read_legacy_object_at(source, source_commit, &primary.source_file)?;
+        let selector = format!(
+            "?:[GEQ [MOD $RANDOM0 {}] {}]",
+            substitution.random_modulus, substitution.alternate_minimum
+        );
+        let redirect = format!("K:{}", substitution.alternate_source_index);
+        if alternate.is_none_or(|alternate| alternate.facility_id != primary.facility_id)
+            || !primary_indexes.insert(substitution.primary_source_index)
+            || !substitution_alternates.insert(substitution.alternate_source_index)
+            || source_record.flags.get(&substitute_flag).is_none()
+            || !source_text.lines().any(|line| line.trim() == selector)
+            || !source_text.lines().any(|line| line.trim() == redirect)
+            || substitution.alternate_minimum == 0
+            || substitution.alternate_minimum >= substitution.random_modulus
+            || group_decisions
+                .insert(
+                    substitution.group_id.as_str(),
+                    (substitution.random_modulus, substitution.alternate_minimum),
+                )
+                .is_some_and(|decision| {
+                    decision != (substitution.random_modulus, substitution.alternate_minimum)
+                })
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Anambar task substitution {} drifted",
+                substitution.primary_source_index
+            )));
+        }
+    }
+    if alternate_indexes != substitution_alternates
+        || primary_indexes
+            .iter()
+            .any(|index| !logical_source_indexes.contains(index))
+    {
+        return Err(invalid_wilderness_selection(
+            "Anambar task substitution membership drifted",
+        ));
+    }
+
+    Ok(())
+}
+
 fn validate_demo_wilderness_plans(
     source: &Path,
     source_commit: &str,
@@ -12985,6 +13330,8 @@ fn validate_demo_wilderness_plans(
     let t_info = read_legacy_object_at(source, source_commit, T_INFO_SOURCE)?;
     let t_pref = read_legacy_object_at(source, source_commit, T_PREF_SOURCE)?;
     let feature_tags = town_feature_tags(&t_pref);
+
+    validate_demo_task_plan(source, source_commit, selection)?;
 
     for town in &selection.town_plans {
         if !selection
@@ -13318,7 +13665,7 @@ pub fn sync_demo_wilderness(
         ));
     }
     let selection: DemoWildernessSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
-    if selection.schema_version != 7
+    if selection.schema_version != 8
         || selection.towns.is_empty()
         || selection.dungeons.is_empty()
         || selection.town_plans.is_empty()
@@ -13326,7 +13673,7 @@ pub fn sync_demo_wilderness(
         || selection.dungeon_plans.is_empty()
     {
         return Err(LegacyImportError::InvalidDemoWildernessSelection(
-            "selection must use schemaVersion 7 and contain active towns, town plans, two bounty offices, active dungeons, and dungeon plans"
+            "selection must use schemaVersion 8 and contain active towns, town plans, two bounty offices, the Anambar task plan, active dungeons, and dungeon plans"
                 .to_owned(),
         ));
     }
@@ -24443,7 +24790,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 7);
+        assert_eq!(selection.schema_version, 8);
         let anambar = selection
             .town_plans
             .iter()
@@ -24491,7 +24838,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 7);
+        assert_eq!(selection.schema_version, 8);
         let anambar = selection
             .town_plans
             .iter()
@@ -24575,7 +24922,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 7);
+        assert_eq!(selection.schema_version, 8);
         assert_eq!(selection.bounty_offices.len(), 2);
         let office = |town_id: &str| {
             selection
@@ -24613,6 +24960,93 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
                 .map(|service| service.action_id)
                 .collect::<Vec<_>>(),
             [38, 39, 37, 40, 6, 65]
+        );
+    }
+
+    #[test]
+    fn p107a_anambar_task_plan_locks_both_lines_and_correlated_substitutions() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 8);
+        let plan = &selection.anambar_task_plan;
+        assert_eq!(plan.town_id, "demo.town.anambar");
+        assert_eq!(plan.town_source_file, "lib/edit/t_ana.txt");
+        assert_eq!(plan.quest_info_source_file, "lib/edit/q_info.txt");
+        assert_eq!(plan.facilities.len(), 2);
+        assert_eq!(plan.tasks.len(), 10);
+        assert_eq!(
+            plan.tasks
+                .iter()
+                .map(|task| (task.source_index, task.source_file.as_str()))
+                .collect::<Vec<_>>(),
+            [
+                (22, "lib/edit/q_orcs.txt"),
+                (60, "lib/edit/q_orcs2.txt"),
+                (99, "lib/edit/q_scary.txt"),
+                (68, "lib/edit/q_dino.txt"),
+                (67, "lib/edit/q_crystal.txt"),
+                (75, "lib/edit/q_apina.txt"),
+                (83, "lib/edit/q_htower.txt"),
+                (74, "lib/edit/q_cq1.txt"),
+                (73, "lib/edit/q_smug.txt"),
+                (72, "lib/edit/q_cellar.txt"),
+            ]
+        );
+        let mayor = &plan.facilities[0];
+        assert_eq!(mayor.building_index, 1);
+        assert_eq!(mayor.name, "镇长办公室");
+        assert_eq!(mayor.owner_name, "锆石·吉姆");
+        assert_eq!(
+            mayor.entrance_position,
+            DemoWildernessPosition { x: 16, y: 9 }
+        );
+        assert_eq!(mayor.logical_source_task_indexes, [22, 60, 68, 67, 75]);
+        let police = &plan.facilities[1];
+        assert_eq!(police.building_index, 13);
+        assert_eq!(police.name, "警察局");
+        assert_eq!(police.owner_name, "瓦茨");
+        assert_eq!(
+            police.entrance_position,
+            DemoWildernessPosition { x: 12, y: 9 }
+        );
+        assert_eq!(police.logical_source_task_indexes, [74, 73, 72]);
+        assert!(
+            plan.tasks
+                .iter()
+                .filter(|task| task.prerequisite_source_index.is_some())
+                .all(|task| task.unlock_when_prerequisite_failed)
+        );
+        assert!(
+            !plan
+                .tasks
+                .iter()
+                .find(|task| task.source_index == 74)
+                .unwrap()
+                .reward_required
+        );
+        assert!(
+            plan.tasks
+                .iter()
+                .filter(|task| task.source_index != 74)
+                .all(|task| task.reward_required)
+        );
+        assert_eq!(
+            plan.substitutions
+                .iter()
+                .map(|substitution| (
+                    substitution.group_id.as_str(),
+                    substitution.primary_source_index,
+                    substitution.alternate_source_index,
+                    substitution.random_modulus,
+                    substitution.alternate_minimum,
+                ))
+                .collect::<Vec<_>>(),
+            [
+                ("demo.task-substitution.anambar-mayor-line", 60, 99, 64, 32,),
+                ("demo.task-substitution.anambar-mayor-line", 75, 83, 64, 32,),
+            ]
         );
     }
 

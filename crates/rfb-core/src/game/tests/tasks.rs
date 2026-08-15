@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
+use crate::game::tasks::{TaskResolution, task_resolution_for_departure};
 
 fn direct_warrens_death_drops(
     actor_kind_id: &str,
@@ -380,6 +381,133 @@ fn external_task_service_projects_sparse_available_state_and_accepts_at_entrance
             .expect("accepted task should remain projected")
             .status,
         TaskStatusKindDto::Taken
+    );
+}
+
+#[test]
+fn p107_task_substitutions_are_correlated_persisted_and_hide_losing_variants() {
+    let projected_ids = |game: &mut Game| {
+        game.player.position = Position { x: 26, y: 13 };
+        game.snapshot()
+            .task_services
+            .iter()
+            .find(|service| service.id == "demo.town-facility.outpost-count")
+            .expect("P107 test task service should be projected")
+            .tasks
+            .iter()
+            .map(|task| task.task_id.clone())
+            .filter(|task_id| {
+                task_id.contains("test-warrens") || task_id.contains("test-prerequisite")
+            })
+            .collect::<BTreeSet<_>>()
+    };
+    let primary_ids = BTreeSet::from([
+        "demo.task.test-warrens-depth".to_owned(),
+        "demo.task.test-prerequisite".to_owned(),
+    ]);
+    let alternate_ids = BTreeSet::from([
+        "demo.task.test-warrens-depth-alternate".to_owned(),
+        "demo.task.test-prerequisite-alternate".to_owned(),
+    ]);
+
+    let mut first = p107_task_service_game(10);
+    let mut second = p107_task_service_game(11);
+    let first_ids = projected_ids(&mut first);
+    let second_ids = projected_ids(&mut second);
+    assert!(first_ids == primary_ids || first_ids == alternate_ids);
+    assert!(second_ids == primary_ids || second_ids == alternate_ids);
+    assert_ne!(first_ids, second_ids);
+
+    let losing_id = if first_ids == primary_ids {
+        "demo.task.test-warrens-depth-alternate"
+    } else {
+        "demo.task.test-warrens-depth"
+    };
+    let unavailable = dispatch_next(
+        &mut first,
+        GameCommand::AcceptTask {
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
+            task_id: losing_id.to_owned(),
+        },
+    );
+    assert!(
+        unavailable
+            .events
+            .iter()
+            .any(|event| event.kind == "task.accept-unavailable")
+    );
+
+    first.advance_wilderness_generation();
+    assert_eq!(projected_ids(&mut first), first_ids);
+    let content = first.content.clone();
+    let mut restored = Game::from_save_with_content(first.to_save(), content)
+        .expect("P107 task substitution should round-trip through existing task state");
+    assert_eq!(projected_ids(&mut restored), first_ids);
+}
+
+#[test]
+fn p107_failed_prerequisites_unlock_and_optional_status_descriptions_project() {
+    let mut game = p107_task_service_game(10);
+    game.player.position = Position { x: 26, y: 13 };
+    let root_id = if game
+        .task_states
+        .contains_key("demo.task.test-warrens-depth")
+    {
+        "demo.task.test-warrens-depth"
+    } else {
+        "demo.task.test-warrens-depth-alternate"
+    };
+    let followup_id = if root_id.ends_with("-alternate") {
+        "demo.task.test-prerequisite-alternate"
+    } else {
+        "demo.task.test-prerequisite"
+    };
+    game.task_states.get_mut(root_id).unwrap().status = TaskStatusKindDto::Failed;
+    let failed = game.snapshot();
+    let tasks = &failed
+        .task_services
+        .iter()
+        .find(|service| service.id == "demo.town-facility.outpost-count")
+        .unwrap()
+        .tasks;
+    assert_eq!(
+        tasks
+            .iter()
+            .find(|task| task.task_id == root_id)
+            .unwrap()
+            .description_key
+            .as_deref(),
+        Some("test-task-failed-description")
+    );
+    assert_eq!(
+        tasks
+            .iter()
+            .find(|task| task.task_id == followup_id)
+            .unwrap()
+            .status,
+        TaskStatusKindDto::Available
+    );
+
+    let root = game.task_states.get_mut(root_id).unwrap();
+    root.status = TaskStatusKindDto::Completed;
+    root.current = root.required;
+    assert_eq!(
+        game.snapshot()
+            .tasks
+            .iter()
+            .find(|task| task.task_id == root_id)
+            .unwrap()
+            .description_key
+            .as_deref(),
+        Some("test-task-completed-description")
+    );
+    assert!(matches!(
+        task_resolution_for_departure(Some(false), false, true, false),
+        Some(TaskResolution::Completed)
+    ));
+    assert_eq!(
+        game.claim_task_reward("demo.town-facility.outpost-count", root_id),
+        Err("reward-unavailable")
     );
 }
 

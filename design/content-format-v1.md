@@ -741,3 +741,12 @@ Resistance、Restore Mana、Genocide、Life、Augmentation 与 Artifact Creation
 复用现有药水/卷轴；动态悬赏原版的 Good/Great 随机装备也按任务深度映射到这组现有奖励梯度。
 原版“特殊目标（土奇诺子）”以及 Anambar 的普通请求任务仍明确留待各自系统。
 content hash 为 `ed96b99abe3ac0f6ced3799ee9b0571f93bee47f332cd8bfba33a7fd440b25c2`。
+
+包 1.371.0 / P107 第一步把 `legacy-wilderness-selection.json` 升至 schema 8，锁定
+`t_ana.txt`、`q_info.txt`、镇长/警察两条任务链和十个任务源文件。`TaskDefinition` 增加
+可选 `substitution { groupId, alternateTaskId }`、`unlockWhenPrerequisiteFailed`、完成/失败
+描述键，并允许省略 `reward`；无奖励的设施任务成功后直接完成。相同 `groupId` 的替代对由
+初始世界种子作相关选择，选择结果复用既有 `taskStates` 持久化，未选任务不投影也不能接受。
+镇长办公室及警察局任务列表要与后续固定任务层一起注册，避免设施引用尚不存在的任务定义；
+本步不放宽 Quest Giver 的完整性验证。content hash 为
+`2db6bde42d321d93d161c60fecfce045b9e84d944177f6837c8850bd9616b5b5`。

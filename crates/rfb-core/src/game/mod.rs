@@ -1394,7 +1394,7 @@ impl Game {
             .wilderness
             .as_ref()
             .map(|wilderness| position_from_content(wilderness.start_position));
-        let task_states = initial_task_states(world);
+        let task_states = initial_task_states(world, seed);
         let dungeon_states = initial_dungeon_states(world, seed);
         let (town_states, shop_states) = town::initial_town_and_shop_states(
             world,
@@ -6405,7 +6405,7 @@ impl Game {
             .cloned()
             .collect::<Vec<_>>();
         let initial_required =
-            task_initial_state(task_definition(world, task_id)?, &self.task_states).required;
+            task_initial_state(world, task_definition(world, task_id)?, &self.task_states).required;
         if members.is_empty() {
             return None;
         }

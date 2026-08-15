@@ -26,7 +26,7 @@ use rfb_protocol::{
     TerrainInteractionKindDto, VisibilityState, WildernessLocationDto, WildernessLocationKindDto,
 };
 
-use super::tasks::projected_task_state;
+use super::tasks::{projected_task_state, task_description_key};
 use super::{
     AbilityProgress, Game, LightSource, TERRAIN_INTERACTION_DIRECTIONS, ability_detect_subject_dto,
     ability_target_spec_dto, actor_melee_routine_dto, combine_percentages, derived_speed,
@@ -1511,7 +1511,7 @@ impl Game {
                     task_id: task_id.clone(),
                     floor_id: floor.id.clone(),
                     name_key: task.name_key.clone(),
-                    description_key: Some(task.description_key.clone()),
+                    description_key: Some(task_description_key(task, &state).to_owned()),
                     source_facility_id: task.source_facility_id.clone(),
                     status: state.status,
                     current: state.current,
@@ -1562,7 +1562,9 @@ impl Game {
                                 task_id: task.id.clone(),
                                 floor_id: floor.id.clone(),
                                 name_key: task.name_key.clone(),
-                                description_key: Some(task.description_key.clone()),
+                                description_key: Some(
+                                    task_description_key(task, &state).to_owned(),
+                                ),
                                 source_facility_id: task.source_facility_id.clone(),
                                 status: state.status,
                                 current: state.current,

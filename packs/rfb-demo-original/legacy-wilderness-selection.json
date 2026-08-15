@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "worldId": "demo.world.middle-earth",
   "towns": [
     {
@@ -244,6 +244,156 @@
       }
     }
   ],
+  "anambarTaskPlan": {
+    "townId": "demo.town.anambar",
+    "townSourceFile": "lib/edit/t_ana.txt",
+    "questInfoSourceFile": "lib/edit/q_info.txt",
+    "facilities": [
+      {
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "buildingIndex": 1,
+        "name": "镇长办公室",
+        "ownerName": "锆石·吉姆",
+        "ownerRace": "人类",
+        "entrancePosition": { "x": 16, "y": 9 },
+        "requestActionIndex": 0,
+        "logicalSourceTaskIndexes": [22, 60, 68, 67, 75]
+      },
+      {
+        "facilityId": "demo.town-facility.anambar-police-station",
+        "buildingIndex": 13,
+        "name": "警察局",
+        "ownerName": "瓦茨",
+        "ownerRace": "小魔怪",
+        "entrancePosition": { "x": 12, "y": 9 },
+        "requestActionIndex": 4,
+        "logicalSourceTaskIndexes": [74, 73, 72]
+      }
+    ],
+    "tasks": [
+      {
+        "sourceIndex": 22,
+        "sourceName": "The Orc Camp (Anambar)",
+        "level": 20,
+        "sourceFile": "lib/edit/q_orcs.txt",
+        "taskId": "demo.task.anambar-orc-camp",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 60,
+        "sourceName": "Clear the Tunnels (Anambar)",
+        "level": 27,
+        "sourceFile": "lib/edit/q_orcs2.txt",
+        "taskId": "demo.task.anambar-clear-tunnels",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 22,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 99,
+        "sourceName": "The Treasure of Scary Rock (Anambar)",
+        "level": 27,
+        "sourceFile": "lib/edit/q_scary.txt",
+        "taskId": "demo.task.anambar-scary-rock-treasure",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 22,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 68,
+        "sourceName": "Dinosaur Quest (Anambar)",
+        "level": 33,
+        "sourceFile": "lib/edit/q_dino.txt",
+        "taskId": "demo.task.anambar-dinosaur-quest",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 60,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 67,
+        "sourceName": "Crystal Quest (Anambar)",
+        "level": 40,
+        "sourceFile": "lib/edit/q_crystal.txt",
+        "taskId": "demo.task.anambar-crystal-quest",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 68,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 75,
+        "sourceName": "The Mystery of Apina Island (Anambar)",
+        "level": 55,
+        "sourceFile": "lib/edit/q_apina.txt",
+        "taskId": "demo.task.anambar-apina-island",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 67,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 83,
+        "sourceName": "The Treachery of Lord Bovin (Anambar)",
+        "level": 50,
+        "sourceFile": "lib/edit/q_htower.txt",
+        "taskId": "demo.task.anambar-lord-bovin-treachery",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 67,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 74,
+        "sourceName": "Cop Quest (Anambar)",
+        "level": 12,
+        "sourceFile": "lib/edit/q_cq1.txt",
+        "taskId": "demo.task.anambar-cop-quest",
+        "facilityId": "demo.town-facility.anambar-police-station"
+      },
+      {
+        "sourceIndex": 73,
+        "sourceName": "Smugglers' Den (Anambar)",
+        "level": 30,
+        "sourceFile": "lib/edit/q_smug.txt",
+        "taskId": "demo.task.anambar-smugglers-den",
+        "facilityId": "demo.town-facility.anambar-police-station",
+        "prerequisiteSourceIndex": 74,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 72,
+        "sourceName": "The Killer in the Cellar (Anambar)",
+        "level": 70,
+        "sourceFile": "lib/edit/q_cellar.txt",
+        "taskId": "demo.task.anambar-cellar-killer",
+        "facilityId": "demo.town-facility.anambar-police-station",
+        "prerequisiteSourceIndex": 73,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      }
+    ],
+    "substitutions": [
+      {
+        "groupId": "demo.task-substitution.anambar-mayor-line",
+        "primarySourceIndex": 60,
+        "alternateSourceIndex": 99,
+        "randomModulus": 64,
+        "alternateMinimum": 32
+      },
+      {
+        "groupId": "demo.task-substitution.anambar-mayor-line",
+        "primarySourceIndex": 75,
+        "alternateSourceIndex": 83,
+        "randomModulus": 64,
+        "alternateMinimum": 32
+      }
+    ]
+  },
   "dungeonPlans": [
     {
       "sourceIndex": 3,
