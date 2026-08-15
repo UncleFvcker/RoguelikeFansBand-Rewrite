@@ -97,7 +97,7 @@ use rfb_protocol::{
     AbilityTerrainTransformResolutionDto, AbilityVisibleDamageResolutionDto, AttackProfileDto,
     AutoGetModeDto, CampaignStatusDto, CellLightDto, CellVisualDto, DamageDiceDto, Direction,
     EntityFactionDto, EquipmentBonusesDto, EquipmentPassiveDto, GameCommandEnvelope, GameUpdate,
-    GoldAppearanceDto, HealingResolutionDto, ItemActivationDto, ItemChargesDto,
+    GoldAppearanceDto, HealingResolutionDto, ItemActivationDto, ItemChargesDto, ItemCurseEffectDto,
     ItemCurseRemovalResolutionDto, ItemCurseResolutionDto, ItemCurseSeverityDto,
     ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto, ItemEnchantmentsDto,
     ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemOriginKindDto,
@@ -128,6 +128,7 @@ mod ground_item_effects;
 mod hunger;
 mod inventory;
 mod item_combat;
+mod item_curses;
 mod item_knowledge;
 mod item_use;
 mod lighting;

@@ -152,6 +152,9 @@ impl Game {
                 self.process_monster_regeneration();
             }
             self.process_equipped_light_fuel(events);
+            if local_floor_active {
+                self.process_equipped_curse_effects(events, changed);
+            }
             self.process_periodic_mutations(
                 local_floor_active,
                 resting,
@@ -667,6 +670,7 @@ impl Game {
                 continue;
             }
             self.try_clear_monster_confusion(index, events);
+            self.wake_monster_for_equipped_aggravation(index, events, changed);
             if self.entities[index]
                 .statuses
                 .iter()

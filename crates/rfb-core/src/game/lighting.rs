@@ -199,16 +199,22 @@ impl Game {
         let equipment = self
             .items
             .iter()
-            .find(|item| {
-                matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "light")
+            .filter_map(|item| match &item.location {
+                ItemLocation::Equipped { slot_id } => {
+                    let bonus = self.item_equipment_bonuses(item).light_radius;
+                    if slot_id == "light" {
+                        let fuel = item
+                            .fuel
+                            .filter(|fuel| fuel.current > 0)
+                            .map_or(0, |fuel| i32::from(fuel.light_radius));
+                        Some(fuel.max(bonus))
+                    } else {
+                        Some(bonus)
+                    }
+                }
+                _ => None,
             })
-            .map_or(0, |item| {
-                let fuel = item
-                    .fuel
-                    .filter(|fuel| fuel.current > 0)
-                    .map_or(0, |fuel| i32::from(fuel.light_radius));
-                fuel.max(self.item_equipment_bonuses(item).light_radius)
-            });
+            .fold(0_i32, i32::saturating_add);
         let status = self
             .player
             .statuses

@@ -8,8 +8,8 @@ use rfb_content::{
     StatModifiers, WeaponBrand,
 };
 use rfb_protocol::{
-    ItemActivationDto, ItemChargesDto, ItemCurseEffectDto, ItemEnchantmentsDto, MeleeDamageDiceDto,
-    WeaponTraitDto,
+    ItemActivationDto, ItemChargesDto, ItemCurseEffectDto, ItemCurseSeverityDto,
+    ItemEnchantmentsDto, MeleeDamageDiceDto, WeaponTraitDto,
 };
 
 use crate::{
@@ -28,6 +28,7 @@ pub(super) struct EgoMaterialization {
     pub(super) melee_damage_dice: Option<MeleeDamageDiceDto>,
     pub(super) weapon_traits: BTreeSet<WeaponTraitDto>,
     pub(super) curse_effects: BTreeSet<ItemCurseEffectDto>,
+    pub(super) curse: Option<ItemCurseSeverityDto>,
     pub(super) activation: Option<ItemActivationDto>,
     pub(super) charges: Option<ItemChargesDto>,
 }
@@ -36,6 +37,7 @@ impl EgoMaterialization {
     pub(super) fn new(
         affix_ids: Vec<String>,
         rolled_affixes: Vec<RolledAffixState>,
+        curse: Option<ItemCurseSeverityDto>,
         activation: Option<ItemActivationDto>,
         charges: Option<ItemChargesDto>,
     ) -> Self {
@@ -78,6 +80,7 @@ impl EgoMaterialization {
             melee_damage_dice,
             weapon_traits,
             curse_effects,
+            curse,
             activation,
             charges,
         }
@@ -102,6 +105,9 @@ impl EgoMaterialization {
         item.affix_ids = self.affix_ids;
         item.rolled_affixes = self.rolled_affixes;
         item.enchantments = enchantments;
+        if let Some(curse) = self.curse {
+            item.curse = Some(item.curse.map_or(curse, |current| current.max(curse)));
+        }
         item.activation = self.activation;
         item.charges = self.charges;
         item.device_recovery_progress = 0;
@@ -123,7 +129,7 @@ pub(super) fn materialize_ego_with_rng(
     let rolled_affixes = roll_affix_properties_with_rng(content, rng, &affix_ids, roll_depth);
     let (activation, charges) =
         initial_item_runtime_state(content, rng, kind_id, &affix_ids, activation_depth);
-    EgoMaterialization::new(affix_ids, rolled_affixes, activation, charges)
+    EgoMaterialization::new(affix_ids, rolled_affixes, None, activation, charges)
 }
 
 /// Selects one authoritative RFB ego without changing any item state.
@@ -250,6 +256,7 @@ const SV_MATTOCK: u16 = 7;
 #[derive(Debug, Default)]
 struct RfbWeaponRoll {
     state: RolledAffixState,
+    curse: Option<ItemCurseSeverityDto>,
     charisma_pval: bool,
     dexterity_pval: bool,
     blows_pval: bool,
@@ -397,7 +404,7 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
                 roll.stealth_penalty_pval = true;
             }
         }
-        12 if is_weapon => roll_rfb_death(rng, &mut roll.state, &mut dice),
+        12 if is_weapon => roll_rfb_death(rng, &mut roll, &mut dice),
         12 if is_digger => {}
         13 if is_weapon => {
             roll.state.weapon_traits.insert(WeaponTraitDto::Blessed);
@@ -410,6 +417,9 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
             base_kind.sval,
         ),
         15 if is_weapon => {
+            roll.state
+                .curse_effects
+                .insert(ItemCurseEffectDto::Teleport);
             if one_in(rng, 3) {
                 roll.charisma_pval = true;
             }
@@ -461,7 +471,15 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
                 );
             }
         }
-        21 if is_weapon => {}
+        21 if is_weapon => {
+            roll.curse = Some(ItemCurseSeverityDto::Heavy);
+            roll.state
+                .curse_effects
+                .insert(ItemCurseEffectDto::Aggravate);
+            roll.state
+                .curse_effects
+                .insert(roll_rfb_heavy_curse_effect(rng));
+        }
         22 if is_weapon => {
             if one_in(rng, 3) {
                 roll.state
@@ -586,6 +604,7 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
     Some(EgoMaterialization::new(
         vec![affix.id.clone()],
         rolled_affixes,
+        roll.curse,
         None,
         None,
     ))
@@ -1072,8 +1091,10 @@ fn roll_rfb_armageddon(
     }
 }
 
-fn roll_rfb_death(rng: &mut RfbRng, state: &mut RolledAffixState, dice: &mut MeleeDamageDiceDto) {
+fn roll_rfb_death(rng: &mut RfbRng, roll: &mut RfbWeaponRoll, dice: &mut MeleeDamageDiceDto) {
+    let state = &mut roll.state;
     if one_in(rng, 16) {
+        state.properties.equipment_bonuses.light_radius = -1;
         add_resistance(&mut state.properties, ActorDamageType::Dark);
         if one_in(rng, 6) {
             state
@@ -1103,11 +1124,34 @@ fn roll_rfb_death(rng: &mut RfbRng, state: &mut RolledAffixState, dice: &mut Mel
     } else if one_in(rng, 13) {
         add_slay(&mut state.properties, SlayTarget::Living, SlayLevel::Slay);
         dice.dice = dice.dice.saturating_add(1);
+        roll.curse = Some(ItemCurseSeverityDto::Heavy);
+        state.curse_effects.insert(roll_rfb_heavy_curse_effect(rng));
     } else if one_in(rng, 78) {
         add_slay(&mut state.properties, SlayTarget::Living, SlayLevel::Kill);
         if one_in(rng, 2) {
             dice.dice = dice.dice.saturating_add(1);
         }
+        roll.curse = Some(ItemCurseSeverityDto::Heavy);
+        state.curse_effects.insert(roll_rfb_heavy_curse_effect(rng));
+    }
+}
+
+fn roll_rfb_heavy_curse_effect(rng: &mut RfbRng) -> ItemCurseEffectDto {
+    loop {
+        let effect = match rng.bounded(28) {
+            0 => ItemCurseEffectDto::TyCurse,
+            1 => ItemCurseEffectDto::Aggravate,
+            2 => ItemCurseEffectDto::DrainExperience,
+            5 => ItemCurseEffectDto::AddHeavyCurse,
+            7 => ItemCurseEffectDto::CallDemon,
+            8 => ItemCurseEffectDto::CallDragon,
+            10 => ItemCurseEffectDto::Teleport,
+            19 => ItemCurseEffectDto::ByCurse,
+            20 => ItemCurseEffectDto::Danger,
+            23 => ItemCurseEffectDto::CrappyMutation,
+            _ => continue,
+        };
+        return effect;
     }
 }
 
@@ -1763,6 +1807,93 @@ mod tests {
     }
 
     #[test]
+    fn morgul_and_death_materialize_concrete_heavy_curses_and_darkness() {
+        let item = rfb_weapon_item(TV_SWORD, SV_LONG_SWORD);
+        let morgul = ego_affix(
+            "test.affix.morgul",
+            21,
+            1,
+            0,
+            u16::MAX,
+            vec![RfbEgoTypeDefinition::Weapon],
+        );
+        let mut morgul_rng = RfbRng::seeded(1);
+        let morgul = materialize_rfb_weapon_ego_with_rng(&mut morgul_rng, &item, &morgul, 70)
+            .expect("Morgul should materialize");
+        assert_eq!(morgul.curse, Some(ItemCurseSeverityDto::Heavy));
+        assert!(
+            morgul
+                .curse_effects
+                .contains(&ItemCurseEffectDto::Aggravate),
+            "Morgul aggravation is an intrinsic drawback"
+        );
+        assert!(!morgul.curse_effects.is_empty());
+
+        let death = ego_affix(
+            "test.affix.death",
+            12,
+            1,
+            0,
+            u16::MAX,
+            vec![RfbEgoTypeDefinition::Weapon],
+        );
+        let dark = (0..10_000_u64)
+            .find_map(|seed| {
+                let mut rng = RfbRng::seeded(seed);
+                let materialized =
+                    materialize_rfb_weapon_ego_with_rng(&mut rng, &item, &death, 70)?;
+                materialized
+                    .rolled_affixes
+                    .first()
+                    .is_some_and(|rolled| rolled.properties.equipment_bonuses.light_radius == -1)
+                    .then_some(materialized)
+            })
+            .expect("a deterministic Death darkness seed should exist");
+        assert_eq!(
+            dark.rolled_affixes[0]
+                .properties
+                .equipment_bonuses
+                .light_radius,
+            -1
+        );
+
+        let cursed = (0..100_000_u64)
+            .find_map(|seed| {
+                let mut rng = RfbRng::seeded(seed);
+                let materialized =
+                    materialize_rfb_weapon_ego_with_rng(&mut rng, &item, &death, 70)?;
+                materialized.curse.is_some().then_some(materialized)
+            })
+            .expect("a deterministic cursed Death seed should exist");
+        assert_eq!(cursed.curse, Some(ItemCurseSeverityDto::Heavy));
+        assert_eq!(cursed.curse_effects.len(), 1);
+    }
+
+    #[test]
+    fn authoritative_heavy_mask_contains_exactly_ten_effects() {
+        let mut effects = BTreeSet::new();
+        for seed in 0..10_000_u64 {
+            let mut rng = RfbRng::seeded(seed);
+            effects.insert(roll_rfb_heavy_curse_effect(&mut rng));
+        }
+        assert_eq!(
+            effects,
+            BTreeSet::from([
+                ItemCurseEffectDto::TyCurse,
+                ItemCurseEffectDto::Aggravate,
+                ItemCurseEffectDto::DrainExperience,
+                ItemCurseEffectDto::AddHeavyCurse,
+                ItemCurseEffectDto::CallDemon,
+                ItemCurseEffectDto::CallDragon,
+                ItemCurseEffectDto::Teleport,
+                ItemCurseEffectDto::ByCurse,
+                ItemCurseEffectDto::Danger,
+                ItemCurseEffectDto::CrappyMutation,
+            ])
+        );
+    }
+
+    #[test]
     fn special_weapon_ego_restrictions_reject_without_partial_state() {
         let hafted = rfb_weapon_item(TV_HAFTED, SV_WAR_HAMMER);
         let sharpness = ego_affix(
@@ -2029,6 +2160,7 @@ mod tests {
         let materialization = EgoMaterialization::new(
             vec![rolled.affix_id.clone()],
             vec![rolled.clone()],
+            None,
             None,
             None,
         );

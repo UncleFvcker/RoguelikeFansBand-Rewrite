@@ -186,6 +186,12 @@ ESP Evil/Living 后协议推进至 `1.223`；save 与 State Hash 结构未变。
 
 ### E3.5：闭合装备副作用与重诅咒
 
+状态：已完成。Morgul/Death 按权威 `TRC_HEAVY_MASK` 的十项集合抽取并保存具体效果，
+同时物化 Heavy 严重度；装备激怒在怪物获得行动时唤醒睡眠目标，Death 黑暗作为可叠加的
+装备光照惩罚，随机传送按每 10 个 world tick 一次、`1/200` 的 RFB 时点结算。解咒停止
+诅咒门控效果，但保留 Daemon/Morgul/Troika 的固有激怒、Trump 的固有传送和 Death 的
+固有黑暗。本阶段未改变 persisted DTO、Protocol、save 或 state-hash schema。
+
 - 实现装备激怒、黑暗半径和 RFB 随机传送时点；
 - 从权威 heavy mask 中为 Morgul/Death 抽取具体 curse effect，并与 Heavy 严重度一起物化；
 - 移除诅咒后停止 curse effect，但不移除 ego 固有的静态 drawback；
