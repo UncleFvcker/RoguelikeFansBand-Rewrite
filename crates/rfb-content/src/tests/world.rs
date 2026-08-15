@@ -13958,3 +13958,317 @@ fn p107d_crystal_castle_binds_glass_layers_guardians_and_diamond_edge() {
         .expect("Crystal Castle reward should exist");
     assert_eq!(reward.entries[0].item_kind_id, "demo.item.diamond-edge");
 }
+
+#[test]
+fn p107g_anambar_mayor_line_binds_substitutions_rewards_and_crystal_targets() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let mayor = content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.anambar-mayor-office")
+        .expect("Anambar mayor office should exist");
+    assert_eq!(mayor.category, TownFacilityCategory::QuestGiver);
+    assert_eq!(mayor.entrance_position, ContentPosition { x: 16, y: 9 });
+    assert_eq!(mayor.task_ids.len(), 7);
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let task = |id: &str| {
+        world
+            .tasks
+            .iter()
+            .find(|task| task.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    let orcs = task("demo.task.anambar-orc-camp");
+    let tunnels = task("demo.task.anambar-clear-tunnels");
+    let scary = task("demo.task.anambar-scary-rock-treasure");
+    let dino = task("demo.task.anambar-dinosaur-quest");
+    let crystal = task("demo.task.anambar-crystal-quest");
+    let apina = task("demo.task.anambar-apina-island");
+    let bovin = task("demo.task.anambar-lord-bovin-treachery");
+
+    assert!(
+        world
+            .tasks
+            .iter()
+            .filter(|task| task.id.starts_with("demo.task.anambar-"))
+            .all(|task| task.source_facility_id.as_deref()
+                == Some("demo.town-facility.anambar-mayor-office"))
+    );
+    assert_eq!(
+        tunnels.substitution.as_ref().map(|substitution| (
+            substitution.group_id.as_str(),
+            substitution.alternate_task_id.as_str()
+        )),
+        Some((
+            "demo.task-substitution.anambar-mayor-line",
+            "demo.task.anambar-scary-rock-treasure"
+        ))
+    );
+    assert_eq!(
+        apina
+            .substitution
+            .as_ref()
+            .map(|substitution| substitution.alternate_task_id.as_str()),
+        Some("demo.task.anambar-lord-bovin-treachery")
+    );
+    assert_eq!(
+        scary.prerequisite_task_id.as_deref(),
+        Some(orcs.id.as_str())
+    );
+    assert_eq!(
+        dino.prerequisite_task_id.as_deref(),
+        Some(tunnels.id.as_str())
+    );
+    assert_eq!(
+        crystal.prerequisite_task_id.as_deref(),
+        Some(dino.id.as_str())
+    );
+    assert_eq!(
+        bovin.prerequisite_task_id.as_deref(),
+        Some(crystal.id.as_str())
+    );
+    assert!(
+        world
+            .tasks
+            .iter()
+            .filter(|task| task.id.starts_with("demo.task.anambar-") && task.id != orcs.id)
+            .all(|task| task.unlock_when_prerequisite_failed)
+    );
+
+    fn reward(task: &TaskDefinition) -> &TaskRewardEntryDefinition {
+        &task
+            .reward
+            .as_ref()
+            .expect("mayor task should have a reward")
+            .entries[0]
+    }
+    assert_eq!(reward(orcs).item_kind_id, "demo.item.frost-ball-wand");
+    for task in [tunnels, scary] {
+        assert_eq!(reward(task).item_kind_id, "demo.item.amulet");
+        assert_eq!(reward(task).affix_ids, ["rfb-legacy.affix.sacred-pendant"]);
+    }
+    assert_eq!(
+        dino.reward
+            .as_ref()
+            .unwrap()
+            .entries
+            .iter()
+            .map(|entry| (entry.item_kind_id.as_str(), entry.quantity, entry.weight))
+            .collect::<Vec<_>>(),
+        [
+            ("demo.item.healing-potion", 2, 1),
+            ("demo.item.healing-potion", 3, 1),
+            ("demo.item.healing-potion", 4, 1),
+        ]
+    );
+    assert_eq!(reward(crystal).item_kind_id, "demo.item.amulet");
+    assert_eq!(
+        reward(crystal).affix_ids,
+        ["rfb-legacy.affix.amulet-am-quest"]
+    );
+    for task in [apina, bovin] {
+        assert_eq!(reward(task).item_kind_id, "demo.item.confusing-light-staff");
+    }
+
+    assert!(matches!(
+        crystal.location,
+        TaskLocationDefinition::DungeonDepth {
+            ref dungeon_id,
+            depth: 40
+        } if dungeon_id == "demo.dungeon.crystal-castle"
+    ));
+    assert_eq!(crystal.objectives.len(), 1);
+    let objective = &crystal.objectives[0];
+    assert_eq!(objective.kind, TaskObjectiveKind::KillActorKind);
+    assert_eq!(objective.required, 5);
+    assert_eq!(
+        objective.actor_kind_id.as_deref(),
+        Some("demo.actor.great-crystal-drake")
+    );
+    assert_eq!(crystal.target_placements.len(), 1);
+    assert_eq!(crystal.target_placements[0].spawn_count, 5);
+    assert_eq!(
+        crystal.target_placements[0].floor_id,
+        "demo.floor.crystal-castle-depth-40"
+    );
+}
+
+#[test]
+fn p107h_anambar_mayor_fixed_maps_preserve_source_geometry_and_one_shot_entries() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    for (id, depth, width, height, actor_count, covered_tiles, player_position) in [
+        (
+            "orc-camp",
+            20,
+            57,
+            23,
+            32,
+            663,
+            ContentPosition { x: 26, y: 1 },
+        ),
+        (
+            "clear-tunnels",
+            27,
+            72,
+            26,
+            22,
+            709,
+            ContentPosition { x: 3, y: 2 },
+        ),
+        (
+            "scary-rock-treasure",
+            27,
+            43,
+            25,
+            31,
+            943,
+            ContentPosition { x: 1, y: 23 },
+        ),
+        (
+            "dinosaur-quest",
+            33,
+            34,
+            24,
+            53,
+            618,
+            ContentPosition { x: 25, y: 1 },
+        ),
+        (
+            "apina-island",
+            55,
+            54,
+            27,
+            25,
+            1_300,
+            ContentPosition { x: 1, y: 12 },
+        ),
+        (
+            "lord-bovin-treachery",
+            50,
+            54,
+            30,
+            32,
+            544,
+            ContentPosition { x: 26, y: 27 },
+        ),
+    ] {
+        let floor_id = format!("demo.floor.anambar-{id}");
+        let floor = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == floor_id)
+            .unwrap_or_else(|| panic!("{floor_id} should exist"));
+        let task_id = format!("demo.task.anambar-{id}");
+        let available_entry_id = format!("demo.terrain.anambar-{id}-entry-available");
+        assert_eq!(floor.lifecycle, FloorLifecycle::OneShot);
+        assert_eq!(
+            (floor.depth, floor.width, floor.height),
+            (depth, width, height)
+        );
+        assert_eq!(floor.task_id.as_deref(), Some(task_id.as_str()));
+        assert_eq!(
+            floor.available_entry_terrain_id.as_deref(),
+            Some(available_entry_id.as_str())
+        );
+        assert_eq!(
+            floor.completed_entry_terrain_id.as_deref(),
+            Some("demo.terrain.anambar-task-entry-completed")
+        );
+        assert_eq!(
+            floor.failed_entry_terrain_id.as_deref(),
+            Some("demo.terrain.anambar-task-entry-failed")
+        );
+        assert_eq!(
+            floor.abandoned_entry_terrain_id.as_deref(),
+            Some("demo.terrain.anambar-task-entry-abandoned")
+        );
+        let inline = floor.inline_map.as_ref().expect("fixed map should exist");
+        assert_eq!(inline.player_position, player_position);
+        assert_eq!(inline.actor_spawns.len(), actor_count);
+        assert_eq!(
+            inline
+                .terrain_overrides
+                .iter()
+                .map(|override_| override_.positions.len())
+                .sum::<usize>(),
+            covered_tiles
+        );
+    }
+
+    let dinosaur = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.anambar-dinosaur-quest")
+        .and_then(|floor| floor.inline_map.as_ref())
+        .expect("Dinosaur Quest fixed map should exist");
+    let tree = artifact
+        .content
+        .terrain
+        .iter()
+        .find(|terrain| terrain.id == "demo.terrain.surface-tree")
+        .expect("surface tree should exist");
+    assert!(!tree.walkable);
+    assert!(tree.movement_modes.contains(&ActorMovementMode::Fly));
+    for (kind_id, position) in [
+        ("demo.actor.crow", ContentPosition { x: 11, y: 3 }),
+        ("demo.actor.pteranodon", ContentPosition { x: 13, y: 3 }),
+    ] {
+        assert!(
+            dinosaur
+                .actor_spawns
+                .iter()
+                .any(|spawn| { spawn.kind_id == kind_id && spawn.position == position })
+        );
+        assert!(dinosaur.terrain_overrides.iter().any(|override_| {
+            override_.terrain_id == "demo.terrain.surface-tree"
+                && override_.positions.contains(&position)
+        }));
+    }
+
+    let bovin = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.anambar-lord-bovin-treachery")
+        .and_then(|floor| floor.inline_map.as_ref())
+        .expect("Bovin fixed map should exist");
+    assert!(bovin.actor_spawns.iter().any(|spawn| {
+        spawn.kind_id == "demo.actor.lord-bovin-of-the-high-tower"
+            && spawn.position == ContentPosition { x: 26, y: 7 }
+    }));
+
+    let anambar = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.anambar")
+        .and_then(|floor| floor.inline_map.as_ref())
+        .expect("Anambar fixed map should exist");
+    assert!(anambar.terrain_overrides.iter().any(|override_| {
+        override_.terrain_id == "demo.terrain.mayor-office-entrance"
+            && override_.positions == [ContentPosition { x: 16, y: 9 }]
+    }));
+    for (id, x) in [
+        ("orc-camp", 1),
+        ("clear-tunnels", 3),
+        ("scary-rock-treasure", 5),
+        ("dinosaur-quest", 7),
+        ("apina-island", 9),
+        ("lord-bovin-treachery", 11),
+    ] {
+        assert!(anambar.terrain_overrides.iter().any(|override_| {
+            override_.terrain_id == format!("demo.terrain.anambar-{id}-entry-available")
+                && override_.positions == [ContentPosition { x, y: 9 }]
+        }));
+    }
+}

@@ -17,6 +17,27 @@ fn valid_procedural_count_range(range: ProceduralCountRangeDefinition) -> bool {
     (1..=8).contains(&range.minimum) && range.minimum <= range.maximum && range.maximum <= 8
 }
 
+fn actor_can_cross_terrain(actor: &ActorDefinition, terrain: &TerrainDefinition) -> bool {
+    if terrain.tags.iter().any(|tag| tag == "warding-glyph") {
+        return false;
+    }
+    if actor.movement.modes.contains(&ActorMovementMode::PassWall) && terrain.allows_wall_passage {
+        return true;
+    }
+    let flies = actor.movement.modes.contains(&ActorMovementMode::Fly);
+    if actor.movement.modes.contains(&ActorMovementMode::Aquatic) {
+        return terrain.tags.iter().any(|tag| tag == "water")
+            || (flies
+                && (terrain.walkable || terrain.movement_modes.contains(&ActorMovementMode::Fly)));
+    }
+    terrain.walkable
+        || actor
+            .movement
+            .modes
+            .iter()
+            .any(|mode| terrain.movement_modes.contains(mode))
+}
+
 fn validate_streamer_treasure(
     candidate: &ProceduralStreamerCandidateDefinition,
     terrain_ids: &BTreeSet<String>,
@@ -2031,10 +2052,6 @@ pub(super) fn validate_world(
                 )?;
                 if !procedural_actor_ids.insert(spawn.instance_id.clone())
                     || !occupied.insert(spawn.position)
-                    || !terrain_walkability
-                        .get(terrain_at(spawn.position))
-                        .copied()
-                        .unwrap_or(false)
                 {
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                 }
@@ -2044,6 +2061,18 @@ pub(super) fn validate_world(
                     ActorRole::Monster,
                     &procedural.id,
                 )?;
+                let actor = actors
+                    .iter()
+                    .find(|actor| actor.id == spawn.kind_id)
+                    .expect("validated monster role must retain its actor definition");
+                let spawn_terrain_id = terrain_at(spawn.position);
+                let spawn_terrain = terrain
+                    .iter()
+                    .find(|terrain| terrain.id == spawn_terrain_id)
+                    .expect("validated terrain reference must retain its definition");
+                if !actor_can_cross_terrain(actor, spawn_terrain) {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
             }
 
             inline_map

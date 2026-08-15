@@ -8,5 +8,6 @@
   "walkable": false,
   "blocksSight": true,
   "allowsWallPassage": true,
+  "movementModes": ["fly"],
   "tags": ["outdoor", "surface", "tree"]
 }

@@ -61,6 +61,26 @@ fn aquatic_and_wall_passing_domains_remain_distinct() {
 }
 
 #[test]
+fn p107i_flying_monsters_cross_surface_trees() {
+    let game = Game::new(107);
+    let tree = game
+        .content
+        .terrain("demo.terrain.surface-tree")
+        .expect("surface tree definition");
+    let crow = game
+        .content
+        .actor("demo.actor.crow")
+        .expect("flying crow definition");
+    let walker = game
+        .content
+        .actor("demo.actor.small-kobold")
+        .expect("ordinary walker definition");
+
+    assert!(actor_can_cross_terrain(crow, tree));
+    assert!(!actor_can_cross_terrain(walker, tree));
+}
+
+#[test]
 fn kill_body_attacks_a_weaker_actor_blocking_the_next_step() {
     let mut game = Game::new(42);
     game.entities.clear();
