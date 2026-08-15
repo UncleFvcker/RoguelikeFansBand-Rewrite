@@ -5,7 +5,7 @@
 
 更新时间：2026-08-15
 
-当前 main 实现基线：`435df76b0`（兽化人正式 New Game 开放）
+当前 main 实现基线：`1297cfa9f`（暗影妖精正式 New Game 开放）
 
 分支：`codex/class-next`
 
@@ -1092,3 +1092,22 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   升级成功/失败与等级恢复、再生边界、锁定突变、美德、save/state-hash/replay 和 New Game 请求。
   `verify-source`、Web typecheck、Rust check/format 和 diff 检查通过；按用户要求未运行全量测试，也未
   刷新 `contract-v303` fixture。现有 fixture 仍是 v104，主合并验收必须统一迁移到 v105。
+
+## main 当前批次：暗影妖精正式内容、飞行与妖精潜行
+
+- 权威来源为 RFB `master:src/races_k.c`、`master:src/xtra1.c` 和 `master:src/virtue.c`。种族方向继续
+  拥有既有 `rfb-legacy.race.shadow-fairy` 与 `rfb-legacy.skill-set.race-shadow-fairy`；本批没有新增
+  ability、program、item、material、affix、resource 或 actor ID。
+- 暗影妖精按原版闭合六维、生命 91%、基础 HP 13、经验 140%、4 格红外、商店 110%、八项技能、
+  飞行、光弱点、标准身体/出生和初始“魔法”，没有主动能力。
+- `RaceDefinition` 新增单一 `fairyStealth` 标志，并由当前有效种族统一解析。装备带激怒效果时不再唤醒
+  怪物，最终潜行按 `min(stl - 3, (stl + 2) / 2)` 计算且保持非负；临时形态可获得并在解除后失去。
+  当前项目没有可选的原作“性感”人格，未加入推测性人格字段；将来导入该人格时必须显式禁用此例外。
+- 没有新增 Protocol、State Hash 或 save 字段。`rfb-compatibility`、Web option 与
+  `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数从 40 增至 41。
+- 实现提交为 `1297cfa9f`（`Import Shadow-Fairy race`）。最终协调点为 pack `1.379.0` / content hash
+  `7e5f41baf3b454ab2ba12f9d2ac8e16749f693373e87690c827601c14c2fc1c0`、Protocol `1.227`、
+  State Hash Schema v107、save v4、active baseline `contract-v305`。
+- 新增聚焦测试共 6 项：内容 1、中文名 1、核心 3、Web 1，覆盖权威矩阵、飞行/光弱点、初始美德、
+  临时形态、激怒压制与潜行公式、save/state-hash 往返和 New Game 请求。schema、source lock、Rust
+  format 与 diff 检查通过；按用户要求未运行全量测试，也未刷新 fixture。

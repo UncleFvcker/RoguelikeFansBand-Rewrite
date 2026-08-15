@@ -1626,3 +1626,19 @@ git diff --stat
   本地化 35 项、协议 6 项、replay 8 项、save 2 项、Tauri 17 项及其余 contract/文档测试均通过。
   `contract-v305` 的 26 个 exact fixture 全部刷新并验证；Web 167 项、clippy、schema/bindings、source
   lock、Rust check/format、TypeScript 类型检查和生产 UI 构建均通过，零 waiver。
+
+## 89. main 当前交接（暗影妖精正式内容、飞行与妖精潜行）
+
+- 种族方向在 main 上完成 `rfb-legacy.race.shadow-fairy` 与
+  `rfb-legacy.skill-set.race-shadow-fairy` 的正式导入；实现提交为 `1297cfa9f`（`Import Shadow-Fairy
+  race`）。其他方向不得复制或重命名这两个 ID。
+- 暗影妖精闭合权威静态矩阵、飞行、光弱点、初始“魔法”和 New Game 入口，没有新增 ability、program、
+  item、material、affix、resource 或 actor ID。正式 New Game 种族数从 40 增至 41。
+- 共享模型只增加 `RaceDefinition.fairyStealth`：当前有效种族为暗影妖精且装备带激怒效果时，压制怪物
+  唤醒并按原作公式降低最终潜行；临时形态取得并可失去该行为。当前没有可选“性感”人格，因此没有
+  加入推测性人格标签；将来导入该人格时须显式禁用妖精潜行例外。
+- 没有新增 Protocol、State Hash 或 save 字段。最终协调点为 pack `1.379.0` / content hash
+  `7e5f41baf3b454ab2ba12f9d2ac8e16749f693373e87690c827601c14c2fc1c0`、Protocol `1.227`、
+  State Hash Schema v107、save v4、active baseline `contract-v305`，26 个 exact fixture 保持不变。
+- 只运行本批 6 项新增聚焦测试（内容 1、本地化 1、核心 3、Web 1），并通过 schema、source lock、
+  Rust format 与 diff 检查；按用户要求未运行全量测试或刷新 fixture。
