@@ -680,6 +680,17 @@ mod tests {
     }
 
     #[test]
+    fn beastman_content_uses_the_authoritative_chinese_name() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        assert_eq!(
+            localizer
+                .format_exact(Locale::ZhCn, "race-legacy-beastman-name", None)
+                .expect("Beastman content name should format"),
+            "兽化人",
+        );
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

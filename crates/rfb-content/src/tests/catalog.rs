@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.375.0");
+    assert_eq!(catalog.pack_version(), "1.376.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -2668,6 +2668,80 @@ fn formal_amberite_matches_the_authoritative_profile_and_powers() {
         })
     ));
     assert!(amberite.starting_items.is_empty());
+}
+
+#[test]
+fn formal_beastman_matches_the_authoritative_static_profile() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let beastman = catalog
+        .race("rfb-legacy.race.beastman")
+        .expect("formal Beastman race");
+
+    assert_eq!(
+        [
+            beastman.modifiers.strength,
+            beastman.modifiers.intelligence,
+            beastman.modifiers.wisdom,
+            beastman.modifiers.dexterity,
+            beastman.modifiers.constitution,
+            beastman.modifiers.charisma,
+        ],
+        [2, -2, -1, -1, 2, 1],
+    );
+    assert_eq!(
+        (
+            beastman.life_percent,
+            beastman.base_hp,
+            beastman.experience_percent,
+            beastman.infravision,
+            beastman.shop_adjust_percent,
+        ),
+        (102, 22, 150, 0, 130),
+    );
+    assert_eq!(
+        beastman.resistances.get(&ActorDamageType::Confusion),
+        Some(&ActorResistanceLevel::Resistant),
+    );
+    assert_eq!(
+        beastman.resistances.get(&ActorDamageType::Sound),
+        Some(&ActorResistanceLevel::Resistant),
+    );
+    assert_eq!(beastman.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(
+            beastman.tags.iter().any(|candidate| candidate == tag),
+            "{tag}",
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&beastman.skill_set_id)
+        .expect("formal Beastman skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [-5, -1, -1, -1, -1, 5, 12, 3],
+    );
+    assert!(beastman.abilities.is_empty());
+    assert!(beastman.starting_items.is_empty());
 }
 
 #[test]

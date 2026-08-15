@@ -230,6 +230,16 @@ pub(super) fn amberite_game(seed: u64) -> Game {
     .expect("formal Amberite should create")
 }
 
+pub(super) fn beastman_game(seed: u64) -> Game {
+    Game::new_with_build_race_and_name(
+        seed,
+        "demo.build.warrior",
+        "rfb-legacy.race.beastman",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal Beastman should create")
+}
+
 pub(crate) fn divine_caster_game(seed: u64) -> Game {
     static CONTENT: OnceLock<Arc<rfb_content::ContentCatalog>> = OnceLock::new();
     let content = CONTENT

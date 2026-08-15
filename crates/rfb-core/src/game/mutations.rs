@@ -12,6 +12,7 @@ const EASY_TIRING_MUTATION_ID: &str = "rfb.mutation.easy-tiring";
 const EASY_TIRING_II_MUTATION_ID: &str = "rfb.mutation.easy-tiring2";
 const IMPOTENCE_MUTATION_ID: &str = "rfb.mutation.impotence";
 const ASTRAL_GUIDE_MUTATION_ID: &str = "rfb.mutation.astral-guide";
+const BEASTMAN_RACE_ID: &str = "rfb-legacy.race.beastman";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) enum LuckBias {
@@ -1338,6 +1339,57 @@ impl Game {
         gained.then_some(mutation_id)
     }
 
+    fn gain_random_good_mutation_without_refresh(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+    ) -> Option<String> {
+        let candidates = self
+            .random_mutation_candidates(RandomMutationOperation::Gain)
+            .into_iter()
+            .filter(|(_, mutation_id, _)| {
+                self.content.mutation(mutation_id).is_some_and(|mutation| {
+                    matches!(
+                        mutation.rating,
+                        MutationRatingDefinition::Good | MutationRatingDefinition::Great
+                    )
+                })
+            })
+            .collect();
+        let mutation_id = self.select_mutation_from_candidates(candidates)?;
+        self.gain_mutation_without_refresh(&mutation_id, events)
+            .then_some(mutation_id)
+    }
+
+    pub(super) fn initialize_birth_race_mutations(&mut self) {
+        if !self
+            .selected_race_definition()
+            .is_some_and(|race| race.id == BEASTMAN_RACE_ID)
+        {
+            return;
+        }
+        let gained = self.gain_random_good_mutation_without_refresh(&mut Vec::new());
+        debug_assert!(gained.is_some(), "Beastman birth requires a good mutation");
+        self.reconcile_player_body_slots_for_current_form();
+    }
+
+    pub(super) fn apply_birth_race_level_mutation_rolls(
+        &mut self,
+        newly_reached_levels: usize,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        if !self
+            .selected_race_definition()
+            .is_some_and(|race| race.id == BEASTMAN_RACE_ID)
+        {
+            return;
+        }
+        for _ in 0..newly_reached_levels {
+            if self.rng.bounded(5) == 0 {
+                self.gain_random_mutation(events);
+            }
+        }
+    }
+
     pub(super) fn lose_random_mutation(&mut self, events: &mut Vec<DomainEvent>) -> Option<String> {
         let mutation_id = self.select_random_mutation(RandomMutationOperation::Lose)?;
         let lost = self.lose_mutation(&mutation_id, events);
@@ -1633,11 +1685,19 @@ impl Game {
             .active_mutation_ids
             .len()
             .saturating_sub(self.progress.locked_mutation_ids.len());
+        let (free, penalty) = if self
+            .selected_race_definition()
+            .is_some_and(|race| race.id == BEASTMAN_RACE_ID)
+        {
+            (10, 5)
+        } else {
+            (0, 10)
+        };
         100_u64
             .saturating_sub(
-                u64::try_from(unlocked)
+                u64::try_from(unlocked.saturating_sub(free))
                     .unwrap_or(u64::MAX)
-                    .saturating_mul(10),
+                    .saturating_mul(penalty),
             )
             .max(10)
     }

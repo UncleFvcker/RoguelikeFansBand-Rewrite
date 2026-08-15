@@ -86,7 +86,10 @@
   "shopAdjustPercent": 130,
   "skillSetId": "rfb-legacy.skill-set.race-beastman",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

@@ -1498,6 +1498,7 @@ impl Game {
             debug_item_curses_resisted: false,
             monster_division_remainders: BTreeMap::new(),
         };
+        game.initialize_birth_race_mutations();
         game.initialize_player_ability_state();
         game.initialize_starting_item_knowledge();
         let mut initial_entities = std::mem::take(&mut game.entities);

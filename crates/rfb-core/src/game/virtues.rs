@@ -86,6 +86,7 @@ pub(super) fn initial_virtues(
                 kinds.push(VirtueKindDto::Honour)
             }
             "rfb-legacy.race.amberite" => kinds.push(VirtueKindDto::Honour),
+            "rfb-legacy.race.beastman" => kinds.push(VirtueKindDto::Chance),
             "rfb-legacy.race.dwarf" => kinds.push(VirtueKindDto::Diligence),
             "rfb-legacy.race.klackon" => kinds.push(VirtueKindDto::Diligence),
             "rfb-legacy.race.dark-elf" => kinds.push(VirtueKindDto::Enchantment),

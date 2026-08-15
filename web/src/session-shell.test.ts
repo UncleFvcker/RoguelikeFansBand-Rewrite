@@ -74,6 +74,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.einheri",
     "rfb-legacy.race.kutar",
     "rfb-legacy.race.amberite",
+    "rfb-legacy.race.beastman",
   ]);
 });
 
@@ -291,6 +292,21 @@ test("New Game exposes and submits Amberite", () => {
   );
   const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(indexHtml, /<option value="rfb-legacy\.race\.amberite"/);
+});
+
+test("New Game exposes and submits Beastman", () => {
+  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.beastman");
+  assert.equal(
+    createNewSessionRequest(
+      "419",
+      "demo.build.warrior",
+      "rfb-legacy.race.beastman",
+      "Ghor",
+    ).raceId,
+    "rfb-legacy.race.beastman",
+  );
+  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(indexHtml, /<option value="rfb-legacy\.race\.beastman"/);
 });
 
 test("new character requests preserve the selected formal race", () => {

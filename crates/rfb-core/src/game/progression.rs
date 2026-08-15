@@ -729,6 +729,10 @@ impl Game {
             progress,
             levels,
         } = plan_experience_gain(&self.progress, amount, self.victory_level_cap_unlocked());
+        let newly_reached_levels = levels
+            .iter()
+            .filter(|level| **level > previous_max_level)
+            .count();
         self.progress = progress;
         if !levels.is_empty() {
             self.refresh_character_skills();
@@ -753,6 +757,7 @@ impl Game {
                 reached_new_maximum: level > previous_max_level,
             });
         }
+        self.apply_birth_race_level_mutation_rolls(newly_reached_levels, events);
         self.apply_race_level_mutation_rewards(events);
     }
 

@@ -3053,3 +3053,105 @@ fn attribute_resource_refresh_scales_the_prechange_current_value_once() {
     assert_eq!(restored.maximum, before.maximum);
     assert_eq!(restored.current, before.current);
 }
+
+#[test]
+fn formal_beastman_birth_level_mutations_and_regeneration_match_rfb() {
+    let game = super::support::beastman_game(419);
+    assert_eq!(game.progress.active_mutation_ids.len(), 1);
+    let birth_mutation_id = game
+        .progress
+        .active_mutation_ids
+        .iter()
+        .next()
+        .expect("Beastman should begin with one mutation");
+    assert!(matches!(
+        game.content
+            .mutation(birth_mutation_id)
+            .expect("birth mutation should remain defined")
+            .rating,
+        rfb_content::MutationRatingDefinition::Good | rfb_content::MutationRatingDefinition::Great
+    ));
+    assert!(
+        !game
+            .progress
+            .locked_mutation_ids
+            .contains(birth_mutation_id)
+    );
+    assert_eq!(
+        game.effective_player_resistances()
+            .level(DamageType::Confusion),
+        ResistanceLevel::Resistant,
+    );
+    assert_eq!(
+        game.effective_player_resistances().level(DamageType::Sound),
+        ResistanceLevel::Resistant,
+    );
+
+    let success_seed = (0..100)
+        .find(|seed| RfbRng::seeded(*seed).bounded(5) == 0)
+        .expect("a bounded seed should trigger the one-in-five roll");
+    let failure_seed = (0..100)
+        .find(|seed| RfbRng::seeded(*seed).bounded(5) != 0)
+        .expect("a bounded seed should miss the one-in-five roll");
+    let mut leveled = game.clone();
+    let mut replay = game.clone();
+    for candidate in [&mut leveled, &mut replay] {
+        candidate.rng = RfbRng::seeded(success_seed);
+        let mut events = Vec::new();
+        candidate.apply_unscaled_player_experience(experience_required_for_level(2), &mut events);
+        assert_eq!(candidate.progress.level, 2);
+        assert!(
+            events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::MutationGained { .. }))
+        );
+    }
+    assert_eq!(leveled.state_hash(), replay.state_hash());
+    let restored = Game::from_save_with_content(leveled.to_save(), leveled.content.clone())
+        .expect("Beastman mutation state should restore");
+    assert_eq!(restored.state_hash(), leveled.state_hash());
+
+    let mut missed = game.clone();
+    missed.rng = RfbRng::seeded(failure_seed);
+    let mut events = Vec::new();
+    missed.apply_unscaled_player_experience(experience_required_for_level(2), &mut events);
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MutationGained { .. }))
+    );
+
+    leveled.progress.level = 1;
+    leveled.progress.experience = 0;
+    leveled.rng = RfbRng::seeded(success_seed);
+    let mut events = Vec::new();
+    leveled.apply_unscaled_player_experience(experience_required_for_level(2), &mut events);
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MutationGained { .. }))
+    );
+
+    let mutation_ids = game
+        .content
+        .mutations()
+        .take(12)
+        .map(|mutation| mutation.id.clone())
+        .collect::<Vec<_>>();
+    let mut tolerant = game;
+    tolerant.progress.active_mutation_ids = mutation_ids[..10].iter().cloned().collect();
+    tolerant.progress.locked_mutation_ids.clear();
+    assert_eq!(tolerant.mutation_regeneration_percent(), 100);
+    tolerant
+        .progress
+        .active_mutation_ids
+        .insert(mutation_ids[10].clone());
+    assert_eq!(tolerant.mutation_regeneration_percent(), 95);
+    tolerant
+        .progress
+        .active_mutation_ids
+        .insert(mutation_ids[11].clone());
+    assert_eq!(tolerant.mutation_regeneration_percent(), 90);
+    tolerant.progress.locked_mutation_ids = mutation_ids[..2].iter().cloned().collect();
+    assert_eq!(tolerant.mutation_regeneration_percent(), 100);
+}

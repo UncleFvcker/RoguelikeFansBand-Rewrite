@@ -6509,7 +6509,9 @@ fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentIm
         *report.unmapped_race_flags.entry(flag.clone()).or_default() += 1;
     }
     for hook in &entry.hooks {
-        if entry.id == "einheri" && matches!(hook.as_str(), "gain_level" | "get_flags") {
+        if (entry.id == "einheri" && matches!(hook.as_str(), "gain_level" | "get_flags"))
+            || (entry.id == "beastman" && matches!(hook.as_str(), "birth" | "gain_level"))
+        {
             continue;
         }
         *report.race_hook_gaps.entry(hook.clone()).or_default() += 1;
@@ -6579,6 +6581,15 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
         ];
     }
     if entry.id == "amberite" {
+        return vec![
+            "humanoid",
+            "legacy-import",
+            "polymorph-candidate",
+            "rfb-compatibility",
+            "standard-body",
+        ];
+    }
+    if entry.id == "beastman" {
         return vec![
             "humanoid",
             "legacy-import",
@@ -21832,6 +21843,46 @@ static void _amberite_calc_bonuses(void)
         );
         assert_eq!(race["regenerationRateModifierPercent"], 100);
         assert_eq!(race["abilities"].as_array().map(Vec::len), Some(2));
+        assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
+    }
+
+    #[test]
+    fn beastman_resistances_and_formal_mutation_hooks_are_mapped() {
+        const SOURCE: &str = r#"
+static void _beastman_calc_bonuses(void)
+{
+    res_add(RES_CONF);
+    res_add(RES_SOUND);
+}
+"#;
+        let mut beastman = LegacyCharacterEntry {
+            id: "beastman".to_owned(),
+            calc_bonuses_fn: Some("_beastman_calc_bonuses".to_owned()),
+            hooks: vec![
+                "birth".to_owned(),
+                "calc_bonuses".to_owned(),
+                "gain_level".to_owned(),
+            ],
+            ..LegacyCharacterEntry::default()
+        };
+        beastman.resistances = parse_calc_bonuses_defenses(SOURCE, "_beastman_calc_bonuses").0;
+
+        assert_eq!(
+            legacy_race_tags(&beastman),
+            [
+                "humanoid",
+                "legacy-import",
+                "polymorph-candidate",
+                "rfb-compatibility",
+                "standard-body",
+            ],
+        );
+        let mut report = ContentImportReport::default();
+        let race = race_json(&beastman, &[], &mut report);
+        assert_eq!(race["resistances"]["confusion"], "resistant");
+        assert_eq!(race["resistances"]["sound"], "resistant");
+        assert!(!report.race_hook_gaps.contains_key("birth"));
+        assert!(!report.race_hook_gaps.contains_key("gain_level"));
         assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
     }
 
