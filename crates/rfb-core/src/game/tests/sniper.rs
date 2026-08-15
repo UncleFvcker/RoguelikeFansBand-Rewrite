@@ -449,18 +449,38 @@ fn resolve_ability(game: &mut Game, ability_id: &str, target: TargetSelection) -
 }
 
 fn fire_mode(game: &mut Game, mode: SniperShotModeDefinition) -> Vec<DomainEvent> {
-    let mut events = Vec::new();
-    game.resolve_player_projectile(
+    fire_projectile(
+        game,
         TargetSelection::Direction {
             direction: Direction::East,
         },
         ProjectileMode::Sniper(mode),
+    )
+}
+
+fn fire_projectile(
+    game: &mut Game,
+    target: TargetSelection,
+    mode: ProjectileMode,
+) -> Vec<DomainEvent> {
+    let mut events = Vec::new();
+    game.resolve_player_projectile(
+        target,
+        mode,
         &mut events,
         &mut BTreeSet::new(),
         &mut Vec::new(),
     )
     .expect("test sniper shot should resolve");
     events
+}
+
+fn set_test_bolt_affix(game: &mut Game, affix_id: &str) {
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.sniper-bolt")
+        .expect("test bolt stack")
+        .affix_ids = vec![affix_id.to_owned()];
 }
 
 #[test]
@@ -933,6 +953,337 @@ fn double_shot_uses_two_instances_and_degrades_to_one_when_ammunition_is_short()
             })
             .count(),
         1
+    );
+}
+
+#[test]
+fn ammunition_ego_returning_rolls_only_after_target_validation_and_before_split() {
+    let mut invalid = sniper_game(19);
+    prepare_shooting_line(&mut invalid);
+    invalid.progress.level = 50;
+    set_test_bolt_affix(&mut invalid, "rfb-legacy.affix.returning");
+    let draws_before = invalid.rng.draw_counter;
+    let serial_before = invalid.next_item_instance_serial;
+    let events = fire_projectile(
+        &mut invalid,
+        TargetSelection::SelfTarget,
+        ProjectileMode::Normal,
+    );
+    assert_eq!(invalid.rng.draw_counter, draws_before);
+    assert_eq!(invalid.next_item_instance_serial, serial_before);
+    assert_eq!(
+        invalid
+            .items
+            .iter()
+            .find(|item| item.id == "test.sniper-bolt")
+            .expect("unchanged bolt stack")
+            .quantity,
+        20
+    );
+    assert!(matches!(
+        events.as_slice(),
+        [DomainEvent::ProjectileTargetUnavailable]
+    ));
+
+    let mut returned = sniper_game(20);
+    prepare_shooting_line(&mut returned);
+    returned.progress.level = 50;
+    set_test_bolt_affix(&mut returned, "rfb-legacy.affix.returning");
+    returned.rng = RfbRng::seeded(0);
+    let serial_before = returned.next_item_instance_serial;
+    let events = fire_projectile(
+        &mut returned,
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        ProjectileMode::Normal,
+    );
+    assert_eq!(returned.next_item_instance_serial, serial_before);
+    assert_eq!(
+        returned
+            .items
+            .iter()
+            .find(|item| item.id == "test.sniper-bolt")
+            .expect("returned bolt stack")
+            .quantity,
+        20
+    );
+    assert!(!returned.items.iter().any(|item| {
+        item.kind_id == "demo.item.bolt" && matches!(item.location, ItemLocation::Ground(_))
+    }));
+    assert!(!events.iter().any(|event| matches!(
+        event,
+        DomainEvent::ProjectileAmmoRecovered { .. } | DomainEvent::ProjectileAmmoBroken { .. }
+    )));
+
+    let mut failed = sniper_game(21);
+    prepare_shooting_line(&mut failed);
+    failed.progress.level = 50;
+    set_test_bolt_affix(&mut failed, "rfb-legacy.affix.returning");
+    failed.rng = RfbRng::seeded(2);
+    let serial_before = failed.next_item_instance_serial;
+    let events = fire_projectile(
+        &mut failed,
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        ProjectileMode::Normal,
+    );
+    assert_eq!(failed.next_item_instance_serial, serial_before + 1);
+    assert_eq!(
+        failed
+            .items
+            .iter()
+            .find(|item| item.id == "test.sniper-bolt")
+            .expect("reduced bolt stack")
+            .quantity,
+        19
+    );
+    assert_eq!(
+        failed
+            .items
+            .iter()
+            .filter(|item| {
+                item.kind_id == "demo.item.bolt" && matches!(item.location, ItemLocation::Ground(_))
+            })
+            .count(),
+        1
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::ProjectileAmmoRecovered { ammo_kind_id }
+            if ammo_kind_id == "demo.item.bolt"
+    )));
+}
+
+#[test]
+fn ammunition_ego_exploding_uses_hit_damage_and_yields_to_sniper_mode() {
+    let mut exploding = sniper_game(22);
+    prepare_shooting_line(&mut exploding);
+    set_test_bolt_affix(&mut exploding, "rfb-legacy.affix.exploding");
+    for (id, x) in [
+        ("test.center", 12),
+        ("test.inside", 14),
+        ("test.outside", 16),
+    ] {
+        push_durable_sheep(&mut exploding, id, Position { x, y: 10 });
+    }
+    exploding.rng = RfbRng::seeded(0);
+    let events = fire_projectile(
+        &mut exploding,
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        ProjectileMode::Normal,
+    );
+    for id in ["test.center", "test.inside"] {
+        assert!(
+            exploding
+                .entities
+                .iter()
+                .find(|actor| actor.id == id)
+                .expect("explosion target")
+                .hp
+                < 1_000
+        );
+    }
+    assert_eq!(
+        exploding
+            .entities
+            .iter()
+            .find(|actor| actor.id == "test.outside")
+            .expect("outside target")
+            .hp,
+        1_000
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::ProjectileAmmoBroken { ammo_kind_id }
+            if ammo_kind_id == "demo.item.bolt"
+    )));
+
+    let mut missed = sniper_game(23);
+    prepare_shooting_line(&mut missed);
+    set_test_bolt_affix(&mut missed, "rfb-legacy.affix.exploding");
+    push_durable_sheep(&mut missed, "test.missed.center", Position { x: 12, y: 10 });
+    push_durable_sheep(&mut missed, "test.missed.inside", Position { x: 14, y: 10 });
+    missed.rng = RfbRng::seeded(3);
+    let events = fire_projectile(
+        &mut missed,
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        ProjectileMode::Normal,
+    );
+    assert!(missed.entities.iter().all(|actor| actor.hp == 1_000));
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::ProjectileHit { .. }))
+    );
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::ProjectileAmmoBroken { .. }))
+    );
+
+    let mut sniper_priority = sniper_game(24);
+    prepare_shooting_line(&mut sniper_priority);
+    set_test_bolt_affix(&mut sniper_priority, "rfb-legacy.affix.exploding");
+    push_durable_sheep(
+        &mut sniper_priority,
+        "test.priority.center",
+        Position { x: 12, y: 10 },
+    );
+    push_durable_sheep(
+        &mut sniper_priority,
+        "test.priority.outside-mode-radius",
+        Position { x: 14, y: 10 },
+    );
+    sniper_priority.rng = RfbRng::seeded(0);
+    fire_mode(&mut sniper_priority, SniperShotModeDefinition::Exploding);
+    assert!(
+        sniper_priority
+            .entities
+            .iter()
+            .find(|actor| actor.id == "test.priority.center")
+            .expect("direct target")
+            .hp
+            < 1_000
+    );
+    assert_eq!(
+        sniper_priority
+            .entities
+            .iter()
+            .find(|actor| actor.id == "test.priority.outside-mode-radius")
+            .expect("target outside zero-focus Sniper radius")
+            .hp,
+        1_000
+    );
+}
+
+#[test]
+fn ammunition_ego_endurance_orders_breakage_and_all_destruction_protection() {
+    let mut endurance = sniper_game(25);
+    prepare_shooting_line(&mut endurance);
+    set_test_bolt_affix(&mut endurance, "rfb-legacy.affix.endurance");
+    push_durable_sheep(
+        &mut endurance,
+        "test.endurance.target",
+        Position { x: 12, y: 10 },
+    );
+    endurance.rng = RfbRng::seeded(0);
+    let events = fire_projectile(
+        &mut endurance,
+        TargetSelection::Direction {
+            direction: Direction::East,
+        },
+        ProjectileMode::Normal,
+    );
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::ProjectileAmmoRecovered { ammo_kind_id }
+            if ammo_kind_id == "demo.item.bolt"
+    )));
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::ProjectileAmmoBroken { .. }))
+    );
+
+    let mut forced = sniper_game(26);
+    prepare_shooting_line(&mut forced);
+    set_test_bolt_affix(&mut forced, "rfb-legacy.affix.endurance");
+    push_durable_sheep(
+        &mut forced,
+        "test.endurance.forced-target",
+        Position { x: 12, y: 10 },
+    );
+    forced.rng = RfbRng::seeded(0);
+    let events = fire_mode(&mut forced, SniperShotModeDefinition::Exploding);
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::ProjectileAmmoBroken { .. }))
+    );
+
+    let mut protected = sniper_game(27);
+    protected.items.clear();
+    give_inventory_item(&mut protected, "test.endurance", "demo.item.bolt");
+    protected
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.endurance")
+        .expect("Endurance bolt")
+        .affix_ids
+        .push("rfb-legacy.affix.endurance".to_owned());
+    let draws_before = protected.rng.draw_counter;
+    protected.damage_player_inventory("test.acid", DamageType::Acid, false, 1, &mut Vec::new());
+    assert_eq!(protected.rng.draw_counter, draws_before);
+    assert!(
+        protected
+            .items
+            .iter()
+            .any(|item| item.id == "test.endurance")
+    );
+
+    let position = Position { x: 12, y: 10 };
+    protected
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.endurance")
+        .expect("Endurance bolt")
+        .location = ItemLocation::Ground(position);
+    protected.resolve_ground_item_projectile_effects(
+        "test.mana",
+        &[position],
+        DamageType::Mana,
+        false,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    );
+    assert!(
+        protected
+            .items
+            .iter()
+            .any(|item| item.id == "test.endurance")
+    );
+
+    give_inventory_item(&mut protected, "test.ordinary", "demo.item.bolt");
+    protected
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.ordinary")
+        .expect("ordinary bolt")
+        .location = ItemLocation::Ground(position);
+    protected.push_generated_actor(
+        "test.item-destroyer".to_owned(),
+        "demo.actor.air-elemental",
+        position,
+    );
+    let actor_index = protected
+        .entities
+        .iter()
+        .position(|actor| actor.id == "test.item-destroyer")
+        .expect("item-destroying monster");
+    protected.destroy_items_under_monster(
+        actor_index,
+        position,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+    );
+    assert!(
+        protected
+            .items
+            .iter()
+            .any(|item| item.id == "test.endurance")
+    );
+    assert!(
+        !protected
+            .items
+            .iter()
+            .any(|item| item.id == "test.ordinary")
     );
 }
 

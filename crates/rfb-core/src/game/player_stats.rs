@@ -203,6 +203,8 @@ pub(in crate::game) struct ResolvedProjectileProfile {
     pub(in crate::game) damage_type: DamageType,
     pub(in crate::game) ammunition_slays: BTreeMap<SlayTarget, SlayLevel>,
     pub(in crate::game) ammunition_brands: BTreeSet<WeaponBrand>,
+    pub(in crate::game) ammunition_behavior: Option<AmmunitionBehaviorDefinition>,
+    pub(in crate::game) ammunition_endurance: bool,
     pub(in crate::game) ammo_item_id: Option<String>,
     pub(in crate::game) ammo_kind_id: String,
     pub(in crate::game) ammunition_weight_tenths_pound: u16,
@@ -1307,6 +1309,8 @@ impl Game {
                     let ammo_profile = ammo_definition.ammunition_profile.as_ref()?;
                     let mut ammunition_slays = ammo_definition.slays.clone();
                     let mut ammunition_brands = ammo_definition.brands.clone();
+                    let mut ammunition_behavior = None;
+                    let mut ammunition_endurance = false;
                     if let Some(ammunition) = ammunition {
                         for affix_id in &ammunition.affix_ids {
                             if let Some(affix) = self.content.affix(affix_id) {
@@ -1314,6 +1318,12 @@ impl Game {
                                     affix.slays.iter().map(|(target, level)| (*target, *level)),
                                 );
                                 ammunition_brands.extend(affix.brands.iter().copied());
+                                ammunition_behavior =
+                                    ammunition_behavior.or(affix.ammunition_behavior);
+                                ammunition_endurance |= affix
+                                    .rfb_ego
+                                    .as_ref()
+                                    .is_some_and(|ego| ego.source_index == 184);
                             }
                         }
                         ammunition_slays.extend(
@@ -1444,6 +1454,8 @@ impl Game {
                         damage_type: DamageType::from(ammo_profile.damage_type),
                         ammunition_slays,
                         ammunition_brands,
+                        ammunition_behavior,
+                        ammunition_endurance,
                         ammo_item_id: ammunition.map(|item| item.id.clone()),
                         ammo_kind_id: ammo_definition.id.clone(),
                         ammunition_weight_tenths_pound: ammo_definition.weight_tenths_pound,

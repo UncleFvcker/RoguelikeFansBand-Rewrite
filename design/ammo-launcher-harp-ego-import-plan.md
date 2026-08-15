@@ -188,6 +188,12 @@ HARP 使用独立选择池，基础 `NO_ENCHANT`、launcher 槽和无 `projectil
 
 ### E4.6：闭合 Returning、Exploding 与 Endurance 消费者
 
+状态：已完成。射击 profile 现在携带 typed ammunition behavior 与 source 184 身份；Returning 在目标
+与路径验证后、拆栈前逐发判定，成功时完整执行射击但不创建弹药实例。Exploding 在普通命中伤害掷出后
+复用既有物理爆炸事务，以相同 `tdam` 施加半径 3 投射；Sniper Exploding 分支先行。破损顺序固定为
+强制模式、Endurance、Exploding、普通概率；Endurance 的元素、魔法、地面投影和怪物毁坏继续复用已有
+静态属性消费者。三个固定 seed 测试覆盖合法性、命中/miss、优先级、RNG、数量与实例 ID 时点。
+
 - Returning：合法射击才掷返回概率；成功路径照常进行命中判定与结算，但不拆栈、不分配新 ID、
   不生成地面弹药；失败路径只在既有时点拆出一发，取消和非法目标不消耗 RNG；
 - Exploding：命中后以同一个 `tdam` 执行半径 3 物理投射，并走必碎；miss 不爆炸，Sniper 专属爆炸
