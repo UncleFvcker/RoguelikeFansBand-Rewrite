@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.372.0");
+    assert_eq!(catalog.pack_version(), "1.373.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -2334,6 +2334,109 @@ fn formal_boit_completes_the_authoritative_profile_throwing_bonus_and_vomit_powe
         );
     }
     assert!(boit.starting_items.is_empty());
+}
+
+#[test]
+fn formal_einheri_matches_the_authoritative_profile_healing_penalty_and_talent_pool() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let einheri = catalog
+        .race("rfb-legacy.race.einheri")
+        .expect("formal Einheri race");
+
+    assert_eq!(
+        [
+            einheri.modifiers.strength,
+            einheri.modifiers.intelligence,
+            einheri.modifiers.wisdom,
+            einheri.modifiers.dexterity,
+            einheri.modifiers.constitution,
+            einheri.modifiers.charisma,
+        ],
+        [2, 0, 0, 2, 1, 1],
+    );
+    assert_eq!(
+        (
+            einheri.life_percent,
+            einheri.base_hp,
+            einheri.experience_percent,
+            einheri.infravision,
+            einheri.shop_adjust_percent,
+            einheri.hold_life_minimum_level,
+            einheri.regeneration_rate_modifier_percent,
+            einheri.healing_received_percent,
+        ),
+        (113, 44, 160, 3, 100, Some(1), 100, 50),
+    );
+    assert_eq!(einheri.body_slots.len(), 15);
+    for tag in [
+        "nonliving",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+        "undead",
+    ] {
+        assert!(
+            einheri.tags.iter().any(|candidate| candidate == tag),
+            "{tag}",
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&einheri.skill_set_id)
+        .expect("formal Einheri skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [5, 3, 8, -1, 7, 10, 22, 8],
+    );
+
+    let [activation] = einheri.abilities.as_slice() else {
+        panic!("Einheri should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.berserk",
+            1,
+            TechniqueAttribute::Strength,
+            10,
+            50,
+        ),
+    );
+    let talent = einheri
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "einheri-talent")
+        .expect("Einheri talent");
+    let human_talent = catalog
+        .race("demo.race.rfb-human")
+        .expect("formal Human race")
+        .level_mutation_rewards
+        .iter()
+        .find(|reward| reward.id == "human-talent")
+        .expect("Human talent");
+    assert_eq!(talent.minimum_level, 30);
+    assert_eq!(talent.selection, human_talent.selection);
+    assert!(einheri.starting_items.is_empty());
 }
 
 #[test]

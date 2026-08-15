@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::support::{
-    archon_game, boit_game, golem_game, skeleton_game, sprite_game, wood_elf_game, zombie_game,
+    archon_game, boit_game, einheri_game, golem_game, skeleton_game, sprite_game, wood_elf_game,
+    zombie_game,
 };
 use super::*;
 
@@ -419,6 +420,19 @@ fn formal_boit_receives_the_authoritative_sacrifice_virtue() {
             VirtueKindDto::Valour,
             VirtueKindDto::Honour,
             VirtueKindDto::Sacrifice,
+        ]
+    );
+}
+
+#[test]
+fn formal_einheri_receives_the_authoritative_unlife_virtue() {
+    let einheri = einheri_game(409);
+    assert_eq!(
+        &virtue_kinds(&einheri)[..3],
+        [
+            VirtueKindDto::Valour,
+            VirtueKindDto::Honour,
+            VirtueKindDto::Unlife,
         ]
     );
 }

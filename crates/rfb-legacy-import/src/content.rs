@@ -872,8 +872,10 @@ pub struct LegacyCharacterEntry {
     pub see_invisible: bool,
     pub see_invisible_minimum_level: Option<u16>,
     pub telepathy_minimum_level: Option<u16>,
+    pub hold_life_minimum_level: Option<u16>,
     pub attribute_sustains: Vec<String>,
     pub regeneration_rate_modifier_percent: i32,
+    pub healing_received_percent: u16,
     pub speed: i32,
     pub speed_per_ten_levels: i32,
     pub spell_capacity_bonus: i32,
@@ -907,8 +909,10 @@ impl Default for LegacyCharacterEntry {
             see_invisible: false,
             see_invisible_minimum_level: None,
             telepathy_minimum_level: None,
+            hold_life_minimum_level: None,
             attribute_sustains: Vec::new(),
             regeneration_rate_modifier_percent: 0,
+            healing_received_percent: 100,
             speed: 0,
             speed_per_ten_levels: 0,
             spell_capacity_bonus: 0,
@@ -5633,6 +5637,10 @@ pub fn parse_character_block(name: &str, body: &str) -> LegacyCharacterEntry {
             }
         }
     }
+    if entry.id == "einheri" {
+        entry.hold_life_minimum_level = Some(1);
+        entry.healing_received_percent = 50;
+    }
     entry
 }
 
@@ -6487,12 +6495,20 @@ fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentIm
                         | "RACE_NIGHT_START"
                         | "RACE_EATS_DEVICES"
                 ))
+            || (entry.id == "einheri"
+                && matches!(
+                    flag.as_str(),
+                    "RACE_IS_NONLIVING" | "RACE_IS_UNDEAD" | "RACE_DEMI_TALENT"
+                ))
         {
             continue;
         }
         *report.unmapped_race_flags.entry(flag.clone()).or_default() += 1;
     }
     for hook in &entry.hooks {
+        if entry.id == "einheri" && matches!(hook.as_str(), "gain_level" | "get_flags") {
+            continue;
+        }
         *report.race_hook_gaps.entry(hook.clone()).or_default() += 1;
     }
 }
@@ -6587,6 +6603,16 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             "standard-body",
         ];
     }
+    if entry.id == "einheri" {
+        return vec![
+            "legacy-import",
+            "nonliving",
+            "polymorph-candidate",
+            "rfb-compatibility",
+            "standard-body",
+            "undead",
+        ];
+    }
     if matches!(entry.id.as_str(), "skeleton" | "zombie") {
         return vec![
             "device-eater",
@@ -6637,6 +6663,29 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
     }
     vec!["legacy-import"]
 }
+
+const DEMIGOD_TALENT_MUTATION_IDS: [&str; 20] = [
+    "rfb.mutation.fast-learner",
+    "rfb.mutation.weapon-skills",
+    "rfb.mutation.subtle-casting",
+    "rfb.mutation.peerless-sniper",
+    "rfb.mutation.unyielding",
+    "rfb.mutation.untouchable",
+    "rfb.mutation.loremaster",
+    "rfb.mutation.arcane-mastery",
+    "rfb.mutation.evasion",
+    "rfb.mutation.potion-chugger",
+    "rfb.mutation.one-with-magic",
+    "rfb.mutation.peerless-tracker",
+    "rfb.mutation.infernal-deal",
+    "rfb.mutation.fell-sorcery",
+    "rfb.mutation.sacred-vitality",
+    "rfb.mutation.cult-of-personality",
+    "rfb.mutation.fleet-of-foot",
+    "rfb.mutation.demonic-grasp",
+    "rfb.mutation.weird-mind",
+    "rfb.mutation.fantastic-frenzy",
+];
 
 fn race_json(
     entry: &LegacyCharacterEntry,
@@ -6708,12 +6757,18 @@ fn race_json(
     if let Some(minimum_level) = entry.telepathy_minimum_level {
         value["telepathyMinimumLevel"] = serde_json::json!(minimum_level);
     }
+    if let Some(minimum_level) = entry.hold_life_minimum_level {
+        value["holdLifeMinimumLevel"] = serde_json::json!(minimum_level);
+    }
     if !entry.attribute_sustains.is_empty() {
         value["attributeSustains"] = serde_json::json!(entry.attribute_sustains);
     }
     if entry.regeneration_rate_modifier_percent != 0 {
         value["regenerationRateModifierPercent"] =
             serde_json::json!(entry.regeneration_rate_modifier_percent);
+    }
+    if entry.healing_received_percent != 100 {
+        value["healingReceivedPercent"] = serde_json::json!(entry.healing_received_percent);
     }
     if entry.speed_per_ten_levels != 0 {
         value["levelStatScalings"] = serde_json::json!([{
@@ -6739,6 +6794,16 @@ fn race_json(
                 }))
                 .collect::<Vec<_>>()
         );
+    }
+    if entry.id == "einheri" {
+        value["levelMutationRewards"] = serde_json::json!([{
+            "id": "einheri-talent",
+            "minimumLevel": 30,
+            "selection": {
+                "type": "choice",
+                "mutationIds": DEMIGOD_TALENT_MUTATION_IDS,
+            },
+        }]);
     }
     character_gap_accounting(entry, report);
     value
@@ -20936,7 +21001,7 @@ S:ANY:Slot
         assert!(entries.iter().any(|entry| {
             entry["skillId"] == "rfb-legacy.skill.perception" && entry["base"] == 10
         }));
-        assert_eq!(outcome.skill_files.len(), 8);
+        assert_eq!(outcome.skill_files.len(), 9);
     }
 
     #[test]
@@ -21735,6 +21800,79 @@ static power_info _boit_get_powers[] =
         let race = race_json(&boit, &[], &mut report);
         assert_eq!(race["modifiers"]["speed"], 2);
         assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
+    }
+
+    #[test]
+    fn einheri_passives_power_talent_and_formal_tags_are_mapped() {
+        const SOURCE: &str = r#"
+static void _einheri_calc_bonuses(void)
+{
+    p_ptr->hold_life++;
+    p_ptr->regen += 100;
+}
+static power_info _einheri_get_powers[] =
+{
+    { A_STR, {1, 10, 50, berserk_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+"#;
+        let mut einheri = LegacyCharacterEntry {
+            id: "einheri".to_owned(),
+            flags: vec![
+                "RACE_IS_NONLIVING".to_owned(),
+                "RACE_IS_UNDEAD".to_owned(),
+                "RACE_DEMI_TALENT".to_owned(),
+            ],
+            hooks: vec![
+                "calc_bonuses".to_owned(),
+                "get_flags".to_owned(),
+                "get_powers".to_owned(),
+                "gain_level".to_owned(),
+            ],
+            calc_bonuses_fn: Some("_einheri_calc_bonuses".to_owned()),
+            get_powers_fn: Some("_einheri_get_powers".to_owned()),
+            ..parse_character_block("einheri", "")
+        };
+        let (_, _, _, _, _, _, _, _, _, regeneration, _, _) =
+            parse_calc_bonuses_defenses(SOURCE, "_einheri_calc_bonuses");
+        einheri.regeneration_rate_modifier_percent = regeneration;
+        parse_race_powers(SOURCE, &mut einheri);
+
+        assert_eq!(
+            legacy_race_tags(&einheri),
+            [
+                "legacy-import",
+                "nonliving",
+                "polymorph-candidate",
+                "rfb-compatibility",
+                "standard-body",
+                "undead",
+            ],
+        );
+        assert_eq!(
+            einheri.abilities,
+            [LegacyInnatePower {
+                governing_attribute: "strength".to_owned(),
+                minimum_level: 1,
+                cost: 10,
+                base_failure_percent: 50,
+                ability_id: "rfb.ability.race.berserk".to_owned(),
+            }],
+        );
+        let mut report = ContentImportReport::default();
+        let race = race_json(&einheri, &[], &mut report);
+        assert_eq!(race["holdLifeMinimumLevel"], 1);
+        assert_eq!(race["regenerationRateModifierPercent"], 100);
+        assert_eq!(race["healingReceivedPercent"], 50);
+        assert_eq!(race["levelMutationRewards"][0]["minimumLevel"], 30);
+        assert_eq!(
+            race["levelMutationRewards"][0]["selection"]["mutationIds"]
+                .as_array()
+                .map(Vec::len),
+            Some(20),
+        );
+        assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
+        assert!(report.unmapped_race_flags.is_empty());
     }
 
     #[test]

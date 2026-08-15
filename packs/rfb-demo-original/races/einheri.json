@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.berserk",
+      "baseFailurePercent": 50,
+      "cost": 10,
+      "governingAttribute": "strength",
+      "minimumLevel": 1
+    }
+  ],
   "baseHp": 44,
   "bodySlots": [
     {
@@ -66,9 +75,43 @@
   "descriptionKey": "race-legacy-einheri-description",
   "experiencePercent": 160,
   "formatVersion": 1,
+  "healingReceivedPercent": 50,
+  "holdLifeMinimumLevel": 1,
   "id": "rfb-legacy.race.einheri",
+  "infravision": 3,
   "kinCategory": "kin-glyph-112",
   "legacyIndex": 64,
+  "levelMutationRewards": [
+    {
+      "id": "einheri-talent",
+      "minimumLevel": 30,
+      "selection": {
+        "mutationIds": [
+          "rfb.mutation.fast-learner",
+          "rfb.mutation.weapon-skills",
+          "rfb.mutation.subtle-casting",
+          "rfb.mutation.peerless-sniper",
+          "rfb.mutation.unyielding",
+          "rfb.mutation.untouchable",
+          "rfb.mutation.loremaster",
+          "rfb.mutation.arcane-mastery",
+          "rfb.mutation.evasion",
+          "rfb.mutation.potion-chugger",
+          "rfb.mutation.one-with-magic",
+          "rfb.mutation.peerless-tracker",
+          "rfb.mutation.infernal-deal",
+          "rfb.mutation.fell-sorcery",
+          "rfb.mutation.sacred-vitality",
+          "rfb.mutation.cult-of-personality",
+          "rfb.mutation.fleet-of-foot",
+          "rfb.mutation.demonic-grasp",
+          "rfb.mutation.weird-mind",
+          "rfb.mutation.fantastic-frenzy"
+        ],
+        "type": "choice"
+      }
+    }
+  ],
   "lifePercent": 113,
   "modifiers": {
     "charisma": 1,
@@ -77,10 +120,15 @@
     "strength": 2
   },
   "nameKey": "race-legacy-einheri-name",
+  "regenerationRateModifierPercent": 100,
   "shopAdjustPercent": 100,
   "skillSetId": "rfb-legacy.skill-set.race-einheri",
   "tags": [
     "legacy-import",
-    "polymorph-candidate"
+    "nonliving",
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body",
+    "undead"
   ]
 }

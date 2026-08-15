@@ -390,7 +390,7 @@ impl Game {
         });
         self.apply_player_experience(0, events);
         self.refresh_after_attribute_change(previous_max_hp, &previous_resource_maxima);
-        self.player.hp = self.effective_player_max_hp();
+        self.apply_player_healing(5_000);
     }
 
     pub(super) fn apply_nonlethal_ty_curse(&mut self, level: u16, source_id: &str) {

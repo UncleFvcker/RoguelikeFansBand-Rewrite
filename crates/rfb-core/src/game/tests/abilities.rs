@@ -3160,6 +3160,97 @@ fn formal_boit_vomits_poison_while_afraid_or_confused_and_pays_empty_stomach_ene
 }
 
 #[test]
+fn formal_einheri_halves_shared_healing_but_keeps_full_natural_regeneration() {
+    const BERSERK_ABILITY_ID: &str = "rfb.ability.race.berserk";
+    let mut game = einheri_game(406);
+    clear_monsters(&mut game);
+    assert_eq!(game.world_tick, 0);
+    assert_eq!(game.player_infravision_range(), 3);
+    assert_eq!(game.player_hold_life_sources(), 1);
+    assert_eq!(game.player_regeneration_rate_percent(), 200);
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == "demo.item.ration-of-food" && item.location == ItemLocation::Inventory
+    }));
+    assert!(game.items.iter().any(|item| {
+        item.kind_id == "demo.item.wooden-torch" && item.location == ItemLocation::Inventory
+    }));
+
+    let maximum = game.effective_player_max_hp();
+    game.player.hp = maximum - 30;
+    let healing = game.apply_player_healing(21);
+    assert_eq!(healing.requested, 10);
+    assert_eq!(healing.applied, 10);
+    assert_eq!(game.player.hp, maximum - 20);
+
+    let regenerated_from = game.player.hp;
+    for _ in 0..20 {
+        dispatch_next(&mut game, GameCommand::Wait);
+        if game.player.hp > regenerated_from {
+            break;
+        }
+    }
+    assert!(game.player.hp > regenerated_from);
+    assert_eq!(game.player_regeneration_rate_percent(), 200);
+
+    let projected = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == BERSERK_ABILITY_ID)
+        .expect("Einheri Berserk should be projected");
+    assert_eq!(projected.source, AbilitySourceDto::Race);
+    assert_eq!(projected.minimum_level, 1);
+    assert_eq!(projected.base_resource_cost, 10);
+    assert!(projected.failure_percent < 100);
+    assert_eq!(
+        projected.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Strength),
+    );
+
+    game.debug_set_ability_casts_succeed(true);
+    let mut replay = game.clone();
+    for cast in [&mut game, &mut replay] {
+        dispatch_next(
+            cast,
+            GameCommand::CastAbility {
+                ability_id: BERSERK_ABILITY_ID.to_owned(),
+                target: TargetSelection::SelfTarget,
+            },
+        );
+        assert!(cast.player_has_status_kind(STATUS_BERSERK));
+    }
+    assert_eq!(game.state_hash(), replay.state_hash());
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Einheri result should restore");
+    assert_eq!(restored.state_hash(), game.state_hash());
+
+    let mut temporary = Game::new_with_build_race_and_name(
+        407,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("formal Human should create");
+    temporary.player.hp = temporary.effective_player_max_hp() - 30;
+    assert_eq!(temporary.apply_player_healing(21).requested, 21);
+    temporary.player.hp = temporary.effective_player_max_hp() - 30;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.einheri-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.einheri".to_owned());
+    temporary.player.statuses.push(form);
+    assert_eq!(temporary.apply_player_healing(21).requested, 10);
+    assert_eq!(temporary.player_regeneration_rate_percent(), 200);
+    assert_eq!(temporary.player_hold_life_sources(), 1);
+    temporary
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert_eq!(temporary.player_regeneration_rate_percent(), 100);
+    assert_eq!(temporary.player_hold_life_sources(), 0);
+}
+
+#[test]
 fn snotling_mushroom_boost_follows_the_effective_race() {
     let use_mushroom = |game: &mut Game, id: &str| {
         give_inventory_item(game, id, "demo.item.cure-poison-mushroom");

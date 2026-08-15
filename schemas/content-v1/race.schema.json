@@ -786,6 +786,14 @@
       "minimum": 0,
       "type": "integer"
     },
+    "healingReceivedPercent": {
+      "default": 100,
+      "description": "Percentage of shared player-healing effects retained by this effective race.",
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "holdLifeMinimumLevel": {
       "description": "Character level at which this effective race gains intrinsic hold life.",
       "format": "uint16",

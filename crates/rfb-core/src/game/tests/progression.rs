@@ -2788,6 +2788,53 @@ fn barbarian_fear_power_and_level_thirty_talent_are_authoritative() {
 }
 
 #[test]
+fn formal_einheri_chooses_the_shared_demigod_talent_at_level_thirty() {
+    let mut game = einheri_game(408);
+    let level_29_experience = experience_required_for_level(29);
+    game.apply_unscaled_player_experience(level_29_experience, &mut Vec::new());
+    assert!(
+        game.snapshot()
+            .player
+            .pending_race_mutation_choice
+            .is_none()
+    );
+
+    game.apply_unscaled_player_experience(
+        experience_required_for_level(30) - level_29_experience,
+        &mut Vec::new(),
+    );
+    let pending = game
+        .snapshot()
+        .player
+        .pending_race_mutation_choice
+        .expect("Einheri should choose a level 30 talent");
+    assert_eq!(pending.reward_id, "einheri-talent");
+    assert_eq!(pending.candidates.len(), 20);
+    dispatch_next(
+        &mut game,
+        GameCommand::ChooseRaceMutation {
+            reward_id: pending.reward_id,
+            mutation_id: "rfb.mutation.sacred-vitality".to_owned(),
+        },
+    );
+    assert!(
+        game.progress
+            .locked_mutation_ids
+            .contains("rfb.mutation.sacred-vitality")
+    );
+    game.player.hp = game.effective_player_max_hp() - 30;
+    assert_eq!(
+        game.apply_player_healing(21).requested,
+        12,
+        "Sacred Vitality applies before Einheri's halving",
+    );
+
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Einheri talent should restore");
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
 fn selected_formal_race_overrides_the_build_default_and_round_trips() {
     let content = race_reward_catalog();
     let game = Game::from_content_internal(

@@ -1653,6 +1653,10 @@ impl Game {
         let amount = amount
             .max(0)
             .saturating_add(amount.max(0).saturating_mul(i32::from(bonus_percent)) / 100);
+        let healing_received_percent = self
+            .character_definitions()
+            .map_or(100, |(_, race, _, _)| race.healing_received_percent);
+        let amount = amount.saturating_mul(i32::from(healing_received_percent)) / 100;
         let maximum = self.effective_player_max_hp();
         apply_healing(&mut self.player.hp, maximum, HealingRequest::amount(amount))
     }

@@ -633,6 +633,17 @@ mod tests {
     }
 
     #[test]
+    fn einheri_content_uses_the_authoritative_chinese_name() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        assert_eq!(
+            localizer
+                .format_exact(Locale::ZhCn, "race-legacy-einheri-name", None)
+                .expect("Einheri content should format"),
+            "英灵战士",
+        );
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

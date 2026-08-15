@@ -151,6 +151,9 @@ pub struct RaceDefinition {
     /// Additive percentage adjustment to the natural HP regeneration rate.
     #[serde(default)]
     pub regeneration_rate_modifier_percent: i32,
+    /// Percentage of shared player-healing effects retained by this effective race.
+    #[serde(default = "default_percent")]
+    pub healing_received_percent: u16,
     /// Divisor applied to nutrition gained from ordinary food effects.
     #[serde(default = "default_food_nutrition_divisor")]
     pub food_nutrition_divisor: u16,
