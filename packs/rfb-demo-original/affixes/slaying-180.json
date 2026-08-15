@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.slaying-180",
+  "nameKey": "affix-legacy-slaying-180-name",
+  "descriptionKey": "affix-legacy-slaying-180-description",
+  "generationLevel": 10,
+  "rfbEgo": { "sourceIndex": 180, "rarity": 2, "types": ["ammo"] },
+  "tags": ["ammo", "legacy-import"]
+}

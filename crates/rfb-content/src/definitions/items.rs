@@ -122,6 +122,16 @@ pub enum RfbEgoTypeDefinition {
     Special,
 }
 
+/// Intrinsic behavior carried by an ammunition ego. Resolution happens when
+/// the ammunition is fired; this field only identifies the behavior.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AmmunitionBehaviorDefinition {
+    Returning,
+    Exploding,
+}
+
 /// Identity and allocation inputs copied from one authoritative `e_info`
 /// record. Affixes without this metadata never enter the RFB ego pool.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -262,6 +272,9 @@ pub struct AffixDefinition {
     /// Protects ammunition assigned to this equipped quiver from inventory damage.
     #[serde(default)]
     pub protects_quiver_ammunition: bool,
+    /// Shot-time behavior contributed by an ammunition ego.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ammunition_behavior: Option<AmmunitionBehaviorDefinition>,
     /// Optional activation contributed by this affix. The generated activation
     /// and charges are materialized on the item instance like an intrinsic
     /// device activation.

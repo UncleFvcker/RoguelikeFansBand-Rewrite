@@ -170,6 +170,13 @@ HARP 使用独立选择池，基础 `NO_ENCHANT`、launcher 槽和无 `projectil
 
 ### E4.5：实现 6 条弹药物化与完整造箭候选池
 
+状态：已完成。180/181 复用共享 Slaying/Craft helper，182 的 Blessed 写入实例性质，183/185 使用
+`AmmunitionBehaviorDefinition`，六条统一在动态分支后执行骰面 super-charge。Archer 已删除私有二候选
+近似，改走共享 source-order selector/materializer；固定 seed 精确锁定一次选择、动态物化、强化及 RNG
+顺序，并验证拆堆和读档复制已有结果。为使 Archer 当前即可使用完整池，六条 AMMO affix 已先进入正式
+内容，source 181 临时定义也已替换；自然生成 policy 与其余十条 ranged affix 仍留给 E4.7。内容包推进至
+`1.380.0`，只增加 content schema 的 typed behavior，未推进 Protocol、save 或 State Hash schema。
+
 - 180 复用 `roll_rfb_slaying(..., true)`，181 复用 `roll_rfb_craft(..., true)`；
 - 182/184 写入既有静态 slay、brand、Blessed 和毁坏免疫，183/185 写入 typed ammunition behavior；
 - 所有 AMMO ego 物化后执行共同骰面 super-charge：触发率 `1/(5+200/max(level,1))`，连续增 `dd`，
@@ -192,10 +199,10 @@ HARP 使用独立选择池，基础 `NO_ENCHANT`、launcher 槽和无 `projectil
 
 ### E4.7：导入内容并开放自然生成
 
-- importer 生成 16 条正式 affix 和 16 组权威中英文消息；英文重名的 Ammo Slaying 必须用 source
-  index/type 消歧，不能覆盖 WEAPON source 1；
-- 保留 `rfb-legacy.affix.endurance` 稳定 ID 并补齐 source 184 元数据；用正式 source 181 替换
-  `demo.affix.ammo-elemental`，确认无引用后删除临时定义；
+- importer 生成并核对 16 条正式 affix 和 16 组权威中英文消息；E4.5 已落地的六条 AMMO 定义必须与
+  importer 输出一致，英文重名的 Ammo Slaying 继续使用 source index/type 消歧，不能覆盖 WEAPON source 1；
+- E4.5 已保留 `rfb-legacy.affix.endurance` 稳定 ID、补齐 source 184 元数据，并用正式 source 181
+  删除了 `demo.affix.ammo-elemental`；本批只需验证 importer 可重复生成相同结果；
 - 把 `base-items` 的窄 RFB ego policy 从 `WEAPON/DIGGER` 扩到本批完成的 `BOW/AMMO/HARP`，其余
   护甲仍走旧 policy，直到 E5；
 - 自然生成的 incompatible launcher ego 必须按权威重试；Harp 不进入 BOW 池，BOW 也不进入 HARP 池；
@@ -228,7 +235,7 @@ E4 只有同时满足以下条件才完成：
 - [ ] audit 恰好得到 8 BOW、6 AMMO、2 HARP，16 条全有权威中文名和非零 rarity；
 - [ ] 18 个基础物品有唯一 `rfbBaseKind`，普通 Harp 及其非 Bard pval 可自然生成并稳定读档；
 - [ ] 三个发射器子类型限制严格重试，所有倍率、伤害附魔、射程和额外射击使用最终实例结果；
-- [ ] 六种弹药共享一个 selector/materializer，Archer 不再维护二候选近似池；
+- [x] 六种弹药共享一个 selector/materializer，Archer 不再维护二候选近似池；
 - [ ] 整堆弹药只物化一次，拆分、发射和读档不重掷；
 - [ ] Returning、Exploding、Endurance 都有真实消费者和顺序测试，不存在仅显示名称的 no-op；
 - [ ] 16 条无 activation 的事实被锁定，没有虚构 effect 或无关 DTO；

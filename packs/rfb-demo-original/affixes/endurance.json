@@ -5,6 +5,7 @@
   "nameKey": "affix-legacy-endurance-name",
   "descriptionKey": "affix-legacy-endurance-description",
   "generationLevel": 40,
+  "rfbEgo": { "sourceIndex": 184, "rarity": 4, "types": ["ammo"] },
   "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
   "resistsProjectionDestruction": true,
   "resistsMonsterDestruction": true,

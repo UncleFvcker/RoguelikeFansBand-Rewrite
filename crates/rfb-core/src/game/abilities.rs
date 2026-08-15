@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::ego::{
-    materialize_rfb_weapon_ego_with_rng, merge_affix_properties, roll_rfb_craft, roll_rfb_slaying,
+    materialize_rfb_weapon_ego_with_rng, merge_affix_properties,
+    roll_and_materialize_rfb_ego_from_affixes_with_rng,
 };
 use super::item_use::VisibleBanishmentOutcome;
 use super::terrain::TerrainChangeSource;
@@ -6373,42 +6374,6 @@ impl Game {
         }
     }
 
-    fn roll_rfb_ammunition_ego(&mut self, level: u16) -> RolledAffixState {
-        const SLAYING_AFFIX_ID: &str = "rfb-legacy.affix.slaying";
-        const ELEMENTAL_AFFIX_ID: &str = "demo.affix.ammo-elemental";
-
-        let rarity_weight = |rarity: u32, minimum_level: u16| {
-            let effective = if level < minimum_level {
-                rarity.saturating_add(rarity.saturating_mul(u32::from(minimum_level - level)))
-            } else {
-                rarity
-            };
-            (10_000 / effective).max(1)
-        };
-        let slaying_weight = rarity_weight(2, 10);
-        let elemental_weight = rarity_weight(3, 20);
-        if self
-            .rng
-            .bounded(u64::from(slaying_weight + elemental_weight))
-            < u64::from(slaying_weight)
-        {
-            let mut properties = AffixPropertyBundleDefinition::default();
-            roll_rfb_slaying(&mut self.rng, &mut properties, level, true);
-            RolledAffixState {
-                affix_id: SLAYING_AFFIX_ID.to_owned(),
-                properties,
-                ..RolledAffixState::default()
-            }
-        } else {
-            let mut state = RolledAffixState {
-                affix_id: ELEMENTAL_AFFIX_ID.to_owned(),
-                ..RolledAffixState::default()
-            };
-            roll_rfb_craft(&mut self.rng, &mut state, level, true);
-            state
-        }
-    }
-
     pub(super) fn apply_rfb_ammunition_magic(&mut self, item: &mut ItemInstance) {
         let level = self.progress.level.min(127);
         let power = self.roll_rfb_ammunition_magic_power();
@@ -6460,33 +6425,19 @@ impl Game {
             return;
         }
 
-        let rolled_affix = self.roll_rfb_ammunition_ego(level);
-        item.affix_ids = vec![rolled_affix.affix_id.clone()];
-        item.rolled_affixes = vec![rolled_affix];
-        let (base_dice, sides) = self
+        let definition = self
             .content
             .item(&item.kind_id)
-            .and_then(|definition| definition.ammunition_profile.as_ref())
-            .map(|profile| (profile.damage_dice, profile.damage_sides))
-            .expect("created ammunition kind must remain ammunition");
-        let mut dice = base_dice;
-        if self
-            .rng
-            .bounded(u64::from(5_u16.saturating_add(200 / level.max(1))))
-            == 0
-        {
-            loop {
-                dice = dice.saturating_add(1);
-                let odds = dice.saturating_mul(sides).saturating_div(2).max(1);
-                if self.rng.bounded(u64::from(odds)) != 0 {
-                    break;
-                }
-            }
-            dice = dice.min(9);
-        }
-        if dice != base_dice {
-            item.damage_dice_override = Some(dice);
-        }
+            .expect("created ammunition kind must remain defined");
+        let materialization = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            &mut self.rng,
+            definition,
+            self.content.affix_definitions(),
+            level,
+            None,
+        )
+        .expect("created ammunition must have a compatible RFB ego");
+        materialization.apply_to(item);
     }
 
     fn resolve_player_create_item_effect(

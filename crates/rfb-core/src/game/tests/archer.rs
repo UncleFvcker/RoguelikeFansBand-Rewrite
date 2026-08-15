@@ -529,11 +529,11 @@ fn original_neutral_apply_magic_covers_quality_curses_egos_and_damage_dice() {
             saw_heavy_curse = true;
             assert!(item.enchantments.to_hit < 0 && item.enchantments.to_damage < 0);
         }
-        if item.affix_ids == ["rfb-legacy.affix.slaying"] {
+        if item.affix_ids == ["rfb-legacy.affix.slaying-180"] {
             saw_slaying = true;
             assert!(!item.rolled_affixes[0].properties.slays.is_empty());
         }
-        if item.affix_ids == ["demo.affix.ammo-elemental"] {
+        if item.affix_ids == ["rfb-legacy.affix.elemental"] {
             saw_elemental = true;
             assert!(!item.rolled_affixes[0].properties.brands.is_empty());
         }
@@ -577,6 +577,66 @@ fn original_neutral_apply_magic_covers_quality_curses_egos_and_damage_dice() {
 }
 
 #[test]
+fn archer_ammunition_uses_one_shared_dynamic_roll_and_persists_the_stack() {
+    let mut game = archer_game(45);
+    game.progress.level = 50;
+    let template_index = game
+        .items
+        .iter()
+        .position(|item| item.kind_id == "demo.item.arrow")
+        .expect("birth arrows should exist");
+    let mut stack = game.items.remove(template_index);
+    stack.quantity = 20;
+    game.rng = RfbRng::seeded(65);
+    game.apply_rfb_ammunition_magic(&mut stack);
+
+    assert_eq!(game.rng.draw_counter, 31);
+    assert_eq!(stack.quality, ItemQualityDto::Exceptional);
+    assert_eq!(stack.enchantments.to_hit, 7);
+    assert_eq!(stack.enchantments.to_damage, 7);
+    assert_eq!(stack.affix_ids, ["rfb-legacy.affix.slaying-180"]);
+    assert_eq!(stack.rolled_affixes.len(), 1);
+    assert_eq!(
+        stack.rolled_affixes[0]
+            .properties
+            .slays
+            .get(&SlayTarget::Living),
+        Some(&SlayLevel::Slay)
+    );
+    assert_eq!(stack.damage_dice_override, Some(4));
+
+    let stack_id = stack.id.clone();
+    let expected_rolled = stack.rolled_affixes.clone();
+    game.items.push(stack);
+    let draws_before_split = game.rng.draw_counter;
+    game.drop_inventory_quantity(&stack_id, 7)
+        .expect("the ammunition stack should split")
+        .expect("the split should produce a drop outcome");
+    assert_eq!(game.rng.draw_counter, draws_before_split);
+    let parts = game
+        .items
+        .iter()
+        .filter(|item| item.kind_id == "demo.item.arrow" && !item.affix_ids.is_empty())
+        .collect::<Vec<_>>();
+    assert_eq!(parts.len(), 2);
+    assert_eq!(parts.iter().map(|item| item.quantity).sum::<u32>(), 20);
+    assert!(parts.iter().all(|item| {
+        item.rolled_affixes == expected_rolled && item.damage_dice_override == Some(4)
+    }));
+
+    let saved = crate::save::inventory_to_save(&parts.into_iter().cloned().collect::<Vec<_>>());
+    let restored = saved
+        .into_iter()
+        .map(|item| crate::save::inventory_item_from_dto(item, &game.content))
+        .collect::<Result<Vec<_>, _>>()
+        .expect("both split stacks should round-trip");
+    assert!(restored.iter().all(|item| {
+        item.rolled_affixes == expected_rolled && item.damage_dice_override == Some(4)
+    }));
+    assert_eq!(game.rng.draw_counter, draws_before_split);
+}
+
+#[test]
 fn player_made_ammunition_dice_and_rolled_brands_feed_the_projectile_profile() {
     let mut game = archer_game(43);
     let arrows = game
@@ -590,9 +650,9 @@ fn player_made_ammunition_dice_and_rolled_brands_feed_the_projectile_profile() {
     arrows.discount_percent = 99;
     arrows.damage_dice_override = Some(9);
     arrows.quality = ItemQualityDto::Exceptional;
-    arrows.affix_ids = vec!["demo.affix.ammo-elemental".to_owned()];
+    arrows.affix_ids = vec!["rfb-legacy.affix.elemental".to_owned()];
     arrows.rolled_affixes = vec![RolledAffixState {
-        affix_id: "demo.affix.ammo-elemental".to_owned(),
+        affix_id: "rfb-legacy.affix.elemental".to_owned(),
         properties,
         ..RolledAffixState::default()
     }];

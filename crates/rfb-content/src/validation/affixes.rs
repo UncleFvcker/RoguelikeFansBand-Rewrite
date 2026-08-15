@@ -86,6 +86,7 @@ pub(super) fn validate_affixes(
             || affix.resists_projection_destruction
             || affix.resists_monster_destruction
             || affix.protects_quiver_ammunition
+            || affix.ammunition_behavior.is_some()
             || affix.device_generation.is_some()
             || affix.rfb_ego.is_some()
             || roll_substance;

@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.elemental",
+  "nameKey": "affix-legacy-elemental-name",
+  "descriptionKey": "affix-legacy-elemental-description",
+  "generationLevel": 20,
+  "rfbEgo": { "sourceIndex": 181, "rarity": 3, "types": ["ammo"] },
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "tags": ["ammo", "legacy-import"]
+}

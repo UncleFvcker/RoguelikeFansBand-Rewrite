@@ -31,6 +31,7 @@ pub(super) struct EgoMaterialization {
     pub(super) intrinsic_properties: Option<AffixPropertyBundleDefinition>,
     pub(super) enchantment_delta: ItemEnchantmentsDto,
     pub(super) melee_damage_dice: Option<MeleeDamageDiceDto>,
+    pub(super) ammunition_damage_dice: Option<u16>,
     pub(super) weapon_traits: BTreeSet<WeaponTraitDto>,
     pub(super) curse_effects: BTreeSet<ItemCurseEffectDto>,
     pub(super) curse: Option<ItemCurseSeverityDto>,
@@ -85,6 +86,7 @@ impl EgoMaterialization {
             intrinsic_properties,
             enchantment_delta,
             melee_damage_dice,
+            ammunition_damage_dice: None,
             weapon_traits,
             curse_effects,
             curse,
@@ -115,6 +117,7 @@ impl EgoMaterialization {
             item.intrinsic_properties = properties;
         }
         item.enchantments = enchantments;
+        item.damage_dice_override = self.ammunition_damage_dice;
         if let Some(curse) = self.curse {
             item.curse = Some(item.curse.map_or(curse, |current| current.max(curse)));
         }
@@ -247,6 +250,9 @@ fn merge_stat_modifiers(total: &mut StatModifiers, addition: &StatModifiers) {
         .saturating_add(addition.spell_power_bonus);
 }
 
+const TV_SHOT: u16 = 16;
+const TV_ARROW: u16 = 17;
+const TV_BOLT: u16 = 18;
 const TV_DIGGING: u16 = 20;
 const TV_HAFTED: u16 = 21;
 const TV_POLEARM: u16 = 22;
@@ -335,6 +341,65 @@ pub(crate) fn materialize_rfb_harp_ego(
         None,
         None,
     ))
+}
+
+/// Materializes one selected RFB ammunition ego and the common post-ego dice
+/// super-charge. The returned state is committed atomically by `apply_to`.
+pub(crate) fn materialize_rfb_ammunition_ego_with_rng(
+    rng: &mut RfbRng,
+    item: &ItemDefinition,
+    affix: &AffixDefinition,
+    generation_level: u16,
+) -> Option<EgoMaterialization> {
+    let source_index = affix.rfb_ego.as_ref()?.source_index;
+    let base_kind = item.rfb_base_kind?;
+    if !matches!(base_kind.tval, TV_SHOT | TV_ARROW | TV_BOLT) {
+        return None;
+    }
+    let ammunition = item.ammunition_profile.as_ref()?;
+    let mut state = RolledAffixState {
+        affix_id: affix.id.clone(),
+        ..RolledAffixState::default()
+    };
+    match source_index {
+        180 => roll_rfb_slaying(rng, &mut state.properties, generation_level, true),
+        181 => roll_rfb_craft(rng, &mut state, generation_level, true),
+        182 => {
+            state.weapon_traits.insert(WeaponTraitDto::Blessed);
+        }
+        183..=185 => {}
+        _ => return None,
+    }
+
+    let rolled_affixes = state
+        .has_instance_state()
+        .then_some(state)
+        .into_iter()
+        .collect();
+    let mut materialized = EgoMaterialization::new(
+        vec![affix.id.clone()],
+        rolled_affixes,
+        None,
+        None,
+        None,
+        None,
+    );
+    let mut dice = ammunition.damage_dice;
+    if one_in(rng, 5_u16.saturating_add(200 / generation_level.max(1))) {
+        loop {
+            dice = dice.saturating_add(1);
+            let odds = dice
+                .saturating_mul(ammunition.damage_sides)
+                .saturating_div(2)
+                .max(1);
+            if !one_in(rng, odds) {
+                break;
+            }
+        }
+        dice = dice.min(9);
+    }
+    materialized.ammunition_damage_dice = (dice != ammunition.damage_dice).then_some(dice);
+    Some(materialized)
 }
 
 #[derive(Debug, Default)]
@@ -1086,7 +1151,9 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
     intrinsic_properties: Option<&AffixPropertyBundleDefinition>,
 ) -> Option<EgoMaterialization> {
     let base_kind = item.rfb_base_kind?;
-    let allowed_type = if base_kind.tval == TV_DIGGING {
+    let allowed_type = if matches!(base_kind.tval, TV_SHOT | TV_ARROW | TV_BOLT) {
+        RfbEgoTypeDefinition::Ammo
+    } else if base_kind.tval == TV_DIGGING {
         RfbEgoTypeDefinition::Digger
     } else if matches!(base_kind.tval, TV_HAFTED | TV_POLEARM | TV_SWORD) {
         RfbEgoTypeDefinition::Weapon
@@ -1123,6 +1190,9 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
             .find(|affix| affix.id == affix_id)
             .expect("selected ego affix remains available");
         let materialized = match allowed_type {
+            RfbEgoTypeDefinition::Ammo => {
+                materialize_rfb_ammunition_ego_with_rng(rng, item, affix, generation_level)
+            }
             RfbEgoTypeDefinition::Bow => {
                 materialize_rfb_launcher_ego_with_rng(rng, item, affix, generation_level)
             }
@@ -1160,6 +1230,7 @@ fn rfb_ego_can_apply_to_base(
         164 => tval == TV_BOW && sval == SV_LONG_BOW,
         165 => tval == TV_BOW && sval == SV_HEAVY_XBOW,
         166 => tval == TV_BOW && sval == SV_SLING,
+        180..=185 => matches!(tval, TV_SHOT | TV_ARROW | TV_BOLT),
         195 | 196 => tval == TV_BOW && sval == SV_HARP,
         _ => false,
     }
@@ -2149,6 +2220,7 @@ mod tests {
             resists_projection_destruction: false,
             resists_monster_destruction: false,
             protects_quiver_ammunition: false,
+            ammunition_behavior: None,
             device_generation: None,
             preserves_ordinary_quality: false,
             roll_groups: Vec::new(),
@@ -3390,6 +3462,84 @@ mod tests {
             rolled.properties.status_immunities,
             ["rfb.status.fear", "rfb.status.blindness"]
         );
+    }
+
+    #[test]
+    fn ammunition_egos_share_dynamic_helpers_typed_behaviors_and_supercharge() {
+        use rfb_content::AmmunitionBehaviorDefinition;
+
+        let content = Game::new(1).content;
+        let definition = content
+            .item("demo.item.arrow")
+            .expect("test ammunition exists")
+            .clone();
+        for (source_index, affix_id) in [
+            (180, "rfb-legacy.affix.slaying-180"),
+            (181, "rfb-legacy.affix.elemental"),
+            (182, "rfb-legacy.affix.holy-might"),
+            (183, "rfb-legacy.affix.returning"),
+            (184, "rfb-legacy.affix.endurance"),
+            (185, "rfb-legacy.affix.exploding"),
+        ] {
+            let affix = content
+                .affix(affix_id)
+                .expect("formal ammunition ego exists");
+            assert_eq!(
+                affix.rfb_ego.as_ref().map(|ego| ego.source_index),
+                Some(source_index)
+            );
+            let mut rng = RfbRng::seeded(0xE4_5000 + u64::from(source_index));
+            let materialized =
+                materialize_rfb_ammunition_ego_with_rng(&mut rng, &definition, affix, 50)
+                    .expect("all six ammunition egos should materialize");
+            assert_eq!(materialized.affix_ids, [affix.id.clone()]);
+            match source_index {
+                180 => assert!(!materialized.rolled_affixes[0].properties.slays.is_empty()),
+                181 => {
+                    assert!(!materialized.rolled_affixes[0].properties.brands.is_empty());
+                    assert_eq!(affix.elemental_destruction_immunities.len(), 4);
+                }
+                182 => {
+                    assert!(
+                        materialized
+                            .weapon_traits
+                            .contains(&WeaponTraitDto::Blessed)
+                    );
+                    assert_eq!(affix.slays.len(), 3);
+                    assert!(affix.brands.contains(&WeaponBrand::Fire));
+                    assert_eq!(affix.elemental_destruction_immunities.len(), 4);
+                }
+                183 => assert_eq!(
+                    affix.ammunition_behavior,
+                    Some(AmmunitionBehaviorDefinition::Returning)
+                ),
+                184 => {
+                    assert!(affix.ammunition_behavior.is_none());
+                    assert_eq!(affix.elemental_destruction_immunities.len(), 4);
+                    assert!(affix.resists_projection_destruction);
+                    assert!(affix.resists_monster_destruction);
+                }
+                185 => assert_eq!(
+                    affix.ammunition_behavior,
+                    Some(AmmunitionBehaviorDefinition::Exploding)
+                ),
+                _ => unreachable!(),
+            }
+        }
+
+        let endurance = content
+            .affix("rfb-legacy.affix.endurance")
+            .expect("formal Endurance ego exists");
+        let mut rng = RfbRng::seeded(18);
+        let materialized =
+            materialize_rfb_ammunition_ego_with_rng(&mut rng, &definition, endurance, 50)
+                .expect("Endurance ammunition should materialize");
+        assert_eq!(rng.draw_counter, 3);
+        assert_eq!(materialized.ammunition_damage_dice, Some(5));
+        let mut stack = launcher_instance("demo.item.arrow");
+        stack.quantity = 20;
+        materialized.apply_to(&mut stack);
+        assert_eq!(stack.damage_dice_override, Some(5));
     }
 
     #[test]

@@ -4006,6 +4006,14 @@
       ],
       "type": "object"
     },
+    "AmmunitionBehaviorDefinition": {
+      "description": "Intrinsic behavior carried by an ammunition ego. Resolution happens when\nthe ammunition is fired; this field only identifies the behavior.",
+      "enum": [
+        "returning",
+        "exploding"
+      ],
+      "type": "string"
+    },
     "DraconianStrikeModeDefinition": {
       "enum": [
         "fire",
@@ -6969,6 +6977,17 @@
   "properties": {
     "$schema": {
       "type": "string"
+    },
+    "ammunitionBehavior": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AmmunitionBehaviorDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Shot-time behavior contributed by an ammunition ego."
     },
     "brands": {
       "default": [],
