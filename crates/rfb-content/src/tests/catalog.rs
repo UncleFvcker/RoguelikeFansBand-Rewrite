@@ -2817,6 +2817,112 @@ fn formal_shadow_fairy_matches_the_authoritative_profile_and_fairy_stealth() {
 }
 
 #[test]
+fn formal_ogre_matches_the_authoritative_profile_sustain_and_explosive_rune() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let ogre = catalog
+        .race("rfb-legacy.race.ogre")
+        .expect("formal Ogre race");
+
+    assert_eq!(
+        [
+            ogre.modifiers.strength,
+            ogre.modifiers.intelligence,
+            ogre.modifiers.wisdom,
+            ogre.modifiers.dexterity,
+            ogre.modifiers.constitution,
+            ogre.modifiers.charisma,
+        ],
+        [3, 0, -1, -1, 3, 0],
+    );
+    assert_eq!(
+        (
+            ogre.life_percent,
+            ogre.base_hp,
+            ogre.experience_percent,
+            ogre.infravision,
+            ogre.shop_adjust_percent,
+        ),
+        (106, 23, 140, 0, 125),
+    );
+    assert!(
+        ogre.attribute_sustains
+            .contains(&ItemAttributeDefinition::Intelligence)
+    );
+    assert_eq!(ogre.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(ogre.tags.iter().any(|candidate| candidate == tag), "{tag}");
+    }
+
+    let skills = catalog
+        .skill_set(&ogre.skill_set_id)
+        .expect("formal Ogre skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [-3, -3, -3, -2, -1, 5, 20, -5],
+    );
+
+    let [power] = ogre.abilities.as_slice() else {
+        panic!("Ogre should have one racial power");
+    };
+    assert_eq!(
+        (
+            power.ability_id.as_str(),
+            power.minimum_level,
+            power.governing_attribute,
+            power.cost,
+            power.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.explosive-rune",
+            25,
+            TechniqueAttribute::Intelligence,
+            35,
+            70,
+        ),
+    );
+    let ability = catalog
+        .ability(&power.ability_id)
+        .expect("Ogre Explosive Rune ability");
+    assert!(matches!(
+        &ability.effect,
+        AbilityEffectDefinition::CreateCurrentTerrain {
+            source_terrain_ids,
+            target_terrain_id,
+        } if source_terrain_ids == &["demo.terrain.floor"]
+            && target_terrain_id == "demo.terrain.explosive-rune"
+    ));
+    let terrain = catalog
+        .terrain("demo.terrain.explosive-rune")
+        .expect("Explosive Rune terrain");
+    assert!(terrain.walkable && !terrain.blocks_sight);
+    assert_eq!(
+        terrain.monster_destroy_to_terrain_id.as_deref(),
+        Some("demo.terrain.floor")
+    );
+    assert!(terrain.tags.iter().any(|tag| tag == "explosive-rune"));
+    assert!(ogre.starting_items.is_empty());
+}
+
+#[test]
 fn formal_dark_elf_matches_rfb_profile_passives_and_magic_missile() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");

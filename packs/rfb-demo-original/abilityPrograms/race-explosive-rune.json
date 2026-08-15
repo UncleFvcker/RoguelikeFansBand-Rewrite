@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability-program.race.explosive-rune",
+  "input": "self",
+  "steps": [
+    {
+      "sourceTerrainIds": [
+        "demo.terrain.floor"
+      ],
+      "targetTerrainId": "demo.terrain.explosive-rune",
+      "type": "create-current-terrain"
+    }
+  ]
+}

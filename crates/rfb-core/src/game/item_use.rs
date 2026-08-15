@@ -1056,6 +1056,19 @@ impl Game {
         source_terrain_ids: &[String],
         target_terrain_id: &str,
     ) -> Option<(Position, String)> {
+        if self
+            .content
+            .terrain(target_terrain_id)
+            .is_some_and(|terrain| terrain.tags.iter().any(|tag| tag == "explosive-rune"))
+            && self
+                .terrain
+                .iter()
+                .filter(|terrain_id| terrain_id.as_str() == target_terrain_id)
+                .count()
+                > 10
+        {
+            return None;
+        }
         let position = self.player.position;
         let index = self.index(position)?;
         (source_terrain_ids.contains(&self.terrain[index])

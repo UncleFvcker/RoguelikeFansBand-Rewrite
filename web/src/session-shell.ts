@@ -65,6 +65,7 @@ export const PLAYTEST_RACE_IDS = [
   "rfb-legacy.race.amberite",
   "rfb-legacy.race.beastman",
   "rfb-legacy.race.shadow-fairy",
+  "rfb-legacy.race.ogre",
 ] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";

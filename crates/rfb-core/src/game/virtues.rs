@@ -81,7 +81,9 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.high-elf" | "rfb-legacy.race.kutar" => {
                 kinds.push(VirtueKindDto::Vitality)
             }
-            "rfb-legacy.race.hobbit" => kinds.push(VirtueKindDto::Temperance),
+            "rfb-legacy.race.hobbit" | "rfb-legacy.race.ogre" => {
+                kinds.push(VirtueKindDto::Temperance)
+            }
             "rfb-legacy.race.kobold" | "rfb-legacy.race.snotling" => {
                 kinds.push(VirtueKindDto::Honour)
             }

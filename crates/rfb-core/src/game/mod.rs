@@ -5073,6 +5073,7 @@ impl Game {
         removed_entities: &mut Vec<String>,
     ) -> Result<ActorStepOutcome, CoreError> {
         let old_position = self.entities[index].position;
+        let moving_entity_id = self.entities[index].id.clone();
         if let Some(target_index) = self
             .entities
             .iter()
@@ -5124,6 +5125,13 @@ impl Game {
         if !self.trigger_actor_trap(index, next_position, events, changed, removed_entities)? {
             return Ok(ActorStepOutcome::Removed);
         }
+        let Some(index) = self
+            .entities
+            .iter()
+            .position(|entity| entity.id == moving_entity_id && entity.hp > 0)
+        else {
+            return Ok(ActorStepOutcome::Removed);
+        };
         self.pick_up_items_under_monster(index, next_position, events, changed);
         self.destroy_items_under_monster(index, next_position, events, changed);
         Ok(ActorStepOutcome::Moved)

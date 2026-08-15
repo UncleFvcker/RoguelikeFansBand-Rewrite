@@ -76,6 +76,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.amberite",
     "rfb-legacy.race.beastman",
     "rfb-legacy.race.shadow-fairy",
+    "rfb-legacy.race.ogre",
   ]);
 });
 
@@ -323,6 +324,21 @@ test("New Game exposes and submits Shadow-Fairy", () => {
   );
   const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(indexHtml, /<option value="rfb-legacy\.race\.shadow-fairy"/);
+});
+
+test("New Game exposes and submits Ogre", () => {
+  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.ogre");
+  assert.equal(
+    createNewSessionRequest(
+      "423",
+      "demo.build.warrior",
+      "rfb-legacy.race.ogre",
+      "Shagrat",
+    ).raceId,
+    "rfb-legacy.race.ogre",
+  );
+  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(indexHtml, /<option value="rfb-legacy\.race\.ogre"/);
 });
 
 test("new character requests preserve the selected formal race", () => {

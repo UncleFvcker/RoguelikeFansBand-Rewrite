@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "blocksSight": false,
+  "descriptionKey": "terrain-demo-explosive-rune-description",
+  "formatVersion": 1,
+  "glyph": ";",
+  "id": "demo.terrain.explosive-rune",
+  "monsterDestroyToTerrainId": "demo.terrain.floor",
+  "nameKey": "terrain-demo-explosive-rune-name",
+  "tags": [
+    "explosive-rune"
+  ],
+  "walkable": true
+}

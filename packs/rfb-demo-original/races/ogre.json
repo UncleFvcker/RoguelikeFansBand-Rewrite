@@ -1,5 +1,17 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.explosive-rune",
+      "baseFailurePercent": 70,
+      "cost": 35,
+      "governingAttribute": "intelligence",
+      "minimumLevel": 25
+    }
+  ],
+  "attributeSustains": [
+    "intelligence"
+  ],
   "baseHp": 23,
   "bodySlots": [
     {
@@ -80,7 +92,10 @@
   "shopAdjustPercent": 125,
   "skillSetId": "rfb-legacy.skill-set.race-ogre",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

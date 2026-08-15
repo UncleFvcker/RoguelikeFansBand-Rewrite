@@ -722,6 +722,23 @@ mod tests {
     }
 
     #[test]
+    fn ogre_content_uses_the_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("race-legacy-ogre-name", "食人魔"),
+            ("ability-rfb-race-explosive-rune-name", "爆炸符文"),
+            ("terrain-demo-explosive-rune-name", "爆炸符文"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Ogre content name should format"),
+                expected,
+            );
+        }
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

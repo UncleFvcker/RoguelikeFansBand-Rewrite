@@ -2935,6 +2935,243 @@ const RACE_KUTAR_EXPAND_ABILITY_ID: &str = "rfb.ability.race.kutar-expand";
 const RACE_AMBERITE_SHADOW_SHIFTING_ABILITY_ID: &str = "rfb.ability.race.amberite-shadow-shifting";
 const RACE_AMBERITE_PATTERN_MINDWALK_ABILITY_ID: &str =
     "rfb.ability.race.amberite-pattern-mindwalk";
+const RACE_OGRE_EXPLOSIVE_RUNE_ABILITY_ID: &str = "rfb.ability.race.explosive-rune";
+const EXPLOSIVE_RUNE_TERRAIN_ID: &str = "demo.terrain.explosive-rune";
+
+#[test]
+fn formal_ogre_sustains_intelligence_and_places_capped_explosive_runes() {
+    let mut game = ogre_game(423);
+    clear_monsters(&mut game);
+    assert!(game.player_sustains_attribute(AttributeKind::Intelligence));
+    assert!(
+        game.virtues
+            .iter()
+            .any(|virtue| virtue.kind == VirtueKindDto::Temperance)
+    );
+
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 20, "test.ogre-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.small-kobold".to_owned());
+    game.player.statuses.push(form);
+    assert!(!game.player_sustains_attribute(AttributeKind::Intelligence));
+    game.player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+
+    game.progress.level = 24;
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_OGRE_EXPLOSIVE_RUNE_ABILITY_ID)
+        .expect("Explosive Rune should project before unlocking");
+    assert!(!locked.can_cast);
+    assert_eq!(locked.minimum_level, 25);
+    assert_eq!((locked.base_resource_cost, locked.resource_cost), (35, 35));
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Intelligence)
+    );
+    assert!(matches!(
+        locked.effects.as_slice(),
+        [AbilityEffectSpecDto::CreateCurrentTerrain {
+            target_terrain_id,
+            ..
+        }] if target_terrain_id == EXPLOSIVE_RUNE_TERRAIN_ID
+    ));
+
+    game.progress.level = 25;
+    game.progress.max_level = 25;
+    game.refresh_character_skills();
+    game.player.hp = game.effective_player_max_hp();
+    let position = game.player.position;
+    replace_terrain(&mut game, position, "demo.terrain.floor");
+    game.floor_connections
+        .retain(|connection| connection.position != position);
+    game.items.retain(
+        |item| !matches!(item.location, ItemLocation::Ground(ground) if ground == position),
+    );
+    game.gold_piles.retain(|pile| pile.position != position);
+
+    let available = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_OGRE_EXPLOSIVE_RUNE_ABILITY_ID)
+        .expect("level-twenty-five Explosive Rune");
+    assert!(available.can_cast);
+    let failure_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(available.failure_percent)
+        })
+        .expect("Explosive Rune should have a failing percentile seed");
+    let mut failed = game.clone();
+    failed.rng = RfbRng::seeded(failure_seed);
+    let failed_hp = failed.player.hp;
+    let mut failed_events = Vec::new();
+    failed
+        .resolve_player_ability(
+            RACE_OGRE_EXPLOSIVE_RUNE_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut failed_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("failed Explosive Rune should resolve");
+    assert_eq!(failed.player.hp, failed_hp - 35);
+    assert_eq!(failed.terrain_at(position), "demo.terrain.floor");
+    assert!(matches!(
+        failed_events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+
+    game.debug_set_ability_casts_succeed(true);
+    let hp_before = game.player.hp;
+    game.resolve_player_ability(
+        RACE_OGRE_EXPLOSIVE_RUNE_ABILITY_ID,
+        TargetSelection::SelfTarget,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Explosive Rune should resolve");
+    assert_eq!(game.player.hp, hp_before - 35);
+    assert_eq!(game.terrain_at(position), EXPLOSIVE_RUNE_TERRAIN_ID);
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("placed Explosive Rune should restore");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.terrain_at(position), EXPLOSIVE_RUNE_TERRAIN_ID);
+
+    let mut capped = ogre_game(424);
+    let player_index = capped
+        .index(capped.player.position)
+        .expect("player position");
+    let mut rune_count = 0;
+    for (index, terrain_id) in capped.terrain.iter_mut().enumerate() {
+        if rune_count < 11 && index != player_index {
+            *terrain_id = EXPLOSIVE_RUNE_TERRAIN_ID.to_owned();
+            rune_count += 1;
+        }
+    }
+    capped.terrain[player_index] = "demo.terrain.floor".to_owned();
+    assert_eq!(rune_count, 11);
+    assert!(
+        capped
+            .current_terrain_creation_replacement(
+                &["demo.terrain.floor".to_owned()],
+                EXPLOSIVE_RUNE_TERRAIN_ID,
+            )
+            .is_none()
+    );
+}
+
+#[test]
+fn explosive_rune_step_explodes_or_is_destroyed_by_the_authoritative_roll() {
+    let mut base = ogre_game(425);
+    clear_monsters(&mut base);
+    base.progress.level = 25;
+    base.progress.max_level = 25;
+    base.refresh_character_skills();
+    let rune = Position { x: 10, y: 10 };
+    let start = Position { x: 11, y: 10 };
+    let bystander = Position { x: 10, y: 11 };
+    let safe = Position { x: 5, y: 5 };
+    for position in [rune, start, bystander, safe] {
+        replace_terrain(&mut base, position, "demo.terrain.floor");
+    }
+    replace_terrain(&mut base, rune, EXPLOSIVE_RUNE_TERRAIN_ID);
+    base.player.position = safe;
+    base.push_generated_actor(
+        "test.ogre-rune-stepper".to_owned(),
+        "demo.actor.newt",
+        start,
+    );
+    let monster_level = base
+        .content
+        .actor("demo.actor.newt")
+        .expect("Newt definition")
+        .level;
+    let break_roll_sides = 299_u64 * u64::from(base.progress.level) / 50;
+    let explode_seed = (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(break_roll_sides) + 1 > u64::from(monster_level)
+        })
+        .expect("Explosive Rune should have a triggering seed");
+    let disarm_seed = (0..10_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(break_roll_sides) + 1 <= u64::from(monster_level)
+        })
+        .expect("Explosive Rune should have a destruction seed");
+
+    let restored = Game::from_save_with_content(base.to_save(), base.content.clone())
+        .expect("armed Explosive Rune should restore");
+    assert_eq!(restored.state_hash(), base.state_hash());
+
+    let mut exploded = base.clone();
+    exploded.push_generated_actor(
+        "test.ogre-rune-bystander".to_owned(),
+        "demo.actor.newt",
+        bystander,
+    );
+    exploded.rng = RfbRng::seeded(explode_seed);
+    let mut events = Vec::new();
+    let mut removed = Vec::new();
+    assert_eq!(
+        exploded
+            .move_entity(0, rune, &mut events, &mut BTreeSet::new(), &mut removed)
+            .expect("monster rune step should resolve"),
+        ActorStepOutcome::Removed
+    );
+    assert_eq!(exploded.terrain_at(rune), "demo.terrain.floor");
+    assert!(removed.contains(&"test.ogre-rune-stepper".to_owned()));
+    assert!(removed.contains(&"test.ogre-rune-bystander".to_owned()));
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::AbilityAreaDamage {
+            ability_id,
+            resolution,
+            ..
+        } if ability_id == RACE_OGRE_EXPLOSIVE_RUNE_ABILITY_ID
+            && resolution.center == rune
+            && resolution.radius == 2
+            && (64..=148).contains(&resolution.base_raw_damage)
+            && resolution.target_count == 2
+    )));
+
+    let mut disarmed = base;
+    disarmed.rng = RfbRng::seeded(disarm_seed);
+    let hp_before = disarmed.entities[0].hp;
+    let mut events = Vec::new();
+    assert_eq!(
+        disarmed
+            .move_entity(0, rune, &mut events, &mut BTreeSet::new(), &mut Vec::new(),)
+            .expect("monster rune destruction should resolve"),
+        ActorStepOutcome::Moved
+    );
+    assert_eq!(disarmed.terrain_at(rune), "demo.terrain.floor");
+    assert_eq!(disarmed.entities[0].hp, hp_before);
+    assert!(events.iter().any(|event| matches!(
+        event,
+        DomainEvent::MonsterTerrainDestroyed {
+            terrain_kind_id,
+            replacement_terrain_kind_id,
+            position,
+            ..
+        } if terrain_kind_id == EXPLOSIVE_RUNE_TERRAIN_ID
+            && replacement_terrain_kind_id == "demo.terrain.floor"
+            && *position == rune
+    )));
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::AbilityAreaDamage { .. }))
+    );
+}
 
 #[test]
 fn formal_snotling_devours_flesh_while_confused_and_round_trips() {

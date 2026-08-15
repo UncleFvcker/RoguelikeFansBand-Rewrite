@@ -3,6 +3,9 @@
 use super::movement::actor_avoids_terrain_trap;
 use super::*;
 
+const EXPLOSIVE_RUNE_ABILITY_ID: &str = "rfb.ability.race.explosive-rune";
+const EXPLOSIVE_RUNE_BREAK_POWER: u64 = 299;
+
 pub(super) enum PlayerTrapOutcome {
     Resisted,
     Triggered {
@@ -26,6 +29,23 @@ impl Game {
         let Some(terrain) = self.content.terrain(&self.terrain[terrain_index]) else {
             return Ok(true);
         };
+        if terrain.tags.iter().any(|tag| tag == "explosive-rune") {
+            let terrain_kind_id = terrain.id.clone();
+            let replacement_terrain_kind_id = terrain
+                .monster_destroy_to_terrain_id
+                .clone()
+                .expect("validated explosive rune must define a destruction target");
+            return self.trigger_explosive_rune(
+                index,
+                terrain_index,
+                position,
+                terrain_kind_id,
+                replacement_terrain_kind_id,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
         let Some(trap) = terrain.trap.clone() else {
             return Ok(true);
         };
@@ -60,6 +80,61 @@ impl Game {
             events.push(event);
             Ok(true)
         }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn trigger_explosive_rune(
+        &mut self,
+        index: usize,
+        terrain_index: usize,
+        position: Position,
+        terrain_kind_id: String,
+        replacement_terrain_kind_id: String,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<bool, CoreError> {
+        let target_entity_id = self.entities[index].id.clone();
+        let source_kind_id = self.entities[index].kind_id.clone();
+        let monster_level = self
+            .actor_runtime_definition(&self.entities[index])
+            .expect("moving actor definition must remain available")
+            .level;
+        let break_roll_sides = EXPLOSIVE_RUNE_BREAK_POWER * u64::from(self.progress.level) / 50;
+        let explodes = self.rng.bounded(break_roll_sides) + 1 > u64::from(monster_level);
+
+        self.terrain[terrain_index] = replacement_terrain_kind_id.clone();
+        self.revealed_terrain.remove(&position);
+        changed.insert(position);
+        if !explodes {
+            events.push(DomainEvent::MonsterTerrainDestroyed {
+                source_kind_id,
+                terrain_kind_id,
+                replacement_terrain_kind_id,
+                position,
+            });
+            return Ok(true);
+        }
+
+        let base_raw_damage =
+            (i32::from(self.progress.level) + self.roll_damage(7, 7)).saturating_mul(2);
+        self.resolve_player_area_damage_with_base(
+            EXPLOSIVE_RUNE_ABILITY_ID,
+            vec![position],
+            false,
+            DamageType::Mana,
+            2,
+            None,
+            base_raw_damage,
+            true,
+            events,
+            changed,
+            removed_entities,
+        )?;
+        Ok(self
+            .entities
+            .iter()
+            .any(|entity| entity.id == target_entity_id && entity.hp > 0))
     }
 
     pub(super) fn trigger_player_trap(
