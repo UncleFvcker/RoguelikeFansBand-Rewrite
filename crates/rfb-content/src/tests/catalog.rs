@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.373.0");
+    assert_eq!(catalog.pack_version(), "1.374.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -2437,6 +2437,109 @@ fn formal_einheri_matches_the_authoritative_profile_healing_penalty_and_talent_p
     assert_eq!(talent.minimum_level, 30);
     assert_eq!(talent.selection, human_talent.selection);
     assert!(einheri.starting_items.is_empty());
+}
+
+#[test]
+fn formal_kutar_matches_the_authoritative_profile_and_expansion_power() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let kutar = catalog
+        .race("rfb-legacy.race.kutar")
+        .expect("formal Kutar race");
+
+    assert_eq!(
+        [
+            kutar.modifiers.strength,
+            kutar.modifiers.intelligence,
+            kutar.modifiers.wisdom,
+            kutar.modifiers.dexterity,
+            kutar.modifiers.constitution,
+            kutar.modifiers.charisma,
+        ],
+        [0, -1, -1, 1, 2, 2],
+    );
+    assert_eq!(
+        (
+            kutar.life_percent,
+            kutar.base_hp,
+            kutar.experience_percent,
+            kutar.infravision,
+            kutar.shop_adjust_percent,
+        ),
+        (102, 21, 175, 0, 95),
+    );
+    assert_eq!(
+        kutar.resistances.get(&ActorDamageType::Confusion),
+        Some(&ActorResistanceLevel::Resistant),
+    );
+    assert_eq!(kutar.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(kutar.tags.iter().any(|candidate| candidate == tag), "{tag}");
+    }
+
+    let skills = catalog
+        .skill_set(&kutar.skill_set_id)
+        .expect("formal Kutar skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [-2, 3, 5, 5, -2, 6, 0, -3],
+    );
+
+    let [activation] = kutar.abilities.as_slice() else {
+        panic!("Kutar should have one racial power");
+    };
+    assert_eq!(
+        (
+            activation.ability_id.as_str(),
+            activation.minimum_level,
+            activation.governing_attribute,
+            activation.cost,
+            activation.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.kutar-expand",
+            20,
+            TechniqueAttribute::Charisma,
+            15,
+            70,
+        ),
+    );
+    let ability = catalog
+        .ability(&activation.ability_id)
+        .expect("Kutar Expand Horizontally ability");
+    assert!(matches!(
+        &ability.effect,
+        AbilityEffectDefinition::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 30,
+            duration_dice: 1,
+            duration_sides: 20,
+            granted_modifiers,
+            granted_equipment_bonuses,
+            ..
+        } if status_kind_id == "rfb.status.kutar-expand"
+            && granted_modifiers.defense == 35
+            && granted_equipment_bonuses.saving_throw_skill_override == Some(10)
+    ));
+    assert!(kutar.starting_items.is_empty());
 }
 
 #[test]

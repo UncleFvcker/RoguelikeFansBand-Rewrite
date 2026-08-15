@@ -644,6 +644,22 @@ mod tests {
     }
 
     #[test]
+    fn kutar_content_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("race-legacy-kutar-name", "库塔"),
+            ("ability-rfb-race-kutar-expand-name", "横向膨胀"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Kutar content name should format"),
+                expected,
+            );
+        }
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

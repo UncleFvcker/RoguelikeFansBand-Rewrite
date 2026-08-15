@@ -2918,6 +2918,7 @@ const RACE_WOOD_ELF_NATURE_AWARENESS_ABILITY_ID: &str =
 const RACE_SPRITE_SLEEPING_DUST_ABILITY_ID: &str = "rfb.ability.race.sleeping-dust";
 const RACE_SNOTLING_DEVOUR_FLESH_ABILITY_ID: &str = "rfb.ability.race.devour-flesh";
 const RACE_BOIT_VOMIT_ABILITY_ID: &str = "rfb.ability.race.vomit";
+const RACE_KUTAR_EXPAND_ABILITY_ID: &str = "rfb.ability.race.kutar-expand";
 
 #[test]
 fn formal_snotling_devours_flesh_while_confused_and_round_trips() {
@@ -3589,6 +3590,134 @@ fn formal_wood_elf_nature_awareness_unlocks_at_twenty_and_reuses_full_detection(
     let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
         .expect("Wood-Elf detection knowledge should restore");
     assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn formal_kutar_expansion_fixes_saving_throw_and_adds_thirty_five_armor() {
+    let mut game = kutar_game(410);
+    clear_monsters(&mut game);
+    game.progress.level = 19;
+    let locked = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_KUTAR_EXPAND_ABILITY_ID)
+        .expect("Kutar Expand Horizontally should be projected before it unlocks");
+    assert_eq!(locked.source, AbilitySourceDto::Race);
+    assert_eq!(locked.minimum_level, 20);
+    assert_eq!((locked.base_resource_cost, locked.resource_cost), (15, 15));
+    assert_eq!(
+        locked.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Charisma),
+    );
+    assert!(!locked.can_cast);
+
+    game.progress.level = 20;
+    game.progress.max_level = 20;
+    game.refresh_character_skills();
+    let available = game
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_KUTAR_EXPAND_ABILITY_ID)
+        .expect("level-twenty Kutar Expand Horizontally");
+    assert!(available.can_cast);
+    assert!(available.failure_percent > 0);
+    assert!(matches!(
+        available.effects.as_slice(),
+        [AbilityEffectSpecDto::ApplyStatus {
+            status_kind_id,
+            duration_ticks: 30,
+            duration_dice: 1,
+            duration_sides: 20,
+            granted_modifiers,
+            granted_equipment_bonuses,
+            ..
+        }] if status_kind_id == STATUS_KUTAR_EXPAND
+            && granted_modifiers.defense == 35
+            && granted_equipment_bonuses.saving_throw_skill_override == Some(10)
+    ));
+
+    let failure_seed = (0..1_000)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(100) < u64::from(available.failure_percent)
+        })
+        .expect("Kutar Expand Horizontally should have a failing percentile seed");
+    let mut failed = game.clone();
+    failed.rng = RfbRng::seeded(failure_seed);
+    let failed_hp = failed.player.hp;
+    let failed_stats = failed.player_derived_stats();
+    let mut failed_events = Vec::new();
+    failed
+        .resolve_player_ability(
+            RACE_KUTAR_EXPAND_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut failed_events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("failed Kutar expansion should resolve");
+    assert!(matches!(
+        failed_events.first(),
+        Some(DomainEvent::AbilityCastFailed { .. })
+    ));
+    assert_eq!(failed.player.hp, failed_hp - 15);
+    assert_eq!(
+        failed.player_derived_stats().armor_class.value,
+        failed_stats.armor_class.value,
+    );
+    assert_eq!(
+        failed.player_derived_stats().saving_throw_skill.value,
+        failed_stats.saving_throw_skill.value,
+    );
+    assert!(!failed.player_has_status_kind(STATUS_KUTAR_EXPAND));
+
+    game.debug_set_ability_casts_succeed(true);
+    let hp_before = game.player.hp;
+    let stats_before = game.player_derived_stats();
+    assert_ne!(stats_before.saving_throw_skill.value, 10);
+    let mut replay = game.clone();
+    for cast in [&mut game, &mut replay] {
+        cast.resolve_player_ability(
+            RACE_KUTAR_EXPAND_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Kutar expansion should resolve");
+        let expanded = cast
+            .player
+            .statuses
+            .iter()
+            .find(|status| status.kind_id == STATUS_KUTAR_EXPAND)
+            .expect("Kutar expansion status");
+        assert!((31..=50).contains(&expanded.remaining_ticks));
+        assert_eq!(expanded.granted_modifiers.defense, 35);
+        assert_eq!(
+            expanded
+                .granted_equipment_bonuses
+                .saving_throw_skill_override,
+            Some(10),
+        );
+        let stats = cast.player_derived_stats();
+        assert_eq!(stats.armor_class.value, stats_before.armor_class.value + 35);
+        assert_eq!(stats.saving_throw_skill.value, 10);
+    }
+    assert_eq!(game.player.hp, hp_before - 15);
+    assert_eq!(game.state_hash(), replay.state_hash());
+
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone())
+        .expect("Kutar expansion should restore");
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        restored.player_derived_stats().armor_class.value,
+        stats_before.armor_class.value + 35
+    );
+    assert_eq!(restored.player_derived_stats().saving_throw_skill.value, 10);
 }
 
 #[test]

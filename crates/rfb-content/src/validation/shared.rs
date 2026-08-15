@@ -186,6 +186,9 @@ pub(super) fn equipment_bonuses_out_of_range(bonuses: &EquipmentBonuses) -> bool
         ]
         .into_iter()
         .any(|value| !(-1_000_000..=1_000_000).contains(&value))
+        || bonuses
+            .saving_throw_skill_override
+            .is_some_and(|value| !(0..=1_000_000).contains(&value))
         || !(-64..=64).contains(&bonuses.infravision)
         || !(-8..=8).contains(&bonuses.light_radius)
 }

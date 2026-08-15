@@ -72,6 +72,7 @@ test("new character creation exposes only formal race slices", () => {
     "rfb-legacy.race.snotling",
     "rfb-legacy.race.boit",
     "rfb-legacy.race.einheri",
+    "rfb-legacy.race.kutar",
   ]);
 });
 
@@ -259,6 +260,21 @@ test("New Game exposes and submits Einheri", () => {
   );
   const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(indexHtml, /<option value="rfb-legacy\.race\.einheri"/);
+});
+
+test("New Game exposes and submits Kutar", () => {
+  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.kutar");
+  assert.equal(
+    createNewSessionRequest(
+      "411",
+      "demo.build.warrior",
+      "rfb-legacy.race.kutar",
+      "Kutar",
+    ).raceId,
+    "rfb-legacy.race.kutar",
+  );
+  const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(indexHtml, /<option value="rfb-legacy\.race\.kutar"/);
 });
 
 test("new character requests preserve the selected formal race", () => {

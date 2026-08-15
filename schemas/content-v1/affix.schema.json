@@ -479,6 +479,14 @@
           "format": "int32",
           "type": "integer"
         },
+        "savingThrowSkillOverride": {
+          "description": "Replaces the final saving-throw skill while a status grants this bundle.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "searchSkill": {
           "default": 0,
           "format": "int32",

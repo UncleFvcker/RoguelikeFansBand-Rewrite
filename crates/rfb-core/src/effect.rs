@@ -54,6 +54,7 @@ pub const STATUS_ULTIMATE_RESISTANCE: &str = "rfb.status.ultimate-resistance";
 pub const STATUS_FIRE_AURA: &str = "rfb.status.fire-aura";
 pub const STATUS_HOLY_AURA: &str = "rfb.status.holy-aura";
 pub const STATUS_DEMON_LORD_TRANSFORMATION: &str = "rfb.status.demon-lord-transformation";
+pub const STATUS_KUTAR_EXPAND: &str = "rfb.status.kutar-expand";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct DamagePacket {

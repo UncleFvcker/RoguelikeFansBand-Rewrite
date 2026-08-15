@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::support::{
-    archon_game, boit_game, einheri_game, golem_game, skeleton_game, sprite_game, wood_elf_game,
-    zombie_game,
+    archon_game, boit_game, einheri_game, golem_game, kutar_game, skeleton_game, sprite_game,
+    wood_elf_game, zombie_game,
 };
 use super::*;
 
@@ -433,6 +433,19 @@ fn formal_einheri_receives_the_authoritative_unlife_virtue() {
             VirtueKindDto::Valour,
             VirtueKindDto::Honour,
             VirtueKindDto::Unlife,
+        ]
+    );
+}
+
+#[test]
+fn formal_kutar_receives_the_authoritative_vitality_virtue() {
+    let kutar = kutar_game(411);
+    assert_eq!(
+        &virtue_kinds(&kutar)[..3],
+        [
+            VirtueKindDto::Valour,
+            VirtueKindDto::Honour,
+            VirtueKindDto::Vitality,
         ]
     );
 }

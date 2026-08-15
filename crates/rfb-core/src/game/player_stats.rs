@@ -2450,6 +2450,24 @@ impl Game {
         } else {
             max_hp
         };
+        let saving_throw_skill =
+            pipeline.resolve(StatKind::SavingThrowSkill, StatBounds::NON_NEGATIVE);
+        let saving_throw_skill = if let Some((status, value)) =
+            actor.statuses.iter().find_map(|status| {
+                status
+                    .granted_equipment_bonuses
+                    .saving_throw_skill_override
+                    .map(|value| (status, value))
+            }) {
+            saving_throw_skill.with_modifier(
+                StatLayer::Status,
+                &status.kind_id,
+                value.saturating_sub(saving_throw_skill.value),
+                StatBounds::NON_NEGATIVE,
+            )
+        } else {
+            saving_throw_skill
+        };
         ActorDerivedStats {
             max_hp: if include_equipment {
                 apply_player_life_force(max_hp, self.progress.life_force)
@@ -2484,8 +2502,7 @@ impl Game {
             bash_power: pipeline.resolve(StatKind::BashPower, StatBounds::NON_NEGATIVE),
             search_skill: pipeline.resolve(StatKind::SearchSkill, StatBounds::NON_NEGATIVE),
             device_skill: pipeline.resolve(StatKind::DeviceSkill, StatBounds::NON_NEGATIVE),
-            saving_throw_skill: pipeline
-                .resolve(StatKind::SavingThrowSkill, StatBounds::NON_NEGATIVE),
+            saving_throw_skill,
             stealth_skill: pipeline.resolve(StatKind::StealthSkill, StatBounds::NON_NEGATIVE),
             perception_skill: pipeline.resolve(StatKind::PerceptionSkill, StatBounds::NON_NEGATIVE),
             disarm_skill: pipeline.resolve(StatKind::DisarmSkill, StatBounds::NON_NEGATIVE),

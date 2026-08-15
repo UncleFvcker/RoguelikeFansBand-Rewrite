@@ -659,6 +659,9 @@ pub struct EquipmentBonuses {
     pub device_skill: i32,
     #[serde(default)]
     pub saving_throw_skill: i32,
+    /// Replaces the final saving-throw skill while a status grants this bundle.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub saving_throw_skill_override: Option<i32>,
     #[serde(default)]
     pub stealth_skill: i32,
     #[serde(default)]

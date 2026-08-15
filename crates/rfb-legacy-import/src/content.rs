@@ -5704,6 +5704,7 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "mind_blast_spell" => "rfb.ability.race.mind-blast",
             "nature_awareness_spell" => "rfb.ability.race.wood-elf-nature-awareness",
             "imp_fire_spell" => "rfb.ability.race.imp-fire",
+            "kutar_expand_spell" => "rfb.ability.race.kutar-expand",
             "phase_door_spell" => "rfb.ability.race.phase-door",
             "poison_dart_spell" => "rfb.ability.race.poison-dart",
             "probing_spell" => "rfb.ability.race.probe-monsters",
@@ -6558,6 +6559,15 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
         ];
     }
     if entry.id == "sprite" {
+        return vec![
+            "humanoid",
+            "legacy-import",
+            "polymorph-candidate",
+            "rfb-compatibility",
+            "standard-body",
+        ];
+    }
+    if entry.id == "kutar" {
         return vec![
             "humanoid",
             "legacy-import",
@@ -21692,6 +21702,55 @@ static void _sprite_calc_bonuses(void)
         assert_eq!(race["resistances"]["light"], "resistant");
         assert_eq!(race["levelStatScalings"][0]["stat"], "speed");
         assert_eq!(race["levelStatScalings"][0]["divisor"], 10);
+        assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
+    }
+
+    #[test]
+    fn kutar_confusion_resistance_power_and_formal_tags_are_mapped() {
+        const SOURCE: &str = r#"
+static power_info _kutar_get_powers[] =
+{
+    { A_CHR, {20, 15, 70, kutar_expand_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+static void _kutar_calc_bonuses(void)
+{
+    res_add(RES_CONF);
+}
+"#;
+        let mut kutar = LegacyCharacterEntry {
+            id: "kutar".to_owned(),
+            calc_bonuses_fn: Some("_kutar_calc_bonuses".to_owned()),
+            get_powers_fn: Some("_kutar_get_powers".to_owned()),
+            hooks: vec!["calc_bonuses".to_owned(), "get_powers".to_owned()],
+            ..LegacyCharacterEntry::default()
+        };
+        kutar.resistances = parse_calc_bonuses_defenses(SOURCE, "_kutar_calc_bonuses").0;
+        parse_race_powers(SOURCE, &mut kutar);
+
+        assert_eq!(
+            legacy_race_tags(&kutar),
+            [
+                "humanoid",
+                "legacy-import",
+                "polymorph-candidate",
+                "rfb-compatibility",
+                "standard-body",
+            ],
+        );
+        assert_eq!(
+            kutar.abilities,
+            [LegacyInnatePower {
+                governing_attribute: "charisma".to_owned(),
+                minimum_level: 20,
+                cost: 15,
+                base_failure_percent: 70,
+                ability_id: "rfb.ability.race.kutar-expand".to_owned(),
+            }],
+        );
+        let mut report = ContentImportReport::default();
+        let race = race_json(&kutar, &[], &mut report);
+        assert_eq!(race["resistances"]["confusion"], "resistant");
         assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
     }
 

@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.223";
+pub const PROTOCOL_VERSION: &str = "1.224";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
 
@@ -560,6 +560,8 @@ pub struct EquipmentBonusesDto {
     pub device_skill: i32,
     #[serde(default)]
     pub saving_throw_skill: i32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub saving_throw_skill_override: Option<i32>,
     #[serde(default)]
     pub stealth_skill: i32,
     #[serde(default)]

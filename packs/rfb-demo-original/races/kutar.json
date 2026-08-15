@@ -1,5 +1,14 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.kutar-expand",
+      "baseFailurePercent": 70,
+      "cost": 15,
+      "governingAttribute": "charisma",
+      "minimumLevel": 20
+    }
+  ],
   "baseHp": 21,
   "bodySlots": [
     {
@@ -84,7 +93,10 @@
   "shopAdjustPercent": 95,
   "skillSetId": "rfb-legacy.skill-set.race-kutar",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

@@ -7191,6 +7191,13 @@
           "format": "int32",
           "default": 0
         },
+        "savingThrowSkillOverride": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int32"
+        },
         "searchSkill": {
           "type": "integer",
           "format": "int32",
