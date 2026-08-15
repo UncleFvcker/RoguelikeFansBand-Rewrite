@@ -25051,6 +25051,82 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
     }
 
     #[test]
+    fn p107b_crystal_castle_plan_locks_glass_ecology_and_guardians() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert!(selection.dungeons.iter().any(|entry| {
+            entry.source_index == 20
+                && entry.source_name == "Crystal castle"
+                && entry.id == "demo.dungeon.crystal-castle"
+        }));
+        let castle = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 20)
+            .expect("Crystal castle should have an implementation plan");
+
+        assert_eq!(castle.source_name, "Crystal castle");
+        assert_eq!(castle.id, "demo.dungeon.crystal-castle");
+        assert_eq!(castle.position, DemoWildernessPosition { x: 40, y: 37 });
+        assert_eq!((castle.minimum_depth, castle.maximum_depth), (40, 60));
+        assert_eq!(castle.monster_divisor, 0);
+        assert_eq!(
+            castle.generation_flags,
+            ["ARENA", "NO_CAVE", "CURTAIN", "GLASS_DOOR", "GLASS_ROOM"]
+        );
+        assert_eq!(
+            castle.monster_preferences,
+            [
+                "INVISIBLE",
+                "HAS_LITE_1",
+                "SELF_LITE_1",
+                "HAS_LITE_2",
+                "SELF_LITE_2",
+                "HAS_DARK_1",
+                "SELF_DARK_1",
+                "HAS_DARK_2",
+                "SELF_DARK_2",
+                "RES_SHAR",
+            ]
+        );
+        assert_eq!(
+            castle.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GLASS_FLOOR".to_owned(),
+                    percent: 40,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 60,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GLASS_FLOOR".to_owned(),
+                    percent: 0,
+                },
+            ]
+        );
+        assert_eq!(castle.tunnel_percent, Some(100));
+        let entrance = castle
+            .initial_guardian
+            .as_ref()
+            .expect("Ethereal dragon should guard the entrance");
+        assert_eq!((entrance.source_index, entrance.level), (676, 43));
+        assert_eq!(entrance.chinese_name, "虚灵龙");
+        assert_eq!(
+            (castle.guardian.source_index, castle.guardian.level),
+            (1167, 60)
+        );
+        assert_eq!(castle.guardian.chinese_name, "钻石巨龙");
+        assert_eq!(
+            castle.final_object,
+            Some(DemoDungeonObjectPlan { tval: 23, sval: 31 })
+        );
+    }
+
+    #[test]
     fn melee_brain_smash_reuses_psi_damage_and_status_riders() {
         let mut monsters = parse_r_info(
             "N:781:Ultimate beholder\nG:e:o\nI:120:40d100:30:80:10:100\nW:66:4:999:18000:0:0\nB:GAZE:BRAIN_SMASH(5d5)\nF:FORCE_MAXHP\n",

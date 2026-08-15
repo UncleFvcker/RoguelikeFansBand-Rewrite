@@ -13731,3 +13731,230 @@ fn p106_dual_town_bounty_offices_share_the_wanted_reward_contract() {
             && override_.positions == [ContentPosition { x: 12, y: 9 }]
     }));
 }
+
+#[test]
+fn p107c_anambar_rewards_bind_their_authoritative_effects_and_sacred_ego() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let item = |id: &str| {
+        content
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    let activation_effect = |id: &str| {
+        &item(id)
+            .device_generation
+            .as_ref()
+            .expect("task device should have generated activation")
+            .activations[0]
+            .effect
+    };
+
+    assert!(matches!(
+        activation_effect("demo.item.frost-ball-wand"),
+        ItemUseEffectDefinition::AreaDamage {
+            damage_dice: 0,
+            damage_sides: 0,
+            damage_bonus: 50,
+            damage_type: ActorDamageType::Cold,
+            radius: 2,
+        }
+    ));
+    let ItemUseEffectDefinition::Sequence { effects } =
+        activation_effect("demo.item.confusing-light-staff")
+    else {
+        panic!("Confusing Lights should use an ordered status sequence");
+    };
+    assert_eq!(effects.len(), 5);
+    assert_eq!(
+        effects
+            .iter()
+            .map(|effect| match effect {
+                ItemUseEffectDefinition::VisibleApplyStatus {
+                    status_kind_id,
+                    power,
+                    ..
+                } => (status_kind_id.as_str(), *power),
+                _ => panic!("Confusing Lights steps should target visible actors"),
+            })
+            .collect::<Vec<_>>(),
+        [
+            ("rfb.status.slow", Some(110)),
+            ("rfb.status.stun", Some(110)),
+            ("rfb.status.confusion", Some(110)),
+            ("rfb.status.fear", Some(110)),
+            ("rfb.status.paralysis", Some(36)),
+        ]
+    );
+    assert!(matches!(
+        activation_effect("demo.item.destruction-staff"),
+        ItemUseEffectDefinition::AreaDestruction {
+            minimum_radius: 13,
+            maximum_radius: 17,
+            ..
+        }
+    ));
+    let restoring = item("demo.item.sixfold-provision");
+    assert_eq!(restoring.base_value, 1000);
+    assert!(restoring.tags.contains(&"task-reward".to_owned()));
+    assert!(matches!(
+        restoring.use_action.as_ref().map(|action| &action.effect),
+        Some(ItemUseEffectDefinition::RestoreAllAttributes)
+    ));
+
+    let sacred = content
+        .affixes
+        .iter()
+        .find(|affix| affix.id == "rfb-legacy.affix.sacred-pendant")
+        .expect("Sacred Pendant should exist");
+    let ego = sacred
+        .rfb_ego
+        .as_ref()
+        .expect("Sacred Pendant should retain EGO identity");
+    assert_eq!((ego.source_index, ego.rarity), (221, 2));
+    assert_eq!(ego.types, [RfbEgoTypeDefinition::Amulet]);
+    assert_eq!(sacred.roll_groups.len(), 3);
+    assert_eq!(sacred.roll_groups[2].rolls, 5);
+    assert!(sacred.tags.contains(&"blessed-weapon".to_owned()));
+}
+
+#[test]
+fn p107d_crystal_castle_binds_glass_layers_guardians_and_diamond_edge() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let diamond = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.diamond-edge")
+        .expect("Diamond Edge should exist");
+    assert!(diamond.vorpal);
+    assert_eq!(diamond.tunneling_pval, 4);
+    assert_eq!(
+        diamond.melee_profile.as_ref().map(|profile| (
+            profile.damage_dice,
+            profile.damage_sides,
+            profile.to_hit,
+            profile.to_damage
+        )),
+        Some((6, 6, 10, 10))
+    );
+    for (id, walkable, blocks_sight) in [
+        ("demo.terrain.glass-floor", true, false),
+        ("demo.terrain.glass-door-open", true, false),
+        ("demo.terrain.glass-door-closed", false, false),
+    ] {
+        let terrain = content
+            .terrain
+            .iter()
+            .find(|terrain| terrain.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"));
+        assert_eq!(
+            (terrain.walkable, terrain.blocks_sight),
+            (walkable, blocks_sight)
+        );
+    }
+    let policy = content
+        .encounter_tables
+        .iter()
+        .find(|table| table.id == "demo.encounter-table.crystal-castle")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Crystal Castle should use global allocation");
+    assert_eq!(policy.preferred_glyphs, ["D"]);
+    assert_eq!(policy.preferred_tags, ["invisible"]);
+    assert_eq!((policy.special_div, policy.ambient_chance_one_in), (0, 160));
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    assert!(world.wilderness.as_ref().is_some_and(|wilderness| {
+        wilderness.locations.iter().any(|location| {
+            matches!(
+                location,
+                WildernessLocationDefinition::Dungeon {
+                    position: ContentPosition { x: 40, y: 37 },
+                    dungeon_id,
+                } if dungeon_id == "demo.dungeon.crystal-castle"
+            )
+        })
+    }));
+    let dungeon = world
+        .dungeons
+        .iter()
+        .find(|dungeon| dungeon.id == "demo.dungeon.crystal-castle")
+        .expect("Crystal Castle should exist");
+    assert_eq!(dungeon.legacy_index, Some(20));
+    assert_eq!(
+        dungeon.guardian_actor_kind_id,
+        "demo.actor.the-diamond-dragon"
+    );
+    assert_eq!(
+        dungeon
+            .entrance_guardian
+            .as_ref()
+            .map(|guardian| guardian.actor_kind_id.as_str()),
+        Some("demo.actor.ethereal-dragon")
+    );
+    let mut floors = world
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.crystal-castle"))
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(
+        floors.iter().map(|floor| floor.depth).collect::<Vec<_>>(),
+        (40..=60).collect::<Vec<_>>()
+    );
+    assert!(floors.windows(2).all(|pair| {
+        pair[0].next_floor_id.as_deref() == Some(pair[1].id.as_str())
+            && pair[1].return_floor_id == pair[0].id
+    }));
+    assert_eq!(
+        floors[0].entry_terrain_id.as_deref(),
+        Some("demo.terrain.crystal-castle-entrance")
+    );
+    assert!(floors.iter().all(|floor| {
+        (floor.width, floor.height) == (66, 22)
+            && floor.floor_terrain_id == "demo.terrain.floor"
+            && floor.terrain_feature_table_id.as_deref()
+                == Some("demo.terrain-feature-table.crystal-castle")
+    }));
+    let floor = |depth| {
+        floors
+            .iter()
+            .find(|floor| floor.depth == depth)
+            .copied()
+            .unwrap()
+    };
+    assert_eq!(
+        floor(45)
+            .generation_budget
+            .as_ref()
+            .unwrap()
+            .room_placements,
+        Some(2)
+    );
+    assert_eq!(
+        floor(50).closed_door_terrain_id,
+        "demo.terrain.curtain-closed"
+    );
+    assert_eq!(floor(55).wall_terrain_id, "demo.terrain.glass-wall");
+    let guardian = floors
+        .last()
+        .and_then(|floor| floor.guardian.as_ref())
+        .expect("Diamond Dragon should guard depth 60");
+    assert_eq!(guardian.actor_kind_id, "demo.actor.the-diamond-dragon");
+    assert_eq!(
+        guardian.reward_loot_table_id.as_deref(),
+        Some("demo.loot-table.crystal-castle-final-reward")
+    );
+    let reward = content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.crystal-castle-final-reward")
+        .expect("Crystal Castle reward should exist");
+    assert_eq!(reward.entries[0].item_kind_id, "demo.item.diamond-edge");
+}

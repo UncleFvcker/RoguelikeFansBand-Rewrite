@@ -2765,6 +2765,51 @@
               "$ref": "#/$defs/ActorDamageType",
               "default": "physical"
             },
+            "radius": {
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "area-damage",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "damageDice",
+            "damageSides",
+            "radius"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "damageBonus": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageSides": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "damageType": {
+              "$ref": "#/$defs/ActorDamageType",
+              "default": "physical"
+            },
             "type": {
               "const": "beam-damage",
               "type": "string"
@@ -2850,6 +2895,74 @@
           "required": [
             "type",
             "maximumDistance"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationDice": {
+              "default": 0,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "default": 0,
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationTicks": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "intensity": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "power": {
+              "default": null,
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "resistanceType": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/ActorDamageType"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            },
+            "stacking": {
+              "$ref": "#/$defs/AbilityStatusStackingDefinition"
+            },
+            "statusKindId": {
+              "type": "string"
+            },
+            "type": {
+              "const": "visible-apply-status",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "statusKindId",
+            "intensity",
+            "durationTicks",
+            "stacking"
           ],
           "type": "object"
         },

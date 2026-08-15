@@ -97,9 +97,13 @@ fn effect_program_input_for_step(
     match effect {
         ItemUseEffectDefinition::Sequence { .. } => None,
         ItemUseEffectDefinition::Damage { .. }
+        | ItemUseEffectDefinition::AreaDamage { .. }
         | ItemUseEffectDefinition::BeamDamage { .. }
         | ItemUseEffectDefinition::RandomElementConeDamage { .. } => {
             Some(EffectProgramInputDefinition::Actor)
+        }
+        ItemUseEffectDefinition::VisibleApplyStatus { .. } => {
+            Some(EffectProgramInputDefinition::SelfTarget)
         }
         ItemUseEffectDefinition::IdentifyItem { .. }
         | ItemUseEffectDefinition::EnchantItem { .. }

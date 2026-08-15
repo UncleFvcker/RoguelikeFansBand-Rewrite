@@ -1,0 +1,45 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.sacred-pendant",
+  "nameKey": "affix-legacy-sacred-pendant-name",
+  "descriptionKey": "affix-legacy-sacred-pendant-description",
+  "generationLevel": 30,
+  "rfbEgo": { "sourceIndex": 221, "rarity": 2, "types": ["amulet"] },
+  "rollGroups": [
+    {
+      "rolls": 1,
+      "candidates": [
+        { "weight": 1, "properties": { "modifiers": { "defense": 1 } } },
+        { "weight": 1, "properties": { "modifiers": { "defense": 2 } } },
+        { "weight": 1, "properties": { "modifiers": { "defense": 3 } } },
+        { "weight": 1, "properties": { "modifiers": { "defense": 4 } } },
+        { "weight": 1, "properties": { "modifiers": { "defense": 5 } } }
+      ]
+    },
+    {
+      "rolls": 1,
+      "candidates": [
+        { "weight": 1, "properties": {} },
+        { "weight": 1, "properties": { "equipmentBonuses": { "lightRadius": 1 } } }
+      ]
+    },
+    {
+      "rolls": 5,
+      "candidates": [
+        { "weight": 45, "properties": { "modifiers": { "strength": 1 } } },
+        { "weight": 45, "properties": { "modifiers": { "wisdom": 1 } } },
+        { "weight": 22, "properties": { "statusImmunities": ["rfb.status.paralysis"] } },
+        { "weight": 23, "properties": { "statusImmunities": ["rfb.status.paralysis"], "passives": ["see-invisible"] } },
+        { "weight": 9, "properties": { "resistances": { "chaos": "resistant" } } },
+        { "weight": 12, "properties": { "resistances": { "confusion": "resistant" } } },
+        { "weight": 8, "properties": { "resistances": { "nether": "resistant" } } },
+        { "weight": 16, "properties": { "resistances": { "fear": "resistant" } } },
+        { "weight": 22, "properties": { "passives": ["regeneration"] } },
+        { "weight": 23, "properties": { "passives": ["hold-life"] } },
+        { "weight": 135, "properties": { "modifiers": { "defense": 1 } } }
+      ]
+    }
+  ],
+  "tags": ["amulet", "blessed-weapon", "legacy-import", "task-reward"]
+}

@@ -5,6 +5,59 @@ use super::*;
 
 impl Game {
     #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_item_activation_area_damage(
+        &mut self,
+        source_kind_id: String,
+        profile_id: Option<String>,
+        effect: ItemUseEffectDefinition,
+        plan: ItemUsePlan,
+        device_power_bonus: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        let ItemUseEffectDefinition::AreaDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            damage_type,
+            radius,
+        } = effect
+        else {
+            unreachable!("item area-damage executor requires an area-damage effect")
+        };
+        let ItemUsePlan::Projectile { path } = plan else {
+            unreachable!("item area-damage executor requires a projectile plan")
+        };
+        let profile_id =
+            profile_id.expect("dynamic area-damage activation must carry a profile ID");
+        let raw_damage = i32::try_from(device_power_value(
+            u64::try_from(
+                self.roll_damage(damage_dice, damage_sides)
+                    .saturating_add(i32::from(damage_bonus))
+                    .max(0),
+            )
+            .expect("non-negative device area damage must fit u64"),
+            device_power_bonus,
+        ))
+        .expect("device-powered area damage must fit i32");
+        self.mark_item_aware(&source_kind_id);
+        self.resolve_player_area_damage_with_base(
+            &profile_id,
+            path,
+            true,
+            DamageType::from(damage_type),
+            radius,
+            None,
+            raw_damage,
+            true,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
     pub(super) fn resolve_item_activation_beam_damage(
         &mut self,
         source_kind_id: String,

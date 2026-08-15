@@ -421,6 +421,7 @@ pub(crate) fn valid_item_effect(
                             | ItemUseEffectDefinition::SelfKnowledge
                             | ItemUseEffectDefinition::Detect { .. }
                             | ItemUseEffectDefinition::SetFloorGlow { .. }
+                            | ItemUseEffectDefinition::VisibleApplyStatus { .. }
                     ) && valid_item_effect(
                         effect,
                         terrain_tags,
@@ -447,6 +448,35 @@ pub(crate) fn valid_item_effect(
             ((*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0)
                 || ((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides)))
                 && *damage_bonus <= 10_000
+        }
+        ItemUseEffectDefinition::AreaDamage {
+            damage_dice,
+            damage_sides,
+            damage_bonus,
+            radius,
+            ..
+        } => {
+            ((*damage_dice == 0 && *damage_sides == 0 && *damage_bonus > 0)
+                || ((1..=100).contains(damage_dice) && (1..=10_000).contains(damage_sides)))
+                && *damage_bonus <= 10_000
+                && (1..=16).contains(radius)
+        }
+        ItemUseEffectDefinition::VisibleApplyStatus {
+            status_kind_id,
+            intensity,
+            duration_ticks,
+            duration_dice,
+            duration_sides,
+            power,
+            ..
+        } => {
+            validate_id(status_kind_id).is_ok()
+                && (1..=1_000).contains(intensity)
+                && (1..=1_000_000).contains(duration_ticks)
+                && ((*duration_dice == 0 && *duration_sides == 0)
+                    || ((1..=100).contains(duration_dice)
+                        && (1..=1_000_000).contains(duration_sides)))
+                && power.is_none_or(|power| (1..=1_000).contains(&power))
         }
         ItemUseEffectDefinition::RandomElementConeDamage {
             damage,
@@ -517,6 +547,7 @@ pub(crate) fn valid_item_effect(
 fn item_effect_is_self_targeted(effect: &ItemUseEffectDefinition) -> bool {
     match effect {
         ItemUseEffectDefinition::Damage { .. }
+        | ItemUseEffectDefinition::AreaDamage { .. }
         | ItemUseEffectDefinition::BeamDamage { .. }
         | ItemUseEffectDefinition::RandomElementConeDamage { .. }
         | ItemUseEffectDefinition::IdentifyItem { .. }
@@ -658,9 +689,11 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::RemoveEquippedCurses { .. }
                     | ItemUseEffectDefinition::SummonCategory { .. }
                     | ItemUseEffectDefinition::DispelCategory { .. }
-                    | ItemUseEffectDefinition::BanishVisible { .. } => self_target,
+                    | ItemUseEffectDefinition::BanishVisible { .. }
+                    | ItemUseEffectDefinition::VisibleApplyStatus { .. } => self_target,
                     ItemUseEffectDefinition::RechargeFromDevice { .. } => false,
                     ItemUseEffectDefinition::Damage { .. }
+                    | ItemUseEffectDefinition::AreaDamage { .. }
                     | ItemUseEffectDefinition::BeamDamage { .. } => projectile_target,
                     ItemUseEffectDefinition::RandomElementConeDamage { .. } => {
                         target.modes.as_slice() == [AbilityTargetModeDefinition::Direction]
@@ -737,7 +770,7 @@ pub(super) fn validate_items(
         if item.break_chance_percent > 100 {
             return Err(ContentError::InvalidItemBreakChance(item.id.clone()));
         }
-        if item.riding_weapon_kind.is_some() && item.melee_profile.is_none() {
+        if (item.riding_weapon_kind.is_some() || item.vorpal) && item.melee_profile.is_none() {
             return Err(ContentError::InvalidAttackProfile(item.id.clone()));
         }
         if let Some(fuel) = item.fuel {

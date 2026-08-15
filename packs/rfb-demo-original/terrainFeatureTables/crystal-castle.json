@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain-feature-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain-feature-table.crystal-castle",
+  "rolls": 180,
+  "entries": [
+    { "terrainId": "demo.terrain.glass-floor", "placement": "room", "weight": 1, "minDepth": 40, "maxDepth": 60 }
+  ]
+}

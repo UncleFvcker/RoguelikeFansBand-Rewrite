@@ -428,6 +428,12 @@
       "minDepth": 40
     },
     {
+      "itemKindId": "demo.item.diamond-edge",
+      "weight": 6,
+      "quantity": 1,
+      "minDepth": 90
+    },
+    {
       "itemKindId": "demo.item.detect-invisible-scroll",
       "weight": 100,
       "quantity": 1,

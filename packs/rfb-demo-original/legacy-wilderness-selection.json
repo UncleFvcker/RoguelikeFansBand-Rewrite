@@ -83,6 +83,11 @@
       "sourceIndex": 6,
       "sourceName": "Graveyard",
       "id": "demo.dungeon.graveyard"
+    },
+    {
+      "sourceIndex": 20,
+      "sourceName": "Crystal castle",
+      "id": "demo.dungeon.crystal-castle"
     }
   ],
   "townPlans": [
@@ -1158,6 +1163,47 @@
       },
       "finalObject": { "tval": 55, "sval": 0 },
       "finalEgoSourceIndex": 560
+    },
+    {
+      "sourceIndex": 20,
+      "sourceName": "Crystal castle",
+      "id": "demo.dungeon.crystal-castle",
+      "position": { "x": 40, "y": 37 },
+      "minimumDepth": 40,
+      "maximumDepth": 60,
+      "monsterDivisor": 0,
+      "generationFlags": ["ARENA", "NO_CAVE", "CURTAIN", "GLASS_DOOR", "GLASS_ROOM"],
+      "monsterPreferences": [
+        "INVISIBLE",
+        "HAS_LITE_1",
+        "SELF_LITE_1",
+        "HAS_LITE_2",
+        "SELF_LITE_2",
+        "HAS_DARK_1",
+        "SELF_DARK_1",
+        "HAS_DARK_2",
+        "SELF_DARK_2",
+        "RES_SHAR"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "GLASS_FLOOR", "percent": 40 },
+        { "sourceTag": "FLOOR", "percent": 60 },
+        { "sourceTag": "GLASS_FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 100,
+      "initialGuardian": {
+        "sourceIndex": 676,
+        "sourceName": "Ethereal dragon",
+        "chineseName": "虚灵龙",
+        "level": 43
+      },
+      "guardian": {
+        "sourceIndex": 1167,
+        "sourceName": "The Diamond Dragon",
+        "chineseName": "钻石巨龙",
+        "level": 60
+      },
+      "finalObject": { "tval": 23, "sval": 31 }
     }
   ]
 }

@@ -10,8 +10,9 @@
   "mogaminatorRare": false,
   "weightTenthsPound": 2,
   "maxStack": 20,
+  "baseValue": 1000,
   "useAction": {
     "effectProgramId": "demo.effect.restore-all-attributes"
   },
-  "tags": ["attribute-restoration", "consumable", "food"]
+  "tags": ["attribute-restoration", "consumable", "food", "task-reward"]
 }

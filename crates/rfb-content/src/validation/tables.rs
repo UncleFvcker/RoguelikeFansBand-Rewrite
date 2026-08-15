@@ -762,7 +762,7 @@ pub(super) fn validate_tables(
                                 || terrain.walkable
                                     && matches!(
                                         tag.as_str(),
-                                        "grass" | "dirt" | "snow" | "ice" | "slush"
+                                        "grass" | "dirt" | "snow" | "ice" | "slush" | "glass"
                                     )
                         })
                 }

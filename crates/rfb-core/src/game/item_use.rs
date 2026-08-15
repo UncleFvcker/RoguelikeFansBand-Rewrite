@@ -2079,7 +2079,9 @@ impl Game {
     fn resolve_item_sequence(
         &mut self,
         source_kind_id: &str,
+        profile_id: Option<&str>,
         effects: Vec<ItemUseEffectDefinition>,
+        device_power_bonus: i32,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
@@ -2106,10 +2108,110 @@ impl Game {
                     events,
                     changed,
                 ),
+                effect @ ItemUseEffectDefinition::VisibleApplyStatus { .. } => {
+                    let actor_ids = self.item_visible_actor_ids();
+                    self.resolve_item_visible_status(
+                        source_kind_id,
+                        profile_id,
+                        effect,
+                        actor_ids,
+                        device_power_bonus,
+                        events,
+                        changed,
+                    );
+                }
                 effect => {
                     self.resolve_item_self_effect(source_kind_id, &effect, events);
                 }
             }
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn resolve_item_visible_status(
+        &mut self,
+        source_kind_id: &str,
+        profile_id: Option<&str>,
+        effect: ItemUseEffectDefinition,
+        actor_ids: Vec<String>,
+        device_power_bonus: i32,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) {
+        let ItemUseEffectDefinition::VisibleApplyStatus {
+            status_kind_id,
+            intensity,
+            duration_ticks,
+            duration_dice,
+            duration_sides,
+            stacking,
+            resistance_type,
+            power,
+        } = effect
+        else {
+            unreachable!("visible status executor requires a visible status effect")
+        };
+        let source_id = profile_id.unwrap_or(source_kind_id);
+        let power = power.map(|power| {
+            u16::try_from(device_power_value(u64::from(power), device_power_bonus))
+                .unwrap_or(u16::MAX)
+        });
+        let empty_resistances = BTreeMap::new();
+        let empty_brands = BTreeSet::new();
+        let empty_immunities = BTreeSet::new();
+        self.mark_item_aware(source_kind_id);
+        for entity_id in actor_ids {
+            let Some(index) = self
+                .entities
+                .iter()
+                .position(|entity| entity.id == entity_id && entity.hp > 0)
+            else {
+                continue;
+            };
+            let target_kind_id = self.entities[index].kind_id.clone();
+            let target_level = self
+                .content
+                .actor(&target_kind_id)
+                .map(|definition| definition.level);
+            let resistances = self.entities[index].resistances.clone();
+            let status_immunities = self
+                .actor_has_status_immunity(index, &status_kind_id)
+                .then(|| BTreeSet::from([status_kind_id.clone()]))
+                .unwrap_or_default();
+            let resolution = apply_ability_status_effect(
+                &mut self.entities[index],
+                source_id,
+                0,
+                &status_kind_id,
+                intensity,
+                duration_ticks,
+                duration_dice,
+                duration_sides,
+                stacking,
+                resistance_type,
+                power,
+                &empty_resistances,
+                &empty_brands,
+                &StatModifiers::default(),
+                &EquipmentBonuses::default(),
+                &empty_immunities,
+                None,
+                false,
+                100,
+                target_level,
+                Some((&resistances, &status_immunities)),
+                &mut self.rng,
+            );
+            changed.insert(self.entities[index].position);
+            events.push(DomainEvent::AbilityEffectsResolved {
+                ability_id: source_id.to_owned(),
+                resolution: AbilityEffectsResolutionDto {
+                    target_entity_id: Some(entity_id),
+                    target_kind_id: Some(target_kind_id),
+                    effects: vec![resolution],
+                },
+                trace: None,
+            });
         }
     }
 
@@ -2470,9 +2572,15 @@ impl Game {
             (ItemUseEffectDefinition::ApplyBooze, ItemUsePlan::SelfTarget) => {
                 self.resolve_item_booze(&kind_id, events, changed);
             }
-            (ItemUseEffectDefinition::Sequence { effects }, ItemUsePlan::SelfTarget) => {
-                self.resolve_item_sequence(&kind_id, effects, events, changed)
-            }
+            (ItemUseEffectDefinition::Sequence { effects }, ItemUsePlan::SelfTarget) => self
+                .resolve_item_sequence(
+                    &kind_id,
+                    profile_id.as_deref(),
+                    effects,
+                    device_power_bonus,
+                    events,
+                    changed,
+                ),
             (
                 ItemUseEffectDefinition::Acquirement {
                     loot_table_id,
@@ -2661,6 +2769,19 @@ impl Game {
                 removed_entities,
             )?,
             (
+                effect @ ItemUseEffectDefinition::AreaDamage { .. },
+                plan @ ItemUsePlan::Projectile { .. },
+            ) => self.resolve_item_activation_area_damage(
+                kind_id,
+                profile_id,
+                effect,
+                plan,
+                device_power_bonus,
+                events,
+                changed,
+                removed_entities,
+            )?,
+            (
                 effect @ ItemUseEffectDefinition::BeamDamage { .. },
                 plan @ ItemUsePlan::Projectile { .. },
             ) => self.resolve_item_activation_beam_damage(
@@ -2712,6 +2833,18 @@ impl Game {
                     changed,
                 );
             }
+            (
+                effect @ ItemUseEffectDefinition::VisibleApplyStatus { .. },
+                ItemUsePlan::VisibleActors { actor_ids },
+            ) => self.resolve_item_visible_status(
+                &kind_id,
+                profile_id.as_deref(),
+                effect,
+                actor_ids,
+                device_power_bonus,
+                events,
+                changed,
+            ),
             (effect @ ItemUseEffectDefinition::Detect { .. }, ItemUsePlan::Detect) => {
                 self.resolve_item_detection(kind_id, profile_id, effect, events, changed);
             }
@@ -2921,7 +3054,9 @@ impl Game {
                     replacements: self.adjacent_trap_door_replacements(),
                 })
             }
-            ItemUseEffectDefinition::Damage { .. } | ItemUseEffectDefinition::BeamDamage { .. } => {
+            ItemUseEffectDefinition::Damage { .. }
+            | ItemUseEffectDefinition::AreaDamage { .. }
+            | ItemUseEffectDefinition::BeamDamage { .. } => {
                 let path = target_definition.and_then(|definition| {
                     target.and_then(|target| self.item_effect_path(definition, target))
                 })?;
@@ -2940,7 +3075,8 @@ impl Game {
                 })
             }
             ItemUseEffectDefinition::DispelCategory { .. }
-            | ItemUseEffectDefinition::BanishVisible { .. } => {
+            | ItemUseEffectDefinition::BanishVisible { .. }
+            | ItemUseEffectDefinition::VisibleApplyStatus { .. } => {
                 self_target.then(|| ItemUsePlan::VisibleActors {
                     actor_ids: self.item_visible_actor_ids(),
                 })
@@ -4945,6 +5081,7 @@ impl Game {
                 self.resolve_item_self_knowledge(source_kind_id, events)
             }
             ItemUseEffectDefinition::Damage { .. }
+            | ItemUseEffectDefinition::AreaDamage { .. }
             | ItemUseEffectDefinition::BeamDamage { .. }
             | ItemUseEffectDefinition::RandomElementConeDamage { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
@@ -4959,6 +5096,7 @@ impl Game {
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }
             | ItemUseEffectDefinition::BanishVisible { .. }
+            | ItemUseEffectDefinition::VisibleApplyStatus { .. }
             | ItemUseEffectDefinition::Detect { .. }
             | ItemUseEffectDefinition::IdentifyItem { .. }
             | ItemUseEffectDefinition::Acquirement { .. }

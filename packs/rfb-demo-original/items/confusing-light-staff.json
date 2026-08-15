@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.confusing-light-staff",
+  "nameKey": "item-demo-confusing-light-staff-name",
+  "appearanceNameKey": "item-demo-unfamiliar-staff-name",
+  "descriptionKey": "item-demo-confusing-light-staff-description",
+  "glyph": "_",
+  "generationLevel": 55,
+  "mogaminatorRare": true,
+  "weightTenthsPound": 50,
+  "maxStack": 1,
+  "baseValue": 6600,
+  "elementalDestructionVulnerabilities": ["acid", "fire"],
+  "deviceGeneration": {
+    "recovery": { "intervalTicks": 10, "energyPerMille": 10 },
+    "activations": [
+      {
+        "id": "demo.device-activation.confusing-light",
+        "nameKey": "device-activation-demo-confusing-light-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 50,
+        "charges": { "minimum": 45, "maximum": 45, "cost": 26 },
+        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+        "effectProgramId": "demo.effect.confusing-light"
+      }
+    ]
+  },
+  "tags": ["device", "rfb", "staff", "task-reward"]
+}

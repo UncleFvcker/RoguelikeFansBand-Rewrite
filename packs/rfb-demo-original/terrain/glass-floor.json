@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.glass-floor",
+  "nameKey": "terrain-demo-glass-floor-name",
+  "descriptionKey": "terrain-demo-glass-floor-description",
+  "glyph": ".",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["floor", "glass", "interior"]
+}
