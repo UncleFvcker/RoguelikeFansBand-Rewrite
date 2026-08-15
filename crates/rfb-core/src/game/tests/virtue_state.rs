@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::support::{
-    archon_game, boit_game, einheri_game, golem_game, kutar_game, skeleton_game, sprite_game,
-    wood_elf_game, zombie_game,
+    archon_game, boit_game, einheri_game, golem_game, kutar_game, shadow_fairy_game, skeleton_game,
+    sprite_game, wood_elf_game, zombie_game,
 };
 use super::*;
 
@@ -484,6 +484,19 @@ fn formal_beastman_receives_the_authoritative_chance_virtue() {
             VirtueKindDto::Nature,
             VirtueKindDto::Temperance,
             VirtueKindDto::Chance,
+        ]
+    );
+}
+
+#[test]
+fn formal_shadow_fairy_receives_the_authoritative_enchantment_virtue() {
+    let shadow_fairy = shadow_fairy_game(421);
+    assert_eq!(
+        &virtue_kinds(&shadow_fairy)[..3],
+        [
+            VirtueKindDto::Valour,
+            VirtueKindDto::Honour,
+            VirtueKindDto::Enchantment,
         ]
     );
 }

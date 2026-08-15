@@ -2745,6 +2745,78 @@ fn formal_beastman_matches_the_authoritative_static_profile() {
 }
 
 #[test]
+fn formal_shadow_fairy_matches_the_authoritative_profile_and_fairy_stealth() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let shadow_fairy = catalog
+        .race("rfb-legacy.race.shadow-fairy")
+        .expect("formal Shadow-Fairy race");
+
+    assert_eq!(
+        [
+            shadow_fairy.modifiers.strength,
+            shadow_fairy.modifiers.intelligence,
+            shadow_fairy.modifiers.wisdom,
+            shadow_fairy.modifiers.dexterity,
+            shadow_fairy.modifiers.constitution,
+            shadow_fairy.modifiers.charisma,
+        ],
+        [-2, 2, 2, 1, -1, -3],
+    );
+    assert_eq!(
+        (
+            shadow_fairy.life_percent,
+            shadow_fairy.base_hp,
+            shadow_fairy.experience_percent,
+            shadow_fairy.infravision,
+            shadow_fairy.shop_adjust_percent,
+        ),
+        (91, 13, 140, 4, 110),
+    );
+    assert!(shadow_fairy.levitation);
+    assert!(shadow_fairy.fairy_stealth);
+    assert_eq!(
+        shadow_fairy.resistances.get(&ActorDamageType::Light),
+        Some(&ActorResistanceLevel::Vulnerable),
+    );
+    assert_eq!(shadow_fairy.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(
+            shadow_fairy.tags.iter().any(|candidate| candidate == tag),
+            "{tag}",
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&shadow_fairy.skill_set_id)
+        .expect("formal Shadow-Fairy skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [7, 6, 0, 6, 12, 15, -10, -3],
+    );
+    assert!(shadow_fairy.abilities.is_empty());
+    assert!(shadow_fairy.starting_items.is_empty());
+}
+
+#[test]
 fn formal_dark_elf_matches_rfb_profile_passives_and_magic_missile() {
     let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");

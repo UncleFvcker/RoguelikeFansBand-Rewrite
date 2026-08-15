@@ -763,6 +763,65 @@ fn formal_sprite_and_temporary_form_apply_level_speed_and_static_passives() {
 }
 
 #[test]
+fn formal_shadow_fairy_and_temporary_form_apply_and_remove_intrinsics() {
+    let shadow_fairy = shadow_fairy_game(421);
+    assert!(shadow_fairy.player_levitates());
+    assert_eq!(shadow_fairy.player_infravision_range(), 4);
+    assert_eq!(
+        shadow_fairy
+            .effective_player_resistances()
+            .level(DamageType::Light),
+        ResistanceLevel::Vulnerable,
+    );
+    assert_eq!(
+        shadow_fairy.player_fairy_stealth_race_id(),
+        Some("rfb-legacy.race.shadow-fairy"),
+    );
+    let restored =
+        Game::from_save_with_content(shadow_fairy.to_save(), shadow_fairy.content.clone())
+            .expect("Shadow-Fairy should round-trip");
+    assert_eq!(restored.state_hash(), shadow_fairy.state_hash());
+
+    let mut human = Game::new_with_build_race_and_name(
+        421,
+        "demo.build.warrior",
+        "demo.race.rfb-human",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Human warrior should create");
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.shadow-fairy-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.shadow-fairy".to_owned());
+    human.player.statuses.push(form);
+    assert!(human.player_levitates());
+    assert_eq!(human.player_infravision_range(), 4);
+    assert_eq!(
+        human
+            .effective_player_resistances()
+            .level(DamageType::Light),
+        ResistanceLevel::Vulnerable,
+    );
+    assert_eq!(
+        human.player_fairy_stealth_race_id(),
+        Some("rfb-legacy.race.shadow-fairy"),
+    );
+
+    human
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+    assert!(!human.player_levitates());
+    assert_eq!(human.player_infravision_range(), 0);
+    assert_eq!(
+        human
+            .effective_player_resistances()
+            .level(DamageType::Light),
+        ResistanceLevel::Normal,
+    );
+    assert_eq!(human.player_fairy_stealth_race_id(), None);
+}
+
+#[test]
 fn draconian_subraces_are_available_to_formal_character_creation() {
     for suffix in [
         "red", "white", "blue", "black", "green", "bronze", "crystal", "gold", "shadow",

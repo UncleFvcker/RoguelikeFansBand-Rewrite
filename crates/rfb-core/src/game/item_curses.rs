@@ -33,10 +33,14 @@ impl Game {
             })
     }
 
-    pub(super) fn player_aggravates_monsters(&self) -> bool {
+    pub(super) fn player_has_equipped_aggravation(&self) -> bool {
         self.items.iter().any(|item| {
             self.item_has_active_equipped_curse_effect(item, ItemCurseEffectDto::Aggravate)
         })
+    }
+
+    pub(super) fn player_aggravates_monsters(&self) -> bool {
+        self.player_has_equipped_aggravation() && self.player_fairy_stealth_race_id().is_none()
     }
 
     pub(super) fn wake_monster_for_equipped_aggravation(
@@ -183,6 +187,68 @@ mod tests {
                 .statuses
                 .iter()
                 .any(|status| status.kind_id == STATUS_SLEEP)
+        );
+    }
+
+    #[test]
+    fn shadow_fairy_form_converts_equipped_aggravation_into_a_stealth_penalty() {
+        let mut game = Game::new_with_build_race_and_name(
+            421,
+            "demo.build.warrior",
+            "demo.race.rfb-human",
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect("Human warrior should create");
+        let mut form = crate::game::monster_combat::melee_status(
+            STATUS_PLAYER_POLYMORPH,
+            100,
+            "test.shadow-fairy-form",
+        )
+        .status;
+        form.granted_race_id = Some("rfb-legacy.race.shadow-fairy".to_owned());
+        game.player.statuses.push(form);
+        let stealth_before = game.player_derived_stats().stealth_skill.value;
+
+        add_curse_effect(
+            &mut game,
+            ItemCurseEffectDto::Aggravate,
+            Some(ItemCurseSeverityDto::Heavy),
+        );
+        assert!(game.player_has_equipped_aggravation());
+        assert!(!game.player_aggravates_monsters());
+        assert_eq!(
+            game.player_derived_stats().stealth_skill.value,
+            stealth_before
+                .saturating_sub(3)
+                .min(stealth_before.saturating_add(2) / 2)
+                .max(0),
+        );
+
+        game.entities.clear();
+        game.push_generated_actor(
+            "test.shadow-fairy-sleeper".to_owned(),
+            "demo.actor.small-kobold",
+            Position { x: 4, y: 3 },
+        );
+        game.entities[0].statuses.push(sleeping_status());
+        game.wake_monster_for_equipped_aggravation(0, &mut Vec::new(), &mut BTreeSet::new());
+        assert!(
+            game.entities[0]
+                .statuses
+                .iter()
+                .any(|status| status.kind_id == STATUS_SLEEP)
+        );
+
+        game.player
+            .statuses
+            .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+        assert!(game.player_aggravates_monsters());
+        game.wake_monster_for_equipped_aggravation(0, &mut Vec::new(), &mut BTreeSet::new());
+        assert!(
+            game.entities[0]
+                .statuses
+                .iter()
+                .all(|status| status.kind_id != STATUS_SLEEP)
         );
     }
 

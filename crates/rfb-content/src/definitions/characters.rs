@@ -129,6 +129,9 @@ pub struct RaceDefinition {
     /// Whether the effective race can cross terrain that requires levitation.
     #[serde(default, skip_serializing_if = "is_false")]
     pub levitation: bool,
+    /// Whether equipped aggravation is converted into RFB's reduced fairy-stealth penalty.
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub fairy_stealth: bool,
     /// Whether this race contributes one intrinsic see-invisible source.
     #[serde(default, skip_serializing_if = "is_false")]
     pub see_invisible: bool,

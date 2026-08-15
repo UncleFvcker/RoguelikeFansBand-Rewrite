@@ -65,11 +65,14 @@
   ],
   "descriptionKey": "race-legacy-shadow-fairy-description",
   "experiencePercent": 140,
+  "fairyStealth": true,
   "formatVersion": 1,
   "id": "rfb-legacy.race.shadow-fairy",
+  "infravision": 4,
   "kinCategory": "kin-glyph-104",
   "legacyIndex": 34,
   "lifePercent": 91,
+  "levitation": true,
   "modifiers": {
     "charisma": -3,
     "constitution": -1,
@@ -85,7 +88,10 @@
   "shopAdjustPercent": 110,
   "skillSetId": "rfb-legacy.skill-set.race-shadow-fairy",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

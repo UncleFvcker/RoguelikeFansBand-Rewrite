@@ -907,6 +907,11 @@ impl Game {
             })
     }
 
+    pub(super) fn player_fairy_stealth_race_id(&self) -> Option<&str> {
+        self.character_definitions()
+            .and_then(|(_, race, _, _)| race.fairy_stealth.then_some(race.id.as_str()))
+    }
+
     pub(super) fn player_has_targeted_esp(
         &self,
         definition: &rfb_content::ActorDefinition,
@@ -2586,6 +2591,25 @@ impl Game {
         } else {
             saving_throw_skill
         };
+        let stealth_skill = pipeline.resolve(StatKind::StealthSkill, StatBounds::NON_NEGATIVE);
+        let stealth_skill = if include_equipment && self.player_has_equipped_aggravation() {
+            if let Some(race_id) = self.player_fairy_stealth_race_id() {
+                let reduced = stealth_skill
+                    .value
+                    .saturating_sub(3)
+                    .min(stealth_skill.value.saturating_add(2) / 2);
+                stealth_skill.with_modifier(
+                    StatLayer::Species,
+                    race_id,
+                    reduced.saturating_sub(stealth_skill.value),
+                    StatBounds::NON_NEGATIVE,
+                )
+            } else {
+                stealth_skill
+            }
+        } else {
+            stealth_skill
+        };
         ActorDerivedStats {
             max_hp: if include_equipment {
                 apply_player_life_force(max_hp, self.progress.life_force)
@@ -2621,7 +2645,7 @@ impl Game {
             search_skill: pipeline.resolve(StatKind::SearchSkill, StatBounds::NON_NEGATIVE),
             device_skill: pipeline.resolve(StatKind::DeviceSkill, StatBounds::NON_NEGATIVE),
             saving_throw_skill,
-            stealth_skill: pipeline.resolve(StatKind::StealthSkill, StatBounds::NON_NEGATIVE),
+            stealth_skill,
             perception_skill: pipeline.resolve(StatKind::PerceptionSkill, StatBounds::NON_NEGATIVE),
             disarm_skill: pipeline.resolve(StatKind::DisarmSkill, StatBounds::NON_NEGATIVE),
             dig_skill: pipeline.resolve(StatKind::DigSkill, StatBounds::NON_NEGATIVE),

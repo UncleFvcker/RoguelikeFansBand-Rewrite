@@ -711,6 +711,17 @@ mod tests {
     }
 
     #[test]
+    fn shadow_fairy_content_uses_the_authoritative_chinese_name() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        assert_eq!(
+            localizer
+                .format_exact(Locale::ZhCn, "race-legacy-shadow-fairy-name", None)
+                .expect("Shadow-Fairy content name should format"),
+            "暗影妖精",
+        );
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

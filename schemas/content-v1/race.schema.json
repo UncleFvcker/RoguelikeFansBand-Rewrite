@@ -772,6 +772,10 @@
       "minimum": 0,
       "type": "integer"
     },
+    "fairyStealth": {
+      "description": "Whether equipped aggravation is converted into RFB's reduced fairy-stealth penalty.",
+      "type": "boolean"
+    },
     "foodNutritionDivisor": {
       "default": 1,
       "description": "Divisor applied to nutrition gained from ordinary food effects.",
