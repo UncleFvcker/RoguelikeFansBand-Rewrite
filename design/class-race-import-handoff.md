@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-15
-当前实现基线：`c8ca8e4d0`（屁精正式 New Game 开放；本次文档提交只做交接封板）
+当前实现基线：`33addaf2d`（库塔正式 New Game 开放；本次文档提交只做交接封板）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,14 +10,15 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.373.0`
-- content hash：`219d142fb3e7449c7e5d40c4c99c048f1e16c8a91388e18e058369c9cee349ce`
-- Protocol：`1.223`
-- State Hash Schema：`v104`
+- demo pack：`1.374.0`
+- content hash：`0a6076df6cfbf9fa35a784935592c610161fe5bb4c74b6358f9d0231d7c9a78f`
+- Protocol：`1.224`
+- State Hash Schema：`v105`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
-- active fixture baseline：`contract-v303`，26 个 exact fixture
+- active fixture baseline：`contract-v303`，26 个 exact fixture；现有 fixture 仍是 v104，按用户要求本批
+  未运行全量测试或刷新，主合并验收需统一迁移到 v105
 - 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 37 个种族。
+  6 个职业构筑和 38 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -77,6 +78,9 @@ New Game 当前按以下稳定 ID 开放：
 - `rfb-legacy.race.archon`
 - `rfb-legacy.race.sprite`
 - `rfb-legacy.race.snotling`
+- `rfb-legacy.race.boit`
+- `rfb-legacy.race.einheri`
+- `rfb-legacy.race.kutar`
 
 种族通过新游戏请求中的独立 `raceId` 覆盖 Build 的默认 Human。不要生成
 “职业 × 种族”的重复 Build JSON。玩家外观目前由职业 Build 决定，新增普通种族不复制玩家 Actor 或
@@ -280,6 +284,24 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
   治疗截断与加成顺序、自然再生、生命力保护、狂暴、临时形态、30 级选择、美德、标准出生及
   save/state-hash/replay。`verify-source`、schema、Web typecheck、Rust check/format 和 diff 检查通过；
   按用户要求未运行全量测试，也未刷新 fixture。
+
+### 库塔导入最终证据
+
+- 实现提交：`33addaf2d`（`Import Kutar race`）。最终协调点为 pack `1.374.0` / content hash
+  `0a6076df6cfbf9fa35a784935592c610161fe5bb4c74b6358f9d0231d7c9a78f`；Protocol `1.224`、
+  State Hash Schema v105、save v2。正式 New Game 种族数从 37 增至 38，ability 数从 1834 增至 1835。
+- 库塔闭合六维 `0/-1/-1/+1/+2/+2`、生命 102%、基础 HP 21、经验 175%、0 格红外、商店 95%、
+  八项技能、混乱抗性、标准身体/出生和初始“生命力”。`rfb-compatibility`、Web option 与稳定
+  `raceId` 请求均已加入。
+- 新增并由种族方向拥有 `rfb.ability.race.kutar-expand`、
+  `rfb.ability-program.race.kutar-expand` 和 `rfb.status.kutar-expand`。20 级魅力能力“横向膨胀”
+  消耗 15、基础失败率 70%，持续 `30 + 1d20`，提供固定 +35 AC，并把最终豁免技能覆盖为 10。
+  通用状态授予技能数据增加 `savingThrowSkillOverride`，随现有状态 DTO、save 和 state hash 往返；因此
+  Protocol 推进到 1.224、State Hash Schema 推进到 v105，save schema 保持 v2。
+- 只运行本批新增聚焦测试：内容 1、本地化 1、importer 1、核心 2、Web 1，均通过，覆盖静态矩阵、
+  能力解锁/失败/成功/消耗/持续/AC/豁免覆盖、美德及 save/state-hash/replay。`verify-source`、schema、
+  Protocol bindings、Web typecheck、Rust check/format 和 diff 检查通过。按用户要求未运行全量测试，
+  也未刷新 `contract-v303` fixture；主合并验收必须把现有 v104 fixture 统一刷新到 v105。
 
 ## 2. 权威来源与不可变规则
 

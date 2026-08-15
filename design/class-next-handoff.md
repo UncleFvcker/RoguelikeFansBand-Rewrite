@@ -5,7 +5,7 @@
 
 更新时间：2026-08-15
 
-当前 main 实现基线：`638bab21c`（小妖精正式 New Game 开放）
+当前 main 实现基线：`33addaf2d`（库塔正式 New Game 开放）
 
 分支：`codex/class-next`
 
@@ -1018,3 +1018,26 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   神圣活力顺序、自然再生、生命力保护、狂暴、临时形态、30 级选择、美德、标准出生及
   save/state-hash/replay。source lock、schema、Web typecheck、Rust check/format 和 diff 检查通过；按用户
   要求未运行全量测试或刷新 fixture。
+
+## main 当前批次：库塔正式内容、横向膨胀与豁免覆盖
+
+- 权威来源为 RFB `master:src/races_k.c`、`master:src/spells_h.c`、`master:src/xtra1.c`、
+  `master:src/effects.c` 和 `master:src/virtue.c`。种族方向继续拥有既有
+  `rfb-legacy.race.kutar` 与 `rfb-legacy.skill-set.race-kutar`，新增并拥有
+  `rfb.ability.race.kutar-expand`、`rfb.ability-program.race.kutar-expand` 和
+  `rfb.status.kutar-expand`；本批不新增 item、material、affix、resource 或 actor ID。
+- 库塔按原版闭合六维 `0/-1/-1/+1/+2/+2`、生命 102%、基础 HP 21、经验 175%、0 格红外、
+  商店 95%、八项技能、混乱抗性、标准身体/出生和初始“生命力”。临时库塔形态继续通过当前有效
+  种族路径获得同一静态矩阵与种族能力。
+- 20 级魅力能力“横向膨胀”消耗 15、基础失败率 70%，施加 `30 + 1d20` 状态，固定提供 +35 AC，
+  并把最终豁免技能覆盖为 10。最窄通用字段 `savingThrowSkillOverride` 复用既有状态授予技能数据，
+  自动进入状态投影、save 与 state hash；Protocol 因共享 DTO 推进到 `1.224`，State Hash Schema
+  推进到 v105，save schema 保持 v2。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数从 37 增至 38。
+  实现提交为 `33addaf2d`（`Import Kutar race`）。最终协调点为 pack `1.374.0` / content hash
+  `0a6076df6cfbf9fa35a784935592c610161fe5bb4c74b6358f9d0231d7c9a78f`、Protocol `1.224`、
+  State Hash Schema v105、save v2。
+- 新增聚焦测试共 6 项：内容 1、中文名 1、importer 1、核心 2、Web 1，覆盖静态矩阵、能力等级、
+  成功/失败支付、持续时间、AC、豁免固定值、美德及 save/state-hash/replay。`verify-source`、schema、
+  Protocol bindings、Web typecheck、Rust check/format 和 diff 检查通过；按用户要求未运行全量测试，
+  也未刷新 `contract-v303` fixture。现有 fixture 仍是 v104，主合并验收必须统一迁移到 v105。

@@ -1528,3 +1528,22 @@ git diff --stat
   State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
   Web 共 7 项聚焦测试通过，含 save/state-hash/replay；schema/source lock、typecheck、格式和 diff
   检查通过。按用户要求未运行全量测试或刷新 fixture。
+
+## 84. main 当前交接（库塔正式内容、横向膨胀与豁免覆盖）
+
+- 种族方向继续拥有 `rfb-legacy.race.kutar` 与 `rfb-legacy.skill-set.race-kutar`，并新增、拥有
+  `rfb.ability.race.kutar-expand`、`rfb.ability-program.race.kutar-expand` 和
+  `rfb.status.kutar-expand`。其他方向不得复制或改名这些身份。
+- 通用状态授予技能数据新增可选 `savingThrowSkillOverride`；它覆盖最终豁免技能并沿既有状态 DTO、
+  save 与 state hash 生命周期持久化。Protocol 因共享 DTO 推进到 `1.224`，State Hash Schema 推进到
+  v105，save schema 保持 v2。任何依赖 state hash fixture 的并行方向必须基于 v105 重算，不能继续提交
+  v104 预期值。
+- 库塔完整行为包括权威属性/生命/HP/经验/红外/商店/技能矩阵、混乱抗性、标准身体/出生、初始
+  “生命力”，以及 20 级魅力能力“横向膨胀”：消耗 15、基础失败率 70%、持续 `30 + 1d20`、
+  +35 AC、豁免技能固定为 10。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 38。
+- 实现提交为 `33addaf2d`（`Import Kutar race`）。共享协调点为 pack `1.374.0` / content hash
+  `0a6076df6cfbf9fa35a784935592c610161fe5bb4c74b6358f9d0231d7c9a78f`、Protocol `1.224`、
+  State Hash Schema v105、save v2。新增内容、本地化、importer、核心和 Web 共 6 项聚焦测试通过，
+  含 save/state-hash/replay；schema/source lock、bindings、typecheck、格式和 diff 检查通过。按用户要求
+  未运行全量测试或刷新 `contract-v303` fixture；现有 v104 fixture 留给主合并验收统一迁移。
