@@ -188,6 +188,8 @@ pub(super) fn validate_towns_and_shops(
                     || !facility.task_ids.is_empty()
                     || facility.bounty_office.is_some()
                     || !has_service))
+            || (facility.reject_artifact_deposits
+                && facility.category != TownFacilityCategory::Home)
             || invalid_service_cost
             || !valid_bounty_office
             || !valid_memberships

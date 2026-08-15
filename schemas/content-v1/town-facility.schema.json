@@ -210,6 +210,10 @@
       },
       "type": "array"
     },
+    "rejectArtifactDeposits": {
+      "default": false,
+      "type": "boolean"
+    },
     "researchItemCost": {
       "default": null,
       "format": "uint32",

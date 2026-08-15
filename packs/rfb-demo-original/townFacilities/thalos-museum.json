@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.thalos-museum",
+  "nameKey": "town-facility-demo-thalos-museum-name",
+  "descriptionKey": "town-facility-demo-thalos-museum-description",
+  "townId": "demo.town.thalos",
+  "category": "home",
+  "storageId": "demo.town-facility.thalos-museum",
+  "rejectArtifactDeposits": true,
+  "entrancePosition": { "x": 20, "y": 9 },
+  "entranceTerrainId": "demo.terrain.museum-entrance"
+}

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 9,
+  "schemaVersion": 10,
   "worldId": "demo.world.middle-earth",
   "towns": [
     {
@@ -114,6 +114,7 @@
         { "symbol": "8", "sourceTag": "HOME" },
         { "symbol": "9", "sourceTag": "BOOKSTORE" }
       ],
+      "specialFacilities": [],
       "buildings": [
       {
         "buildingIndex": 4,
@@ -235,6 +236,9 @@
         { "symbol": "7", "sourceTag": "BLACK_MARKET" },
         { "symbol": "8", "sourceTag": "HOME" },
         { "symbol": "9", "sourceTag": "BOOKSTORE" }
+      ],
+      "specialFacilities": [
+        { "symbol": "M", "sourceIndex": 95, "sourceTag": "MUSEUM", "sourceName": "博物馆" }
       ],
       "buildings": [
         {

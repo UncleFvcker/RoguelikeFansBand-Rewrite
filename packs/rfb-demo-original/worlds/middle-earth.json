@@ -8286,6 +8286,7 @@
           { "terrainId": "demo.terrain.archer-guild-entrance", "positions": [{ "x": 14, "y": 9 }] },
           { "terrainId": "demo.terrain.paladin-guild-entrance", "positions": [{ "x": 16, "y": 9 }] },
           { "terrainId": "demo.terrain.icky-cave-entrance", "positions": [{ "x": 18, "y": 9 }] },
+          { "terrainId": "demo.terrain.museum-entrance", "positions": [{ "x": 20, "y": 9 }] },
           { "terrainId": "demo.terrain.outpost-gate", "positions": [{ "x": 11, "y": 10 }] }
         ]
       }

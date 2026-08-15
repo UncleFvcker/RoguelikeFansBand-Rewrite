@@ -13980,7 +13980,7 @@ fn p108b_thalos_core_binds_fixed_town_services_and_embedded_icky_cave() {
         .expect("Thalos should exist");
     assert_eq!(town.floor_id, "demo.floor.thalos");
     assert_eq!(town.shop_ids.len(), 10);
-    assert_eq!(town.facility_ids.len(), 8);
+    assert_eq!(town.facility_ids.len(), 9);
     for id in [
         "demo.town-facility.thalos-home",
         "demo.town-facility.thalos-library",
@@ -14135,6 +14135,38 @@ fn p108b_thalos_core_binds_fixed_town_services_and_embedded_icky_cave() {
     ] {
         assert!(!town.facility_ids.contains(&deferred.to_owned()));
     }
+}
+
+#[test]
+fn p109b_thalos_binds_town_travel_and_museum() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let town = content
+        .towns
+        .iter()
+        .find(|town| town.id == "demo.town.thalos")
+        .expect("Thalos should exist");
+    assert!(
+        town.facility_ids
+            .contains(&"demo.town-facility.thalos-museum".to_owned())
+    );
+    let inn = content
+        .shops
+        .iter()
+        .find(|shop| shop.id == "demo.shop.thalos-inn")
+        .expect("Thalos Inn should exist");
+    assert_eq!(inn.inn_stay_cost, Some(20));
+
+    let museum = content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.thalos-museum")
+        .expect("Thalos Museum should exist");
+    assert_eq!(museum.category, TownFacilityCategory::Home);
+    assert_eq!(museum.storage_id.as_deref(), Some(museum.id.as_str()));
+    assert!(museum.reject_artifact_deposits);
+    assert_eq!(museum.entrance_position, ContentPosition { x: 20, y: 9 });
+    assert_eq!(museum.entrance_terrain_id, "demo.terrain.museum-entrance");
 }
 
 #[test]

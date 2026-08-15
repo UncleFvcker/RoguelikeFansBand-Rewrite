@@ -37,6 +37,8 @@ pub struct TownFacilityDefinition {
     #[serde(default)]
     pub storage_id: Option<String>,
     #[serde(default)]
+    pub reject_artifact_deposits: bool,
+    #[serde(default)]
     pub owner_name_key: Option<String>,
     #[serde(default)]
     pub task_ids: Vec<String>,

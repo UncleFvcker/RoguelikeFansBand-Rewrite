@@ -423,6 +423,7 @@ struct DemoWildernessTownPlan {
     position: DemoWildernessPosition,
     source_file: String,
     standard_facilities: Vec<DemoTownFacilityPlan>,
+    special_facilities: Vec<DemoTownSpecialFacilityPlan>,
     buildings: Vec<DemoTownBuildingPlan>,
 }
 
@@ -497,6 +498,15 @@ struct LegacyQuestRecord {
 struct DemoTownFacilityPlan {
     symbol: char,
     source_tag: String,
+}
+
+#[derive(Debug, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTownSpecialFacilityPlan {
+    symbol: char,
+    source_index: u32,
+    source_tag: String,
+    source_name: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -14365,6 +14375,11 @@ fn validate_demo_wilderness_plans(
     let t_info = read_legacy_object_at(source, source_commit, T_INFO_SOURCE)?;
     let t_pref = read_legacy_object_at(source, source_commit, T_PREF_SOURCE)?;
     let feature_tags = town_feature_tags(&t_pref);
+    let terrain = parse_f_info(&read_legacy_object_at(
+        source,
+        source_commit,
+        F_INFO_SOURCE,
+    )?)?;
 
     validate_demo_task_plan(source, source_commit, selection)?;
 
@@ -14412,6 +14427,25 @@ fn validate_demo_wilderness_plans(
             {
                 return Err(invalid_wilderness_selection(format!(
                     "town plan {} facility {}:{} is absent or duplicated",
+                    town.id, facility.symbol, facility.source_tag
+                )));
+            }
+        }
+        for facility in &town.special_facilities {
+            let feature = terrain
+                .iter()
+                .find(|entry| entry.index == facility.source_index);
+            if !symbols.insert(facility.symbol)
+                || feature_tags.get(&facility.symbol) != Some(&facility.source_tag)
+                || !source_has_town_symbol(&town_source, facility.symbol)
+                || !feature.is_some_and(|entry| {
+                    entry.tag == facility.source_tag
+                        && entry.display_name.as_deref() == Some(facility.source_name.as_str())
+                        && entry.flags.iter().any(|flag| flag == "STORE")
+                })
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "town plan {} special facility {}:{} drifted",
                     town.id, facility.symbol, facility.source_tag
                 )));
             }
@@ -14692,7 +14726,7 @@ pub fn sync_demo_wilderness(
         ));
     }
     let selection: DemoWildernessSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
-    if selection.schema_version != 9
+    if selection.schema_version != 10
         || selection.towns.is_empty()
         || selection.dungeons.is_empty()
         || selection.town_plans.is_empty()
@@ -14700,7 +14734,7 @@ pub fn sync_demo_wilderness(
         || selection.dungeon_plans.is_empty()
     {
         return Err(LegacyImportError::InvalidDemoWildernessSelection(
-            "selection must use schemaVersion 9 and contain active towns, town plans, three bounty offices, the Anambar task plan, active dungeons, and dungeon plans"
+            "selection must use schemaVersion 10 and contain active towns, town plans, three bounty offices, the Anambar task plan, active dungeons, and dungeon plans"
                 .to_owned(),
         ));
     }
@@ -27592,7 +27626,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 9);
+        assert_eq!(selection.schema_version, 10);
         let anambar = selection
             .town_plans
             .iter()
@@ -27643,7 +27677,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 9);
+        assert_eq!(selection.schema_version, 10);
         let anambar = selection
             .town_plans
             .iter()
@@ -27740,7 +27774,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 9);
+        assert_eq!(selection.schema_version, 10);
         assert_eq!(selection.bounty_offices.len(), 3);
         let office = |town_id: &str| {
             selection
@@ -27791,7 +27825,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 9);
+        assert_eq!(selection.schema_version, 10);
         let plan = &selection.anambar_task_plan;
         assert_eq!(plan.town_id, "demo.town.anambar");
         assert_eq!(plan.town_source_file, "lib/edit/t_ana.txt");
@@ -27878,7 +27912,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 9);
+        assert_eq!(selection.schema_version, 10);
         assert!(selection.towns.iter().any(|town| {
             town.source_index == 6 && town.source_name == "萨洛斯" && town.id == "demo.town.thalos"
         }));
@@ -27938,6 +27972,40 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         );
         assert!(selection.dungeons.iter().any(|dungeon| {
             dungeon.source_index == 21 && dungeon.id == "demo.dungeon.icky-cave"
+        }));
+    }
+
+    #[test]
+    fn p109a_thalos_plan_locks_museum_and_town_travel() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 10);
+        let thalos = selection
+            .town_plans
+            .iter()
+            .find(|plan| plan.id == "demo.town.thalos")
+            .expect("Thalos should have an implementation plan");
+        assert_eq!(
+            thalos.special_facilities,
+            [DemoTownSpecialFacilityPlan {
+                symbol: 'M',
+                source_index: 95,
+                source_tag: "MUSEUM".to_owned(),
+                source_name: "博物馆".to_owned(),
+            }]
+        );
+        let inn = thalos
+            .buildings
+            .iter()
+            .find(|building| building.building_index == 4)
+            .expect("Thalos Inn should be planned");
+        assert!(inn.services.iter().any(|service| {
+            service.action_id == 42
+                && service.name == "传送到其他城镇"
+                && service.minimum_cost == 500
+                && service.maximum_cost == 500
         }));
     }
 
