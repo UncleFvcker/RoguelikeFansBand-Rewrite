@@ -4010,7 +4010,7 @@ fn demo_item_json(
     }
 
     let mut report = ContentImportReport::default();
-    let mut value = item_json_with_terrain(entry, id, ammo, None, None, &mut report);
+    let value = item_json_with_terrain(entry, id, ammo, None, None, &mut report);
     report.unmapped_item_flags.remove("TOWN");
     if bare_jewelry {
         report.item_behavior_gaps.remove("effect-jewelry");
@@ -4021,6 +4021,33 @@ fn demo_item_json(
         )));
     }
 
+    Ok(finalize_demo_item_json(value, id))
+}
+
+fn demo_harp_json(
+    entry: &LegacyItemEntry,
+    ammo: &LauncherAmmoIndex,
+) -> Result<serde_json::Value, LegacyImportError> {
+    if (entry.index, entry.tval, entry.sval, entry.name.as_str()) != (168, 19, 70, "Harp") {
+        return Err(LegacyImportError::InvalidDemoItemSelection(
+            "source index 168 no longer identifies the authoritative Harp".to_owned(),
+        ));
+    }
+    let mut report = ContentImportReport::default();
+    let value = item_json_with_terrain(entry, "harp", ammo, None, None, &mut report);
+    if report.item_behavior_gaps.remove("launcher-unpaired") != Some(1)
+        || report.unmapped_item_flags.remove("CHR") != Some(1)
+        || !report.item_behavior_gaps.is_empty()
+        || !report.unmapped_item_flags.is_empty()
+    {
+        return Err(LegacyImportError::InvalidDemoItemSelection(
+            "Harp has gaps beyond its deferred pval and fake-bow behavior".to_owned(),
+        ));
+    }
+    Ok(finalize_demo_item_json(value, "harp"))
+}
+
+fn finalize_demo_item_json(mut value: serde_json::Value, id: &str) -> serde_json::Value {
     value["id"] = serde_json::json!(format!("demo.item.{id}"));
     value["nameKey"] = serde_json::json!(format!("item-demo-{id}-name"));
     value["descriptionKey"] = serde_json::json!(format!("item-demo-{id}-description"));
@@ -4033,7 +4060,7 @@ fn demo_item_json(
         tags.sort_by_key(serde_json::Value::to_string);
         tags.dedup();
     }
-    Ok(value)
+    value
 }
 
 impl ItemShape {
@@ -16436,6 +16463,21 @@ struct EgoContractExpectation {
     branch_activation: Option<&'static str>,
 }
 
+#[derive(Debug)]
+struct RangedEgoContractExpectation {
+    index: u32,
+    english_name: &'static str,
+    chinese_name: &'static str,
+    types: &'static [&'static str],
+    level: u16,
+    max_level: Option<u16>,
+    rarity: u16,
+    combat_maxima: [i32; 4],
+    flags: &'static [&'static str],
+    subtype_restriction: Option<(&'static str, u32)>,
+    dynamic_branch: &'static str,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct LegacyEgoActivationCandidate {
     source_order: usize,
@@ -17032,6 +17074,234 @@ const WEAPON_DIGGER_EGO_EXPECTATIONS: &[EgoContractExpectation] = &[
     },
 ];
 
+const RANGED_EGO_EXPECTATIONS: &[RangedEgoContractExpectation] = &[
+    RangedEgoContractExpectation {
+        index: 160,
+        english_name: "of Accuracy",
+        chinese_name: "精度之",
+        types: &["BOW"],
+        level: 0,
+        max_level: Some(40),
+        rarity: 1,
+        combat_maxima: [10, 5, 0, 0],
+        flags: &["AWARE"],
+        subtype_restriction: None,
+        dynamic_branch: "accuracy-to-hit",
+    },
+    RangedEgoContractExpectation {
+        index: 161,
+        english_name: "of Velocity",
+        chinese_name: "极速之",
+        types: &["BOW"],
+        level: 0,
+        max_level: Some(60),
+        rarity: 1,
+        combat_maxima: [5, 5, 0, 0],
+        flags: &["AWARE"],
+        subtype_restriction: None,
+        dynamic_branch: "velocity-multiplier",
+    },
+    RangedEgoContractExpectation {
+        index: 162,
+        english_name: "of Extra Might",
+        chinese_name: "额外力量之",
+        types: &["BOW"],
+        level: 20,
+        max_level: None,
+        rarity: 2,
+        combat_maxima: [2, 4, 0, 3],
+        flags: &["STR"],
+        subtype_restriction: None,
+        dynamic_branch: "extra-might-multiplier",
+    },
+    RangedEgoContractExpectation {
+        index: 163,
+        english_name: "of Extra Shots",
+        chinese_name: "额外射击之",
+        types: &["BOW"],
+        level: 10,
+        max_level: None,
+        rarity: 2,
+        combat_maxima: [4, 2, 0, 0],
+        flags: &["XTRA_SHOTS", "AWARE"],
+        subtype_restriction: None,
+        dynamic_branch: "extra-shots-pval",
+    },
+    RangedEgoContractExpectation {
+        index: 164,
+        english_name: "of Lothlorien",
+        chinese_name: "罗斯洛立安的",
+        types: &["BOW"],
+        level: 60,
+        max_level: None,
+        rarity: 4,
+        combat_maxima: [10, 10, 0, 3],
+        flags: &["DEX", "STEALTH", "IGNORE_ACID", "IGNORE_FIRE"],
+        subtype_restriction: Some(("long-bow", 162)),
+        dynamic_branch: "lothlorien-multiplier-shots-or-high-resistance",
+    },
+    RangedEgoContractExpectation {
+        index: 165,
+        english_name: "of the Haradrim",
+        chinese_name: "哈拉德人的",
+        types: &["BOW"],
+        level: 70,
+        max_level: None,
+        rarity: 6,
+        combat_maxima: [5, 10, 0, 3],
+        flags: &["STR", "IGNORE_ACID", "IGNORE_FIRE"],
+        subtype_restriction: Some(("heavy-crossbow", 164)),
+        dynamic_branch: "haradrim-multiplier-shots-or-high-resistance",
+    },
+    RangedEgoContractExpectation {
+        index: 166,
+        english_name: "of Buckland",
+        chinese_name: "雄鹿地的",
+        types: &["BOW"],
+        level: 30,
+        max_level: None,
+        rarity: 3,
+        combat_maxima: [10, 5, 0, 3],
+        flags: &["SPEED", "XTRA_SHOTS", "IGNORE_ACID", "IGNORE_FIRE"],
+        subtype_restriction: Some(("sling", 160)),
+        dynamic_branch: "buckland-multiplier-or-high-resistance",
+    },
+    RangedEgoContractExpectation {
+        index: 167,
+        english_name: "of the Hunter",
+        chinese_name: "猎人的",
+        types: &["BOW"],
+        level: 20,
+        max_level: None,
+        rarity: 3,
+        combat_maxima: [10, 5, 0, 4],
+        flags: &["STEALTH"],
+        subtype_restriction: None,
+        dynamic_branch: "hunter-esp-and-animal-slay",
+    },
+    RangedEgoContractExpectation {
+        index: 180,
+        english_name: "of Slaying",
+        chinese_name: "杀戮之",
+        types: &["AMMO"],
+        level: 10,
+        max_level: None,
+        rarity: 2,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &[],
+        subtype_restriction: None,
+        dynamic_branch: "ammunition-slaying",
+    },
+    RangedEgoContractExpectation {
+        index: 181,
+        english_name: "(Elemental)",
+        chinese_name: "(元素的)",
+        types: &["AMMO"],
+        level: 20,
+        max_level: None,
+        rarity: 3,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &["IGNORE_ACID", "IGNORE_FIRE", "IGNORE_COLD", "IGNORE_ELEC"],
+        subtype_restriction: None,
+        dynamic_branch: "ammunition-craft",
+    },
+    RangedEgoContractExpectation {
+        index: 182,
+        english_name: "of Holy Might",
+        chinese_name: "神圣力量之",
+        types: &["AMMO"],
+        level: 60,
+        max_level: None,
+        rarity: 7,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &[
+            "SLAY_EVIL",
+            "SLAY_DEMON",
+            "SLAY_UNDEAD",
+            "BRAND_FIRE",
+            "BLESSED",
+            "IGNORE_ACID",
+            "IGNORE_FIRE",
+            "IGNORE_COLD",
+            "IGNORE_ELEC",
+        ],
+        subtype_restriction: None,
+        dynamic_branch: "static-holy-might",
+    },
+    RangedEgoContractExpectation {
+        index: 183,
+        english_name: "of Returning",
+        chinese_name: "返回之",
+        types: &["AMMO"],
+        level: 40,
+        max_level: None,
+        rarity: 4,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &[],
+        subtype_restriction: None,
+        dynamic_branch: "returning-shot",
+    },
+    RangedEgoContractExpectation {
+        index: 184,
+        english_name: "of Endurance",
+        chinese_name: "耐力之",
+        types: &["AMMO"],
+        level: 40,
+        max_level: None,
+        rarity: 4,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &["IGNORE_ACID", "IGNORE_FIRE", "IGNORE_COLD", "IGNORE_ELEC"],
+        subtype_restriction: None,
+        dynamic_branch: "endurance-destruction",
+    },
+    RangedEgoContractExpectation {
+        index: 185,
+        english_name: "of Exploding",
+        chinese_name: "爆炸之",
+        types: &["AMMO"],
+        level: 1,
+        max_level: Some(60),
+        rarity: 5,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &[],
+        subtype_restriction: None,
+        dynamic_branch: "exploding-hit",
+    },
+    RangedEgoContractExpectation {
+        index: 195,
+        english_name: "of the Vanyar",
+        chinese_name: "凡雅精灵的",
+        types: &["HARP"],
+        level: 0,
+        max_level: None,
+        rarity: 1,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &["CHR", "WIS", "SUST_CHR", "SUST_WIS", "RES_DARK"],
+        subtype_restriction: None,
+        dynamic_branch: "shared-harp-pval",
+    },
+    RangedEgoContractExpectation {
+        index: 196,
+        english_name: "of Erebor",
+        chinese_name: "伊鲁伯的",
+        types: &["HARP"],
+        level: 0,
+        max_level: None,
+        rarity: 1,
+        combat_maxima: [0, 0, 0, 0],
+        flags: &[
+            "CHR",
+            "SUST_CHR",
+            "SUST_STR",
+            "SUST_CON",
+            "RES_FEAR",
+            "RES_BLIND",
+        ],
+        subtype_restriction: None,
+        dynamic_branch: "shared-harp-pval",
+    },
+];
+
 fn validate_weapon_digger_ego_contract(
     egos: &[LegacyEgoEntry],
     chinese_names: &[Option<String>],
@@ -17106,6 +17376,98 @@ fn validate_weapon_digger_ego_contract(
         {
             return Err(LegacyImportError::InvalidEgoAudit(format!(
                 "weapon/digger ego {} no longer matches its authoritative expectation",
+                expectation.index
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn validate_ranged_ego_contract(
+    egos: &[LegacyEgoEntry],
+    chinese_names: &[Option<String>],
+) -> Result<(), LegacyImportError> {
+    let actual_indices = egos
+        .iter()
+        .filter(|ego| {
+            ego.slots
+                .iter()
+                .any(|slot| matches!(slot.as_str(), "BOW" | "AMMO" | "HARP"))
+        })
+        .map(|ego| ego.index)
+        .collect::<Vec<_>>();
+    let expected_indices = RANGED_EGO_EXPECTATIONS
+        .iter()
+        .map(|expectation| expectation.index)
+        .collect::<Vec<_>>();
+    if actual_indices != expected_indices
+        || RANGED_EGO_EXPECTATIONS.len() != 16
+        || RANGED_EGO_EXPECTATIONS
+            .iter()
+            .filter(|expectation| expectation.types == ["BOW"])
+            .count()
+            != 8
+        || RANGED_EGO_EXPECTATIONS
+            .iter()
+            .filter(|expectation| expectation.types == ["AMMO"])
+            .count()
+            != 6
+        || RANGED_EGO_EXPECTATIONS
+            .iter()
+            .filter(|expectation| expectation.types == ["HARP"])
+            .count()
+            != 2
+        || RANGED_EGO_EXPECTATIONS
+            .iter()
+            .filter(|expectation| expectation.subtype_restriction.is_some())
+            .count()
+            != 3
+        || RANGED_EGO_EXPECTATIONS
+            .iter()
+            .any(|expectation| expectation.dynamic_branch.is_empty())
+        || RANGED_EGO_EXPECTATIONS.iter().any(|expectation| {
+            expectation
+                .subtype_restriction
+                .is_some_and(|(id, source_index)| {
+                    !RANGED_BASE_KIND_EXPECTATIONS
+                        .iter()
+                        .any(|base| base.id == id && base.source_index == source_index)
+                })
+        })
+    {
+        return Err(LegacyImportError::InvalidEgoAudit(
+            "bow/ammo/harp ego contract shape changed".to_owned(),
+        ));
+    }
+
+    for expectation in RANGED_EGO_EXPECTATIONS {
+        let ego = egos
+            .iter()
+            .find(|ego| ego.index == expectation.index)
+            .expect("the exact ranged source-index list was checked above");
+        let actual_types = ego.slots.iter().map(String::as_str).collect::<Vec<_>>();
+        let actual_flags = ego.flags.iter().map(String::as_str).collect::<Vec<_>>();
+        let actual_chinese_name = chinese_names
+            .get(expectation.index as usize)
+            .and_then(Option::as_deref);
+        if ego.name != expectation.english_name
+            || actual_chinese_name != Some(expectation.chinese_name)
+            || actual_types != expectation.types
+            || ego.level != expectation.level
+            || ego.max_level != expectation.max_level
+            || ego.rarity != expectation.rarity
+            || [
+                ego.max_to_hit,
+                ego.max_to_damage,
+                ego.max_to_armor,
+                ego.max_pval,
+            ] != expectation.combat_maxima
+            || actual_flags != expectation.flags
+            || ego.has_activation
+            || ego.activation.is_some()
+        {
+            return Err(LegacyImportError::InvalidEgoAudit(format!(
+                "bow/ammo/harp ego {} no longer matches its authoritative expectation",
                 expectation.index
             )));
         }
@@ -17401,6 +17763,7 @@ pub fn audit_egos(source: &Path) -> Result<EgoAuditReport, LegacyImportError> {
         DEVICES_C_SOURCE,
     )?)?;
     validate_weapon_digger_ego_contract(&egos, &chinese_names)?;
+    validate_ranged_ego_contract(&egos, &chinese_names)?;
     validate_weapon_ego_activation_contract(&activation_candidates)?;
     audit_ego_sources(source_commit, &egos, &chinese_names)
 }
@@ -17458,6 +17821,281 @@ fn write_weapon_ego_locale_block(
     source.push('\n');
     fs::write(path, source)?;
     Ok(())
+}
+
+#[derive(Debug)]
+struct RangedBaseKindExpectation {
+    source_index: u32,
+    id: &'static str,
+    tval: u16,
+    sval: u16,
+}
+
+const RANGED_BASE_KIND_EXPECTATIONS: &[RangedBaseKindExpectation] = &[
+    RangedBaseKindExpectation {
+        source_index: 160,
+        id: "sling",
+        tval: 19,
+        sval: 2,
+    },
+    RangedBaseKindExpectation {
+        source_index: 161,
+        id: "short-bow",
+        tval: 19,
+        sval: 12,
+    },
+    RangedBaseKindExpectation {
+        source_index: 162,
+        id: "long-bow",
+        tval: 19,
+        sval: 13,
+    },
+    RangedBaseKindExpectation {
+        source_index: 163,
+        id: "light-crossbow",
+        tval: 19,
+        sval: 23,
+    },
+    RangedBaseKindExpectation {
+        source_index: 164,
+        id: "heavy-crossbow",
+        tval: 19,
+        sval: 24,
+    },
+    RangedBaseKindExpectation {
+        source_index: 168,
+        id: "harp",
+        tval: 19,
+        sval: 70,
+    },
+    RangedBaseKindExpectation {
+        source_index: 175,
+        id: "arrow",
+        tval: 17,
+        sval: 1,
+    },
+    RangedBaseKindExpectation {
+        source_index: 176,
+        id: "sheaf-arrow",
+        tval: 17,
+        sval: 2,
+    },
+    RangedBaseKindExpectation {
+        source_index: 177,
+        id: "mithril-arrow",
+        tval: 17,
+        sval: 3,
+    },
+    RangedBaseKindExpectation {
+        source_index: 178,
+        id: "seeker-arrow",
+        tval: 17,
+        sval: 4,
+    },
+    RangedBaseKindExpectation {
+        source_index: 185,
+        id: "bolt",
+        tval: 18,
+        sval: 1,
+    },
+    RangedBaseKindExpectation {
+        source_index: 186,
+        id: "steel-bolt",
+        tval: 18,
+        sval: 2,
+    },
+    RangedBaseKindExpectation {
+        source_index: 187,
+        id: "mithril-bolt",
+        tval: 18,
+        sval: 3,
+    },
+    RangedBaseKindExpectation {
+        source_index: 188,
+        id: "seeker-bolt",
+        tval: 18,
+        sval: 4,
+    },
+    RangedBaseKindExpectation {
+        source_index: 189,
+        id: "adamantine-bolt",
+        tval: 18,
+        sval: 5,
+    },
+    RangedBaseKindExpectation {
+        source_index: 190,
+        id: "rounded-pebble",
+        tval: 16,
+        sval: 1,
+    },
+    RangedBaseKindExpectation {
+        source_index: 191,
+        id: "iron-shot",
+        tval: 16,
+        sval: 2,
+    },
+    RangedBaseKindExpectation {
+        source_index: 192,
+        id: "mithril-shot",
+        tval: 16,
+        sval: 3,
+    },
+];
+
+fn validate_ranged_base_kind_contract(
+    entries: &[LegacyItemEntry],
+    chinese_names: &[Option<String>],
+    selection: &DemoItemSelection,
+) -> Result<(), LegacyImportError> {
+    let selected = selected_demo_items(selection, entries)?;
+    let by_index = entries
+        .iter()
+        .map(|entry| (entry.index, entry))
+        .collect::<BTreeMap<_, _>>();
+    let mut source_indices = BTreeSet::new();
+    let mut base_kinds = BTreeSet::new();
+    if RANGED_BASE_KIND_EXPECTATIONS.len() != 18 {
+        return Err(LegacyImportError::InvalidDemoItemSelection(
+            "ranged base-kind contract must contain 18 entries".to_owned(),
+        ));
+    }
+    for expectation in RANGED_BASE_KIND_EXPECTATIONS {
+        let entry = by_index.get(&expectation.source_index).ok_or_else(|| {
+            LegacyImportError::InvalidDemoItemSelection(format!(
+                "missing ranged source item {}",
+                expectation.source_index
+            ))
+        })?;
+        if (entry.tval, entry.sval) != (expectation.tval, expectation.sval)
+            || !source_indices.insert(entry.index)
+            || !base_kinds.insert((entry.tval, entry.sval))
+        {
+            return Err(LegacyImportError::InvalidDemoItemSelection(format!(
+                "ranged source identity {} no longer matches {}/{}",
+                expectation.source_index, expectation.tval, expectation.sval
+            )));
+        }
+        if expectation.source_index == 168 {
+            let chinese_name = chinese_names.get(168).and_then(Option::as_deref);
+            if entry.name != "Harp" || chinese_name != Some("& 把~竖琴") {
+                return Err(LegacyImportError::InvalidDemoItemSelection(
+                    "Harp no longer has its authoritative English and Chinese names".to_owned(),
+                ));
+            }
+        } else if !selected.iter().any(|(selected_entry, selected_item)| {
+            selected_entry.source_index == expectation.source_index
+                && selected_entry.id == expectation.id
+                && selected_item.index == expectation.source_index
+        }) {
+            return Err(LegacyImportError::InvalidDemoItemSelection(format!(
+                "ranged source item {} is not selected as {}",
+                expectation.source_index, expectation.id
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn write_demo_harp_locale(path: &Path, name: &str, chinese: bool) -> Result<(), LegacyImportError> {
+    const NAME_PREFIX: &str = "item-demo-harp-name =";
+    const DESCRIPTION_PREFIX: &str = "item-demo-harp-description =";
+    let mut source = fs::read_to_string(path)?
+        .lines()
+        .filter(|line| !line.starts_with(NAME_PREFIX) && !line.starts_with(DESCRIPTION_PREFIX))
+        .collect::<Vec<_>>()
+        .join("\n")
+        .trim_end()
+        .to_owned();
+    let description = if chinese {
+        "游吟诗人偏爱的弦乐器。"
+    } else {
+        "A stringed instrument favored by bards."
+    };
+    source.push_str(&format!(
+        "\n{name_prefix} {name}\n{description_prefix} {description}\n",
+        name_prefix = NAME_PREFIX,
+        description_prefix = DESCRIPTION_PREFIX,
+    ));
+    fs::write(path, source)?;
+    Ok(())
+}
+
+/// Validates the E4 ranged ego contract, backfills the selected launcher and
+/// ammunition identities, and imports the deferred-pval Harp base item.
+pub fn sync_demo_ranged_ego_identities(
+    source: &Path,
+    pack_root: &Path,
+) -> Result<usize, LegacyImportError> {
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let egos = parse_e_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        E_INFO_SOURCE,
+    )?)?;
+    let ego_chinese_names = parse_chinese_name_table(
+        &read_legacy_object_at(source, &source_commit, E_NAME_ZH_SOURCE)?,
+        E_NAME_ZH_SOURCE,
+    )?;
+    validate_ranged_ego_contract(&egos, &ego_chinese_names)?;
+
+    let entries = parse_k_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        K_INFO_SOURCE,
+    )?)?;
+    let item_chinese_names = parse_chinese_name_table(
+        &read_legacy_object_at(source, &source_commit, K_NAME_ZH_SOURCE)?,
+        K_NAME_ZH_SOURCE,
+    )?;
+    let selection: DemoItemSelection =
+        serde_json::from_slice(&fs::read(pack_root.join("legacy-item-selection.json"))?)?;
+    validate_ranged_base_kind_contract(&entries, &item_chinese_names, &selection)?;
+
+    for expectation in RANGED_BASE_KIND_EXPECTATIONS
+        .iter()
+        .filter(|expectation| expectation.source_index != 168)
+    {
+        let path = pack_root
+            .join("items")
+            .join(format!("{}.json", expectation.id));
+        let mut value: serde_json::Value = serde_json::from_slice(&fs::read(&path)?)?;
+        value["rfbBaseKind"] = serde_json::json!({
+            "sourceIndex": expectation.source_index,
+            "tval": expectation.tval,
+            "sval": expectation.sval,
+        });
+        fs::write(path, serde_json::to_string_pretty(&value)? + "\n")?;
+    }
+
+    let harp = entries
+        .iter()
+        .find(|entry| entry.index == 168)
+        .expect("the Harp source identity was validated above");
+    let harp_json = demo_harp_json(harp, &launcher_ammo_index(&entries))?;
+    fs::write(
+        pack_root.join("items/harp.json"),
+        serde_json::to_string_pretty(&harp_json)? + "\n",
+    )?;
+
+    let workspace_root = pack_root
+        .parent()
+        .and_then(Path::parent)
+        .unwrap_or(pack_root);
+    write_demo_harp_locale(
+        &workspace_root.join("locales/en-US/content.ftl"),
+        &singular_english_kind_name(&harp.name),
+        false,
+    )?;
+    let chinese_name = item_chinese_names[168]
+        .as_deref()
+        .map(singular_chinese_kind_name)
+        .expect("the Harp Chinese name was validated above");
+    write_demo_harp_locale(
+        &workspace_root.join("locales/zh-CN/content.ftl"),
+        &chinese_name,
+        true,
+    )?;
+    Ok(RANGED_BASE_KIND_EXPECTATIONS.len())
 }
 
 fn sync_demo_weapon_digger_base_kinds(
@@ -25084,6 +25722,52 @@ static cptr _ego_name_zh[] =
         }
         assert!(!report.unmapped_ego_flags.contains_key("FULL_NAME"));
         assert!(!report.not_applicable_item_flags.contains_key("FULL_NAME"));
+    }
+
+    #[test]
+    fn ranged_ego_contract_locks_all_sixteen_automatic_names() {
+        assert_eq!(
+            RANGED_EGO_EXPECTATIONS
+                .iter()
+                .map(|expectation| expectation.index)
+                .collect::<Vec<_>>(),
+            [
+                160, 161, 162, 163, 164, 165, 166, 167, 180, 181, 182, 183, 184, 185, 195, 196,
+            ]
+        );
+        assert!(RANGED_EGO_EXPECTATIONS.iter().all(|expectation| {
+            !expectation.english_name.is_empty()
+                && !expectation.chinese_name.is_empty()
+                && !expectation.flags.contains(&"FULL_NAME")
+        }));
+    }
+
+    #[test]
+    fn ranged_harp_base_definition_keeps_source_identity_and_fake_bow_shape() {
+        let harp = LegacyItemEntry {
+            index: 168,
+            name: "Harp".to_owned(),
+            glyph: Some('}'),
+            tval: 19,
+            sval: 70,
+            level: 25,
+            weight_tenths_pound: 40,
+            base_value: 400,
+            flags: vec!["CHR".to_owned(), "NO_ENCHANT".to_owned()],
+            ..LegacyItemEntry::default()
+        };
+        let value = demo_harp_json(&harp, &launcher_ammo_index(std::slice::from_ref(&harp)))
+            .expect("the deferred-pval Harp base should import");
+
+        assert_eq!(value["id"], "demo.item.harp");
+        assert_eq!(
+            value["rfbBaseKind"],
+            serde_json::json!({"sourceIndex": 168, "tval": 19, "sval": 70})
+        );
+        assert_eq!(value["equipmentSlot"], "launcher");
+        assert_eq!(value["resistsEnchantment"], true);
+        assert!(value.get("projectileProfile").is_none());
+        assert!(value.get("modifiers").is_none());
     }
 
     #[test]

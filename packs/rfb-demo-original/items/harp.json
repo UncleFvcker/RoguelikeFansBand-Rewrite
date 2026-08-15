@@ -1,30 +1,23 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
   "baseValue": 400,
-  "descriptionKey": "item-demo-short-bow-description",
+  "descriptionKey": "item-demo-harp-description",
   "elementalDestructionVulnerabilities": [
     "acid",
     "fire"
   ],
   "equipmentSlot": "launcher",
   "formatVersion": 1,
-  "generationLevel": 10,
+  "generationLevel": 25,
   "glyph": "}",
-  "id": "demo.item.short-bow",
+  "id": "demo.item.harp",
   "maxStack": 1,
-  "mogaminatorRare": false,
-  "nameKey": "item-demo-short-bow-name",
-  "projectileProfile": {
-    "ammunitionType": "arrow",
-    "damageMultiplierPercent": 250,
-    "range": 16,
-    "shotEnergy": 8888,
-    "toDamage": 0,
-    "toHit": 0
-  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-harp-name",
+  "resistsEnchantment": true,
   "rfbBaseKind": {
-    "sourceIndex": 161,
-    "sval": 12,
+    "sourceIndex": 168,
+    "sval": 70,
     "tval": 19
   },
   "tags": [
@@ -32,5 +25,5 @@
     "launcher",
     "rfb-compatibility"
   ],
-  "weightTenthsPound": 30
+  "weightTenthsPound": 40
 }

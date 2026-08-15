@@ -27,6 +27,11 @@
   "maxStack": 99,
   "mogaminatorRare": true,
   "nameKey": "item-demo-mithril-arrow-name",
+  "rfbBaseKind": {
+    "sourceIndex": 177,
+    "sval": 3,
+    "tval": 17
+  },
   "tags": [
     "ammunition",
     "rfb-compatibility"

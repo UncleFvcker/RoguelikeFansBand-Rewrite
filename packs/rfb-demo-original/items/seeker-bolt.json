@@ -26,6 +26,11 @@
   "maxStack": 99,
   "mogaminatorRare": true,
   "nameKey": "item-demo-seeker-bolt-name",
+  "rfbBaseKind": {
+    "sourceIndex": 188,
+    "sval": 4,
+    "tval": 18
+  },
   "tags": [
     "ammunition",
     "rfb-compatibility"

@@ -1082,4 +1082,30 @@ mod tests {
             );
         }
     }
+
+    #[test]
+    fn ranged_ego_automatic_names_compose_in_both_locales() {
+        for (locale, base, affix, expected) in [
+            (Locale::EnUs, "Arrow", "(Elemental)", "Arrow (Elemental)"),
+            (Locale::ZhCn, "箭", "(元素的)", "元素的箭"),
+            (
+                Locale::EnUs,
+                "Long Bow",
+                "of Accuracy",
+                "Long Bow of Accuracy",
+            ),
+            (Locale::ZhCn, "长弓", "精度之", "精度之长弓"),
+            (Locale::EnUs, "Harp", "of the Vanyar", "Harp of the Vanyar"),
+            (Locale::ZhCn, "竖琴", "凡雅精灵的", "凡雅精灵的竖琴"),
+        ] {
+            assert_eq!(
+                compose_affix_names(
+                    locale,
+                    base,
+                    &[(affix.to_owned(), AffixNamePlacementDefinition::Automatic)],
+                ),
+                expected
+            );
+        }
+    }
 }

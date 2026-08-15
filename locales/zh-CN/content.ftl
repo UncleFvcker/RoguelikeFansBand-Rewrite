@@ -8178,3 +8178,5 @@ task-demo-anambar-lord-bovin-treachery-name = 鲍文大人的背叛 (阿南巴)
 task-demo-anambar-lord-bovin-treachery-description = 曾经备受爱戴的高塔典狱长鲍文（Bovin）大人，与一名黑女巫联手，转向了邪恶。黑暗巫师和死灵法师现在频繁出入高塔，密谋对抗我们的城市。必须在他们唤起一支不可阻挡的恶魔、巨龙和死者大军之前，破坏他们的计划。请帮助我们，拯救我们的城市。
 task-demo-anambar-lord-bovin-treachery-completed-description = 谢谢你！现在阿南巴（Anambar）的人民又可以安全地出行了。
 task-demo-anambar-lord-bovin-treachery-failed-description = 我早该知道你胜任不了这个任务。幸运的是，伟大的英雄格威利姆（Gwilim）大人恰好路过，把我们从叛徒鲍文的黑暗军队手中拯救了出来。
+item-demo-harp-name = 竖琴
+item-demo-harp-description = 游吟诗人偏爱的弦乐器。

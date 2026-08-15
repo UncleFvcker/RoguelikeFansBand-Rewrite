@@ -8174,3 +8174,5 @@ task-demo-anambar-lord-bovin-treachery-name = The Treachery of Lord Bovin (Anamb
 task-demo-anambar-lord-bovin-treachery-description = Lord Bovin and a dark witch have turned the High Tower into a base for dragons, demons, necromancers, and other enemies of Anambar.
 task-demo-anambar-lord-bovin-treachery-completed-description = Thank you. The people of Anambar may travel safely again.
 task-demo-anambar-lord-bovin-treachery-failed-description = Lord Gwilim happened to pass by and saved us from Bovin's dark army after you failed.
+item-demo-harp-name = Harp
+item-demo-harp-description = A stringed instrument favored by bards.

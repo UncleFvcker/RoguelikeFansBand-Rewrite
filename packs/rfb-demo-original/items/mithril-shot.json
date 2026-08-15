@@ -23,6 +23,11 @@
   "maxStack": 99,
   "mogaminatorRare": true,
   "nameKey": "item-demo-mithril-shot-name",
+  "rfbBaseKind": {
+    "sourceIndex": 192,
+    "sval": 3,
+    "tval": 16
+  },
   "tags": [
     "ammunition",
     "rfb-compatibility"

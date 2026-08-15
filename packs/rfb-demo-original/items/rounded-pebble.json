@@ -17,6 +17,11 @@
   "maxStack": 99,
   "mogaminatorRare": false,
   "nameKey": "item-demo-rounded-pebble-name",
+  "rfbBaseKind": {
+    "sourceIndex": 190,
+    "sval": 1,
+    "tval": 16
+  },
   "tags": [
     "ammunition",
     "rfb-compatibility"

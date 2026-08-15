@@ -102,6 +102,12 @@ Blessed 与 `IGNORE` 全部由现有静态属性表达；不得为它增加专�
 
 ### E4.1：锁定 16 条权威契约与 18 个基础身份
 
+状态：已完成。新增 ranged expectation 表，逐条校验 8 BOW、6 AMMO、2 HARP 的权威中英文名、
+`T/W/C/F/E`、三个子类型限制和动态分支；同步命令从 RFB `master` 回灌 5 个发射器与 12 种弹药的
+`rfbBaseKind`，并导入 source 168 Harp 的权威基础定义与中英文名。18 个 `(sourceIndex,tval,sval)`
+通过正式内容测试锁定，Harp 保持 launcher 槽、`NO_ENCHANT` 和无 projectile profile；生成期 CHR/pval
+仍留给 E4.2/E4.4。内容包推进至 `1.379.0`；本批没有新增 schema、Protocol、save 或 State Hash 字段。
+
 - 增加最小 expectation 表，逐条锁定 index、权威中英文名、类型、L/M/R、`C/F/E`、子类型限制和
   动态分支；不建设 `ego.c` C 源码解析器；
 - 为 5 个发射器、12 种弹药回灌 `rfbBaseKind`，导入 source index 168 Harp 的权威基础定义和中文名；

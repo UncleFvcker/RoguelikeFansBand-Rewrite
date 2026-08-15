@@ -17,6 +17,11 @@
   "maxStack": 99,
   "mogaminatorRare": false,
   "nameKey": "item-demo-iron-shot-name",
+  "rfbBaseKind": {
+    "sourceIndex": 191,
+    "sval": 2,
+    "tval": 16
+  },
   "tags": [
     "ammunition",
     "rfb-compatibility"
