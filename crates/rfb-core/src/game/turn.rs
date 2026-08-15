@@ -382,7 +382,18 @@ impl Game {
                 continue;
             }
             let Some(recovery) = item_device_generation(content, &item.kind_id, &item.affix_ids)
-                .and_then(|generation| generation.recovery)
+                .and_then(|generation| {
+                    item.activation
+                        .as_ref()
+                        .and_then(|activation| {
+                            generation
+                                .activations
+                                .iter()
+                                .find(|profile| profile.id == activation.profile_id)
+                        })
+                        .and_then(|profile| profile.recovery)
+                        .or(generation.recovery)
+                })
             else {
                 continue;
             };

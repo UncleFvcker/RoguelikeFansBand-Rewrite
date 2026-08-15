@@ -4,8 +4,9 @@ use std::collections::BTreeSet;
 
 use rfb_content::{
     ActorDamageType, ActorResistanceLevel, AffixDefinition, AffixPropertyBundleDefinition,
-    ContentCatalog, EquipmentPassive, ItemDefinition, RfbEgoTypeDefinition, SlayLevel, SlayTarget,
-    StatModifiers, WeaponBrand,
+    ContentCatalog, EquipmentPassive, ItemDefinition, ItemDeviceActivationDefinition,
+    ItemDeviceGenerationDefinition, RfbActivationBiasDefinition, RfbEgoTypeDefinition, SlayLevel,
+    SlayTarget, StatModifiers, WeaponBrand,
 };
 use rfb_protocol::{
     ItemActivationDto, ItemChargesDto, ItemCurseEffectDto, ItemCurseSeverityDto,
@@ -17,7 +18,10 @@ use crate::{
     state::{ItemInstance, RolledAffixState},
 };
 
-use super::{initial_item_runtime_state, merge_equipment_bonuses, roll_weighted_index_with_rng};
+use super::{
+    initial_item_runtime_state, merge_equipment_bonuses, roll_weighted_index_with_rng,
+    target_spec_dto,
+};
 
 /// Complete generated affix state shared by content-driven consumers.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -262,6 +266,7 @@ struct RfbWeaponRoll {
     blows_pval: bool,
     stealth_penalty_pval: bool,
     explicit_pval: Option<u16>,
+    activation_profile_index: Option<usize>,
 }
 
 /// Materializes one selected RFB weapon/digger ego without changing item state.
@@ -292,6 +297,9 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
         },
         ..RfbWeaponRoll::default()
     };
+    roll.activation_profile_index = matches!(source_index, 11 | 15 | 24 | 42)
+        .then(|| fixed_activation_profile_index(affix))
+        .flatten();
     let mut dice = base_dice;
 
     match source_index {
@@ -355,6 +363,14 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
             roll.state.enchantment_delta.to_hit = -10;
             roll.state.enchantment_delta.to_damage = -10;
             roll.state.weapon_traits.insert(WeaponTraitDto::ManaBrand);
+            if one_in(rng, 5) {
+                roll.activation_profile_index = roll_biased_activation_profile_index(
+                    rng,
+                    affix,
+                    RfbActivationBiasDefinition::Mage,
+                    generation_level,
+                );
+            }
         }
         7 if is_weapon => roll_rfb_armageddon(
             rng,
@@ -363,9 +379,24 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
             base_kind.tval,
             base_kind.sval,
         ),
-        8 if is_weapon => {}
+        8 if is_weapon => {
+            if one_in(rng, 5) {
+                roll.activation_profile_index = roll_biased_activation_profile_index(
+                    rng,
+                    affix,
+                    RfbActivationBiasDefinition::Chaos,
+                    generation_level,
+                );
+            }
+        }
         9 if is_weapon => {
-            roll_rfb_craft(rng, &mut roll.state, generation_level, false);
+            roll.activation_profile_index = roll_rfb_craft_with_activation(
+                rng,
+                &mut roll.state,
+                generation_level,
+                false,
+                affix.device_generation.as_ref(),
+            );
         }
         10 if is_weapon => {
             roll.state.weapon_traits.insert(WeaponTraitDto::Blessed);
@@ -376,6 +407,14 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
                 roll.blows_pval = true;
             } else if one_in(rng, 777) && generation_level > 80 {
                 roll.state.weapon_traits.insert(WeaponTraitDto::ManaBrand);
+            }
+            if one_in(rng, 5) {
+                roll.activation_profile_index = roll_biased_activation_profile_index(
+                    rng,
+                    affix,
+                    RfbActivationBiasDefinition::Priestly,
+                    generation_level,
+                );
             }
         }
         11 if is_weapon => {
@@ -403,19 +442,48 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
             } else {
                 roll.stealth_penalty_pval = true;
             }
+            if one_in(rng, 5) {
+                roll.activation_profile_index = roll_biased_activation_profile_index(
+                    rng,
+                    affix,
+                    RfbActivationBiasDefinition::Demon,
+                    generation_level,
+                )
+                .or(roll.activation_profile_index);
+            }
         }
-        12 if is_weapon => roll_rfb_death(rng, &mut roll, &mut dice),
+        12 if is_weapon => {
+            roll_rfb_death(rng, &mut roll, &mut dice);
+            if one_in(rng, 5) {
+                roll.activation_profile_index = roll_biased_activation_profile_index(
+                    rng,
+                    affix,
+                    RfbActivationBiasDefinition::Necromantic,
+                    generation_level,
+                );
+            }
+        }
         12 if is_digger => {}
         13 if is_weapon => {
             roll.state.weapon_traits.insert(WeaponTraitDto::Blessed);
         }
-        14 if is_weapon => roll_rfb_nature(
-            rng,
-            &mut roll.state,
-            &mut dice,
-            base_kind.tval,
-            base_kind.sval,
-        ),
+        14 if is_weapon => {
+            roll_rfb_nature(
+                rng,
+                &mut roll.state,
+                &mut dice,
+                base_kind.tval,
+                base_kind.sval,
+            );
+            if one_in(rng, 5) {
+                roll.activation_profile_index = roll_biased_activation_profile_index(
+                    rng,
+                    affix,
+                    RfbActivationBiasDefinition::Ranger,
+                    generation_level,
+                );
+            }
+        }
         15 if is_weapon => {
             roll.state
                 .curse_effects
@@ -532,6 +600,14 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
                     .passives
                     .insert(EquipmentPassive::Vampiric);
             }
+            if one_in(rng, 5) {
+                roll.activation_profile_index = roll_biased_activation_profile_index(
+                    rng,
+                    affix,
+                    RfbActivationBiasDefinition::Demon,
+                    generation_level,
+                );
+            }
         }
         26 if is_weapon => {
             if !is_lance(base_kind.tval, base_kind.sval) {
@@ -546,6 +622,14 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
                 dice.dice = dice.dice.saturating_mul(dice.sides);
                 dice.sides = 1;
                 roll.state.weapon_traits.insert(WeaponTraitDto::Order);
+            }
+            if one_in(rng, 5) {
+                roll.activation_profile_index = roll_biased_activation_profile_index(
+                    rng,
+                    affix,
+                    RfbActivationBiasDefinition::Priestly,
+                    generation_level,
+                );
             }
         }
         27 if is_weapon => {
@@ -595,6 +679,11 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
     if dice != base_dice {
         roll.state.melee_damage_dice = Some(dice);
     }
+    let (activation, charges) = roll
+        .activation_profile_index
+        .and_then(|index| affix.device_generation.as_ref()?.activations.get(index))
+        .map(materialize_rfb_activation)
+        .unzip();
     let rolled_affixes = roll
         .state
         .has_instance_state()
@@ -605,9 +694,86 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
         vec![affix.id.clone()],
         rolled_affixes,
         roll.curse,
-        None,
-        None,
+        activation,
+        charges,
     ))
+}
+
+fn fixed_activation_profile_index(affix: &AffixDefinition) -> Option<usize> {
+    affix
+        .device_generation
+        .as_ref()?
+        .activations
+        .iter()
+        .position(|activation| activation.rfb_biases.is_empty())
+}
+
+fn roll_biased_activation_profile_index(
+    rng: &mut RfbRng,
+    affix: &AffixDefinition,
+    bias: RfbActivationBiasDefinition,
+    generation_level: u16,
+) -> Option<usize> {
+    let generation = affix.device_generation.as_ref()?;
+    roll_biased_activation_index(rng, generation, bias, generation_level)
+}
+
+fn roll_biased_activation_index(
+    rng: &mut RfbRng,
+    generation: &ItemDeviceGenerationDefinition,
+    bias: RfbActivationBiasDefinition,
+    generation_level: u16,
+) -> Option<usize> {
+    let candidates = generation
+        .activations
+        .iter()
+        .enumerate()
+        .filter(|(_, activation)| {
+            activation.rfb_biases.contains(&bias)
+                && activation.min_depth <= generation_level
+                && generation_level <= activation.max_depth
+        })
+        .collect::<Vec<_>>();
+    let total_weight = candidates
+        .iter()
+        .map(|(_, activation)| u64::from(activation.weight))
+        .sum::<u64>();
+    if total_weight == 0 {
+        return None;
+    }
+    let mut selection = rng.bounded(total_weight);
+    candidates
+        .into_iter()
+        .find(|(_, activation)| {
+            if selection < u64::from(activation.weight) {
+                true
+            } else {
+                selection -= u64::from(activation.weight);
+                false
+            }
+        })
+        .map(|(index, _)| index)
+}
+
+fn materialize_rfb_activation(
+    profile: &ItemDeviceActivationDefinition,
+) -> (ItemActivationDto, ItemChargesDto) {
+    let power = u16::try_from(profile.device_check_difficulty)
+        .expect("validated RFB effect level must fit u16");
+    (
+        ItemActivationDto {
+            profile_id: profile.id.clone(),
+            name_key: profile.name_key.clone(),
+            power,
+            cost: profile.charges.cost,
+            device_check_difficulty: profile.device_check_difficulty,
+            target_spec: target_spec_dto(&profile.target),
+        },
+        ItemChargesDto {
+            current: profile.charges.maximum,
+            maximum: profile.charges.maximum,
+        },
+    )
 }
 
 fn roll_and_materialize_rfb_ego_from_affixes_with_rng(
@@ -996,6 +1162,17 @@ pub(super) fn roll_rfb_craft(
     generation_level: u16,
     is_ammunition: bool,
 ) {
+    let _ = roll_rfb_craft_with_activation(rng, state, generation_level, is_ammunition, None);
+}
+
+fn roll_rfb_craft_with_activation(
+    rng: &mut RfbRng,
+    state: &mut RolledAffixState,
+    generation_level: u16,
+    is_ammunition: bool,
+    generation: Option<&ItemDeviceGenerationDefinition>,
+) -> Option<usize> {
+    let mut activation_profile_index = None;
     let mut rolls = 1_u16.saturating_add(rfb_m_bonus(rng, 4, generation_level));
     if one_in(rng, 8) {
         rolls = rolls.saturating_mul(2);
@@ -1014,6 +1191,23 @@ pub(super) fn roll_rfb_craft(
         state.properties.brands.insert(brand);
         if roll_index == 0 && one_in(rng, 2) && !is_ammunition {
             add_resistance(&mut state.properties, resistance);
+            if one_in(rng, 5) {
+                activation_profile_index = generation.and_then(|generation| {
+                    roll_biased_activation_index(
+                        rng,
+                        generation,
+                        match brand {
+                            WeaponBrand::Acid => RfbActivationBiasDefinition::Acid,
+                            WeaponBrand::Electricity => RfbActivationBiasDefinition::Electricity,
+                            WeaponBrand::Fire => RfbActivationBiasDefinition::Fire,
+                            WeaponBrand::Cold => RfbActivationBiasDefinition::Cold,
+                            WeaponBrand::Poison => RfbActivationBiasDefinition::Poison,
+                            _ => unreachable!("craft only rolls five elemental brands"),
+                        },
+                        generation_level,
+                    )
+                });
+            }
             break;
         }
         if one_in(rng, 3) && !is_ammunition {
@@ -1023,6 +1217,7 @@ pub(super) fn roll_rfb_craft(
     if one_in(rng, 6) && generation_level > 60 && !is_ammunition {
         state.weapon_traits.insert(WeaponTraitDto::ManaBrand);
     }
+    activation_profile_index
 }
 
 fn roll_rfb_armageddon(
@@ -1546,8 +1741,11 @@ mod tests {
 
     use crate::game::Game;
     use rfb_content::{
-        AffixDefinition, EquipmentBonuses, ItemDefinition, RfbBaseKindDefinition,
-        RfbEgoGenerationDefinition, StatModifiers,
+        AbilityTargetDefinition, AbilityTargetModeDefinition, AffixDefinition, EquipmentBonuses,
+        ItemDefinition, ItemDeviceActivationDefinition, ItemDeviceChargeRangeDefinition,
+        ItemDeviceGenerationDefinition, ItemDeviceRecoveryDefinition, ItemUseEffectDefinition,
+        RfbActivationBiasDefinition, RfbBaseKindDefinition, RfbEgoGenerationDefinition,
+        StatModifiers,
     };
     use rfb_protocol::{ItemCurseEffectDto, ItemQualityDto, MeleeDamageDiceDto, WeaponTraitDto};
 
@@ -1609,6 +1807,253 @@ mod tests {
             sval,
         });
         item
+    }
+
+    fn ego_activation_profile(
+        id: &str,
+        weight: u32,
+        biases: BTreeSet<RfbActivationBiasDefinition>,
+        difficulty: i32,
+    ) -> ItemDeviceActivationDefinition {
+        ItemDeviceActivationDefinition {
+            id: id.to_owned(),
+            name_key: format!("{id}-name"),
+            weight,
+            min_depth: 1,
+            max_depth: 100,
+            device_check_difficulty: difficulty,
+            rfb_biases: biases,
+            charges: ItemDeviceChargeRangeDefinition {
+                minimum: 1,
+                maximum: 1,
+                cost: 1,
+            },
+            recovery: Some(ItemDeviceRecoveryDefinition {
+                interval_ticks: 100,
+                energy_per_mille: 1_000,
+            }),
+            target: AbilityTargetDefinition {
+                modes: vec![AbilityTargetModeDefinition::SelfTarget],
+                range: 0,
+                requires_line_of_effect: false,
+            },
+            effect_program_id: None,
+            effect: ItemUseEffectDefinition::NoNumericEffect,
+        }
+    }
+
+    #[test]
+    fn fixed_weapon_ego_activations_materialize_one_full_charge() {
+        for (source_index, item, profile_id, power) in [
+            (
+                11,
+                rfb_weapon_item(TV_SWORD, SV_LONG_SWORD),
+                "test.activation.destruction",
+                50,
+            ),
+            (
+                15,
+                rfb_weapon_item(TV_SWORD, SV_LONG_SWORD),
+                "test.activation.teleport",
+                15,
+            ),
+            (
+                24,
+                rfb_weapon_item(TV_POLEARM, SV_LANCE),
+                "test.activation.charge",
+                10,
+            ),
+            (
+                42,
+                rfb_weapon_item(TV_DIGGING, SV_MATTOCK),
+                "test.activation.stone-to-mud",
+                10,
+            ),
+        ] {
+            let mut affix = ego_affix(
+                &format!("test.affix.{source_index}"),
+                source_index,
+                1,
+                0,
+                u16::MAX,
+                vec![if source_index == 42 {
+                    RfbEgoTypeDefinition::Digger
+                } else {
+                    RfbEgoTypeDefinition::Weapon
+                }],
+            );
+            affix.device_generation = Some(ItemDeviceGenerationDefinition {
+                activations: vec![ego_activation_profile(
+                    profile_id,
+                    1,
+                    BTreeSet::new(),
+                    power,
+                )],
+                recovery: None,
+            });
+            let mut rng = RfbRng::seeded(0xE3_6000 + u64::from(source_index));
+            let materialized = materialize_rfb_weapon_ego_with_rng(&mut rng, &item, &affix, 80)
+                .expect("fixed activation ego should materialize");
+            let activation = materialized
+                .activation
+                .expect("fixed activation should be selected");
+            assert_eq!(activation.profile_id, profile_id);
+            assert_eq!(activation.power, u16::try_from(power).unwrap());
+            assert_eq!(activation.device_check_difficulty, power);
+            assert_eq!(
+                materialized.charges,
+                Some(ItemChargesDto {
+                    current: 1,
+                    maximum: 1,
+                })
+            );
+        }
+    }
+
+    #[test]
+    fn biased_activation_selection_uses_source_order_weights_and_depth() {
+        let mut excluded = ego_activation_profile(
+            "test.activation.excluded",
+            10_000,
+            BTreeSet::from([RfbActivationBiasDefinition::Mage]),
+            1,
+        );
+        excluded.max_depth = 49;
+        let generation = ItemDeviceGenerationDefinition {
+            activations: vec![
+                ego_activation_profile("test.activation.fixed", 1, BTreeSet::new(), 1),
+                excluded,
+                ego_activation_profile(
+                    "test.activation.common",
+                    127,
+                    BTreeSet::from([RfbActivationBiasDefinition::Mage]),
+                    16,
+                ),
+                ego_activation_profile(
+                    "test.activation.rare",
+                    1,
+                    BTreeSet::from([RfbActivationBiasDefinition::Mage]),
+                    30,
+                ),
+            ],
+            recovery: None,
+        };
+        let mut rng = RfbRng::seeded(0xE3_6003);
+        assert_eq!(
+            roll_biased_activation_index(
+                &mut rng,
+                &generation,
+                RfbActivationBiasDefinition::Mage,
+                50,
+            ),
+            Some(2)
+        );
+        assert_eq!(rng.draw_counter, 1);
+    }
+
+    #[test]
+    fn daemon_bias_activation_overrides_fixed_destruction_in_exact_rng_order() {
+        let item = rfb_weapon_item(TV_SWORD, SV_LONG_SWORD);
+        let mut affix = ego_affix(
+            "test.affix.daemon",
+            11,
+            1,
+            0,
+            u16::MAX,
+            vec![RfbEgoTypeDefinition::Weapon],
+        );
+        affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            activations: vec![
+                ego_activation_profile("test.activation.destruction", 1, BTreeSet::new(), 50),
+                ego_activation_profile(
+                    "test.activation.demon",
+                    255,
+                    BTreeSet::from([RfbActivationBiasDefinition::Demon]),
+                    20,
+                ),
+            ],
+            recovery: None,
+        });
+        let outcomes = [0_u64, 4]
+            .into_iter()
+            .map(|seed| {
+                let mut rng = RfbRng::seeded(seed);
+                let materialized = materialize_rfb_weapon_ego_with_rng(&mut rng, &item, &affix, 80)
+                    .expect("Daemon ego should materialize");
+                (
+                    materialized
+                        .activation
+                        .expect("Daemon keeps either fixed or biased activation")
+                        .profile_id,
+                    rng.draw_counter,
+                )
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(
+            outcomes,
+            [
+                ("test.activation.destruction".to_owned(), 7),
+                ("test.activation.demon".to_owned(), 8),
+            ]
+        );
+    }
+
+    #[test]
+    fn mage_bias_activation_belongs_to_arcane_not_mana() {
+        let activation = ego_activation_profile(
+            "test.activation.mage",
+            255,
+            BTreeSet::from([RfbActivationBiasDefinition::Mage]),
+            20,
+        );
+        let mut mana_affix = ego_affix(
+            "test.affix.mana",
+            3,
+            1,
+            0,
+            u16::MAX,
+            vec![RfbEgoTypeDefinition::Weapon],
+        );
+        mana_affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            activations: vec![activation.clone()],
+            recovery: None,
+        });
+        let mut mana_rng = RfbRng::seeded(1);
+        let mana = materialize_rfb_weapon_ego_with_rng(
+            &mut mana_rng,
+            &rfb_weapon_item(TV_SWORD, SV_LONG_SWORD),
+            &mana_affix,
+            50,
+        )
+        .expect("Mana ego should materialize");
+        assert_eq!(mana.activation, None);
+        assert_eq!(mana_rng.draw_counter, 4);
+
+        let mut arcane_affix = ego_affix(
+            "test.affix.arcane",
+            6,
+            1,
+            0,
+            u16::MAX,
+            vec![RfbEgoTypeDefinition::Weapon],
+        );
+        arcane_affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            activations: vec![activation],
+            recovery: None,
+        });
+        let mut arcane_rng = RfbRng::seeded(1);
+        let arcane = materialize_rfb_weapon_ego_with_rng(
+            &mut arcane_rng,
+            &rfb_weapon_item(TV_HAFTED, SV_WIZSTAFF),
+            &arcane_affix,
+            50,
+        )
+        .expect("Arcane ego should materialize");
+        assert_eq!(
+            arcane.activation.map(|activation| activation.profile_id),
+            Some("test.activation.mage".to_owned())
+        );
+        assert_eq!(arcane_rng.draw_counter, 5);
     }
 
     #[test]

@@ -44,6 +44,7 @@ pub(crate) mod support;
 mod tasks;
 mod town;
 mod virtue_state;
+mod weapon_ego_activations;
 mod weapon_proficiency;
 mod weapon_traits;
 mod world;

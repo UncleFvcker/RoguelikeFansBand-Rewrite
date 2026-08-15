@@ -30,6 +30,7 @@ const R_INFO_SOURCE: &str = "lib/edit/r_info.txt";
 const K_INFO_SOURCE: &str = "lib/edit/k_info.txt";
 const E_INFO_SOURCE: &str = "lib/edit/e_info.txt";
 const E_NAME_ZH_SOURCE: &str = "src/ego_name_zh.inc";
+const DEVICES_C_SOURCE: &str = "src/devices.c";
 const A_INFO_SOURCE: &str = "lib/edit/a_info.txt";
 const K_NAME_ZH_SOURCE: &str = "src/kind_name_zh.inc";
 const B_INFO_SOURCE: &str = "lib/edit/b_info.txt";
@@ -4678,7 +4679,8 @@ fn ego_json(
         modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
     }
     fold_spell_power_modifier(&entry.flags, entry.max_pval, &mut modifiers, &mut equipment);
-    if entry.has_activation {
+    let fixed_device_generation = fixed_weapon_ego_device_generation(entry);
+    if entry.has_activation && fixed_device_generation.is_none() {
         *report
             .item_behavior_gaps
             .entry("ego-activation".to_owned())
@@ -4743,6 +4745,9 @@ fn ego_json(
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
     apply_ego_roll_recipe(&mut value, entry);
+    if let Some(device_generation) = fixed_device_generation {
+        value["deviceGeneration"] = device_generation;
+    }
     let destruction_immunities = item_destruction_immunities(&entry.flags);
     if !destruction_immunities.is_empty() {
         value["elementalDestructionImmunities"] = serde_json::json!(destruction_immunities);
@@ -4767,10 +4772,68 @@ fn ego_json_has_substance(value: &serde_json::Value) -> bool {
         "elementalDestructionImmunities",
         "resistsProjectionDestruction",
         "resistsMonsterDestruction",
+        "deviceGeneration",
         "rollGroups",
     ]
     .iter()
     .any(|field| value.get(field).is_some())
+}
+
+fn fixed_weapon_ego_device_generation(entry: &LegacyEgoEntry) -> Option<serde_json::Value> {
+    let activation = entry.activation.as_ref()?;
+    let (effect_program_id, target) = match (entry.index, activation.token.as_str()) {
+        (11, "DESTRUCTION") => (
+            "demo.effect.destruction-scroll",
+            serde_json::json!({
+                "modes": ["self"],
+                "range": 0,
+                "requiresLineOfEffect": false,
+            }),
+        ),
+        (15, "TELEPORT") => (
+            "demo.effect.random-teleport-long",
+            serde_json::json!({
+                "modes": ["self"],
+                "range": 0,
+                "requiresLineOfEffect": false,
+            }),
+        ),
+        (24, "CHARGE") => (
+            "rfb.effect.ego-riding-charge",
+            serde_json::json!({
+                "modes": ["direction", "entity"],
+                "range": 7,
+                "requiresLineOfEffect": true,
+            }),
+        ),
+        (42, "STONE_TO_MUD") => (
+            "rfb.effect.ego-stone-to-mud",
+            serde_json::json!({
+                "modes": ["direction"],
+                "range": 18,
+                "requiresLineOfEffect": true,
+            }),
+        ),
+        _ => return None,
+    };
+    let token = activation.token.to_ascii_lowercase().replace('_', "-");
+    Some(serde_json::json!({
+        "activations": [{
+            "id": format!("rfb.device-activation.ego-{}-{token}", entry.index),
+            "nameKey": format!("device-activation-rfb-ego-{token}-name"),
+            "weight": 1,
+            "minDepth": 1,
+            "maxDepth": 100,
+            "deviceCheckDifficulty": activation.power,
+            "charges": { "minimum": 1, "maximum": 1, "cost": 1 },
+            "recovery": {
+                "intervalTicks": activation.recovery_turns.saturating_mul(10),
+                "energyPerMille": 1000,
+            },
+            "target": target,
+            "effectProgramId": effect_program_id,
+        }],
+    }))
 }
 
 fn ego_roll_recipe_consumes(entry: &LegacyEgoEntry, flag: &str) -> bool {
@@ -14951,6 +15014,117 @@ struct EgoContractExpectation {
     branch_activation: Option<&'static str>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct LegacyEgoActivationCandidate {
+    source_order: usize,
+    token: String,
+    level: u16,
+    recovery_turns: u16,
+    rarity: u16,
+    biases: Vec<String>,
+}
+
+#[derive(Debug)]
+struct EgoActivationBranchExpectation {
+    source_index: u32,
+    generation_level: u16,
+    biases: &'static [&'static str],
+    candidate_count: usize,
+    total_weight: u32,
+    first_token: &'static str,
+    last_token: &'static str,
+}
+
+const WEAPON_EGO_ACTIVATION_BRANCH_EXPECTATIONS: &[EgoActivationBranchExpectation] = &[
+    EgoActivationBranchExpectation {
+        source_index: 6,
+        generation_level: 50,
+        biases: &["BIAS_MAGE"],
+        candidate_count: 32,
+        total_weight: 2_887,
+        first_token: "CLAIRVOYANCE",
+        last_token: "STASIS_MONSTERS",
+    },
+    EgoActivationBranchExpectation {
+        source_index: 8,
+        generation_level: 30,
+        biases: &["BIAS_CHAOS"],
+        candidate_count: 11,
+        total_weight: 1_414,
+        first_token: "SUMMON_DEMON",
+        last_token: "POLYMORPH",
+    },
+    EgoActivationBranchExpectation {
+        source_index: 9,
+        generation_level: 15,
+        biases: &[
+            "BIAS_ACID",
+            "BIAS_ELEC",
+            "BIAS_FIRE",
+            "BIAS_COLD",
+            "BIAS_POIS",
+        ],
+        candidate_count: 27,
+        total_weight: 5_221,
+        first_token: "RESIST_ACID",
+        last_token: "BREATHE_POIS",
+    },
+    EgoActivationBranchExpectation {
+        source_index: 10,
+        generation_level: 40,
+        biases: &["BIAS_PRIESTLY"],
+        candidate_count: 25,
+        total_weight: 3_309,
+        first_token: "ENLIGHTENMENT",
+        last_token: "HOLINESS",
+    },
+    EgoActivationBranchExpectation {
+        source_index: 11,
+        generation_level: 70,
+        biases: &["BIAS_DEMON"],
+        candidate_count: 9,
+        total_weight: 1_064,
+        first_token: "DESTRUCTION",
+        last_token: "ROCKET",
+    },
+    EgoActivationBranchExpectation {
+        source_index: 12,
+        generation_level: 20,
+        biases: &["BIAS_NECROMANTIC"],
+        candidate_count: 18,
+        total_weight: 2_588,
+        first_token: "GENOCIDE",
+        last_token: "SCARE_MONSTERS",
+    },
+    EgoActivationBranchExpectation {
+        source_index: 14,
+        generation_level: 15,
+        biases: &["BIAS_RANGER"],
+        candidate_count: 10,
+        total_weight: 2_230,
+        first_token: "STONE_TO_MUD",
+        last_token: "SLOW_MONSTERS",
+    },
+    EgoActivationBranchExpectation {
+        source_index: 25,
+        generation_level: 30,
+        biases: &["BIAS_DEMON"],
+        candidate_count: 16,
+        total_weight: 2_721,
+        first_token: "DESTRUCTION",
+        last_token: "AGGRAVATE",
+    },
+    EgoActivationBranchExpectation {
+        source_index: 26,
+        generation_level: 40,
+        biases: &["BIAS_PRIESTLY"],
+        candidate_count: 25,
+        total_weight: 3_309,
+        first_token: "ENLIGHTENMENT",
+        last_token: "HOLINESS",
+    },
+];
+
 const WEAPON_DIGGER_EGO_EXPECTATIONS: &[EgoContractExpectation] = &[
     EgoContractExpectation {
         index: 1,
@@ -15517,6 +15691,149 @@ fn validate_weapon_digger_ego_contract(
     Ok(())
 }
 
+fn parse_effect_info_activation_candidates(
+    source: &str,
+) -> Result<Vec<LegacyEgoActivationCandidate>, LegacyImportError> {
+    let mut in_table = false;
+    let mut source_order = 0;
+    let mut candidates = Vec::new();
+    let mut pending_row = None::<(usize, String)>;
+    for (line_index, line) in source.lines().enumerate() {
+        let line = line.trim();
+        if !in_table {
+            in_table = line.contains("static _effect_info_t _effect_info[]");
+            continue;
+        }
+        if line == "};" {
+            break;
+        }
+        if pending_row.is_none() {
+            if line.starts_with("{\"") {
+                pending_row = Some((line_index, line.to_owned()));
+            } else {
+                continue;
+            }
+        } else {
+            pending_row
+                .as_mut()
+                .expect("pending row was checked above")
+                .1
+                .push_str(line);
+        }
+        if !pending_row
+            .as_ref()
+            .expect("pending row was populated above")
+            .1
+            .ends_with("},")
+        {
+            continue;
+        }
+        let (row_line_index, row) = pending_row.take().expect("completed row must exist");
+        let after_quote = row
+            .strip_prefix("{\"")
+            .expect("pending effect row starts with a quoted token");
+        let Some((token, remainder)) = after_quote.split_once('"') else {
+            continue;
+        };
+        let fields = remainder
+            .trim_start_matches(',')
+            .trim()
+            .trim_end_matches(',')
+            .trim_end_matches('}')
+            .split(',')
+            .map(str::trim)
+            .collect::<Vec<_>>();
+        if fields.len() != 5 {
+            return Err(LegacyImportError::InvalidEgoAudit(format!(
+                "{DEVICES_C_SOURCE}:{} malformed _effect_info row",
+                row_line_index + 1
+            )));
+        }
+        let parse_number = |value: &str, field: &str| {
+            value.parse::<u16>().map_err(|error| {
+                LegacyImportError::InvalidEgoAudit(format!(
+                    "{DEVICES_C_SOURCE}:{} invalid {field} {value}: {error}",
+                    row_line_index + 1
+                ))
+            })
+        };
+        let biases = fields[4]
+            .split('|')
+            .map(str::trim)
+            .filter(|bias| *bias != "0")
+            .map(str::to_owned)
+            .collect::<Vec<_>>();
+        candidates.push(LegacyEgoActivationCandidate {
+            source_order,
+            token: token.to_owned(),
+            level: parse_number(fields[1], "level")?,
+            recovery_turns: parse_number(fields[2], "recovery")?,
+            rarity: parse_number(fields[3], "rarity")?,
+            biases,
+        });
+        source_order += 1;
+    }
+    if candidates.is_empty() {
+        return Err(LegacyImportError::InvalidEgoAudit(format!(
+            "{DEVICES_C_SOURCE} has no _effect_info candidates"
+        )));
+    }
+    Ok(candidates)
+}
+
+fn weapon_ego_activation_candidates<'a>(
+    candidates: &'a [LegacyEgoActivationCandidate],
+    expectation: &EgoActivationBranchExpectation,
+) -> Vec<&'a LegacyEgoActivationCandidate> {
+    let minimum_effect_level = expectation.generation_level / 3;
+    candidates
+        .iter()
+        .filter(|candidate| {
+            candidate.rarity > 0
+                && candidate.level >= minimum_effect_level
+                && candidate
+                    .biases
+                    .iter()
+                    .any(|bias| expectation.biases.contains(&bias.as_str()))
+        })
+        .collect()
+}
+
+fn validate_weapon_ego_activation_contract(
+    candidates: &[LegacyEgoActivationCandidate],
+) -> Result<(), LegacyImportError> {
+    if candidates.len() != 233
+        || candidates
+            .windows(2)
+            .any(|pair| pair[0].source_order >= pair[1].source_order)
+    {
+        return Err(LegacyImportError::InvalidEgoAudit(format!(
+            "_effect_info source order or row count changed: {} rows",
+            candidates.len()
+        )));
+    }
+    for expectation in WEAPON_EGO_ACTIVATION_BRANCH_EXPECTATIONS {
+        let eligible = weapon_ego_activation_candidates(candidates, expectation);
+        let total_weight = eligible
+            .iter()
+            .map(|candidate| (255 / u32::from(candidate.rarity)).max(1))
+            .sum::<u32>();
+        if eligible.len() != expectation.candidate_count
+            || total_weight != expectation.total_weight
+            || eligible.first().map(|candidate| candidate.token.as_str())
+                != Some(expectation.first_token)
+            || eligible.last().map(|candidate| candidate.token.as_str())
+                != Some(expectation.last_token)
+        {
+            return Err(LegacyImportError::InvalidEgoAudit(format!(
+                "weapon ego {} bias activation candidates changed",
+                expectation.source_index
+            )));
+        }
+    }
+    Ok(())
+}
+
 fn add_occurrences(total: &mut BTreeMap<String, usize>, additions: &BTreeMap<String, usize>) {
     for (key, count) in additions {
         *total.entry(key.clone()).or_default() += count;
@@ -15660,7 +15977,13 @@ pub fn audit_egos(source: &Path) -> Result<EgoAuditReport, LegacyImportError> {
         &read_legacy_object_at(source, &source_commit, E_NAME_ZH_SOURCE)?,
         E_NAME_ZH_SOURCE,
     )?;
+    let activation_candidates = parse_effect_info_activation_candidates(&read_legacy_object_at(
+        source,
+        &source_commit,
+        DEVICES_C_SOURCE,
+    )?)?;
     validate_weapon_digger_ego_contract(&egos, &chinese_names)?;
+    validate_weapon_ego_activation_contract(&activation_candidates)?;
     audit_ego_sources(source_commit, &egos, &chinese_names)
 }
 
@@ -22455,6 +22778,115 @@ static cptr _ego_name_zh[] =
                 power: 50,
                 recovery_turns: 100,
             })
+        );
+    }
+
+    #[test]
+    fn fixed_weapon_ego_activations_emit_effect_program_profiles() {
+        let egos = parse_e_info(
+            "N:11:(Daemon)\nT:WEAPON\nW:70:*:6\nE:DESTRUCTION:50:150\n\
+             N:15:(Trump)\nT:WEAPON\nW:30:*:6\nE:TELEPORT:15:25\n\
+             N:24:of Jousting\nT:WEAPON\nW:20:*:1\nE:CHARGE:10:100\n\
+             N:42:of Disruption\nT:DIGGER\nW:50:*:4\nE:STONE_TO_MUD:10:5\n",
+        )
+        .expect("fixed activation egos should parse");
+        let mut report = ContentImportReport::default();
+        let definitions = egos
+            .iter()
+            .map(|ego| ego_json(ego, &format!("ego-{}", ego.index), &mut report))
+            .collect::<Vec<_>>();
+
+        for (definition, program, modes, range, interval_ticks, difficulty) in [
+            (
+                &definitions[0],
+                "demo.effect.destruction-scroll",
+                serde_json::json!(["self"]),
+                0,
+                1_500,
+                50,
+            ),
+            (
+                &definitions[1],
+                "demo.effect.random-teleport-long",
+                serde_json::json!(["self"]),
+                0,
+                250,
+                15,
+            ),
+            (
+                &definitions[2],
+                "rfb.effect.ego-riding-charge",
+                serde_json::json!(["direction", "entity"]),
+                7,
+                1_000,
+                10,
+            ),
+            (
+                &definitions[3],
+                "rfb.effect.ego-stone-to-mud",
+                serde_json::json!(["direction"]),
+                18,
+                50,
+                10,
+            ),
+        ] {
+            let activation = &definition["deviceGeneration"]["activations"][0];
+            assert_eq!(activation["effectProgramId"], program);
+            assert_eq!(activation["target"]["modes"], modes);
+            assert_eq!(activation["target"]["range"], range);
+            assert_eq!(activation["deviceCheckDifficulty"], difficulty);
+            assert_eq!(
+                activation["charges"],
+                serde_json::json!({
+                    "minimum": 1,
+                    "maximum": 1,
+                    "cost": 1,
+                })
+            );
+            assert_eq!(activation["recovery"]["intervalTicks"], interval_ticks);
+            assert_eq!(activation["recovery"]["energyPerMille"], 1_000);
+        }
+        assert!(!report.item_behavior_gaps.contains_key("ego-activation"));
+    }
+
+    #[test]
+    fn biased_weapon_ego_activation_candidates_preserve_source_order_and_weight() {
+        let candidates = parse_effect_info_activation_candidates(
+            "static _effect_info_t _effect_info[] =\n\
+             {\n\
+             {\"TOO_LOW\", EFFECT_TOO_LOW, 15, 10, 1, BIAS_MAGE},\n\
+             {\"FIRST\", EFFECT_FIRST, 16, 20, 2, BIAS_MAGE | BIAS_FIRE},\n\
+             {\"RARITY_ZERO\", EFFECT_ZERO, 50, 30, 0, BIAS_MAGE},\n\
+             {\"LAST\", EFFECT_LAST, 30, 40, 255, BIAS_MAGE},\n\
+             };\n",
+        )
+        .expect("synthetic effect info should parse");
+        let expectation = EgoActivationBranchExpectation {
+            source_index: 6,
+            generation_level: 50,
+            biases: &["BIAS_MAGE"],
+            candidate_count: 2,
+            total_weight: 128,
+            first_token: "FIRST",
+            last_token: "LAST",
+        };
+        let eligible = weapon_ego_activation_candidates(&candidates, &expectation);
+        assert_eq!(
+            eligible
+                .iter()
+                .map(|candidate| candidate.token.as_str())
+                .collect::<Vec<_>>(),
+            ["FIRST", "LAST"]
+        );
+        assert_eq!(eligible[0].source_order, 1);
+        assert_eq!(eligible[0].level, 16);
+        assert_eq!(eligible[0].recovery_turns, 20);
+        assert_eq!(
+            eligible
+                .iter()
+                .map(|candidate| (255 / u32::from(candidate.rarity)).max(1))
+                .sum::<u32>(),
+            expectation.total_weight
         );
     }
 

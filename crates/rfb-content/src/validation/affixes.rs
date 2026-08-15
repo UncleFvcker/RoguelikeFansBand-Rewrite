@@ -110,36 +110,86 @@ pub(super) fn validate_affixes(
 }
 
 fn valid_affix_device_generation(generation: &ItemDeviceGenerationDefinition) -> bool {
-    let [activation] = generation.activations.as_slice() else {
+    if generation.activations.is_empty() || generation.activations.len() > 256 {
         return false;
-    };
-    let valid_effect = matches!(
-        activation.effect,
-        ItemUseEffectDefinition::ApplyBerserkStrength {
-            duration_dice: 1..=100,
-            duration_sides: 1..=1_000_000,
-            duration_bonus: 0..=1_000_000,
-        }
-    );
-    let self_target = activation.target.modes.as_slice()
-        == [AbilityTargetModeDefinition::SelfTarget]
-        && activation.target.range == 0
-        && !activation.target.requires_line_of_effect;
-    let valid_recovery = generation.recovery.is_some_and(|recovery| {
+    }
+    let valid_recovery = |recovery: ItemDeviceRecoveryDefinition| {
         (1..=10_000).contains(&recovery.interval_ticks)
             && (1..=1_000).contains(&recovery.energy_per_mille)
-    });
-    validate_id(&activation.id).is_ok()
-        && validate_message_key(&activation.name_key).is_ok()
-        && (1..=1_000_000).contains(&activation.weight)
-        && activation.min_depth == 1
-        && activation.max_depth == 100
-        && (1..=1_000_000).contains(&activation.device_check_difficulty)
-        && (1..=1_000_000).contains(&activation.charges.minimum)
-        && activation.charges.minimum <= activation.charges.maximum
-        && activation.charges.maximum <= 1_000_000
-        && (1..=activation.charges.minimum).contains(&activation.charges.cost)
-        && self_target
-        && valid_effect
-        && valid_recovery
+    };
+    let mut ids = BTreeSet::new();
+    generation.recovery.is_none_or(valid_recovery)
+        && generation.activations.iter().all(|activation| {
+            let mut modes = BTreeSet::new();
+            let modes_are_unique = activation
+                .target
+                .modes
+                .iter()
+                .all(|mode| modes.insert(*mode))
+                && !activation.target.modes.is_empty();
+            let self_target = activation.target.modes.as_slice()
+                == [AbilityTargetModeDefinition::SelfTarget]
+                && activation.target.range == 0
+                && !activation.target.requires_line_of_effect;
+            let projectile_target = !activation
+                .target
+                .modes
+                .contains(&AbilityTargetModeDefinition::SelfTarget)
+                && activation.target.modes.iter().all(|mode| {
+                    matches!(
+                        mode,
+                        AbilityTargetModeDefinition::Direction
+                            | AbilityTargetModeDefinition::Position
+                            | AbilityTargetModeDefinition::Entity
+                    )
+                })
+                && (1..=64).contains(&activation.target.range)
+                && activation.target.requires_line_of_effect;
+            let valid_effect_target = match activation.effect {
+                ItemUseEffectDefinition::ApplyBerserkStrength {
+                    duration_dice: 1..=100,
+                    duration_sides: 1..=1_000_000,
+                    duration_bonus: 0..=1_000_000,
+                }
+                | ItemUseEffectDefinition::AreaDestruction { .. }
+                | ItemUseEffectDefinition::RandomTeleport { .. } => self_target,
+                ItemUseEffectDefinition::TerrainBeam { .. } => projectile_target,
+                ItemUseEffectDefinition::RidingCharge => {
+                    activation.target.modes.as_slice()
+                        == [
+                            AbilityTargetModeDefinition::Direction,
+                            AbilityTargetModeDefinition::Entity,
+                        ]
+                        && activation.target.range == 7
+                        && activation.target.requires_line_of_effect
+                }
+                _ => {
+                    let item_target = activation.target.modes.as_slice()
+                        == [AbilityTargetModeDefinition::Item]
+                        && activation.target.range == 0
+                        && !activation.target.requires_line_of_effect;
+                    self_target || projectile_target || item_target
+                }
+            };
+            validate_id(&activation.id).is_ok()
+                && ids.insert(activation.id.clone())
+                && validate_message_key(&activation.name_key).is_ok()
+                && activation.effect != ItemUseEffectDefinition::NoNumericEffect
+                && (1..=1_000_000).contains(&activation.weight)
+                && activation.min_depth <= activation.max_depth
+                && (1..=1_000_000).contains(&activation.device_check_difficulty)
+                && (1..=1_000_000).contains(&activation.charges.minimum)
+                && activation.charges.minimum <= activation.charges.maximum
+                && activation.charges.maximum <= 1_000_000
+                && (1..=activation.charges.minimum).contains(&activation.charges.cost)
+                && activation.recovery.is_none_or(valid_recovery)
+                && modes_are_unique
+                && valid_effect_target
+        })
+        && (1..=100).all(|depth| {
+            generation
+                .activations
+                .iter()
+                .any(|activation| activation.min_depth <= depth && depth <= activation.max_depth)
+        })
 }

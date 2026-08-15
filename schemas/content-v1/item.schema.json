@@ -318,6 +318,8 @@
         "esp-dragon",
         "esp-human",
         "esp-good",
+        "esp-evil",
+        "esp-living",
         "sustain-strength",
         "sustain-intelligence",
         "sustain-wisdom",
@@ -400,6 +402,25 @@
         },
         "nameKey": {
           "type": "string"
+        },
+        "recovery": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemDeviceRecoveryDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rfbBiases": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RfbActivationBiasDefinition"
+          },
+          "type": "array",
+          "uniqueItems": true
         },
         "target": {
           "$ref": "#/$defs/AbilityTargetDefinition"
@@ -715,6 +736,22 @@
         "ammunitionType"
       ],
       "type": "object"
+    },
+    "RfbActivationBiasDefinition": {
+      "enum": [
+        "mage",
+        "chaos",
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison",
+        "priestly",
+        "demon",
+        "necromantic",
+        "ranger"
+      ],
+      "type": "string"
     },
     "RfbBaseKindDefinition": {
       "additionalProperties": false,

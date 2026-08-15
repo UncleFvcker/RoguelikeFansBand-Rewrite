@@ -18,6 +18,14 @@
       ],
       "type": "string"
     },
+    "AbilityTerrainBeamOperationDefinition": {
+      "enum": [
+        "jam-doors",
+        "destroy-traps-and-doors",
+        "stone-to-mud"
+      ],
+      "type": "string"
+    },
     "ActorDamageType": {
       "enum": [
         "physical",
@@ -1731,6 +1739,36 @@
           "properties": {
             "type": {
               "const": "destroy-adjacent-traps-and-doors",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "operation": {
+              "$ref": "#/$defs/AbilityTerrainBeamOperationDefinition"
+            },
+            "type": {
+              "const": "terrain-beam",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "operation"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "riding-charge",
               "type": "string"
             }
           },

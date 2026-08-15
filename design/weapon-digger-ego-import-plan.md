@@ -201,6 +201,14 @@ ESP Evil/Living 后协议推进至 `1.223`；save 与 State Hash 结构未变。
 
 ### E3.6：闭合固定与 bias activation
 
+状态：已完成。4 条固定 activation 已映射到共享 effect program，其中 Charge 与 Stone to Mud
+仅新增骑乘冲锋和地形光束两个窄事务；affix activation 支持逐 profile recovery。权威
+`devices.c::_effect_info` 的 233 行 source order 已锁定，并审计 9 条实际分支在最低等级处的候选、
+`level/rarity/bias` 与 `max(255/rarity,1)` 权重；实例化按 Arcane、Chaos、Craft、Crusade、
+Daemon、Death、Nature、Hell Lance、Holy Lance 的原始 RNG 时点选择，Daemon 随机项成功时覆盖
+固定 Destruction。目标、取消、charge/recovery 和固定种子 RNG 路径均有聚焦测试。本阶段未改变
+persisted DTO、Protocol、save 或 state-hash schema；正式 30 条 affix 与玩家可达随机池仍留给 E3.7。
+
 - 先实现 4 条固定 `E:`：Destruction、Teleport、Charge、Stone to Mud；
 - 给 item activation 增加最窄的 effect-program 复用途径，避免复制 spell resolver；
 - 从 `_effect_info` 导入 9 条分支实际使用的 level/rarity/bias 候选，并保持 source order 与

@@ -13,8 +13,9 @@ use crate::{
     ItemDeviceActivationDefinition, ItemDeviceChargeRangeDefinition,
     ItemDeviceGenerationDefinition, ItemDeviceRecoveryDefinition, ItemFuelDefinition,
     ItemMountUseDefinition, ItemShatterEffectDefinition, ItemUseActionDefinition,
-    ProjectileProfileDefinition, RfbBaseKindDefinition, RidingWeaponKindDefinition, SlayLevel,
-    SlayTarget, StatModifiers, ThrowProfileDefinition, WeaponBrand,
+    ProjectileProfileDefinition, RfbActivationBiasDefinition, RfbBaseKindDefinition,
+    RidingWeaponKindDefinition, SlayLevel, SlayTarget, StatModifiers, ThrowProfileDefinition,
+    WeaponBrand,
     effect_programs::{
         ResolvedEffectProgram, effect_program_input_matches_device_target,
         resolve_source_item_effect,
@@ -150,7 +151,11 @@ struct SourceItemDeviceActivationDefinition {
     min_depth: u16,
     max_depth: u16,
     device_check_difficulty: i32,
+    #[serde(default)]
+    rfb_biases: BTreeSet<RfbActivationBiasDefinition>,
     charges: ItemDeviceChargeRangeDefinition,
+    #[serde(default)]
+    recovery: Option<ItemDeviceRecoveryDefinition>,
     target: AbilityTargetDefinition,
     effect_program_id: String,
 }
@@ -200,8 +205,11 @@ impl SourceItemDeviceActivationDefinition {
             min_depth: self.min_depth,
             max_depth: self.max_depth,
             device_check_difficulty: self.device_check_difficulty,
+            rfb_biases: self.rfb_biases,
             charges: self.charges,
+            recovery: self.recovery,
             target: self.target,
+            effect_program_id: None,
             effect,
         })
     }

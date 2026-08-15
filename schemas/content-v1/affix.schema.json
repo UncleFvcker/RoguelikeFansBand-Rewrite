@@ -55,6 +55,14 @@
       ],
       "type": "string"
     },
+    "AbilityTerrainBeamOperationDefinition": {
+      "enum": [
+        "jam-doors",
+        "destroy-traps-and-doors",
+        "stone-to-mud"
+      ],
+      "type": "string"
+    },
     "ActorDamageType": {
       "enum": [
         "physical",
@@ -522,6 +530,8 @@
         "esp-dragon",
         "esp-human",
         "esp-good",
+        "esp-evil",
+        "esp-living",
         "sustain-strength",
         "sustain-intelligence",
         "sustain-wisdom",
@@ -569,7 +579,17 @@
           "type": "integer"
         },
         "effect": {
-          "$ref": "#/$defs/ItemUseEffectDefinition"
+          "$ref": "#/$defs/ItemUseEffectDefinition",
+          "default": {
+            "type": "no-numeric-effect"
+          }
+        },
+        "effectProgramId": {
+          "description": "Source-only effect-program reference. Pack compilation resolves and\nclears this field before encoding compiled content.",
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "id": {
           "type": "string"
@@ -589,6 +609,23 @@
         "nameKey": {
           "type": "string"
         },
+        "recovery": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemDeviceRecoveryDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "rfbBiases": {
+          "items": {
+            "$ref": "#/$defs/RfbActivationBiasDefinition"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
         "target": {
           "$ref": "#/$defs/AbilityTargetDefinition"
         },
@@ -606,8 +643,7 @@
         "maxDepth",
         "deviceCheckDifficulty",
         "charges",
-        "target",
-        "effect"
+        "target"
       ],
       "type": "object"
     },
@@ -2249,6 +2285,36 @@
         {
           "additionalProperties": false,
           "properties": {
+            "operation": {
+              "$ref": "#/$defs/AbilityTerrainBeamOperationDefinition"
+            },
+            "type": {
+              "const": "terrain-beam",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "operation"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "riding-charge",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "statusKindId": {
               "type": "string"
             },
@@ -2977,6 +3043,22 @@
           "type": "object"
         }
       ]
+    },
+    "RfbActivationBiasDefinition": {
+      "enum": [
+        "mage",
+        "chaos",
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison",
+        "priestly",
+        "demon",
+        "necromantic",
+        "ranger"
+      ],
+      "type": "string"
     },
     "RfbEgoGenerationDefinition": {
       "additionalProperties": false,

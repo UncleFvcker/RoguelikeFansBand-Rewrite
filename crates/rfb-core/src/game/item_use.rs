@@ -33,6 +33,10 @@ pub(super) enum ItemUsePlan {
     Projectile {
         path: Vec<Position>,
     },
+    RidingCharge {
+        target_entity_id: Option<String>,
+        destination: Position,
+    },
     Cone {
         path: Vec<Position>,
         direction: Direction,
@@ -2680,6 +2684,47 @@ impl Game {
                 removed_entities,
             )?,
             (
+                ItemUseEffectDefinition::TerrainBeam { operation },
+                ItemUsePlan::Projectile { path },
+            ) => {
+                let source_id = profile_id.as_deref().unwrap_or(&kind_id);
+                self.resolve_terrain_beam_effect(
+                    source_id,
+                    operation,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                self.mark_item_aware(&kind_id);
+            }
+            (
+                ItemUseEffectDefinition::RidingCharge,
+                ItemUsePlan::RidingCharge {
+                    target_entity_id,
+                    destination,
+                },
+            ) => {
+                if destination != self.player.position {
+                    events.extend(self.relocate_player(destination, changed));
+                }
+                if let Some(target_entity_id) = target_entity_id {
+                    let target_index = self
+                        .entities
+                        .iter()
+                        .position(|entity| entity.id == target_entity_id && entity.hp > 0)
+                        .expect("planned riding-charge target must remain available");
+                    self.resolve_player_melee(
+                        target_index,
+                        false,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+                self.mark_item_aware(&kind_id);
+            }
+            (
                 effect @ ItemUseEffectDefinition::RandomElementConeDamage { .. },
                 plan @ ItemUsePlan::Cone { .. },
             ) => self.resolve_item_random_element_cone_damage(
@@ -2932,6 +2977,44 @@ impl Game {
                     target.and_then(|target| self.item_effect_path(definition, target))
                 })?;
                 Some(ItemUsePlan::Projectile { path })
+            }
+            ItemUseEffectDefinition::TerrainBeam { .. } => {
+                let path = target_definition.and_then(|definition| {
+                    target.and_then(|target| self.item_effect_path(definition, target))
+                })?;
+                Some(ItemUsePlan::Projectile { path })
+            }
+            ItemUseEffectDefinition::RidingCharge => {
+                let mount_index = self.riding_actor_id.as_deref().and_then(|mount_id| {
+                    self.entities
+                        .iter()
+                        .position(|entity| entity.id == mount_id)
+                })?;
+                let path = target_definition
+                    .and_then(|definition| self.item_effect_path(definition, target?))?;
+                let mut destination = self.player.position;
+                let mut target_entity_id = None;
+                for position in path {
+                    if let Some(entity) = self.entities.iter().find(|entity| {
+                        entity.hp > 0
+                            && entity.position == position
+                            && self.riding_actor_id.as_deref() != Some(entity.id.as_str())
+                    }) {
+                        if self.actor_is_player_side(entity) {
+                            return None;
+                        }
+                        target_entity_id = Some(entity.id.clone());
+                        break;
+                    }
+                    if !self.actor_can_enter_position(mount_index, position) {
+                        break;
+                    }
+                    destination = position;
+                }
+                Some(ItemUsePlan::RidingCharge {
+                    target_entity_id,
+                    destination,
+                })
             }
             ItemUseEffectDefinition::RandomElementConeDamage { radius, .. } => {
                 let TargetSelection::Direction { direction } = target? else {
@@ -4952,6 +5035,8 @@ impl Game {
             }
             ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::BeamDamage { .. }
+            | ItemUseEffectDefinition::TerrainBeam { .. }
+            | ItemUseEffectDefinition::RidingCharge
             | ItemUseEffectDefinition::RandomElementConeDamage { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters

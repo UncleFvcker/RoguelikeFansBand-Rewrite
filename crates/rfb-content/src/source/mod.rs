@@ -15,7 +15,11 @@ use crate::{
     CONTENT_FORMAT, CONTENT_FORMAT_VERSION, CompiledArtifact, CompiledContentV1, ContentError,
     ContentLockV1, PACK_SCHEMA, PackManifest,
     ability_programs::{SourceAbilityDefinition, compile_ability_program_catalog},
-    effect_programs::{compile_effect_program_catalog, validate_effect_program_catalog},
+    effect_programs::{
+        ResolvedEffectProgram, compile_effect_program_catalog,
+        effect_program_input_matches_device_target, resolve_source_item_effect,
+        validate_effect_program_catalog,
+    },
     encode_content,
     player_ability_bindings::{
         compile_player_ability_binding_catalog, validate_player_ability_binding_references,
@@ -89,6 +93,8 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         .into_iter()
         .map(|item| item.into_compiled(&effect_programs))
         .collect::<Result<Vec<_>, _>>()?;
+    let mut affixes = load_root(root, "affixes", &roots, &mut budget)?;
+    resolve_affix_effect_programs(&mut affixes, &effect_programs)?;
     let ability_programs =
         compile_ability_program_catalog(load_root(root, "abilityPrograms", &roots, &mut budget)?)?;
     let player_ability_bindings = compile_player_ability_binding_catalog(load_root(
@@ -112,7 +118,7 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
         load_after: manifest.load_after,
         terrain: load_root(root, "terrain", &roots, &mut budget)?,
         actors: load_root(root, "actors", &roots, &mut budget)?,
-        affixes: load_root(root, "affixes", &roots, &mut budget)?,
+        affixes,
         items,
         resources: load_root(root, "resources", &roots, &mut budget)?,
         abilities,
@@ -137,6 +143,28 @@ pub fn compile_pack_dir(root: &Path) -> Result<CompiledArtifact, ContentError> {
     };
     validate_effect_program_catalog(&effect_programs, &content)?;
     encode_content(content)
+}
+
+fn resolve_affix_effect_programs(
+    affixes: &mut [crate::AffixDefinition],
+    programs: &std::collections::BTreeMap<String, ResolvedEffectProgram>,
+) -> Result<(), ContentError> {
+    for affix in affixes {
+        let Some(generation) = &mut affix.device_generation else {
+            continue;
+        };
+        for activation in &mut generation.activations {
+            let Some(program_id) = activation.effect_program_id.take() else {
+                continue;
+            };
+            let (effect, input) = resolve_source_item_effect(&activation.id, program_id, programs)?;
+            if !effect_program_input_matches_device_target(input, &activation.target) {
+                return Err(ContentError::InvalidItemUseAction(activation.id.clone()));
+            }
+            activation.effect = effect;
+        }
+    }
+    Ok(())
 }
 
 pub fn verify_pack_lock(root: &Path) -> Result<CompiledArtifact, ContentError> {
@@ -237,4 +265,65 @@ fn read_json<T: DeserializeOwned>(
         path: path.to_path_buf(),
         source,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{EffectProgramDefinition, ItemUseEffectDefinition};
+
+    #[test]
+    fn affix_activation_resolves_shared_effect_program() {
+        let programs = compile_effect_program_catalog(vec![
+            serde_json::from_value::<EffectProgramDefinition>(serde_json::json!({
+                "$schema": crate::EFFECT_PROGRAM_SCHEMA,
+                "formatVersion": 1,
+                "id": "test.effect.riding-charge",
+                "input": "actor",
+                "steps": [{ "type": "riding-charge" }],
+            }))
+            .expect("test effect program should deserialize"),
+        ])
+        .expect("test effect program should compile");
+        let mut affixes = vec![
+            serde_json::from_value::<crate::AffixDefinition>(serde_json::json!({
+                "$schema": crate::AFFIX_SCHEMA,
+                "formatVersion": 1,
+                "id": "test.affix.riding-charge",
+                "nameKey": "test-affix-riding-charge-name",
+                "descriptionKey": "test-affix-riding-charge-description",
+                "generationLevel": 1,
+                "deviceGeneration": {
+                    "activations": [{
+                        "id": "test.activation.riding-charge",
+                        "nameKey": "test-activation-riding-charge-name",
+                        "weight": 1,
+                        "minDepth": 1,
+                        "maxDepth": 100,
+                        "deviceCheckDifficulty": 10,
+                        "charges": { "minimum": 1, "maximum": 1, "cost": 1 },
+                        "recovery": { "intervalTicks": 1000, "energyPerMille": 1000 },
+                        "target": {
+                            "modes": ["direction", "entity"],
+                            "range": 7,
+                            "requiresLineOfEffect": true
+                        },
+                        "effectProgramId": "test.effect.riding-charge"
+                    }]
+                },
+                "tags": ["test"]
+            }))
+            .expect("test affix should deserialize"),
+        ];
+
+        resolve_affix_effect_programs(&mut affixes, &programs)
+            .expect("affix activation should resolve the shared effect program");
+        let activation = &affixes[0]
+            .device_generation
+            .as_ref()
+            .expect("test affix should keep device generation")
+            .activations[0];
+        assert_eq!(activation.effect_program_id, None);
+        assert_eq!(activation.effect, ItemUseEffectDefinition::RidingCharge);
+    }
 }

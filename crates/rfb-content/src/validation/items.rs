@@ -210,7 +210,9 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::PrepareConfusingStrike
         | ItemUseEffectDefinition::AggravateMonsters
         | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
-        | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors => true,
+        | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
+        | ItemUseEffectDefinition::TerrainBeam { .. }
+        | ItemUseEffectDefinition::RidingCharge => true,
         ItemUseEffectDefinition::MassGenocide { power, radius } => *power > 0 && *radius > 0,
         ItemUseEffectDefinition::Genocide { power } => (1..=1_000).contains(power),
         ItemUseEffectDefinition::RechargeFromDevice { power } => (1..=1_000).contains(power),
@@ -661,7 +663,17 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::BanishVisible { .. } => self_target,
                     ItemUseEffectDefinition::RechargeFromDevice { .. } => false,
                     ItemUseEffectDefinition::Damage { .. }
-                    | ItemUseEffectDefinition::BeamDamage { .. } => projectile_target,
+                    | ItemUseEffectDefinition::BeamDamage { .. }
+                    | ItemUseEffectDefinition::TerrainBeam { .. } => projectile_target,
+                    ItemUseEffectDefinition::RidingCharge => {
+                        target.modes.as_slice()
+                            == [
+                                AbilityTargetModeDefinition::Direction,
+                                AbilityTargetModeDefinition::Entity,
+                            ]
+                            && target.range == 7
+                            && target.requires_line_of_effect
+                    }
                     ItemUseEffectDefinition::RandomElementConeDamage { .. } => {
                         target.modes.as_slice() == [AbilityTargetModeDefinition::Direction]
                             && projectile_target

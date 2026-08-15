@@ -8,8 +8,8 @@ use serde::{Deserialize, Serialize};
 
 use super::{
     AbilityDetectSubjectDefinition, AbilityStatusStackingDefinition, AbilityTargetDefinition,
-    ActorDamageType, ActorResistanceLevel, EquipmentBonuses, ItemAttributeDefinition,
-    StatModifiers,
+    AbilityTerrainBeamOperationDefinition, ActorDamageType, ActorResistanceLevel, EquipmentBonuses,
+    ItemAttributeDefinition, StatModifiers,
 };
 
 const fn default_incoming_damage_percent() -> u8 {
@@ -629,6 +629,10 @@ pub enum ItemUseEffectDefinition {
         magma_terrain_id: String,
     },
     DestroyAdjacentTrapsAndDoors,
+    TerrainBeam {
+        operation: AbilityTerrainBeamOperationDefinition,
+    },
+    RidingCharge,
     RemoveStatus {
         status_kind_id: String,
     },
@@ -766,6 +770,12 @@ pub enum ItemUseEffectDefinition {
     ResetRecall,
 }
 
+impl Default for ItemUseEffectDefinition {
+    fn default() -> Self {
+        Self::NoNumericEffect
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -813,6 +823,23 @@ pub struct ItemDeviceChargeRangeDefinition {
     pub cost: u32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum RfbActivationBiasDefinition {
+    Mage,
+    Chaos,
+    Acid,
+    Electricity,
+    Fire,
+    Cold,
+    Poison,
+    Priestly,
+    Demon,
+    Necromantic,
+    Ranger,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -823,8 +850,17 @@ pub struct ItemDeviceActivationDefinition {
     pub min_depth: u16,
     pub max_depth: u16,
     pub device_check_difficulty: i32,
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub rfb_biases: BTreeSet<RfbActivationBiasDefinition>,
     pub charges: ItemDeviceChargeRangeDefinition,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recovery: Option<ItemDeviceRecoveryDefinition>,
     pub target: AbilityTargetDefinition,
+    /// Source-only effect-program reference. Pack compilation resolves and
+    /// clears this field before encoding compiled content.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effect_program_id: Option<String>,
+    #[serde(default)]
     pub effect: ItemUseEffectDefinition,
 }
 

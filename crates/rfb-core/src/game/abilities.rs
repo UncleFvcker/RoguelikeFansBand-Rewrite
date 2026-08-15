@@ -2353,6 +2353,25 @@ impl Game {
         let AbilityEffectDefinition::TerrainBeam { operation } = ability.effect else {
             unreachable!("terrain-beam executor requires a terrain-beam effect");
         };
+        self.resolve_terrain_beam_effect(
+            &ability.id,
+            operation,
+            path,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    pub(super) fn resolve_terrain_beam_effect(
+        &mut self,
+        source_id: &str,
+        operation: AbilityTerrainBeamOperationDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         let stone_to_mud_power = (operation == AbilityTerrainBeamOperationDefinition::StoneToMud)
             .then(|| {
                 u16::try_from(21 + self.rng.bounded(30)).expect("stone-to-mud power must fit u16")
@@ -2418,7 +2437,7 @@ impl Game {
         }
         for ((source_id, target_id), positions) in groups {
             events.push(DomainEvent::AbilityTerrainTransformed {
-                ability_id: ability.id.clone(),
+                ability_id: source_id.to_owned(),
                 resolution: AbilityTerrainTransformResolutionDto {
                     center: self.player.position,
                     radius: 0,
@@ -2441,7 +2460,7 @@ impl Game {
                 })
                 .collect::<Vec<_>>();
             events.push(DomainEvent::AbilityBeamDamage {
-                ability_id: ability.id.clone(),
+                ability_id: source_id.to_owned(),
                 resolution: AbilityBeamDamageResolutionDto {
                     base_raw_damage: i32::from(power),
                     damage_type: DamageType::Disintegrate.into(),
@@ -2460,7 +2479,7 @@ impl Game {
                 };
                 self.resolve_stone_to_mud_damage_to_entity(
                     index,
-                    &ability.id,
+                    source_id,
                     i32::from(power),
                     trace.clone(),
                     events,
