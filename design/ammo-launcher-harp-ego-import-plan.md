@@ -154,6 +154,12 @@ v108；未刷新或执行全量 fixtures。
 
 ### E4.4：实现普通竖琴与 2 条 HARP ego
 
+状态：已完成。普通 Harp 在固定神器判定后、quality/ego 调度前执行一次非 Bard
+`1+m_bonus(1)`，将 CHR 保存到 `intrinsicProperties`；195/196 从该实例属性复用 pval，分别补齐
+Vanyar 的 WIS/sustain/暗抗与 Erebor 的 sustain/恐惧及盲目免疫，不重复 CHR 或消耗 pval RNG。
+HARP 使用独立选择池，基础 `NO_ENCHANT`、launcher 槽和无 `projectileProfile` 均保持不变；新增测试
+覆盖普通竖琴的装备/卸下聚合、Vanyar/Erebor、精确 RNG 次数和 save round-trip。
+
 - 在 quality/ego 调度前物化普通 Harp 的 `1+m_bonus(1)`，写入 `intrinsicProperties` 的 CHR，并保持
   基础 `NO_ENCHANT`，不生成无意义的命中/伤害附魔；
 - 195/196 只使用同一个基础 pval 添加其余属性、sustain 与抗性，不能再次掷 pval 或重复 CHR；

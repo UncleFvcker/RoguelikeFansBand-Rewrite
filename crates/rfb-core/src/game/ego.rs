@@ -266,6 +266,76 @@ const SV_MATTOCK: u16 = 7;
 const SV_SLING: u16 = 2;
 const SV_LONG_BOW: u16 = 13;
 const SV_HEAVY_XBOW: u16 = 24;
+const SV_HARP: u16 = 70;
+
+/// Rolls the generation-time property carried by every ordinary RFB Harp.
+pub(super) fn materialize_rfb_harp_intrinsic_with_rng(
+    rng: &mut RfbRng,
+    item: &ItemDefinition,
+    generation_level: u16,
+) -> Option<AffixPropertyBundleDefinition> {
+    let base_kind = item.rfb_base_kind?;
+    if base_kind.tval != TV_BOW || base_kind.sval != SV_HARP {
+        return None;
+    }
+    Some(AffixPropertyBundleDefinition {
+        modifiers: StatModifiers {
+            charisma: i32::from(1_u16.saturating_add(rfb_m_bonus(rng, 1, generation_level))),
+            ..StatModifiers::default()
+        },
+        ..AffixPropertyBundleDefinition::default()
+    })
+}
+
+/// Materializes one selected RFB Harp ego from the already rolled base pval.
+pub(crate) fn materialize_rfb_harp_ego(
+    item: &ItemDefinition,
+    affix: &AffixDefinition,
+    intrinsic_properties: &AffixPropertyBundleDefinition,
+) -> Option<EgoMaterialization> {
+    let source_index = affix.rfb_ego.as_ref()?.source_index;
+    let base_kind = item.rfb_base_kind?;
+    if base_kind.tval != TV_BOW || base_kind.sval != SV_HARP {
+        return None;
+    }
+    let pval = intrinsic_properties.modifiers.charisma;
+    if pval <= 0 {
+        return None;
+    }
+
+    let mut state = RolledAffixState {
+        affix_id: affix.id.clone(),
+        ..RolledAffixState::default()
+    };
+    match source_index {
+        195 => {
+            state.properties.modifiers.wisdom = pval;
+            state.properties.passives.extend([
+                EquipmentPassive::SustainCharisma,
+                EquipmentPassive::SustainWisdom,
+            ]);
+            add_resistance(&mut state.properties, ActorDamageType::Dark);
+        }
+        196 => {
+            state.properties.passives.extend([
+                EquipmentPassive::SustainCharisma,
+                EquipmentPassive::SustainStrength,
+                EquipmentPassive::SustainConstitution,
+            ]);
+            add_status_immunity(&mut state.properties, "rfb.status.fear");
+            add_status_immunity(&mut state.properties, "rfb.status.blindness");
+        }
+        _ => return None,
+    }
+    Some(EgoMaterialization::new(
+        vec![affix.id.clone()],
+        vec![state],
+        None,
+        None,
+        None,
+        None,
+    ))
+}
 
 #[derive(Debug, Default)]
 struct RfbLauncherRoll {
@@ -1013,17 +1083,25 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
     item: &ItemDefinition,
     affixes: impl Iterator<Item = &'a AffixDefinition> + Clone,
     generation_level: u16,
+    intrinsic_properties: Option<&AffixPropertyBundleDefinition>,
 ) -> Option<EgoMaterialization> {
     let base_kind = item.rfb_base_kind?;
     let allowed_type = if base_kind.tval == TV_DIGGING {
         RfbEgoTypeDefinition::Digger
     } else if matches!(base_kind.tval, TV_HAFTED | TV_POLEARM | TV_SWORD) {
         RfbEgoTypeDefinition::Weapon
+    } else if base_kind.tval == TV_BOW && base_kind.sval == SV_HARP {
+        RfbEgoTypeDefinition::Harp
     } else if base_kind.tval == TV_BOW {
         RfbEgoTypeDefinition::Bow
     } else {
         return None;
     };
+    if allowed_type == RfbEgoTypeDefinition::Harp
+        && intrinsic_properties.is_none_or(|properties| properties.modifiers.charisma <= 0)
+    {
+        return None;
+    }
     if !affixes.clone().any(|affix| {
         affix.rfb_ego.as_ref().is_some_and(|ego| {
             ego.types.contains(&allowed_type)
@@ -1044,10 +1122,13 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
             .clone()
             .find(|affix| affix.id == affix_id)
             .expect("selected ego affix remains available");
-        let materialized = if allowed_type == RfbEgoTypeDefinition::Bow {
-            materialize_rfb_launcher_ego_with_rng(rng, item, affix, generation_level)
-        } else {
-            materialize_rfb_weapon_ego_with_rng(rng, item, affix, generation_level)
+        let materialized = match allowed_type {
+            RfbEgoTypeDefinition::Bow => {
+                materialize_rfb_launcher_ego_with_rng(rng, item, affix, generation_level)
+            }
+            RfbEgoTypeDefinition::Harp => intrinsic_properties
+                .and_then(|properties| materialize_rfb_harp_ego(item, affix, properties)),
+            _ => materialize_rfb_weapon_ego_with_rng(rng, item, affix, generation_level),
         };
         if let Some(materialized) = materialized {
             return Some(materialized);
@@ -1079,6 +1160,7 @@ fn rfb_ego_can_apply_to_base(
         164 => tval == TV_BOW && sval == SV_LONG_BOW,
         165 => tval == TV_BOW && sval == SV_HEAVY_XBOW,
         166 => tval == TV_BOW && sval == SV_SLING,
+        195 | 196 => tval == TV_BOW && sval == SV_HARP,
         _ => false,
     }
 }
@@ -2793,6 +2875,7 @@ mod tests {
             &item,
             [disruption, digging].iter(),
             70,
+            None,
         )
         .expect("compatible fallback ego should eventually materialize");
         assert_eq!(materialized.affix_ids, ["test.affix.digging"]);
@@ -3166,6 +3249,150 @@ mod tests {
     }
 
     #[test]
+    fn ordinary_harp_rolls_intrinsic_charisma_and_is_not_a_projectile_launcher() {
+        let definition = rfb_launcher_item("demo.item.harp");
+        assert_eq!(definition.equipment_slot.as_deref(), Some("launcher"));
+        assert!(definition.projectile_profile.is_none());
+        assert!(definition.resists_enchantment);
+
+        let mut rng = RfbRng::seeded(0xE4_4001);
+        let intrinsic = materialize_rfb_harp_intrinsic_with_rng(&mut rng, &definition, 80)
+            .expect("the authoritative Harp base should roll intrinsic charisma");
+        assert_eq!((intrinsic.modifiers.charisma, rng.draw_counter), (2, 4));
+
+        let mut game = Game::new(57);
+        for item in &mut game.items {
+            if matches!(&item.location, ItemLocation::Equipped { .. }) {
+                item.location = ItemLocation::Inventory;
+            }
+        }
+        let base_charisma = game.effective_player_attributes().charisma;
+        let mut harp = launcher_instance("demo.item.harp");
+        harp.quality = ItemQualityDto::Ordinary;
+        harp.intrinsic_properties = intrinsic.clone();
+        assert!(harp.affix_ids.is_empty());
+        assert_eq!(harp.enchantments, ItemEnchantmentsDto::default());
+        game.items.push(harp);
+
+        assert_eq!(
+            game.effective_player_attributes().charisma,
+            base_charisma
+                + u16::try_from(intrinsic.modifiers.charisma)
+                    .expect("Harp charisma bonus should be positive")
+        );
+        assert!(game.player_projectile_profile().is_none());
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.item.launcher")
+            .expect("ordinary Harp should remain present")
+            .location = ItemLocation::Inventory;
+        assert_eq!(game.effective_player_attributes().charisma, base_charisma);
+    }
+
+    #[test]
+    fn harp_egos_reuse_base_pval_and_round_trip_without_rerolling() {
+        let definition = rfb_launcher_item("demo.item.harp");
+        let mut rng = RfbRng::seeded(0xE4_4195);
+        let intrinsic = materialize_rfb_harp_intrinsic_with_rng(&mut rng, &definition, 80)
+            .expect("Harp base should roll before its ego");
+        let base_draws = rng.draw_counter;
+        let vanyar = ego_affix(
+            "test.affix.vanyar",
+            195,
+            1,
+            0,
+            u16::MAX,
+            vec![RfbEgoTypeDefinition::Harp],
+        );
+        let mut missing_base_rng = RfbRng::seeded(0xE4_4195);
+        assert!(
+            roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                &mut missing_base_rng,
+                &definition,
+                std::iter::once(&vanyar),
+                80,
+                None,
+            )
+            .is_none()
+        );
+        assert_eq!(missing_base_rng.draw_counter, 0);
+        let materialization = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            &mut rng,
+            &definition,
+            std::iter::once(&vanyar),
+            80,
+            Some(&intrinsic),
+        )
+        .expect("Vanyar should materialize on a Harp");
+        assert_eq!(rng.draw_counter, base_draws + 1, "ego must not reroll pval");
+        assert_eq!(
+            materialization.enchantment_delta,
+            ItemEnchantmentsDto::default()
+        );
+        let rolled = &materialization.rolled_affixes[0];
+        assert_eq!(rolled.properties.modifiers.charisma, 0);
+        assert_eq!(
+            rolled.properties.modifiers.wisdom,
+            intrinsic.modifiers.charisma
+        );
+        assert_eq!(
+            rolled.properties.passives,
+            BTreeSet::from([
+                EquipmentPassive::SustainCharisma,
+                EquipmentPassive::SustainWisdom,
+            ])
+        );
+        assert_eq!(
+            rolled.properties.resistances.get(&ActorDamageType::Dark),
+            Some(&ActorResistanceLevel::Resistant)
+        );
+
+        let mut vanyar_item = launcher_instance("demo.item.harp");
+        vanyar_item.intrinsic_properties = intrinsic.clone();
+        materialization.apply_to(&mut vanyar_item);
+        assert_eq!(
+            vanyar_item.intrinsic_properties.modifiers.charisma,
+            intrinsic.modifiers.charisma
+        );
+        vanyar_item.location = ItemLocation::Inventory;
+        let content = Game::new(1).content;
+        let saved = crate::save::inventory_to_save(std::slice::from_ref(&vanyar_item));
+        let restored = crate::save::inventory_item_from_dto(saved[0].clone(), &content)
+            .expect("Vanyar Harp should round-trip");
+        assert_eq!(
+            restored.intrinsic_properties,
+            vanyar_item.intrinsic_properties
+        );
+        assert_eq!(restored.rolled_affixes, vanyar_item.rolled_affixes);
+
+        let erebor = ego_affix(
+            "test.affix.erebor",
+            196,
+            1,
+            0,
+            u16::MAX,
+            vec![RfbEgoTypeDefinition::Harp],
+        );
+        let erebor = materialize_rfb_harp_ego(&definition, &erebor, &intrinsic)
+            .expect("Erebor should materialize on a Harp");
+        assert_eq!(erebor.enchantment_delta, ItemEnchantmentsDto::default());
+        let rolled = &erebor.rolled_affixes[0];
+        assert_eq!(rolled.properties.modifiers.charisma, 0);
+        assert_eq!(
+            rolled.properties.passives,
+            BTreeSet::from([
+                EquipmentPassive::SustainCharisma,
+                EquipmentPassive::SustainStrength,
+                EquipmentPassive::SustainConstitution,
+            ])
+        );
+        assert_eq!(
+            rolled.properties.status_immunities,
+            ["rfb.status.fear", "rfb.status.blindness"]
+        );
+    }
+
+    #[test]
     fn basic_launcher_egos_follow_authoritative_rng_and_profile_order() {
         let (accuracy, draws) = roll_launcher_ego(160, 0xE4_3160, "demo.item.long-bow");
         assert_eq!(
@@ -3411,6 +3638,7 @@ mod tests {
                 &rfb_launcher_item(kind_id),
                 affixes.iter(),
                 80,
+                None,
             )
             .expect("compatible restricted ego should eventually be selected");
             assert_eq!(materialization.affix_ids, [expected_affix]);

@@ -185,8 +185,8 @@ use damage::{
     process_actor_status_tick, process_actor_status_tick_with, scale_damage_outcome,
 };
 use ego::{
-    EgoMaterialization, materialize_ego_with_rng,
-    roll_and_materialize_rfb_ego_from_affixes_with_rng,
+    EgoMaterialization, materialize_ego_with_rng, materialize_rfb_harp_intrinsic_with_rng,
+    merge_affix_properties, roll_and_materialize_rfb_ego_from_affixes_with_rng,
 };
 use environment_combat::PlayerTrapOutcome;
 use floor::{
@@ -5696,6 +5696,10 @@ impl Game {
                     continue;
                 }
             }
+            let harp_intrinsic_properties =
+                self.content.item(&entry.item_kind_id).and_then(|item| {
+                    materialize_rfb_harp_intrinsic_with_rng(&mut self.rng, item, generation_depth)
+                });
             let rolled_quality = match table.quality_policy {
                 Some(policy) => self.roll_rfb_depth_loot_quality(
                     policy,
@@ -5752,6 +5756,7 @@ impl Game {
                         item,
                         self.content.affix_definitions(),
                         generation_depth,
+                        harp_intrinsic_properties.as_ref(),
                     )
                 })
             })
@@ -5803,13 +5808,17 @@ impl Game {
             let EgoMaterialization {
                 affix_ids,
                 rolled_affixes,
-                intrinsic_properties,
+                intrinsic_properties: ego_intrinsic_properties,
                 enchantment_delta,
                 curse,
                 activation,
                 charges,
                 ..
             } = materialization;
+            let mut intrinsic_properties = harp_intrinsic_properties.unwrap_or_default();
+            if let Some(properties) = ego_intrinsic_properties {
+                merge_affix_properties(&mut intrinsic_properties, &properties);
+            }
             let curse = curse.map_or_else(
                 || initial_item_curse(&self.content, &entry.item_kind_id),
                 |generated| {
@@ -5829,7 +5838,7 @@ impl Game {
                 quality,
                 affix_ids,
                 rolled_affixes,
-                intrinsic_properties: intrinsic_properties.unwrap_or_default(),
+                intrinsic_properties,
                 enchantments: enchantment_delta,
                 curse,
                 activation,
