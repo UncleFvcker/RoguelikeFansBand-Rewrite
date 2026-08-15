@@ -56,6 +56,19 @@ pub(in crate::game) fn good_priest_weapon_penalty(
     priest_class && good_realm && matches!(weapon_tval, Some(22 | 23)) && !blessed
 }
 
+fn launcher_multiplier(base: u16, delta_percent: i32) -> u16 {
+    u16::try_from(
+        i32::from(base)
+            .saturating_add(delta_percent)
+            .clamp(0, i32::from(u16::MAX)),
+    )
+    .expect("clamped launcher multiplier fits u16")
+}
+
+fn launcher_range(multiplier_percent: u16) -> u16 {
+    13_u16.saturating_add(multiplier_percent / 80).min(18)
+}
+
 fn draconian_innate_blows(attributes: AttributeSet, weight: u16, maximum: u16) -> u16 {
     let strength_index = usize::from(
         attributes
@@ -934,6 +947,7 @@ impl Game {
             (EquipmentPassive::EspGood, "good"),
             (EquipmentPassive::EspEvil, "evil"),
             (EquipmentPassive::EspLiving, "living"),
+            (EquipmentPassive::EspNonliving, "nonliving"),
         ]
         .into_iter()
         .any(|(passive, tag)| {
@@ -956,6 +970,9 @@ impl Game {
         self.player_has_status_kind(STATUS_TELEPATHY)
             || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
             || self.player_has_status_kind(STATUS_DEMON_LORD_TRANSFORMATION)
+            || self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::Telepathy)
             || self.player_has_permanent_telepathy()
     }
 
@@ -1135,16 +1152,19 @@ impl Game {
                 .is_some_and(|ammo| ammo.ammunition_type == profile.ammunition_type)
         })?;
         let ammo = ammunition.ammunition_profile.as_ref()?;
+        let bonuses = self.item_equipment_bonuses(item);
+        let multiplier = launcher_multiplier(
+            profile.damage_multiplier_percent,
+            bonuses.launcher_multiplier_delta_percent,
+        );
+        let range = launcher_range(multiplier);
         Some(ProjectileProfileDto {
-            range: profile.range,
+            range,
             to_hit: profile
                 .to_hit
                 .saturating_add(i32::from(item.enchantments.to_hit))
                 .saturating_add(ammo.to_hit),
-            to_damage: ammo
-                .to_damage
-                .saturating_mul(i32::from(profile.damage_multiplier_percent))
-                / 100
+            to_damage: ammo.to_damage.saturating_mul(i32::from(multiplier)) / 100
                 + profile
                     .to_damage
                     .saturating_add(i32::from(item.enchantments.to_damage)),
@@ -1154,7 +1174,7 @@ impl Game {
                 damage_type: DamageType::from(ammo.damage_type).into(),
             },
             ammo_kind_id: ammunition.id.clone(),
-            target_spec: projectile_target_spec(profile.range),
+            target_spec: projectile_target_spec(range),
             source_item_id: item.id.clone(),
         })
     }
@@ -1255,6 +1275,11 @@ impl Game {
                 .projectile_profile
                 .as_ref()
                 .and_then(|profile| {
+                    let bonuses = self.item_equipment_bonuses(item);
+                    let multiplier = launcher_multiplier(
+                        profile.damage_multiplier_percent,
+                        bonuses.launcher_multiplier_delta_percent,
+                    );
                     let ammunition = self
                         .items
                         .iter()
@@ -1353,6 +1378,9 @@ impl Game {
                     {
                         base_shot = base_shot.min(cap);
                     }
+                    base_shot = base_shot
+                        .saturating_add(bonuses.base_shot_delta_percent)
+                        .max(1);
                     let energy_cost = (i32::from(profile.shot_energy) / base_shot).max(1);
                     let breakage_modifier = if heavy_shoot {
                         0
@@ -1396,7 +1424,7 @@ impl Game {
                         .to_damage
                         .saturating_add(i32::from(item.enchantments.to_damage));
                     Some(ResolvedProjectileProfile {
-                        range: profile.range,
+                        range: launcher_range(multiplier),
                         to_hit: profile
                             .to_hit
                             .saturating_add(i32::from(item.enchantments.to_hit))
@@ -1404,13 +1432,11 @@ impl Game {
                             .saturating_add(mounted_to_hit)
                             .saturating_add(sniping_to_hit)
                             .saturating_add(ammunition_to_hit),
-                        to_damage: ammunition_to_damage
-                            .saturating_mul(i32::from(profile.damage_multiplier_percent))
-                            / 100
+                        to_damage: ammunition_to_damage.saturating_mul(i32::from(multiplier)) / 100
                             + launcher_to_damage,
                         ammunition_to_damage,
                         launcher_to_damage,
-                        damage_multiplier_percent: profile.damage_multiplier_percent,
+                        damage_multiplier_percent: multiplier,
                         damage_dice: ammunition
                             .and_then(|item| item.damage_dice_override)
                             .unwrap_or(ammo_profile.damage_dice),

@@ -7744,6 +7744,8 @@
         "esp-good",
         "esp-evil",
         "esp-living",
+        "esp-nonliving",
+        "telepathy",
         "sustain-strength",
         "sustain-intelligence",
         "sustain-wisdom",

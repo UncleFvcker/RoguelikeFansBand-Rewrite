@@ -6871,6 +6871,8 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
         EquipmentPassive::EspGood => EquipmentPassiveDto::EspGood,
         EquipmentPassive::EspEvil => EquipmentPassiveDto::EspEvil,
         EquipmentPassive::EspLiving => EquipmentPassiveDto::EspLiving,
+        EquipmentPassive::EspNonliving => EquipmentPassiveDto::EspNonliving,
+        EquipmentPassive::Telepathy => EquipmentPassiveDto::Telepathy,
         EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
         EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
         EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,

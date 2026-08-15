@@ -251,6 +251,7 @@ const TV_DIGGING: u16 = 20;
 const TV_HAFTED: u16 = 21;
 const TV_POLEARM: u16 = 22;
 const TV_SWORD: u16 = 23;
+const TV_BOW: u16 = 19;
 const SV_WHIP: u16 = 2;
 const SV_WAR_HAMMER: u16 = 8;
 const SV_WIZSTAFF: u16 = 21;
@@ -262,6 +263,151 @@ const SV_BLADE_OF_CHAOS: u16 = 30;
 const SV_DIAMOND_EDGE: u16 = 31;
 const SV_FALCON_SWORD: u16 = 33;
 const SV_MATTOCK: u16 = 7;
+
+#[derive(Debug, Default)]
+struct RfbLauncherRoll {
+    state: RolledAffixState,
+}
+
+/// Materializes one selected RFB launcher ego without changing item state.
+/// Restricted launcher egos return `None` so a caller can preserve the
+/// original choose-reject-retry RNG sequence.
+pub(crate) fn materialize_rfb_launcher_ego_with_rng(
+    rng: &mut RfbRng,
+    item: &ItemDefinition,
+    affix: &AffixDefinition,
+    generation_level: u16,
+) -> Option<EgoMaterialization> {
+    let source_index = affix.rfb_ego.as_ref()?.source_index;
+    let base_kind = item.rfb_base_kind?;
+    let profile = item.projectile_profile.as_ref()?;
+    if base_kind.tval != TV_BOW {
+        return None;
+    }
+
+    let mut roll = RfbLauncherRoll {
+        state: RolledAffixState {
+            affix_id: affix.id.clone(),
+            ..RolledAffixState::default()
+        },
+    };
+    match source_index {
+        160 => roll.state.enchantment_delta.to_hit = 10,
+        161 => {
+            add_launcher_multiplier(
+                &mut roll.state.properties,
+                5_u16.saturating_add(rfb_m_bonus(rng, 20, generation_level)),
+                profile.shot_energy,
+            );
+            roll.state.enchantment_delta.to_damage = 5;
+        }
+        162 => add_launcher_multiplier(
+            &mut roll.state.properties,
+            25_u16
+                .saturating_add(randint1(rng, 25))
+                .saturating_add(rfb_m_bonus(rng, 50, generation_level)),
+            profile.shot_energy,
+        ),
+        163 => {
+            let pval = 1_u16.saturating_add(rfb_m_bonus(rng, 4, generation_level));
+            apply_rfb_pval(
+                &mut roll.state.properties,
+                source_index,
+                pval,
+                false,
+                false,
+                false,
+                false,
+            );
+        }
+        167 => {
+            if one_in(rng, 5) {
+                add_esp_strong(rng, &mut roll.state.properties);
+            } else {
+                add_esp_weak(rng, &mut roll.state.properties, false);
+            }
+            if one_in(rng, 30) {
+                add_slay(
+                    &mut roll.state.properties,
+                    SlayTarget::Animal,
+                    SlayLevel::Slay,
+                );
+            }
+        }
+        _ => return None,
+    }
+
+    finalize_rfb_launcher_ego(rng, &mut roll, source_index, profile.shot_energy);
+    let rolled_affixes = roll
+        .state
+        .has_instance_state()
+        .then_some(roll.state)
+        .into_iter()
+        .collect();
+    Some(EgoMaterialization::new(
+        vec![affix.id.clone()],
+        rolled_affixes,
+        None,
+        None,
+        None,
+        None,
+    ))
+}
+
+fn add_launcher_multiplier(
+    properties: &mut AffixPropertyBundleDefinition,
+    multiplier_percent: u16,
+    shot_energy: u16,
+) {
+    properties
+        .equipment_bonuses
+        .launcher_multiplier_delta_percent = properties
+        .equipment_bonuses
+        .launcher_multiplier_delta_percent
+        .saturating_add(
+            i32::from(multiplier_percent).saturating_mul(i32::from(shot_energy)) / 10_000,
+        );
+}
+
+fn finalize_rfb_launcher_ego(
+    rng: &mut RfbRng,
+    roll: &mut RfbLauncherRoll,
+    source_index: u32,
+    shot_energy: u16,
+) {
+    let (max_to_hit, max_to_damage, max_to_armor, max_pval) = rfb_ego_maxima(source_index);
+    roll.state.enchantment_delta.to_hit = roll
+        .state
+        .enchantment_delta
+        .to_hit
+        .saturating_add(roll_signed(rng, max_to_hit));
+    roll.state.enchantment_delta.to_damage = roll
+        .state
+        .enchantment_delta
+        .to_damage
+        .saturating_add(roll_signed(rng, max_to_damage));
+    roll.state.enchantment_delta.to_armor = roll
+        .state
+        .enchantment_delta
+        .to_armor
+        .saturating_add(roll_signed(rng, max_to_armor));
+    if max_pval > 0 {
+        apply_rfb_pval(
+            &mut roll.state.properties,
+            source_index,
+            randint1(rng, max_pval),
+            false,
+            false,
+            false,
+            false,
+        );
+    }
+    roll.state.enchantment_delta.to_damage = i16::try_from(
+        i32::from(roll.state.enchantment_delta.to_damage).saturating_mul(i32::from(shot_energy))
+            / 7_150,
+    )
+    .expect("launcher ego damage bonus fits i16");
+}
 
 #[derive(Debug, Default)]
 struct RfbWeaponRoll {
@@ -794,6 +940,8 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
         RfbEgoTypeDefinition::Digger
     } else if matches!(base_kind.tval, TV_HAFTED | TV_POLEARM | TV_SWORD) {
         RfbEgoTypeDefinition::Weapon
+    } else if base_kind.tval == TV_BOW {
+        RfbEgoTypeDefinition::Bow
     } else {
         return None;
     };
@@ -817,9 +965,12 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
             .clone()
             .find(|affix| affix.id == affix_id)
             .expect("selected ego affix remains available");
-        if let Some(materialized) =
+        let materialized = if allowed_type == RfbEgoTypeDefinition::Bow {
+            materialize_rfb_launcher_ego_with_rng(rng, item, affix, generation_level)
+        } else {
             materialize_rfb_weapon_ego_with_rng(rng, item, affix, generation_level)
-        {
+        };
+        if let Some(materialized) = materialized {
             return Some(materialized);
         }
     }
@@ -845,6 +996,7 @@ fn rfb_ego_can_apply_to_base(
         42 => tval == TV_DIGGING && sval == SV_MATTOCK,
         1..=27 => matches!(tval, TV_HAFTED | TV_POLEARM | TV_SWORD) || tval == TV_DIGGING,
         40 | 41 => tval == TV_DIGGING,
+        160..=163 | 167 => tval == TV_BOW,
         _ => false,
     }
 }
@@ -1023,6 +1175,9 @@ fn apply_rfb_pval(
             properties.equipment_bonuses.digging_skill = pval_i32;
             properties.modifiers.strength = pval_i32;
         }
+        162 => properties.modifiers.strength = pval_i32,
+        163 => properties.equipment_bonuses.base_shot_delta_percent = pval_i32.saturating_mul(15),
+        167 => properties.equipment_bonuses.stealth_skill = pval_i32,
         _ => {}
     }
 }
@@ -1052,6 +1207,11 @@ fn rfb_ego_maxima(source_index: u32) -> (i16, i16, i16, u16) {
         40 => (0, 0, 0, 5),
         41 => (0, 3, 0, 5),
         42 => (0, 7, 0, 5),
+        160 => (10, 5, 0, 0),
+        161 => (5, 5, 0, 0),
+        162 => (2, 4, 0, 3),
+        163 => (4, 2, 0, 0),
+        167 => (10, 5, 0, 4),
         _ => (0, 0, 0, 0),
     }
 }
@@ -1625,7 +1785,37 @@ fn add_one_ability(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinit
 }
 
 fn add_one_low_esp(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
-    properties.passives.insert(match rng.bounded(9) {
+    properties.passives.insert(weak_esp(rng.bounded(9)));
+}
+
+fn add_esp_strong(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition) {
+    properties.passives.insert(match rng.bounded(4) {
+        0 => EquipmentPassive::EspEvil,
+        1 => EquipmentPassive::Telepathy,
+        2 => EquipmentPassive::EspLiving,
+        _ => EquipmentPassive::EspNonliving,
+    });
+}
+
+fn add_esp_weak(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinition, extra: bool) {
+    let count = if extra {
+        let maximum = randint1(rng, 6);
+        3_u16.saturating_add(randint1(rng, maximum))
+    } else {
+        randint1(rng, 3)
+    };
+    let mut available = (0..9_u64).collect::<Vec<_>>();
+    for _ in 0..count {
+        let index = usize::try_from(rng.bounded(available.len() as u64))
+            .expect("weak ESP index fits usize");
+        properties
+            .passives
+            .insert(weak_esp(available.remove(index)));
+    }
+}
+
+const fn weak_esp(index: u64) -> EquipmentPassive {
+    match index {
         0 => EquipmentPassive::EspAnimal,
         1 => EquipmentPassive::EspUndead,
         2 => EquipmentPassive::EspDemon,
@@ -1635,7 +1825,7 @@ fn add_one_low_esp(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefinit
         6 => EquipmentPassive::EspDragon,
         7 => EquipmentPassive::EspHuman,
         _ => EquipmentPassive::EspGood,
-    });
+    }
 }
 
 fn add_slay(properties: &mut AffixPropertyBundleDefinition, target: SlayTarget, level: SlayLevel) {
@@ -1815,6 +2005,62 @@ mod tests {
             sval,
         });
         item
+    }
+
+    fn rfb_launcher_item(kind_id: &str) -> ItemDefinition {
+        Game::new(1)
+            .content
+            .item(kind_id)
+            .expect("test launcher exists")
+            .clone()
+    }
+
+    fn launcher_instance(kind_id: &str) -> ItemInstance {
+        ItemInstance {
+            id: "test.item.launcher".to_owned(),
+            kind_id: kind_id.to_owned(),
+            quantity: 1,
+            inscription: None,
+            origin_actor_kind_id: None,
+            origin_kind: None,
+            damage_dice_override: None,
+            discount_percent: 0,
+            quality: ItemQualityDto::Fine,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            intrinsic_properties: Default::default(),
+            enchantments: ItemEnchantmentsDto::default(),
+            curse: None,
+            permanent_destruction_immunities: BTreeSet::new(),
+            activation: None,
+            charges: None,
+            fuel: None,
+            device_recovery_progress: 0,
+            captured_actor: None,
+            location: ItemLocation::Equipped {
+                slot_id: "launcher".to_owned(),
+            },
+        }
+    }
+
+    fn roll_launcher_ego(source_index: u32, seed: u64, kind_id: &str) -> (EgoMaterialization, u64) {
+        let affix = ego_affix(
+            &format!("test.affix.launcher-{source_index}"),
+            source_index,
+            1,
+            0,
+            u16::MAX,
+            vec![RfbEgoTypeDefinition::Bow],
+        );
+        let mut rng = RfbRng::seeded(seed);
+        let materialization = materialize_rfb_launcher_ego_with_rng(
+            &mut rng,
+            &rfb_launcher_item(kind_id),
+            &affix,
+            80,
+        )
+        .expect("compatible launcher ego should materialize");
+        (materialization, rng.draw_counter)
     }
 
     fn ego_activation_profile(
@@ -2835,6 +3081,197 @@ mod tests {
             restored.rng, rng_before,
             "loading must not reroll properties"
         );
+    }
+
+    #[test]
+    fn basic_launcher_egos_follow_authoritative_rng_and_profile_order() {
+        let (accuracy, draws) = roll_launcher_ego(160, 0xE4_3160, "demo.item.long-bow");
+        assert_eq!(
+            (
+                draws,
+                accuracy.enchantment_delta.to_hit,
+                accuracy.enchantment_delta.to_damage
+            ),
+            (2, 12, 5)
+        );
+
+        let (velocity, draws) = roll_launcher_ego(161, 0xE4_3161, "demo.item.long-bow");
+        let velocity = &velocity.rolled_affixes[0];
+        assert_eq!(
+            (
+                draws,
+                velocity.enchantment_delta.to_hit,
+                velocity.enchantment_delta.to_damage
+            ),
+            (6, 4, 9)
+        );
+        assert_eq!(
+            velocity
+                .properties
+                .equipment_bonuses
+                .launcher_multiplier_delta_percent,
+            17
+        );
+
+        let (might, draws) = roll_launcher_ego(162, 0xE4_3162, "demo.item.long-bow");
+        let might = &might.rolled_affixes[0];
+        assert_eq!(
+            (
+                draws,
+                might.enchantment_delta.to_hit,
+                might.enchantment_delta.to_damage
+            ),
+            (8, 2, 1)
+        );
+        assert_eq!(
+            might
+                .properties
+                .equipment_bonuses
+                .launcher_multiplier_delta_percent,
+            80
+        );
+        assert_eq!(might.properties.modifiers.strength, 1);
+
+        let (shots, draws) = roll_launcher_ego(163, 0xE4_3163, "demo.item.long-bow");
+        let shots = &shots.rolled_affixes[0];
+        assert_eq!(
+            (
+                draws,
+                shots.enchantment_delta.to_hit,
+                shots.enchantment_delta.to_damage
+            ),
+            (6, 3, 1)
+        );
+        assert_eq!(
+            shots.properties.equipment_bonuses.base_shot_delta_percent,
+            60
+        );
+
+        let (strong_hunter, draws) = roll_launcher_ego(167, 0xE4_3167, "demo.item.long-bow");
+        let strong_hunter = &strong_hunter.rolled_affixes[0];
+        assert_eq!(
+            (
+                draws,
+                strong_hunter.enchantment_delta.to_hit,
+                strong_hunter.enchantment_delta.to_damage
+            ),
+            (6, 4, 4)
+        );
+        assert_eq!(
+            strong_hunter.properties.passives,
+            BTreeSet::from([EquipmentPassive::EspNonliving])
+        );
+        assert_eq!(
+            strong_hunter.properties.slays.get(&SlayTarget::Animal),
+            Some(&SlayLevel::Slay)
+        );
+        assert_eq!(strong_hunter.properties.equipment_bonuses.stealth_skill, 3);
+
+        let (weak_hunter, draws) = roll_launcher_ego(167, 1, "demo.item.long-bow");
+        let weak_hunter = &weak_hunter.rolled_affixes[0];
+        assert_eq!(
+            (
+                draws,
+                weak_hunter.enchantment_delta.to_hit,
+                weak_hunter.enchantment_delta.to_damage
+            ),
+            (8, 3, 2)
+        );
+        assert_eq!(
+            weak_hunter.properties.passives,
+            BTreeSet::from([EquipmentPassive::EspGiant, EquipmentPassive::EspGood])
+        );
+        assert_eq!(weak_hunter.properties.equipment_bonuses.stealth_skill, 2);
+    }
+
+    #[test]
+    fn launcher_ego_profile_uses_final_multiplier_range_and_shot_rate() {
+        let mut game = Game::new(57);
+        let launcher_slot_id = game
+            .items
+            .iter()
+            .find_map(|item| {
+                let ItemLocation::Equipped { slot_id } = &item.location else {
+                    return None;
+                };
+                game.content
+                    .item(&item.kind_id)
+                    .is_some_and(|definition| definition.projectile_profile.is_some())
+                    .then(|| slot_id.clone())
+            })
+            .expect("test game should begin with a launcher slot");
+        let equipped_launchers = game
+            .items
+            .iter()
+            .filter(|item| {
+                matches!(item.location, ItemLocation::Equipped { .. })
+                    && game
+                        .content
+                        .item(&item.kind_id)
+                        .is_some_and(|definition| definition.projectile_profile.is_some())
+            })
+            .map(|item| item.id.clone())
+            .collect::<BTreeSet<_>>();
+        for item in &mut game.items {
+            if equipped_launchers.contains(&item.id) {
+                item.location = ItemLocation::Inventory;
+            }
+        }
+        let mut launcher = launcher_instance("demo.item.long-bow");
+        launcher.location = ItemLocation::Equipped {
+            slot_id: launcher_slot_id,
+        };
+        game.items.push(launcher);
+        let base = game
+            .player_projectile_profile()
+            .expect("test long bow should resolve");
+
+        let mut might_game = game.clone();
+        let (might, _) = roll_launcher_ego(162, 0xE4_3162, "demo.item.long-bow");
+        let might_item = might_game
+            .items
+            .iter_mut()
+            .find(|item| item.id == "test.item.launcher")
+            .expect("test launcher should remain equipped");
+        might.apply_to(might_item);
+        might_item.affix_ids.clear();
+        let might_profile = might_game
+            .player_projectile_profile()
+            .expect("extra might bow should resolve");
+        assert_eq!(might_profile.damage_multiplier_percent, 380);
+        assert_eq!(might_profile.range, 17);
+        assert_eq!(
+            might_profile.to_damage,
+            might_profile.ammunition_to_damage.saturating_mul(380) / 100
+                + might_profile.launcher_to_damage
+        );
+        let might_item = might_game
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.launcher")
+            .expect("test launcher should remain equipped");
+        assert_eq!(
+            might_game
+                .item_projectile_profile(might_item)
+                .expect("item profile should resolve")
+                .range,
+            17
+        );
+
+        let mut shots_game = game.clone();
+        let (shots, _) = roll_launcher_ego(163, 0xE4_3163, "demo.item.long-bow");
+        let shots_item = shots_game
+            .items
+            .iter_mut()
+            .find(|item| item.id == "test.item.launcher")
+            .expect("test launcher should remain equipped");
+        shots.apply_to(shots_item);
+        shots_item.affix_ids.clear();
+        let shots_profile = shots_game
+            .player_projectile_profile()
+            .expect("extra shots bow should resolve");
+        assert_eq!(shots_profile.base_shot, base.base_shot + 60);
+        assert_eq!(shots_profile.energy_cost, 10_000 / shots_profile.base_shot);
     }
 
     #[test]

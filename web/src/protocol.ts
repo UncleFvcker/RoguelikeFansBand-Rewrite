@@ -45,7 +45,7 @@ launcherMultiplierDeltaPercent?: number,
  */
 baseShotDeltaPercent?: number, meleeAttacks: number, meleeSkill: number, meleeDamage: number, rangedSkill: number, throwingSkill: number, deviceSkill: number, savingThrowSkill: number, savingThrowSkillOverride?: number | null, stealthSkill: number, searchSkill: number, perceptionSkill: number, disarmingSkill: number, diggingSkill: number, infravision: number, lightRadius: number, };
 
-export type EquipmentPassiveDto = "regeneration" | "see-invisible" | "vampiric" | "hold-life" | "levitation" | "warning" | "slow-digestion" | "esp-animal" | "esp-undead" | "esp-demon" | "esp-orc" | "esp-troll" | "esp-giant" | "esp-dragon" | "esp-human" | "esp-good" | "esp-evil" | "esp-living" | "sustain-strength" | "sustain-intelligence" | "sustain-wisdom" | "sustain-dexterity" | "sustain-constitution" | "sustain-charisma";
+export type EquipmentPassiveDto = "regeneration" | "see-invisible" | "vampiric" | "hold-life" | "levitation" | "warning" | "slow-digestion" | "esp-animal" | "esp-undead" | "esp-demon" | "esp-orc" | "esp-troll" | "esp-giant" | "esp-dragon" | "esp-human" | "esp-good" | "esp-evil" | "esp-living" | "esp-nonliving" | "telepathy" | "sustain-strength" | "sustain-intelligence" | "sustain-wisdom" | "sustain-dexterity" | "sustain-constitution" | "sustain-charisma";
 
 export type AttributeKindDto = "strength" | "intelligence" | "wisdom" | "dexterity" | "constitution" | "charisma";
 

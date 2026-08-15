@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.228";
+pub const PROTOCOL_VERSION: &str = "1.229";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 5;
 
@@ -631,6 +631,8 @@ pub enum EquipmentPassiveDto {
     EspGood,
     EspEvil,
     EspLiving,
+    EspNonliving,
+    Telepathy,
     SustainStrength,
     SustainIntelligence,
     SustainWisdom,
@@ -664,13 +666,15 @@ where
             "esp-good" => Some(Ok(EquipmentPassiveDto::EspGood)),
             "esp-evil" => Some(Ok(EquipmentPassiveDto::EspEvil)),
             "esp-living" => Some(Ok(EquipmentPassiveDto::EspLiving)),
+            "esp-nonliving" => Some(Ok(EquipmentPassiveDto::EspNonliving)),
+            "telepathy" => Some(Ok(EquipmentPassiveDto::Telepathy)),
             "sustain-strength" => Some(Ok(EquipmentPassiveDto::SustainStrength)),
             "sustain-intelligence" => Some(Ok(EquipmentPassiveDto::SustainIntelligence)),
             "sustain-wisdom" => Some(Ok(EquipmentPassiveDto::SustainWisdom)),
             "sustain-dexterity" => Some(Ok(EquipmentPassiveDto::SustainDexterity)),
             "sustain-constitution" => Some(Ok(EquipmentPassiveDto::SustainConstitution)),
             "sustain-charisma" => Some(Ok(EquipmentPassiveDto::SustainCharisma)),
-            "telepathy" | "blessed" | "easy-spell" | "device-power" => None,
+            "blessed" | "easy-spell" | "device-power" => None,
             _ => Some(Err(serde::de::Error::custom(format!(
                 "unknown rolled affix passive `{passive}`"
             )))),
@@ -5329,7 +5333,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_protocol_uses_explicit_units_and_v5_save() {
-        assert_eq!(PROTOCOL_VERSION, "1.228");
+        assert_eq!(PROTOCOL_VERSION, "1.229");
         assert_eq!(SAVE_HEADER_SCHEMA_VERSION, 5);
         assert_eq!(SAVE_PAYLOAD_SCHEMA_VERSION, 5);
         let encoded = serde_json::to_value(EquipmentBonusesDto {

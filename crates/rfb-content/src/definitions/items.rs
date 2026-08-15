@@ -75,6 +75,8 @@ pub enum EquipmentPassive {
     EspGood,
     EspEvil,
     EspLiving,
+    EspNonliving,
+    Telepathy,
     SustainStrength,
     SustainIntelligence,
     SustainWisdom,

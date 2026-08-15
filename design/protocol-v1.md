@@ -816,3 +816,7 @@ schema 升至 v4，二进制容器格式仍为 v1，不为旧开发存档提供�
 `baseShotDeltaPercent`，并为四类物品 save DTO 增加 `intrinsicProperties`。基础物品在生成期
 掷出的真实属性原样进入装备聚合、物品投影、save 与 State Hash Schema v108，读档不重掷；
 save header/payload schema 同步升至 v5，二进制容器格式仍为 v1。
+
+协议 1.229 为 `EquipmentPassiveDto` 增加装备来源的永久 Telepathy 与 Nonliving ESP，用于无损
+物化 Hunter 发射器 ego 的四种强 ESP 结果。它们复用既有感知消费者与 rolled affix 持久集合，
+没有新增字段；State Hash Schema 保持 v108，save header/payload schema 保持 v5。
