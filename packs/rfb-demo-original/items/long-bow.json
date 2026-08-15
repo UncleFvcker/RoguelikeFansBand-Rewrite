@@ -22,6 +22,11 @@
     "toDamage": 0,
     "toHit": 0
   },
+  "rfbBaseKind": {
+    "sourceIndex": 162,
+    "sval": 13,
+    "tval": 19
+  },
   "tags": [
     "equipment",
     "launcher",

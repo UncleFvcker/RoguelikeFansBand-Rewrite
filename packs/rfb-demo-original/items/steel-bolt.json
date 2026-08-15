@@ -20,6 +20,11 @@
   "maxStack": 99,
   "mogaminatorRare": false,
   "nameKey": "item-demo-steel-bolt-name",
+  "rfbBaseKind": {
+    "sourceIndex": 186,
+    "sval": 2,
+    "tval": 18
+  },
   "tags": [
     "ammunition",
     "rfb-compatibility"

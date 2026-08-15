@@ -59,7 +59,7 @@ fn direct_warrens_death_drops(
 }
 
 #[test]
-fn base_item_natural_egos_use_the_weapon_digger_policy_only() {
+fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
     let mut game =
         Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).expect("Orc Cave loot test should create");
     let context = LootContext {
@@ -71,7 +71,10 @@ fn base_item_natural_egos_use_the_weapon_digger_policy_only() {
         },
     };
     let mut saw_rfb_weapon_or_digger_ego = false;
-    let mut saw_rolled_rfb_weapon_or_digger_ego = false;
+    let mut saw_rfb_launcher_ego = false;
+    let mut saw_rfb_ammunition_ego = false;
+    let mut saw_rfb_harp_ego = false;
+    let mut saw_rolled_rfb_ego = false;
     let mut saw_protection = false;
     let mut saw_fine_incompatible_fallback = false;
     for _ in 0..20_000 {
@@ -89,20 +92,44 @@ fn base_item_natural_egos_use_the_weapon_digger_policy_only() {
                 .and_then(|affix_id| game.content.affix(affix_id))
                 .and_then(|affix| affix.rfb_ego.as_ref());
             if let Some(rfb_ego) = rfb_ego {
-                saw_rfb_weapon_or_digger_ego = true;
                 assert_eq!(item.quality, ItemQualityDto::Exceptional);
                 assert_eq!(item.affix_ids.len(), 1);
                 assert!(item.rolled_affixes.len() <= 1);
                 if let Some(rolled) = item.rolled_affixes.first() {
-                    saw_rolled_rfb_weapon_or_digger_ego = true;
+                    saw_rolled_rfb_ego = true;
                     assert_eq!(rolled.affix_id, item.affix_ids[0]);
                 }
                 let base_kind = definition
                     .rfb_base_kind
                     .expect("RFB ego target should retain source base identity");
-                assert!(matches!(base_kind.tval, 20..=23));
-                assert_ne!(rfb_ego.source_index, 6, "Arcane requires a Wizardstaff");
-                assert_ne!(rfb_ego.source_index, 42, "Disruption requires a Mattock");
+                match rfb_ego.source_index {
+                    1..=27 | 40..=42 => {
+                        saw_rfb_weapon_or_digger_ego = true;
+                        assert!(matches!(base_kind.tval, 20..=23));
+                        assert_ne!(rfb_ego.source_index, 6, "Arcane requires a Wizardstaff");
+                        assert_ne!(rfb_ego.source_index, 42, "Disruption requires a Mattock");
+                    }
+                    160..=167 => {
+                        saw_rfb_launcher_ego = true;
+                        assert_eq!(base_kind.tval, 19);
+                        assert_ne!(base_kind.sval, 70, "Harp must not enter the BOW pool");
+                        match rfb_ego.source_index {
+                            164 => assert_eq!(base_kind.sval, 13),
+                            165 => assert_eq!(base_kind.sval, 24),
+                            166 => assert_eq!(base_kind.sval, 2),
+                            _ => {}
+                        }
+                    }
+                    180..=185 => {
+                        saw_rfb_ammunition_ego = true;
+                        assert!(matches!(base_kind.tval, 16..=18));
+                    }
+                    195 | 196 => {
+                        saw_rfb_harp_ego = true;
+                        assert_eq!((base_kind.tval, base_kind.sval), (19, 70));
+                    }
+                    index => panic!("unexpected natural RFB ego source index {index}"),
+                }
             } else if item.affix_ids == ["rfb-legacy.affix.protection"] {
                 saw_protection = true;
                 assert!(matches!(
@@ -120,7 +147,10 @@ fn base_item_natural_egos_use_the_weapon_digger_policy_only() {
         }
     }
     assert!(saw_rfb_weapon_or_digger_ego);
-    assert!(saw_rolled_rfb_weapon_or_digger_ego);
+    assert!(saw_rfb_launcher_ego);
+    assert!(saw_rfb_ammunition_ego);
+    assert!(saw_rfb_harp_ego);
+    assert!(saw_rolled_rfb_ego);
     assert!(saw_protection);
     assert!(saw_fine_incompatible_fallback);
 }

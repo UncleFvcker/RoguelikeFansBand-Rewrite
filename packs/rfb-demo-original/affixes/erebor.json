@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-erebor-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.erebor",
+  "nameKey": "affix-legacy-erebor-name",
+  "passives": [
+    "sustain-charisma",
+    "sustain-constitution",
+    "sustain-strength"
+  ],
+  "rfbEgo": {
+    "rarity": 1,
+    "sourceIndex": 196,
+    "types": [
+      "harp"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.blindness",
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "harp",
+    "legacy-import"
+  ]
+}

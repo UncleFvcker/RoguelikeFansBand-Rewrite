@@ -297,7 +297,7 @@ test("New Game exposes and submits Amberite", () => {
 });
 
 test("New Game exposes and submits Beastman", () => {
-  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.beastman");
+  assert.ok(PLAYTEST_RACE_IDS.includes("rfb-legacy.race.beastman"));
   assert.equal(
     createNewSessionRequest(
       "419",
@@ -312,7 +312,7 @@ test("New Game exposes and submits Beastman", () => {
 });
 
 test("New Game exposes and submits Shadow-Fairy", () => {
-  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.shadow-fairy");
+  assert.ok(PLAYTEST_RACE_IDS.includes("rfb-legacy.race.shadow-fairy"));
   assert.equal(
     createNewSessionRequest(
       "421",

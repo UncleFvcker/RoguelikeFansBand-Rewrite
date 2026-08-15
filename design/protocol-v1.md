@@ -811,3 +811,16 @@ Schema 保持 v104，save header/payload schema 保持 v2。
 独特怪奖励、今日目标与动态地牢任务；它与协议 1.226 的随机 ego 实例状态共同进入
 State Hash Schema v107。由于并行分支各自占用了 save schema v3，合并后的 header/payload
 schema 升至 v4，二进制容器格式仍为 v1，不为旧开发存档提供兼容路径。
+
+协议 1.228 为 `EquipmentBonusesDto` 增加有明确单位的 `launcherMultiplierDeltaPercent` 与
+`baseShotDeltaPercent`，并为四类物品 save DTO 增加 `intrinsicProperties`。基础物品在生成期
+掷出的真实属性原样进入装备聚合、物品投影、save 与 State Hash Schema v108，读档不重掷；
+save header/payload schema 同步升至 v5，二进制容器格式仍为 v1。
+
+协议 1.229 为 `EquipmentPassiveDto` 增加装备来源的永久 Telepathy 与 Nonliving ESP，用于无损
+物化 Hunter 发射器 ego 的四种强 ESP 结果。它们复用既有感知消费者与 rolled affix 持久集合，
+没有新增字段；State Hash Schema 保持 v108，save header/payload schema 保持 v5。
+
+主工作树整合时，monster 与 items 分支曾各自占用协议 1.228：前者用于城镇任务服务投影，后者
+用于物品实例属性。联合结构因此发布为协议 1.230，避免协议 1.228/1.229 在不同历史上代表不同
+DTO 集合；State Hash Schema 保持 v108，save header/payload schema 保持 v5。

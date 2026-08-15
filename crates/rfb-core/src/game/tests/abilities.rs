@@ -3104,7 +3104,7 @@ fn explosive_rune_step_explodes_or_is_destroyed_by_the_authoritative_roll() {
     let disarm_seed = (0..10_000)
         .find(|seed| {
             let mut rng = RfbRng::seeded(*seed);
-            rng.bounded(break_roll_sides) + 1 <= u64::from(monster_level)
+            rng.bounded(break_roll_sides) < u64::from(monster_level)
         })
         .expect("Explosive Rune should have a destruction seed");
 

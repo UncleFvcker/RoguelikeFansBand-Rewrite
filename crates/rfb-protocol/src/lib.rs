@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.228";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 4;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 4;
+pub const PROTOCOL_VERSION: &str = "1.230";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 5;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -565,6 +565,12 @@ pub struct AbilityBanishTargetDto {
 pub struct EquipmentBonusesDto {
     #[serde(default, skip_serializing_if = "is_zero_i32")]
     pub life_percent: i32,
+    /// Additive launcher damage multiplier in percentage points. `25` means +x0.25.
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub launcher_multiplier_delta_percent: i32,
+    /// Additive RFB `base_shot` value in hundredths of a shot. `15` means +0.15 shots.
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub base_shot_delta_percent: i32,
     #[serde(default)]
     pub melee_attacks: i32,
     #[serde(default)]
@@ -625,6 +631,8 @@ pub enum EquipmentPassiveDto {
     EspGood,
     EspEvil,
     EspLiving,
+    EspNonliving,
+    Telepathy,
     SustainStrength,
     SustainIntelligence,
     SustainWisdom,
@@ -658,13 +666,15 @@ where
             "esp-good" => Some(Ok(EquipmentPassiveDto::EspGood)),
             "esp-evil" => Some(Ok(EquipmentPassiveDto::EspEvil)),
             "esp-living" => Some(Ok(EquipmentPassiveDto::EspLiving)),
+            "esp-nonliving" => Some(Ok(EquipmentPassiveDto::EspNonliving)),
+            "telepathy" => Some(Ok(EquipmentPassiveDto::Telepathy)),
             "sustain-strength" => Some(Ok(EquipmentPassiveDto::SustainStrength)),
             "sustain-intelligence" => Some(Ok(EquipmentPassiveDto::SustainIntelligence)),
             "sustain-wisdom" => Some(Ok(EquipmentPassiveDto::SustainWisdom)),
             "sustain-dexterity" => Some(Ok(EquipmentPassiveDto::SustainDexterity)),
             "sustain-constitution" => Some(Ok(EquipmentPassiveDto::SustainConstitution)),
             "sustain-charisma" => Some(Ok(EquipmentPassiveDto::SustainCharisma)),
-            "telepathy" | "blessed" | "easy-spell" | "device-power" => None,
+            "blessed" | "easy-spell" | "device-power" => None,
             _ => Some(Err(serde::de::Error::custom(format!(
                 "unknown rolled affix passive `{passive}`"
             )))),
@@ -2169,6 +2179,31 @@ pub enum ItemCurseEffectDto {
     ByCurse,
     Danger,
     CrappyMutation,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ItemIntrinsicPropertiesSaveDto {
+    #[serde(default)]
+    pub modifiers: StatModifiersDto,
+    #[serde(default, skip_serializing_if = "EquipmentBonusesDto::is_empty")]
+    pub equipment_bonuses: EquipmentBonusesDto,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub resistances: Vec<ResistanceDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub status_immunities: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub slays: Vec<SlayDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub brands: Vec<WeaponBrandDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub passives: Vec<EquipmentPassiveDto>,
+}
+
+impl ItemIntrinsicPropertiesSaveDto {
+    fn is_empty(&self) -> bool {
+        self == &Self::default()
+    }
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
@@ -4830,6 +4865,11 @@ pub struct ItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(
+        default,
+        skip_serializing_if = "ItemIntrinsicPropertiesSaveDto::is_empty"
+    )]
+    pub intrinsic_properties: ItemIntrinsicPropertiesSaveDto,
     #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4868,6 +4908,11 @@ pub struct InventoryItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(
+        default,
+        skip_serializing_if = "ItemIntrinsicPropertiesSaveDto::is_empty"
+    )]
+    pub intrinsic_properties: ItemIntrinsicPropertiesSaveDto,
     #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4907,6 +4952,11 @@ pub struct EquipmentItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(
+        default,
+        skip_serializing_if = "ItemIntrinsicPropertiesSaveDto::is_empty"
+    )]
+    pub intrinsic_properties: ItemIntrinsicPropertiesSaveDto,
     #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -4946,6 +4996,11 @@ pub struct CarriedItemSaveDto {
     pub affix_ids: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub rolled_affixes: Vec<RolledAffixSaveDto>,
+    #[serde(
+        default,
+        skip_serializing_if = "ItemIntrinsicPropertiesSaveDto::is_empty"
+    )]
+    pub intrinsic_properties: ItemIntrinsicPropertiesSaveDto,
     #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
     pub enchantments: ItemEnchantmentsDto,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5278,6 +5333,25 @@ pub fn from_msgpack<T: DeserializeOwned>(bytes: &[u8]) -> Result<T, CodecError> 
 mod tests {
     use super::*;
 
+    #[test]
+    fn ranged_materialization_protocol_uses_explicit_units_and_v5_save() {
+        assert_eq!(PROTOCOL_VERSION, "1.230");
+        assert_eq!(SAVE_HEADER_SCHEMA_VERSION, 5);
+        assert_eq!(SAVE_PAYLOAD_SCHEMA_VERSION, 5);
+        let encoded = serde_json::to_value(EquipmentBonusesDto {
+            launcher_multiplier_delta_percent: 25,
+            base_shot_delta_percent: 15,
+            ..EquipmentBonusesDto::default()
+        })
+        .expect("equipment bonuses should serialize");
+        assert_eq!(encoded["launcherMultiplierDeltaPercent"], 25);
+        assert_eq!(encoded["baseShotDeltaPercent"], 15);
+        let empty = serde_json::to_value(EquipmentBonusesDto::default())
+            .expect("empty equipment bonuses should serialize");
+        assert!(empty.get("launcherMultiplierDeltaPercent").is_none());
+        assert!(empty.get("baseShotDeltaPercent").is_none());
+    }
+
     #[derive(Serialize)]
     #[serde(rename_all = "camelCase")]
     struct LegacySavePayloadV1 {
@@ -5514,6 +5588,7 @@ mod tests {
                 EquipmentPassiveDto::SustainDexterity,
                 EquipmentPassiveDto::SustainConstitution,
                 EquipmentPassiveDto::SustainCharisma,
+                EquipmentPassiveDto::Telepathy,
                 EquipmentPassiveDto::Vampiric
             ]
         );

@@ -1104,6 +1104,7 @@ fn p90c_troll_cave_shared_entry_shafts_conquest_and_reward_are_one_shot() {
 fn p91c_eyrie_generation_keeps_caverns_rivers_shafts_and_connectivity() {
     let mut game =
         Game::new_with_build(191, "demo.build.warrior").expect("Middle-earth should create");
+    game.rng = RfbRng::seeded(191);
     let mut definitions = game
         .content
         .world(&game.world_id)
@@ -5173,8 +5174,14 @@ fn p103e_volcano_generates_lava_guardians_and_fixed_staff_reward() {
             let index = actor.position.y as usize * usize::from(generated.width)
                 + actor.position.x as usize;
             game.content
-                .terrain(&generated.terrain[index])
-                .is_some_and(|terrain| terrain.walkable)
+                .actor(&actor.kind_id)
+                .is_some_and(|definition| {
+                    game.content
+                        .terrain(&generated.terrain[index])
+                        .is_some_and(|terrain| {
+                            super::super::movement::actor_can_cross_terrain(definition, terrain)
+                        })
+                })
         }));
         if definition.final_floor {
             assert!(generated.entities.iter().any(|actor| {

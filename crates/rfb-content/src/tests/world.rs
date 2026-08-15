@@ -10946,7 +10946,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 343);
+    assert_eq!(base_items.entries.len(), 344);
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -10994,7 +10994,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 318);
+    assert_eq!(active_source_items.len(), 319);
 
     let source_items_without_allocations =
         BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
@@ -11009,7 +11009,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 309);
+    assert_eq!(expected_item_ids.len(), 310);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -14446,14 +14446,12 @@ fn p107g_anambar_mayor_line_binds_substitutions_rewards_and_crystal_targets() {
     let apina = task("demo.task.anambar-apina-island");
     let bovin = task("demo.task.anambar-lord-bovin-treachery");
 
-    assert!(
-        world
-            .tasks
-            .iter()
-            .filter(|task| task.id.starts_with("demo.task.anambar-"))
-            .all(|task| task.source_facility_id.as_deref()
-                == Some("demo.town-facility.anambar-mayor-office"))
-    );
+    for mayor_task in [orcs, tunnels, scary, dino, crystal, apina, bovin] {
+        assert_eq!(
+            mayor_task.source_facility_id.as_deref(),
+            Some("demo.town-facility.anambar-mayor-office")
+        );
+    }
     assert_eq!(
         tunnels.substitution.as_ref().map(|substitution| (
             substitution.group_id.as_str(),
@@ -14487,13 +14485,9 @@ fn p107g_anambar_mayor_line_binds_substitutions_rewards_and_crystal_targets() {
         bovin.prerequisite_task_id.as_deref(),
         Some(crystal.id.as_str())
     );
-    assert!(
-        world
-            .tasks
-            .iter()
-            .filter(|task| task.id.starts_with("demo.task.anambar-") && task.id != orcs.id)
-            .all(|task| task.unlock_when_prerequisite_failed)
-    );
+    for mayor_task in [tunnels, scary, dino, crystal, apina, bovin] {
+        assert!(mayor_task.unlock_when_prerequisite_failed);
+    }
 
     fn reward(task: &TaskDefinition) -> &TaskRewardEntryDefinition {
         &task

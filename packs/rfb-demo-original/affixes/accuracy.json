@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-accuracy-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 40,
+  "id": "rfb-legacy.affix.accuracy",
+  "nameKey": "affix-legacy-accuracy-name",
+  "rfbEgo": {
+    "rarity": 1,
+    "sourceIndex": 160,
+    "types": [
+      "bow"
+    ]
+  },
+  "tags": [
+    "bow",
+    "legacy-import"
+  ]
+}

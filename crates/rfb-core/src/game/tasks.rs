@@ -678,6 +678,7 @@ pub(super) fn reward_item(
         quality,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        intrinsic_properties: Default::default(),
         enchantments: ItemEnchantmentsDto::default(),
         curse: initial_item_curse(content, &entry.item_kind_id),
         permanent_destruction_immunities: Default::default(),

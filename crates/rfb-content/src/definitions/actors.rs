@@ -645,6 +645,12 @@ pub struct EquipmentBonuses {
     /// Additive adjustment to RFB's equipment life multiplier. `9` means +9% max HP.
     #[serde(default, skip_serializing_if = "is_zero_i32")]
     pub life_percent: i32,
+    /// Additive launcher damage multiplier in percentage points. `25` means +x0.25.
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub launcher_multiplier_delta_percent: i32,
+    /// Additive RFB `base_shot` value in hundredths of a shot. `15` means +0.15 shots.
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub base_shot_delta_percent: i32,
     #[serde(default)]
     pub melee_attacks: i32,
     #[serde(default)]

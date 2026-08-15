@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "brands": [
+    "fire"
+  ],
+  "descriptionKey": "affix-legacy-holy-might-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "id": "rfb-legacy.affix.holy-might",
+  "nameKey": "affix-legacy-holy-might-name",
+  "rfbEgo": {
+    "rarity": 7,
+    "sourceIndex": 182,
+    "types": [
+      "ammo"
+    ]
+  },
+  "slays": {
+    "demon": "slay",
+    "evil": "slay",
+    "undead": "slay"
+  },
+  "tags": [
+    "ammo",
+    "legacy-import"
+  ]
+}

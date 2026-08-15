@@ -1449,7 +1449,28 @@ impl Game {
                     .floor_id
                     .clone()
             } else {
-                world.initial_floor_id.clone()
+                let current = world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == self.current_floor_id)
+                    .expect("pending dungeon recall must retain its current floor");
+                let dungeon_id = current
+                    .dungeon_id
+                    .as_ref()
+                    .expect("pending dungeon recall must retain its dungeon ID");
+                let root_floor_id = &world
+                    .dungeons
+                    .iter()
+                    .find(|dungeon| dungeon.id == *dungeon_id)
+                    .expect("pending dungeon recall must retain its dungeon definition")
+                    .root_floor_id;
+                world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == *root_floor_id)
+                    .expect("pending dungeon recall must retain its root floor")
+                    .return_floor_id
+                    .clone()
             },
         })
     }
@@ -1481,6 +1502,9 @@ impl Game {
                 else {
                     return Ok(());
                 };
+                if self.current_town().is_some() {
+                    self.initialize_continuous_wilderness_surface()?;
+                }
                 events.push(DomainEvent::RecallTriggered {
                     from_floor_id,
                     to_floor_id: transition.to_floor_id.clone(),

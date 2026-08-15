@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.382.0");
+    assert_eq!(catalog.pack_version(), "1.384.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -285,7 +285,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     );
     assert!(catalog.affix("rfb-legacy.affix.slaying").is_some());
     assert!(catalog.affix("rfb-legacy.affix.protection").is_some());
-    assert!(catalog.affix("demo.affix.ammo-elemental").is_some());
+    assert!(catalog.affix("rfb-legacy.affix.elemental").is_some());
     assert!(catalog.class("demo.class.mage").is_none());
     let world = catalog
         .world("demo.world.middle-earth")

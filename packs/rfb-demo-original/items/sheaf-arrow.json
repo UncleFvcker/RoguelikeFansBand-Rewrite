@@ -21,6 +21,11 @@
   "maxStack": 99,
   "mogaminatorRare": false,
   "nameKey": "item-demo-sheaf-arrow-name",
+  "rfbBaseKind": {
+    "sourceIndex": 176,
+    "sval": 2,
+    "tval": 17
+  },
   "tags": [
     "ammunition",
     "rfb-compatibility"

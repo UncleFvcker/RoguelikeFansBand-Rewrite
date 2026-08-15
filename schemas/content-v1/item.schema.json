@@ -222,6 +222,11 @@
     "EquipmentBonuses": {
       "additionalProperties": false,
       "properties": {
+        "baseShotDeltaPercent": {
+          "description": "Additive RFB `base_shot` value in hundredths of a shot. `15` means +0.15 shots.",
+          "format": "int32",
+          "type": "integer"
+        },
         "deviceSkill": {
           "default": 0,
           "format": "int32",
@@ -239,6 +244,11 @@
         },
         "infravision": {
           "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "launcherMultiplierDeltaPercent": {
+          "description": "Additive launcher damage multiplier in percentage points. `25` means +x0.25.",
           "format": "int32",
           "type": "integer"
         },
@@ -328,6 +338,8 @@
         "esp-good",
         "esp-evil",
         "esp-living",
+        "esp-nonliving",
+        "telepathy",
         "sustain-strength",
         "sustain-intelligence",
         "sustain-wisdom",

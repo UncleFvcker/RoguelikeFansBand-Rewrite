@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-extra-shots-description",
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "id": "rfb-legacy.affix.extra-shots",
+  "nameKey": "affix-legacy-extra-shots-name",
+  "rfbEgo": {
+    "rarity": 2,
+    "sourceIndex": 163,
+    "types": [
+      "bow"
+    ]
+  },
+  "tags": [
+    "bow",
+    "legacy-import"
+  ]
+}

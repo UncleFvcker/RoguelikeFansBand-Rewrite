@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-lothlorien-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "id": "rfb-legacy.affix.lothlorien",
+  "nameKey": "affix-legacy-lothlorien-name",
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 164,
+    "types": [
+      "bow"
+    ]
+  },
+  "tags": [
+    "bow",
+    "legacy-import"
+  ]
+}

@@ -1660,3 +1660,25 @@ git diff --stat
 - 本批 5 项新增聚焦测试（内容 1、本地化 1、核心 2、Web 1）通过；一次宽泛过滤器额外执行了 59 项
   名称含 `progression` 的既有核心测试，均通过。source lock、Rust format 与 diff 检查通过；未运行
   全量测试或刷新 fixture。
+
+## 91. main 当前交接（Thalos 任务线与远程 ego 整合）
+
+- 已将 `codex/monsters-next` 的 4 个增量提交合并到 main；分支 tip 为 `49eb701be`，monster merge
+  commit 为 `3dbc39800`。本批覆盖 Anambar 警察任务线、Thalos 城镇核心、旅行与博物馆，以及宫殿和
+  学院两条任务线。monster 分支和工作树按用户要求保留。
+- 已将 `codex/items-next` 的 9 个增量提交合并到 main；分支 tip 为 `1526c3193`。本批闭合发射器、
+  弹药与竖琴 ego 的 source identity、逐实例物化、自然生成、战斗/损毁消费者和 save/state-hash
+  生命周期。items 分支和工作树按用户要求保留。
+- 两个并行方向独立占用了 Protocol `1.228`，items 后续又推进到 `1.229`；联合结构统一发布为
+  Protocol `1.230`。远程 ego 的逐实例状态令 save header/payload schema 升至 v5；联合 State Hash
+  Schema 为 v108，active baseline 为 `contract-v306`，26 个 exact fixture 已刷新并验证，零 waiver。
+- 共享协调点为 pack `1.384.0` / content hash
+  `b9fb857fed30dc5b819967d926512d039da47a6f1d80989fc9e9e565fbaed6c2`。内容包现有 201 terrain、
+  1402 actors、356 items、1838 abilities、65 affixes、3 towns、24 town facilities 和 30 shops。
+- 合并验收同步修正了第三座 Black Market 与 harp 选择 ledger 的联合断言、Anambar 镇长任务过滤边界、
+  新内容初始化对 Eyrie 固定种子测试的影响，以及具备特殊移动能力的 Volcano 守卫落点断言。Recall
+  现在按当前地牢根入口返回对应城镇，再复用连续荒野的城镇嵌入流程，Icky Cave 从 Thalos 回城不再
+  错误硬编码初始城镇。
+- 最终 `rfb-core` 935 项、`rfb-content` 320 项、`rfb-legacy-import` 170 项、本地化 39 项、Protocol
+  7 项与其余 workspace 测试通过；Web 170 项、clippy、schema/bindings、source lock、Rust format、
+  TypeScript 类型检查和生产 UI 构建均通过。

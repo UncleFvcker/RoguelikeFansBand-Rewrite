@@ -1932,6 +1932,58 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
 }
 
 #[test]
+fn ranged_ego_base_identities_and_harp_are_formal() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let expected = [
+        ("demo.item.sling", 160, 19, 2),
+        ("demo.item.short-bow", 161, 19, 12),
+        ("demo.item.long-bow", 162, 19, 13),
+        ("demo.item.light-crossbow", 163, 19, 23),
+        ("demo.item.heavy-crossbow", 164, 19, 24),
+        ("demo.item.harp", 168, 19, 70),
+        ("demo.item.arrow", 175, 17, 1),
+        ("demo.item.sheaf-arrow", 176, 17, 2),
+        ("demo.item.mithril-arrow", 177, 17, 3),
+        ("demo.item.seeker-arrow", 178, 17, 4),
+        ("demo.item.bolt", 185, 18, 1),
+        ("demo.item.steel-bolt", 186, 18, 2),
+        ("demo.item.mithril-bolt", 187, 18, 3),
+        ("demo.item.seeker-bolt", 188, 18, 4),
+        ("demo.item.adamantine-bolt", 189, 18, 5),
+        ("demo.item.rounded-pebble", 190, 16, 1),
+        ("demo.item.iron-shot", 191, 16, 2),
+        ("demo.item.mithril-shot", 192, 16, 3),
+    ];
+    for (id, source_index, tval, sval) in expected {
+        let item = artifact
+            .content
+            .items
+            .iter()
+            .find(|item| item.id == id)
+            .unwrap_or_else(|| panic!("{id} should be formal"));
+        assert_eq!(
+            item.rfb_base_kind,
+            Some(RfbBaseKindDefinition {
+                source_index,
+                tval,
+                sval,
+            }),
+            "{id} source identity"
+        );
+    }
+
+    let harp = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.harp")
+        .expect("Harp should be formal");
+    assert_eq!(harp.equipment_slot.as_deref(), Some("launcher"));
+    assert!(harp.projectile_profile.is_none());
+    assert!(harp.resists_enchantment);
+}
+
+#[test]
 fn rfb_base_kind_identity_rejects_duplicate_source_indices_and_kind_values() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let set_identities = |content: &mut CompiledContentV1, second: RfbBaseKindDefinition| {

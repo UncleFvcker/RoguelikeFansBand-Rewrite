@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-buckland-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.buckland",
+  "nameKey": "affix-legacy-buckland-name",
+  "rfbEgo": {
+    "rarity": 3,
+    "sourceIndex": 166,
+    "types": [
+      "bow"
+    ]
+  },
+  "tags": [
+    "bow",
+    "legacy-import"
+  ]
+}

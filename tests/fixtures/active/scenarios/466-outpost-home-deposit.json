@@ -1145,6 +1145,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.wizardstaff",
+            "nameKey": "item-demo-wizardstaff-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.zweihander",
             "nameKey": "item-demo-zweihander-name",
             "category": "melee",
@@ -1695,7 +1704,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "e3e3e626ec3450c345f2729fc569b1e1a478f6319dd24af0dc9fdc96deb8015e"
+      "stateHash": "2409592cf6c2a67290f10031f62eb95330bc30836bcb3c37eda98ca01234ffc2"
     },
     "events": [
       {

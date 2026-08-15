@@ -25,12 +25,12 @@ use rfb_protocol::{
     EquipmentItemSaveDto, EquipmentPassiveDto, FloorConnectionSaveDto, FloorRegionSaveDto,
     FloorSaveDto, GoldPileDto, InventoryItemSaveDto, ItemActivationDto, ItemChargesDto,
     ItemDestructionElementDto, ItemEnchantmentsDto, ItemFuelDto, ItemFuelKindDto,
-    ItemOriginKindDto, ItemSaveDto, MaterialSaveDto, MonsterPackSaveDto,
-    NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto, PlayerSaveDto, Position,
-    ResistanceDto, ResistanceLevelDto, ResistanceSaveDto, RolledAffixSaveDto, SkillProgressSaveDto,
-    SlayDto, SlayLevelDto, SlayTargetDto, StatModifiersDto, StatusSaveDto, SummonSaveDto,
-    TargetModeDto, TargetSpecDto, TerrainSaveDto, VirtueDto, WeaponBrandDto,
-    WeaponProficiencySaveDto,
+    ItemIntrinsicPropertiesSaveDto, ItemOriginKindDto, ItemSaveDto, MaterialSaveDto,
+    MonsterPackSaveDto, NaturalAttributeSetSaveDto, PlayerBuildSaveDto, PlayerProgressSaveDto,
+    PlayerSaveDto, Position, ResistanceDto, ResistanceLevelDto, ResistanceSaveDto,
+    RolledAffixSaveDto, SkillProgressSaveDto, SlayDto, SlayLevelDto, SlayTargetDto,
+    StatModifiersDto, StatusSaveDto, SummonSaveDto, TargetModeDto, TargetSpecDto, TerrainSaveDto,
+    VirtueDto, WeaponBrandDto, WeaponProficiencySaveDto,
 };
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
@@ -349,6 +349,7 @@ pub(crate) fn item_from_dto(
         item.discount_percent,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
+    let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         id: item.id,
@@ -362,6 +363,7 @@ pub(crate) fn item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        intrinsic_properties,
         enchantments: item.enchantments,
         curse: item.curse,
         permanent_destruction_immunities: item
@@ -402,6 +404,7 @@ pub(crate) fn inventory_item_from_dto(
         item.discount_percent,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
+    let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         id: item.id,
@@ -415,6 +418,7 @@ pub(crate) fn inventory_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        intrinsic_properties,
         enchantments: item.enchantments,
         curse: item.curse,
         permanent_destruction_immunities: item
@@ -460,6 +464,7 @@ pub(crate) fn equipment_item_from_dto(
         item.discount_percent,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
+    let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         id: item.id,
@@ -473,6 +478,7 @@ pub(crate) fn equipment_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        intrinsic_properties,
         enchantments: item.enchantments,
         curse: item.curse,
         permanent_destruction_immunities: item
@@ -515,6 +521,7 @@ pub(crate) fn carried_item_from_dto(
         item.discount_percent,
     )?;
     let rolled_affixes = rolled_affixes_from_save(item.rolled_affixes, &item.affix_ids)?;
+    let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         id: item.id,
@@ -528,6 +535,7 @@ pub(crate) fn carried_item_from_dto(
         quality: item.quality,
         affix_ids: item.affix_ids,
         rolled_affixes,
+        intrinsic_properties,
         enchantments: item.enchantments,
         curse: item.curse,
         permanent_destruction_immunities: item
@@ -1044,6 +1052,107 @@ fn rolled_affixes_to_save(rolled_affixes: &[RolledAffixState]) -> Vec<RolledAffi
         .collect()
 }
 
+fn intrinsic_properties_to_save(
+    properties: &AffixPropertyBundleDefinition,
+) -> ItemIntrinsicPropertiesSaveDto {
+    let mut status_immunities = properties.status_immunities.clone();
+    status_immunities.sort();
+    ItemIntrinsicPropertiesSaveDto {
+        modifiers: stat_modifiers_to_dto(&properties.modifiers),
+        equipment_bonuses: equipment_bonuses_to_dto(&properties.equipment_bonuses),
+        resistances: properties
+            .resistances
+            .iter()
+            .map(|(damage_type, level)| ResistanceDto {
+                damage_type: damage_type_dto(*damage_type),
+                level: resistance_level_dto(*level),
+            })
+            .collect(),
+        status_immunities,
+        slays: properties
+            .slays
+            .iter()
+            .map(|(target, level)| SlayDto {
+                target: slay_target_dto(*target),
+                level: slay_level_dto(*level),
+            })
+            .collect(),
+        brands: properties
+            .brands
+            .iter()
+            .copied()
+            .map(weapon_brand_dto)
+            .collect(),
+        passives: properties
+            .passives
+            .iter()
+            .copied()
+            .map(equipment_passive_dto)
+            .collect(),
+    }
+}
+
+fn intrinsic_properties_from_save(
+    saved: ItemIntrinsicPropertiesSaveDto,
+) -> Result<AffixPropertyBundleDefinition, CoreError> {
+    if saved
+        .resistances
+        .windows(2)
+        .any(|pair| pair[0].damage_type >= pair[1].damage_type)
+        || saved
+            .status_immunities
+            .windows(2)
+            .any(|pair| pair[0] >= pair[1])
+        || saved
+            .status_immunities
+            .iter()
+            .any(|status_id| !valid_rule_id(status_id))
+        || saved
+            .slays
+            .windows(2)
+            .any(|pair| pair[0].target >= pair[1].target)
+        || saved.brands.windows(2).any(|pair| pair[0] >= pair[1])
+        || saved.passives.windows(2).any(|pair| pair[0] >= pair[1])
+    {
+        return Err(CoreError::InvalidSave(
+            "intrinsic item properties are invalid",
+        ));
+    }
+    let mut resistances = BTreeMap::new();
+    for resistance in saved.resistances {
+        let Some(damage_type) = actor_damage_type(resistance.damage_type) else {
+            return Err(CoreError::InvalidSave(
+                "intrinsic item properties are invalid",
+            ));
+        };
+        let Some(level) = actor_resistance_level(resistance.level) else {
+            return Err(CoreError::InvalidSave(
+                "intrinsic item properties are invalid",
+            ));
+        };
+        resistances.insert(damage_type, level);
+    }
+    let properties = AffixPropertyBundleDefinition {
+        modifiers: stat_modifiers_from_dto(saved.modifiers),
+        equipment_bonuses: equipment_bonuses_from_dto(saved.equipment_bonuses),
+        resistances,
+        status_immunities: saved.status_immunities,
+        slays: saved
+            .slays
+            .into_iter()
+            .map(|slay| (slay_target(slay.target), slay_level(slay.level)))
+            .collect(),
+        brands: saved.brands.into_iter().map(weapon_brand).collect(),
+        passives: saved.passives.into_iter().map(equipment_passive).collect(),
+    };
+    if affix_property_bundle_out_of_range(&properties) {
+        return Err(CoreError::InvalidSave(
+            "intrinsic item properties are invalid",
+        ));
+    }
+    Ok(properties)
+}
+
 fn rolled_affixes_from_save(
     rolled_affixes: Vec<RolledAffixSaveDto>,
     affix_ids: &[String],
@@ -1181,6 +1290,8 @@ fn stat_modifiers_from_dto(modifiers: StatModifiersDto) -> StatModifiers {
 fn equipment_bonuses_to_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
     EquipmentBonusesDto {
         life_percent: bonuses.life_percent,
+        launcher_multiplier_delta_percent: bonuses.launcher_multiplier_delta_percent,
+        base_shot_delta_percent: bonuses.base_shot_delta_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -1202,6 +1313,8 @@ fn equipment_bonuses_to_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
 fn equipment_bonuses_from_dto(bonuses: EquipmentBonusesDto) -> EquipmentBonuses {
     EquipmentBonuses {
         life_percent: bonuses.life_percent,
+        launcher_multiplier_delta_percent: bonuses.launcher_multiplier_delta_percent,
+        base_shot_delta_percent: bonuses.base_shot_delta_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -1242,6 +1355,8 @@ fn affix_property_bundle_out_of_range(properties: &AffixPropertyBundleDefinition
     .into_iter()
     .any(|value| !(-1_000_000..=1_000_000).contains(&value))
         || !(-100..=100).contains(&bonuses.life_percent)
+        || !(-1_000..=1_000).contains(&bonuses.launcher_multiplier_delta_percent)
+        || !(-1_000..=1_000).contains(&bonuses.base_shot_delta_percent)
         || [
             modifiers.strength,
             modifiers.intelligence,
@@ -1449,6 +1564,8 @@ const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
         EquipmentPassive::EspGood => EquipmentPassiveDto::EspGood,
         EquipmentPassive::EspEvil => EquipmentPassiveDto::EspEvil,
         EquipmentPassive::EspLiving => EquipmentPassiveDto::EspLiving,
+        EquipmentPassive::EspNonliving => EquipmentPassiveDto::EspNonliving,
+        EquipmentPassive::Telepathy => EquipmentPassiveDto::Telepathy,
         EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
         EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
         EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
@@ -1478,6 +1595,8 @@ const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
         EquipmentPassiveDto::EspGood => EquipmentPassive::EspGood,
         EquipmentPassiveDto::EspEvil => EquipmentPassive::EspEvil,
         EquipmentPassiveDto::EspLiving => EquipmentPassive::EspLiving,
+        EquipmentPassiveDto::EspNonliving => EquipmentPassive::EspNonliving,
+        EquipmentPassiveDto::Telepathy => EquipmentPassive::Telepathy,
         EquipmentPassiveDto::SustainStrength => EquipmentPassive::SustainStrength,
         EquipmentPassiveDto::SustainIntelligence => EquipmentPassive::SustainIntelligence,
         EquipmentPassiveDto::SustainWisdom => EquipmentPassive::SustainWisdom,
@@ -1529,6 +1648,7 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item
@@ -1568,6 +1688,7 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item
@@ -1608,6 +1729,7 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item
@@ -1652,6 +1774,7 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 quality: item.quality,
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
+                intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item

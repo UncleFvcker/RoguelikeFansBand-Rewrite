@@ -275,7 +275,7 @@ fn life_first_book_keeps_the_original_spell_table_allocation_and_final_scaling()
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -422,7 +422,7 @@ fn daemon_first_book_keeps_the_original_identity_spell_table_and_effect_boundari
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -579,7 +579,7 @@ fn crusade_first_book_keeps_original_identity_spell_table_and_effect_boundaries(
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     for (id, level, mana, failure, experience) in [
@@ -736,7 +736,7 @@ fn crusade_second_book_keeps_original_identity_allocation_and_spell_table() {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     for (id, level, mana, failure, experience) in [
@@ -885,7 +885,7 @@ fn crusade_third_book_keeps_original_identity_allocation_and_spell_table() {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     for (id, level, mana, failure, experience) in [
@@ -1033,7 +1033,7 @@ fn crusade_fourth_book_keeps_original_identity_allocation_and_spell_table() {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     for (id, level, mana, failure, experience) in [
@@ -1182,7 +1182,7 @@ fn daemon_second_book_keeps_the_original_identity_allocation_and_spell_table() {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -1383,7 +1383,7 @@ fn daemon_third_book_keeps_the_original_identity_allocation_spell_table_and_demo
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -1638,7 +1638,7 @@ fn daemon_fourth_book_completes_the_original_realm_and_keeps_composite_effects_e
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -1826,7 +1826,7 @@ fn life_second_book_keeps_the_original_identity_allocation_and_spell_table() {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -1962,7 +1962,11 @@ fn life_third_book_keeps_the_original_identity_allocation_and_spell_table() {
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .map(|shop| shop.category)
             .collect::<Vec<_>>(),
-        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+        vec![
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+        ]
     );
 
     let expected = [
@@ -2142,7 +2146,11 @@ fn life_fourth_book_completes_the_original_realm_and_acquisition() {
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .map(|shop| shop.category)
             .collect::<Vec<_>>(),
-        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+        vec![
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+        ]
     );
 
     let expected = [
@@ -2336,7 +2344,7 @@ fn nature_first_book_keeps_the_original_spell_table_and_allocation() {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -2451,7 +2459,7 @@ fn nature_second_book_keeps_the_original_spell_table_and_allocation() {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -2573,7 +2581,11 @@ fn commit32_nature_third_book_keeps_the_original_spell_table_and_allocation() {
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .map(|shop| shop.category)
             .collect::<Vec<_>>(),
-        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+        vec![
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+        ]
     );
 
     let expected = [
@@ -2674,7 +2686,11 @@ fn commit33_nature_fourth_book_keeps_the_original_spell_table_and_allocation() {
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .map(|shop| shop.category)
             .collect::<Vec<_>>(),
-        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+        vec![
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+        ]
     );
 
     let expected = [
@@ -2758,7 +2774,7 @@ fn armageddon_first_book_keeps_the_original_spell_table_and_elemental_scaling() 
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -2903,7 +2919,7 @@ fn armageddon_second_book_keeps_the_original_spell_table_and_allocation() {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -3017,7 +3033,11 @@ fn armageddon_third_book_keeps_the_original_spell_table_and_allocation() {
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .map(|shop| shop.category)
             .collect::<Vec<_>>(),
-        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+        vec![
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+        ]
     );
 
     let expected = [
@@ -3116,7 +3136,11 @@ fn armageddon_fourth_book_keeps_the_original_spell_table_and_allocation() {
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .map(|shop| shop.category)
             .collect::<Vec<_>>(),
-        vec![ShopCategory::BlackMarket, ShopCategory::BlackMarket]
+        vec![
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
+        ]
     );
 
     let expected = [
@@ -3266,7 +3290,7 @@ fn sorcery_third_book_keeps_the_original_spell_table_and_acquisition() {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -3677,7 +3701,7 @@ fn arcane_fourth_book_completes_the_original_realm_and_acquisition() {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        2
+        3
     );
 
     let expected = [
@@ -3819,7 +3843,7 @@ fn sorcery_fourth_book_completes_the_original_realm_and_keeps_rare_books_out_of_
         .iter()
         .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
         .collect::<Vec<_>>();
-    assert_eq!(stocked.len(), 2);
+    assert_eq!(stocked.len(), 3);
     assert!(
         stocked
             .iter()

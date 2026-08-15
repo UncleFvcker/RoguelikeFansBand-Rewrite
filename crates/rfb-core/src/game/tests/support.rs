@@ -442,6 +442,7 @@ pub(super) fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        intrinsic_properties: Default::default(),
         permanent_destruction_immunities: Default::default(),
         enchantments: Default::default(),
         curse: None,

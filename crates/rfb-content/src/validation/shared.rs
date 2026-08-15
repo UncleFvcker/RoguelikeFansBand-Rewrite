@@ -170,6 +170,8 @@ pub(super) fn attribute_modifiers_out_of_range(modifiers: &StatModifiers) -> boo
 
 pub(super) fn equipment_bonuses_out_of_range(bonuses: &EquipmentBonuses) -> bool {
     !(-100..=100).contains(&bonuses.life_percent)
+        || !(-1_000..=1_000).contains(&bonuses.launcher_multiplier_delta_percent)
+        || !(-1_000..=1_000).contains(&bonuses.base_shot_delta_percent)
         || !(-8..=8).contains(&bonuses.melee_attacks)
         || [
             bonuses.melee_skill,

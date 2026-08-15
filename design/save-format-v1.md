@@ -458,3 +458,9 @@ contract-v301 为 `ActorSaveDto` 增加必填 `anger` 与 `friendly`。怒气范
 拥有远程施法档案的敌对怪物持有；运行时友好只允许由当前 Human“个人崇拜”影响的召唤
 怪物持有，宠物仍使用既有 `controllerId`。两项进入 State Hash Schema v99；Protocol 升至
 1.200，save 容器保持 v1，不兼容缺字段的旧开发存档。
+
+E4.2 为地面、背包、装备和怪物携带四类物品 save DTO 增加 `intrinsicProperties`，保存基础
+物品在生成期掷出的属性、装备加值、抗性、免疫、slay、brand 与 passive。发射器倍率增量使用
+百分点，额外射击使用 RFB `base_shot` 百分制；两者随同实例属性原样恢复且不抽 RNG。Protocol
+升至 1.228，save header/payload schema 升至 v5，State Hash Schema 升至 v108；二进制容器
+格式仍为 v1。

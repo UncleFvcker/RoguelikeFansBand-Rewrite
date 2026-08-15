@@ -1130,6 +1130,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.wizardstaff",
+            "nameKey": "item-demo-wizardstaff-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.zweihander",
             "nameKey": "item-demo-zweihander-name",
             "category": "melee",
@@ -1705,6 +1714,20 @@
       "nextGoldPileSerial": 1,
       "tasks": [
         {
+          "taskId": "demo.task.anambar-cellar-killer",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.anambar-cop-quest",
+          "status": "available",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
           "taskId": "demo.task.anambar-crystal-quest",
           "status": "locked",
           "required": 5,
@@ -1734,6 +1757,13 @@
         },
         {
           "taskId": "demo.task.anambar-scary-rock-treasure",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.anambar-smugglers-den",
           "status": "locked",
           "required": 1,
           "stage": 1,
@@ -1783,6 +1813,76 @@
           "stages": 1
         },
         {
+          "taskId": "demo.task.thalos-basilisk-cave",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.thalos-clear-wreckage",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.thalos-cloning-pits",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.thalos-djinnis-cavern",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.thalos-mushrooms",
+          "status": "available",
+          "required": 5,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.thalos-old-watchtower",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.thalos-renegade-sorcerer",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.thalos-shadow-fairies",
+          "status": "available",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.thalos-staff-recovery",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.thalos-tidy-laboratory",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
           "taskId": "demo.task.the-sewer",
           "status": "available",
           "required": 1,
@@ -1818,7 +1918,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 2
       },
-      "stateHash": "d42c62d3c4a60da19531c0eec751130f8355e9d134aa62e270a6848862652096"
+      "stateHash": "e9e7868ae43c5216b4aed2a1593f92721c3c3cfae1f8e439c10fa88f6ab09166"
     },
     "events": [
       {

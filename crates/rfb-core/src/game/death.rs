@@ -530,6 +530,7 @@ impl Game {
                 quality: ItemQualityDto::Ordinary,
                 affix_ids: Vec::new(),
                 rolled_affixes: Vec::new(),
+                intrinsic_properties: Default::default(),
                 enchantments: ItemEnchantmentsDto::default(),
                 location: ItemLocation::Ground(actor.position),
             })

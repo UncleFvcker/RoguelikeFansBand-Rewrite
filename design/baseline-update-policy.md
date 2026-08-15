@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v300`，机器可读政策固定在：
+当前逻辑基线是 `contract-v306`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -353,3 +353,8 @@ State Hash Schema v98 与 save v1 均不变，内容包升至 1.316.0。
 状态。Protocol 升至 1.200、State Hash Schema 升至 v99、内容包升至 1.317.0。按本批约定
 只完成新增聚焦测试；actor save/hash 投影使全部 26 条 active fixture 必须在合并验收时统一
 刷新并 replay，当前不得声明零漂移或零 waiver 验收完成。
+
+`contract-v306` 整合 monster 的 Anambar/Thalos 城镇任务与 items 的发射器、弹药和竖琴
+ego。物品实例新增 `intrinsicProperties`，使 Protocol 最终升至 1.230、State Hash Schema
+升至 v108、save header/payload schema 升至 v5，内容包升至 1.384.0。公共物品存档与哈希
+结构变化要求统一刷新并复验全部 26 条 active fixture，active 集保持零 waiver。

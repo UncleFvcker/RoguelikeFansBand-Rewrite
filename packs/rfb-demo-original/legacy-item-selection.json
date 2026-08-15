@@ -68,6 +68,7 @@
     { "sourceIndex": 162, "id": "long-bow" },
     { "sourceIndex": 163, "id": "light-crossbow" },
     { "sourceIndex": 164, "id": "heavy-crossbow" },
+    { "sourceIndex": 168, "id": "harp" },
     { "sourceIndex": 175, "id": "arrow" },
     { "sourceIndex": 176, "id": "sheaf-arrow" },
     { "sourceIndex": 177, "id": "mithril-arrow" },

@@ -56,6 +56,19 @@ pub(in crate::game) fn good_priest_weapon_penalty(
     priest_class && good_realm && matches!(weapon_tval, Some(22 | 23)) && !blessed
 }
 
+fn launcher_multiplier(base: u16, delta_percent: i32) -> u16 {
+    u16::try_from(
+        i32::from(base)
+            .saturating_add(delta_percent)
+            .clamp(0, i32::from(u16::MAX)),
+    )
+    .expect("clamped launcher multiplier fits u16")
+}
+
+fn launcher_range(multiplier_percent: u16) -> u16 {
+    13_u16.saturating_add(multiplier_percent / 80).min(18)
+}
+
 fn draconian_innate_blows(attributes: AttributeSet, weight: u16, maximum: u16) -> u16 {
     let strength_index = usize::from(
         attributes
@@ -190,6 +203,8 @@ pub(in crate::game) struct ResolvedProjectileProfile {
     pub(in crate::game) damage_type: DamageType,
     pub(in crate::game) ammunition_slays: BTreeMap<SlayTarget, SlayLevel>,
     pub(in crate::game) ammunition_brands: BTreeSet<WeaponBrand>,
+    pub(in crate::game) ammunition_behavior: Option<AmmunitionBehaviorDefinition>,
+    pub(in crate::game) ammunition_endurance: bool,
     pub(in crate::game) ammo_item_id: Option<String>,
     pub(in crate::game) ammo_kind_id: String,
     pub(in crate::game) ammunition_weight_tenths_pound: u16,
@@ -593,6 +608,12 @@ impl Game {
                     }
                 }
             }
+            for (damage_type, level) in &item.intrinsic_properties.resistances {
+                record(
+                    DamageType::from(*damage_type),
+                    ResistanceLevel::from(*level),
+                );
+            }
             for rolled in &item.rolled_affixes {
                 for (damage_type, level) in &rolled.properties.resistances {
                     record(
@@ -688,6 +709,7 @@ impl Game {
                     immunities.extend(affix.status_immunities.iter().cloned());
                 }
             }
+            immunities.extend(item.intrinsic_properties.status_immunities.iter().cloned());
             for rolled in &item.rolled_affixes {
                 immunities.extend(rolled.properties.status_immunities.iter().cloned());
             }
@@ -727,6 +749,7 @@ impl Game {
                 }
             },
         );
+        add_stat_modifiers_dto(&mut modifiers, &item.intrinsic_properties.modifiers);
         for rolled in &item.rolled_affixes {
             add_stat_modifiers_dto(&mut modifiers, &rolled.properties.modifiers);
         }
@@ -748,6 +771,7 @@ impl Game {
                 merge_equipment_bonuses(&mut bonuses, &affix.equipment_bonuses);
             }
         }
+        merge_equipment_bonuses(&mut bonuses, &item.intrinsic_properties.equipment_bonuses);
         for rolled in &item.rolled_affixes {
             merge_equipment_bonuses(&mut bonuses, &rolled.properties.equipment_bonuses);
         }
@@ -764,6 +788,7 @@ impl Game {
                 passives.extend(&affix.passives);
             }
         }
+        passives.extend(&item.intrinsic_properties.passives);
         for rolled in &item.rolled_affixes {
             passives.extend(&rolled.properties.passives);
         }
@@ -929,6 +954,7 @@ impl Game {
             (EquipmentPassive::EspGood, "good"),
             (EquipmentPassive::EspEvil, "evil"),
             (EquipmentPassive::EspLiving, "living"),
+            (EquipmentPassive::EspNonliving, "nonliving"),
         ]
         .into_iter()
         .any(|(passive, tag)| {
@@ -951,6 +977,9 @@ impl Game {
         self.player_has_status_kind(STATUS_TELEPATHY)
             || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
             || self.player_has_status_kind(STATUS_DEMON_LORD_TRANSFORMATION)
+            || self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::Telepathy)
             || self.player_has_permanent_telepathy()
     }
 
@@ -1130,16 +1159,19 @@ impl Game {
                 .is_some_and(|ammo| ammo.ammunition_type == profile.ammunition_type)
         })?;
         let ammo = ammunition.ammunition_profile.as_ref()?;
+        let bonuses = self.item_equipment_bonuses(item);
+        let multiplier = launcher_multiplier(
+            profile.damage_multiplier_percent,
+            bonuses.launcher_multiplier_delta_percent,
+        );
+        let range = launcher_range(multiplier);
         Some(ProjectileProfileDto {
-            range: profile.range,
+            range,
             to_hit: profile
                 .to_hit
                 .saturating_add(i32::from(item.enchantments.to_hit))
                 .saturating_add(ammo.to_hit),
-            to_damage: ammo
-                .to_damage
-                .saturating_mul(i32::from(profile.damage_multiplier_percent))
-                / 100
+            to_damage: ammo.to_damage.saturating_mul(i32::from(multiplier)) / 100
                 + profile
                     .to_damage
                     .saturating_add(i32::from(item.enchantments.to_damage)),
@@ -1149,7 +1181,7 @@ impl Game {
                 damage_type: DamageType::from(ammo.damage_type).into(),
             },
             ammo_kind_id: ammunition.id.clone(),
-            target_spec: projectile_target_spec(profile.range),
+            target_spec: projectile_target_spec(range),
             source_item_id: item.id.clone(),
         })
     }
@@ -1250,6 +1282,11 @@ impl Game {
                 .projectile_profile
                 .as_ref()
                 .and_then(|profile| {
+                    let bonuses = self.item_equipment_bonuses(item);
+                    let multiplier = launcher_multiplier(
+                        profile.damage_multiplier_percent,
+                        bonuses.launcher_multiplier_delta_percent,
+                    );
                     let ammunition = self
                         .items
                         .iter()
@@ -1277,6 +1314,8 @@ impl Game {
                     let ammo_profile = ammo_definition.ammunition_profile.as_ref()?;
                     let mut ammunition_slays = ammo_definition.slays.clone();
                     let mut ammunition_brands = ammo_definition.brands.clone();
+                    let mut ammunition_behavior = None;
+                    let mut ammunition_endurance = false;
                     if let Some(ammunition) = ammunition {
                         for affix_id in &ammunition.affix_ids {
                             if let Some(affix) = self.content.affix(affix_id) {
@@ -1284,8 +1323,23 @@ impl Game {
                                     affix.slays.iter().map(|(target, level)| (*target, *level)),
                                 );
                                 ammunition_brands.extend(affix.brands.iter().copied());
+                                ammunition_behavior =
+                                    ammunition_behavior.or(affix.ammunition_behavior);
+                                ammunition_endurance |= affix
+                                    .rfb_ego
+                                    .as_ref()
+                                    .is_some_and(|ego| ego.source_index == 184);
                             }
                         }
+                        ammunition_slays.extend(
+                            ammunition
+                                .intrinsic_properties
+                                .slays
+                                .iter()
+                                .map(|(target, level)| (*target, *level)),
+                        );
+                        ammunition_brands
+                            .extend(ammunition.intrinsic_properties.brands.iter().copied());
                         for rolled in &ammunition.rolled_affixes {
                             ammunition_slays.extend(
                                 rolled
@@ -1339,6 +1393,9 @@ impl Game {
                     {
                         base_shot = base_shot.min(cap);
                     }
+                    base_shot = base_shot
+                        .saturating_add(bonuses.base_shot_delta_percent)
+                        .max(1);
                     let energy_cost = (i32::from(profile.shot_energy) / base_shot).max(1);
                     let breakage_modifier = if heavy_shoot {
                         0
@@ -1382,7 +1439,7 @@ impl Game {
                         .to_damage
                         .saturating_add(i32::from(item.enchantments.to_damage));
                     Some(ResolvedProjectileProfile {
-                        range: profile.range,
+                        range: launcher_range(multiplier),
                         to_hit: profile
                             .to_hit
                             .saturating_add(i32::from(item.enchantments.to_hit))
@@ -1390,13 +1447,11 @@ impl Game {
                             .saturating_add(mounted_to_hit)
                             .saturating_add(sniping_to_hit)
                             .saturating_add(ammunition_to_hit),
-                        to_damage: ammunition_to_damage
-                            .saturating_mul(i32::from(profile.damage_multiplier_percent))
-                            / 100
+                        to_damage: ammunition_to_damage.saturating_mul(i32::from(multiplier)) / 100
                             + launcher_to_damage,
                         ammunition_to_damage,
                         launcher_to_damage,
-                        damage_multiplier_percent: profile.damage_multiplier_percent,
+                        damage_multiplier_percent: multiplier,
                         damage_dice: ammunition
                             .and_then(|item| item.damage_dice_override)
                             .unwrap_or(ammo_profile.damage_dice),
@@ -1404,6 +1459,8 @@ impl Game {
                         damage_type: DamageType::from(ammo_profile.damage_type),
                         ammunition_slays,
                         ammunition_brands,
+                        ammunition_behavior,
+                        ammunition_endurance,
                         ammo_item_id: ammunition.map(|item| item.id.clone()),
                         ammo_kind_id: ammo_definition.id.clone(),
                         ammunition_weight_tenths_pound: ammo_definition.weight_tenths_pound,
@@ -1848,6 +1905,10 @@ impl Game {
                     apply(&affix.slays, &affix.brands);
                 }
             }
+            apply(
+                &item.intrinsic_properties.slays,
+                &item.intrinsic_properties.brands,
+            );
             for rolled in &item.rolled_affixes {
                 apply(&rolled.properties.slays, &rolled.properties.brands);
             }

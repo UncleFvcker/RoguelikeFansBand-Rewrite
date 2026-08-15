@@ -66,8 +66,8 @@ use rfb_content::{
     AbilitySpellPowerDefinition, AbilitySpellPowerField, AbilityStatusStackingDefinition,
     AbilityTargetDefinition, AbilityTargetModeDefinition, AbilityTerrainBeamOperationDefinition,
     ActorDamageType, ActorMovementMode, ActorResistanceLevel, ActorRole,
-    AffixPropertyBundleDefinition, AmmunitionTypeDefinition, CastingAttribute,
-    CastingCapacityFormula, CastingFailureFormula, CastingLearningFormula,
+    AffixPropertyBundleDefinition, AmmunitionBehaviorDefinition, AmmunitionTypeDefinition,
+    CastingAttribute, CastingCapacityFormula, CastingFailureFormula, CastingLearningFormula,
     CastingProfileDefinition, CastingRealmProfileDefinition, CastingStudyMode,
     ClassAbilityDefinition, ContentCatalog, DraconianStrikeModeDefinition,
     DungeonInstanceLifecycle, EncounterEntryDefinition, EncounterTableDefinition, EquipmentBonuses,
@@ -185,8 +185,8 @@ use damage::{
     process_actor_status_tick, process_actor_status_tick_with, scale_damage_outcome,
 };
 use ego::{
-    EgoMaterialization, materialize_ego_with_rng,
-    roll_and_materialize_rfb_ego_from_affixes_with_rng,
+    EgoMaterialization, materialize_ego_with_rng, materialize_rfb_harp_intrinsic_with_rng,
+    merge_affix_properties, roll_and_materialize_rfb_ego_from_affixes_with_rng,
 };
 use environment_combat::PlayerTrapOutcome;
 use floor::{
@@ -233,7 +233,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 107;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 108;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -534,6 +534,7 @@ struct GeneratedItemDraft {
     quality: ItemQualityDto,
     affix_ids: Vec<String>,
     rolled_affixes: Vec<RolledAffixState>,
+    intrinsic_properties: AffixPropertyBundleDefinition,
     enchantments: ItemEnchantmentsDto,
     curse: Option<ItemCurseSeverityDto>,
     activation: Option<ItemActivationDto>,
@@ -555,6 +556,7 @@ impl GeneratedItemDraft {
             quality: self.quality,
             affix_ids: self.affix_ids,
             rolled_affixes: self.rolled_affixes,
+            intrinsic_properties: self.intrinsic_properties,
             enchantments: self.enchantments,
             curse: self.curse,
             permanent_destruction_immunities: Default::default(),
@@ -885,6 +887,7 @@ fn append_starting_item(
         quality: ItemQualityDto::Ordinary,
         affix_ids: Vec::new(),
         rolled_affixes: Vec::new(),
+        intrinsic_properties: Default::default(),
         enchantments: ItemEnchantmentsDto::default(),
         curse: initial_item_curse(content, &starting_item.item_kind_id),
         permanent_destruction_immunities: Default::default(),
@@ -1341,6 +1344,7 @@ impl Game {
                     quality: item_quality_dto(spawn.quality),
                     affix_ids: Vec::new(),
                     rolled_affixes: Vec::new(),
+                    intrinsic_properties: Default::default(),
                     enchantments: ItemEnchantmentsDto::default(),
                     curse: initial_item_curse(&content, &spawn.kind_id),
                     permanent_destruction_immunities: Default::default(),
@@ -3146,6 +3150,7 @@ impl Game {
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            intrinsic_properties: Default::default(),
             enchantments: ItemEnchantmentsDto::default(),
             curse: initial_item_curse(&self.content, kind_id),
             permanent_destruction_immunities: Default::default(),
@@ -5705,6 +5710,10 @@ impl Game {
                     continue;
                 }
             }
+            let harp_intrinsic_properties =
+                self.content.item(&entry.item_kind_id).and_then(|item| {
+                    materialize_rfb_harp_intrinsic_with_rng(&mut self.rng, item, generation_depth)
+                });
             let rolled_quality = match table.quality_policy {
                 Some(policy) => self.roll_rfb_depth_loot_quality(
                     policy,
@@ -5744,7 +5753,11 @@ impl Game {
                 })
             });
             let supports_quality = self.content.item(&entry.item_kind_id).is_some_and(|item| {
-                item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1
+                (item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1)
+                    || (table.rfb_ego_policy
+                        == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
+                        && item.rfb_base_kind.is_some()
+                        && item.ammunition_profile.is_some())
             });
             let quality = if supports_quality {
                 rolled_quality
@@ -5761,6 +5774,7 @@ impl Game {
                         item,
                         self.content.affix_definitions(),
                         generation_depth,
+                        harp_intrinsic_properties.as_ref(),
                     )
                 })
             })
@@ -5812,12 +5826,17 @@ impl Game {
             let EgoMaterialization {
                 affix_ids,
                 rolled_affixes,
+                intrinsic_properties: ego_intrinsic_properties,
                 enchantment_delta,
                 curse,
                 activation,
                 charges,
                 ..
             } = materialization;
+            let mut intrinsic_properties = harp_intrinsic_properties.unwrap_or_default();
+            if let Some(properties) = ego_intrinsic_properties {
+                merge_affix_properties(&mut intrinsic_properties, &properties);
+            }
             let curse = curse.map_or_else(
                 || initial_item_curse(&self.content, &entry.item_kind_id),
                 |generated| {
@@ -5837,6 +5856,7 @@ impl Game {
                 quality,
                 affix_ids,
                 rolled_affixes,
+                intrinsic_properties,
                 enchantments: enchantment_delta,
                 curse,
                 activation,
@@ -5944,6 +5964,7 @@ impl Game {
         let EgoMaterialization {
             affix_ids,
             rolled_affixes,
+            intrinsic_properties,
             enchantment_delta,
             activation,
             charges,
@@ -5965,6 +5986,7 @@ impl Game {
             quality: ItemQualityDto::Ordinary,
             affix_ids,
             rolled_affixes,
+            intrinsic_properties: intrinsic_properties.unwrap_or_default(),
             enchantments: enchantment_delta,
             curse: initial_item_curse(&self.content, &kind_id),
             activation,
@@ -6836,6 +6858,8 @@ fn add_stat_modifiers_dto(total: &mut StatModifiersDto, addition: &StatModifiers
 fn equipment_bonuses_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
     EquipmentBonusesDto {
         life_percent: bonuses.life_percent,
+        launcher_multiplier_delta_percent: bonuses.launcher_multiplier_delta_percent,
+        base_shot_delta_percent: bonuses.base_shot_delta_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -6874,6 +6898,8 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
         EquipmentPassive::EspGood => EquipmentPassiveDto::EspGood,
         EquipmentPassive::EspEvil => EquipmentPassiveDto::EspEvil,
         EquipmentPassive::EspLiving => EquipmentPassiveDto::EspLiving,
+        EquipmentPassive::EspNonliving => EquipmentPassiveDto::EspNonliving,
+        EquipmentPassive::Telepathy => EquipmentPassiveDto::Telepathy,
         EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
         EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
         EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
@@ -6909,6 +6935,12 @@ fn roll_weighted_index_with_rng(rng: &mut RfbRng, weights: &[u32]) -> usize {
 
 fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBonuses) {
     total.life_percent = total.life_percent.saturating_add(addition.life_percent);
+    total.launcher_multiplier_delta_percent = total
+        .launcher_multiplier_delta_percent
+        .saturating_add(addition.launcher_multiplier_delta_percent);
+    total.base_shot_delta_percent = total
+        .base_shot_delta_percent
+        .saturating_add(addition.base_shot_delta_percent);
     total.melee_attacks = total.melee_attacks.saturating_add(addition.melee_attacks);
     total.melee_skill = total.melee_skill.saturating_add(addition.melee_skill);
     total.melee_damage = total.melee_damage.saturating_add(addition.melee_damage);

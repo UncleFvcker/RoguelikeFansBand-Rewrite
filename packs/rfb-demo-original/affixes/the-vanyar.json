@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-vanyar-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.the-vanyar",
+  "nameKey": "affix-legacy-the-vanyar-name",
+  "passives": [
+    "sustain-charisma",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "dark": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 1,
+    "sourceIndex": 195,
+    "types": [
+      "harp"
+    ]
+  },
+  "tags": [
+    "harp",
+    "legacy-import"
+  ]
+}

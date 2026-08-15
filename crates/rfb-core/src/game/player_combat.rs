@@ -699,8 +699,17 @@ impl Game {
             1
         };
         for _ in 0..shot_count {
-            let Some(ammunition) = self.take_inventory_item(&ammo_item_id)? else {
-                break;
+            let returned = profile.ammunition_behavior
+                == Some(AmmunitionBehaviorDefinition::Returning)
+                && self.rng.bounded(100)
+                    < u64::from(50_u16.saturating_add(self.progress.level / 2));
+            let ammunition = if returned {
+                None
+            } else {
+                let Some(ammunition) = self.take_inventory_item(&ammo_item_id)? else {
+                    break;
+                };
+                Some(ammunition)
             };
             let outcome = self.resolve_one_player_projectile(
                 &profile,
@@ -711,15 +720,27 @@ impl Game {
                 changed,
                 removed_entities,
             )?;
-            self.settle_projectile_ammunition(
-                ammunition,
-                outcome.trace.landing,
-                outcome.hit_body,
-                mode.break_chance_override()
-                    .unwrap_or(profile.ammo_break_chance_percent),
-                events,
-                changed,
-            );
+            if let Some(ammunition) = ammunition {
+                let break_chance_percent = mode.break_chance_override().unwrap_or_else(|| {
+                    if profile.ammunition_endurance {
+                        0
+                    } else if profile.ammunition_behavior
+                        == Some(AmmunitionBehaviorDefinition::Exploding)
+                    {
+                        100
+                    } else {
+                        profile.ammo_break_chance_percent
+                    }
+                });
+                self.settle_projectile_ammunition(
+                    ammunition,
+                    outcome.trace.landing,
+                    outcome.hit_body,
+                    break_chance_percent,
+                    events,
+                    changed,
+                );
+            }
             if outcome.fatal {
                 break;
             }
@@ -1041,6 +1062,17 @@ impl Game {
             return self.resolve_sniper_explosion(
                 self.entities[index].position,
                 sniper_explosion_radius(concentration),
+                raw_damage,
+                trace,
+                events,
+                changed,
+                removed_entities,
+            );
+        }
+        if profile.ammunition_behavior == Some(AmmunitionBehaviorDefinition::Exploding) {
+            return self.resolve_sniper_explosion(
+                self.entities[index].position,
+                3,
                 raw_damage,
                 trace,
                 events,
