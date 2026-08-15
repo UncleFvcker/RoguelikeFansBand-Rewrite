@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-15
-当前实现基线：`1297cfa9f`（暗影妖精正式 New Game 开放；本次文档提交只做交接封板）
+当前实现基线：`e61bea680`（食人魔正式 New Game 开放；本次文档提交只做交接封板）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,15 +10,15 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.379.0`
-- content hash：`7e5f41baf3b454ab2ba12f9d2ac8e16749f693373e87690c827601c14c2fc1c0`
+- demo pack：`1.380.0`
+- content hash：`8e99f65ad8a24a310d787b150c120bedb61ced772d4ce00735497d7a92fb08e2`
 - Protocol：`1.227`
 - State Hash Schema：`v107`
 - save header/payload schema：`v4`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v305`，26 个 exact fixture；本批没有改变 state-hash 输入、协议投影、
   通用初始化或 RNG，按用户要求只运行新增聚焦测试，未运行全量测试或刷新 fixture
 - 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 41 个种族。
+  6 个职业构筑和 42 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -84,6 +84,7 @@ New Game 当前按以下稳定 ID 开放：
 - `rfb-legacy.race.amberite`
 - `rfb-legacy.race.beastman`
 - `rfb-legacy.race.shadow-fairy`
+- `rfb-legacy.race.ogre`
 
 种族通过新游戏请求中的独立 `raceId` 覆盖 Build 的默认 Human。不要生成
 “职业 × 种族”的重复 Build JSON。玩家外观目前由职业 Build 决定，新增普通种族不复制玩家 Actor 或
@@ -367,6 +368,28 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
   飞行/光弱点、初始美德、临时形态、激怒压制与潜行公式、save/state-hash 往返和 New Game 请求。
   schema 检查、`verify-source`、Rust format 与 diff 检查通过；按用户要求未运行全量测试，也未刷新
   `contract-v305` fixture。
+
+### 食人魔导入最终证据
+
+- 实现提交：`e61bea680`（`Import Ogre race`）。最终协调点为 pack `1.380.0` / content hash
+  `8e99f65ad8a24a310d787b150c120bedb61ced772d4ce00735497d7a92fb08e2`；Protocol `1.227`、
+  State Hash Schema v107、save v4。正式 New Game 种族数从 41 增至 42，terrain 从 162 增至 163，
+  ability 从 1837 增至 1838。
+- 食人魔闭合六维 `+3/0/-1/-1/+3/0`、生命 106%、基础 HP 23、经验 140%、0 格红外、商店 125%、
+  八项技能、智力维持、标准身体/出生和初始“节制”。`rfb-compatibility`、Web option 与稳定 `raceId`
+  请求均已加入。
+- 新增 `rfb.ability.race.explosive-rune`、`rfb.ability-program.race.explosive-rune` 与
+  `demo.terrain.explosive-rune`。能力为 25 级、智力、消耗 35、基础失败率 70%；只在干净普通地板上
+  设置，并保留非盗贼最多 11 个符文的上限。
+- 怪物实际移动进入符文后，先按 `1d(299 × 玩家等级 / 50)` 与怪物等级比较。掷骰大于怪物等级时触发
+  半径 2、伤害 `2 × (玩家等级 + 7d7)` 的法力爆炸，并沿现有范围伤害路径影响怪物、地形和地面物品；
+  否则怪物解除符文。两条路径都会把地形恢复为普通地板，符文地形沿既有 save/state-hash 生命周期
+  往返，没有新增持久字段。
+- 本批新增聚焦测试共 5 项：内容 1、核心 2、本地化 1、Web 1，覆盖权威矩阵、精确中文名、智力维持、
+  初始美德、24/25 级边界、失败/成功与代价、11 个上限、save/state-hash、怪物踩踏、爆炸/解除判定和
+  New Game 请求。一次宽泛的 `ogre` 过滤器额外匹配了名称含 `progression` 的 59 项既有核心测试，均
+  通过；最终两项新增核心测试已用完整名称单独通过。`verify-source`、Rust format 与 diff 检查通过；
+  未运行全量测试，也未刷新 `contract-v305` fixture。
 
 ## 2. 权威来源与不可变规则
 

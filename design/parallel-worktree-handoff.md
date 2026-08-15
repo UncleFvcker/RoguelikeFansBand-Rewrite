@@ -1642,3 +1642,21 @@ git diff --stat
   State Hash Schema v107、save v4、active baseline `contract-v305`，26 个 exact fixture 保持不变。
 - 只运行本批 6 项新增聚焦测试（内容 1、本地化 1、核心 3、Web 1），并通过 schema、source lock、
   Rust format 与 diff 检查；按用户要求未运行全量测试或刷新 fixture。
+
+## 90. main 当前交接（食人魔正式内容、智力维持与爆炸符文）
+
+- 种族方向在 main 上完成 `rfb-legacy.race.ogre` 与 `rfb-legacy.skill-set.race-ogre` 的正式导入；实现
+  提交为 `e61bea680`（`Import Ogre race`）。新增稳定 ID 为 `rfb.ability.race.explosive-rune`、
+  `rfb.ability-program.race.explosive-rune` 和 `demo.terrain.explosive-rune`，其他方向不得复制或重命名。
+- 食人魔闭合权威静态矩阵、智力维持、初始“节制”和 New Game 入口。爆炸符文为 25 级、智力、消耗
+  35、基础失败率 70%，复用现有当前地形创建与范围伤害路径；最多存在 11 个符文。
+- 怪物踩踏判定为 `1d(299 × 玩家等级 / 50) > 怪物等级` 时爆炸；伤害为
+  `2 × (玩家等级 + 7d7)`、半径 2、法力属性，否则解除。爆炸/解除后都恢复普通地板；多目标死亡后
+  移动物实体按稳定 ID 重新定位，避免索引变化影响后续拾取/破坏事务。
+- 没有新增 Protocol、State Hash 或 save 字段。最终协调点为 pack `1.380.0` / content hash
+  `8e99f65ad8a24a310d787b150c120bedb61ced772d4ce00735497d7a92fb08e2`、Protocol `1.227`、
+  State Hash Schema v107、save v4、active baseline `contract-v305`；正式 New Game 种族数为 42，
+  26 个 exact fixture 保持不变。
+- 本批 5 项新增聚焦测试（内容 1、本地化 1、核心 2、Web 1）通过；一次宽泛过滤器额外执行了 59 项
+  名称含 `progression` 的既有核心测试，均通过。source lock、Rust format 与 diff 检查通过；未运行
+  全量测试或刷新 fixture。

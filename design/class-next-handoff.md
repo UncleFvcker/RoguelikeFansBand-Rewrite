@@ -5,7 +5,7 @@
 
 更新时间：2026-08-15
 
-当前 main 实现基线：`1297cfa9f`（暗影妖精正式 New Game 开放）
+当前 main 实现基线：`e61bea680`（食人魔正式 New Game 开放）
 
 分支：`codex/class-next`
 
@@ -1111,3 +1111,24 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
 - 新增聚焦测试共 6 项：内容 1、中文名 1、核心 3、Web 1，覆盖权威矩阵、飞行/光弱点、初始美德、
   临时形态、激怒压制与潜行公式、save/state-hash 往返和 New Game 请求。schema、source lock、Rust
   format 与 diff 检查通过；按用户要求未运行全量测试，也未刷新 fixture。
+
+## main 当前批次：食人魔正式内容、智力维持与爆炸符文
+
+- 权威来源为 RFB `master:src/races_k.c`、`master:src/spells_c.c`、`master:src/spells3.c`、
+  `master:src/cave.c`、`master:lib/edit/f_info.txt` 和 `master:src/virtue.c`。种族方向继续拥有既有
+  `rfb-legacy.race.ogre` 与 `rfb-legacy.skill-set.race-ogre`，新增
+  `rfb.ability.race.explosive-rune`、`rfb.ability-program.race.explosive-rune` 和
+  `demo.terrain.explosive-rune`；其他方向不得复制这些 ID。
+- 食人魔闭合权威六维、生命 106%、基础 HP 23、经验 140%、0 格红外、商店 125%、八项技能、智力
+  维持、标准身体/出生和初始“节制”。正式与临时有效种族继续复用现有属性维持路径。
+- 爆炸符文为 25 级、智力、消耗 35、基础失败率 70%，复用 `create-current-terrain`，只在干净普通地板
+  放置，并限制最多 11 个。怪物踩入后以 `1d(299 × 等级 / 50)` 对怪物等级进行原作判定：成功触发
+  半径 2、`2 × (等级 + 7d7)` 法力爆炸，否则解除；地形在两条路径后都恢复为普通地板。
+- 没有新增 Protocol、State Hash 或 save 字段。`rfb-compatibility`、Web option 与
+  `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数从 41 增至 42。
+- 实现提交为 `e61bea680`（`Import Ogre race`）。最终协调点为 pack `1.380.0` / content hash
+  `8e99f65ad8a24a310d787b150c120bedb61ced772d4ce00735497d7a92fb08e2`、Protocol `1.227`、
+  State Hash Schema v107、save v4、active baseline `contract-v305`。
+- 新增聚焦测试共 5 项：内容 1、核心 2、中文名 1、Web 1，均通过。一次宽泛过滤额外执行了 59 项
+  名称含 `progression` 的既有核心测试，均通过；最终新增核心测试已按完整名称单独验证。source lock、
+  Rust format 与 diff 检查通过；未运行全量测试或刷新 fixture。
