@@ -9545,6 +9545,11 @@ fn outpost_has_walls_inner_shops_and_an_exterior_warrens_entrance() {
         wilderness.locations,
         [
             WildernessLocationDefinition::Town {
+                position: ContentPosition { x: 17, y: 29 },
+                map_origin: ContentPosition { x: 37, y: 6 },
+                town_id: "demo.town.thalos".to_owned(),
+            },
+            WildernessLocationDefinition::Town {
                 position: ContentPosition { x: 26, y: 39 },
                 map_origin: ContentPosition { x: 27, y: 6 },
                 town_id: "demo.town.anambar".to_owned(),
@@ -13962,6 +13967,174 @@ fn p107d_crystal_castle_binds_glass_layers_guardians_and_diamond_edge() {
         .find(|table| table.id == "demo.loot-table.crystal-castle-final-reward")
         .expect("Crystal Castle reward should exist");
     assert_eq!(reward.entries[0].item_kind_id, "demo.item.diamond-edge");
+}
+
+#[test]
+fn p108b_thalos_core_binds_fixed_town_services_and_embedded_icky_cave() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let town = content
+        .towns
+        .iter()
+        .find(|town| town.id == "demo.town.thalos")
+        .expect("Thalos should exist");
+    assert_eq!(town.floor_id, "demo.floor.thalos");
+    assert_eq!(town.shop_ids.len(), 10);
+    assert_eq!(town.facility_ids.len(), 8);
+    for id in [
+        "demo.town-facility.thalos-home",
+        "demo.town-facility.thalos-library",
+        "demo.town-facility.thalos-bounty-office",
+        "demo.town-facility.thalos-weapon-master",
+        "demo.town-facility.thalos-warrior-guild",
+        "demo.town-facility.thalos-life-temple",
+        "demo.town-facility.thalos-archer-guild",
+        "demo.town-facility.thalos-paladin-guild",
+    ] {
+        assert!(town.facility_ids.contains(&id.to_owned()), "missing {id}");
+    }
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let wilderness = world.wilderness.as_ref().expect("wilderness should exist");
+    assert!(wilderness.locations.iter().any(|location| {
+        matches!(
+            location,
+            WildernessLocationDefinition::Town {
+                position: ContentPosition { x: 17, y: 29 },
+                map_origin: ContentPosition { x: 37, y: 6 },
+                town_id,
+            } if town_id == "demo.town.thalos"
+        )
+    }));
+    assert!(wilderness.locations.iter().any(|location| {
+        matches!(
+            location,
+            WildernessLocationDefinition::Dungeon {
+                position: ContentPosition { x: 17, y: 29 },
+                dungeon_id,
+            } if dungeon_id == "demo.dungeon.icky-cave"
+        )
+    }));
+
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == town.floor_id)
+        .expect("Thalos floor should exist");
+    assert_eq!((floor.width, floor.height), (23, 11));
+    assert_eq!(
+        floor.next_floor_id.as_deref(),
+        Some("demo.floor.icky-cave-depth-10")
+    );
+    assert_eq!(
+        floor.down_stair_terrain_id.as_deref(),
+        Some("demo.terrain.icky-cave-entrance")
+    );
+    let inline = floor
+        .inline_map
+        .as_ref()
+        .expect("Thalos should use a fixed map");
+    assert_eq!(inline.player_position, ContentPosition { x: 11, y: 9 });
+    let has_terrain = |terrain_id: &str, position: ContentPosition| {
+        inline.terrain_overrides.iter().any(|override_| {
+            override_.terrain_id == terrain_id && override_.positions.contains(&position)
+        })
+    };
+    for shop_id in &town.shop_ids {
+        let shop = content
+            .shops
+            .iter()
+            .find(|shop| &shop.id == shop_id)
+            .unwrap_or_else(|| panic!("{shop_id} should exist"));
+        assert!(has_terrain(
+            &shop.entrance_terrain_id,
+            shop.entrance_position
+        ));
+    }
+    for facility_id in &town.facility_ids {
+        let facility = content
+            .town_facilities
+            .iter()
+            .find(|facility| &facility.id == facility_id)
+            .unwrap_or_else(|| panic!("{facility_id} should exist"));
+        assert!(has_terrain(
+            &facility.entrance_terrain_id,
+            facility.entrance_position
+        ));
+    }
+    assert!(has_terrain(
+        "demo.terrain.icky-cave-entrance",
+        ContentPosition { x: 18, y: 9 }
+    ));
+    assert!(has_terrain(
+        "demo.terrain.outpost-gate",
+        ContentPosition { x: 11, y: 10 }
+    ));
+    let icky_root = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.icky-cave-depth-10")
+        .expect("Icky Cave root should exist");
+    assert_eq!(icky_root.return_floor_id, "demo.floor.thalos");
+
+    let facility = |id: &str| {
+        content
+            .town_facilities
+            .iter()
+            .find(|facility| facility.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    assert_eq!(
+        facility("demo.town-facility.thalos-home")
+            .storage_id
+            .as_deref(),
+        Some("demo.town-facility.outpost-home")
+    );
+    assert_eq!(
+        facility("demo.town-facility.thalos-life-temple").owner_realm_ids,
+        ["life"]
+    );
+    assert_eq!(
+        facility("demo.town-facility.thalos-life-temple")
+            .service_actions
+            .iter()
+            .map(|service| (service.kind, service.owner_cost, service.other_cost))
+            .collect::<Vec<_>>(),
+        [
+            (TownFacilityServiceKind::Heal, 0, 150),
+            (TownFacilityServiceKind::RestoreVitality, 400, 1_500),
+        ]
+    );
+    assert_eq!(
+        facility("demo.town-facility.thalos-paladin-guild").owner_class_ids,
+        ["demo.class.paladin"]
+    );
+    assert_eq!(
+        facility("demo.town-facility.thalos-paladin-guild")
+            .service_actions
+            .iter()
+            .map(|service| (service.kind, service.owner_cost, service.other_cost))
+            .collect::<Vec<_>>(),
+        [
+            (TownFacilityServiceKind::Heal, 0, 150),
+            (TownFacilityServiceKind::EnchantArmor, 300, 600),
+        ]
+    );
+
+    for deferred in [
+        "demo.town-facility.thalos-arena",
+        "demo.town-facility.thalos-casino",
+        "demo.town-facility.thalos-sorcery-tower",
+        "demo.town-facility.thalos-rogue-guild",
+        "demo.town-facility.thalos-palace",
+        "demo.town-facility.thalos-royal-academy",
+    ] {
+        assert!(!town.facility_ids.contains(&deferred.to_owned()));
+    }
 }
 
 #[test]

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.thalos-home",
+  "nameKey": "town-facility-demo-outpost-home-name",
+  "descriptionKey": "town-facility-demo-outpost-home-description",
+  "townId": "demo.town.thalos",
+  "category": "home",
+  "storageId": "demo.town-facility.outpost-home",
+  "entrancePosition": { "x": 2, "y": 9 },
+  "entranceTerrainId": "demo.terrain.home-entrance"
+}

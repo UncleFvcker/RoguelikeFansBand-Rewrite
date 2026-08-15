@@ -1,0 +1,39 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/shop.schema.json",
+  "formatVersion": 1,
+  "id": "demo.shop.thalos-bookstore",
+  "nameKey": "shop-demo-anambar-bookstore-name",
+  "descriptionKey": "shop-demo-anambar-bookstore-description",
+  "townId": "demo.town.thalos",
+  "category": "bookstore",
+  "entrancePosition": { "x": 16, "y": 1 },
+  "entranceTerrainId": "demo.terrain.bookstore-entrance",
+  "owner": {
+    "id": "demo.shop-owner.thalos-doraf",
+    "nameKey": "shop-owner-demo-outpost-doraf-name",
+    "raceId": "demo.race.rfb-human",
+    "greedPercent": 108,
+    "purchasePriceCap": 10000
+  },
+  "stock": [
+    { "itemKindId": "demo.item.black-prayers", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.black-mass", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.beginners-handbook", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.master-sorcerers-handbook", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.cantrips-for-beginners", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.minor-arcana", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.major-arcana", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.manual-of-mastery", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.book-of-common-prayer", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.high-mass", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.dark-incantations", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.immortal-rituals", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.rites-of-initiation", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.ways-of-war", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.call-of-the-wild", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.nature-mastery", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.book-of-elements", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 },
+    { "itemKindId": "demo.item.earth-wind-and-fire", "initialMinimum": 1, "initialMaximum": 1, "maintenanceMinimum": 1, "maintenanceMaximum": 1 }
+  ],
+  "maintenance": { "intervalWorldTicks": 10000 }
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.thalos-life-temple",
+  "nameKey": "town-facility-demo-thalos-life-temple-name",
+  "descriptionKey": "town-facility-demo-thalos-life-temple-description",
+  "townId": "demo.town.thalos",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-thalos-life-temple-owner-name",
+  "ownerRealmIds": ["life"],
+  "serviceActions": [
+    { "kind": "heal", "ownerCost": 0, "otherCost": 150 },
+    { "kind": "restore-vitality", "ownerCost": 400, "otherCost": 1500 }
+  ],
+  "entrancePosition": { "x": 12, "y": 9 },
+  "entranceTerrainId": "demo.terrain.life-temple-entrance"
+}

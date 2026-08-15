@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.thalos-paladin-guild",
+  "nameKey": "town-facility-demo-thalos-paladin-guild-name",
+  "descriptionKey": "town-facility-demo-thalos-paladin-guild-description",
+  "townId": "demo.town.thalos",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-thalos-paladin-guild-owner-name",
+  "ownerClassIds": ["demo.class.paladin"],
+  "serviceActions": [
+    { "kind": "enchant-armor", "ownerCost": 300, "otherCost": 600 },
+    { "kind": "heal", "ownerCost": 0, "otherCost": 150 }
+  ],
+  "entrancePosition": { "x": 16, "y": 9 },
+  "entranceTerrainId": "demo.terrain.paladin-guild-entrance"
+}

@@ -221,6 +221,62 @@ fn outpost_shops_are_projected_from_authoritative_content() {
 }
 
 #[test]
+fn p108c_thalos_projects_its_embedded_icky_cave_and_returns_to_town() {
+    let mut game =
+        Game::new_with_build(108, "demo.build.warrior").expect("Middle-earth game should start");
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    let thalos_position = Position { x: 17, y: 29 };
+    game.wilderness_position = Some(thalos_position);
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+
+    assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.wilderness_position, Some(thalos_position));
+    assert_eq!(
+        game.current_town().map(|town| town.id.as_str()),
+        Some("demo.town.thalos")
+    );
+    assert!(game.town_states["demo.town.thalos"].visited);
+    let entrance = Position { x: 55, y: 15 };
+    assert_eq!(game.terrain_at(entrance), "demo.terrain.icky-cave-entrance");
+    assert_eq!(
+        game.terrain
+            .iter()
+            .filter(|terrain| terrain.as_str() == "demo.terrain.icky-cave-entrance")
+            .count(),
+        1
+    );
+
+    game.player.position = entrance;
+    let entered = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(entered.floor_id, "demo.floor.icky-cave-depth-10");
+    assert_eq!(game.current_floor_id, "demo.floor.icky-cave-depth-10");
+
+    let upstairs_index = game
+        .terrain
+        .iter()
+        .position(|terrain| terrain == "demo.terrain.stairs-up")
+        .expect("Icky Cave root should have an upstairs");
+    game.player.position = Position {
+        x: (upstairs_index % usize::from(game.width)) as i32,
+        y: (upstairs_index / usize::from(game.width)) as i32,
+    };
+    let returned = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(returned.floor_id, wilderness::WILDERNESS_FLOOR_ID);
+    assert_eq!(game.wilderness_position, Some(thalos_position));
+    assert_eq!(
+        game.current_town().map(|town| town.id.as_str()),
+        Some("demo.town.thalos")
+    );
+    assert_eq!(game.terrain_at(entrance), "demo.terrain.icky-cave-entrance");
+}
+
+#[test]
 fn shroomery_trade_maintenance_and_save_round_trip_use_existing_shop_state() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Outpost game should start");

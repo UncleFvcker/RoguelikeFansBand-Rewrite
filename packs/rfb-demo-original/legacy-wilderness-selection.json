@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 8,
+  "schemaVersion": 9,
   "worldId": "demo.world.middle-earth",
   "towns": [
     {
@@ -11,6 +11,11 @@
       "sourceIndex": 5,
       "sourceName": "阿南巴",
       "id": "demo.town.anambar"
+    },
+    {
+      "sourceIndex": 6,
+      "sourceName": "萨洛斯",
+      "id": "demo.town.thalos"
     }
   ],
   "dungeons": [
@@ -109,7 +114,8 @@
         { "symbol": "8", "sourceTag": "HOME" },
         { "symbol": "9", "sourceTag": "BOOKSTORE" }
       ],
-      "inn": {
+      "buildings": [
+      {
         "buildingIndex": 4,
         "name": "旅店",
         "ownerName": "奥托",
@@ -123,7 +129,7 @@
           { "actionIndex": 4, "name": "询问你的声望", "minimumCost": 1, "maximumCost": 1, "command": "a", "actionId": 55, "restriction": 0 }
         ]
       },
-      "library": {
+      {
         "buildingIndex": 0,
         "name": "图书馆",
         "ownerName": "托妮卡",
@@ -135,7 +141,7 @@
           { "actionIndex": 3, "name": "鉴定所有物品", "minimumCost": 350, "maximumCost": 350, "command": "p", "actionId": 26, "restriction": 0 }
         ]
       },
-      "weaponMaster": {
+      {
         "buildingIndex": 6,
         "name": "武器大师",
         "ownerName": "锤趾汤姆泰克",
@@ -144,7 +150,7 @@
           { "actionIndex": 0, "name": "评估护甲等级(AC)", "minimumCost": 400, "maximumCost": 400, "command": "a", "actionId": 46, "restriction": 0 }
         ]
       },
-      "warriorGuild": {
+      {
         "buildingIndex": 7,
         "name": "战士公会",
         "ownerName": "扼龙者罗伯塔",
@@ -163,7 +169,7 @@
           { "actionIndex": 1, "name": "强化护甲", "minimumCost": 0, "maximumCost": 0, "command": "a", "actionId": 24, "restriction": 0 }
         ]
       },
-      "mammonTemple": {
+      {
         "buildingIndex": 9,
         "name": "玛门神庙",
         "ownerName": "灰衣托利亚",
@@ -179,7 +185,7 @@
           { "actionIndex": 2, "name": "治疗突变", "minimumCost": 10000, "maximumCost": 100000, "command": "m", "actionId": 35, "restriction": 0 }
         ]
       },
-      "archerGuild": {
+      {
         "buildingIndex": 11,
         "name": "弓箭手公会",
         "ownerName": "奈尔多利恩",
@@ -195,7 +201,7 @@
           { "actionIndex": 1, "name": "强化弓", "minimumCost": 0, "maximumCost": 0, "command": "b", "actionId": 31, "restriction": 0 }
         ]
       },
-      "trumpTower": {
+      {
         "buildingIndex": 14,
         "name": "王牌之塔",
         "ownerName": "伊万·叶克尼亚兹",
@@ -210,6 +216,218 @@
           { "actionIndex": 0, "name": "传送回地下城", "minimumCost": 0, "maximumCost": 150, "command": "r", "actionId": 33, "restriction": 0 }
         ]
       }
+      ]
+    },
+    {
+      "sourceIndex": 6,
+      "sourceName": "萨洛斯",
+      "id": "demo.town.thalos",
+      "position": { "x": 17, "y": 29 },
+      "sourceFile": "lib/edit/t_thalos.txt",
+      "standardFacilities": [
+        { "symbol": "0", "sourceTag": "SHROOMERY" },
+        { "symbol": "1", "sourceTag": "GENERAL_STORE" },
+        { "symbol": "2", "sourceTag": "ARMOURY" },
+        { "symbol": "3", "sourceTag": "WEAPON_SMITHS" },
+        { "symbol": "4", "sourceTag": "TEMPLE" },
+        { "symbol": "5", "sourceTag": "ALCHEMY_SHOP" },
+        { "symbol": "6", "sourceTag": "MAGIC_SHOP" },
+        { "symbol": "7", "sourceTag": "BLACK_MARKET" },
+        { "symbol": "8", "sourceTag": "HOME" },
+        { "symbol": "9", "sourceTag": "BOOKSTORE" }
+      ],
+      "buildings": [
+        {
+          "buildingIndex": 0,
+          "name": "图书馆",
+          "ownerName": "伊本·赫勒敦",
+          "ownerRace": "人类？",
+          "services": [
+            { "actionIndex": 0, "name": "研究物品", "minimumCost": 1000, "maximumCost": 1000, "command": "a", "actionId": 1, "restriction": 0 },
+            { "actionIndex": 1, "name": "城镇纵览", "minimumCost": 0, "maximumCost": 0, "command": "h", "actionId": 2, "restriction": 0 },
+            { "actionIndex": 2, "name": "鉴定单件物品", "minimumCost": 50, "maximumCost": 50, "command": "i", "actionId": 44, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 1,
+          "name": "宫殿",
+          "ownerName": "苏丹·伊德里斯",
+          "ownerRace": "人类",
+          "services": [
+            { "actionIndex": 0, "name": "请求任务", "minimumCost": 0, "maximumCost": 0, "command": "q", "actionId": 6, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 2,
+          "name": "竞技场",
+          "ownerName": "塔里克",
+          "ownerRace": "人类",
+          "services": [
+            { "actionIndex": 0, "name": "进入竞技场", "minimumCost": 0, "maximumCost": 0, "command": "e", "actionId": 10, "restriction": 0 },
+            { "actionIndex": 1, "name": "查看海报", "minimumCost": 0, "maximumCost": 0, "command": "p", "actionId": 8, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 3,
+          "name": "赌场",
+          "ownerName": "阿齐兹",
+          "ownerRace": "人类",
+          "services": [
+            { "actionIndex": 0, "name": "夹牌游戏(In-Between)", "minimumCost": 0, "maximumCost": 0, "command": "b", "actionId": 12, "restriction": 0 },
+            { "actionIndex": 1, "name": "玩掷骰子", "minimumCost": 0, "maximumCost": 0, "command": "c", "actionId": 14, "restriction": 0 },
+            { "actionIndex": 2, "name": "转轮盘", "minimumCost": 0, "maximumCost": 0, "command": "s", "actionId": 15, "restriction": 0 },
+            { "actionIndex": 3, "name": "玩骰子老虎机", "minimumCost": 0, "maximumCost": 0, "command": "d", "actionId": 16, "restriction": 0 },
+            { "actionIndex": 4, "name": "怪物竞技场", "minimumCost": 0, "maximumCost": 0, "command": "m", "actionId": 36, "restriction": 0 },
+            { "actionIndex": 5, "name": "扑克", "minimumCost": 0, "maximumCost": 0, "command": "p", "actionId": 43, "restriction": 0 },
+            { "actionIndex": 6, "name": "游戏规则", "minimumCost": 0, "maximumCost": 0, "command": "r", "actionId": 13, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 4,
+          "name": "旅店",
+          "ownerName": "巴尔萨泽",
+          "ownerRace": "人类",
+          "access": "Member",
+          "services": [
+            { "actionIndex": 0, "name": "住宿一晚", "minimumCost": 20, "maximumCost": 20, "command": "r", "actionId": 17, "restriction": 0 },
+            { "actionIndex": 1, "name": "购买食物和饮料", "minimumCost": 1, "maximumCost": 1, "command": "f", "actionId": 18, "restriction": 1 },
+            { "actionIndex": 2, "name": "打听传闻", "minimumCost": 10, "maximumCost": 10, "command": "u", "actionId": 19, "restriction": 0 },
+            { "actionIndex": 3, "name": "传送到其他城镇", "minimumCost": 500, "maximumCost": 500, "command": "m", "actionId": 42, "restriction": 0 },
+            { "actionIndex": 4, "name": "询问你的声望", "minimumCost": 1, "maximumCost": 1, "command": "a", "actionId": 55, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 5,
+          "name": "赏金事务所",
+          "ownerName": "卡利尔",
+          "ownerRace": "人类",
+          "services": [
+            { "actionIndex": 0, "name": "今日通缉", "minimumCost": 0, "maximumCost": 0, "command": "a", "actionId": 38, "restriction": 0 },
+            { "actionIndex": 1, "name": "通缉独特怪名单", "minimumCost": 0, "maximumCost": 0, "command": "b", "actionId": 39, "restriction": 0 },
+            { "actionIndex": 2, "name": "特殊目标", "minimumCost": 0, "maximumCost": 0, "command": "s", "actionId": 37, "restriction": 0 },
+            { "actionIndex": 3, "name": "领取赏金", "minimumCost": 0, "maximumCost": 0, "command": "c", "actionId": 40, "restriction": 0 },
+            { "actionIndex": 4, "name": "悬赏任务", "minimumCost": 0, "maximumCost": 0, "command": "m", "actionId": 65, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 6,
+          "name": "武器大师",
+          "ownerName": "托瓦尔德",
+          "ownerRace": "人类",
+          "services": [
+            { "actionIndex": 0, "name": "评估护甲等级(AC)", "minimumCost": 100, "maximumCost": 100, "command": "a", "actionId": 46, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 7,
+          "name": "战士公会",
+          "ownerName": "阿拉肖",
+          "ownerRace": "兽人",
+          "memberships": [
+            { "sourceTag": "C", "identity": "*", "role": "None" },
+            { "sourceTag": "C", "identity": "Warrior", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Samurai", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Cavalry", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Berserker", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Blood-Knight", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Mauler", "role": "Owner" }
+          ],
+          "services": [
+            { "actionIndex": 0, "name": "强化武器", "minimumCost": 0, "maximumCost": 0, "command": "w", "actionId": 23, "restriction": 0 },
+            { "actionIndex": 1, "name": "强化护甲", "minimumCost": 0, "maximumCost": 0, "command": "a", "actionId": 24, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 8,
+          "name": "巫术之塔",
+          "ownerName": "津达尼",
+          "ownerRace": "人类",
+          "memberships": [
+            { "sourceTag": "C", "identity": "*", "role": "None" },
+            { "sourceTag": "C", "identity": "Mage", "role": "Owner" },
+            { "sourceTag": "C", "identity": "High-Mage", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Blood-Mage", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Sorcerer", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Yellow-Mage", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Gray-Mage", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Ranger", "role": "Member" },
+            { "sourceTag": "C", "identity": "Warrior-Mage", "role": "Member" }
+          ],
+          "services": [
+            { "actionIndex": 0, "name": "鉴定所有物品", "minimumCost": 200, "maximumCost": 1000, "command": "i", "actionId": 26, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 9,
+          "name": "生命神殿",
+          "ownerName": "雷德尔·菲纳希尔",
+          "ownerRace": "精灵",
+          "memberships": [
+            { "sourceTag": "M", "identity": "*", "role": "None" },
+            { "sourceTag": "M", "identity": "Life", "role": "Owner" }
+          ],
+          "services": [
+            { "actionIndex": 0, "name": "治疗祈祷", "minimumCost": 0, "maximumCost": 150, "command": "h", "actionId": 28, "restriction": 0 },
+            { "actionIndex": 1, "name": "属性恢复", "minimumCost": 400, "maximumCost": 1500, "command": "r", "actionId": 29, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 10,
+          "name": "盗贼公会",
+          "ownerName": "格尔干",
+          "ownerRace": "霍比特人",
+          "memberships": [
+            { "sourceTag": "C", "identity": "*", "role": "None" },
+            { "sourceTag": "C", "identity": "Rogue", "role": "Owner" }
+          ],
+          "services": [
+            { "actionIndex": 0, "name": "住宿一晚", "minimumCost": 0, "maximumCost": 100, "command": "r", "actionId": 17, "restriction": 0 },
+            { "actionIndex": 1, "name": "鉴定所有物品", "minimumCost": 100, "maximumCost": 2000, "command": "i", "actionId": 26, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 11,
+          "name": "弓箭手公会",
+          "ownerName": "伊克兰",
+          "ownerRace": "木精灵",
+          "memberships": [
+            { "sourceTag": "C", "identity": "*", "role": "None" },
+            { "sourceTag": "C", "identity": "Ranger", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Archer", "role": "Owner" },
+            { "sourceTag": "C", "identity": "Sniper", "role": "Owner" }
+          ],
+          "services": [
+            { "actionIndex": 0, "name": "强化弹药", "minimumCost": 20, "maximumCost": 40, "command": "a", "actionId": 30, "restriction": 0 },
+            { "actionIndex": 1, "name": "强化弓", "minimumCost": 0, "maximumCost": 0, "command": "b", "actionId": 31, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 12,
+          "name": "圣武士公会",
+          "ownerName": "基亚拉",
+          "ownerRace": "巨人",
+          "memberships": [
+            { "sourceTag": "C", "identity": "*", "role": "None" },
+            { "sourceTag": "C", "identity": "Paladin", "role": "Owner" }
+          ],
+          "services": [
+            { "actionIndex": 0, "name": "强化护甲", "minimumCost": 300, "maximumCost": 600, "command": "a", "actionId": 24, "restriction": 0 },
+            { "actionIndex": 1, "name": "拜访治疗师", "minimumCost": 0, "maximumCost": 150, "command": "h", "actionId": 28, "restriction": 0 }
+          ]
+        },
+        {
+          "buildingIndex": 13,
+          "name": "皇家书院",
+          "ownerName": "伊祖卡玛领主",
+          "ownerRace": "人类",
+          "memberships": [
+            { "sourceTag": "C", "identity": "*", "role": "None" }
+          ],
+          "services": [
+            { "actionIndex": 0, "name": "请求任务", "minimumCost": 0, "maximumCost": 0, "command": "q", "actionId": 6, "restriction": 0 }
+          ]
+        }
+      ]
     }
   ],
   "bountyOffices": [
@@ -245,6 +463,23 @@
           { "actionIndex": 3, "name": "领取赏金", "minimumCost": 0, "maximumCost": 0, "command": "c", "actionId": 40, "restriction": 0 },
           { "actionIndex": 4, "name": "请求任务", "minimumCost": 0, "maximumCost": 0, "command": "q", "actionId": 6, "restriction": 0 },
           { "actionIndex": 5, "name": "悬赏任务", "minimumCost": 0, "maximumCost": 0, "command": "m", "actionId": 65, "restriction": 0 }
+        ]
+      }
+    },
+    {
+      "townId": "demo.town.thalos",
+      "sourceFile": "lib/edit/t_thalos.txt",
+      "building": {
+        "buildingIndex": 5,
+        "name": "赏金事务所",
+        "ownerName": "卡利尔",
+        "ownerRace": "人类",
+        "services": [
+          { "actionIndex": 0, "name": "今日通缉", "minimumCost": 0, "maximumCost": 0, "command": "a", "actionId": 38, "restriction": 0 },
+          { "actionIndex": 1, "name": "通缉独特怪名单", "minimumCost": 0, "maximumCost": 0, "command": "b", "actionId": 39, "restriction": 0 },
+          { "actionIndex": 2, "name": "特殊目标", "minimumCost": 0, "maximumCost": 0, "command": "s", "actionId": 37, "restriction": 0 },
+          { "actionIndex": 3, "name": "领取赏金", "minimumCost": 0, "maximumCost": 0, "command": "c", "actionId": 40, "restriction": 0 },
+          { "actionIndex": 4, "name": "悬赏任务", "minimumCost": 0, "maximumCost": 0, "command": "m", "actionId": 65, "restriction": 0 }
         ]
       }
     }
