@@ -969,3 +969,27 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   吞噬血肉的确认/混乱/饱食/流血/自伤、蘑菇四重增益与共享 RNG、临时形态、蘑菇店、美德及
   save/state-hash/replay。source lock、schema、Protocol bindings、Web typecheck、Rust check/format 和
   diff 检查通过；按用户要求未运行全量测试或刷新 fixture。
+
+## main 当前批次：博伊特人正式内容、呕吐与投掷加成
+
+- 权威来源为 RFB `master:src/races_a.c`、`master:src/virtue.c` 和 `master:src/py_birth.c`。种族方向
+  继续拥有既有 `rfb-legacy.race.boit` 与 `rfb-legacy.skill-set.race-boit`，新增并拥有
+  `rfb.ability.race.vomit` 和 `rfb.ability-program.race.vomit`；本批不新增 item、material、affix、
+  resource 或 actor ID。
+- 博伊特人按原版闭合六维 `-1/-2/-2/-2/0/-2`、速度 +2、生命 95%、基础 HP 15、经验 80%、
+  1 格红外、商店 105%、八项基础技能、投掷 +25、标准身体/出生和初始“牺牲”。临时博伊特人形态
+  按当前有效种族获得并在解除后失去同一静态加成和能力。
+- 1 级力量能力“呕吐”消耗 0、基础失败率 0%，可在恐惧和混乱时使用。专用 `Vomit` 效果清除中毒，
+  以中毒时长的 `2 / 7` 在玩家中心造成半径 1 毒伤，并按原版压低营养；营养低于 524 时额外承受
+  10 点无条件自伤，并在普通动作费用上增加 15 能量。Protocol 因公共效果投影推进到 `1.223`，没有
+  新增命令、权威状态、save 字段或 State Hash 输入。
+- importer 新增字面量 `skill_tht` 调整提取，并生成 `rfb-legacy.skill.throwing` 定义，独立导入产物不留
+  悬空 SkillSet 引用。`rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game
+  种族数从 35 增至 36。
+- 实现提交为 `8bfeee7da`（`Import Boit race`）。最终协调点为 pack `1.372.0` / content hash
+  `72c8fc68e42729b2da8914951768ee46a2fd1e8854ee221eabff500650a58e4d`、Protocol `1.223`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。
+- 新增聚焦测试共 6 项：内容 1、中文名 1、importer 1、核心 2、Web 1，覆盖静态矩阵、投掷加成、
+  能力投影、恐惧/混乱放行、范围毒伤、解毒、营养与空腹边界、额外行动能量、美德及
+  save/state-hash/replay。source lock、schema、Protocol bindings、Web typecheck、Rust check/format 和
+  diff 检查通过；按用户要求未运行全量测试或刷新 fixture。

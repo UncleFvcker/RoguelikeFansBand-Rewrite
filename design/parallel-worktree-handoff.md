@@ -1491,3 +1491,22 @@ git diff --stat
   State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
   Web 共 10 项聚焦测试通过，含 save/state-hash/replay；schema/source lock、bindings、typecheck、
   格式和 diff 检查通过。按用户要求未运行全量测试或刷新 fixture。
+
+## 82. main 当前交接（博伊特人正式内容、呕吐与投掷加成）
+
+- 种族方向继续拥有 `rfb-legacy.race.boit` 与 `rfb-legacy.skill-set.race-boit`，并新增、拥有
+  `rfb.ability.race.vomit` 和 `rfb.ability-program.race.vomit`。其他方向不得复制或改名这些身份；
+  标准口粮、火把、毒素伤害和营养状态均复用现有内容与事务。
+- 通用能力投影新增 `Vomit`，Protocol 因此推进到 `1.223`；`usable-while-afraid` 与既有
+  `usable-while-confused` 只允许明确标记的能力绕过对应限制。呕吐按原版清除中毒、在玩家中心造成
+  半径 1 毒伤并降低营养，空腹时额外承受 10 自伤和 15 行动能量。没有新增权威状态、save 字段或
+  State Hash 输入。
+- 博伊特人完整行为包括权威属性/速度/生命/HP/经验/红外/商店/技能矩阵、投掷 +25、标准身体/出生、
+  初始“牺牲”和 1 级“呕吐”。importer 同步提取 `skill_tht` 并生成 legacy throwing Skill，避免重导入
+  出现悬空引用。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 36。
+- 实现提交为 `8bfeee7da`（`Import Boit race`）。共享协调点为 pack `1.372.0` / content hash
+  `72c8fc68e42729b2da8914951768ee46a2fd1e8854ee221eabff500650a58e4d`、Protocol `1.223`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
+  Web 共 6 项聚焦测试通过，含 save/state-hash/replay；schema/source lock、bindings、typecheck、
+  格式和 diff 检查通过。按用户要求未运行全量测试或刷新 fixture。

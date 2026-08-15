@@ -10,14 +10,14 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.371.0`
-- content hash：`c1eb19e4f44cc33dea8ba18ffa6ea266162723266cdc8bb27c2aa5517b791a36`
-- Protocol：`1.222`
+- demo pack：`1.372.0`
+- content hash：`72c8fc68e42729b2da8914951768ee46a2fd1e8854ee221eabff500650a58e4d`
+- Protocol：`1.223`
 - State Hash Schema：`v104`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v303`，26 个 exact fixture
 - 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 35 个种族。
+  6 个职业构筑和 36 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -240,6 +240,24 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
   临时屁精形态的购买请求。
 - 只运行了本批新增聚焦测试：内容 1、本地化 1、importer 1、核心 5、Web 2，均通过，覆盖静态矩阵、
   出生数量、能力投影/混乱/饱食/流血/自伤/确认、蘑菇四重增益与共享 RNG、临时形态、蘑菇店、美德及
+  save/state-hash/replay。`verify-source`、schema、Protocol bindings、Web typecheck、Rust
+  check/format 和 diff 检查通过；按用户要求未运行全量测试，也未刷新 fixture。
+
+### 博伊特人导入最终证据
+
+- 实现提交：`8bfeee7da`（`Import Boit race`）。最终协调点为 pack `1.372.0` / content hash
+  `72c8fc68e42729b2da8914951768ee46a2fd1e8854ee221eabff500650a58e4d`；Protocol `1.223`、
+  State Hash Schema v104、save v2 和 `contract-v303` fixture baseline 均未改变。正式 New Game 种族数
+  从 35 增至 36，ability 数从 1833 增至 1834。
+- 博伊特人闭合六维 `-1/-2/-2/-2/0/-2`、速度 +2、生命 95%、基础 HP 15、经验 80%、1 格红外、
+  商店 105%、八项基础技能、投掷 +25、标准身体/出生及初始“牺牲”。
+- 新增并由种族方向拥有 `rfb.ability.race.vomit` 和 `rfb.ability-program.race.vomit`。1 级力量能力
+  “呕吐”消耗 0、基础失败率 0%，可在恐惧和混乱时使用；它清除中毒，以中毒时长的 `2 / 7` 在玩家
+  中心造成半径 1 毒伤，并把营养降到 `max(1, min(old - 100, 512))`。营养低于 524 时额外承受 10 点
+  无法规避的自伤并增加 15 行动能量消耗。
+- importer 现提取字面量 `skill_tht` 调整并生成 legacy throwing Skill，避免独立导入产物留下悬空
+  SkillSet 引用。只运行本批新增聚焦测试：内容 1、本地化 1、importer 1、核心 2、Web 1，均通过，
+  覆盖静态矩阵、能力投影、恐惧/混乱放行、范围毒伤、解毒、营养边界、空腹自伤/行动能量、美德及
   save/state-hash/replay。`verify-source`、schema、Protocol bindings、Web typecheck、Rust
   check/format 和 diff 检查通过；按用户要求未运行全量测试，也未刷新 fixture。
 
