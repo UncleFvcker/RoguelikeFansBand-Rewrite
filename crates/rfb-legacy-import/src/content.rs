@@ -5709,6 +5709,8 @@ fn parse_race_powers(text: &str, entry: &mut LegacyCharacterEntry) {
             "poison_dart_spell" => "rfb.ability.race.poison-dart",
             "probing_spell" => "rfb.ability.race.probe-monsters",
             "restore_life_spell" => "rfb.ability.race.restore-life",
+            "shadow_shifting_spell" => "rfb.ability.race.amberite-shadow-shifting",
+            "pattern_mindwalk_spell" => "rfb.ability.race.amberite-pattern-mindwalk",
             "scare_monster_spell" => "rfb.ability.race.scare-monster",
             "sleeping_dust_spell" => "rfb.ability.race.sleeping-dust",
             "spit_acid_spell" => "rfb.ability.race.spit-acid",
@@ -6568,6 +6570,15 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
         ];
     }
     if entry.id == "kutar" {
+        return vec![
+            "humanoid",
+            "legacy-import",
+            "polymorph-candidate",
+            "rfb-compatibility",
+            "standard-body",
+        ];
+    }
+    if entry.id == "amberite" {
         return vec![
             "humanoid",
             "legacy-import",
@@ -21751,6 +21762,76 @@ static void _kutar_calc_bonuses(void)
         let mut report = ContentImportReport::default();
         let race = race_json(&kutar, &[], &mut report);
         assert_eq!(race["resistances"]["confusion"], "resistant");
+        assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
+    }
+
+    #[test]
+    fn amberite_sustain_regeneration_powers_and_formal_tags_are_mapped() {
+        const SOURCE: &str = r#"
+static power_info _amberite_get_powers[] =
+{
+    { A_INT, {30, 50, 70, shadow_shifting_spell}},
+    { A_WIS, {40, 75, 75, pattern_mindwalk_spell}},
+    { -1, {-1, -1, -1, NULL} }
+};
+static void _amberite_calc_bonuses(void)
+{
+    p_ptr->sustain_con = TRUE;
+    p_ptr->regen += 100;
+}
+"#;
+        let mut amberite = LegacyCharacterEntry {
+            id: "amberite".to_owned(),
+            calc_bonuses_fn: Some("_amberite_calc_bonuses".to_owned()),
+            get_powers_fn: Some("_amberite_get_powers".to_owned()),
+            hooks: vec!["calc_bonuses".to_owned(), "get_powers".to_owned()],
+            ..LegacyCharacterEntry::default()
+        };
+        let (_, _, _, _, _, _, attribute_sustains, _, _, regeneration, _, _) =
+            parse_calc_bonuses_defenses(SOURCE, "_amberite_calc_bonuses");
+        amberite.attribute_sustains = attribute_sustains;
+        amberite.regeneration_rate_modifier_percent = regeneration;
+        parse_race_powers(SOURCE, &mut amberite);
+
+        assert_eq!(
+            legacy_race_tags(&amberite),
+            [
+                "humanoid",
+                "legacy-import",
+                "polymorph-candidate",
+                "rfb-compatibility",
+                "standard-body",
+            ],
+        );
+        assert_eq!(amberite.attribute_sustains, ["constitution"]);
+        assert_eq!(amberite.regeneration_rate_modifier_percent, 100);
+        assert_eq!(
+            amberite.abilities,
+            [
+                LegacyInnatePower {
+                    governing_attribute: "intelligence".to_owned(),
+                    minimum_level: 30,
+                    cost: 50,
+                    base_failure_percent: 70,
+                    ability_id: "rfb.ability.race.amberite-shadow-shifting".to_owned(),
+                },
+                LegacyInnatePower {
+                    governing_attribute: "wisdom".to_owned(),
+                    minimum_level: 40,
+                    cost: 75,
+                    base_failure_percent: 75,
+                    ability_id: "rfb.ability.race.amberite-pattern-mindwalk".to_owned(),
+                },
+            ],
+        );
+        let mut report = ContentImportReport::default();
+        let race = race_json(&amberite, &[], &mut report);
+        assert_eq!(
+            race["attributeSustains"],
+            serde_json::json!(["constitution"])
+        );
+        assert_eq!(race["regenerationRateModifierPercent"], 100);
+        assert_eq!(race["abilities"].as_array().map(Vec::len), Some(2));
         assert_eq!(report.race_hook_gaps["calc_bonuses"], 1);
     }
 

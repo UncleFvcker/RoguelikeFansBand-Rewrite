@@ -8353,6 +8353,7 @@ fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> AbilityEffectSpe
                 life_force: *life_force,
             }
         }
+        AbilityEffectDefinition::AlterReality => AbilityEffectSpecDto::AlterReality,
         AbilityEffectDefinition::AnimateDead {
             actor_kind_id,
             corpse_item_kind_id,

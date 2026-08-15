@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.224";
+pub const PROTOCOL_VERSION: &str = "1.225";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
 
@@ -1416,6 +1416,7 @@ pub enum AbilityEffectSpecDto {
     RestoreVitality {
         life_force: u16,
     },
+    AlterReality,
     AnimateDead {
         actor_kind_id: String,
         corpse_item_kind_id: String,
@@ -2806,6 +2807,11 @@ pub enum AbilityEffectResolutionDto {
         experience_after: u64,
         life_force_before: u16,
         life_force_after: u16,
+    },
+    AlterReality {
+        effect_index: u8,
+        ticks_before: u8,
+        ticks_after: u8,
     },
     AnimateDead {
         effect_index: u8,

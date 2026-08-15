@@ -660,6 +660,26 @@ mod tests {
     }
 
     #[test]
+    fn amberite_content_uses_authoritative_chinese_names() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("race-legacy-amberite-name", "安珀人"),
+            ("ability-rfb-race-amberite-shadow-shifting-name", "阴影位移"),
+            (
+                "ability-rfb-race-amberite-pattern-mindwalk-name",
+                "漫步全知阵",
+            ),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("Amberite content name should format"),
+                expected,
+            );
+        }
+    }
+
+    #[test]
     fn draconian_content_uses_authoritative_chinese_names() {
         let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
         for (key, expected) in [

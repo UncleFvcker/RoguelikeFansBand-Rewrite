@@ -451,6 +451,25 @@ fn formal_kutar_receives_the_authoritative_vitality_virtue() {
 }
 
 #[test]
+fn formal_amberite_receives_the_authoritative_honour_virtue() {
+    let amberite = Game::new_with_build_race_and_name(
+        413,
+        "demo.build.archer",
+        "rfb-legacy.race.amberite",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .expect("Amberite Archer should create");
+    assert_eq!(
+        &virtue_kinds(&amberite)[..3],
+        [
+            VirtueKindDto::Nature,
+            VirtueKindDto::Temperance,
+            VirtueKindDto::Honour,
+        ]
+    );
+}
+
+#[test]
 fn formal_golem_receives_the_authoritative_justice_virtue() {
     let golem = golem_game(367);
     assert_eq!(

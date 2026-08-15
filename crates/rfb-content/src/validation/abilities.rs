@@ -922,6 +922,7 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::RestoreVitality { life_force, .. } => {
                     (1..=1_000).contains(life_force)
                 }
+                AbilityEffectDefinition::AlterReality => true,
                 AbilityEffectDefinition::AnimateDead {
                     actor_kind_id,
                     corpse_item_kind_id,
@@ -1325,6 +1326,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::MassSleepOrStasis { .. }
             | AbilityEffectDefinition::SleepingDust { .. }
             | AbilityEffectDefinition::RestoreVitality { .. }
+            | AbilityEffectDefinition::AlterReality
             | AbilityEffectDefinition::ReportMagic
             | AbilityEffectDefinition::Earthquake { .. }
             | AbilityEffectDefinition::AreaDestruction { .. }
@@ -1361,6 +1363,7 @@ pub(super) fn validate_abilities(
                                 | AbilityEffectDefinition::ReduceStatus { .. }
                                 | AbilityEffectDefinition::ApplyStatus { .. }
                                 | AbilityEffectDefinition::RemoveStatus { .. }
+                                | AbilityEffectDefinition::RestoreVitality { .. }
                                 | AbilityEffectDefinition::AnimateDead { .. }
                                 | AbilityEffectDefinition::VisibleDamage { .. }
                                 | AbilityEffectDefinition::VisibleApplyStatus { .. }

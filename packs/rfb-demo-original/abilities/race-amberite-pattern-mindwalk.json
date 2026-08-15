@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.race.amberite-pattern-mindwalk",
+  "descriptionKey": "ability-rfb-race-amberite-pattern-mindwalk-description",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.amberite-pattern-mindwalk",
+  "nameKey": "ability-rfb-race-amberite-pattern-mindwalk-name",
+  "tags": ["race", "restoration"],
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

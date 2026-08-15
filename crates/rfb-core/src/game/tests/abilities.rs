@@ -2919,6 +2919,9 @@ const RACE_SPRITE_SLEEPING_DUST_ABILITY_ID: &str = "rfb.ability.race.sleeping-du
 const RACE_SNOTLING_DEVOUR_FLESH_ABILITY_ID: &str = "rfb.ability.race.devour-flesh";
 const RACE_BOIT_VOMIT_ABILITY_ID: &str = "rfb.ability.race.vomit";
 const RACE_KUTAR_EXPAND_ABILITY_ID: &str = "rfb.ability.race.kutar-expand";
+const RACE_AMBERITE_SHADOW_SHIFTING_ABILITY_ID: &str = "rfb.ability.race.amberite-shadow-shifting";
+const RACE_AMBERITE_PATTERN_MINDWALK_ABILITY_ID: &str =
+    "rfb.ability.race.amberite-pattern-mindwalk";
 
 #[test]
 fn formal_snotling_devours_flesh_while_confused_and_round_trips() {
@@ -3718,6 +3721,217 @@ fn formal_kutar_expansion_fixes_saving_throw_and_adds_thirty_five_armor() {
         stats_before.armor_class.value + 35
     );
     assert_eq!(restored.player_derived_stats().saving_throw_skill.value, 10);
+}
+
+#[test]
+fn formal_amberite_passives_and_powers_match_the_authoritative_behavior() {
+    let mut shadow = amberite_game(412);
+    clear_monsters(&mut shadow);
+    assert!(shadow.player_sustains_attribute(AttributeKind::Constitution));
+    assert_eq!(shadow.player_regeneration_rate_percent(), 200);
+
+    let mut polymorph =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 10, "test.amberite-form").status;
+    polymorph.granted_race_id = Some("rfb-legacy.race.small-kobold".to_owned());
+    shadow.player.statuses.push(polymorph);
+    assert!(!shadow.player_sustains_attribute(AttributeKind::Constitution));
+    assert_eq!(shadow.player_regeneration_rate_percent(), 100);
+    shadow
+        .player
+        .statuses
+        .retain(|status| status.kind_id != STATUS_PLAYER_POLYMORPH);
+
+    shadow.progress.level = 29;
+    let snapshot = shadow.snapshot();
+    for ability_id in [
+        RACE_AMBERITE_SHADOW_SHIFTING_ABILITY_ID,
+        RACE_AMBERITE_PATTERN_MINDWALK_ABILITY_ID,
+    ] {
+        assert!(
+            !snapshot
+                .player
+                .abilities
+                .iter()
+                .find(|ability| ability.id == ability_id)
+                .expect("Amberite power should project before unlocking")
+                .can_cast
+        );
+    }
+
+    shadow.progress.level = 30;
+    shadow.progress.max_level = 30;
+    shadow.refresh_character_skills();
+    shadow.player.hp = shadow.effective_player_max_hp();
+    shadow.debug_set_ability_casts_succeed(true);
+    let projected = shadow
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_AMBERITE_SHADOW_SHIFTING_ABILITY_ID)
+        .expect("level-thirty Shadow Shifting");
+    assert!(projected.can_cast);
+    assert_eq!(projected.source, AbilitySourceDto::Race);
+    assert_eq!(projected.minimum_level, 30);
+    assert_eq!(
+        (projected.base_resource_cost, projected.resource_cost),
+        (50, 50)
+    );
+    assert_eq!(
+        projected.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Intelligence)
+    );
+    assert!(matches!(
+        projected.effects.as_slice(),
+        [AbilityEffectSpecDto::AlterReality]
+    ));
+
+    let hp_before = shadow.player.hp;
+    let mut replay = shadow.clone();
+    for cast in [&mut shadow, &mut replay] {
+        let mut events = Vec::new();
+        cast.resolve_player_ability(
+            RACE_AMBERITE_SHADOW_SHIFTING_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Shadow Shifting should resolve");
+        assert!((15..=35).contains(&cast.reality_change_ticks));
+        assert!(events.iter().any(|event| matches!(
+            event,
+            DomainEvent::AbilityEffectsResolved { resolution, .. }
+                if matches!(
+                    resolution.effects.as_slice(),
+                    [AbilityEffectResolutionDto::AlterReality {
+                        ticks_before: 0,
+                        ticks_after: 15..=35,
+                        ..
+                    }]
+                )
+        )));
+    }
+    assert_eq!(shadow.player.hp, hp_before - 50);
+    assert_eq!(shadow.state_hash(), replay.state_hash());
+    let restored = Game::from_save_with_content(shadow.to_save(), shadow.content.clone())
+        .expect("Shadow Shifting countdown should restore");
+    assert_eq!(restored.reality_change_ticks, shadow.reality_change_ticks);
+    assert_eq!(restored.state_hash(), shadow.state_hash());
+
+    shadow
+        .resolve_player_ability(
+            RACE_AMBERITE_SHADOW_SHIFTING_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("a second Shadow Shifting cast should cancel the countdown");
+    assert_eq!(shadow.reality_change_ticks, 0);
+
+    let mut pattern = amberite_game(413);
+    clear_monsters(&mut pattern);
+    pattern.progress.level = 40;
+    pattern.progress.max_level = 40;
+    pattern.progress.attributes = AttributeSet {
+        strength: 3,
+        intelligence: 3,
+        wisdom: 3,
+        dexterity: 3,
+        constitution: 3,
+        charisma: 3,
+    };
+    pattern.progress.maximum_attributes = AttributeSet {
+        strength: 18,
+        intelligence: 18,
+        wisdom: 18,
+        dexterity: 18,
+        constitution: 3,
+        charisma: 18,
+    };
+    pattern.refresh_character_skills();
+    let drained_experience = crate::stats::experience_required_for_level(40);
+    let maximum_experience = crate::stats::experience_required_for_level(41).saturating_sub(1);
+    pattern.progress.experience = drained_experience;
+    pattern.progress.maximum_experience = maximum_experience;
+    pattern.progress.life_force = 125;
+    for status_kind_id in [
+        STATUS_POISON,
+        STATUS_HALLUCINATION,
+        STATUS_STUN,
+        STATUS_BLEEDING,
+        STATUS_BLINDNESS,
+    ] {
+        pattern
+            .player
+            .statuses
+            .push(monster_combat::melee_status(status_kind_id, 20, "test.pattern-mindwalk").status);
+    }
+    pattern.player.hp = pattern.effective_player_max_hp();
+    pattern.debug_set_ability_casts_succeed(true);
+    let projected = pattern
+        .snapshot()
+        .player
+        .abilities
+        .into_iter()
+        .find(|ability| ability.id == RACE_AMBERITE_PATTERN_MINDWALK_ABILITY_ID)
+        .expect("level-forty Pattern Mindwalking");
+    assert!(projected.can_cast);
+    assert_eq!(projected.minimum_level, 40);
+    assert_eq!(
+        (projected.base_resource_cost, projected.resource_cost),
+        (75, 75)
+    );
+    assert_eq!(
+        projected.governing_attribute,
+        Some(rfb_protocol::AttributeKindDto::Wisdom)
+    );
+    assert!(matches!(
+        projected.effects.last(),
+        Some(AbilityEffectSpecDto::RestoreVitality { life_force: 1000 })
+    ));
+
+    let mut replay = pattern.clone();
+    for cast in [&mut pattern, &mut replay] {
+        let mut events = Vec::new();
+        cast.resolve_player_ability(
+            RACE_AMBERITE_PATTERN_MINDWALK_ABILITY_ID,
+            TargetSelection::SelfTarget,
+            &mut events,
+            &mut BTreeSet::new(),
+            &mut Vec::new(),
+        )
+        .expect("Pattern Mindwalking should resolve");
+        assert_eq!(mutation_cast_resolution(&events).hp_paid, 75);
+        assert!(!events.iter().any(|event| {
+            match event {
+                DomainEvent::AbilityHealed { .. } => true,
+                DomainEvent::AbilityEffectsResolved { resolution, .. } => resolution
+                    .effects
+                    .iter()
+                    .any(|effect| matches!(effect, AbilityEffectResolutionDto::Heal { .. })),
+                _ => false,
+            }
+        }));
+        assert_eq!(cast.progress.attributes, cast.progress.maximum_attributes);
+        assert_eq!(cast.progress.experience, maximum_experience);
+        assert_eq!(cast.progress.life_force, 1_000);
+        for status_kind_id in [
+            STATUS_POISON,
+            STATUS_HALLUCINATION,
+            STATUS_STUN,
+            STATUS_BLEEDING,
+            STATUS_BLINDNESS,
+        ] {
+            assert!(!cast.player_has_status_kind(status_kind_id));
+        }
+    }
+    assert!(pattern.player.hp < pattern.effective_player_max_hp());
+    assert_eq!(pattern.state_hash(), replay.state_hash());
+    let restored = Game::from_save_with_content(pattern.to_save(), pattern.content.clone())
+        .expect("Pattern Mindwalking result should restore");
+    assert_eq!(restored.state_hash(), pattern.state_hash());
 }
 
 #[test]

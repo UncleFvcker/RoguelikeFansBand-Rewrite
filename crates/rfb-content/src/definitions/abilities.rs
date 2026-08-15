@@ -783,6 +783,7 @@ pub enum AbilityEffectDefinition {
         #[serde(default)]
         restore_attributes: bool,
     },
+    AlterReality,
     AnimateDead {
         actor_kind_id: String,
         corpse_item_kind_id: String,

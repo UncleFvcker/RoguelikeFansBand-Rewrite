@@ -1247,6 +1247,9 @@ impl Game {
             (AbilityEffectDefinition::RestoreVitality { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_restore_vitality_effect(&ability, events);
             }
+            (AbilityEffectDefinition::AlterReality, AbilityTargetPlan::SelfTarget) => {
+                self.resolve_player_alter_reality_effect(&ability, events);
+            }
             (AbilityEffectDefinition::VisibleDamage { .. }, AbilityTargetPlan::SelfTarget) => {
                 self.resolve_player_visible_damage_effect(
                     &ability,
@@ -3921,6 +3924,7 @@ impl Game {
                     AbilityEffectDefinition::Heal { .. }
                     | AbilityEffectDefinition::HealDice { .. }
                     | AbilityEffectDefinition::ReduceStatus { .. }
+                    | AbilityEffectDefinition::RestoreVitality { .. }
                     | AbilityEffectDefinition::LightArea { .. }
                     | AbilityEffectDefinition::ApplyStatus { .. }
                     | AbilityEffectDefinition::RemoveStatus { .. }
@@ -5601,6 +5605,36 @@ impl Game {
                     experience_after: experience.after,
                     life_force_before: life_force.before,
                     life_force_after: life_force.after,
+                }],
+            },
+            trace: None,
+        });
+    }
+
+    fn resolve_player_alter_reality_effect(
+        &mut self,
+        ability: &AbilityDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        debug_assert!(matches!(
+            ability.effect,
+            AbilityEffectDefinition::AlterReality
+        ));
+        let ticks_before = self.reality_change_ticks;
+        self.reality_change_ticks = if ticks_before == 0 {
+            u8::try_from(self.rng.bounded(21) + 15).expect("reality countdown must fit u8")
+        } else {
+            0
+        };
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: ability.id.clone(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: Some(self.player.id.clone()),
+                target_kind_id: Some(self.player.kind_id.clone()),
+                effects: vec![AbilityEffectResolutionDto::AlterReality {
+                    effect_index: 0,
+                    ticks_before,
+                    ticks_after: self.reality_change_ticks,
                 }],
             },
             trace: None,
@@ -11349,6 +11383,14 @@ impl Game {
                 .then_some(AbilityTargetPlan::SelfTarget)
             }
             AbilityEffectDefinition::RestoreVitality { .. } => {
+                (matches!(target, TargetSelection::SelfTarget)
+                    && ability
+                        .target
+                        .modes
+                        .contains(&AbilityTargetModeDefinition::SelfTarget))
+                .then_some(AbilityTargetPlan::SelfTarget)
+            }
+            AbilityEffectDefinition::AlterReality => {
                 (matches!(target, TargetSelection::SelfTarget)
                     && ability
                         .target

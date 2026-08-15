@@ -85,6 +85,7 @@ pub(super) fn initial_virtues(
             "rfb-legacy.race.kobold" | "rfb-legacy.race.snotling" => {
                 kinds.push(VirtueKindDto::Honour)
             }
+            "rfb-legacy.race.amberite" => kinds.push(VirtueKindDto::Honour),
             "rfb-legacy.race.dwarf" => kinds.push(VirtueKindDto::Diligence),
             "rfb-legacy.race.klackon" => kinds.push(VirtueKindDto::Diligence),
             "rfb-legacy.race.dark-elf" => kinds.push(VirtueKindDto::Enchantment),

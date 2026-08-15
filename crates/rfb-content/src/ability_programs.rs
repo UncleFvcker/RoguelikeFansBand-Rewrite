@@ -241,6 +241,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::DevourFlesh { .. }
                     | AbilityEffectDefinition::Vomit
                     | AbilityEffectDefinition::RestoreVitality { .. }
+                    | AbilityEffectDefinition::AlterReality
                     | AbilityEffectDefinition::VisibleDamage { .. }
                     | AbilityEffectDefinition::VisibleApplyStatus { .. }
                     | AbilityEffectDefinition::Entangle { .. }
@@ -379,6 +380,7 @@ fn ability_program_step_is_composable(
                 | AbilityEffectDefinition::ReduceStatus { .. }
                 | AbilityEffectDefinition::ApplyStatus { .. }
                 | AbilityEffectDefinition::RemoveStatus { .. }
+                | AbilityEffectDefinition::RestoreVitality { .. }
                 | AbilityEffectDefinition::AnimateDead { .. }
                 | AbilityEffectDefinition::AreaDamage { .. }
                 | AbilityEffectDefinition::CallSunlight { .. }

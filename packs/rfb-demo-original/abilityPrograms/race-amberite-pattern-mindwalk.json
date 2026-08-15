@@ -1,0 +1,15 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.ability-program.race.amberite-pattern-mindwalk",
+  "input": "self",
+  "steps": [
+    { "type": "remove-status", "statusKindId": "rfb.status.poison" },
+    { "type": "remove-status", "statusKindId": "rfb.status.hallucination" },
+    { "type": "remove-status", "statusKindId": "rfb.status.stun" },
+    { "type": "remove-status", "statusKindId": "rfb.status.bleeding" },
+    { "type": "remove-status", "statusKindId": "rfb.status.blindness" },
+    { "type": "remove-status", "statusKindId": "rfb.status.fear" },
+    { "type": "restore-vitality", "lifeForce": 1000, "restoreAttributes": true }
+  ]
+}

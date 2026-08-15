@@ -2728,6 +2728,19 @@
         {
           "additionalProperties": false,
           "properties": {
+            "type": {
+              "const": "alter-reality",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
             "actorKindId": {
               "type": "string"
             },

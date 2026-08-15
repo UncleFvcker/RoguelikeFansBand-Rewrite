@@ -2772,6 +2772,39 @@
         {
           "type": "object",
           "properties": {
+            "effectIndex": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "ticksAfter": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "ticksBefore": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "alter-reality"
+            }
+          },
+          "required": [
+            "type",
+            "effectIndex",
+            "ticksBefore",
+            "ticksAfter"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "actorKindId": {
               "type": "string"
             },
@@ -5491,6 +5524,18 @@
           "required": [
             "type",
             "lifeForce"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "alter-reality"
+            }
+          },
+          "required": [
+            "type"
           ]
         },
         {

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/ability.schema.json",
+  "abilityProgramId": "rfb.ability-program.race.amberite-shadow-shifting",
+  "descriptionKey": "ability-rfb-race-amberite-shadow-shifting-description",
+  "formatVersion": 1,
+  "id": "rfb.ability.race.amberite-shadow-shifting",
+  "nameKey": "ability-rfb-race-amberite-shadow-shifting-name",
+  "tags": ["race", "utility"],
+  "target": {
+    "modes": ["self"],
+    "range": 0,
+    "requiresLineOfEffect": false
+  }
+}

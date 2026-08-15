@@ -8,7 +8,7 @@ fn compiled_catalog_indexes_current_rfb_content() {
     let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
 
     assert_eq!(catalog.pack_id(), "rfb.demo.original-v1");
-    assert_eq!(catalog.pack_version(), "1.374.0");
+    assert_eq!(catalog.pack_version(), "1.375.0");
     assert_eq!(catalog.races().count(), 57);
     let human_weakness = catalog
         .race("demo.race.rfb-human")
@@ -2540,6 +2540,134 @@ fn formal_kutar_matches_the_authoritative_profile_and_expansion_power() {
             && granted_equipment_bonuses.saving_throw_skill_override == Some(10)
     ));
     assert!(kutar.starting_items.is_empty());
+}
+
+#[test]
+fn formal_amberite_matches_the_authoritative_profile_and_powers() {
+    let artifact = verify_pack_lock(&original_pack_path()).expect("original pack should verify");
+    let catalog = ContentCatalog::from_bytes(&artifact.bytes).expect("catalog should decode");
+    let amberite = catalog
+        .race("rfb-legacy.race.amberite")
+        .expect("formal Amberite race");
+
+    assert_eq!(
+        [
+            amberite.modifiers.strength,
+            amberite.modifiers.intelligence,
+            amberite.modifiers.wisdom,
+            amberite.modifiers.dexterity,
+            amberite.modifiers.constitution,
+            amberite.modifiers.charisma,
+        ],
+        [1, 2, 2, 2, 3, 0],
+    );
+    assert_eq!(
+        (
+            amberite.life_percent,
+            amberite.base_hp,
+            amberite.experience_percent,
+            amberite.infravision,
+            amberite.shop_adjust_percent,
+            amberite.regeneration_rate_modifier_percent,
+        ),
+        (100, 20, 190, 0, 100, 100),
+    );
+    assert!(
+        amberite
+            .attribute_sustains
+            .contains(&ItemAttributeDefinition::Constitution)
+    );
+    assert_eq!(amberite.body_slots.len(), 15);
+    for tag in [
+        "humanoid",
+        "polymorph-candidate",
+        "rfb-compatibility",
+        "standard-body",
+    ] {
+        assert!(
+            amberite.tags.iter().any(|candidate| candidate == tag),
+            "{tag}",
+        );
+    }
+
+    let skills = catalog
+        .skill_set(&amberite.skill_set_id)
+        .expect("formal Amberite skill set")
+        .entries
+        .iter()
+        .map(|entry| (entry.skill_id.as_str(), entry.base))
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(
+        [
+            skills.get("demo.skill.disarming").copied().unwrap_or(0),
+            skills.get("demo.skill.device").copied().unwrap_or(0),
+            skills.get("demo.skill.saving-throw").copied().unwrap_or(0),
+            skills.get("demo.skill.stealth").copied().unwrap_or(0),
+            skills.get("demo.skill.search").copied().unwrap_or(0),
+            skills.get("demo.skill.perception").copied().unwrap_or(0),
+            skills.get("demo.skill.melee").copied().unwrap_or(0),
+            skills.get("demo.skill.ranged").copied().unwrap_or(0),
+        ],
+        [4, 3, 3, 2, 3, 13, 15, 7],
+    );
+
+    let [shadow_shifting, pattern_mindwalk] = amberite.abilities.as_slice() else {
+        panic!("Amberite should have two racial powers");
+    };
+    assert_eq!(
+        (
+            shadow_shifting.ability_id.as_str(),
+            shadow_shifting.minimum_level,
+            shadow_shifting.governing_attribute,
+            shadow_shifting.cost,
+            shadow_shifting.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.amberite-shadow-shifting",
+            30,
+            TechniqueAttribute::Intelligence,
+            50,
+            70,
+        ),
+    );
+    assert_eq!(
+        (
+            pattern_mindwalk.ability_id.as_str(),
+            pattern_mindwalk.minimum_level,
+            pattern_mindwalk.governing_attribute,
+            pattern_mindwalk.cost,
+            pattern_mindwalk.base_failure_percent,
+        ),
+        (
+            "rfb.ability.race.amberite-pattern-mindwalk",
+            40,
+            TechniqueAttribute::Wisdom,
+            75,
+            75,
+        ),
+    );
+    assert!(matches!(
+        catalog
+            .ability(&shadow_shifting.ability_id)
+            .expect("Amberite Shadow Shifting ability")
+            .effect,
+        AbilityEffectDefinition::AlterReality
+    ));
+    let pattern = catalog
+        .ability(&pattern_mindwalk.ability_id)
+        .expect("Amberite Pattern Mindwalking ability");
+    let AbilityEffectDefinition::Sequence { effects } = &pattern.effect else {
+        panic!("Pattern Mindwalking should be an ordered restoration sequence");
+    };
+    assert_eq!(effects.len(), 7);
+    assert!(matches!(
+        effects.last(),
+        Some(AbilityEffectDefinition::RestoreVitality {
+            life_force: 1000,
+            restore_attributes: true,
+        })
+    ));
+    assert!(amberite.starting_items.is_empty());
 }
 
 #[test]

@@ -1,5 +1,24 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "abilities": [
+    {
+      "abilityId": "rfb.ability.race.amberite-shadow-shifting",
+      "baseFailurePercent": 70,
+      "cost": 50,
+      "governingAttribute": "intelligence",
+      "minimumLevel": 30
+    },
+    {
+      "abilityId": "rfb.ability.race.amberite-pattern-mindwalk",
+      "baseFailurePercent": 75,
+      "cost": 75,
+      "governingAttribute": "wisdom",
+      "minimumLevel": 40
+    }
+  ],
+  "attributeSustains": [
+    "constitution"
+  ],
   "baseHp": 20,
   "bodySlots": [
     {
@@ -78,10 +97,14 @@
     "wisdom": 2
   },
   "nameKey": "race-legacy-amberite-name",
+  "regenerationRateModifierPercent": 100,
   "shopAdjustPercent": 100,
   "skillSetId": "rfb-legacy.skill-set.race-amberite",
   "tags": [
+    "humanoid",
     "legacy-import",
-    "polymorph-candidate"
+    "polymorph-candidate",
+    "rfb-compatibility",
+    "standard-body"
   ]
 }

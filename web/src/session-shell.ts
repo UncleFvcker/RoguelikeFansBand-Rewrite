@@ -62,6 +62,7 @@ export const PLAYTEST_RACE_IDS = [
   "rfb-legacy.race.boit",
   "rfb-legacy.race.einheri",
   "rfb-legacy.race.kutar",
+  "rfb-legacy.race.amberite",
 ] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
