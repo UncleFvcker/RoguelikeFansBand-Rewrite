@@ -1797,6 +1797,13 @@ impl Game {
         let mut allow_criticals = true;
         let mut impact_earthquake_item_id = None;
         'profiles: for (profile, profile_attacks) in profiles {
+            let vorpal_weapon = profile.source_item_id.as_ref().is_some_and(|item_id| {
+                self.items
+                    .iter()
+                    .find(|item| &item.id == item_id)
+                    .and_then(|item| self.content.item(&item.kind_id))
+                    .is_some_and(|definition| definition.vorpal)
+            });
             let vampiric_weapon =
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
                     || profile.source_item_id.as_ref().is_some_and(|item_id| {
@@ -1908,7 +1915,8 @@ impl Game {
                     base_damage = base_damage.saturating_mul(multiplier);
                 }
                 let mut rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
-                if matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vorpal))
+                if (vorpal_weapon
+                    || matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vorpal)))
                     && self.rng.bounded(6) == 0
                 {
                     let mut multiplier = 2;

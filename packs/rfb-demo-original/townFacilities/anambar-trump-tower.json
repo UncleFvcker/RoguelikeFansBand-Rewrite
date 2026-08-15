@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.anambar-trump-tower",
+  "nameKey": "town-facility-demo-anambar-trump-tower-name",
+  "descriptionKey": "town-facility-demo-anambar-trump-tower-description",
+  "townId": "demo.town.anambar",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-anambar-trump-tower-owner-name",
+  "memberRaceIds": ["rfb-legacy.race.amberite"],
+  "ownerRealmIds": ["trump"],
+  "serviceActions": [
+    { "kind": "recall", "ownerCost": 0, "otherCost": 150 }
+  ],
+  "entrancePosition": { "x": 8, "y": 9 },
+  "entranceTerrainId": "demo.terrain.trump-tower-entrance"
+}

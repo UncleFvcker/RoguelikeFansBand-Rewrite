@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::game::tests::support::{dispatch_next, test_caster_game};
+use rfb_protocol::{BountyOfficeActionDto, FacilityMembershipDto, FacilityServiceKindDto};
 
 const GENERAL_STORE_ID: &str = "demo.shop.outpost-general-store";
 const ARMOURY_ID: &str = "demo.shop.outpost-armoury";
@@ -16,7 +17,14 @@ const WHITE_HORSE_INN_ID: &str = "demo.shop.outpost-white-horse";
 const HOME_ID: &str = "demo.town-facility.outpost-home";
 const ANAMBAR_HOME_ID: &str = "demo.town-facility.anambar-home";
 const ANAMBAR_INN_ID: &str = "demo.shop.anambar-inn";
+const ANAMBAR_LIBRARY_ID: &str = "demo.town-facility.anambar-library";
+const ANAMBAR_WEAPON_MASTER_ID: &str = "demo.town-facility.anambar-weapon-master";
+const ANAMBAR_WARRIOR_GUILD_ID: &str = "demo.town-facility.anambar-warrior-guild";
+const ANAMBAR_MAMMON_TEMPLE_ID: &str = "demo.town-facility.anambar-mammon-temple";
+const ANAMBAR_ARCHER_GUILD_ID: &str = "demo.town-facility.anambar-archer-guild";
+const ANAMBAR_TRUMP_TOWER_ID: &str = "demo.town-facility.anambar-trump-tower";
 const OUTPOST_COUNT_ID: &str = "demo.town-facility.outpost-count";
+const OUTPOST_BOUNTY_OFFICE_ID: &str = "demo.town-facility.outpost-bounty-office";
 
 fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
     shops
@@ -49,6 +57,82 @@ fn anambar_inn_game(seed: u64) -> Game {
     game.mark_shop_visited_at_player().unwrap();
     assert!(projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).player_at_entrance);
     game
+}
+
+fn anambar_library_game(seed: u64) -> Game {
+    let mut game =
+        Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth game should start");
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 26, y: 39 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    game.player.position = Position { x: 43, y: 7 };
+    assert!(
+        game.snapshot()
+            .task_services
+            .iter()
+            .any(|service| service.id == ANAMBAR_LIBRARY_ID && service.player_at_entrance)
+    );
+    game
+}
+
+fn anambar_facility_game(
+    seed: u64,
+    build_id: &str,
+    race_id: Option<&str>,
+    facility_id: &str,
+    position: Position,
+) -> Game {
+    let mut game = match race_id {
+        Some(race_id) => {
+            Game::new_with_build_race_and_name(seed, build_id, race_id, Game::DEFAULT_PLAYER_NAME)
+        }
+        None => Game::new_with_build(seed, build_id),
+    }
+    .expect("Middle-earth game should start");
+    dispatch_next(
+        &mut game,
+        GameCommand::EnterWorldMap {
+            leave_pets: false,
+            cancel_recall: false,
+        },
+    );
+    game.wilderness_position = Some(Position { x: 26, y: 39 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    game.player.position = position;
+    assert!(
+        game.snapshot()
+            .task_services
+            .iter()
+            .any(|service| service.id == facility_id && service.player_at_entrance)
+    );
+    game
+}
+
+fn add_bounty_remains(game: &mut Game, id: &str, actor_kind_id: &str) {
+    let mut remains = game
+        .items
+        .first()
+        .expect("a new character should carry an item")
+        .clone();
+    remains.id = id.to_owned();
+    remains.kind_id = "demo.item.corpse-remains".to_owned();
+    remains.quantity = 1;
+    remains.origin_actor_kind_id = Some(actor_kind_id.to_owned());
+    remains.origin_kind = None;
+    remains.affix_ids.clear();
+    remains.rolled_affixes.clear();
+    remains.activation = None;
+    remains.charges = None;
+    remains.fuel = None;
+    remains.captured_actor = None;
+    remains.location = ItemLocation::Inventory;
+    game.items.push(remains);
 }
 
 fn white_horse_inn_game(seed: u64) -> Game {
@@ -541,6 +625,409 @@ fn outpost_count_legal_name_change_is_validated_saved_and_projected() {
 }
 
 #[test]
+fn p104c_anambar_library_identifies_researches_and_identifies_all_without_time_or_rng() {
+    let mut single = anambar_library_game(104);
+    let service = single
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_LIBRARY_ID)
+        .expect("library service should be projected");
+    assert_eq!(service.identify_item_cost, Some(50));
+    assert_eq!(service.research_item_cost, Some(1_300));
+    assert_eq!(service.identify_all_items_cost, Some(350));
+    assert_eq!(
+        service.overview_message_key.as_deref(),
+        Some("town-facility-demo-anambar-library-overview")
+    );
+    assert!(service.tasks.is_empty());
+    let item_id = single
+        .items
+        .iter()
+        .find(|item| item.location == ItemLocation::Inventory)
+        .expect("warrior should carry an item")
+        .id
+        .clone();
+    single.item_property_knowledge.remove(&item_id);
+    single.gold = 50;
+    let tick = single.world_tick;
+    let draws = single.rng_draw_counter();
+    let identified = dispatch_next(
+        &mut single,
+        GameCommand::IdentifyAtFacility {
+            facility_id: ANAMBAR_LIBRARY_ID.to_owned(),
+            item_id: item_id.clone(),
+        },
+    );
+    assert_eq!(single.gold, 0);
+    assert!(single.item_property_knowledge[&item_id].appraised);
+    assert!(!single.item_property_knowledge[&item_id].identified);
+    assert_eq!(single.world_tick, tick);
+    assert_eq!(single.rng_draw_counter(), draws);
+    assert_eq!(
+        identified.events[0].message_key,
+        "facility-identify-completed"
+    );
+
+    let mut research = anambar_library_game(105);
+    let item_id = research
+        .items
+        .iter()
+        .find(|item| item.location == ItemLocation::Inventory)
+        .expect("warrior should carry an item")
+        .id
+        .clone();
+    let knowledge = research
+        .item_property_knowledge
+        .entry(item_id.clone())
+        .or_default();
+    knowledge.appraised = true;
+    knowledge.identified = false;
+    knowledge.known_affix_ids.clear();
+    research.gold = 1_300;
+    let tick = research.world_tick;
+    let draws = research.rng_draw_counter();
+    let researched = dispatch_next(
+        &mut research,
+        GameCommand::ResearchItemAtFacility {
+            facility_id: ANAMBAR_LIBRARY_ID.to_owned(),
+            item_id: item_id.clone(),
+        },
+    );
+    assert_eq!(research.gold, 0);
+    assert!(research.item_property_knowledge[&item_id].identified);
+    assert_eq!(research.world_tick, tick);
+    assert_eq!(research.rng_draw_counter(), draws);
+    assert_eq!(
+        researched.events[0].message_key,
+        "facility-research-completed"
+    );
+
+    let mut all = anambar_library_game(106);
+    let carried_ids = all
+        .items
+        .iter()
+        .filter(|item| {
+            matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        })
+        .map(|item| item.id.clone())
+        .collect::<Vec<_>>();
+    for item_id in &carried_ids {
+        all.item_property_knowledge.remove(item_id);
+    }
+    all.gold = 350;
+    let tick = all.world_tick;
+    let draws = all.rng_draw_counter();
+    let identified_all = dispatch_next(
+        &mut all,
+        GameCommand::IdentifyAllAtFacility {
+            facility_id: ANAMBAR_LIBRARY_ID.to_owned(),
+        },
+    );
+    assert_eq!(all.gold, 0);
+    assert!(carried_ids.iter().all(|item_id| {
+        all.item_property_knowledge
+            .get(item_id)
+            .is_some_and(|knowledge| knowledge.appraised)
+    }));
+    assert_eq!(all.world_tick, tick);
+    assert_eq!(all.rng_draw_counter(), draws);
+    assert_eq!(identified_all.events[0].kind, "facility.identified-all");
+    assert_eq!(
+        identified_all.events[0].args["count"],
+        carried_ids.len().to_string()
+    );
+
+    all.gold = 350;
+    let rejected = dispatch_next(
+        &mut all,
+        GameCommand::IdentifyAllAtFacility {
+            facility_id: ANAMBAR_LIBRARY_ID.to_owned(),
+        },
+    );
+    assert_eq!(all.gold, 350);
+    assert_eq!(rejected.events[0].kind, "facility.identify-all-unavailable");
+    assert_eq!(rejected.events[0].args["reason"], "nothing-to-identify");
+}
+
+#[test]
+fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_and_recall() {
+    let mut warrior = anambar_facility_game(
+        105,
+        "demo.build.warrior",
+        None,
+        ANAMBAR_WARRIOR_GUILD_ID,
+        Position { x: 35, y: 7 },
+    );
+    let guild = warrior
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_WARRIOR_GUILD_ID)
+        .expect("warrior guild should be projected");
+    assert_eq!(guild.membership, FacilityMembershipDto::Owner);
+    let weapon_service = guild
+        .service_actions
+        .iter()
+        .find(|service| service.kind == FacilityServiceKindDto::EnchantWeapon)
+        .expect("warrior guild should enchant weapons");
+    assert_eq!(weapon_service.cost, 750);
+    let weapon_id = weapon_service
+        .targets
+        .first()
+        .expect("warrior should carry an enchantable weapon")
+        .item_id
+        .clone();
+    warrior.gold = 750;
+    let tick = warrior.world_tick;
+    let draws = warrior.rng_draw_counter();
+    let enchanted = dispatch_next(
+        &mut warrior,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_WARRIOR_GUILD_ID.to_owned(),
+            service: FacilityServiceKindDto::EnchantWeapon,
+            item_id: Some(weapon_id),
+        },
+    );
+    assert_eq!(warrior.gold, 0);
+    assert_eq!(warrior.world_tick, tick);
+    assert!(warrior.rng_draw_counter() > draws);
+    assert!(
+        enchanted
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.item-enchanted")
+    );
+
+    let archer = anambar_facility_game(
+        106,
+        "demo.build.archer",
+        None,
+        ANAMBAR_ARCHER_GUILD_ID,
+        Position { x: 47, y: 7 },
+    );
+    let archer_guild = archer
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_ARCHER_GUILD_ID)
+        .expect("archer guild should be projected");
+    assert_eq!(archer_guild.membership, FacilityMembershipDto::Owner);
+    let ammunition = archer_guild
+        .service_actions
+        .iter()
+        .find(|service| service.kind == FacilityServiceKindDto::EnchantAmmunition)
+        .and_then(|service| service.targets.first())
+        .expect("archer should carry enchantable ammunition");
+    let quantity = archer
+        .items
+        .iter()
+        .find(|item| item.id == ammunition.item_id)
+        .expect("projected ammunition should exist")
+        .quantity;
+    assert_eq!(ammunition.cost, 22 * quantity);
+
+    let mut healing = anambar_facility_game(
+        107,
+        "demo.build.paladin-death",
+        None,
+        ANAMBAR_MAMMON_TEMPLE_ID,
+        Position { x: 39, y: 7 },
+    );
+    let temple = healing
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_MAMMON_TEMPLE_ID)
+        .expect("Mammon temple should be projected");
+    assert_eq!(temple.membership, FacilityMembershipDto::Member);
+    assert_eq!(
+        temple
+            .service_actions
+            .iter()
+            .find(|service| service.kind == FacilityServiceKindDto::Heal)
+            .map(|service| service.cost),
+        Some(500)
+    );
+    healing.player.hp = 1;
+    healing
+        .player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_POISON, 20, "test.p105").status);
+    healing.gold = 500;
+    let tick = healing.world_tick;
+    let draws = healing.rng_draw_counter();
+    let healed = dispatch_next(
+        &mut healing,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_MAMMON_TEMPLE_ID.to_owned(),
+            service: FacilityServiceKindDto::Heal,
+            item_id: None,
+        },
+    );
+    assert_eq!(
+        healing.player.hp,
+        201.min(healing.effective_player_max_hp())
+    );
+    assert!(!healing.player_has_status_kind(STATUS_POISON));
+    assert_eq!(healing.gold, 0);
+    assert_eq!(healing.world_tick, tick);
+    assert_eq!(healing.rng_draw_counter(), draws);
+    assert!(
+        healed
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.healed")
+    );
+
+    let mut restored = anambar_facility_game(
+        108,
+        "demo.build.warrior",
+        None,
+        ANAMBAR_MAMMON_TEMPLE_ID,
+        Position { x: 39, y: 7 },
+    );
+    restored.progress.attributes.strength = restored
+        .progress
+        .maximum_attributes
+        .strength
+        .saturating_sub(1);
+    restored.progress.maximum_experience = restored.progress.experience.saturating_add(10);
+    restored.progress.life_force = 900;
+    restored.gold = 2_500;
+    let update = dispatch_next(
+        &mut restored,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_MAMMON_TEMPLE_ID.to_owned(),
+            service: FacilityServiceKindDto::RestoreVitality,
+            item_id: None,
+        },
+    );
+    assert_eq!(
+        restored.progress.attributes,
+        restored.progress.maximum_attributes
+    );
+    assert_eq!(
+        restored.progress.experience,
+        restored.progress.maximum_experience
+    );
+    assert_eq!(restored.progress.life_force, 1_000);
+    assert_eq!(restored.gold, 0);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.vitality-restored")
+    );
+
+    let mut mutated = anambar_facility_game(
+        109,
+        "demo.build.warrior",
+        None,
+        ANAMBAR_MAMMON_TEMPLE_ID,
+        Position { x: 39, y: 7 },
+    );
+    mutated.progress.active_mutation_ids.clear();
+    mutated.progress.locked_mutation_ids.clear();
+    mutated
+        .progress
+        .active_mutation_ids
+        .insert("rfb.mutation.alcohol".to_owned());
+    mutated.gold = 100_000;
+    let update = dispatch_next(
+        &mut mutated,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_MAMMON_TEMPLE_ID.to_owned(),
+            service: FacilityServiceKindDto::CureMutation,
+            item_id: None,
+        },
+    );
+    assert!(mutated.progress.active_mutation_ids.is_empty());
+    assert_eq!(mutated.gold, 0);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.mutation-cured")
+    );
+
+    let mut assessed = anambar_facility_game(
+        110,
+        "demo.build.warrior",
+        None,
+        ANAMBAR_WEAPON_MASTER_ID,
+        Position { x: 31, y: 7 },
+    );
+    assessed.gold = 400;
+    let update = dispatch_next(
+        &mut assessed,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_WEAPON_MASTER_ID.to_owned(),
+            service: FacilityServiceKindDto::AssessArmor,
+            item_id: None,
+        },
+    );
+    assert_eq!(assessed.gold, 0);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.armor-assessed")
+    );
+
+    let mut recall = anambar_facility_game(
+        111,
+        "demo.build.warrior",
+        None,
+        ANAMBAR_TRUMP_TOWER_ID,
+        Position { x: 35, y: 15 },
+    );
+    let mut amberite_form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 20, "test.p105").status;
+    amberite_form.granted_race_id = Some("rfb-legacy.race.amberite".to_owned());
+    recall.player.statuses.push(amberite_form);
+    let tower = recall
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == ANAMBAR_TRUMP_TOWER_ID)
+        .expect("Trump tower should be projected");
+    assert_eq!(tower.membership, FacilityMembershipDto::Member);
+    assert_eq!(tower.service_actions[0].cost, 150);
+    recall.recall = Some(RecallStateDto {
+        dungeon_id: "demo.dungeon.warrens".to_owned(),
+        floor_id: "demo.floor.warrens-depth-1".to_owned(),
+        remaining_turns: None,
+    });
+    recall.gold = 150;
+    let update = dispatch_next(
+        &mut recall,
+        GameCommand::UseFacilityService {
+            facility_id: ANAMBAR_TRUMP_TOWER_ID.to_owned(),
+            service: FacilityServiceKindDto::Recall,
+            item_id: None,
+        },
+    );
+    assert_eq!(recall.gold, 0, "{:?}", update.events);
+    assert_eq!(
+        recall
+            .recall
+            .as_ref()
+            .and_then(|recall| recall.remaining_turns),
+        Some(2)
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "facility.recall-started")
+    );
+}
+
+#[test]
 fn outpost_temple_has_walkable_space_on_both_sides_and_to_the_south() {
     let game = Game::new_with_build(42, "demo.build.warrior").expect("Warrens game should start");
 
@@ -682,7 +1169,7 @@ fn anambar_home_uses_the_outpost_home_inventory() {
     assert_eq!(game.home_states.len(), 1);
     assert!(game.home_states.contains_key(HOME_ID));
     let town_snapshot = game.snapshot();
-    assert_eq!(town_snapshot.shops.len(), 9);
+    assert_eq!(town_snapshot.shops.len(), 10);
     assert!(
         town_snapshot
             .shops
@@ -1751,4 +2238,195 @@ fn maintenance_refills_only_after_interval_at_entrance() {
         .collect::<std::collections::BTreeSet<_>>();
     assert!(guaranteed_stock.is_subset(&stocked));
     assert!(game.rng_draw_counter() > draws_before);
+}
+
+#[test]
+fn p106_bounty_office_projects_and_redeems_daily_and_wanted_remains() {
+    let mut game =
+        Game::new_with_build(106, "demo.build.warrior").expect("Middle-earth game should start");
+    game.player.position = Position { x: 57, y: 19 };
+    let office = game
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == OUTPOST_BOUNTY_OFFICE_ID)
+        .expect("Outpost bounty office should be projected");
+    let bounty = office
+        .bounty_office
+        .expect("bounty details should be visible at the entrance");
+    assert_eq!(bounty.wanted_targets.len(), 20);
+
+    let daily = bounty.daily_target;
+    add_bounty_remains(&mut game, "test.bounty.daily", &daily.actor_kind_id);
+    let gold_before = game.gold;
+    let daily_update = dispatch_next(
+        &mut game,
+        GameCommand::UseBountyOffice {
+            facility_id: OUTPOST_BOUNTY_OFFICE_ID.to_owned(),
+            action: BountyOfficeActionDto::TurnIn,
+            item_id: Some("test.bounty.daily".to_owned()),
+        },
+    );
+    assert!(
+        daily_update
+            .events
+            .iter()
+            .any(|event| event.kind == "bounty.daily-turned-in")
+    );
+    assert_eq!(game.gold, gold_before + daily.corpse_reward);
+    assert!(!game.items.iter().any(|item| item.id == "test.bounty.daily"));
+
+    let wanted = bounty
+        .wanted_targets
+        .into_iter()
+        .find(|target| !target.completed)
+        .expect("a new character should have an open wanted target");
+    let reward_before = game
+        .items
+        .iter()
+        .filter(|item| item.kind_id == wanted.reward_item_kind_id)
+        .map(|item| item.quantity)
+        .sum::<u32>();
+    add_bounty_remains(&mut game, "test.bounty.wanted", &wanted.actor_kind_id);
+    let wanted_update = dispatch_next(
+        &mut game,
+        GameCommand::UseBountyOffice {
+            facility_id: OUTPOST_BOUNTY_OFFICE_ID.to_owned(),
+            action: BountyOfficeActionDto::TurnIn,
+            item_id: Some("test.bounty.wanted".to_owned()),
+        },
+    );
+    assert!(
+        wanted_update
+            .events
+            .iter()
+            .any(|event| event.kind == "bounty.wanted-turned-in")
+    );
+    assert!(
+        game.bounty_state
+            .completed_wanted_actor_kind_ids
+            .contains(&wanted.actor_kind_id)
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == wanted.reward_item_kind_id)
+            .map(|item| item.quantity)
+            .sum::<u32>(),
+        reward_before + 1
+    );
+}
+
+#[test]
+fn p106_dynamic_bounty_spawns_only_counted_targets_and_round_trips() {
+    let mut game =
+        Game::new_with_build(206, "demo.build.warrior").expect("Middle-earth game should start");
+    game.player.position = Position { x: 57, y: 19 };
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseBountyOffice {
+            facility_id: OUTPOST_BOUNTY_OFFICE_ID.to_owned(),
+            action: BountyOfficeActionDto::RequestMission,
+            item_id: None,
+        },
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "bounty.mission-requested")
+    );
+    let mission = game
+        .bounty_state
+        .mission
+        .clone()
+        .expect("requesting a bounty should create a mission");
+    let definition = game
+        .content
+        .world(&game.world_id)
+        .and_then(|world| {
+            world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == mission.floor_id)
+        })
+        .expect("bounty floor should exist")
+        .clone();
+    let floor = game
+        .generate_procedural_floor(&definition, None)
+        .expect("bounty floor should generate");
+    let targets = floor
+        .entities
+        .iter()
+        .filter(|actor| actor.id.contains(".bounty-target."))
+        .collect::<Vec<_>>();
+    assert_eq!(targets.len(), usize::from(mission.total));
+    assert!(
+        targets
+            .iter()
+            .all(|actor| actor.kind_id == mission.actor_kind_id)
+    );
+
+    game.current_floor_id.clone_from(&mission.floor_id);
+    game.command_actor_deaths.push(ActorDeathRecord {
+        actor_id: "ordinary.same-kind".to_owned(),
+        actor_kind_id: mission.actor_kind_id.clone(),
+        position: Position::default(),
+        credit_player: true,
+    });
+    assert_eq!(game.apply_bounty_deaths(), None);
+    assert_eq!(
+        game.bounty_state.mission.as_ref().unwrap().remaining,
+        mission.total
+    );
+    game.command_actor_deaths = targets
+        .iter()
+        .map(|actor| ActorDeathRecord {
+            actor_id: actor.id.clone(),
+            actor_kind_id: actor.kind_id.clone(),
+            position: actor.position,
+            credit_player: true,
+        })
+        .collect();
+    assert_eq!(
+        game.apply_bounty_deaths(),
+        Some(mission.actor_kind_id.clone())
+    );
+    assert_eq!(game.bounty_state.mission.as_ref().unwrap().remaining, 0);
+
+    let mut restored = Game::from_save(game.to_save()).expect("bounty mission should round-trip");
+    assert_eq!(restored.bounty_state, game.bounty_state);
+    restored.current_floor_id = "demo.floor.surface".to_owned();
+    restored.current_dungeon_instance_id = None;
+    restored.player.position = Position { x: 57, y: 19 };
+    let reward_kind_id = restored
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == OUTPOST_BOUNTY_OFFICE_ID)
+        .and_then(|service| service.bounty_office)
+        .and_then(|bounty| bounty.mission)
+        .expect("completed mission should be projected")
+        .reward_item_kind_id;
+    let claim = dispatch_next(
+        &mut restored,
+        GameCommand::UseBountyOffice {
+            facility_id: OUTPOST_BOUNTY_OFFICE_ID.to_owned(),
+            action: BountyOfficeActionDto::ClaimMissionReward,
+            item_id: None,
+        },
+    );
+    assert!(
+        claim
+            .events
+            .iter()
+            .any(|event| event.kind == "bounty.mission-rewarded")
+    );
+    assert!(restored.bounty_state.mission.is_none());
+    assert!(
+        restored
+            .items
+            .iter()
+            .any(|item| item.kind_id == reward_kind_id && item.location == ItemLocation::Inventory)
+    );
 }

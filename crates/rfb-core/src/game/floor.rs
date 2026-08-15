@@ -503,7 +503,7 @@ impl Game {
             .content
             .world(&self.world_id)
             .expect("active world must remain available");
-        if self.current_floor_id == world.initial_floor_id {
+        if self.current_floor_id == world.initial_floor_id || self.current_town().is_some() {
             let dungeon = world
                 .dungeons
                 .iter()
@@ -693,7 +693,7 @@ impl Game {
                 return Ok(None);
             }
             let reward_claim_required = task_definition(world, &task_id)
-                .is_some_and(|task| task.source_facility_id.is_some());
+                .is_some_and(|task| task.source_facility_id.is_some() && task.reward.is_some());
             let resolution = task_resolution_for_departure(
                 Some(source.retakeable),
                 abandon_task,
@@ -701,6 +701,7 @@ impl Game {
                 reward_claim_required,
             );
             let initial_required = task_initial_state(
+                world,
                 task_definition(world, &task_id).expect("paused task must retain its definition"),
                 &self.task_states,
             )
@@ -1116,7 +1117,7 @@ impl Game {
                     .content
                     .world(&self.world_id)
                     .and_then(|world| task_definition(world, &departure.task_id))
-                    .map(|task| &task.reward)
+                    .and_then(|task| task.reward.as_ref())
                     .cloned()
             {
                 let reward = reward_item(

@@ -22,10 +22,65 @@
       ],
       "type": "object"
     },
+    "TownFacilityBountyDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "wantedRewardItemKindIds": {
+          "description": "The twenty source-ordered prizes for the character's wanted uniques.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "wantedRewardItemKindIds"
+      ],
+      "type": "object"
+    },
     "TownFacilityCategory": {
       "enum": [
         "home",
-        "quest-giver"
+        "quest-giver",
+        "service"
+      ],
+      "type": "string"
+    },
+    "TownFacilityServiceDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/TownFacilityServiceKind"
+        },
+        "otherCost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "ownerCost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "ownerCost",
+        "otherCost"
+      ],
+      "type": "object"
+    },
+    "TownFacilityServiceKind": {
+      "enum": [
+        "heal",
+        "restore-vitality",
+        "cure-mutation",
+        "enchant-weapon",
+        "enchant-armor",
+        "enchant-ammunition",
+        "enchant-bow",
+        "assess-armor",
+        "recall"
       ],
       "type": "string"
     }
@@ -36,6 +91,17 @@
   "properties": {
     "$schema": {
       "type": "string"
+    },
+    "bountyOffice": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TownFacilityBountyDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "category": {
       "$ref": "#/$defs/TownFacilityCategory"
@@ -58,6 +124,15 @@
     "id": {
       "type": "string"
     },
+    "identifyAllItemsCost": {
+      "default": null,
+      "format": "uint32",
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "identifyItemCost": {
       "default": null,
       "format": "uint32",
@@ -76,8 +151,43 @@
         "null"
       ]
     },
+    "memberClassIds": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "memberRaceIds": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "memberRealmIds": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
     "nameKey": {
       "type": "string"
+    },
+    "overviewMessageKey": {
+      "default": null,
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ownerClassIds": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
     },
     "ownerNameKey": {
       "default": null,
@@ -85,6 +195,36 @@
         "string",
         "null"
       ]
+    },
+    "ownerRaceIds": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "ownerRealmIds": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "researchItemCost": {
+      "default": null,
+      "format": "uint32",
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "serviceActions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/TownFacilityServiceDefinition"
+      },
+      "type": "array"
     },
     "storageId": {
       "default": null,

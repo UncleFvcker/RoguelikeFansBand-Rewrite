@@ -6668,6 +6668,236 @@
         "slotType"
       ]
     },
+    "BountyDailyTargetDto": {
+      "type": "object",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "actorNameKey": {
+          "type": "string"
+        },
+        "corpseReward": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "skeletonReward": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "actorKindId",
+        "actorNameKey",
+        "corpseReward",
+        "skeletonReward"
+      ]
+    },
+    "BountyMissionDto": {
+      "type": "object",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "actorNameKey": {
+          "type": "string"
+        },
+        "depth": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "dungeonId": {
+          "type": "string"
+        },
+        "floorId": {
+          "type": "string"
+        },
+        "floorNameKey": {
+          "type": "string"
+        },
+        "remaining": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        },
+        "rewardItemKindId": {
+          "type": "string"
+        },
+        "rewardNameKey": {
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/BountyMissionStatusDto"
+        },
+        "total": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "status",
+        "dungeonId",
+        "floorId",
+        "floorNameKey",
+        "depth",
+        "actorKindId",
+        "actorNameKey",
+        "total",
+        "remaining",
+        "rewardItemKindId",
+        "rewardNameKey"
+      ]
+    },
+    "BountyMissionStatusDto": {
+      "type": "string",
+      "enum": [
+        "active",
+        "reward-available"
+      ]
+    },
+    "BountyOfficeActionDto": {
+      "type": "string",
+      "enum": [
+        "turn-in",
+        "request-mission",
+        "abandon-mission",
+        "claim-mission-reward"
+      ]
+    },
+    "BountyOfficeDto": {
+      "type": "object",
+      "properties": {
+        "dailyTarget": {
+          "$ref": "#/$defs/BountyDailyTargetDto"
+        },
+        "mission": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BountyMissionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "turnIns": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BountyTurnInDto"
+          }
+        },
+        "wantedTargets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BountyWantedTargetDto"
+          }
+        }
+      },
+      "required": [
+        "dailyTarget",
+        "wantedTargets",
+        "turnIns"
+      ]
+    },
+    "BountyTurnInDto": {
+      "type": "object",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "actorNameKey": {
+          "type": "string"
+        },
+        "itemId": {
+          "type": "string"
+        },
+        "reward": {
+          "$ref": "#/$defs/BountyTurnInRewardDto"
+        }
+      },
+      "required": [
+        "itemId",
+        "actorKindId",
+        "actorNameKey",
+        "reward"
+      ]
+    },
+    "BountyTurnInRewardDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "kind": {
+              "type": "string",
+              "const": "gold"
+            }
+          },
+          "required": [
+            "kind",
+            "amount"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemKindId": {
+              "type": "string"
+            },
+            "itemNameKey": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string",
+              "const": "item"
+            }
+          },
+          "required": [
+            "kind",
+            "itemKindId",
+            "itemNameKey"
+          ]
+        }
+      ]
+    },
+    "BountyWantedTargetDto": {
+      "type": "object",
+      "properties": {
+        "actorKindId": {
+          "type": "string"
+        },
+        "actorNameKey": {
+          "type": "string"
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "rewardItemKindId": {
+          "type": "string"
+        },
+        "rewardNameKey": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "actorKindId",
+        "actorNameKey",
+        "completed",
+        "rewardItemKindId",
+        "rewardNameKey"
+      ]
+    },
     "CampaignStateDto": {
       "type": "object",
       "properties": {
@@ -7512,6 +7742,68 @@
         "sustain-charisma"
       ]
     },
+    "FacilityMembershipDto": {
+      "type": "string",
+      "enum": [
+        "visitor",
+        "member",
+        "owner"
+      ]
+    },
+    "FacilityServiceDto": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "kind": {
+          "$ref": "#/$defs/FacilityServiceKindDto"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FacilityServiceTargetDto"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "cost"
+      ]
+    },
+    "FacilityServiceKindDto": {
+      "type": "string",
+      "enum": [
+        "heal",
+        "restore-vitality",
+        "cure-mutation",
+        "enchant-weapon",
+        "enchant-armor",
+        "enchant-ammunition",
+        "enchant-bow",
+        "assess-armor",
+        "recall"
+      ]
+    },
+    "FacilityServiceTargetDto": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "itemId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "itemId",
+        "cost"
+      ]
+    },
     "GameCommand": {
       "oneOf": [
         {
@@ -8270,6 +8562,94 @@
             "type",
             "facilityId",
             "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "itemId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "research-item-at-facility"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "identify-all-at-facility"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "itemId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "service": {
+              "$ref": "#/$defs/FacilityServiceKindDto"
+            },
+            "type": {
+              "type": "string",
+              "const": "use-facility-service"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "service"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "action": {
+              "$ref": "#/$defs/BountyOfficeActionDto"
+            },
+            "facilityId": {
+              "type": "string"
+            },
+            "itemId": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "type": {
+              "type": "string",
+              "const": "use-bounty-office"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "action"
           ]
         },
         {
@@ -12778,6 +13158,16 @@
     "TaskServiceDto": {
       "type": "object",
       "properties": {
+        "bountyOffice": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/BountyOfficeDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "descriptionKey": {
           "type": "string"
         },
@@ -12789,6 +13179,14 @@
         },
         "id": {
           "type": "string"
+        },
+        "identifyAllItemsCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
         },
         "identifyItemCost": {
           "type": [
@@ -12806,14 +13204,38 @@
           "format": "uint32",
           "minimum": 0
         },
+        "membership": {
+          "$ref": "#/$defs/FacilityMembershipDto",
+          "default": "visitor"
+        },
         "nameKey": {
           "type": "string"
+        },
+        "overviewMessageKey": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "ownerNameKey": {
           "type": "string"
         },
         "playerAtEntrance": {
           "type": "boolean"
+        },
+        "researchItemCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "serviceActions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FacilityServiceDto"
+          }
         },
         "tasks": {
           "type": "array",

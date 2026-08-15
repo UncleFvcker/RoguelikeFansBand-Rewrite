@@ -626,6 +626,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.diamond-edge",
+            "nameKey": "item-demo-diamond-edge-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.dragon-bane",
             "nameKey": "item-demo-dragon-bane-name",
             "category": "melee",
@@ -1696,6 +1705,41 @@
       "nextGoldPileSerial": 1,
       "tasks": [
         {
+          "taskId": "demo.task.anambar-crystal-quest",
+          "status": "locked",
+          "required": 5,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.anambar-dinosaur-quest",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.anambar-lord-bovin-treachery",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.anambar-orc-camp",
+          "status": "available",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
+          "taskId": "demo.task.anambar-scary-rock-treasure",
+          "status": "locked",
+          "required": 1,
+          "stage": 1,
+          "stages": 1
+        },
+        {
           "taskId": "demo.task.crows-nest",
           "status": "locked",
           "required": 1,
@@ -1774,7 +1818,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 2
       },
-      "stateHash": "eb14d17c7bda9fc355c966d6aa115e3699443f8032be97d56164e952ac4bac7e"
+      "stateHash": "d42c62d3c4a60da19531c0eec751130f8355e9d134aa62e270a6848862652096"
     },
     "events": [
       {

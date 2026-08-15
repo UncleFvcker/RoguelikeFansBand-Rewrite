@@ -97,10 +97,14 @@ fn effect_program_input_for_step(
     match effect {
         ItemUseEffectDefinition::Sequence { .. } => None,
         ItemUseEffectDefinition::Damage { .. }
+        | ItemUseEffectDefinition::AreaDamage { .. }
         | ItemUseEffectDefinition::BeamDamage { .. }
         | ItemUseEffectDefinition::RandomElementConeDamage { .. }
         | ItemUseEffectDefinition::TerrainBeam { .. }
         | ItemUseEffectDefinition::RidingCharge => Some(EffectProgramInputDefinition::Actor),
+        ItemUseEffectDefinition::VisibleApplyStatus { .. } => {
+            Some(EffectProgramInputDefinition::SelfTarget)
+        }
         ItemUseEffectDefinition::IdentifyItem { .. }
         | ItemUseEffectDefinition::EnchantItem { .. }
         | ItemUseEffectDefinition::MundanifyItem

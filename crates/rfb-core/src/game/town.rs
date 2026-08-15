@@ -4,18 +4,22 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::{
     ContentCatalog, ShopCategory, ShopDefinition, ShopStockDefinition, TownDefinition,
-    TownFacilityCategory, TownFacilityDefinition, WildernessLocationDefinition, WorldDefinition,
+    TownFacilityCategory, TownFacilityDefinition, TownFacilityServiceDefinition,
+    TownFacilityServiceKind, WildernessLocationDefinition, WorldDefinition,
 };
 use rfb_protocol::{
-    AbilityTownTargetDto, HomeDto, HomeItemDto, HomeStateSaveDto, InnTravelDestinationDto,
-    ItemEnchantmentsDto, ItemIdentifyResolutionDto, ItemQualityDto, MapScaleDto, Position,
-    ShopCategoryDto, ShopDto, ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto,
-    TownDto, TownStateSaveDto,
+    AbilityTownTargetDto, FacilityMembershipDto, FacilityServiceDto, FacilityServiceKindDto,
+    FacilityServiceTargetDto, HomeDto, HomeItemDto, HomeStateSaveDto, InnTravelDestinationDto,
+    ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto, ItemEnchantmentsDto,
+    ItemIdentifyResolutionDto, ItemQualityDto, MapScaleDto, Position, ShopCategoryDto, ShopDto,
+    ShopOwnerDto, ShopSellQuoteDto, ShopStateSaveDto, ShopStockItemDto, TownDto, TownStateSaveDto,
 };
 
 use crate::{
-    effect::{STATUS_BLEEDING, STATUS_POISON},
+    combat::apply_melee_armor_reduction,
+    effect::{STATUS_BLEEDING, STATUS_BLINDNESS, STATUS_CONFUSION, STATUS_POISON, STATUS_STUN},
     error::CoreError,
+    event::DomainEvent,
     rng::RfbRng,
     save::position_from_content,
     state::{HomeState, ItemInstance, ItemLocation, ShopState, TownState},
@@ -23,9 +27,10 @@ use crate::{
 };
 
 use super::{
-    Game, initial_item_curse, initial_item_runtime_state,
+    Game, RecallUseAction, initial_item_curse, initial_item_runtime_state,
     inventory::{
-        ItemIdentificationRequest, item_instances_stack_compatible, item_properties_match,
+        ItemEnchantmentRequest, ItemIdentificationRequest, item_instances_stack_compatible,
+        item_properties_match,
     },
     normalize_player_name, wilderness,
 };
@@ -66,6 +71,57 @@ pub(crate) struct FacilityIdentifyOutcome {
     pub(crate) cost: u32,
     pub(crate) gold_balance: u32,
     pub(crate) resolution: ItemIdentifyResolutionDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct FacilityIdentifyAllOutcome {
+    pub(crate) facility_id: String,
+    pub(crate) identified_count: usize,
+    pub(crate) cost: u32,
+    pub(crate) gold_balance: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum FacilityServiceOutcome {
+    Healed {
+        facility_id: String,
+        healed: i32,
+        mount_healed: i32,
+        statuses_removed: usize,
+        cost: u32,
+        gold_balance: u32,
+    },
+    VitalityRestored {
+        facility_id: String,
+        cost: u32,
+        gold_balance: u32,
+    },
+    MutationCured {
+        facility_id: String,
+        mutation_id: String,
+        cost: u32,
+        gold_balance: u32,
+    },
+    ItemEnchanted {
+        facility_id: String,
+        cost: u32,
+        gold_balance: u32,
+        resolution: ItemEnchantmentResolutionDto,
+    },
+    ArmorAssessed {
+        facility_id: String,
+        armor_class: i32,
+        protection_percent: i32,
+        cost: u32,
+        gold_balance: u32,
+    },
+    RecallStarted {
+        facility_id: String,
+        dungeon_id: String,
+        floor_id: String,
+        cost: u32,
+        gold_balance: u32,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -1083,7 +1139,181 @@ fn transfer_group_to_shop(
     transferred
 }
 
+const fn facility_service_kind_dto(kind: TownFacilityServiceKind) -> FacilityServiceKindDto {
+    match kind {
+        TownFacilityServiceKind::Heal => FacilityServiceKindDto::Heal,
+        TownFacilityServiceKind::RestoreVitality => FacilityServiceKindDto::RestoreVitality,
+        TownFacilityServiceKind::CureMutation => FacilityServiceKindDto::CureMutation,
+        TownFacilityServiceKind::EnchantWeapon => FacilityServiceKindDto::EnchantWeapon,
+        TownFacilityServiceKind::EnchantArmor => FacilityServiceKindDto::EnchantArmor,
+        TownFacilityServiceKind::EnchantAmmunition => FacilityServiceKindDto::EnchantAmmunition,
+        TownFacilityServiceKind::EnchantBow => FacilityServiceKindDto::EnchantBow,
+        TownFacilityServiceKind::AssessArmor => FacilityServiceKindDto::AssessArmor,
+        TownFacilityServiceKind::Recall => FacilityServiceKindDto::Recall,
+    }
+}
+
+const fn enchantment_service(kind: FacilityServiceKindDto) -> bool {
+    matches!(
+        kind,
+        FacilityServiceKindDto::EnchantWeapon
+            | FacilityServiceKindDto::EnchantArmor
+            | FacilityServiceKindDto::EnchantAmmunition
+            | FacilityServiceKindDto::EnchantBow
+    )
+}
+
 impl Game {
+    pub(super) fn town_facility_membership(
+        &self,
+        facility: &TownFacilityDefinition,
+    ) -> FacilityMembershipDto {
+        let Some((build, race, class, _)) = self.character_definitions() else {
+            return FacilityMembershipDto::Visitor;
+        };
+        let realms = [
+            build.first_realm_id.as_deref(),
+            build.second_realm_id.as_deref(),
+        ];
+        let matches_role = |class_ids: &[String], race_ids: &[String], realm_ids: &[String]| {
+            class_ids.contains(&class.id)
+                || race_ids.contains(&race.id)
+                || realms
+                    .into_iter()
+                    .flatten()
+                    .any(|realm_id| realm_ids.iter().any(|candidate| candidate == realm_id))
+        };
+        if matches_role(
+            &facility.owner_class_ids,
+            &facility.owner_race_ids,
+            &facility.owner_realm_ids,
+        ) {
+            FacilityMembershipDto::Owner
+        } else if matches_role(
+            &facility.member_class_ids,
+            &facility.member_race_ids,
+            &facility.member_realm_ids,
+        ) {
+            FacilityMembershipDto::Member
+        } else {
+            FacilityMembershipDto::Visitor
+        }
+    }
+
+    fn town_facility_service_cost(
+        &self,
+        definition: TownFacilityServiceDefinition,
+        membership: FacilityMembershipDto,
+    ) -> u32 {
+        let owner = membership == FacilityMembershipDto::Owner;
+        let declared = if owner {
+            definition.owner_cost
+        } else {
+            definition.other_cost
+        };
+        if declared == 0
+            && matches!(
+                definition.kind,
+                TownFacilityServiceKind::EnchantWeapon
+                    | TownFacilityServiceKind::EnchantArmor
+                    | TownFacilityServiceKind::EnchantBow
+            )
+        {
+            if owner { 750 } else { 1_500 }
+        } else {
+            declared
+        }
+    }
+
+    fn town_facility_enchantment_limit(&self, membership: FacilityMembershipDto) -> i16 {
+        let base = if membership == FacilityMembershipDto::Owner {
+            5
+        } else {
+            2
+        };
+        i16::try_from(base + self.progress.level / 5).unwrap_or(i16::MAX)
+    }
+
+    fn town_facility_enchantment_target(
+        &self,
+        item: &ItemInstance,
+        service: FacilityServiceKindDto,
+        limit: i16,
+    ) -> bool {
+        if item.quantity == 0
+            || !matches!(
+                item.location,
+                ItemLocation::Inventory | ItemLocation::Equipped { .. }
+            )
+        {
+            return false;
+        }
+        let Some(definition) = self.content.item(&item.kind_id) else {
+            return false;
+        };
+        if definition.resists_enchantment || definition.tags.iter().any(|tag| tag == "no-enchant") {
+            return false;
+        }
+        match service {
+            FacilityServiceKindDto::EnchantWeapon => {
+                definition.melee_profile.is_some()
+                    && (item.enchantments.to_hit < limit || item.enchantments.to_damage < limit)
+            }
+            FacilityServiceKindDto::EnchantArmor => {
+                definition.tags.iter().any(|tag| tag == "armor")
+                    && item.enchantments.to_armor < limit
+            }
+            FacilityServiceKindDto::EnchantAmmunition => {
+                definition.ammunition_profile.is_some()
+                    && (item.enchantments.to_hit < limit || item.enchantments.to_damage < limit)
+            }
+            FacilityServiceKindDto::EnchantBow => {
+                definition.projectile_profile.is_some()
+                    && (item.enchantments.to_hit < limit || item.enchantments.to_damage < limit)
+            }
+            _ => false,
+        }
+    }
+
+    pub(super) fn town_facility_service_dtos(
+        &self,
+        facility: &TownFacilityDefinition,
+    ) -> Vec<FacilityServiceDto> {
+        let membership = self.town_facility_membership(facility);
+        let limit = self.town_facility_enchantment_limit(membership);
+        facility
+            .service_actions
+            .iter()
+            .copied()
+            .map(|definition| {
+                let kind = facility_service_kind_dto(definition.kind);
+                let cost = self.town_facility_service_cost(definition, membership);
+                let mut targets = if enchantment_service(kind) {
+                    self.items
+                        .iter()
+                        .filter(|item| self.town_facility_enchantment_target(item, kind, limit))
+                        .map(|item| FacilityServiceTargetDto {
+                            item_id: item.id.clone(),
+                            cost: if kind == FacilityServiceKindDto::EnchantAmmunition {
+                                cost.saturating_mul(item.quantity)
+                            } else {
+                                cost
+                            },
+                        })
+                        .collect::<Vec<_>>()
+                } else {
+                    Vec::new()
+                };
+                targets.sort_by(|left, right| left.item_id.cmp(&right.item_id));
+                FacilityServiceDto {
+                    kind,
+                    cost,
+                    targets,
+                }
+            })
+            .collect()
+    }
+
     pub(super) fn town_facility_accessible(&self, facility_id: &str) -> bool {
         let Some(facility) = self.content.town_facility(facility_id) else {
             return false;
@@ -1110,6 +1340,30 @@ impl Game {
         let Some(cost) = facility.identify_item_cost else {
             return Err("service-unavailable");
         };
+        self.identify_item_at_facility(facility_id, item_id, cost, false)
+    }
+
+    pub(super) fn research_item_at_facility(
+        &mut self,
+        facility_id: &str,
+        item_id: &str,
+    ) -> Result<FacilityIdentifyOutcome, &'static str> {
+        let Some(facility) = self.content.town_facility(facility_id) else {
+            return Err("unknown-facility");
+        };
+        let Some(cost) = facility.research_item_cost else {
+            return Err("service-unavailable");
+        };
+        self.identify_item_at_facility(facility_id, item_id, cost, true)
+    }
+
+    fn identify_item_at_facility(
+        &mut self,
+        facility_id: &str,
+        item_id: &str,
+        cost: u32,
+        full: bool,
+    ) -> Result<FacilityIdentifyOutcome, &'static str> {
         if !self.town_facility_accessible(facility_id) {
             return Err("facility-unreachable");
         }
@@ -1123,18 +1377,18 @@ impl Game {
         }) else {
             return Err("item-unavailable");
         };
-        if self
+        let already_identified = self
             .item_property_knowledge
             .get(&item.id)
-            .is_some_and(|knowledge| knowledge.appraised || knowledge.identified)
-        {
+            .is_some_and(|knowledge| knowledge.identified || (!full && knowledge.appraised));
+        if already_identified {
             return Err("already-identified");
         }
         if self.gold < cost {
             return Err("insufficient-gold");
         }
 
-        let outcome = self.identify_item_instance(item_id, ItemIdentificationRequest::new(false));
+        let outcome = self.identify_item_instance(item_id, ItemIdentificationRequest::new(full));
         debug_assert!(outcome.changed);
         self.gold -= cost;
         Ok(FacilityIdentifyOutcome {
@@ -1148,6 +1402,226 @@ impl Game {
                 changed: outcome.changed,
             },
         })
+    }
+
+    pub(super) fn identify_all_at_facility(
+        &mut self,
+        facility_id: &str,
+    ) -> Result<FacilityIdentifyAllOutcome, &'static str> {
+        let Some(facility) = self.content.town_facility(facility_id) else {
+            return Err("unknown-facility");
+        };
+        let Some(cost) = facility.identify_all_items_cost else {
+            return Err("service-unavailable");
+        };
+        if !self.town_facility_accessible(facility_id) {
+            return Err("facility-unreachable");
+        }
+        let has_unexamined_item = self.items.iter().any(|item| {
+            item.quantity > 0
+                && matches!(
+                    item.location,
+                    ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                )
+                && !self
+                    .item_property_knowledge
+                    .get(&item.id)
+                    .is_some_and(|knowledge| knowledge.appraised || knowledge.identified)
+        });
+        if !has_unexamined_item {
+            return Err("nothing-to-identify");
+        }
+        if self.gold < cost {
+            return Err("insufficient-gold");
+        }
+
+        let identified_count = self.identify_carried_items();
+        debug_assert!(identified_count > 0);
+        self.gold -= cost;
+        Ok(FacilityIdentifyAllOutcome {
+            facility_id: facility_id.to_owned(),
+            identified_count,
+            cost,
+            gold_balance: self.gold,
+        })
+    }
+
+    pub(super) fn use_town_facility_service(
+        &mut self,
+        facility_id: &str,
+        service: FacilityServiceKindDto,
+        item_id: Option<&str>,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<FacilityServiceOutcome, &'static str> {
+        let Some(facility) = self.content.town_facility(facility_id).cloned() else {
+            return Err("unknown-facility");
+        };
+        if !self.town_facility_accessible(facility_id) {
+            return Err("facility-unreachable");
+        }
+        let Some(projected) = self
+            .town_facility_service_dtos(&facility)
+            .into_iter()
+            .find(|candidate| candidate.kind == service)
+        else {
+            return Err("service-unavailable");
+        };
+        let (cost, item_id) = if enchantment_service(service) {
+            let item_id = item_id.ok_or("item-required")?;
+            let target = projected
+                .targets
+                .iter()
+                .find(|target| target.item_id == item_id)
+                .ok_or("item-unavailable")?;
+            (target.cost, Some(item_id))
+        } else {
+            if item_id.is_some() {
+                return Err("unexpected-item");
+            }
+            (projected.cost, None)
+        };
+        if self.gold < cost {
+            return Err("insufficient-gold");
+        }
+
+        let outcome = match service {
+            FacilityServiceKindDto::Heal => {
+                let healed = self.apply_player_healing(200).applied;
+                let before = self.player.statuses.len();
+                self.player.statuses.retain(|status| {
+                    !matches!(
+                        status.kind_id.as_str(),
+                        STATUS_POISON
+                            | STATUS_BLINDNESS
+                            | STATUS_CONFUSION
+                            | STATUS_BLEEDING
+                            | STATUS_STUN
+                    )
+                });
+                let statuses_removed = before - self.player.statuses.len();
+                let riding_actor_id = self.riding_actor_id.clone();
+                let mount_healed = riding_actor_id
+                    .as_deref()
+                    .and_then(|mount_id| {
+                        let index = self
+                            .entities
+                            .iter()
+                            .position(|actor| actor.id == mount_id)?;
+                        let definition = self.content.actor(&self.entities[index].kind_id)?;
+                        let maximum = self
+                            .actor_derived_stats(&self.entities[index], definition, false)
+                            .max_hp
+                            .value;
+                        let before = self.entities[index].hp;
+                        self.entities[index].hp = before.saturating_add(500).min(maximum);
+                        Some(self.entities[index].hp.saturating_sub(before))
+                    })
+                    .unwrap_or(0);
+                FacilityServiceOutcome::Healed {
+                    facility_id: facility_id.to_owned(),
+                    healed,
+                    mount_healed,
+                    statuses_removed,
+                    cost,
+                    gold_balance: self.gold - cost,
+                }
+            }
+            FacilityServiceKindDto::RestoreVitality => {
+                let attributes_restored = self.restore_all_player_attributes();
+                let mut restoration_events = Vec::new();
+                let vitality_restored =
+                    self.restore_player_experience_and_life_force(1_000, &mut restoration_events);
+                if !attributes_restored && !vitality_restored {
+                    return Err("nothing-to-restore");
+                }
+                events.extend(restoration_events);
+                FacilityServiceOutcome::VitalityRestored {
+                    facility_id: facility_id.to_owned(),
+                    cost,
+                    gold_balance: self.gold - cost,
+                }
+            }
+            FacilityServiceKindDto::CureMutation => {
+                let mut mutation_events = Vec::new();
+                let mutation_id = self
+                    .cure_random_mutation(false, &mut mutation_events)
+                    .ok_or("no-curable-mutation")?;
+                events.extend(mutation_events);
+                FacilityServiceOutcome::MutationCured {
+                    facility_id: facility_id.to_owned(),
+                    mutation_id,
+                    cost,
+                    gold_balance: self.gold - cost,
+                }
+            }
+            FacilityServiceKindDto::EnchantWeapon
+            | FacilityServiceKindDto::EnchantArmor
+            | FacilityServiceKindDto::EnchantAmmunition
+            | FacilityServiceKindDto::EnchantBow => {
+                let item_id = item_id.expect("enchantment target was validated");
+                let request = match service {
+                    FacilityServiceKindDto::EnchantWeapon
+                    | FacilityServiceKindDto::EnchantAmmunition
+                    | FacilityServiceKindDto::EnchantBow => ItemEnchantmentRequest::new(1, 1, 0),
+                    FacilityServiceKindDto::EnchantArmor => ItemEnchantmentRequest::new(0, 0, 1),
+                    _ => unreachable!(),
+                };
+                let enchanted = self.enchant_item_instance(item_id, request);
+                if enchanted.to_hit.successes == 0
+                    && enchanted.to_damage.successes == 0
+                    && enchanted.to_armor.successes == 0
+                {
+                    return Err("enchantment-failed");
+                }
+                let component = |outcome: super::inventory::ItemEnchantmentComponentOutcome| {
+                    ItemEnchantmentComponentResolutionDto {
+                        attempts: outcome.attempts,
+                        successes: outcome.successes,
+                        before: outcome.before,
+                        after: outcome.after,
+                    }
+                };
+                FacilityServiceOutcome::ItemEnchanted {
+                    facility_id: facility_id.to_owned(),
+                    cost,
+                    gold_balance: self.gold - cost,
+                    resolution: ItemEnchantmentResolutionDto {
+                        item_id: enchanted.item_id,
+                        item_kind_id: enchanted.item_kind_id,
+                        to_hit: component(enchanted.to_hit),
+                        to_damage: component(enchanted.to_damage),
+                        to_armor: component(enchanted.to_armor),
+                    },
+                }
+            }
+            FacilityServiceKindDto::AssessArmor => {
+                let armor_class = self.player_derived_stats().armor_class.value.max(0);
+                let protection_percent =
+                    100_i32.saturating_sub(apply_melee_armor_reduction(100, armor_class));
+                FacilityServiceOutcome::ArmorAssessed {
+                    facility_id: facility_id.to_owned(),
+                    armor_class,
+                    protection_percent,
+                    cost,
+                    gold_balance: self.gold - cost,
+                }
+            }
+            FacilityServiceKindDto::Recall => {
+                if self.recall_use_plan() != Some(RecallUseAction::Start) {
+                    return Err("recall-unavailable");
+                }
+                let destination = self.start_recall(1);
+                FacilityServiceOutcome::RecallStarted {
+                    facility_id: facility_id.to_owned(),
+                    dungeon_id: destination.dungeon_id,
+                    floor_id: destination.floor_id,
+                    cost,
+                    gold_balance: self.gold - cost,
+                }
+            }
+        };
+        self.gold -= cost;
+        Ok(outcome)
     }
 
     pub(super) fn rename_at_facility(

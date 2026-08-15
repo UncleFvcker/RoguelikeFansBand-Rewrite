@@ -632,16 +632,33 @@ pub struct TaskDefinition {
     pub name_key: String,
     pub description_key: String,
     #[serde(default)]
+    pub completed_description_key: Option<String>,
+    #[serde(default)]
+    pub failed_description_key: Option<String>,
+    #[serde(default)]
     pub source_facility_id: Option<String>,
     #[serde(default)]
     pub prerequisite_task_id: Option<String>,
+    #[serde(default)]
+    pub unlock_when_prerequisite_failed: bool,
+    #[serde(default)]
+    pub substitution: Option<TaskSubstitutionDefinition>,
     pub location: TaskLocationDefinition,
     pub objectives: Vec<TaskObjectiveDefinition>,
     #[serde(default)]
     pub target_placements: Vec<TaskTargetPlacementDefinition>,
     #[serde(default)]
     pub completion_exit_terrain_id: Option<String>,
-    pub reward: TaskRewardDefinition,
+    #[serde(default)]
+    pub reward: Option<TaskRewardDefinition>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TaskSubstitutionDefinition {
+    pub group_id: String,
+    pub alternate_task_id: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

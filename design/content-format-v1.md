@@ -722,3 +722,39 @@ content hash 为 `e0e6820f83989f8790a455d6af5656ec833341e03ef84b2005652c898c47e5
 `melee-adjacent` 步骤，供“大屠杀”复用普通近战 resolver。新增正式内容 ID 仅为无双追踪者
 和奇妙狂乱的两对 ability/program；content hash 为
 `b27d385635fe09ef107ca2dd4e7fe6475d58e7e3320893e899246920779f5cb2`。
+
+包 1.368.0 / P104 为 `TownFacilityDefinition` 增加可选的研究费用、全部鉴定费用与城镇纵览
+消息键，并增加只承载明确设施服务的 `service` 类别。Anambar 新增图书馆与蘑菇店；图书馆费用
+及“托妮卡”、蘑菇店“马丁”等中文名均锁定 RFB `master`，蘑菇库存复用 Outpost 已支持的五种
+物品。content hash 为 `990e57bb72cc98469da7a3a6950ac15db9ae051d7e396fd3f85f7a9628fada2a`。
+
+包 1.369.0 / P105 为 `TownFacilityDefinition` 增加职业、种族、领域的 Owner/Member 列表，
+以及封闭的类型化 `serviceActions`。Anambar 新增武器大师、战士公会、玛门神庙、弓箭手公会和
+王牌之塔；五名业主、九项服务、原版价格和会员关系均由 RFB `master:t_ana.txt` 锁定。零价武器、
+护甲和弓强化采用原版最低价格 1500，Owner 为 750；弹药按堆叠数量采用声明的 44/22 单价。
+content hash 为 `6a383c424681994144ba97a0c46710dc58f031b1dfb74b916a8a0335ef43040d`。
+
+包 1.370.0 / P106 为 `TownFacilityDefinition` 增加可选 `bountyOffice`，其中按原版领奖顺序声明
+20 项独特怪奖励。Outpost 的“赏金事务所/驯兽师阿拉克”和 Anambar 的“警察局/瓦茨”均由
+RFB `master` 锁定，共用今日通缉、独特怪遗骸交付和动态悬赏任务运行时。尚未导入的 Speed、
+Resistance、Restore Mana、Genocide、Life、Augmentation 与 Artifact Creation 奖品按相邻强度
+复用现有药水/卷轴；动态悬赏原版的 Good/Great 随机装备也按任务深度映射到这组现有奖励梯度。
+原版“特殊目标（土奇诺子）”以及 Anambar 的普通请求任务仍明确留待各自系统。
+content hash 为 `ed96b99abe3ac0f6ced3799ee9b0571f93bee47f332cd8bfba33a7fd440b25c2`。
+
+包 1.371.0 / P107 第一步把 `legacy-wilderness-selection.json` 升至 schema 8，锁定
+`t_ana.txt`、`q_info.txt`、镇长/警察两条任务链和十个任务源文件。`TaskDefinition` 增加
+可选 `substitution { groupId, alternateTaskId }`、`unlockWhenPrerequisiteFailed`、完成/失败
+描述键，并允许省略 `reward`；无奖励的设施任务成功后直接完成。相同 `groupId` 的替代对由
+初始世界种子作相关选择，选择结果复用既有 `taskStates` 持久化，未选任务不投影也不能接受。
+镇长办公室及警察局任务列表要与后续固定任务层一起注册，避免设施引用尚不存在的任务定义；
+本步不放宽 Quest Giver 的完整性验证。content hash 为
+`2db6bde42d321d93d161c60fecfce045b9e84d944177f6837c8850bd9616b5b5`。
+
+包 1.372.0 / P107 第二步导入固定任务奖励“冰霜球魔杖”“神圣吊坠”“混乱之光法杖”
+“破坏法杖”和既有“完全恢复蘑菇”，并导入水晶城堡 40–60 层、虚灵龙/钻石巨龙守卫及
+钻石刃奖励。冰霜球复用范围伤害执行器，混乱之光按原版依次施加减速、震慑、混乱、恐惧和
+冻结，破坏法杖复用破坏卷轴程序；钻石刃的 `vorpal` 标记接入普通近战既有斩切连击规则。
+透明玻璃门沿用门的开关协议，玻璃地面可进入房间特征表；ARENA、CURTAIN、GLASS_ROOM
+继续按代表层约定落地。content hash 为
+`35e1a2512a527abc3f3fa5bff02381e68eed50cc60eca821059d6c4de3078374`。

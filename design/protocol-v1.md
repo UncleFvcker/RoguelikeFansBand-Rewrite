@@ -803,3 +803,11 @@ Schema 保持 v104，save header/payload schema 保持 v2。
 武器性质与具体诅咒效果，装备被动增加 Evil/Living ESP。随机物化结果必须原样保存，读档不得重掷，
 因此 save header/payload schema 升至 v3；它与 v105 的状态覆盖共同形成 State Hash Schema v106。
 二进制容器格式仍为 v1，不为旧开发存档提供兼容路径。
+
+协议 1.227 整合 P104–P106 的城镇设施与悬赏协议增量：增加
+`ResearchItemAtFacility`、`IdentifyAllAtFacility`、`UseFacilityService` 和
+`UseBountyOffice` 命令，并由 `TaskServiceDto`、`BountyOfficeDto` 投影 Anambar 与 Outpost
+的研究、鉴定、身份化服务、装备强化、召回及悬赏状态。`BountyStateSaveDto` 保存已领取的
+独特怪奖励、今日目标与动态地牢任务；它与协议 1.226 的随机 ego 实例状态共同进入
+State Hash Schema v107。由于并行分支各自占用了 save schema v3，合并后的 header/payload
+schema 升至 v4，二进制容器格式仍为 v1，不为旧开发存档提供兼容路径。

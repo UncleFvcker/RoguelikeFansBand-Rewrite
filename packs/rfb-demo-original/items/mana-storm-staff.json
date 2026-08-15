@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.mana-storm-staff",
+  "nameKey": "item-demo-mana-storm-staff-name",
+  "appearanceNameKey": "item-demo-unfamiliar-staff-name",
+  "descriptionKey": "item-demo-mana-storm-staff-description",
+  "glyph": "_",
+  "generationLevel": 85,
+  "weightTenthsPound": 50,
+  "maxStack": 1,
+  "baseValue": 17820,
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "deviceGeneration": {
+    "recovery": { "intervalTicks": 10, "energyPerMille": 10 },
+    "activations": [
+      {
+        "id": "demo.device-activation.mana-storm",
+        "nameKey": "device-activation-demo-mana-storm-name",
+        "weight": 1,
+        "minDepth": 1,
+        "maxDepth": 100,
+        "deviceCheckDifficulty": 85,
+        "charges": { "minimum": 5, "maximum": 5, "cost": 1 },
+        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
+        "effectProgramId": "demo.effect.mana-storm"
+      }
+    ]
+  },
+  "mogaminatorRare": true,
+  "tags": ["device", "dungeon-reward", "rfb", "staff"]
+}

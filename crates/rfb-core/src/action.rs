@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use rfb_protocol::{
-    AttributeKindDto, AutoGetModeDto, Direction, GameCommand, LocaleDto, SummonCommandModeDto,
-    TargetSelection,
+    AttributeKindDto, AutoGetModeDto, BountyOfficeActionDto, Direction, FacilityServiceKindDto,
+    GameCommand, LocaleDto, SummonCommandModeDto, TargetSelection,
 };
 
 use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
@@ -122,6 +122,23 @@ pub(crate) enum GameAction {
         facility_id: String,
         item_id: String,
     },
+    ResearchItemAtFacility {
+        facility_id: String,
+        item_id: String,
+    },
+    IdentifyAllAtFacility {
+        facility_id: String,
+    },
+    UseFacilityService {
+        facility_id: String,
+        service: FacilityServiceKindDto,
+        item_id: Option<String>,
+    },
+    UseBountyOffice {
+        facility_id: String,
+        action: BountyOfficeActionDto,
+        item_id: Option<String>,
+    },
     RenameAtFacility {
         facility_id: String,
         name: String,
@@ -217,6 +234,10 @@ impl GameAction {
             | Self::Retire
             | Self::SellToShop { .. }
             | Self::IdentifyAtFacility { .. }
+            | Self::ResearchItemAtFacility { .. }
+            | Self::IdentifyAllAtFacility { .. }
+            | Self::UseFacilityService { .. }
+            | Self::UseBountyOffice { .. }
             | Self::RenameAtFacility { .. }
             | Self::StayAtInn { .. }
             | Self::TravelFromInn { .. }
@@ -374,6 +395,34 @@ impl From<GameCommand> for GameAction {
                 item_id,
             } => Self::IdentifyAtFacility {
                 facility_id,
+                item_id,
+            },
+            GameCommand::ResearchItemAtFacility {
+                facility_id,
+                item_id,
+            } => Self::ResearchItemAtFacility {
+                facility_id,
+                item_id,
+            },
+            GameCommand::IdentifyAllAtFacility { facility_id } => {
+                Self::IdentifyAllAtFacility { facility_id }
+            }
+            GameCommand::UseFacilityService {
+                facility_id,
+                service,
+                item_id,
+            } => Self::UseFacilityService {
+                facility_id,
+                service,
+                item_id,
+            },
+            GameCommand::UseBountyOffice {
+                facility_id,
+                action,
+                item_id,
+            } => Self::UseBountyOffice {
+                facility_id,
+                action,
                 item_id,
             },
             GameCommand::RenameAtFacility { facility_id, name } => {

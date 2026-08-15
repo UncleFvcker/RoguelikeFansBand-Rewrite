@@ -26,7 +26,7 @@ use rfb_protocol::{
     TerrainInteractionKindDto, VisibilityState, WildernessLocationDto, WildernessLocationKindDto,
 };
 
-use super::tasks::projected_task_state;
+use super::tasks::{projected_task_state, task_description_key};
 use super::{
     AbilityProgress, Game, LightSource, TERRAIN_INTERACTION_DIRECTIONS, ability_detect_subject_dto,
     ability_target_spec_dto, actor_melee_routine_dto, combine_percentages, derived_speed,
@@ -1516,7 +1516,7 @@ impl Game {
                     task_id: task_id.clone(),
                     floor_id: floor.id.clone(),
                     name_key: task.name_key.clone(),
-                    description_key: Some(task.description_key.clone()),
+                    description_key: Some(task_description_key(task, &state).to_owned()),
                     source_facility_id: task.source_facility_id.clone(),
                     status: state.status,
                     current: state.current,
@@ -1540,7 +1540,12 @@ impl Game {
         town.facility_ids
             .iter()
             .filter_map(|facility_id| self.content.town_facility(facility_id))
-            .filter(|facility| facility.category == TownFacilityCategory::QuestGiver)
+            .filter(|facility| {
+                matches!(
+                    facility.category,
+                    TownFacilityCategory::QuestGiver | TownFacilityCategory::Service
+                )
+            })
             .map(|facility| {
                 let entrance_position = self
                     .town_local_to_active_position(
@@ -1562,7 +1567,9 @@ impl Game {
                                 task_id: task.id.clone(),
                                 floor_id: floor.id.clone(),
                                 name_key: task.name_key.clone(),
-                                description_key: Some(task.description_key.clone()),
+                                description_key: Some(
+                                    task_description_key(task, &state).to_owned(),
+                                ),
                                 source_facility_id: task.source_facility_id.clone(),
                                 status: state.status,
                                 current: state.current,
@@ -1589,7 +1596,15 @@ impl Game {
                     entrance_terrain_id: facility.entrance_terrain_id.clone(),
                     player_at_entrance,
                     identify_item_cost: facility.identify_item_cost,
+                    research_item_cost: facility.research_item_cost,
+                    identify_all_items_cost: facility.identify_all_items_cost,
+                    overview_message_key: facility.overview_message_key.clone(),
                     legal_name_change_cost: facility.legal_name_change_cost,
+                    membership: self.town_facility_membership(facility),
+                    service_actions: self.town_facility_service_dtos(facility),
+                    bounty_office: player_at_entrance
+                        .then(|| self.bounty_office_dto(facility))
+                        .flatten(),
                     tasks,
                 }
             })

@@ -6,7 +6,15 @@
   "descriptionKey": "town-demo-anambar-description",
   "floorId": "demo.floor.anambar",
   "facilityIds": [
-    "demo.town-facility.anambar-home"
+    "demo.town-facility.anambar-archer-guild",
+    "demo.town-facility.anambar-home",
+    "demo.town-facility.anambar-library",
+    "demo.town-facility.anambar-mammon-temple",
+    "demo.town-facility.anambar-mayor-office",
+    "demo.town-facility.anambar-police-station",
+    "demo.town-facility.anambar-trump-tower",
+    "demo.town-facility.anambar-warrior-guild",
+    "demo.town-facility.anambar-weapon-master"
   ],
   "shopIds": [
     "demo.shop.anambar-alchemist",
@@ -16,6 +24,7 @@
     "demo.shop.anambar-general-store",
     "demo.shop.anambar-inn",
     "demo.shop.anambar-magic-shop",
+    "demo.shop.anambar-shroomery",
     "demo.shop.anambar-temple",
     "demo.shop.anambar-weaponsmith"
   ]

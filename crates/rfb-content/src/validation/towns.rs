@@ -12,6 +12,7 @@ use super::shared::{
 pub(super) struct TownValidationRefs<'a> {
     pub(super) items: &'a [ItemDefinition],
     pub(super) races: &'a [RaceDefinition],
+    pub(super) classes: &'a [ClassDefinition],
 }
 
 pub(super) struct TownValidationOutputs {
@@ -68,10 +69,96 @@ pub(super) fn validate_towns_and_shops(
         if let Some(owner_name_key) = &facility.owner_name_key {
             validate_message_key(owner_name_key)?;
         }
+        if let Some(overview_message_key) = &facility.overview_message_key {
+            validate_message_key(overview_message_key)?;
+        }
+        facility.owner_class_ids.sort();
+        facility.member_class_ids.sort();
+        facility.owner_race_ids.sort();
+        facility.member_race_ids.sort();
+        facility.owner_realm_ids.sort();
+        facility.member_realm_ids.sort();
+        facility.service_actions.sort_by_key(|service| service.kind);
+        let duplicate_membership = [
+            &facility.owner_class_ids,
+            &facility.member_class_ids,
+            &facility.owner_race_ids,
+            &facility.member_race_ids,
+            &facility.owner_realm_ids,
+            &facility.member_realm_ids,
+        ]
+        .into_iter()
+        .any(|ids| ids.windows(2).any(|pair| pair[0] == pair[1]));
         let unique_task_ids = facility.task_ids.iter().collect::<BTreeSet<_>>();
-        let invalid_service_cost =
-            facility.identify_item_cost == Some(0) || facility.legal_name_change_cost == Some(0);
+        let unique_services = facility
+            .service_actions
+            .iter()
+            .map(|service| service.kind)
+            .collect::<BTreeSet<_>>();
+        let valid_memberships = facility
+            .owner_class_ids
+            .iter()
+            .chain(&facility.member_class_ids)
+            .all(|class_id| refs.classes.iter().any(|class| class.id == *class_id))
+            && facility
+                .owner_race_ids
+                .iter()
+                .chain(&facility.member_race_ids)
+                .all(|race_id| refs.races.iter().any(|race| race.id == *race_id))
+            && facility
+                .owner_realm_ids
+                .iter()
+                .chain(&facility.member_realm_ids)
+                .all(|realm_id| {
+                    !realm_id.is_empty()
+                        && realm_id.len() <= 64
+                        && realm_id.bytes().all(|byte| {
+                            byte.is_ascii_lowercase()
+                                || byte.is_ascii_digit()
+                                || matches!(byte, b'-' | b'_')
+                        })
+                });
+        let overlapping_memberships = facility
+            .owner_class_ids
+            .iter()
+            .any(|id| facility.member_class_ids.contains(id))
+            || facility
+                .owner_race_ids
+                .iter()
+                .any(|id| facility.member_race_ids.contains(id))
+            || facility
+                .owner_realm_ids
+                .iter()
+                .any(|id| facility.member_realm_ids.contains(id));
+        let has_membership = !facility.owner_class_ids.is_empty()
+            || !facility.member_class_ids.is_empty()
+            || !facility.owner_race_ids.is_empty()
+            || !facility.member_race_ids.is_empty()
+            || !facility.owner_realm_ids.is_empty()
+            || !facility.member_realm_ids.is_empty();
+        let invalid_service_cost = facility.identify_item_cost == Some(0)
+            || facility.research_item_cost == Some(0)
+            || facility.identify_all_items_cost == Some(0)
+            || facility.legal_name_change_cost == Some(0)
+            || facility.service_actions.iter().any(|service| {
+                service.owner_cost > 999_999_999 || service.other_cost > 999_999_999
+            });
+        let valid_bounty_office = facility.bounty_office.as_ref().is_none_or(|bounty| {
+            bounty.wanted_reward_item_kind_ids.len() == 20
+                && bounty.wanted_reward_item_kind_ids.iter().all(|item_id| {
+                    validate_definition_id(item_id, "item").is_ok()
+                        && refs.items.iter().any(|item| item.id == *item_id)
+                })
+        });
+        let has_service = facility.identify_item_cost.is_some()
+            || facility.research_item_cost.is_some()
+            || facility.identify_all_items_cost.is_some()
+            || facility.overview_message_key.is_some()
+            || facility.legal_name_change_cost.is_some()
+            || !facility.service_actions.is_empty()
+            || facility.bounty_office.is_some();
         let empty_task_service_has_shop = !facility.task_ids.is_empty()
+            || facility.bounty_office.is_some()
             || shops.iter().any(|shop| {
                 shop.town_id == facility.town_id
                     && shop.entrance_position == facility.entrance_position
@@ -82,12 +169,31 @@ pub(super) fn validate_towns_and_shops(
                 || facility.owner_name_key.is_some()
                 || !facility.task_ids.is_empty()
                 || facility.identify_item_cost.is_some()
-                || facility.legal_name_change_cost.is_some()))
+                || facility.research_item_cost.is_some()
+                || facility.identify_all_items_cost.is_some()
+                || facility.overview_message_key.is_some()
+                || facility.legal_name_change_cost.is_some()
+                || has_membership
+                || !facility.service_actions.is_empty()
+                || facility.bounty_office.is_some()))
             || (facility.category == TownFacilityCategory::QuestGiver
                 && (facility.storage_id.is_some()
                     || facility.owner_name_key.is_none()
-                    || !empty_task_service_has_shop))
+                    || !empty_task_service_has_shop
+                    || has_membership
+                    || !facility.service_actions.is_empty()))
+            || (facility.category == TownFacilityCategory::Service
+                && (facility.storage_id.is_some()
+                    || facility.owner_name_key.is_none()
+                    || !facility.task_ids.is_empty()
+                    || facility.bounty_office.is_some()
+                    || !has_service))
             || invalid_service_cost
+            || !valid_bounty_office
+            || !valid_memberships
+            || duplicate_membership
+            || overlapping_memberships
+            || unique_services.len() != facility.service_actions.len()
             || unique_task_ids.len() != facility.task_ids.len()
             || facility
                 .task_ids

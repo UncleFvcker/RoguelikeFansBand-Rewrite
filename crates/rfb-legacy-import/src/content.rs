@@ -394,6 +394,8 @@ struct DemoWildernessSelection {
     towns: Vec<DemoWildernessLocationSelection>,
     dungeons: Vec<DemoWildernessLocationSelection>,
     town_plans: Vec<DemoWildernessTownPlan>,
+    bounty_offices: Vec<DemoBountyOfficePlan>,
+    anambar_task_plan: DemoTaskImportPlan,
     dungeon_plans: Vec<DemoWildernessDungeonPlan>,
 }
 
@@ -421,7 +423,79 @@ struct DemoWildernessTownPlan {
     position: DemoWildernessPosition,
     source_file: String,
     standard_facilities: Vec<DemoTownFacilityPlan>,
-    inn: DemoTownInnPlan,
+    inn: DemoTownBuildingPlan,
+    library: DemoTownBuildingPlan,
+    weapon_master: DemoTownBuildingPlan,
+    warrior_guild: DemoTownBuildingPlan,
+    mammon_temple: DemoTownBuildingPlan,
+    archer_guild: DemoTownBuildingPlan,
+    trump_tower: DemoTownBuildingPlan,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoBountyOfficePlan {
+    town_id: String,
+    source_file: String,
+    building: DemoTownBuildingPlan,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTaskImportPlan {
+    town_id: String,
+    town_source_file: String,
+    quest_info_source_file: String,
+    facilities: Vec<DemoTaskFacilityPlan>,
+    tasks: Vec<DemoTaskPlan>,
+    substitutions: Vec<DemoTaskSubstitutionPlan>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTaskFacilityPlan {
+    facility_id: String,
+    building_index: u16,
+    name: String,
+    owner_name: String,
+    owner_race: String,
+    entrance_position: DemoWildernessPosition,
+    request_action_index: u16,
+    logical_source_task_indexes: Vec<u32>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTaskPlan {
+    source_index: u32,
+    source_name: String,
+    level: u16,
+    source_file: String,
+    task_id: String,
+    facility_id: String,
+    prerequisite_source_index: Option<u32>,
+    #[serde(default)]
+    unlock_when_prerequisite_failed: bool,
+    #[serde(default)]
+    reward_required: bool,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTaskSubstitutionPlan {
+    group_id: String,
+    primary_source_index: u32,
+    alternate_source_index: u32,
+    random_modulus: u32,
+    alternate_minimum: u32,
+}
+
+#[derive(Debug, Default)]
+struct LegacyQuestRecord {
+    name: String,
+    level: u16,
+    source_file: String,
+    flags: BTreeSet<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -433,18 +507,29 @@ struct DemoTownFacilityPlan {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct DemoTownInnPlan {
+struct DemoTownBuildingPlan {
     building_index: u16,
     name: String,
     owner_name: String,
     owner_race: String,
-    access: String,
-    services: Vec<DemoTownInnServicePlan>,
+    #[serde(default)]
+    access: Option<String>,
+    #[serde(default)]
+    memberships: Vec<DemoTownBuildingMembershipPlan>,
+    services: Vec<DemoTownBuildingServicePlan>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-struct DemoTownInnServicePlan {
+struct DemoTownBuildingMembershipPlan {
+    source_tag: char,
+    identity: String,
+    role: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+struct DemoTownBuildingServicePlan {
     action_index: u16,
     name: String,
     minimum_cost: u32,
@@ -13990,6 +14075,292 @@ fn dungeon_final_object(record: &LegacyDungeonRecord) -> Option<DemoDungeonObjec
     })
 }
 
+fn parse_quest_records(text: &str) -> Result<BTreeMap<u32, LegacyQuestRecord>, LegacyImportError> {
+    let mut records = BTreeMap::new();
+    let mut current = None;
+    for line in text.lines().map(str::trim) {
+        if let Some(rest) = line.strip_prefix("N:") {
+            let mut fields = rest.splitn(3, ':');
+            let source_index = fields
+                .next()
+                .and_then(|value| value.parse::<u32>().ok())
+                .ok_or_else(|| invalid_wilderness_selection("invalid q_info quest index"))?;
+            let level = fields
+                .next()
+                .and_then(|value| value.parse::<u16>().ok())
+                .ok_or_else(|| invalid_wilderness_selection("invalid q_info quest level"))?;
+            let name = fields
+                .next()
+                .ok_or_else(|| invalid_wilderness_selection("missing q_info quest name"))?;
+            if records
+                .insert(
+                    source_index,
+                    LegacyQuestRecord {
+                        name: name.to_owned(),
+                        level,
+                        ..LegacyQuestRecord::default()
+                    },
+                )
+                .is_some()
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "duplicate q_info quest {source_index}"
+                )));
+            }
+            current = Some(source_index);
+        } else if let Some(rest) = line.strip_prefix("T:") {
+            let Some(record) = current.and_then(|index| records.get_mut(&index)) else {
+                return Err(invalid_wilderness_selection(
+                    "q_info task flags precede their quest record",
+                ));
+            };
+            record.flags.extend(
+                rest.split('|')
+                    .map(str::trim)
+                    .filter(|flag| !flag.is_empty())
+                    .map(str::to_owned),
+            );
+        } else if let Some(source_file) = line.strip_prefix("F:") {
+            let Some(record) = current.and_then(|index| records.get_mut(&index)) else {
+                return Err(invalid_wilderness_selection(
+                    "q_info task source precedes its quest record",
+                ));
+            };
+            record.source_file = source_file.to_owned();
+        }
+    }
+    Ok(records)
+}
+
+fn validate_demo_task_plan(
+    source: &Path,
+    source_commit: &str,
+    selection: &DemoWildernessSelection,
+) -> Result<(), LegacyImportError> {
+    let plan = &selection.anambar_task_plan;
+    if !selection.towns.iter().any(|town| town.id == plan.town_id)
+        || plan.facilities.len() != 2
+        || plan.tasks.len() != 10
+        || plan.substitutions.len() != 2
+    {
+        return Err(invalid_wilderness_selection(
+            "Anambar task plan must retain two facilities, ten source tasks, and two substitutions",
+        ));
+    }
+    let town_source = read_legacy_object_at(source, source_commit, &plan.town_source_file)?;
+    let quest_info = read_legacy_object_at(source, source_commit, &plan.quest_info_source_file)?;
+    let quest_records = parse_quest_records(&quest_info)?;
+
+    let mut facility_ids = BTreeSet::new();
+    let mut building_indexes = BTreeSet::new();
+    let mut entrance_positions = BTreeSet::new();
+    let mut logical_source_indexes = BTreeSet::new();
+    for facility in &plan.facilities {
+        if !facility_ids.insert(facility.facility_id.as_str())
+            || !building_indexes.insert(facility.building_index)
+            || !entrance_positions
+                .insert((facility.entrance_position.x, facility.entrance_position.y))
+            || !facility
+                .logical_source_task_indexes
+                .iter()
+                .all(|index| logical_source_indexes.insert(*index))
+        {
+            return Err(invalid_wilderness_selection(
+                "Anambar task facility plan contains duplicates",
+            ));
+        }
+        let identity = format!(
+            "B:{}:N:{}:{}:{}",
+            facility.building_index, facility.name, facility.owner_name, facility.owner_race
+        );
+        let request_action = format!(
+            "B:{}:A:{}:请求任务:0:0:q:6:0",
+            facility.building_index, facility.request_action_index
+        );
+        if !town_source.lines().any(|line| line.trim() == identity)
+            || !town_source
+                .lines()
+                .any(|line| line.trim() == request_action)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Anambar task facility {} drifted",
+                facility.facility_id
+            )));
+        }
+    }
+    if logical_source_indexes.len() != 8 {
+        return Err(invalid_wilderness_selection(
+            "Anambar task facilities must expose eight logical tasks",
+        ));
+    }
+
+    let mut source_indexes = BTreeSet::new();
+    let mut task_ids = BTreeSet::new();
+    let mut source_files = BTreeSet::new();
+    for task in &plan.tasks {
+        let Some(record) = quest_records.get(&task.source_index) else {
+            return Err(invalid_wilderness_selection(format!(
+                "Anambar task {} is absent from q_info",
+                task.source_index
+            )));
+        };
+        let expected_source_file = format!("lib/edit/{}", record.source_file);
+        if !source_indexes.insert(task.source_index)
+            || !task_ids.insert(task.task_id.as_str())
+            || !source_files.insert(task.source_file.as_str())
+            || !facility_ids.contains(task.facility_id.as_str())
+            || record.name != task.source_name
+            || record.level != task.level
+            || expected_source_file != task.source_file
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Anambar task {} identity or source drifted",
+                task.source_index
+            )));
+        }
+        read_legacy_object_at(source, source_commit, &task.source_file)?;
+        if let Some(prerequisite) = task.prerequisite_source_index {
+            if prerequisite == task.source_index
+                || !plan.tasks.iter().any(|candidate| {
+                    candidate.source_index == prerequisite
+                        && candidate.facility_id == task.facility_id
+                })
+                || !task.unlock_when_prerequisite_failed
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "Anambar task {} prerequisite drifted",
+                    task.source_index
+                )));
+            }
+        } else if task.unlock_when_prerequisite_failed {
+            return Err(invalid_wilderness_selection(format!(
+                "Anambar root task {} cannot unlock after failure",
+                task.source_index
+            )));
+        }
+    }
+    if plan
+        .tasks
+        .iter()
+        .filter(|task| !task.reward_required)
+        .map(|task| task.source_index)
+        .collect::<Vec<_>>()
+        != [74]
+    {
+        return Err(invalid_wilderness_selection(
+            "Anambar Cop Quest must remain the sole rewardless task",
+        ));
+    }
+
+    let alternate_indexes = plan
+        .substitutions
+        .iter()
+        .map(|substitution| substitution.alternate_source_index)
+        .collect::<BTreeSet<_>>();
+    for facility in &plan.facilities {
+        for source_index in &facility.logical_source_task_indexes {
+            let task = plan
+                .tasks
+                .iter()
+                .find(|task| task.source_index == *source_index)
+                .ok_or_else(|| {
+                    invalid_wilderness_selection(format!(
+                        "Anambar facility {} references unknown task {source_index}",
+                        facility.facility_id
+                    ))
+                })?;
+            if task.facility_id != facility.facility_id || alternate_indexes.contains(source_index)
+            {
+                return Err(invalid_wilderness_selection(format!(
+                    "Anambar facility {} task list drifted",
+                    facility.facility_id
+                )));
+            }
+            if let Some(prerequisite) = task.prerequisite_source_index {
+                let prerequisite_line = format!("$QUEST{prerequisite}");
+                let advances_after_finish = town_source
+                    .lines()
+                    .any(|line| line.contains(&prerequisite_line) && line.contains("Finished"));
+                let advances_after_failure = town_source
+                    .lines()
+                    .any(|line| line.contains(&prerequisite_line) && line.contains("FailedDone"));
+                let target = format!("BUILDING_{}({source_index})", facility.building_index);
+                if !advances_after_finish
+                    || !advances_after_failure
+                    || !town_source.contains(&target)
+                {
+                    return Err(invalid_wilderness_selection(format!(
+                        "Anambar task chain {} -> {source_index} drifted",
+                        prerequisite
+                    )));
+                }
+            }
+        }
+    }
+
+    let mut primary_indexes = BTreeSet::new();
+    let mut substitution_alternates = BTreeSet::new();
+    let mut group_decisions = BTreeMap::new();
+    for substitution in &plan.substitutions {
+        let Some(primary) = plan
+            .tasks
+            .iter()
+            .find(|task| task.source_index == substitution.primary_source_index)
+        else {
+            return Err(invalid_wilderness_selection(
+                "Anambar task substitution primary is absent",
+            ));
+        };
+        let alternate = plan
+            .tasks
+            .iter()
+            .find(|task| task.source_index == substitution.alternate_source_index);
+        let source_record = quest_records
+            .get(&substitution.primary_source_index)
+            .expect("planned primary task record should remain available");
+        let substitute_flag = format!("SUBSTITUTE_{}", substitution.alternate_source_index);
+        let source_text = read_legacy_object_at(source, source_commit, &primary.source_file)?;
+        let selector = format!(
+            "?:[GEQ [MOD $RANDOM0 {}] {}]",
+            substitution.random_modulus, substitution.alternate_minimum
+        );
+        let redirect = format!("K:{}", substitution.alternate_source_index);
+        if alternate.is_none_or(|alternate| alternate.facility_id != primary.facility_id)
+            || !primary_indexes.insert(substitution.primary_source_index)
+            || !substitution_alternates.insert(substitution.alternate_source_index)
+            || !source_record.flags.contains(&substitute_flag)
+            || !source_text.lines().any(|line| line.trim() == selector)
+            || !source_text.lines().any(|line| line.trim() == redirect)
+            || substitution.alternate_minimum == 0
+            || substitution.alternate_minimum >= substitution.random_modulus
+            || group_decisions
+                .insert(
+                    substitution.group_id.as_str(),
+                    (substitution.random_modulus, substitution.alternate_minimum),
+                )
+                .is_some_and(|decision| {
+                    decision != (substitution.random_modulus, substitution.alternate_minimum)
+                })
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Anambar task substitution {} drifted",
+                substitution.primary_source_index
+            )));
+        }
+    }
+    if alternate_indexes != substitution_alternates
+        || primary_indexes
+            .iter()
+            .any(|index| !logical_source_indexes.contains(index))
+    {
+        return Err(invalid_wilderness_selection(
+            "Anambar task substitution membership drifted",
+        ));
+    }
+
+    Ok(())
+}
+
 fn validate_demo_wilderness_plans(
     source: &Path,
     source_commit: &str,
@@ -14000,6 +14371,8 @@ fn validate_demo_wilderness_plans(
     let t_info = read_legacy_object_at(source, source_commit, T_INFO_SOURCE)?;
     let t_pref = read_legacy_object_at(source, source_commit, T_PREF_SOURCE)?;
     let feature_tags = town_feature_tags(&t_pref);
+
+    validate_demo_task_plan(source, source_commit, selection)?;
 
     for town in &selection.town_plans {
         if !selection
@@ -14050,22 +14423,128 @@ fn validate_demo_wilderness_plans(
             }
         }
 
-        let inn = &town.inn;
-        let inn_name = format!(
-            "B:{}:N:{}:{}:{}",
-            inn.building_index, inn.name, inn.owner_name, inn.owner_race
-        );
-        if !town_source.lines().any(|line| line.trim() == inn_name) {
+        for building in [
+            &town.inn,
+            &town.library,
+            &town.weapon_master,
+            &town.warrior_guild,
+            &town.mammon_temple,
+            &town.archer_guild,
+            &town.trump_tower,
+        ] {
+            let building_name = format!(
+                "B:{}:N:{}:{}:{}",
+                building.building_index, building.name, building.owner_name, building.owner_race
+            );
+            if !town_source.lines().any(|line| line.trim() == building_name) {
+                return Err(invalid_wilderness_selection(format!(
+                    "town plan {} building {} identity drifted",
+                    town.id, building.building_index
+                )));
+            }
+            let mut action_indexes = BTreeSet::new();
+            for service in &building.services {
+                let service_line = format!(
+                    "B:{}:A:{}:{}:{}:{}:{}:{}:{}",
+                    building.building_index,
+                    service.action_index,
+                    service.name,
+                    service.minimum_cost,
+                    service.maximum_cost,
+                    service.command,
+                    service.action_id,
+                    service.restriction
+                );
+                if !action_indexes.insert(service.action_index)
+                    || !town_source.lines().any(|line| line.trim() == service_line)
+                {
+                    return Err(invalid_wilderness_selection(format!(
+                        "town plan {} building {} service {} is absent or duplicated",
+                        town.id, building.building_index, service.action_index
+                    )));
+                }
+            }
+            if let Some(access) = &building.access {
+                let access_line = format!("B:{}:R:*:{}", building.building_index, access);
+                if !town_source.lines().any(|line| line.trim() == access_line) {
+                    return Err(invalid_wilderness_selection(format!(
+                        "town plan {} building {} access drifted",
+                        town.id, building.building_index
+                    )));
+                }
+            }
+            let mut memberships = BTreeSet::new();
+            let mut membership_lines = BTreeSet::new();
+            for membership in &building.memberships {
+                if !matches!(membership.source_tag, 'C' | 'R' | 'M')
+                    || !memberships.insert((membership.source_tag, membership.identity.as_str()))
+                {
+                    return Err(invalid_wilderness_selection(format!(
+                        "town plan {} building {} membership is invalid or duplicated",
+                        town.id, building.building_index
+                    )));
+                }
+                let membership_line = format!(
+                    "B:{}:{}:{}:{}",
+                    building.building_index,
+                    membership.source_tag,
+                    membership.identity,
+                    membership.role
+                );
+                membership_lines.insert(membership_line.clone());
+                if !town_source
+                    .lines()
+                    .any(|line| line.trim() == membership_line)
+                {
+                    return Err(invalid_wilderness_selection(format!(
+                        "town plan {} building {} membership drifted",
+                        town.id, building.building_index
+                    )));
+                }
+            }
+            let source_membership_lines = town_source
+                .lines()
+                .map(str::trim)
+                .filter(|line| {
+                    ['C', 'R', 'M'].into_iter().any(|source_tag| {
+                        line.starts_with(&format!("B:{}:{}:", building.building_index, source_tag))
+                    })
+                })
+                .map(str::to_owned)
+                .collect::<BTreeSet<_>>();
+            if !building.memberships.is_empty() && membership_lines != source_membership_lines {
+                return Err(invalid_wilderness_selection(format!(
+                    "town plan {} building {} membership set drifted",
+                    town.id, building.building_index
+                )));
+            }
+        }
+    }
+
+    for office in &selection.bounty_offices {
+        if !selection.towns.iter().any(|town| town.id == office.town_id) {
             return Err(invalid_wilderness_selection(format!(
-                "town plan {} inn identity drifted",
-                town.id
+                "bounty office {} is not in an active town",
+                office.town_id
+            )));
+        }
+        let source = read_legacy_object_at(source, source_commit, &office.source_file)?;
+        let building = &office.building;
+        let identity = format!(
+            "B:{}:N:{}:{}:{}",
+            building.building_index, building.name, building.owner_name, building.owner_race
+        );
+        if !source.lines().any(|line| line.trim() == identity) {
+            return Err(invalid_wilderness_selection(format!(
+                "bounty office {} identity drifted",
+                office.town_id
             )));
         }
         let mut action_indexes = BTreeSet::new();
-        for service in &inn.services {
-            let service_line = format!(
+        for service in &building.services {
+            let line = format!(
                 "B:{}:A:{}:{}:{}:{}:{}:{}:{}",
-                inn.building_index,
+                building.building_index,
                 service.action_index,
                 service.name,
                 service.minimum_cost,
@@ -14075,20 +14554,13 @@ fn validate_demo_wilderness_plans(
                 service.restriction
             );
             if !action_indexes.insert(service.action_index)
-                || !town_source.lines().any(|line| line.trim() == service_line)
+                || !source.lines().any(|source_line| source_line.trim() == line)
             {
                 return Err(invalid_wilderness_selection(format!(
-                    "town plan {} inn service {} is absent or duplicated",
-                    town.id, service.action_index
+                    "bounty office {} action {} drifted",
+                    office.town_id, service.action_index
                 )));
             }
-        }
-        let access_line = format!("B:{}:R:*:{}", inn.building_index, inn.access);
-        if !town_source.lines().any(|line| line.trim() == access_line) {
-            return Err(invalid_wilderness_selection(format!(
-                "town plan {} inn access drifted",
-                town.id
-            )));
         }
     }
 
@@ -14234,14 +14706,15 @@ pub fn sync_demo_wilderness(
         ));
     }
     let selection: DemoWildernessSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
-    if selection.schema_version != 4
+    if selection.schema_version != 8
         || selection.towns.is_empty()
         || selection.dungeons.is_empty()
         || selection.town_plans.is_empty()
+        || selection.bounty_offices.len() != 2
         || selection.dungeon_plans.is_empty()
     {
         return Err(LegacyImportError::InvalidDemoWildernessSelection(
-            "selection must use schemaVersion 4 and contain active towns, town plans, active dungeons, and dungeon plans"
+            "selection must use schemaVersion 8 and contain active towns, town plans, two bounty offices, the Anambar task plan, active dungeons, and dungeon plans"
                 .to_owned(),
         ));
     }
@@ -26999,6 +27472,474 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
         assert_eq!(spear["effect"]["damageType"], "psi");
         assert_eq!(spear["effect"]["damageSides"], 45);
         assert_eq!(spear["effect"]["damageBonus"], 100);
+    }
+
+    #[test]
+    fn p102a_chameleon_cave_plan_locks_ecology_layout_guardian_and_reward() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let cave = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 18)
+            .expect("Chameleon cave should have an implementation plan");
+
+        assert_eq!(cave.source_name, "Chameleon cave");
+        assert_eq!(cave.id, "demo.dungeon.chameleon-cave");
+        assert_eq!(cave.position, DemoWildernessPosition { x: 94, y: 52 });
+        assert_eq!((cave.minimum_depth, cave.maximum_depth), (30, 45));
+        assert_eq!(cave.monster_divisor, 0);
+        assert_eq!(
+            cave.generation_flags,
+            [
+                "CAVERN",
+                "WATER_RIVER",
+                "LAVA_RIVER",
+                "ARENA",
+                "DESTROY",
+                "LAKE_WATER",
+                "LAKE_LAVA",
+                "LAKE_RUBBLE",
+                "LAKE_TREE",
+                "CHAMELEON",
+            ]
+        );
+        assert_eq!(cave.monster_preferences, ["CHAMELEON"]);
+        assert_eq!(
+            cave.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 100
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 0
+                },
+            ]
+        );
+        assert_eq!(cave.tunnel_percent, Some(50));
+        assert!(cave.initial_guardian.is_none());
+        assert_eq!(cave.guardian.source_index, 1041);
+        assert_eq!(cave.guardian.source_name, "Chameleon Lord");
+        assert_eq!(cave.guardian.chinese_name, "变色龙领主");
+        assert_eq!(cave.guardian.level, 45);
+        assert_eq!(
+            cave.final_object,
+            Some(DemoDungeonObjectPlan { tval: 75, sval: 66 })
+        );
+        assert_eq!(cave.final_artifact_source_index, None);
+        assert_eq!(cave.final_ego_source_index, None);
+        assert_eq!(cave.substitute_source_index, None);
+    }
+
+    #[test]
+    fn p103a_volcano_plan_locks_ecology_layout_guardians_and_fixed_staff() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        let volcano = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 8)
+            .expect("Volcano should have an implementation plan");
+
+        assert_eq!(volcano.source_name, "Volcano");
+        assert_eq!(volcano.id, "demo.dungeon.volcano");
+        assert_eq!(volcano.position, DemoWildernessPosition { x: 13, y: 53 });
+        assert_eq!((volcano.minimum_depth, volcano.maximum_depth), (50, 60));
+        assert_eq!(volcano.monster_divisor, 0);
+        assert_eq!(
+            volcano.generation_flags,
+            ["CAVE", "CAVERN", "LAKE_LAVA", "LAVA_RIVER", "DESTROY"]
+        );
+        assert_eq!(
+            volcano.monster_preferences,
+            ["IM_FIRE", "CAN_FLY", "WILD_VOLCANO"]
+        );
+        assert_eq!(
+            volcano.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "DIRT".to_owned(),
+                    percent: 40,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "SHALLOW_LAVA".to_owned(),
+                    percent: 40,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "DEEP_LAVA".to_owned(),
+                    percent: 20,
+                },
+            ]
+        );
+        assert_eq!(volcano.tunnel_percent, Some(0));
+        let entrance = volcano
+            .initial_guardian
+            .as_ref()
+            .expect("Lesser Balrog should guard the entrance");
+        assert_eq!((entrance.source_index, entrance.level), (940, 49));
+        assert_eq!(entrance.chinese_name, "次级炎魔");
+        assert_eq!(
+            (volcano.guardian.source_index, volcano.guardian.level),
+            (972, 60)
+        );
+        assert_eq!(volcano.guardian.chinese_name, "红龙晨星");
+        assert_eq!(
+            volcano.final_object,
+            Some(DemoDungeonObjectPlan { tval: 55, sval: 0 })
+        );
+        assert_eq!(volcano.final_ego_source_index, Some(560));
+    }
+
+    #[test]
+    fn p104a_anambar_plan_locks_library_services_and_shroomery() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 8);
+        let anambar = selection
+            .town_plans
+            .iter()
+            .find(|plan| plan.id == "demo.town.anambar")
+            .expect("Anambar should have an implementation plan");
+        assert!(
+            anambar
+                .standard_facilities
+                .iter()
+                .any(|facility| { facility.symbol == '0' && facility.source_tag == "SHROOMERY" })
+        );
+        assert_eq!(anambar.library.building_index, 0);
+        assert_eq!(anambar.library.name, "图书馆");
+        assert_eq!(anambar.library.owner_name, "托妮卡");
+        assert_eq!(anambar.library.owner_race, "人类");
+        assert_eq!(anambar.library.access, None);
+        assert_eq!(anambar.library.services.len(), 4);
+        assert_eq!(
+            anambar
+                .library
+                .services
+                .iter()
+                .map(|service| (
+                    service.action_index,
+                    service.name.as_str(),
+                    service.minimum_cost,
+                    service.maximum_cost,
+                    service.command,
+                    service.action_id,
+                    service.restriction,
+                ))
+                .collect::<Vec<_>>(),
+            [
+                (0, "研究物品", 1_300, 1_300, 'a', 1, 0),
+                (1, "城镇纵览", 0, 0, 'h', 2, 0),
+                (2, "鉴定单件物品", 50, 50, 'i', 44, 0),
+                (3, "鉴定所有物品", 350, 350, 'p', 26, 0),
+            ]
+        );
+    }
+
+    #[test]
+    fn p105a_anambar_plan_locks_recovery_enchantment_and_recall_buildings() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 8);
+        let anambar = selection
+            .town_plans
+            .iter()
+            .find(|plan| plan.id == "demo.town.anambar")
+            .expect("Anambar should have an implementation plan");
+        assert_eq!(
+            [
+                &anambar.weapon_master,
+                &anambar.warrior_guild,
+                &anambar.mammon_temple,
+                &anambar.archer_guild,
+                &anambar.trump_tower,
+            ]
+            .map(|building| (
+                building.building_index,
+                building.name.as_str(),
+                building.owner_name.as_str(),
+                building.owner_race.as_str(),
+            )),
+            [
+                (6, "武器大师", "锤趾汤姆泰克", "精灵"),
+                (7, "战士公会", "扼龙者罗伯塔", "仿生人"),
+                (9, "玛门神庙", "灰衣托利亚", "仿生人"),
+                (11, "弓箭手公会", "奈尔多利恩", "高等精灵"),
+                (14, "王牌之塔", "伊万·叶克尼亚兹", "人类"),
+            ]
+        );
+        assert_eq!(
+            anambar
+                .mammon_temple
+                .services
+                .iter()
+                .map(|service| (
+                    service.name.as_str(),
+                    service.minimum_cost,
+                    service.maximum_cost,
+                    service.action_id,
+                ))
+                .collect::<Vec<_>>(),
+            [
+                ("付钱治疗", 0, 500, 28),
+                ("属性恢复", 500, 2_500, 29),
+                ("治疗突变", 10_000, 100_000, 35),
+            ]
+        );
+        assert_eq!(
+            anambar
+                .archer_guild
+                .services
+                .iter()
+                .map(|service| (
+                    service.name.as_str(),
+                    service.minimum_cost,
+                    service.maximum_cost,
+                    service.action_id,
+                ))
+                .collect::<Vec<_>>(),
+            [("强化弹药", 22, 44, 30), ("强化弓", 0, 0, 31)]
+        );
+        assert!(anambar.warrior_guild.memberships.iter().any(|membership| {
+            membership.source_tag == 'C'
+                && membership.identity == "Warrior"
+                && membership.role == "Owner"
+        }));
+        assert!(anambar.mammon_temple.memberships.iter().any(|membership| {
+            membership.source_tag == 'C'
+                && membership.identity == "Paladin"
+                && membership.role == "Member"
+        }));
+        assert!(anambar.trump_tower.memberships.iter().any(|membership| {
+            membership.source_tag == 'M'
+                && membership.identity == "Trump"
+                && membership.role == "Owner"
+        }));
+        assert_eq!(anambar.trump_tower.services[0].action_id, 33);
+    }
+
+    #[test]
+    fn p106a_bounty_office_plan_locks_both_source_buildings() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 8);
+        assert_eq!(selection.bounty_offices.len(), 2);
+        let office = |town_id: &str| {
+            selection
+                .bounty_offices
+                .iter()
+                .find(|office| office.town_id == town_id)
+                .expect("P106 town should retain a bounty office plan")
+        };
+        let outpost = office("demo.town.outpost");
+        assert_eq!(outpost.source_file, "lib/edit/t_outp.txt");
+        assert_eq!(outpost.building.building_index, 13);
+        assert_eq!(outpost.building.name, "赏金事务所");
+        assert_eq!(outpost.building.owner_name, "驯兽师阿拉克");
+        assert_eq!(outpost.building.owner_race, "矮人");
+        assert_eq!(
+            outpost
+                .building
+                .services
+                .iter()
+                .map(|service| service.action_id)
+                .collect::<Vec<_>>(),
+            [38, 39, 37, 40, 65]
+        );
+        let anambar = office("demo.town.anambar");
+        assert_eq!(anambar.source_file, "lib/edit/t_ana.txt");
+        assert_eq!(anambar.building.building_index, 13);
+        assert_eq!(anambar.building.name, "警察局");
+        assert_eq!(anambar.building.owner_name, "瓦茨");
+        assert_eq!(anambar.building.owner_race, "小魔怪");
+        assert_eq!(
+            anambar
+                .building
+                .services
+                .iter()
+                .map(|service| service.action_id)
+                .collect::<Vec<_>>(),
+            [38, 39, 37, 40, 6, 65]
+        );
+    }
+
+    #[test]
+    fn p107a_anambar_task_plan_locks_both_lines_and_correlated_substitutions() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 8);
+        let plan = &selection.anambar_task_plan;
+        assert_eq!(plan.town_id, "demo.town.anambar");
+        assert_eq!(plan.town_source_file, "lib/edit/t_ana.txt");
+        assert_eq!(plan.quest_info_source_file, "lib/edit/q_info.txt");
+        assert_eq!(plan.facilities.len(), 2);
+        assert_eq!(plan.tasks.len(), 10);
+        assert_eq!(
+            plan.tasks
+                .iter()
+                .map(|task| (task.source_index, task.source_file.as_str()))
+                .collect::<Vec<_>>(),
+            [
+                (22, "lib/edit/q_orcs.txt"),
+                (60, "lib/edit/q_orcs2.txt"),
+                (99, "lib/edit/q_scary.txt"),
+                (68, "lib/edit/q_dino.txt"),
+                (67, "lib/edit/q_crystal.txt"),
+                (75, "lib/edit/q_apina.txt"),
+                (83, "lib/edit/q_htower.txt"),
+                (74, "lib/edit/q_cq1.txt"),
+                (73, "lib/edit/q_smug.txt"),
+                (72, "lib/edit/q_cellar.txt"),
+            ]
+        );
+        let mayor = &plan.facilities[0];
+        assert_eq!(mayor.building_index, 1);
+        assert_eq!(mayor.name, "镇长办公室");
+        assert_eq!(mayor.owner_name, "锆石·吉姆");
+        assert_eq!(
+            mayor.entrance_position,
+            DemoWildernessPosition { x: 16, y: 9 }
+        );
+        assert_eq!(mayor.logical_source_task_indexes, [22, 60, 68, 67, 75]);
+        let police = &plan.facilities[1];
+        assert_eq!(police.building_index, 13);
+        assert_eq!(police.name, "警察局");
+        assert_eq!(police.owner_name, "瓦茨");
+        assert_eq!(
+            police.entrance_position,
+            DemoWildernessPosition { x: 12, y: 9 }
+        );
+        assert_eq!(police.logical_source_task_indexes, [74, 73, 72]);
+        assert!(
+            plan.tasks
+                .iter()
+                .filter(|task| task.prerequisite_source_index.is_some())
+                .all(|task| task.unlock_when_prerequisite_failed)
+        );
+        assert!(
+            !plan
+                .tasks
+                .iter()
+                .find(|task| task.source_index == 74)
+                .unwrap()
+                .reward_required
+        );
+        assert!(
+            plan.tasks
+                .iter()
+                .filter(|task| task.source_index != 74)
+                .all(|task| task.reward_required)
+        );
+        assert_eq!(
+            plan.substitutions
+                .iter()
+                .map(|substitution| (
+                    substitution.group_id.as_str(),
+                    substitution.primary_source_index,
+                    substitution.alternate_source_index,
+                    substitution.random_modulus,
+                    substitution.alternate_minimum,
+                ))
+                .collect::<Vec<_>>(),
+            [
+                ("demo.task-substitution.anambar-mayor-line", 60, 99, 64, 32,),
+                ("demo.task-substitution.anambar-mayor-line", 75, 83, 64, 32,),
+            ]
+        );
+    }
+
+    #[test]
+    fn p107b_crystal_castle_plan_locks_glass_ecology_and_guardians() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert!(selection.dungeons.iter().any(|entry| {
+            entry.source_index == 20
+                && entry.source_name == "Crystal castle"
+                && entry.id == "demo.dungeon.crystal-castle"
+        }));
+        let castle = selection
+            .dungeon_plans
+            .iter()
+            .find(|plan| plan.source_index == 20)
+            .expect("Crystal castle should have an implementation plan");
+
+        assert_eq!(castle.source_name, "Crystal castle");
+        assert_eq!(castle.id, "demo.dungeon.crystal-castle");
+        assert_eq!(castle.position, DemoWildernessPosition { x: 40, y: 37 });
+        assert_eq!((castle.minimum_depth, castle.maximum_depth), (40, 60));
+        assert_eq!(castle.monster_divisor, 0);
+        assert_eq!(
+            castle.generation_flags,
+            ["ARENA", "NO_CAVE", "CURTAIN", "GLASS_DOOR", "GLASS_ROOM"]
+        );
+        assert_eq!(
+            castle.monster_preferences,
+            [
+                "INVISIBLE",
+                "HAS_LITE_1",
+                "SELF_LITE_1",
+                "HAS_LITE_2",
+                "SELF_LITE_2",
+                "HAS_DARK_1",
+                "SELF_DARK_1",
+                "HAS_DARK_2",
+                "SELF_DARK_2",
+                "RES_SHAR",
+            ]
+        );
+        assert_eq!(
+            castle.floor_terrain_distribution,
+            [
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GLASS_FLOOR".to_owned(),
+                    percent: 40,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "FLOOR".to_owned(),
+                    percent: 60,
+                },
+                DemoDungeonFloorTerrainPlan {
+                    source_tag: "GLASS_FLOOR".to_owned(),
+                    percent: 0,
+                },
+            ]
+        );
+        assert_eq!(castle.tunnel_percent, Some(100));
+        let entrance = castle
+            .initial_guardian
+            .as_ref()
+            .expect("Ethereal dragon should guard the entrance");
+        assert_eq!((entrance.source_index, entrance.level), (676, 43));
+        assert_eq!(entrance.chinese_name, "虚灵龙");
+        assert_eq!(
+            (castle.guardian.source_index, castle.guardian.level),
+            (1167, 60)
+        );
+        assert_eq!(castle.guardian.chinese_name, "钻石巨龙");
+        assert_eq!(
+            castle.final_object,
+            Some(DemoDungeonObjectPlan { tval: 23, sval: 31 })
+        );
     }
 
     #[test]

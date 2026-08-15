@@ -51,6 +51,7 @@ use super::{
 };
 
 struct TaskRestoreContext<'a> {
+    selection_seed: u64,
     current_floor_id: &'a str,
     terrain: &'a [String],
     stored_floors: &'a BTreeMap<String, FloorState>,
@@ -157,8 +158,42 @@ fn restore_task_states(
     world: &rfb_content::WorldDefinition,
     context: TaskRestoreContext<'_>,
 ) -> Result<BTreeMap<String, TaskState>, CoreError> {
-    let mut states = initial_task_states(world);
+    let mut states = initial_task_states(world, context.selection_seed);
     if !context.saved_states.is_empty() {
+        for primary in world
+            .tasks
+            .iter()
+            .filter(|task| task.substitution.is_some())
+        {
+            let alternate_id = &primary
+                .substitution
+                .as_ref()
+                .expect("filtered task must retain substitution")
+                .alternate_task_id;
+            let saved_primary = context
+                .saved_states
+                .iter()
+                .any(|state| state.task_id == primary.id);
+            let saved_alternate = context
+                .saved_states
+                .iter()
+                .any(|state| state.task_id == *alternate_id);
+            if saved_primary == saved_alternate {
+                return Err(CoreError::InvalidSave("task substitution state is invalid"));
+            }
+            states.remove(&primary.id);
+            states.remove(alternate_id);
+            let selected = if saved_alternate {
+                task_definition(world, alternate_id)
+                    .expect("validated task substitution must retain its alternate")
+            } else {
+                primary
+            };
+            states.insert(
+                selected.id.clone(),
+                task_initial_state(world, selected, &states),
+            );
+        }
         let mut restored = BTreeMap::new();
         for saved in context.saved_states {
             let Some(task) = task_definition(world, &saved.task_id) else {
@@ -167,7 +202,7 @@ fn restore_task_states(
             let expected = states
                 .get(&saved.task_id)
                 .cloned()
-                .unwrap_or_else(|| task_initial_state(task, &states));
+                .unwrap_or_else(|| task_initial_state(world, task, &states));
             let objectives = task_objectives(world, &saved.task_id);
             let Some(objective) = usize::try_from(saved.stage_index)
                 .ok()
@@ -213,8 +248,9 @@ fn restore_task_states(
                 }
                 TaskStatusKindDto::RewardAvailable => {
                     saved.active_floor_id.is_none()
-                        && task_definition(world, &saved.task_id)
-                            .is_some_and(|task| task.source_facility_id.is_some())
+                        && task_definition(world, &saved.task_id).is_some_and(|task| {
+                            task.source_facility_id.is_some() && task.reward.is_some()
+                        })
                         && usize::try_from(saved.stage_index)
                             .ok()
                             .is_some_and(|stage| stage + 1 == objectives.len())
@@ -628,6 +664,7 @@ struct StateHashPayloadV98<'a> {
     item_knowledge: Vec<ItemKnowledgeSaveDto>,
     item_property_knowledge: Vec<ItemPropertyKnowledgeSaveDto>,
     task_states: Vec<TaskStateSaveDto>,
+    bounty_state: rfb_protocol::BountyStateSaveDto,
     dungeon_states: Vec<DungeonStateSaveDto>,
     defeated_limited_actor_counts: Vec<DefeatedActorCountSaveRef<'a>>,
     generated_artifact_ids: Vec<&'a str>,
@@ -745,10 +782,9 @@ impl Game {
                 .map_err(|_| CoreError::InvalidSave("Mogaminator source is invalid"))?;
         if mogaminator.wanted_actor_kind_ids.len() > 20
             || mogaminator.wanted_actor_kind_ids.iter().any(|actor_id| {
-                content.actor(actor_id).is_none_or(|actor| {
-                    !actor.tags.iter().any(|tag| tag == "unique")
-                        || (actor.corpse_item_kind_id.is_none() && actor.remains.is_none())
-                })
+                content
+                    .actor(actor_id)
+                    .is_none_or(|actor| !super::mogaminator::wanted_actor_candidate(actor))
             })
         {
             return Err(CoreError::InvalidSave(
@@ -758,6 +794,13 @@ impl Game {
         let world = content
             .world(&payload.world_id)
             .ok_or_else(|| CoreError::UnknownWorld(payload.world_id.clone()))?;
+        let bounty_state = super::bounty::BountyState::from_save(
+            payload.bounty_state.clone(),
+            &content,
+            world,
+            &mogaminator.wanted_actor_kind_ids,
+            payload.world_tick,
+        )?;
         let wilderness_position = match (&world.wilderness, payload.wilderness_position) {
             (Some(wilderness), Some(position)) => {
                 let symbol = usize::try_from(position.y)
@@ -1287,6 +1330,7 @@ impl Game {
         let task_states = restore_task_states(
             world,
             TaskRestoreContext {
+                selection_seed: payload.wilderness_seed,
                 current_floor_id: &current_floor_id,
                 terrain: &terrain,
                 stored_floors: &stored_floors,
@@ -1401,6 +1445,7 @@ impl Game {
             item_knowledge,
             item_property_knowledge,
             task_states,
+            bounty_state,
             command_actor_deaths: Vec::new(),
             dungeon_states,
             defeated_limited_actor_counts,
@@ -1492,6 +1537,7 @@ impl Game {
             item_property_knowledge: self.item_property_knowledge_to_save(),
             task_progress: Vec::new(),
             task_states: self.task_states_to_save(),
+            bounty_state: self.bounty_state.to_save(),
             dungeon_states: self.dungeon_states_to_save(),
             defeated_limited_actor_counts: self
                 .defeated_limited_actor_counts
@@ -1569,6 +1615,7 @@ impl Game {
             item_knowledge: self.item_knowledge_to_save(),
             item_property_knowledge: self.item_property_knowledge_to_save(),
             task_states: self.task_states_to_save(),
+            bounty_state: self.bounty_state.to_save(),
             dungeon_states: self.dungeon_states_to_save(),
             defeated_limited_actor_counts: self
                 .defeated_limited_actor_counts

@@ -43,9 +43,63 @@ pub struct TownFacilityDefinition {
     #[serde(default)]
     pub identify_item_cost: Option<u32>,
     #[serde(default)]
+    pub research_item_cost: Option<u32>,
+    #[serde(default)]
+    pub identify_all_items_cost: Option<u32>,
+    #[serde(default)]
+    pub overview_message_key: Option<String>,
+    #[serde(default)]
     pub legal_name_change_cost: Option<u32>,
+    #[serde(default)]
+    pub owner_class_ids: Vec<String>,
+    #[serde(default)]
+    pub member_class_ids: Vec<String>,
+    #[serde(default)]
+    pub owner_race_ids: Vec<String>,
+    #[serde(default)]
+    pub member_race_ids: Vec<String>,
+    #[serde(default)]
+    pub owner_realm_ids: Vec<String>,
+    #[serde(default)]
+    pub member_realm_ids: Vec<String>,
+    #[serde(default)]
+    pub service_actions: Vec<TownFacilityServiceDefinition>,
+    #[serde(default)]
+    pub bounty_office: Option<TownFacilityBountyDefinition>,
     pub entrance_position: ContentPosition,
     pub entrance_terrain_id: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownFacilityBountyDefinition {
+    /// The twenty source-ordered prizes for the character's wanted uniques.
+    pub wanted_reward_item_kind_ids: Vec<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownFacilityServiceDefinition {
+    pub kind: TownFacilityServiceKind,
+    pub owner_cost: u32,
+    pub other_cost: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum TownFacilityServiceKind {
+    Heal,
+    RestoreVitality,
+    CureMutation,
+    EnchantWeapon,
+    EnchantArmor,
+    EnchantAmmunition,
+    EnchantBow,
+    AssessArmor,
+    Recall,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -54,6 +108,7 @@ pub struct TownFacilityDefinition {
 pub enum TownFacilityCategory {
     Home,
     QuestGiver,
+    Service,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

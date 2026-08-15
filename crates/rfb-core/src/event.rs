@@ -7,22 +7,46 @@ use rfb_protocol::{
     AbilityConeDamageResolutionDto, AbilityDetectResolutionDto, AbilityEffectsResolutionDto,
     AbilityMonsterProbeResolutionDto, AbilityProbeAlignmentDto, AbilityProbeTargetDto,
     AbilitySummonResolutionDto, AbilityTeleportResolutionDto, AbilityTerrainTransformResolutionDto,
-    AbilityVisibleDamageResolutionDto, CheckResolutionDto, Direction, GameEventDto,
-    GameEventOutcomeDto, HealingResolutionDto, ItemCurseRemovalResolutionDto,
-    ItemCurseResolutionDto, ItemCurseSeverityDto, ItemEnchantmentResolutionDto,
-    ItemIdentifyResolutionDto, ItemQualityDto, MonsterAbilityCastResolutionDto,
-    MonsterAbilityDecisionResolutionDto, MonsterDisplacementResolutionDto, Position,
-    ProjectileTraceDto, ResourceRecoveryResolutionDto, RestResolutionDto, RestStopReasonDto,
-    SummonCommandModeDto, SummonCommandResolutionDto,
+    AbilityVisibleDamageResolutionDto, BountyOfficeActionDto, CheckResolutionDto, Direction,
+    FacilityServiceKindDto, GameEventDto, GameEventOutcomeDto, HealingResolutionDto,
+    ItemCurseRemovalResolutionDto, ItemCurseResolutionDto, ItemCurseSeverityDto,
+    ItemEnchantmentResolutionDto, ItemIdentifyResolutionDto, ItemQualityDto,
+    MonsterAbilityCastResolutionDto, MonsterAbilityDecisionResolutionDto,
+    MonsterDisplacementResolutionDto, Position, ProjectileTraceDto, ResourceRecoveryResolutionDto,
+    RestResolutionDto, RestStopReasonDto, SummonCommandModeDto, SummonCommandResolutionDto,
 };
 
 use crate::{
     effect::DamageOutcome,
+    game::BountyOfficeOutcome,
     game::town::{
-        FacilityIdentifyOutcome, FacilityRenameOutcome, InnStayOutcome, InnTravelOutcome,
-        ShopTransactionOutcome,
+        FacilityIdentifyAllOutcome, FacilityIdentifyOutcome, FacilityRenameOutcome,
+        FacilityServiceOutcome, InnStayOutcome, InnTravelOutcome, ShopTransactionOutcome,
     },
 };
+
+const fn facility_service_key(service: FacilityServiceKindDto) -> &'static str {
+    match service {
+        FacilityServiceKindDto::Heal => "heal",
+        FacilityServiceKindDto::RestoreVitality => "restore-vitality",
+        FacilityServiceKindDto::CureMutation => "cure-mutation",
+        FacilityServiceKindDto::EnchantWeapon => "enchant-weapon",
+        FacilityServiceKindDto::EnchantArmor => "enchant-armor",
+        FacilityServiceKindDto::EnchantAmmunition => "enchant-ammunition",
+        FacilityServiceKindDto::EnchantBow => "enchant-bow",
+        FacilityServiceKindDto::AssessArmor => "assess-armor",
+        FacilityServiceKindDto::Recall => "recall",
+    }
+}
+
+const fn bounty_action_key(action: BountyOfficeActionDto) -> &'static str {
+    match action {
+        BountyOfficeActionDto::TurnIn => "turn-in",
+        BountyOfficeActionDto::RequestMission => "request-mission",
+        BountyOfficeActionDto::AbandonMission => "abandon-mission",
+        BountyOfficeActionDto::ClaimMissionReward => "claim-mission-reward",
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ItemAttributeChange {
@@ -655,6 +679,32 @@ pub(crate) enum DomainEvent {
     },
     FacilityItemIdentified {
         outcome: FacilityIdentifyOutcome,
+    },
+    FacilityIdentifyAllUnavailable {
+        facility_id: String,
+        reason: String,
+    },
+    FacilityItemsIdentified {
+        outcome: FacilityIdentifyAllOutcome,
+    },
+    FacilityServiceUnavailable {
+        facility_id: String,
+        service: FacilityServiceKindDto,
+        reason: String,
+    },
+    FacilityServiceCompleted {
+        outcome: FacilityServiceOutcome,
+    },
+    BountyOfficeUnavailable {
+        facility_id: String,
+        action: BountyOfficeActionDto,
+        reason: String,
+    },
+    BountyOfficeCompleted {
+        outcome: BountyOfficeOutcome,
+    },
+    BountyMissionCompleted {
+        actor_kind_id: String,
     },
     FacilityRenameUnavailable {
         facility_id: String,
@@ -2989,18 +3039,223 @@ impl DomainEvent {
                     ("reason", reason.clone()),
                 ],
             ),
-            Self::FacilityItemIdentified { outcome } => dto_with_outcome(
-                "facility.identified",
-                "facility-identify-completed",
+            Self::FacilityItemIdentified { outcome } => {
+                let message_key = if outcome.resolution.full {
+                    "facility-research-completed"
+                } else {
+                    "facility-identify-completed"
+                };
+                dto_with_outcome(
+                    "facility.identified",
+                    message_key,
+                    [
+                        ("facility", outcome.facility_id.clone()),
+                        ("target", outcome.resolution.item_kind_id.clone()),
+                        ("cost", outcome.cost.to_string()),
+                        ("balance", outcome.gold_balance.to_string()),
+                    ],
+                    GameEventOutcomeDto::ItemIdentify {
+                        resolution: outcome.resolution.clone(),
+                    },
+                )
+            }
+            Self::FacilityIdentifyAllUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "facility.identify-all-unavailable",
+                "facility-identify-all-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::FacilityItemsIdentified { outcome } => dto(
+                "facility.identified-all",
+                "facility-identify-all-completed",
                 [
                     ("facility", outcome.facility_id.clone()),
-                    ("target", outcome.resolution.item_kind_id.clone()),
+                    ("count", outcome.identified_count.to_string()),
                     ("cost", outcome.cost.to_string()),
                     ("balance", outcome.gold_balance.to_string()),
                 ],
-                GameEventOutcomeDto::ItemIdentify {
-                    resolution: outcome.resolution.clone(),
-                },
+            ),
+            Self::FacilityServiceUnavailable {
+                facility_id,
+                service,
+                reason,
+            } => dto(
+                "facility.service-unavailable",
+                "facility-service-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("service", facility_service_key(service).to_owned()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::FacilityServiceCompleted { outcome } => match outcome {
+                FacilityServiceOutcome::Healed {
+                    facility_id,
+                    healed,
+                    mount_healed,
+                    statuses_removed,
+                    cost,
+                    gold_balance,
+                } => dto(
+                    "facility.healed",
+                    "facility-healing-completed",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("healed", healed.to_string()),
+                        ("mountHealed", mount_healed.to_string()),
+                        ("statusesRemoved", statuses_removed.to_string()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                ),
+                FacilityServiceOutcome::VitalityRestored {
+                    facility_id,
+                    cost,
+                    gold_balance,
+                } => dto(
+                    "facility.vitality-restored",
+                    "facility-vitality-restored",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                ),
+                FacilityServiceOutcome::MutationCured {
+                    facility_id,
+                    mutation_id,
+                    cost,
+                    gold_balance,
+                } => dto(
+                    "facility.mutation-cured",
+                    "facility-mutation-cured",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("mutation", mutation_id.clone()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                ),
+                FacilityServiceOutcome::ItemEnchanted {
+                    facility_id,
+                    cost,
+                    gold_balance,
+                    resolution,
+                } => dto_with_outcome(
+                    "facility.item-enchanted",
+                    "facility-item-enchanted",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("target", resolution.item_kind_id.clone()),
+                        ("toHit", resolution.to_hit.after.to_string()),
+                        ("toDamage", resolution.to_damage.after.to_string()),
+                        ("toArmor", resolution.to_armor.after.to_string()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                    GameEventOutcomeDto::ItemEnchantment {
+                        resolution: resolution.clone(),
+                    },
+                ),
+                FacilityServiceOutcome::ArmorAssessed {
+                    facility_id,
+                    armor_class,
+                    protection_percent,
+                    cost,
+                    gold_balance,
+                } => dto(
+                    "facility.armor-assessed",
+                    "facility-armor-assessed",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("armorClass", armor_class.to_string()),
+                        ("protection", protection_percent.to_string()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                ),
+                FacilityServiceOutcome::RecallStarted {
+                    facility_id,
+                    dungeon_id,
+                    floor_id,
+                    cost,
+                    gold_balance,
+                } => dto(
+                    "facility.recall-started",
+                    "facility-recall-started",
+                    [
+                        ("facility", facility_id.clone()),
+                        ("dungeon", dungeon_id.clone()),
+                        ("floor", floor_id.clone()),
+                        ("cost", cost.to_string()),
+                        ("balance", gold_balance.to_string()),
+                    ],
+                ),
+            },
+            Self::BountyOfficeUnavailable {
+                facility_id,
+                action,
+                reason,
+            } => dto(
+                "bounty.unavailable",
+                "bounty-action-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("action", bounty_action_key(action).to_owned()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::BountyOfficeCompleted { outcome } => match outcome {
+                BountyOfficeOutcome::DailyTurnIn {
+                    actor_kind_id,
+                    gold,
+                } => dto(
+                    "bounty.daily-turned-in",
+                    "bounty-daily-turned-in",
+                    [("actor", actor_kind_id.clone()), ("gold", gold.to_string())],
+                ),
+                BountyOfficeOutcome::WantedTurnIn {
+                    actor_kind_id,
+                    item_kind_id,
+                } => dto(
+                    "bounty.wanted-turned-in",
+                    "bounty-wanted-turned-in",
+                    [
+                        ("actor", actor_kind_id.clone()),
+                        ("item", item_kind_id.clone()),
+                    ],
+                ),
+                BountyOfficeOutcome::MissionRequested {
+                    actor_kind_id,
+                    floor_id,
+                    total,
+                } => dto(
+                    "bounty.mission-requested",
+                    "bounty-mission-requested",
+                    [
+                        ("actor", actor_kind_id.clone()),
+                        ("floor", floor_id.clone()),
+                        ("total", total.to_string()),
+                    ],
+                ),
+                BountyOfficeOutcome::MissionAbandoned => {
+                    dto_without_args("bounty.mission-abandoned", "bounty-mission-abandoned")
+                }
+                BountyOfficeOutcome::MissionRewarded { item_kind_id } => dto(
+                    "bounty.mission-rewarded",
+                    "bounty-mission-rewarded",
+                    [("item", item_kind_id.clone())],
+                ),
+            },
+            Self::BountyMissionCompleted { actor_kind_id } => dto(
+                "bounty.mission-completed",
+                "bounty-mission-completed",
+                [("actor", actor_kind_id.clone())],
             ),
             Self::FacilityRenameUnavailable {
                 facility_id,

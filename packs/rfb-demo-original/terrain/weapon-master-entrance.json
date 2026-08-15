@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.weapon-master-entrance",
+  "nameKey": "terrain-demo-weapon-master-entrance-name",
+  "descriptionKey": "terrain-demo-weapon-master-entrance-description",
+  "glyph": "6",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["outdoor", "surface", "town-facility-entrance"]
+}

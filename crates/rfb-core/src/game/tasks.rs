@@ -87,15 +87,69 @@ pub(super) fn task_definition<'a>(
     world.tasks.iter().find(|task| task.id == task_id)
 }
 
+fn task_substitution_uses_alternate(group_id: &str, seed: u64) -> bool {
+    let hash = group_id
+        .bytes()
+        .fold(0xcbf2_9ce4_8422_2325_u64, |hash, byte| {
+            (hash ^ u64::from(byte)).wrapping_mul(0x1000_0000_01b3)
+        });
+    (seed ^ hash) & 1 == 1
+}
+
+fn selected_task_id<'a>(
+    world: &'a WorldDefinition,
+    states: &BTreeMap<String, TaskState>,
+    task_id: &'a str,
+) -> Option<&'a str> {
+    let task = task_definition(world, task_id)?;
+    if let Some(substitution) = &task.substitution {
+        return Some(if states.contains_key(&substitution.alternate_task_id) {
+            substitution.alternate_task_id.as_str()
+        } else {
+            task_id
+        });
+    }
+    Some(task_id)
+}
+
+pub(super) fn task_is_selected(
+    world: &WorldDefinition,
+    states: &BTreeMap<String, TaskState>,
+    task_id: &str,
+) -> bool {
+    let Some(task) = task_definition(world, task_id) else {
+        return false;
+    };
+    if let Some(substitution) = &task.substitution {
+        return states.contains_key(task_id)
+            || !states.contains_key(&substitution.alternate_task_id);
+    }
+    world
+        .tasks
+        .iter()
+        .find_map(|primary| {
+            primary
+                .substitution
+                .as_ref()
+                .filter(|substitution| substitution.alternate_task_id == task_id)
+                .map(|_| states.contains_key(task_id))
+        })
+        .unwrap_or(true)
+}
+
 fn task_initial_status(
+    world: &WorldDefinition,
     task: &TaskDefinition,
     states: &BTreeMap<String, TaskState>,
 ) -> TaskStatusKindDto {
     if task.source_facility_id.is_some()
         && task.prerequisite_task_id.as_ref().is_some_and(|id| {
-            !states
-                .get(id)
-                .is_some_and(|state| state.status == TaskStatusKindDto::Completed)
+            let prerequisite_id = selected_task_id(world, states, id).unwrap_or(id);
+            !states.get(prerequisite_id).is_some_and(|state| {
+                state.status == TaskStatusKindDto::Completed
+                    || (task.unlock_when_prerequisite_failed
+                        && state.status == TaskStatusKindDto::Failed)
+            })
         })
     {
         TaskStatusKindDto::Locked
@@ -105,11 +159,12 @@ fn task_initial_status(
 }
 
 pub(super) fn task_initial_state(
+    world: &WorldDefinition,
     task: &TaskDefinition,
     states: &BTreeMap<String, TaskState>,
 ) -> TaskState {
     TaskState {
-        status: task_initial_status(task, states),
+        status: task_initial_status(world, task, states),
         stage_index: 0,
         current: 0,
         required: task
@@ -127,12 +182,20 @@ pub(super) fn projected_task_state(
     task_id: &str,
 ) -> Option<TaskState> {
     let task = task_definition(world, task_id)?;
-    Some(
-        states
-            .get(task_id)
-            .cloned()
-            .unwrap_or_else(|| task_initial_state(task, states)),
-    )
+    if !task_is_selected(world, states, task_id) {
+        return None;
+    }
+    let mut state = states
+        .get(task_id)
+        .cloned()
+        .unwrap_or_else(|| task_initial_state(world, task, states));
+    if matches!(
+        state.status,
+        TaskStatusKindDto::Available | TaskStatusKindDto::Locked
+    ) {
+        state.status = task_initial_status(world, task, states);
+    }
+    Some(state)
 }
 
 pub(super) fn task_applies_to_floor(
@@ -173,14 +236,62 @@ pub(super) fn task_succeeded(world: &WorldDefinition, task_id: &str, state: &Tas
         && state.current >= state.required
 }
 
-pub(super) fn initial_task_states(world: &WorldDefinition) -> BTreeMap<String, TaskState> {
+pub(super) fn initial_task_states(
+    world: &WorldDefinition,
+    seed: u64,
+) -> BTreeMap<String, TaskState> {
     let mut states = BTreeMap::new();
     for task in &world.tasks {
         if task.source_facility_id.is_none() {
-            states.insert(task.id.clone(), task_initial_state(task, &states));
+            states.insert(task.id.clone(), task_initial_state(world, task, &states));
         }
     }
+    for primary in world
+        .tasks
+        .iter()
+        .filter(|task| task.substitution.is_some())
+    {
+        let substitution = primary
+            .substitution
+            .as_ref()
+            .expect("filtered task must retain substitution");
+        let selected = if task_substitution_uses_alternate(&substitution.group_id, seed) {
+            task_definition(world, &substitution.alternate_task_id)
+                .expect("validated task substitution must retain its alternate")
+        } else {
+            primary
+        };
+        states.insert(
+            selected.id.clone(),
+            task_initial_state(world, selected, &states),
+        );
+    }
     states
+}
+
+pub(super) fn task_substitution_state_is_valid(
+    world: &WorldDefinition,
+    states: &BTreeMap<String, TaskState>,
+) -> bool {
+    world.tasks.iter().all(|primary| {
+        primary.substitution.as_ref().is_none_or(|substitution| {
+            states.contains_key(&primary.id) != states.contains_key(&substitution.alternate_task_id)
+        })
+    })
+}
+
+pub(super) fn task_description_key<'a>(task: &'a TaskDefinition, state: &TaskState) -> &'a str {
+    match state.status {
+        TaskStatusKindDto::Completed | TaskStatusKindDto::RewardAvailable => task
+            .completed_description_key
+            .as_deref()
+            .unwrap_or(&task.description_key),
+        TaskStatusKindDto::Failed => task
+            .failed_description_key
+            .as_deref()
+            .unwrap_or(&task.description_key),
+        _ => &task.description_key,
+    }
 }
 
 pub(super) fn task_resolution_for_departure(
@@ -599,18 +710,32 @@ impl Game {
         if task.source_facility_id.as_deref() != Some(facility_id) {
             return Err("task-source-mismatch");
         }
-        let initial = task_initial_state(&task, &self.task_states);
+        if !task_is_selected(world, &self.task_states, task_id) {
+            return Err("task-unavailable");
+        }
+        let initial = task_initial_state(world, &task, &self.task_states);
         if initial.status == TaskStatusKindDto::Locked {
             return Err("task-locked");
         }
-        if self
-            .task_states
-            .get(task_id)
-            .is_some_and(|state| state.status != TaskStatusKindDto::Available)
-        {
+        if self.task_states.get(task_id).is_some_and(|state| {
+            !matches!(
+                state.status,
+                TaskStatusKindDto::Available | TaskStatusKindDto::Locked
+            )
+        }) {
             return Err("task-already-taken");
         }
-        let mut state = self.task_states.get(task_id).cloned().unwrap_or(initial);
+        let mut state = self
+            .task_states
+            .get(task_id)
+            .cloned()
+            .unwrap_or_else(|| initial.clone());
+        if matches!(
+            state.status,
+            TaskStatusKindDto::Available | TaskStatusKindDto::Locked
+        ) {
+            state.status = initial.status;
+        }
         if state.status != TaskStatusKindDto::Available {
             return Err("task-unavailable");
         }
@@ -676,6 +801,9 @@ impl Game {
         if task.source_facility_id.as_deref() != Some(facility_id) {
             return Err("task-source-mismatch");
         }
+        let Some(reward_definition) = task.reward.as_ref() else {
+            return Err("reward-unavailable");
+        };
         if self
             .task_states
             .get(task_id)
@@ -683,12 +811,12 @@ impl Game {
         {
             return Err("reward-unavailable");
         }
-        if self.instance_id_exists(&task.reward.item_instance_id)
+        if self.instance_id_exists(&reward_definition.item_instance_id)
             || self.stored_floors.values().any(|floor| {
                 floor
                     .items
                     .iter()
-                    .any(|item| item.id == task.reward.item_instance_id)
+                    .any(|item| item.id == reward_definition.item_instance_id)
             })
         {
             return Err("reward-item-id-unavailable");
@@ -702,7 +830,7 @@ impl Game {
         let preview = reward_item(
             &self.content,
             class_id,
-            &task.reward,
+            reward_definition,
             ItemLocation::Inventory,
             &mut preview_rng,
         );
@@ -713,7 +841,7 @@ impl Game {
         let reward = reward_item(
             &self.content,
             class_id,
-            &task.reward,
+            reward_definition,
             ItemLocation::Inventory,
             &mut self.rng,
         );

@@ -5,7 +5,9 @@ use crate::game::monster_ecology::{
     actor_matches_surface_habitat,
 };
 use crate::rng::RfbRng;
-use rfb_content::{ActorHabitat, ActorMovementMode, WildernessTerrain};
+use rfb_content::{
+    ActorDamageType, ActorHabitat, ActorMovementMode, ActorResistanceLevel, WildernessTerrain,
+};
 
 use super::support::*;
 use super::*;
@@ -1523,4 +1525,53 @@ fn defeated_limited_actor_counts_are_required_in_new_saves() {
         .remove("defeatedLimitedActorCounts");
 
     assert!(serde_json::from_value::<rfb_protocol::SavePayloadV1>(value).is_err());
+}
+
+#[test]
+fn p103f_volcano_prefers_fire_immune_flying_volcanic_monsters() {
+    let mut game =
+        Game::new_with_build(203, "demo.build.warrior").expect("Middle-earth should create");
+    game.current_floor_id = "demo.floor.volcano-depth-50".to_owned();
+    let policy = game
+        .content
+        .encounter_table("demo.encounter-table.volcano")
+        .and_then(|table| table.global_allocation.as_ref())
+        .expect("Volcano global allocation policy")
+        .clone();
+    let fire_elemental = game
+        .content
+        .actor("demo.actor.fire-elemental")
+        .expect("fire elemental should exist")
+        .clone();
+    let ogre = game
+        .content
+        .actor("demo.actor.ogre")
+        .expect("ordinary non-volcanic monster should exist")
+        .clone();
+    assert!(
+        game.original_dungeon_weight(&fire_elemental, &policy)
+            > game.original_dungeon_weight(&ogre, &policy)
+    );
+
+    for _ in 0..256 {
+        let selected = game
+            .select_original_allocated_monster(&policy, 50, 50, None, &[], None, None)
+            .expect("Volcano should retain ordinary dungeon candidates");
+        let actor = game.content.actor(&selected).expect("selected actor");
+        let allocation = actor.allocation.as_ref().expect("selected allocation");
+        assert!(!allocation.wild_only, "{selected}");
+        assert_ne!(selected, "demo.actor.shooting-star-the-red-dragon");
+        assert_ne!(selected, "demo.actor.lesser-balrog");
+        assert!(
+            actor.resistances.get(&ActorDamageType::Fire) == Some(&ActorResistanceLevel::Immune)
+                || actor.movement.modes.contains(&ActorMovementMode::Fly)
+                || allocation.habitats.contains(&ActorHabitat::Volcano),
+            "{selected}"
+        );
+        assert!(
+            allocation.legacy_dungeon_indices.is_empty()
+                || allocation.legacy_dungeon_indices.contains(&8),
+            "{selected}"
+        );
+    }
 }

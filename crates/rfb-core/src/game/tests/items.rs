@@ -2989,6 +2989,285 @@ fn item_generation_modes_keep_drafts_unallocated_until_commit() {
     );
 }
 
+#[test]
+fn p103d_mana_storm_staff_hits_radius_five_without_backlash() {
+    const ITEM_ID: &str = "test.item.mana-storm-staff.1";
+    let mut game =
+        Game::new_with_build(203, "demo.build.warrior").expect("Mana Storm test should create");
+    clear_monsters(&mut game);
+    game.terrain.fill("demo.terrain.floor".to_owned());
+    game.player.position = Position { x: 10, y: 10 };
+    give_inventory_item(&mut game, ITEM_ID, "demo.item.mana-storm-staff");
+    let item = game
+        .items
+        .iter()
+        .find(|item| item.id == ITEM_ID)
+        .expect("Mana Storm staff should be granted");
+    assert_eq!(item.charges.expect("Mana Storm staff charges").maximum, 5);
+
+    for (id, x) in [("near", 11), ("edge", 15), ("outside", 16)] {
+        game.push_generated_actor(
+            format!("test.actor.mana-storm-{id}"),
+            "demo.actor.ancient-multi-hued-dragon",
+            Position { x, y: 10 },
+        );
+        let actor = game.entities.last_mut().expect("Mana Storm target");
+        actor.hp = 1_000;
+        actor.max_hp = 1_000;
+    }
+    let hp_before = game.player.hp;
+    let mut domain_events = Vec::new();
+    game.resolve_item_elemental_blast(
+        "demo.item.mana-storm-staff",
+        792,
+        DamageType::Mana,
+        5,
+        0,
+        0,
+        DamageType::Mana,
+        false,
+        &mut domain_events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .expect("Mana Storm should resolve");
+    let events = domain_events
+        .into_iter()
+        .map(DomainEvent::into_dto)
+        .collect::<Vec<_>>();
+
+    let resolutions = events
+        .iter()
+        .filter_map(|event| match event.outcome.as_ref() {
+            Some(GameEventOutcomeDto::Damage { resolution })
+            | Some(GameEventOutcomeDto::Death { resolution })
+                if matches!(
+                    event.kind.as_str(),
+                    "item.use-elemental-blast-hit" | "item.use-elemental-blast-slay"
+                ) =>
+            {
+                Some(resolution)
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(resolutions.len(), 2);
+    assert_eq!(
+        resolutions
+            .iter()
+            .map(|resolution| resolution.raw_damage)
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([132, 396])
+    );
+    assert!(
+        game.entities
+            .iter()
+            .any(|actor| actor.id == "test.actor.mana-storm-outside")
+    );
+    assert_eq!(game.player.hp, hp_before);
+    assert!(!events.iter().any(|event| {
+        matches!(
+            event.kind.as_str(),
+            "item.use-elemental-backlash" | "item.use-elemental-backlash-death"
+        )
+    }));
+}
+
+#[test]
+fn p107e_frost_ball_and_confusing_light_reuse_area_and_status_resolvers() {
+    const FROST_ITEM_ID: &str = "test.item.frost-ball-wand.1";
+    let mut frost =
+        Game::new_with_build(207, "demo.build.warrior").expect("Frost Ball test should create");
+    clear_monsters(&mut frost);
+    frost.terrain.fill("demo.terrain.floor".to_owned());
+    frost.player.position = Position { x: 10, y: 10 };
+    give_inventory_item(&mut frost, FROST_ITEM_ID, "demo.item.frost-ball-wand");
+    for (id, position) in [
+        ("center", Position { x: 18, y: 10 }),
+        ("edge", Position { x: 18, y: 12 }),
+        ("outside", Position { x: 18, y: 13 }),
+    ] {
+        frost.push_generated_actor(
+            format!("test.actor.frost-ball-{id}"),
+            "demo.actor.blubbering-idiot",
+            position,
+        );
+        let actor = frost.entities.last_mut().expect("Frost Ball target");
+        actor.hp = 1_000;
+        actor.max_hp = 1_000;
+    }
+    let frost = (0..1_000)
+        .find_map(|seed| {
+            let mut game = frost.clone();
+            game.rng = RfbRng::seeded(seed);
+            dispatch_next(
+                &mut game,
+                GameCommand::UseItem {
+                    item_id: FROST_ITEM_ID.to_owned(),
+                    target: Some(TargetSelection::Direction {
+                        direction: Direction::East,
+                    }),
+                },
+            );
+            game.entities
+                .iter()
+                .any(|actor| actor.id == "test.actor.frost-ball-center" && actor.hp < 1_000)
+                .then_some(game)
+        })
+        .expect("Frost Ball should pass its device check");
+    for id in ["center", "edge"] {
+        assert!(
+            frost
+                .entities
+                .iter()
+                .find(|actor| actor.id == format!("test.actor.frost-ball-{id}"))
+                .expect("affected Frost Ball target")
+                .hp
+                < 1_000
+        );
+    }
+    assert_eq!(
+        frost
+            .entities
+            .iter()
+            .find(|actor| actor.id == "test.actor.frost-ball-outside")
+            .expect("outside Frost Ball target")
+            .hp,
+        1_000
+    );
+
+    const LIGHT_ITEM_ID: &str = "test.item.confusing-light-staff.1";
+    let mut light = Game::new_with_build(208, "demo.build.warrior")
+        .expect("Confusing Light test should create");
+    clear_monsters(&mut light);
+    light.terrain.fill("demo.terrain.floor".to_owned());
+    light.player.position = Position { x: 10, y: 10 };
+    give_inventory_item(&mut light, LIGHT_ITEM_ID, "demo.item.confusing-light-staff");
+    light.push_generated_actor(
+        "test.actor.confusing-light".to_owned(),
+        "demo.actor.blubbering-idiot",
+        Position { x: 12, y: 10 },
+    );
+    light.reveal_current_visibility();
+    let light = (0..1_000)
+        .find_map(|seed| {
+            let mut game = light.clone();
+            game.rng = RfbRng::seeded(seed);
+            game.use_inventory_item(
+                LIGHT_ITEM_ID,
+                Some(&TargetSelection::SelfTarget),
+                None,
+                &mut Vec::new(),
+                &mut BTreeSet::new(),
+                &mut Vec::new(),
+            )
+            .expect("Confusing Light should resolve");
+            let status_ids = game.entities[0]
+                .statuses
+                .iter()
+                .map(|status| status.kind_id.as_str())
+                .collect::<BTreeSet<_>>();
+            (status_ids.len() == 5).then_some(game)
+        })
+        .expect("Confusing Light should apply all five statuses");
+    assert_eq!(
+        light.entities[0]
+            .statuses
+            .iter()
+            .map(|status| status.kind_id.as_str())
+            .collect::<BTreeSet<_>>(),
+        BTreeSet::from([
+            STATUS_CONFUSION,
+            STATUS_FEAR,
+            STATUS_PARALYSIS,
+            STATUS_SLOW,
+            STATUS_STUN,
+        ])
+    );
+}
+
+#[test]
+fn p107f_diamond_edge_vorpal_flag_multiplies_regular_melee_blows() {
+    let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .and_then(std::path::Path::parent)
+        .expect("core crate should be inside the workspace")
+        .join("packs/rfb-demo-original");
+    let artifact = rfb_content::compile_pack_dir(&pack_root).expect("demo pack should compile");
+    let mut plain_content = artifact.content.clone();
+    plain_content
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.diamond-edge")
+        .expect("Diamond Edge should exist")
+        .vorpal = false;
+    let catalog = |content| {
+        std::sync::Arc::new(rfb_content::ContentCatalog::from_artifact(
+            rfb_content::encode_content(content).expect("custom content should encode"),
+        ))
+    };
+    let mut vorpal = Game::from_content_with_build(
+        0,
+        catalog(artifact.content),
+        DEFAULT_WORLD_ID,
+        "demo.build.warrior",
+    )
+    .expect("Vorpal Diamond Edge game should create");
+    let mut plain = Game::from_content_with_build(
+        0,
+        catalog(plain_content),
+        DEFAULT_WORLD_ID,
+        "demo.build.warrior",
+    )
+    .expect("plain Diamond Edge game should create");
+    for game in [&mut vorpal, &mut plain] {
+        clear_monsters(game);
+        game.terrain.fill("demo.terrain.floor".to_owned());
+        game.player.position = Position { x: 10, y: 10 };
+        game.items
+            .iter_mut()
+            .find(|item| {
+                matches!(
+                    &item.location,
+                    ItemLocation::Equipped { slot_id } if slot_id == "right-hand"
+                )
+            })
+            .expect("warrior should have an equipped weapon")
+            .kind_id = "demo.item.diamond-edge".to_owned();
+        game.push_generated_actor(
+            "test.actor.diamond-edge".to_owned(),
+            "demo.actor.blubbering-idiot",
+            Position { x: 11, y: 10 },
+        );
+        let actor = game.entities.last_mut().expect("Diamond Edge target");
+        actor.hp = 100_000;
+        actor.max_hp = 100_000;
+    }
+
+    let first_melee_damage = |game: &mut Game, seed| {
+        game.rng = RfbRng::seeded(seed);
+        let mut events = Vec::new();
+        game.resolve_player_melee(0, false, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+            .expect("Diamond Edge melee should resolve");
+        events
+            .into_iter()
+            .map(DomainEvent::into_dto)
+            .find_map(|event| match event.outcome {
+                Some(GameEventOutcomeDto::Damage { resolution }) => Some(resolution.raw_damage),
+                _ => None,
+            })
+    };
+    let observed = (0..10_000).find_map(|seed| {
+        let mut vorpal_game = vorpal.clone();
+        let mut plain_game = plain.clone();
+        let vorpal_damage = first_melee_damage(&mut vorpal_game, seed)?;
+        let plain_damage = first_melee_damage(&mut plain_game, seed)?;
+        (vorpal_damage > plain_damage).then_some((plain_damage, vorpal_damage))
+    });
+    let (plain_damage, vorpal_damage) = observed.expect("a Vorpal trigger seed should exist");
+    assert!(vorpal_damage >= plain_damage.saturating_mul(2));
+}
+
 fn crisdurian_seed_for_test() -> u64 {
     (0..10_000)
         .find(|seed| RfbRng::seeded(*seed).bounded(15) == 0)

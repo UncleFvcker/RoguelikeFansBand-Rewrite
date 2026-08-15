@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.diamond-edge",
+  "nameKey": "item-demo-diamond-edge-name",
+  "descriptionKey": "item-demo-diamond-edge-description",
+  "glyph": "|",
+  "generationLevel": 90,
+  "mogaminatorRare": true,
+  "weightTenthsPound": 150,
+  "tunnelingPval": 4,
+  "maxStack": 1,
+  "baseValue": 50000,
+  "equipmentSlot": "weapon",
+  "ridingWeaponKind": "compatible",
+  "vorpal": true,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 6,
+    "damageSides": 6,
+    "toHit": 10,
+    "toDamage": 10
+  },
+  "elementalDestructionVulnerabilities": ["acid", "fire"],
+  "tags": ["dungeon-reward", "equipment", "rfb", "weapon"]
+}

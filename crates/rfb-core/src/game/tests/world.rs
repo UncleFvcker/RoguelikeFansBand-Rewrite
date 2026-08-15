@@ -2042,7 +2042,7 @@ fn p100f_graveyard_guardians_and_rolled_soulsword_reward_are_one_shot() {
         .find(|actor| actor.id == "demo.guardian.graveyard-entrance.1")
         .expect("Master lich should guard the entrance");
     assert_eq!(entrance.kind_id, "demo.actor.master-lich");
-    assert_eq!(entrance.position, Position { x: 39, y: 16 });
+    assert_eq!(entrance.position, Position { x: 38, y: 16 });
 
     let (entrance_update, _) = defeat_guardian_with_status(
         &mut game,
@@ -4965,6 +4965,66 @@ fn returning_to_the_outpost_coordinate_restores_its_preserved_floor() {
 }
 
 #[test]
+fn p102c_chameleon_cave_generates_chameleons_and_rewards_polymorph() {
+    let mut game =
+        Game::new_with_build(202, "demo.build.warrior").expect("Middle-earth should create");
+    let mut floors = game
+        .content
+        .world(&game.world_id)
+        .expect("Middle-earth should remain available")
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.chameleon-cave"))
+        .cloned()
+        .collect::<Vec<_>>();
+    floors.sort_by_key(|floor| floor.depth);
+    assert_eq!(floors.len(), 16);
+
+    let mut initialized_forms = 0;
+    for definition in &floors {
+        let generated = game
+            .generate_procedural_floor(definition, None)
+            .unwrap_or_else(|error| panic!("{} should generate: {error}", definition.id));
+        assert!(generated.entities.iter().any(|actor| {
+            matches!(
+                actor.kind_id.as_str(),
+                "demo.actor.chameleon" | "demo.actor.chameleon-lord"
+            )
+        }));
+        assert!(generated.entities.iter().all(|actor| matches!(
+            actor.kind_id.as_str(),
+            "demo.actor.chameleon" | "demo.actor.chameleon-lord"
+        )));
+        initialized_forms += generated
+            .entities
+            .iter()
+            .filter(|actor| actor.appearance_kind_id.is_some())
+            .count();
+    }
+    assert!(initialized_forms > 0);
+
+    let final_floor = floors.last().expect("depth 45 should exist").clone();
+    let generated = game
+        .generate_procedural_floor(&final_floor, None)
+        .expect("Chameleon cave final floor should generate");
+    let guardian = generated
+        .entities
+        .iter()
+        .find(|actor| actor.id == "demo.guardian.chameleon-cave.1")
+        .cloned()
+        .expect("Chameleon Lord should guard depth 45");
+    game.current_floor_id = final_floor.id;
+    let (items, _) = game
+        .generate_death_loot(&guardian)
+        .expect("Chameleon Lord reward should generate");
+    assert!(
+        items
+            .iter()
+            .any(|item| item.kind_id == "demo.item.polymorph-potion")
+    );
+}
+
+#[test]
 fn formal_towns_share_the_continuous_surface_and_initialize_facilities_lazily() {
     const SECOND_TOWN_ID: &str = "demo.town.second";
     const SECOND_FLOOR_ID: &str = "demo.floor.second-town";
@@ -5054,4 +5114,102 @@ fn formal_towns_share_the_continuous_surface_and_initialize_facilities_lazily() 
     );
     assert_eq!(restored.shop_states[SECOND_SHOP_ID].inventory, stock);
     assert!(restored.stored_floors.contains_key("demo.floor.surface"));
+}
+
+#[test]
+fn p103e_volcano_generates_lava_guardians_and_fixed_staff_reward() {
+    let mut game =
+        Game::new_with_build(203, "demo.build.warrior").expect("Middle-earth should create");
+    dispatch_next(&mut game, enter_world_map_command());
+    game.wilderness_position = Some(Position { x: 13, y: 53 });
+    dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+    let entrance = game
+        .entities
+        .iter()
+        .find(|actor| actor.id == "demo.guardian.volcano-entrance.1")
+        .expect("Lesser Balrog should guard Volcano");
+    assert_eq!(entrance.kind_id, "demo.actor.lesser-balrog");
+    assert!(entrance.pack.as_ref().is_some_and(|pack| {
+        pack.behavior == MonsterPackBehaviorDto::GuardPosition && pack.leader_id == entrance.id
+    }));
+
+    let mut definitions = game
+        .content
+        .world(&game.world_id)
+        .expect("Middle-earth should remain available")
+        .procedural_floors
+        .iter()
+        .filter(|floor| floor.dungeon_id.as_deref() == Some("demo.dungeon.volcano"))
+        .cloned()
+        .collect::<Vec<_>>();
+    definitions.sort_by_key(|floor| floor.depth);
+    assert_eq!(definitions.len(), 11);
+
+    let mut generated_lava = 0;
+    let mut generated_rubble = false;
+    for depth in [50, 55, 57, 60] {
+        let definition = definitions
+            .iter()
+            .find(|floor| floor.depth == depth)
+            .expect("representative Volcano layer");
+        let generated = game
+            .generate_procedural_floor(definition, None)
+            .unwrap_or_else(|error| panic!("{} should generate: {error}", definition.id));
+        generated_lava += generated
+            .terrain
+            .iter()
+            .filter(|terrain| {
+                matches!(
+                    terrain.as_str(),
+                    "demo.terrain.surface-lava-deep" | "demo.terrain.surface-lava-shallow"
+                )
+            })
+            .count();
+        generated_rubble |= generated
+            .terrain
+            .iter()
+            .any(|terrain| terrain == "demo.terrain.rubble");
+        assert!(generated.entities.iter().all(|actor| {
+            let index = actor.position.y as usize * usize::from(generated.width)
+                + actor.position.x as usize;
+            game.content
+                .terrain(&generated.terrain[index])
+                .is_some_and(|terrain| terrain.walkable)
+        }));
+        if definition.final_floor {
+            assert!(generated.entities.iter().any(|actor| {
+                actor.id == "demo.guardian.volcano.1"
+                    && actor.kind_id == "demo.actor.shooting-star-the-red-dragon"
+            }));
+        }
+    }
+    assert!(generated_lava > 0);
+    assert!(generated_rubble);
+
+    let final_floor = definitions.last().expect("depth 60 should exist");
+    let generated = game
+        .generate_procedural_floor(final_floor, None)
+        .expect("Volcano final floor should generate");
+    let guardian = generated
+        .entities
+        .iter()
+        .find(|actor| actor.id == "demo.guardian.volcano.1")
+        .cloned()
+        .expect("Shooting Star should guard depth 60");
+    game.current_floor_id = final_floor.id.clone();
+    let (items, _) = game
+        .generate_death_loot(&guardian)
+        .expect("Shooting Star reward should generate");
+    let staff = items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.mana-storm-staff")
+        .expect("Shooting Star should drop the fixed Mana Storm staff");
+    assert_eq!(
+        staff
+            .activation
+            .as_ref()
+            .map(|activation| activation.profile_id.as_str()),
+        Some("demo.device-activation.mana-storm")
+    );
+    assert_eq!(staff.charges.map(|charges| charges.maximum), Some(5));
 }

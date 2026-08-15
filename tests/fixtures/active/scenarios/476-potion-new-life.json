@@ -608,6 +608,15 @@
             "hitBonus": 0
           },
           {
+            "itemKindId": "demo.item.diamond-edge",
+            "nameKey": "item-demo-diamond-edge-name",
+            "category": "melee",
+            "rank": "beginner",
+            "current": 4000,
+            "maximum": 8000,
+            "hitBonus": 0
+          },
+          {
             "itemKindId": "demo.item.dragon-bane",
             "nameKey": "item-demo-dragon-bane-name",
             "category": "melee",
@@ -1695,7 +1704,7 @@
         "conqueredDungeons": 0,
         "completedTasks": 0
       },
-      "stateHash": "c0f3c47c68161cfbe5266bdbc6128b7e2ef51f51111cca77281bb89153d92a23"
+      "stateHash": "c613f1419c79aa6870de6ec592aa03b077823017450fb8d47b36b212d46da1d8"
     },
     "events": [
       {
@@ -1707,6 +1716,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "c0f3c47c68161cfbe5266bdbc6128b7e2ef51f51111cca77281bb89153d92a23"
+    "saveRoundTripStateHash": "c613f1419c79aa6870de6ec592aa03b077823017450fb8d47b36b212d46da1d8"
   }
 }

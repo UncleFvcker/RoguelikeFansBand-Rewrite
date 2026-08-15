@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 8,
   "worldId": "demo.world.middle-earth",
   "towns": [
     {
@@ -83,6 +83,11 @@
       "sourceIndex": 6,
       "sourceName": "Graveyard",
       "id": "demo.dungeon.graveyard"
+    },
+    {
+      "sourceIndex": 20,
+      "sourceName": "Crystal castle",
+      "id": "demo.dungeon.crystal-castle"
     }
   ],
   "townPlans": [
@@ -93,6 +98,7 @@
       "position": { "x": 26, "y": 39 },
       "sourceFile": "lib/edit/t_ana.txt",
       "standardFacilities": [
+        { "symbol": "0", "sourceTag": "SHROOMERY" },
         { "symbol": "1", "sourceTag": "GENERAL_STORE" },
         { "symbol": "2", "sourceTag": "ARMOURY" },
         { "symbol": "3", "sourceTag": "WEAPON_SMITHS" },
@@ -116,9 +122,283 @@
           { "actionIndex": 3, "name": "传送到其他城镇", "minimumCost": 500, "maximumCost": 500, "command": "m", "actionId": 42, "restriction": 0 },
           { "actionIndex": 4, "name": "询问你的声望", "minimumCost": 1, "maximumCost": 1, "command": "a", "actionId": 55, "restriction": 0 }
         ]
+      },
+      "library": {
+        "buildingIndex": 0,
+        "name": "图书馆",
+        "ownerName": "托妮卡",
+        "ownerRace": "人类",
+        "services": [
+          { "actionIndex": 0, "name": "研究物品", "minimumCost": 1300, "maximumCost": 1300, "command": "a", "actionId": 1, "restriction": 0 },
+          { "actionIndex": 1, "name": "城镇纵览", "minimumCost": 0, "maximumCost": 0, "command": "h", "actionId": 2, "restriction": 0 },
+          { "actionIndex": 2, "name": "鉴定单件物品", "minimumCost": 50, "maximumCost": 50, "command": "i", "actionId": 44, "restriction": 0 },
+          { "actionIndex": 3, "name": "鉴定所有物品", "minimumCost": 350, "maximumCost": 350, "command": "p", "actionId": 26, "restriction": 0 }
+        ]
+      },
+      "weaponMaster": {
+        "buildingIndex": 6,
+        "name": "武器大师",
+        "ownerName": "锤趾汤姆泰克",
+        "ownerRace": "精灵",
+        "services": [
+          { "actionIndex": 0, "name": "评估护甲等级(AC)", "minimumCost": 400, "maximumCost": 400, "command": "a", "actionId": 46, "restriction": 0 }
+        ]
+      },
+      "warriorGuild": {
+        "buildingIndex": 7,
+        "name": "战士公会",
+        "ownerName": "扼龙者罗伯塔",
+        "ownerRace": "仿生人",
+        "memberships": [
+          { "sourceTag": "C", "identity": "*", "role": "None" },
+          { "sourceTag": "C", "identity": "Warrior", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Samurai", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Cavalry", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Berserker", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Blood-Knight", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Mauler", "role": "Owner" }
+        ],
+        "services": [
+          { "actionIndex": 0, "name": "强化武器", "minimumCost": 0, "maximumCost": 0, "command": "w", "actionId": 23, "restriction": 0 },
+          { "actionIndex": 1, "name": "强化护甲", "minimumCost": 0, "maximumCost": 0, "command": "a", "actionId": 24, "restriction": 0 }
+        ]
+      },
+      "mammonTemple": {
+        "buildingIndex": 9,
+        "name": "玛门神庙",
+        "ownerName": "灰衣托利亚",
+        "ownerRace": "仿生人",
+        "memberships": [
+          { "sourceTag": "C", "identity": "*", "role": "None" },
+          { "sourceTag": "C", "identity": "Priest", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Paladin", "role": "Member" }
+        ],
+        "services": [
+          { "actionIndex": 0, "name": "付钱治疗", "minimumCost": 0, "maximumCost": 500, "command": "h", "actionId": 28, "restriction": 0 },
+          { "actionIndex": 1, "name": "属性恢复", "minimumCost": 500, "maximumCost": 2500, "command": "r", "actionId": 29, "restriction": 0 },
+          { "actionIndex": 2, "name": "治疗突变", "minimumCost": 10000, "maximumCost": 100000, "command": "m", "actionId": 35, "restriction": 0 }
+        ]
+      },
+      "archerGuild": {
+        "buildingIndex": 11,
+        "name": "弓箭手公会",
+        "ownerName": "奈尔多利恩",
+        "ownerRace": "高等精灵",
+        "memberships": [
+          { "sourceTag": "C", "identity": "*", "role": "None" },
+          { "sourceTag": "C", "identity": "Ranger", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Archer", "role": "Owner" },
+          { "sourceTag": "C", "identity": "Sniper", "role": "Owner" }
+        ],
+        "services": [
+          { "actionIndex": 0, "name": "强化弹药", "minimumCost": 22, "maximumCost": 44, "command": "a", "actionId": 30, "restriction": 0 },
+          { "actionIndex": 1, "name": "强化弓", "minimumCost": 0, "maximumCost": 0, "command": "b", "actionId": 31, "restriction": 0 }
+        ]
+      },
+      "trumpTower": {
+        "buildingIndex": 14,
+        "name": "王牌之塔",
+        "ownerName": "伊万·叶克尼亚兹",
+        "ownerRace": "人类",
+        "memberships": [
+          { "sourceTag": "R", "identity": "*", "role": "None" },
+          { "sourceTag": "R", "identity": "Amberite", "role": "Member" },
+          { "sourceTag": "M", "identity": "*", "role": "None" },
+          { "sourceTag": "M", "identity": "Trump", "role": "Owner" }
+        ],
+        "services": [
+          { "actionIndex": 0, "name": "传送回地下城", "minimumCost": 0, "maximumCost": 150, "command": "r", "actionId": 33, "restriction": 0 }
+        ]
       }
     }
   ],
+  "bountyOffices": [
+    {
+      "townId": "demo.town.outpost",
+      "sourceFile": "lib/edit/t_outp.txt",
+      "building": {
+        "buildingIndex": 13,
+        "name": "赏金事务所",
+        "ownerName": "驯兽师阿拉克",
+        "ownerRace": "矮人",
+        "services": [
+          { "actionIndex": 0, "name": "今日通缉", "minimumCost": 0, "maximumCost": 0, "command": "a", "actionId": 38, "restriction": 0 },
+          { "actionIndex": 1, "name": "通缉独特怪名单", "minimumCost": 0, "maximumCost": 0, "command": "b", "actionId": 39, "restriction": 0 },
+          { "actionIndex": 2, "name": "特殊目标", "minimumCost": 0, "maximumCost": 0, "command": "s", "actionId": 37, "restriction": 0 },
+          { "actionIndex": 3, "name": "领取赏金", "minimumCost": 0, "maximumCost": 0, "command": "c", "actionId": 40, "restriction": 0 },
+          { "actionIndex": 4, "name": "悬赏任务", "minimumCost": 0, "maximumCost": 0, "command": "m", "actionId": 65, "restriction": 0 }
+        ]
+      }
+    },
+    {
+      "townId": "demo.town.anambar",
+      "sourceFile": "lib/edit/t_ana.txt",
+      "building": {
+        "buildingIndex": 13,
+        "name": "警察局",
+        "ownerName": "瓦茨",
+        "ownerRace": "小魔怪",
+        "services": [
+          { "actionIndex": 0, "name": "今日通缉", "minimumCost": 0, "maximumCost": 0, "command": "a", "actionId": 38, "restriction": 0 },
+          { "actionIndex": 1, "name": "通缉独特怪名单", "minimumCost": 0, "maximumCost": 0, "command": "b", "actionId": 39, "restriction": 0 },
+          { "actionIndex": 2, "name": "特殊目标", "minimumCost": 0, "maximumCost": 0, "command": "s", "actionId": 37, "restriction": 0 },
+          { "actionIndex": 3, "name": "领取赏金", "minimumCost": 0, "maximumCost": 0, "command": "c", "actionId": 40, "restriction": 0 },
+          { "actionIndex": 4, "name": "请求任务", "minimumCost": 0, "maximumCost": 0, "command": "q", "actionId": 6, "restriction": 0 },
+          { "actionIndex": 5, "name": "悬赏任务", "minimumCost": 0, "maximumCost": 0, "command": "m", "actionId": 65, "restriction": 0 }
+        ]
+      }
+    }
+  ],
+  "anambarTaskPlan": {
+    "townId": "demo.town.anambar",
+    "townSourceFile": "lib/edit/t_ana.txt",
+    "questInfoSourceFile": "lib/edit/q_info.txt",
+    "facilities": [
+      {
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "buildingIndex": 1,
+        "name": "镇长办公室",
+        "ownerName": "锆石·吉姆",
+        "ownerRace": "人类",
+        "entrancePosition": { "x": 16, "y": 9 },
+        "requestActionIndex": 0,
+        "logicalSourceTaskIndexes": [22, 60, 68, 67, 75]
+      },
+      {
+        "facilityId": "demo.town-facility.anambar-police-station",
+        "buildingIndex": 13,
+        "name": "警察局",
+        "ownerName": "瓦茨",
+        "ownerRace": "小魔怪",
+        "entrancePosition": { "x": 12, "y": 9 },
+        "requestActionIndex": 4,
+        "logicalSourceTaskIndexes": [74, 73, 72]
+      }
+    ],
+    "tasks": [
+      {
+        "sourceIndex": 22,
+        "sourceName": "The Orc Camp (Anambar)",
+        "level": 20,
+        "sourceFile": "lib/edit/q_orcs.txt",
+        "taskId": "demo.task.anambar-orc-camp",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 60,
+        "sourceName": "Clear the Tunnels (Anambar)",
+        "level": 27,
+        "sourceFile": "lib/edit/q_orcs2.txt",
+        "taskId": "demo.task.anambar-clear-tunnels",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 22,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 99,
+        "sourceName": "The Treasure of Scary Rock (Anambar)",
+        "level": 27,
+        "sourceFile": "lib/edit/q_scary.txt",
+        "taskId": "demo.task.anambar-scary-rock-treasure",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 22,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 68,
+        "sourceName": "Dinosaur Quest (Anambar)",
+        "level": 33,
+        "sourceFile": "lib/edit/q_dino.txt",
+        "taskId": "demo.task.anambar-dinosaur-quest",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 60,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 67,
+        "sourceName": "Crystal Quest (Anambar)",
+        "level": 40,
+        "sourceFile": "lib/edit/q_crystal.txt",
+        "taskId": "demo.task.anambar-crystal-quest",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 68,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 75,
+        "sourceName": "The Mystery of Apina Island (Anambar)",
+        "level": 55,
+        "sourceFile": "lib/edit/q_apina.txt",
+        "taskId": "demo.task.anambar-apina-island",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 67,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 83,
+        "sourceName": "The Treachery of Lord Bovin (Anambar)",
+        "level": 50,
+        "sourceFile": "lib/edit/q_htower.txt",
+        "taskId": "demo.task.anambar-lord-bovin-treachery",
+        "facilityId": "demo.town-facility.anambar-mayor-office",
+        "prerequisiteSourceIndex": 67,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 74,
+        "sourceName": "Cop Quest (Anambar)",
+        "level": 12,
+        "sourceFile": "lib/edit/q_cq1.txt",
+        "taskId": "demo.task.anambar-cop-quest",
+        "facilityId": "demo.town-facility.anambar-police-station"
+      },
+      {
+        "sourceIndex": 73,
+        "sourceName": "Smugglers' Den (Anambar)",
+        "level": 30,
+        "sourceFile": "lib/edit/q_smug.txt",
+        "taskId": "demo.task.anambar-smugglers-den",
+        "facilityId": "demo.town-facility.anambar-police-station",
+        "prerequisiteSourceIndex": 74,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 72,
+        "sourceName": "The Killer in the Cellar (Anambar)",
+        "level": 70,
+        "sourceFile": "lib/edit/q_cellar.txt",
+        "taskId": "demo.task.anambar-cellar-killer",
+        "facilityId": "demo.town-facility.anambar-police-station",
+        "prerequisiteSourceIndex": 73,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      }
+    ],
+    "substitutions": [
+      {
+        "groupId": "demo.task-substitution.anambar-mayor-line",
+        "primarySourceIndex": 60,
+        "alternateSourceIndex": 99,
+        "randomModulus": 64,
+        "alternateMinimum": 32
+      },
+      {
+        "groupId": "demo.task-substitution.anambar-mayor-line",
+        "primarySourceIndex": 75,
+        "alternateSourceIndex": 83,
+        "randomModulus": 64,
+        "alternateMinimum": 32
+      }
+    ]
+  },
   "dungeonPlans": [
     {
       "sourceIndex": 3,
@@ -811,6 +1091,119 @@
         "level": 40
       },
       "finalObject": { "tval": 90, "sval": 2 }
+    },
+    {
+      "sourceIndex": 18,
+      "sourceName": "Chameleon cave",
+      "id": "demo.dungeon.chameleon-cave",
+      "position": { "x": 94, "y": 52 },
+      "minimumDepth": 30,
+      "maximumDepth": 45,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "CAVERN",
+        "WATER_RIVER",
+        "LAVA_RIVER",
+        "ARENA",
+        "DESTROY",
+        "LAKE_WATER",
+        "LAKE_LAVA",
+        "LAKE_RUBBLE",
+        "LAKE_TREE",
+        "CHAMELEON"
+      ],
+      "monsterPreferences": ["CHAMELEON"],
+      "floorTerrainDistribution": [
+        { "sourceTag": "FLOOR", "percent": 100 },
+        { "sourceTag": "FLOOR", "percent": 0 },
+        { "sourceTag": "FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 50,
+      "guardian": {
+        "sourceIndex": 1041,
+        "sourceName": "Chameleon Lord",
+        "chineseName": "变色龙领主",
+        "level": 45
+      },
+      "finalObject": { "tval": 75, "sval": 66 }
+    },
+    {
+      "sourceIndex": 8,
+      "sourceName": "Volcano",
+      "id": "demo.dungeon.volcano",
+      "position": { "x": 13, "y": 53 },
+      "minimumDepth": 50,
+      "maximumDepth": 60,
+      "monsterDivisor": 0,
+      "generationFlags": [
+        "CAVE",
+        "CAVERN",
+        "LAKE_LAVA",
+        "LAVA_RIVER",
+        "DESTROY"
+      ],
+      "monsterPreferences": ["IM_FIRE", "CAN_FLY", "WILD_VOLCANO"],
+      "floorTerrainDistribution": [
+        { "sourceTag": "DIRT", "percent": 40 },
+        { "sourceTag": "SHALLOW_LAVA", "percent": 40 },
+        { "sourceTag": "DEEP_LAVA", "percent": 20 }
+      ],
+      "tunnelPercent": 0,
+      "initialGuardian": {
+        "sourceIndex": 940,
+        "sourceName": "Lesser Balrog",
+        "chineseName": "次级炎魔",
+        "level": 49
+      },
+      "guardian": {
+        "sourceIndex": 972,
+        "sourceName": "Shooting Star the Red Dragon",
+        "chineseName": "红龙晨星",
+        "level": 60
+      },
+      "finalObject": { "tval": 55, "sval": 0 },
+      "finalEgoSourceIndex": 560
+    },
+    {
+      "sourceIndex": 20,
+      "sourceName": "Crystal castle",
+      "id": "demo.dungeon.crystal-castle",
+      "position": { "x": 40, "y": 37 },
+      "minimumDepth": 40,
+      "maximumDepth": 60,
+      "monsterDivisor": 0,
+      "generationFlags": ["ARENA", "NO_CAVE", "CURTAIN", "GLASS_DOOR", "GLASS_ROOM"],
+      "monsterPreferences": [
+        "INVISIBLE",
+        "HAS_LITE_1",
+        "SELF_LITE_1",
+        "HAS_LITE_2",
+        "SELF_LITE_2",
+        "HAS_DARK_1",
+        "SELF_DARK_1",
+        "HAS_DARK_2",
+        "SELF_DARK_2",
+        "RES_SHAR"
+      ],
+      "floorTerrainDistribution": [
+        { "sourceTag": "GLASS_FLOOR", "percent": 40 },
+        { "sourceTag": "FLOOR", "percent": 60 },
+        { "sourceTag": "GLASS_FLOOR", "percent": 0 }
+      ],
+      "tunnelPercent": 100,
+      "initialGuardian": {
+        "sourceIndex": 676,
+        "sourceName": "Ethereal dragon",
+        "chineseName": "虚灵龙",
+        "level": 43
+      },
+      "guardian": {
+        "sourceIndex": 1167,
+        "sourceName": "The Diamond Dragon",
+        "chineseName": "钻石巨龙",
+        "level": 60
+      },
+      "finalObject": { "tval": 23, "sval": 31 }
     }
   ]
 }

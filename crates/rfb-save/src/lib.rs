@@ -243,6 +243,12 @@ mod tests {
             item_property_knowledge: Vec::new(),
             task_progress: Vec::new(),
             task_states: Vec::new(),
+            bounty_state: rfb_protocol::BountyStateSaveDto {
+                daily_day: 0,
+                daily_actor_kind_id: "demo.actor.test-target".to_owned(),
+                completed_wanted_actor_kind_ids: Vec::new(),
+                mission: None,
+            },
             dungeon_states: Vec::new(),
             defeated_limited_actor_counts: Vec::new(),
             generated_artifact_ids: Vec::new(),

@@ -115,6 +115,8 @@ use rfb_protocol::{
 };
 
 mod abilities;
+mod bounty;
+pub(crate) use bounty::BountyOfficeOutcome;
 mod capabilities;
 mod capture_ball;
 mod chaos_patron;
@@ -230,7 +232,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 106;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 107;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -1070,6 +1072,7 @@ pub struct Game {
     item_knowledge: BTreeMap<String, ItemKnowledgeState>,
     item_property_knowledge: BTreeMap<String, ItemPropertyKnowledgeState>,
     task_states: BTreeMap<String, TaskState>,
+    bounty_state: bounty::BountyState,
     command_actor_deaths: Vec<ActorDeathRecord>,
     dungeon_states: BTreeMap<String, DungeonState>,
     defeated_limited_actor_counts: BTreeMap<String, u16>,
@@ -1406,7 +1409,7 @@ impl Game {
             .wilderness
             .as_ref()
             .map(|wilderness| position_from_content(wilderness.start_position));
-        let task_states = initial_task_states(world);
+        let task_states = initial_task_states(world, seed);
         let dungeon_states = initial_dungeon_states(world, seed);
         let (town_states, shop_states) = town::initial_town_and_shop_states(
             world,
@@ -1467,6 +1470,7 @@ impl Game {
             item_knowledge: BTreeMap::new(),
             item_property_knowledge: BTreeMap::new(),
             task_states,
+            bounty_state: bounty::BountyState::default(),
             command_actor_deaths: Vec::new(),
             dungeon_states,
             defeated_limited_actor_counts: BTreeMap::new(),
@@ -1518,6 +1522,7 @@ impl Game {
         game.player.hp = game.effective_player_max_hp();
         game.initialize_carried_loot()?;
         game.initialize_continuous_wilderness_surface()?;
+        game.refresh_daily_bounty_target();
         game.refresh_invisible_visibility(true, &BTreeMap::new());
         game.refresh_weird_mind_visibility(true, &BTreeMap::new());
         game.reveal_current_visibility();
@@ -1618,6 +1623,7 @@ impl Game {
             .collect::<BTreeSet<_>>();
         self.command_actor_deaths.clear();
         self.validate_runtime_invariants(&action)?;
+        self.refresh_daily_bounty_target();
         let base_revision = self.revision;
         let world_tick_before_command = self.world_tick;
         let player_position_before_command = self.player.position;
@@ -1758,6 +1764,10 @@ impl Game {
                     | GameAction::DismissPets
                     | GameAction::EnterWorldMap { .. }
                     | GameAction::IdentifyAtFacility { .. }
+                    | GameAction::ResearchItemAtFacility { .. }
+                    | GameAction::IdentifyAllAtFacility { .. }
+                    | GameAction::UseFacilityService { .. }
+                    | GameAction::UseBountyOffice { .. }
                     | GameAction::IncreaseAttribute { .. }
                     | GameAction::ChooseRaceMutation { .. }
                     | GameAction::LeaveWorldMap
@@ -1951,6 +1961,55 @@ impl Game {
                 Err(reason) => events.push(DomainEvent::FacilityIdentifyUnavailable {
                     facility_id,
                     item_id,
+                    reason: reason.to_owned(),
+                }),
+            },
+            GameAction::ResearchItemAtFacility {
+                facility_id,
+                item_id,
+            } => match self.research_item_at_facility(&facility_id, &item_id) {
+                Ok(outcome) => events.push(DomainEvent::FacilityItemIdentified { outcome }),
+                Err(reason) => events.push(DomainEvent::FacilityIdentifyUnavailable {
+                    facility_id,
+                    item_id,
+                    reason: reason.to_owned(),
+                }),
+            },
+            GameAction::IdentifyAllAtFacility { facility_id } => {
+                match self.identify_all_at_facility(&facility_id) {
+                    Ok(outcome) => events.push(DomainEvent::FacilityItemsIdentified { outcome }),
+                    Err(reason) => events.push(DomainEvent::FacilityIdentifyAllUnavailable {
+                        facility_id,
+                        reason: reason.to_owned(),
+                    }),
+                }
+            }
+            GameAction::UseFacilityService {
+                facility_id,
+                service,
+                item_id,
+            } => match self.use_town_facility_service(
+                &facility_id,
+                service,
+                item_id.as_deref(),
+                &mut events,
+            ) {
+                Ok(outcome) => events.push(DomainEvent::FacilityServiceCompleted { outcome }),
+                Err(reason) => events.push(DomainEvent::FacilityServiceUnavailable {
+                    facility_id,
+                    service,
+                    reason: reason.to_owned(),
+                }),
+            },
+            GameAction::UseBountyOffice {
+                facility_id,
+                action,
+                item_id,
+            } => match self.use_bounty_office(&facility_id, action, item_id.as_deref()) {
+                Ok(outcome) => events.push(DomainEvent::BountyOfficeCompleted { outcome }),
+                Err(reason) => events.push(DomainEvent::BountyOfficeUnavailable {
+                    facility_id,
+                    action,
                     reason: reason.to_owned(),
                 }),
             },
@@ -2838,6 +2897,10 @@ impl Game {
             } else if !self.player_is_dead() && !self.wilderness_blocks_regeneration() {
                 self.apply_pet_upkeep_mana_loss(&mut events);
             }
+        }
+        self.refresh_daily_bounty_target();
+        if let Some(actor_kind_id) = self.apply_bounty_deaths() {
+            events.push(DomainEvent::BountyMissionCompleted { actor_kind_id });
         }
         self.apply_task_events(&mut events)?;
         self.apply_campaign_events(&mut events);
@@ -6447,7 +6510,7 @@ impl Game {
             .cloned()
             .collect::<Vec<_>>();
         let initial_required =
-            task_initial_state(task_definition(world, task_id)?, &self.task_states).required;
+            task_initial_state(world, task_definition(world, task_id)?, &self.task_states).required;
         if members.is_empty() {
             return None;
         }

@@ -7,6 +7,11 @@ import type {
   GameEventDto,
   GameSnapshot,
   GameUpdate,
+  BountyOfficeActionDto,
+  BountyMissionStatusDto,
+  FacilityMembershipDto,
+  FacilityServiceKindDto,
+  ItemIdentificationDto,
   TaskServiceDto,
   TaskStatusDto,
   TaskStatusKindDto,
@@ -35,6 +40,7 @@ export class TaskServicePanel {
   #service: TaskServiceDto | undefined;
   #dismissedServiceId: string | undefined;
   #feedback: GameEventDto | undefined;
+  #overviewVisible = false;
   #installed = false;
 
   constructor(options: {
@@ -73,7 +79,10 @@ export class TaskServicePanel {
 
   render(state: GameSnapshot | GameUpdate): void {
     const event = lastTaskServiceEvent(state);
-    if (event) this.#feedback = event;
+    if (event) {
+      this.#feedback = event;
+      this.#overviewVisible = false;
+    }
     const service = state.taskServices.find((candidate) => candidate.playerAtEntrance);
     if (!service) {
       this.reset();
@@ -81,7 +90,10 @@ export class TaskServicePanel {
     }
     const changed = this.#service?.id !== service.id;
     this.#service = service;
-    if (changed) this.#feedback = undefined;
+    if (changed) {
+      this.#feedback = undefined;
+      this.#overviewVisible = false;
+    }
     this.#renderPanel();
     if (!this.#dom.dialog.open && this.#dismissedServiceId !== service.id) {
       this.#beforeOpen();
@@ -102,6 +114,7 @@ export class TaskServicePanel {
     this.#service = undefined;
     this.#dismissedServiceId = undefined;
     this.#feedback = undefined;
+    this.#overviewVisible = false;
     if (this.#dom.dialog.open) this.#dom.dialog.close();
   }
 
@@ -121,13 +134,39 @@ export class TaskServicePanel {
     if (facilityButton && service && !facilityButton.disabled && !this.#state.busy) {
       this.#feedback = undefined;
       const action = facilityButton.dataset.facilityAction;
-      if (action === "identify") {
-        const select = this.#dom.list.querySelector<HTMLSelectElement>("[data-identify-item]");
+      this.#overviewVisible = false;
+      if (action === "identify" || action === "research") {
+        const select = this.#dom.list.querySelector<HTMLSelectElement>(
+          `[data-facility-item-action="${action}"]`,
+        );
         if (select?.value) {
           void this.#dispatch({
-            type: "identify-at-facility",
+            type: action === "identify" ? "identify-at-facility" : "research-item-at-facility",
             facilityId: service.id,
             itemId: select.value,
+          });
+        }
+      } else if (action === "identify-all") {
+        void this.#dispatch({
+          type: "identify-all-at-facility",
+          facilityId: service.id,
+        });
+      } else if (action === "overview") {
+        this.#overviewVisible = true;
+        this.#renderPanel();
+      } else if (action === "service") {
+        const facilityService = facilityButton.dataset.facilityService as
+          | FacilityServiceKindDto
+          | undefined;
+        if (facilityService) {
+          const select = this.#dom.list.querySelector<HTMLSelectElement>(
+            `select[data-facility-service="${facilityService}"]`,
+          );
+          void this.#dispatch({
+            type: "use-facility-service",
+            facilityId: service.id,
+            service: facilityService,
+            itemId: select?.value || undefined,
           });
         }
       } else if (action === "rename") {
@@ -139,6 +178,20 @@ export class TaskServicePanel {
             name: input.value,
           });
         }
+      }
+      return;
+    }
+    const bountyButton = target.closest<HTMLButtonElement>("[data-bounty-action]");
+    if (bountyButton && service && !bountyButton.disabled && !this.#state.busy) {
+      const action = bountyButton.dataset.bountyAction as BountyOfficeActionDto | undefined;
+      if (action) {
+        this.#feedback = undefined;
+        void this.#dispatch({
+          type: "use-bounty-office",
+          facilityId: service.id,
+          action,
+          itemId: bountyButton.dataset.itemId,
+        });
       }
       return;
     }
@@ -160,12 +213,17 @@ export class TaskServicePanel {
     this.#dom.description.textContent = this.#localization.format(service.descriptionKey);
     this.#dom.owner.textContent = this.#localization.format("task-service-owner", {
       owner: this.#localization.format(service.ownerNameKey),
+      membership: this.#localization.format(facilityMembershipKey(service.membership)),
     });
     this.#renderTasks();
-    this.#dom.feedback.textContent = this.#feedback ? this.#formatEvent(this.#feedback) : "";
+    this.#dom.feedback.textContent = this.#feedback
+      ? this.#formatEvent(this.#feedback)
+      : this.#overviewVisible && service.overviewMessageKey
+        ? this.#localization.format(service.overviewMessageKey)
+        : "";
     this.#dom.feedback.dataset.kind = this.#feedback?.kind.endsWith("unavailable")
       ? "error"
-      : this.#feedback
+      : this.#feedback || this.#overviewVisible
         ? "success"
         : "none";
   }
@@ -188,13 +246,19 @@ export class TaskServicePanel {
     const service = this.#service;
     if (!service) return;
     const document = this.#dom.list.ownerDocument;
-    if (service.identifyItemCost !== undefined && service.identifyItemCost !== null) {
+    this.#renderBountyOffice();
+    const renderItemAction = (
+      action: "identify" | "research",
+      cost: number | null | undefined,
+      full: boolean,
+    ): void => {
+      if (cost === undefined || cost === null) return;
       const row = document.createElement("li");
       row.className = "task-service-row";
       const select = document.createElement("select");
-      select.dataset.identifyItem = "true";
+      select.dataset.facilityItemAction = action;
       const items = [...this.#state.inventory, ...this.#state.equipment]
-        .filter((item) => item.identification !== "identified");
+        .filter((item) => facilityIdentificationCandidate(item.identification, full));
       for (const item of items) {
         const option = document.createElement("option");
         option.value = item.id;
@@ -204,12 +268,81 @@ export class TaskServicePanel {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "primary-button task-service-action";
-      button.dataset.facilityAction = "identify";
+      button.dataset.facilityAction = action;
       button.disabled = this.#state.busy || items.length === 0;
-      button.textContent = this.#localization.format("action-facility-identify", {
-        cost: service.identifyItemCost,
-      });
+      button.textContent = this.#localization.format(
+        action === "identify" ? "action-facility-identify" : "action-facility-research",
+        {
+          cost,
+        },
+      );
       row.append(select, button);
+      this.#dom.list.append(row);
+    };
+    renderItemAction("identify", service.identifyItemCost, false);
+    renderItemAction("research", service.researchItemCost, true);
+    if (service.identifyAllItemsCost !== undefined && service.identifyAllItemsCost !== null) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-button task-service-action";
+      button.dataset.facilityAction = "identify-all";
+      button.disabled = this.#state.busy || ![...this.#state.inventory, ...this.#state.equipment]
+        .some((item) => facilityIdentificationCandidate(item.identification, false));
+      button.textContent = this.#localization.format("action-facility-identify-all", {
+        cost: service.identifyAllItemsCost,
+      });
+      row.append(button);
+      this.#dom.list.append(row);
+    }
+    if (service.overviewMessageKey) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "task-service-action";
+      button.dataset.facilityAction = "overview";
+      button.disabled = this.#state.busy;
+      button.textContent = this.#localization.format("action-facility-overview");
+      row.append(button);
+      this.#dom.list.append(row);
+    }
+    const carriedItems = new Map(
+      [...this.#state.inventory, ...this.#state.equipment].map((item) => [item.id, item]),
+    );
+    for (const facilityService of service.serviceActions ?? []) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      if (facilityServiceUsesItem(facilityService.kind)) {
+        const select = document.createElement("select");
+        select.dataset.facilityService = facilityService.kind;
+        for (const target of facilityService.targets ?? []) {
+          const item = carriedItems.get(target.itemId);
+          if (!item) continue;
+          const option = document.createElement("option");
+          option.value = target.itemId;
+          option.textContent = this.#localization.format("facility-service-target-price", {
+            target: this.#visibleItemName(item.displayNameKey, item.kindId),
+            cost: target.cost,
+          });
+          select.append(option);
+        }
+        row.append(select);
+      }
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-button task-service-action";
+      button.dataset.facilityAction = "service";
+      button.dataset.facilityService = facilityService.kind;
+      button.disabled = this.#state.busy
+        || facilityServiceUsesItem(facilityService.kind)
+          && (facilityService.targets?.length ?? 0) === 0;
+      button.textContent = this.#localization.format(
+        facilityServiceActionKey(facilityService.kind),
+        facilityServiceUsesItem(facilityService.kind) ? undefined : { cost: facilityService.cost },
+      );
+      row.append(button);
       this.#dom.list.append(row);
     }
     if (service.legalNameChangeCost !== undefined && service.legalNameChangeCost !== null) {
@@ -232,6 +365,92 @@ export class TaskServicePanel {
       row.append(input, button);
       this.#dom.list.append(row);
     }
+  }
+
+  #renderBountyOffice(): void {
+    const bounty = this.#service?.bountyOffice;
+    if (!bounty) return;
+    const document = this.#dom.list.ownerDocument;
+    const daily = document.createElement("li");
+    daily.className = "task-service-row";
+    daily.textContent = this.#localization.format("bounty-daily-target", {
+      actor: this.#localization.format(bounty.dailyTarget.actorNameKey),
+      corpse: bounty.dailyTarget.corpseReward,
+      skeleton: bounty.dailyTarget.skeletonReward,
+    });
+    this.#dom.list.append(daily);
+
+    const wanted = document.createElement("li");
+    wanted.className = "task-service-row task-service-copy";
+    for (const [index, target] of bounty.wantedTargets.entries()) {
+      const line = document.createElement("p");
+      line.textContent = this.#localization.format("bounty-wanted-target", {
+        index: index + 1,
+        status: this.#localization.format(
+          target.completed ? "bounty-wanted-completed" : "bounty-wanted-open",
+        ),
+        actor: this.#localization.format(target.actorNameKey),
+        reward: this.#localization.format(target.rewardNameKey),
+      });
+      wanted.append(line);
+    }
+    this.#dom.list.append(wanted);
+
+    for (const turnIn of bounty.turnIns) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-button task-service-action";
+      button.dataset.bountyAction = "turn-in";
+      button.dataset.itemId = turnIn.itemId;
+      button.disabled = this.#state.busy;
+      button.textContent = turnIn.reward.kind === "gold"
+        ? this.#localization.format("action-bounty-turn-in-gold", {
+            actor: this.#localization.format(turnIn.actorNameKey),
+            gold: turnIn.reward.amount,
+          })
+        : this.#localization.format("action-bounty-turn-in-item", {
+            actor: this.#localization.format(turnIn.actorNameKey),
+            item: this.#localization.format(turnIn.reward.itemNameKey),
+          });
+      row.append(button);
+      this.#dom.list.append(row);
+    }
+
+    const missionRow = document.createElement("li");
+    missionRow.className = "task-service-row";
+    const missionButton = document.createElement("button");
+    missionButton.type = "button";
+    missionButton.className = "primary-button task-service-action";
+    missionButton.disabled = this.#state.busy;
+    if (!bounty.mission) {
+      missionButton.dataset.bountyAction = bountyMissionAction(undefined);
+      missionButton.textContent = this.#localization.format("action-bounty-request-mission");
+    } else if (bounty.mission.status === "active") {
+      const progress = document.createElement("p");
+      progress.textContent = this.#localization.format("bounty-mission-progress", {
+        floor: this.#localization.format(bounty.mission.floorNameKey),
+        depth: bounty.mission.depth,
+        actor: this.#localization.format(bounty.mission.actorNameKey),
+        remaining: bounty.mission.remaining,
+        total: bounty.mission.total,
+      });
+      missionRow.append(progress);
+      missionButton.dataset.bountyAction = bountyMissionAction(bounty.mission.status);
+      missionButton.textContent = this.#localization.format("action-bounty-abandon-mission");
+    } else {
+      const complete = document.createElement("p");
+      complete.textContent = this.#localization.format("bounty-mission-complete", {
+        actor: this.#localization.format(bounty.mission.actorNameKey),
+        item: this.#localization.format(bounty.mission.rewardNameKey),
+      });
+      missionRow.append(complete);
+      missionButton.dataset.bountyAction = bountyMissionAction(bounty.mission.status);
+      missionButton.textContent = this.#localization.format("action-bounty-claim-mission");
+    }
+    missionRow.append(missionButton);
+    this.#dom.list.append(missionRow);
   }
 
   #taskRow(task: TaskStatusDto): HTMLLIElement {
@@ -290,6 +509,14 @@ export function taskActionForStatus(
   return undefined;
 }
 
+export function bountyMissionAction(
+  status: BountyMissionStatusDto | undefined,
+): BountyOfficeActionDto {
+  if (status === "active") return "abandon-mission";
+  if (status === "reward-available") return "claim-mission-reward";
+  return "request-mission";
+}
+
 function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | undefined {
   if (!("events" in state)) return undefined;
   for (let index = state.events.length - 1; index >= 0; index -= 1) {
@@ -301,13 +528,42 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "task.reward-claim-unavailable" ||
       event?.kind === "facility.identify-unavailable" ||
       event?.kind === "facility.identified" ||
+      event?.kind === "facility.identify-all-unavailable" ||
+      event?.kind === "facility.identified-all" ||
+      event?.kind === "facility.service-unavailable" ||
+      event?.kind === "facility.healed" ||
+      event?.kind === "facility.vitality-restored" ||
+      event?.kind === "facility.mutation-cured" ||
+      event?.kind === "facility.item-enchanted" ||
+      event?.kind === "facility.armor-assessed" ||
+      event?.kind === "facility.recall-started" ||
       event?.kind === "facility.rename-unavailable" ||
-      event?.kind === "facility.renamed"
+      event?.kind === "facility.renamed" ||
+      event?.kind.startsWith("bounty.")
     ) {
       return event;
     }
   }
   return undefined;
+}
+
+export function facilityMembershipKey(membership: FacilityMembershipDto) {
+  return `facility-membership-${membership}` as const;
+}
+
+export function facilityServiceUsesItem(service: FacilityServiceKindDto): boolean {
+  return service.startsWith("enchant-");
+}
+
+export function facilityServiceActionKey(service: FacilityServiceKindDto) {
+  return `action-facility-${service}` as const;
+}
+
+export function facilityIdentificationCandidate(
+  identification: ItemIdentificationDto,
+  full: boolean,
+): boolean {
+  return full ? identification !== "identified" : identification === "unexamined";
 }
 
 function createTaskServiceDom(document: Document): TaskServiceDom {

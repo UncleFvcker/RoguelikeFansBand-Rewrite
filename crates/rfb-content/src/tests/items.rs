@@ -923,6 +923,7 @@ fn riding_weapons_match_the_existing_rfb_master_subset() {
             "demo.item.ball-and-chain",
             "demo.item.broad-spear",
             "demo.item.broad-sword",
+            "demo.item.diamond-edge",
             "demo.item.falchion",
             "demo.item.fauchard",
             "demo.item.flail",
@@ -1978,5 +1979,68 @@ fn rfb_base_kind_identity_rejects_duplicate_source_indices_and_kind_values() {
     assert!(matches!(
         validate_and_normalize(&mut duplicate_kind),
         Err(ContentError::InvalidItemSourceIdentity(_))
+    ));
+}
+
+#[test]
+fn p103b_mana_storm_staff_keeps_fixed_device_power_and_protection() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.mana-storm-staff")
+        .expect("fixed Mana Storm staff should exist");
+    assert_eq!((item.generation_level, item.weight_tenths_pound), (85, 50));
+    assert_eq!(item.base_value, 17_820);
+    assert!(item.mogaminator_rare);
+    assert_eq!(
+        item.elemental_destruction_immunities,
+        BTreeSet::from([
+            ItemDestructionElement::Acid,
+            ItemDestructionElement::Cold,
+            ItemDestructionElement::Electricity,
+            ItemDestructionElement::Fire,
+        ])
+    );
+    assert!(item.elemental_destruction_vulnerabilities.is_empty());
+
+    let generation = item
+        .device_generation
+        .as_ref()
+        .expect("Mana Storm staff should be a device");
+    assert_eq!(
+        generation.recovery,
+        Some(ItemDeviceRecoveryDefinition {
+            interval_ticks: 10,
+            energy_per_mille: 10,
+        })
+    );
+    let [activation] = generation.activations.as_slice() else {
+        panic!("Mana Storm staff should have one fixed activation");
+    };
+    assert_eq!(activation.device_check_difficulty, 85);
+    assert_eq!(
+        (
+            activation.charges.minimum,
+            activation.charges.maximum,
+            activation.charges.cost
+        ),
+        (5, 5, 1)
+    );
+    assert_eq!(
+        activation.target.modes,
+        [AbilityTargetModeDefinition::SelfTarget]
+    );
+    assert!(matches!(
+        activation.effect,
+        ItemUseEffectDefinition::SelfCenteredElementalBlast {
+            base_damage: 792,
+            damage_type: ActorDamageType::Mana,
+            radius: 5,
+            backlash_sides: 0,
+            backlash_bonus: 0,
+            ..
+        }
     ));
 }

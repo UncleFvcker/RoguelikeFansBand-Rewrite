@@ -17,6 +17,27 @@ fn valid_procedural_count_range(range: ProceduralCountRangeDefinition) -> bool {
     (1..=8).contains(&range.minimum) && range.minimum <= range.maximum && range.maximum <= 8
 }
 
+fn actor_can_cross_terrain(actor: &ActorDefinition, terrain: &TerrainDefinition) -> bool {
+    if terrain.tags.iter().any(|tag| tag == "warding-glyph") {
+        return false;
+    }
+    if actor.movement.modes.contains(&ActorMovementMode::PassWall) && terrain.allows_wall_passage {
+        return true;
+    }
+    let flies = actor.movement.modes.contains(&ActorMovementMode::Fly);
+    if actor.movement.modes.contains(&ActorMovementMode::Aquatic) {
+        return terrain.tags.iter().any(|tag| tag == "water")
+            || (flies
+                && (terrain.walkable || terrain.movement_modes.contains(&ActorMovementMode::Fly)));
+    }
+    terrain.walkable
+        || actor
+            .movement
+            .modes
+            .iter()
+            .any(|mode| terrain.movement_modes.contains(mode))
+}
+
 fn validate_streamer_treasure(
     candidate: &ProceduralStreamerCandidateDefinition,
     terrain_ids: &BTreeSet<String>,
@@ -1784,7 +1805,7 @@ pub(super) fn validate_world(
                 let table = terrain_feature_tables
                     .get(table_id)
                     .expect("validated terrain feature table must remain available");
-                if !(1..=320).contains(&placements)
+                if !(1..=800).contains(&placements)
                     || placements > table.rolls
                     || eligible_terrain_feature_entries.is_empty()
                 {
@@ -2031,10 +2052,6 @@ pub(super) fn validate_world(
                 )?;
                 if !procedural_actor_ids.insert(spawn.instance_id.clone())
                     || !occupied.insert(spawn.position)
-                    || !terrain_walkability
-                        .get(terrain_at(spawn.position))
-                        .copied()
-                        .unwrap_or(false)
                 {
                     return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
                 }
@@ -2044,6 +2061,18 @@ pub(super) fn validate_world(
                     ActorRole::Monster,
                     &procedural.id,
                 )?;
+                let actor = actors
+                    .iter()
+                    .find(|actor| actor.id == spawn.kind_id)
+                    .expect("validated monster role must retain its actor definition");
+                let spawn_terrain_id = terrain_at(spawn.position);
+                let spawn_terrain = terrain
+                    .iter()
+                    .find(|terrain| terrain.id == spawn_terrain_id)
+                    .expect("validated terrain reference must retain its definition");
+                if !actor_can_cross_terrain(actor, spawn_terrain) {
+                    return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+                }
             }
 
             inline_map
@@ -2354,16 +2383,57 @@ pub(super) fn validate_world(
     if task_ids.len() != world.tasks.len() {
         return Err(ContentError::InvalidTask(world.id.clone()));
     }
+    let task_sources = world
+        .tasks
+        .iter()
+        .map(|task| (task.id.clone(), task.source_facility_id.clone()))
+        .collect::<BTreeMap<_, _>>();
+    let task_prerequisites = world
+        .tasks
+        .iter()
+        .map(|task| (task.id.clone(), task.prerequisite_task_id.clone()))
+        .collect::<BTreeMap<_, _>>();
+    let primary_task_ids = world
+        .tasks
+        .iter()
+        .filter(|task| task.substitution.is_some())
+        .map(|task| task.id.clone())
+        .collect::<BTreeSet<_>>();
+    let mut alternate_task_ids = BTreeSet::new();
     for task in &mut world.tasks {
         validate_definition_id(&task.id, "task")?;
         validate_message_key(&task.name_key)?;
         validate_message_key(&task.description_key)?;
+        if let Some(key) = &task.completed_description_key {
+            validate_message_key(key)?;
+        }
+        if let Some(key) = &task.failed_description_key {
+            validate_message_key(key)?;
+        }
         if task.objectives.is_empty() {
             return Err(ContentError::InvalidTask(task.id.clone()));
         }
         if let Some(prerequisite_id) = &task.prerequisite_task_id {
             validate_definition_id(prerequisite_id, "task")?;
             if prerequisite_id == &task.id || !task_ids.contains(prerequisite_id) {
+                return Err(ContentError::InvalidTask(task.id.clone()));
+            }
+        }
+        if task.unlock_when_prerequisite_failed && task.prerequisite_task_id.is_none() {
+            return Err(ContentError::InvalidTask(task.id.clone()));
+        }
+        if let Some(substitution) = &task.substitution {
+            validate_definition_id(&substitution.group_id, "task-substitution")?;
+            validate_definition_id(&substitution.alternate_task_id, "task")?;
+            if task.source_facility_id.is_none()
+                || substitution.alternate_task_id == task.id
+                || primary_task_ids.contains(&substitution.alternate_task_id)
+                || !alternate_task_ids.insert(substitution.alternate_task_id.clone())
+                || task_sources.get(&substitution.alternate_task_id)
+                    != Some(&task.source_facility_id)
+                || task_prerequisites.get(&substitution.alternate_task_id)
+                    != Some(&task.prerequisite_task_id)
+            {
                 return Err(ContentError::InvalidTask(task.id.clone()));
             }
         }
@@ -2526,29 +2596,31 @@ pub(super) fn validate_world(
             }
         }
 
-        validate_id(&task.reward.item_instance_id)?;
-        if !procedural_actor_ids.insert(task.reward.item_instance_id.clone()) {
+        let Some(reward) = &mut task.reward else {
+            continue;
+        };
+        validate_id(&reward.item_instance_id)?;
+        if !procedural_actor_ids.insert(reward.item_instance_id.clone()) {
             return Err(ContentError::DuplicateInstanceId(
-                task.reward.item_instance_id.clone(),
+                reward.item_instance_id.clone(),
             ));
         }
-        task.reward
+        reward
             .class_overrides
             .sort_by(|left, right| left.class_id.cmp(&right.class_id));
-        if task.reward.entries.is_empty()
-            || task
-                .reward
+        if reward.entries.is_empty()
+            || reward
                 .class_overrides
                 .windows(2)
                 .any(|pair| pair[0].class_id == pair[1].class_id)
-            || task.reward.class_overrides.iter().any(|override_| {
+            || reward.class_overrides.iter().any(|override_| {
                 override_.entries.is_empty() || !class_ids.contains(&override_.class_id)
             })
         {
             return Err(ContentError::InvalidTask(task.id.clone()));
         }
-        for entries in std::iter::once(&mut task.reward.entries).chain(
-            task.reward
+        for entries in std::iter::once(&mut reward.entries).chain(
+            reward
                 .class_overrides
                 .iter_mut()
                 .map(|entry| &mut entry.entries),
@@ -2566,7 +2638,7 @@ pub(super) fn validate_world(
                 let mut seen_affixes = BTreeSet::new();
                 if entry.quantity == 0 || entry.quantity > *max_stack {
                     return Err(ContentError::InvalidItemQuantity(
-                        task.reward.item_instance_id.clone(),
+                        reward.item_instance_id.clone(),
                     ));
                 }
                 if entry.weight == 0

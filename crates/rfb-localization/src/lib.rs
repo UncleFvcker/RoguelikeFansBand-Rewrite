@@ -1008,6 +1008,50 @@ mod tests {
     }
 
     #[test]
+    fn p102_chameleon_cave_uses_authoritative_chinese_text() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("floor-demo-chameleon-cave-depth-name", "变色龙洞穴"),
+            (
+                "terrain-demo-chameleon-cave-entrance-description",
+                "通向变色龙巢穴的入口",
+            ),
+            ("actor-demo-chameleon-lord-name", "变色龙领主"),
+            ("item-demo-polymorph-potion-name", "变形药水"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("P102 text should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
+    fn p103_volcano_uses_authoritative_chinese_text() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("floor-demo-volcano-depth-name", "火山"),
+            (
+                "terrain-demo-volcano-entrance-description",
+                "通向火山中心的地洞",
+            ),
+            ("actor-demo-lesser-balrog-name", "次级炎魔"),
+            ("actor-demo-shooting-star-the-red-dragon-name", "红龙晨星"),
+            ("item-demo-mana-storm-staff-name", "法力风暴法杖"),
+            ("device-activation-demo-mana-storm-name", "法力风暴"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("P103 text should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn chinese_ego_prefixes_follow_original_composition() {
         assert_eq!(chinese_prefix("杀戮之"), Some("杀戮之"));
         assert_eq!(chinese_prefix("(受祝福的)"), Some("受祝福的"));

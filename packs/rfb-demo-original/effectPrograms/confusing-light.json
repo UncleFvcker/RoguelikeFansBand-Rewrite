@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.confusing-light",
+  "input": "self",
+  "steps": [
+    { "type": "visible-apply-status", "statusKindId": "rfb.status.slow", "intensity": 1, "durationTicks": 50, "stacking": "extend", "power": 110 },
+    { "type": "visible-apply-status", "statusKindId": "rfb.status.stun", "intensity": 16, "durationTicks": 16, "stacking": "extend", "resistanceType": "sound", "power": 110 },
+    { "type": "visible-apply-status", "statusKindId": "rfb.status.confusion", "intensity": 1, "durationTicks": 20, "stacking": "extend", "resistanceType": "confusion", "power": 110 },
+    { "type": "visible-apply-status", "statusKindId": "rfb.status.fear", "intensity": 1, "durationTicks": 20, "stacking": "extend", "resistanceType": "fear", "power": 110 },
+    { "type": "visible-apply-status", "statusKindId": "rfb.status.paralysis", "intensity": 1, "durationTicks": 2, "stacking": "extend", "power": 36 }
+  ]
+}

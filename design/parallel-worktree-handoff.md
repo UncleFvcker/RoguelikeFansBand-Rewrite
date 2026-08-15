@@ -1605,3 +1605,24 @@ git diff --stat
   迷宫墙内的合法生成断言，以及 importer 对未实现 ego 的空词缀判定。最终 `rfb-core` 901 项、
   `rfb-content` 301 项、本地化 33 项、其余 workspace 测试、contract 26 项、Web 164 项、clippy、
   schema/bindings、source lock、TypeScript 类型检查和生产 UI 构建均通过，零 waiver。
+
+## 88. main 当前交接（Anambar、悬赏与三座地下城整合）
+
+- 已将 `codex/monsters-next` 的 8 个增量提交合并到 main；分支 tip 为 `bc3db6cde`，覆盖变色龙洞穴、
+  火山、水晶城堡、Anambar 图书馆/蘑菇店/恢复与强化设施、Outpost/Anambar 双城悬赏，以及 Anambar
+  镇长任务线。monster 分支和工作树按用户要求保留。
+- main 的武器 ego 与 monster 的悬赏状态都曾独立占用 save schema v3，且两边各自使用了不同的
+  State Hash Schema v105 输入。合并后的联合协议统一为 `1.227`、State Hash Schema v107、save
+  header/payload schema v4；二进制容器格式仍为 v1，不为旧开发存档提供兼容路径。
+- 共享协调点为 pack `1.378.0` / content hash
+  `6bcd5136ea99a5be74d1a5a644b6b8ddb86ae97558e4a61ec838426ac1e33183`、Protocol `1.227`、
+  State Hash Schema v107、save v4、active baseline `contract-v305`。内容包现有 162 terrain、
+  1402 actors、350 items、1837 abilities、44 affixes、24 encounter tables、34 loot tables、
+  13 town facilities 和 20 shops。
+- 合并验收同时保留了 items 的 area/terrain/weapon effect 分支与 monster 的范围伤害、状态和设施分支，
+  并同步 Diamond Edge 的自然掉落/骑乘武器断言、Crystal Castle 世界位置、Graveyard 固定种子入口、
+  当前存档测试的 `bountyState`，以及 Rust 1.96 新增 clippy 规则要求的等价简化。
+- 最终 workspace 全量测试通过：`rfb-core` 914 项、`rfb-content` 311 项、`rfb-legacy-import` 164 项、
+  本地化 35 项、协议 6 项、replay 8 项、save 2 项、Tauri 17 项及其余 contract/文档测试均通过。
+  `contract-v305` 的 26 个 exact fixture 全部刷新并验证；Web 167 项、clippy、schema/bindings、source
+  lock、Rust check/format、TypeScript 类型检查和生产 UI 构建均通过，零 waiver。

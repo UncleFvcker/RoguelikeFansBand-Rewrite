@@ -121,7 +121,6 @@ pub(super) fn validate_terrain(
                 .expect("validated terrain target must remain available");
             if target_id == &terrain.id
                 || terrain.walkable
-                || !terrain.blocks_sight
                 || !target.walkable
                 || target.blocks_sight
                 || (terrain.open_check_difficulty.is_none()
@@ -140,7 +139,6 @@ pub(super) fn validate_terrain(
                 || !terrain.walkable
                 || terrain.blocks_sight
                 || target.walkable
-                || !target.blocks_sight
                 || target.open_to_terrain_id.as_deref() != Some(terrain.id.as_str())
             {
                 return Err(ContentError::InvalidTerrainTransition(terrain.id.clone()));

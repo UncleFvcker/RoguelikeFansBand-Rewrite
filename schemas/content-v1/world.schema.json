@@ -1849,6 +1849,13 @@
     "TaskDefinition": {
       "additionalProperties": false,
       "properties": {
+        "completedDescriptionKey": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "completionExitTerrainId": {
           "default": null,
           "type": [
@@ -1858,6 +1865,13 @@
         },
         "descriptionKey": {
           "type": "string"
+        },
+        "failedDescriptionKey": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "id": {
           "type": "string"
@@ -1882,7 +1896,15 @@
           ]
         },
         "reward": {
-          "$ref": "#/$defs/TaskRewardDefinition"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TaskRewardDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "sourceFacilityId": {
           "default": null,
@@ -1891,12 +1913,27 @@
             "null"
           ]
         },
+        "substitution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TaskSubstitutionDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "targetPlacements": {
           "default": [],
           "items": {
             "$ref": "#/$defs/TaskTargetPlacementDefinition"
           },
           "type": "array"
+        },
+        "unlockWhenPrerequisiteFailed": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "required": [
@@ -1904,8 +1941,7 @@
         "nameKey",
         "descriptionKey",
         "location",
-        "objectives",
-        "reward"
+        "objectives"
       ],
       "type": "object"
     },
@@ -2093,6 +2129,22 @@
         "itemKindId",
         "quantity",
         "weight"
+      ],
+      "type": "object"
+    },
+    "TaskSubstitutionDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "alternateTaskId": {
+          "type": "string"
+        },
+        "groupId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "groupId",
+        "alternateTaskId"
       ],
       "type": "object"
     },

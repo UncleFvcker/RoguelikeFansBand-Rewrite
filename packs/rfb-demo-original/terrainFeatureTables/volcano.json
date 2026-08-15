@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain-feature-table.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain-feature-table.volcano",
+  "rolls": 480,
+  "entries": [
+    {
+      "terrainId": "demo.terrain.surface-lava-shallow",
+      "placement": "room",
+      "weight": 2,
+      "minDepth": 50,
+      "maxDepth": 60
+    },
+    {
+      "terrainId": "demo.terrain.surface-lava-deep",
+      "placement": "room",
+      "weight": 1,
+      "minDepth": 50,
+      "maxDepth": 60
+    }
+  ]
+}

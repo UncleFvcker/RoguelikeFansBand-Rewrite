@@ -1098,7 +1098,21 @@ impl Game {
             .content
             .world(&self.world_id)
             .expect("active world must remain available");
-        let expected_tasks = initial_task_states(world);
+        let mut expected_tasks = initial_task_states(world, self.wilderness_seed);
+        for primary in world
+            .tasks
+            .iter()
+            .filter(|task| task.substitution.is_some())
+        {
+            expected_tasks.remove(&primary.id);
+            expected_tasks.remove(
+                &primary
+                    .substitution
+                    .as_ref()
+                    .expect("filtered task must retain substitution")
+                    .alternate_task_id,
+            );
+        }
         if self
             .task_states
             .keys()
@@ -1106,6 +1120,7 @@ impl Game {
             || expected_tasks
                 .keys()
                 .any(|task_id| !self.task_states.contains_key(task_id))
+            || !super::tasks::task_substitution_state_is_valid(world, &self.task_states)
         {
             return Err(CoreError::InvalidSave("task state set is invalid"));
         }
@@ -1113,10 +1128,9 @@ impl Game {
             let Some(task) = task_definition(world, task_id) else {
                 return Err(CoreError::InvalidSave("task state ID is invalid"));
             };
-            let expected = expected_tasks
-                .get(task_id)
-                .cloned()
-                .unwrap_or_else(|| super::tasks::task_initial_state(task, &self.task_states));
+            let expected = expected_tasks.get(task_id).cloned().unwrap_or_else(|| {
+                super::tasks::task_initial_state(world, task, &self.task_states)
+            });
             let members = task_floors(world, task_id).collect::<Vec<_>>();
             let objectives = task_objectives(world, task_id);
             let Some(objective) = usize::try_from(state.stage_index)
@@ -1153,15 +1167,22 @@ impl Game {
                     state.active_floor_id.is_none()
                 }
                 TaskStatusKindDto::Locked => {
+                    let substitution_marker = task.substitution.is_some()
+                        || world.tasks.iter().any(|primary| {
+                            primary.substitution.as_ref().is_some_and(|substitution| {
+                                substitution.alternate_task_id == task.id
+                            })
+                        });
                     state.active_floor_id.is_none()
-                        && expected.status == TaskStatusKindDto::Locked
+                        && (expected.status == TaskStatusKindDto::Locked || substitution_marker)
                         && state.stage_index == 0
                         && state.current == 0
                 }
                 TaskStatusKindDto::RewardAvailable => {
                     state.active_floor_id.is_none()
-                        && task_definition(world, task_id)
-                            .is_some_and(|task| task.source_facility_id.is_some())
+                        && task_definition(world, task_id).is_some_and(|task| {
+                            task.source_facility_id.is_some() && task.reward.is_some()
+                        })
                         && usize::try_from(state.stage_index)
                             .ok()
                             .is_some_and(|stage| stage + 1 == objectives.len())

@@ -733,6 +733,15 @@ pub enum ItemUseEffectDefinition {
         #[serde(default)]
         damage_type: ActorDamageType,
     },
+    AreaDamage {
+        damage_dice: u16,
+        damage_sides: u16,
+        #[serde(default)]
+        damage_bonus: u16,
+        #[serde(default)]
+        damage_type: ActorDamageType,
+        radius: u8,
+    },
     BeamDamage {
         damage_dice: u16,
         damage_sides: u16,
@@ -752,6 +761,20 @@ pub enum ItemUseEffectDefinition {
     },
     BanishVisible {
         maximum_distance: u16,
+    },
+    VisibleApplyStatus {
+        status_kind_id: String,
+        intensity: u16,
+        duration_ticks: u32,
+        #[serde(default)]
+        duration_dice: u16,
+        #[serde(default)]
+        duration_sides: u32,
+        stacking: AbilityStatusStackingDefinition,
+        #[serde(default)]
+        resistance_type: Option<ActorDamageType>,
+        #[serde(default)]
+        power: Option<u16>,
     },
     Detect {
         #[serde(default)]
@@ -959,6 +982,9 @@ pub struct ItemDefinition {
     /// Original mounted-combat identity (`OF_RIDING`, with lances distinguished).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub riding_weapon_kind: Option<RidingWeaponKindDefinition>,
+    /// RFB `OF_VORPAL`: each successful melee blow may multiply its damage.
+    #[serde(default)]
+    pub vorpal: bool,
     /// Original fixed-artifact allocation identity. Scripted demo artifacts
     /// without an RFB `a_info` record intentionally leave this unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]

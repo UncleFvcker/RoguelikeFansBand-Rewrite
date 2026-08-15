@@ -1423,6 +1423,10 @@
       ],
       "default": null
     },
+    "vorpal": {
+      "default": false,
+      "type": "boolean"
+    },
     "weaponProficiencyBaseItemId": {
       "default": null,
       "type": [

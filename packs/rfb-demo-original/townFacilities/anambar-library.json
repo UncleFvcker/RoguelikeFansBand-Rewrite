@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.anambar-library",
+  "nameKey": "town-facility-demo-anambar-library-name",
+  "descriptionKey": "town-facility-demo-anambar-library-description",
+  "townId": "demo.town.anambar",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-anambar-library-owner-name",
+  "identifyItemCost": 50,
+  "researchItemCost": 1300,
+  "identifyAllItemsCost": 350,
+  "overviewMessageKey": "town-facility-demo-anambar-library-overview",
+  "entrancePosition": { "x": 16, "y": 1 },
+  "entranceTerrainId": "demo.terrain.library-entrance"
+}

@@ -8,6 +8,7 @@ use rfb_content::{
 };
 use rfb_protocol::Position;
 
+use super::super::bounty::bounty_target_instance_id;
 use super::super::monster_ecology::OriginalGroupRole;
 use super::super::movement::actor_can_cross_terrain;
 use super::super::*;
@@ -2654,6 +2655,38 @@ impl Game {
                     }
                 }
                 TaskObjectiveKind::ClearFloor | TaskObjectiveKind::EnterFloor => {}
+            }
+        }
+        if let Some((actor_kind_id, count)) = self.bounty_target_for_floor(&definition.id) {
+            let actor = self
+                .content
+                .actor(&actor_kind_id)
+                .expect("validated bounty actor must remain available")
+                .clone();
+            for ordinal in 1..=count {
+                let position = self
+                    .choose_generated_dungeon_task_target_position(
+                        definition,
+                        &terrain,
+                        &occupied,
+                        &actor_kind_id,
+                        first_center,
+                    )
+                    .ok_or_else(|| {
+                        CoreError::Invariant(format!(
+                            "bounty target {actor_kind_id} cannot be placed on floor {}",
+                            definition.id
+                        ))
+                    })?;
+                occupied.insert(position);
+                entities.push(spawn_actor_from_definition(
+                    &mut self.rng,
+                    &actor,
+                    &bounty_target_instance_id(&definition.id, ordinal),
+                    position,
+                    INITIAL_MONSTER_ENERGY_NEED,
+                    actor_starts_alerted(&actor),
+                ));
             }
         }
         if !completion_exit_terrain_ids.is_empty() {

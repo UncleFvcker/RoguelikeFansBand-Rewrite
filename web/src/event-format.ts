@@ -771,7 +771,8 @@ export function createPresentationFormatter(
           reason: shopTransactionReason(event.args.reason),
         });
       case "facility-identify-completed":
-        return localization.format("facility-identify-completed", {
+      case "facility-research-completed":
+        return localization.format(event.messageKey as MessageKey, {
           target: visibleItemNameForKind(event.args.target),
           cost: event.args.cost ?? "?",
           balance: event.args.balance ?? "?",
@@ -779,6 +780,87 @@ export function createPresentationFormatter(
       case "facility-identify-unavailable":
         return localization.format("facility-identify-unavailable", {
           reason: facilityServiceReason(event.args.reason),
+        });
+      case "facility-identify-all-completed":
+        return localization.format("facility-identify-all-completed", {
+          count: event.args.count ?? "?",
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-identify-all-unavailable":
+        return localization.format("facility-identify-all-unavailable", {
+          reason: facilityServiceReason(event.args.reason),
+        });
+      case "facility-healing-completed":
+        return localization.format("facility-healing-completed", {
+          healed: event.args.healed ?? "?",
+          mountHealed: event.args.mountHealed ?? "?",
+          statusesRemoved: event.args.statusesRemoved ?? "?",
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-vitality-restored":
+      case "facility-mutation-cured":
+        return localization.format(event.messageKey as MessageKey, {
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-item-enchanted":
+        return localization.format("facility-item-enchanted", {
+          target: visibleItemNameForKind(event.args.target),
+          toHit: event.args.toHit ?? "?",
+          toDamage: event.args.toDamage ?? "?",
+          toArmor: event.args.toArmor ?? "?",
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-armor-assessed":
+        return localization.format("facility-armor-assessed", {
+          armorClass: event.args.armorClass ?? "?",
+          protection: event.args.protection ?? "?",
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-recall-started":
+        return localization.format("facility-recall-started", {
+          dungeon: contentName(event.args.dungeon),
+          floor: event.args.floor ?? "?",
+          cost: event.args.cost ?? "?",
+          balance: event.args.balance ?? "?",
+        });
+      case "facility-service-unavailable":
+        return localization.format("facility-service-unavailable", {
+          reason: facilityServiceReason(event.args.reason),
+        });
+      case "bounty-action-unavailable":
+        return localization.format("bounty-action-unavailable", {
+          reason: facilityServiceReason(event.args.reason),
+        });
+      case "bounty-daily-turned-in":
+        return localization.format("bounty-daily-turned-in", {
+          actor: contentName(event.args.actor),
+          gold: event.args.gold ?? "?",
+        });
+      case "bounty-wanted-turned-in":
+        return localization.format("bounty-wanted-turned-in", {
+          actor: contentName(event.args.actor),
+          item: contentName(event.args.item),
+        });
+      case "bounty-mission-requested":
+        return localization.format("bounty-mission-requested", {
+          actor: contentName(event.args.actor),
+          floor: floorName(event.args.floor),
+          total: event.args.total ?? "?",
+        });
+      case "bounty-mission-abandoned":
+        return localization.format("bounty-mission-abandoned");
+      case "bounty-mission-rewarded":
+        return localization.format("bounty-mission-rewarded", {
+          item: contentName(event.args.item),
+        });
+      case "bounty-mission-completed":
+        return localization.format("bounty-mission-completed", {
+          actor: contentName(event.args.actor),
         });
       case "facility-rename-completed":
         return localization.format("facility-rename-completed", {
