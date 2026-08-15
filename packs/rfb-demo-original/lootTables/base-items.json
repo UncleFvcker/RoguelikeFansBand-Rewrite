@@ -2167,13 +2167,10 @@
     "goodCapPercent": 75,
     "greatCapPercent": 20
   },
+  "rfbEgoPolicy": "weapon-digger",
   "affixWeights": [
     {
       "weight": 9
-    },
-    {
-      "affixId": "rfb-legacy.affix.slaying",
-      "weight": 1
     },
     {
       "affixId": "rfb-legacy.affix.protection",

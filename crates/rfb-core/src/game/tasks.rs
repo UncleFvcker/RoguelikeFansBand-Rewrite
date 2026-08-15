@@ -18,7 +18,7 @@ use crate::{
 };
 
 use super::{
-    ActorDeathRecord, DungeonState, Game, initial_item_curse, initial_item_runtime_state,
+    ActorDeathRecord, DungeonState, Game, ego::materialize_ego_with_rng, initial_item_curse,
     inventory::item_instances_stack_compatible,
 };
 
@@ -533,29 +533,23 @@ pub(super) fn reward_item(
     rng: &mut crate::rng::RfbRng,
 ) -> ItemInstance {
     let entry = selected_reward_entry(reward, class_id, rng).clone();
-    let rolled_affixes = entry
-        .affix_ids
-        .iter()
-        .flat_map(|affix_id| {
-            let depth = content
-                .affix(affix_id)
-                .expect("validated task reward affix must remain available")
-                .generation_level
-                .max(1);
-            super::roll_affix_properties_with_rng(
-                content,
-                rng,
-                std::slice::from_ref(affix_id),
-                depth,
-            )
-        })
-        .collect();
-    let (activation, mut charges) =
-        initial_item_runtime_state(content, rng, &entry.item_kind_id, &entry.affix_ids, 1);
-    if let Some(charges) = &mut charges {
+    let mut materialization = materialize_ego_with_rng(
+        content,
+        rng,
+        &entry.item_kind_id,
+        entry.affix_ids,
+        |affix| affix.generation_level.max(1),
+        1,
+    );
+    if let Some(charges) = &mut materialization.charges {
         charges.current = charges.maximum;
     }
-    ItemInstance {
+    let quality = if materialization.affix_ids.is_empty() {
+        ItemQualityDto::Ordinary
+    } else {
+        ItemQualityDto::Fine
+    };
+    let mut item = ItemInstance {
         id: reward.item_instance_id.clone(),
         kind_id: entry.item_kind_id.clone(),
         quantity: entry.quantity,
@@ -564,23 +558,21 @@ pub(super) fn reward_item(
         origin_kind: None,
         damage_dice_override: None,
         discount_percent: 0,
-        quality: if entry.affix_ids.is_empty() {
-            ItemQualityDto::Ordinary
-        } else {
-            ItemQualityDto::Fine
-        },
-        affix_ids: entry.affix_ids,
-        rolled_affixes,
+        quality,
+        affix_ids: Vec::new(),
+        rolled_affixes: Vec::new(),
         enchantments: ItemEnchantmentsDto::default(),
         curse: initial_item_curse(content, &entry.item_kind_id),
         permanent_destruction_immunities: Default::default(),
-        activation,
-        charges,
+        activation: None,
+        charges: None,
         fuel: initial_item_fuel(content, &entry.item_kind_id),
         device_recovery_progress: 0,
         captured_actor: None,
         location,
-    }
+    };
+    materialization.apply_to(&mut item);
+    item
 }
 
 impl Game {

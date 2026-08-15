@@ -220,7 +220,7 @@ test("New Game exposes and submits Sprite", () => {
 });
 
 test("New Game exposes and submits Snotling", () => {
-  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.snotling");
+  assert.ok(PLAYTEST_RACE_IDS.includes("rfb-legacy.race.snotling"));
   assert.equal(
     createNewSessionRequest(
       "395",
@@ -235,7 +235,7 @@ test("New Game exposes and submits Snotling", () => {
 });
 
 test("New Game exposes and submits Boit", () => {
-  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.boit");
+  assert.ok(PLAYTEST_RACE_IDS.includes("rfb-legacy.race.boit"));
   assert.equal(
     createNewSessionRequest(
       "401",
@@ -250,7 +250,7 @@ test("New Game exposes and submits Boit", () => {
 });
 
 test("New Game exposes and submits Einheri", () => {
-  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.einheri");
+  assert.ok(PLAYTEST_RACE_IDS.includes("rfb-legacy.race.einheri"));
   assert.equal(
     createNewSessionRequest(
       "409",
@@ -265,7 +265,7 @@ test("New Game exposes and submits Einheri", () => {
 });
 
 test("New Game exposes and submits Kutar", () => {
-  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.kutar");
+  assert.ok(PLAYTEST_RACE_IDS.includes("rfb-legacy.race.kutar"));
   assert.equal(
     createNewSessionRequest(
       "411",
@@ -280,7 +280,7 @@ test("New Game exposes and submits Kutar", () => {
 });
 
 test("New Game exposes and submits Amberite", () => {
-  assert.equal(PLAYTEST_RACE_IDS.at(-1), "rfb-legacy.race.amberite");
+  assert.ok(PLAYTEST_RACE_IDS.includes("rfb-legacy.race.amberite"));
   assert.equal(
     createNewSessionRequest(
       "413",

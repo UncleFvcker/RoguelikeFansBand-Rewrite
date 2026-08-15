@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-extra-attacks-description",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.extra-attacks",
+  "nameKey": "affix-legacy-extra-attacks-name",
+  "rfbEgo": {
+    "rarity": 8,
+    "sourceIndex": 5,
+    "types": [
+      "weapon",
+      "digger"
+    ]
+  },
+  "tags": [
+    "digger",
+    "legacy-import",
+    "weapon"
+  ]
+}

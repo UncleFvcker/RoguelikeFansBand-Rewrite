@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-lucerne-hammer-name",
+  "rfbBaseKind": {
+    "sourceIndex": 96,
+    "sval": 12,
+    "tval": 22
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

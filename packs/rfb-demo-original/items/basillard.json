@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-basillard-name",
+  "rfbBaseKind": {
+    "sourceIndex": 52,
+    "sval": 9,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

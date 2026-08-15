@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use super::*;
+use super::{abilities::AbilityTargetPlan, *};
 
 const WAYBREAD_INTOLERANCE_MUTATION_ID: &str = "rfb.mutation.waybread-into";
 const SKELETON_RACE_ID: &str = "rfb-legacy.race.skeleton";
@@ -8,6 +8,10 @@ const SNOTLING_RACE_ID: &str = "rfb-legacy.race.snotling";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
+    AbilityEffect {
+        ability: Box<AbilityDefinition>,
+        target_plan: AbilityTargetPlan,
+    },
     SelfTarget,
     Acquirement {
         source_item_id: String,
@@ -34,6 +38,10 @@ pub(super) enum ItemUsePlan {
     },
     Projectile {
         path: Vec<Position>,
+    },
+    RidingCharge {
+        target_entity_id: Option<String>,
+        destination: Position,
     },
     Cone {
         path: Vec<Position>,
@@ -1851,9 +1859,9 @@ impl Game {
             return Ok((index, false));
         }
         let mut split = self.items[index].clone();
-        self.items[index].quantity -= 1;
         split.id = self.allocate_item_instance_id()?;
         split.quantity = 1;
+        self.items[index].quantity -= 1;
         self.items.push(split);
         Ok((self.items.len() - 1, true))
     }
@@ -1960,19 +1968,25 @@ impl Game {
         } else {
             weapon_affix_ids
         };
-        let selected = usize::try_from(self.rng.bounded(candidates.len() as u64))
-            .expect("validated crafting candidate count must fit usize");
-        let affix_id = candidates[selected].clone();
-        let rolled_affixes = self.roll_affix_properties(
-            std::slice::from_ref(&affix_id),
-            self.floor_depth(&self.current_floor_id),
-        );
         let (index, split) = self.split_item_for_mutation(target_item_id)?;
         let target_item_id = self.items[index].id.clone();
         let target_kind_id = self.items[index].kind_id.clone();
+        let selected = usize::try_from(self.rng.bounded(candidates.len() as u64))
+            .expect("validated crafting candidate count must fit usize");
+        let affix_id = candidates[selected].clone();
+        let depth = self.floor_depth(&self.current_floor_id);
+        let materialization = materialize_ego_with_rng(
+            &self.content,
+            &mut self.rng,
+            &target_kind_id,
+            vec![affix_id.clone()],
+            |_| depth,
+            depth,
+        );
+        materialization.apply_to(&mut self.items[index]);
         self.items[index].quality = ItemQualityDto::Exceptional;
-        self.items[index].affix_ids = vec![affix_id.clone()];
-        self.items[index].rolled_affixes = rolled_affixes;
+        self.items[index].origin_kind = Some(ItemOriginKindDto::PlayerMade);
+        self.items[index].discount_percent = 99;
         self.item_property_knowledge.insert(
             target_item_id.clone(),
             ItemPropertyKnowledgeState {
@@ -2550,6 +2564,19 @@ impl Game {
         } = settled;
         match (effect, plan) {
             (
+                ItemUseEffectDefinition::AbilityEffect { .. },
+                ItemUsePlan::AbilityEffect {
+                    ability,
+                    target_plan,
+                },
+            ) => self.resolve_player_ability_effect(
+                *ability,
+                target_plan,
+                events,
+                changed,
+                removed_entities,
+            )?,
+            (
                 effect @ (ItemUseEffectDefinition::Heal { .. }
                 | ItemUseEffectDefinition::NoNumericEffect
                 | ItemUseEffectDefinition::IncreaseNutrition { .. }
@@ -2809,6 +2836,47 @@ impl Game {
                 removed_entities,
             )?,
             (
+                ItemUseEffectDefinition::TerrainBeam { operation },
+                ItemUsePlan::Projectile { path },
+            ) => {
+                let source_id = profile_id.as_deref().unwrap_or(&kind_id);
+                self.resolve_terrain_beam_effect(
+                    source_id,
+                    operation,
+                    path,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+                self.mark_item_aware(&kind_id);
+            }
+            (
+                ItemUseEffectDefinition::RidingCharge,
+                ItemUsePlan::RidingCharge {
+                    target_entity_id,
+                    destination,
+                },
+            ) => {
+                if destination != self.player.position {
+                    events.extend(self.relocate_player(destination, changed));
+                }
+                if let Some(target_entity_id) = target_entity_id {
+                    let target_index = self
+                        .entities
+                        .iter()
+                        .position(|entity| entity.id == target_entity_id && entity.hp > 0)
+                        .expect("planned riding-charge target must remain available");
+                    self.resolve_player_melee(
+                        target_index,
+                        false,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+                self.mark_item_aware(&kind_id);
+            }
+            (
                 effect @ ItemUseEffectDefinition::RandomElementConeDamage { .. },
                 plan @ ItemUsePlan::Cone { .. },
             ) => self.resolve_item_random_element_cone_damage(
@@ -2923,6 +2991,34 @@ impl Game {
         }
         let self_target = target.is_none_or(|target| matches!(target, TargetSelection::SelfTarget));
         match effect {
+            ItemUseEffectDefinition::AbilityEffect {
+                effect,
+                affects_ground_items,
+            } => {
+                let target_definition = target_definition?.clone();
+                let selection = target.cloned().unwrap_or(TargetSelection::SelfTarget);
+                let ability = AbilityDefinition {
+                    schema: rfb_content::ABILITY_SCHEMA.to_owned(),
+                    format_version: rfb_content::CONTENT_FORMAT_VERSION,
+                    id: format!("rfb.item-activation.{source_item_id}"),
+                    name_key: "device-activation-rfb-ego-name".to_owned(),
+                    description_key: "device-activation-rfb-ego-description".to_owned(),
+                    target: target_definition,
+                    effect: (**effect).clone(),
+                    affects_ground_items: *affects_ground_items,
+                    level_scaling: Vec::new(),
+                    status_power_attribute: None,
+                    spell_power_fields: Vec::new(),
+                    spell_power_bonus: 0,
+                    player: None,
+                    tags: vec!["item-activation".to_owned()],
+                };
+                let target_plan = self.ability_target_plan(&ability, &selection)?;
+                Some(ItemUsePlan::AbilityEffect {
+                    ability: Box::new(ability),
+                    target_plan,
+                })
+            }
             ItemUseEffectDefinition::NoNumericEffect
             | ItemUseEffectDefinition::IncreaseNutrition { .. }
             | ItemUseEffectDefinition::SatisfyHunger
@@ -3061,6 +3157,44 @@ impl Game {
                     target.and_then(|target| self.item_effect_path(definition, target))
                 })?;
                 Some(ItemUsePlan::Projectile { path })
+            }
+            ItemUseEffectDefinition::TerrainBeam { .. } => {
+                let path = target_definition.and_then(|definition| {
+                    target.and_then(|target| self.item_effect_path(definition, target))
+                })?;
+                Some(ItemUsePlan::Projectile { path })
+            }
+            ItemUseEffectDefinition::RidingCharge => {
+                let mount_index = self.riding_actor_id.as_deref().and_then(|mount_id| {
+                    self.entities
+                        .iter()
+                        .position(|entity| entity.id == mount_id)
+                })?;
+                let path = target_definition
+                    .and_then(|definition| self.item_effect_path(definition, target?))?;
+                let mut destination = self.player.position;
+                let mut target_entity_id = None;
+                for position in path {
+                    if let Some(entity) = self.entities.iter().find(|entity| {
+                        entity.hp > 0
+                            && entity.position == position
+                            && self.riding_actor_id.as_deref() != Some(entity.id.as_str())
+                    }) {
+                        if self.actor_is_player_side(entity) {
+                            return None;
+                        }
+                        target_entity_id = Some(entity.id.clone());
+                        break;
+                    }
+                    if !self.actor_can_enter_position(mount_index, position) {
+                        break;
+                    }
+                    destination = position;
+                }
+                Some(ItemUsePlan::RidingCharge {
+                    target_entity_id,
+                    destination,
+                })
             }
             ItemUseEffectDefinition::RandomElementConeDamage { radius, .. } => {
                 let TargetSelection::Direction { direction } = target? else {
@@ -5079,8 +5213,11 @@ impl Game {
             ItemUseEffectDefinition::SelfKnowledge => {
                 self.resolve_item_self_knowledge(source_kind_id, events)
             }
-            ItemUseEffectDefinition::Damage { .. }
+            ItemUseEffectDefinition::AbilityEffect { .. }
+            | ItemUseEffectDefinition::Damage { .. }
             | ItemUseEffectDefinition::BeamDamage { .. }
+            | ItemUseEffectDefinition::TerrainBeam { .. }
+            | ItemUseEffectDefinition::RidingCharge
             | ItemUseEffectDefinition::RandomElementConeDamage { .. }
             | ItemUseEffectDefinition::SelfCenteredElementalBlast { .. }
             | ItemUseEffectDefinition::AggravateMonsters

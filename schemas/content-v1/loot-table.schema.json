@@ -116,6 +116,12 @@
       ],
       "type": "object"
     },
+    "LootRfbEgoPolicyDefinition": {
+      "enum": [
+        "weapon-digger"
+      ],
+      "type": "string"
+    },
     "LootRollDiceDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -183,6 +189,16 @@
         "$ref": "#/$defs/LootQualityWeightDefinition"
       },
       "type": "array"
+    },
+    "rfbEgoPolicy": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/LootRfbEgoPolicyDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "rollChancePercent": {
       "default": null,

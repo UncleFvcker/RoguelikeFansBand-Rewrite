@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-two-handed-sword-name",
+  "rfbBaseKind": {
+    "sourceIndex": 68,
+    "sval": 25,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

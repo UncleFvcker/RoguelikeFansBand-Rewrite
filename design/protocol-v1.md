@@ -788,3 +788,18 @@ spell power 与实际原始 power 的源码差异；天使斗篷复用通用状�
 `EquipmentPassiveDto` 增加漂浮、警告、减缓消化和九类定向 ESP。它们统一来自已装备物品的
 正式词缀投影；没有新增命令或持久字段，State Hash Schema 保持 v104，save header/payload
 schema 保持 v2。
+
+协议 1.222 为半兽人的吞噬尸体增加 `devour-flesh` 能力投影；协议 1.223 为博伊特人的呕吐增加
+`vomit`，并允许明确标记的能力在恐惧或混乱中使用。两次变化都复用既有权威状态，State Hash
+Schema 保持 v104，save header/payload schema 保持 v2。
+
+协议 1.224 为状态授予技能数据增加可选 `savingThrowSkillOverride`，用于库塔横向膨胀对最终豁免
+技能的覆盖。该状态数据进入 State Hash Schema v105，save header/payload schema 保持 v2。
+
+协议 1.225 增加 `alter-reality` 能力投影，供安珀人的阴影位移启动或取消现实重构倒计时。它复用
+既有持久状态，State Hash Schema 保持 v105，save header/payload schema 保持 v2。
+
+协议 1.226 合并武器与挖掘工具 ego 实例状态：`RolledAffixSaveDto` 增加附魔增量、近战骰面、
+武器性质与具体诅咒效果，装备被动增加 Evil/Living ESP。随机物化结果必须原样保存，读档不得重掷，
+因此 save header/payload schema 升至 v3；它与 v105 的状态覆盖共同形成 State Hash Schema v106。
+二进制容器格式仍为 v1，不为旧开发存档提供兼容路径。

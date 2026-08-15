@@ -26,6 +26,7 @@ pub(crate) fn valid_item_effect(
     loot_table_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
+        ItemUseEffectDefinition::AbilityEffect { .. } => true,
         ItemUseEffectDefinition::NoNumericEffect => true,
         ItemUseEffectDefinition::IncreaseNutrition { amount } => (1..=15_000).contains(amount),
         ItemUseEffectDefinition::SatisfyHunger => true,
@@ -210,7 +211,9 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::PrepareConfusingStrike
         | ItemUseEffectDefinition::AggravateMonsters
         | ItemUseEffectDefinition::IncreaseSpellLearningCapacity
-        | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors => true,
+        | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
+        | ItemUseEffectDefinition::TerrainBeam { .. }
+        | ItemUseEffectDefinition::RidingCharge => true,
         ItemUseEffectDefinition::MassGenocide { power, radius } => *power > 0 && *radius > 0,
         ItemUseEffectDefinition::Genocide { power } => (1..=1_000).contains(power),
         ItemUseEffectDefinition::RechargeFromDevice { power } => (1..=1_000).contains(power),
@@ -585,6 +588,13 @@ pub(super) fn validate_items(
                 && target.requires_line_of_effect;
             modes_are_unique
                 && match effect {
+                    ItemUseEffectDefinition::AbilityEffect { .. } => {
+                        let item_target = target.modes.as_slice()
+                            == [AbilityTargetModeDefinition::Item]
+                            && target.range == 0
+                            && !target.requires_line_of_effect;
+                        self_target || projectile_target || item_target
+                    }
                     ItemUseEffectDefinition::IncreaseNutrition { .. }
                     | ItemUseEffectDefinition::SatisfyHunger
                     | ItemUseEffectDefinition::Heal { .. }
@@ -661,7 +671,17 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::BanishVisible { .. } => self_target,
                     ItemUseEffectDefinition::RechargeFromDevice { .. } => false,
                     ItemUseEffectDefinition::Damage { .. }
-                    | ItemUseEffectDefinition::BeamDamage { .. } => projectile_target,
+                    | ItemUseEffectDefinition::BeamDamage { .. }
+                    | ItemUseEffectDefinition::TerrainBeam { .. } => projectile_target,
+                    ItemUseEffectDefinition::RidingCharge => {
+                        target.modes.as_slice()
+                            == [
+                                AbilityTargetModeDefinition::Direction,
+                                AbilityTargetModeDefinition::Entity,
+                            ]
+                            && target.range == 7
+                            && target.requires_line_of_effect
+                    }
                     ItemUseEffectDefinition::RandomElementConeDamage { .. } => {
                         target.modes.as_slice() == [AbilityTargetModeDefinition::Direction]
                             && projectile_target
@@ -706,6 +726,8 @@ pub(super) fn validate_items(
         })
         .collect::<BTreeMap<_, _>>();
     let mut artifact_source_indices = BTreeSet::new();
+    let mut base_kind_source_indices = BTreeSet::new();
+    let mut base_kind_values = BTreeSet::new();
     let mut item_limits = BTreeMap::new();
     for item in items.iter_mut() {
         require_schema(&item.schema, ITEM_SCHEMA, &item.id)?;
@@ -721,6 +743,16 @@ pub(super) fn validate_items(
         validate_glyph(&item.id, &item.glyph)?;
         if item.weight_tenths_pound == 0 || item.weight_tenths_pound > 10_000 {
             return Err(ContentError::InvalidItemWeight(item.id.clone()));
+        }
+        if let Some(base_kind) = item.rfb_base_kind
+            && (base_kind.source_index == 0
+                || base_kind.tval == 0
+                || item.artifact_generation.is_some()
+                || item.tags.iter().any(|tag| tag == "artifact")
+                || !base_kind_source_indices.insert(base_kind.source_index)
+                || !base_kind_values.insert((base_kind.tval, base_kind.sval)))
+        {
+            return Err(ContentError::InvalidItemSourceIdentity(item.id.clone()));
         }
         if !(-100..=100).contains(&item.tunneling_pval)
             || (item.tunneling_pval != 0

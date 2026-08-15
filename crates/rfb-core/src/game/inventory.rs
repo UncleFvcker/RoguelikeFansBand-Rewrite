@@ -4,6 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use rfb_content::{ContentCatalog, ItemDestructionElement, TaskObjectiveKind};
 use rfb_protocol::{
     ItemCurseSeverityDto, ItemEnchantmentsDto, ItemKnowledgeDto, ItemQualityDto, Position,
+    WeaponTraitDto,
 };
 
 use crate::{
@@ -1384,17 +1385,20 @@ impl Game {
         let item_index = candidates[candidate_index].2;
         let item_id = self.items[item_index].id.clone();
         let item_kind_id = self.items[item_index].kind_id.clone();
+        let blessed = Self::item_has_weapon_trait(&self.items[item_index], WeaponTraitDto::Blessed);
         let artifact = self
             .content
             .item(&item_kind_id)
             .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
-        let resisted = artifact
+        let can_resist = artifact || blessed;
+        let resisted = can_resist
             && if self.debug_item_curses_land {
                 false
             } else if self.debug_item_curses_resisted {
                 true
             } else {
-                self.rng.bounded(100) < 50
+                (blessed && self.rng.bounded(888) + 1 > 100)
+                    || (artifact && self.rng.bounded(100) < 50)
             };
         let before = self.items[item_index].curse;
         if !resisted {

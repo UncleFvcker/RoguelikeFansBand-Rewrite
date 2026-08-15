@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-beaked-axe-name",
+  "rfbBaseKind": {
+    "sourceIndex": 94,
+    "sval": 10,
+    "tval": 22
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

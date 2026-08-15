@@ -3,7 +3,7 @@
 use std::collections::BTreeSet;
 
 use fluent_bundle::{FluentArgs, FluentBundle, FluentResource};
-use rfb_content::ContentCatalog;
+use rfb_content::{AffixNamePlacementDefinition, ContentCatalog};
 use thiserror::Error;
 use unic_langid::LanguageIdentifier;
 
@@ -166,8 +166,7 @@ impl MogaminatorNames {
         } else {
             base_name
         };
-        let mut prefixes = String::new();
-        let mut suffixes = String::new();
+        let mut affix_names = Vec::new();
         for affix_id in affix_ids.iter().collect::<BTreeSet<_>>() {
             let affix = content
                 .affix(affix_id)
@@ -175,17 +174,38 @@ impl MogaminatorNames {
             let affix_name =
                 self.localizer
                     .format_exact(self.localizer.locale(), &affix.name_key, None)?;
-            if self.localizer.locale() == Locale::ZhCn
-                && let Some(prefix) = chinese_prefix(&affix_name)
-            {
-                prefixes.push_str(prefix);
-            } else {
-                suffixes.push(' ');
-                suffixes.push_str(affix_name.trim());
-            }
+            affix_names.push((affix_name, affix.name_placement));
         }
-        Ok(format!("{prefixes}{}{suffixes}", base_name.trim()))
+        Ok(compose_affix_names(
+            self.localizer.locale(),
+            &base_name,
+            &affix_names,
+        ))
     }
+}
+
+fn compose_affix_names(
+    locale: Locale,
+    base_name: &str,
+    affixes: &[(String, AffixNamePlacementDefinition)],
+) -> String {
+    let mut base_name = base_name.trim().to_owned();
+    let mut prefixes = String::new();
+    let mut suffixes = String::new();
+    for (affix_name, placement) in affixes {
+        let affix_name = affix_name.trim();
+        if *placement == AffixNamePlacementDefinition::FullName {
+            base_name = affix_name.to_owned();
+        } else if locale == Locale::ZhCn
+            && let Some(prefix) = chinese_prefix(affix_name)
+        {
+            prefixes.push_str(prefix);
+        } else {
+            suffixes.push(' ');
+            suffixes.push_str(affix_name);
+        }
+    }
+    format!("{prefixes}{base_name}{suffixes}")
 }
 
 fn chinese_prefix(name: &str) -> Option<&str> {
@@ -992,5 +1012,30 @@ mod tests {
         assert_eq!(chinese_prefix("杀戮之"), Some("杀戮之"));
         assert_eq!(chinese_prefix("(受祝福的)"), Some("受祝福的"));
         assert_eq!(chinese_prefix("吸血"), None);
+    }
+
+    #[test]
+    fn full_name_egos_replace_lance_names_in_both_locales() {
+        for (locale, base, hell, holy) in [
+            (Locale::EnUs, "Lance", "Hell Lance", "Holy Lance"),
+            (Locale::ZhCn, "长枪", "地狱长枪", "神圣长枪"),
+        ] {
+            assert_eq!(
+                compose_affix_names(
+                    locale,
+                    base,
+                    &[(hell.to_owned(), AffixNamePlacementDefinition::FullName,)],
+                ),
+                hell
+            );
+            assert_eq!(
+                compose_affix_names(
+                    locale,
+                    base,
+                    &[(holy.to_owned(), AffixNamePlacementDefinition::FullName,)],
+                ),
+                holy
+            );
+        }
     }
 }

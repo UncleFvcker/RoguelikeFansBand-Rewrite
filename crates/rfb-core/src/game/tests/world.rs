@@ -1402,12 +1402,27 @@ fn p92c_labyrinth_generation_keeps_the_small_perfect_maze_connected() {
             "depth {} connectivity",
             definition.depth
         );
-        assert!(
-            generated
-                .entities
-                .iter()
-                .all(|actor| reached.contains(&actor.position))
-        );
+        for actor in &generated.entities {
+            let index = usize::try_from(actor.position.y).expect("actor y should be non-negative")
+                * usize::from(generated.width)
+                + usize::try_from(actor.position.x).expect("actor x should be non-negative");
+            let actor_definition = game
+                .content
+                .actor(&actor.kind_id)
+                .expect("generated actor definition should exist");
+            let terrain = game
+                .content
+                .terrain(&generated.terrain[index])
+                .expect("generated actor terrain should exist");
+            assert!(
+                reached.contains(&actor.position)
+                    || super::super::movement::actor_can_cross_terrain(actor_definition, terrain),
+                "depth {} actor {} cannot occupy {:?}",
+                definition.depth,
+                actor.id,
+                actor.position
+            );
+        }
         assert!(
             generated
                 .terrain

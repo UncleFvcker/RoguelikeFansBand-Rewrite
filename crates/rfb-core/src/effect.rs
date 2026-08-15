@@ -10,6 +10,7 @@ use rfb_protocol::{
 };
 
 pub const STATUS_HASTE: &str = "rfb.status.haste";
+pub const STATUS_LIGHT_SPEED: &str = "rfb.status.light-speed";
 pub const STATUS_SLOW: &str = "rfb.status.slow";
 pub const STATUS_POISON: &str = "rfb.status.poison";
 pub const STATUS_PLAYER_POLYMORPH: &str = "rfb.status.player-polymorph";
@@ -18,6 +19,7 @@ pub const STATUS_STUN: &str = "rfb.status.stun";
 pub const STATUS_FEAR: &str = "rfb.status.fear";
 pub const STATUS_CONFUSION: &str = "rfb.status.confusion";
 pub const STATUS_ANTI_MAGIC: &str = "rfb.status.anti-magic";
+pub const STATUS_MAGIC_RESISTANCE: &str = "rfb.status.magic-resistance";
 pub const STATUS_BLINDNESS: &str = "rfb.status.blindness";
 pub const STATUS_PARALYSIS: &str = "rfb.status.paralysis";
 pub const STATUS_SLEEP: &str = "rfb.status.sleep";

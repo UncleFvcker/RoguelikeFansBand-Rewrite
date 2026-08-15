@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.225";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 2;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 2;
+pub const PROTOCOL_VERSION: &str = "1.226";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 3;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 3;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -604,6 +604,8 @@ pub enum EquipmentPassiveDto {
     EspDragon,
     EspHuman,
     EspGood,
+    EspEvil,
+    EspLiving,
     SustainStrength,
     SustainIntelligence,
     SustainWisdom,
@@ -635,6 +637,8 @@ where
             "esp-dragon" => Some(Ok(EquipmentPassiveDto::EspDragon)),
             "esp-human" => Some(Ok(EquipmentPassiveDto::EspHuman)),
             "esp-good" => Some(Ok(EquipmentPassiveDto::EspGood)),
+            "esp-evil" => Some(Ok(EquipmentPassiveDto::EspEvil)),
+            "esp-living" => Some(Ok(EquipmentPassiveDto::EspLiving)),
             "sustain-strength" => Some(Ok(EquipmentPassiveDto::SustainStrength)),
             "sustain-intelligence" => Some(Ok(EquipmentPassiveDto::SustainIntelligence)),
             "sustain-wisdom" => Some(Ok(EquipmentPassiveDto::SustainWisdom)),
@@ -2108,6 +2112,44 @@ pub struct SlayDto {
     pub level: SlayLevelDto,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MeleeDamageDiceDto {
+    pub dice: u16,
+    pub sides: u16,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum WeaponTraitDto {
+    ManaBrand,
+    Vorpal,
+    Vorpal2,
+    Order,
+    Wild,
+    Impact,
+    Stun,
+    Blessed,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum ItemCurseEffectDto {
+    TyCurse,
+    Aggravate,
+    DrainExperience,
+    AddHeavyCurse,
+    CallDemon,
+    CallDragon,
+    Teleport,
+    ByCurse,
+    Danger,
+    CrappyMutation,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -2127,6 +2169,14 @@ pub struct RolledAffixSaveDto {
     pub brands: Vec<WeaponBrandDto>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub passives: Vec<EquipmentPassiveDto>,
+    #[serde(default, skip_serializing_if = "ItemEnchantmentsDto::is_empty")]
+    pub enchantment_delta: ItemEnchantmentsDto,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub melee_damage_dice: Option<MeleeDamageDiceDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub weapon_traits: Vec<WeaponTraitDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub curse_effects: Vec<ItemCurseEffectDto>,
 }
 
 impl<'de> Deserialize<'de> for RolledAffixSaveDto {
@@ -2152,6 +2202,14 @@ impl<'de> Deserialize<'de> for RolledAffixSaveDto {
             brands: Vec<WeaponBrandDto>,
             #[serde(default)]
             passives: Vec<String>,
+            #[serde(default)]
+            enchantment_delta: ItemEnchantmentsDto,
+            #[serde(default)]
+            melee_damage_dice: Option<MeleeDamageDiceDto>,
+            #[serde(default)]
+            weapon_traits: Vec<WeaponTraitDto>,
+            #[serde(default)]
+            curse_effects: Vec<ItemCurseEffectDto>,
         }
 
         let wire = Wire::deserialize(deserializer)?;
@@ -2164,6 +2222,10 @@ impl<'de> Deserialize<'de> for RolledAffixSaveDto {
             slays: wire.slays,
             brands: wire.brands,
             passives: migrate_rolled_affix_passives(wire.passives)?,
+            enchantment_delta: wire.enchantment_delta,
+            melee_damage_dice: wire.melee_damage_dice,
+            weapon_traits: wire.weapon_traits,
+            curse_effects: wire.curse_effects,
         })
     }
 }

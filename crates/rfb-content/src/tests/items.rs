@@ -724,7 +724,7 @@ fn item_shape_validation_uses_current_rfb_content() {
 fn rfb_ego_affix_metadata_requires_identity_unique_source_and_distinct_types() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let metadata = RfbEgoGenerationDefinition {
-        source_index: 1,
+        source_index: u32::MAX,
         rarity: 0,
         types: vec![RfbEgoTypeDefinition::Weapon, RfbEgoTypeDefinition::Digger],
     };
@@ -770,6 +770,82 @@ fn rfb_ego_affix_metadata_requires_identity_unique_source_and_distinct_types() {
         validate_and_normalize(&mut duplicate_source),
         Err(ContentError::InvalidAffixModifiers(_))
     ));
+}
+
+#[test]
+fn weapon_and_digger_ego_batch_is_formal_and_complete() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let base_kinds = artifact
+        .content
+        .items
+        .iter()
+        .filter_map(|item| item.rfb_base_kind)
+        .filter(|kind| matches!(kind.tval, 20..=23))
+        .collect::<Vec<_>>();
+    assert_eq!(base_kinds.len(), 62);
+    assert_eq!(
+        base_kinds
+            .iter()
+            .map(|kind| kind.source_index)
+            .collect::<BTreeSet<_>>()
+            .len(),
+        base_kinds.len()
+    );
+    assert_eq!(
+        base_kinds
+            .iter()
+            .map(|kind| (kind.tval, kind.sval))
+            .collect::<BTreeSet<_>>()
+            .len(),
+        base_kinds.len()
+    );
+
+    let expected = (1_u32..=27).chain(40..=42).collect::<Vec<_>>();
+    let mut actual = artifact
+        .content
+        .affixes
+        .iter()
+        .filter_map(|affix| affix.rfb_ego.as_ref().map(|ego| (ego.source_index, affix)))
+        .filter(|(source_index, _)| expected.contains(source_index))
+        .collect::<Vec<_>>();
+    actual.sort_by_key(|(source_index, _)| *source_index);
+    assert_eq!(
+        actual
+            .iter()
+            .map(|(source_index, _)| *source_index)
+            .collect::<Vec<_>>(),
+        expected
+    );
+    assert!(actual.iter().all(|(_, affix)| affix.roll_groups.is_empty()));
+
+    let arcane = actual
+        .iter()
+        .find(|(source_index, _)| *source_index == 6)
+        .map(|(_, affix)| *affix)
+        .expect("Arcane should remain formally defined");
+    assert_eq!(
+        arcane
+            .device_generation
+            .as_ref()
+            .expect("Arcane should carry Mage activation candidates")
+            .activations
+            .len(),
+        32
+    );
+    let disruption = actual
+        .iter()
+        .find(|(source_index, _)| *source_index == 42)
+        .map(|(_, affix)| *affix)
+        .expect("Disruption should remain formally defined");
+    assert_eq!(
+        disruption
+            .device_generation
+            .as_ref()
+            .expect("Disruption should retain Stone to Mud")
+            .activations
+            .len(),
+        1
+    );
 }
 
 #[test]
@@ -1086,8 +1162,8 @@ fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
     outside_depth
         .affixes
         .iter_mut()
-        .find(|affix| affix.id == "rfb-legacy.affix.slaying")
-        .expect("Slaying should exist")
+        .find(|affix| affix.id == "rfb-legacy.affix.protection")
+        .expect("Protection should exist")
         .generation_level = 20;
     assert!(matches!(
         validate_and_normalize(&mut outside_depth),
@@ -1852,4 +1928,55 @@ fn supported_legacy_scrolls_and_potions_keep_source_identity_and_values() {
         assert_eq!(item.base_value, base_value, "{id} source value");
         assert!(item.use_action.is_some(), "{id} should be usable");
     }
+}
+
+#[test]
+fn rfb_base_kind_identity_rejects_duplicate_source_indices_and_kind_values() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let set_identities = |content: &mut CompiledContentV1, second: RfbBaseKindDefinition| {
+        let short_sword = content
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.short-sword")
+            .expect("Short Sword should exist");
+        short_sword.rfb_base_kind = Some(RfbBaseKindDefinition {
+            source_index: 100,
+            tval: 23,
+            sval: 10,
+        });
+        let broad_sword = content
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.broad-sword")
+            .expect("Broad Sword should exist");
+        broad_sword.rfb_base_kind = Some(second);
+    };
+
+    let mut duplicate_index = artifact.content.clone();
+    set_identities(
+        &mut duplicate_index,
+        RfbBaseKindDefinition {
+            source_index: 100,
+            tval: 23,
+            sval: 16,
+        },
+    );
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_index),
+        Err(ContentError::InvalidItemSourceIdentity(_))
+    ));
+
+    let mut duplicate_kind = artifact.content;
+    set_identities(
+        &mut duplicate_kind,
+        RfbBaseKindDefinition {
+            source_index: 101,
+            tval: 23,
+            sval: 10,
+        },
+    );
+    assert!(matches!(
+        validate_and_normalize(&mut duplicate_kind),
+        Err(ContentError::InvalidItemSourceIdentity(_))
+    ));
 }

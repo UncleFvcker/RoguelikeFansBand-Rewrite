@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-three-piece-rod-name",
+  "rfbBaseKind": {
+    "sourceIndex": 128,
+    "sval": 11,
+    "tval": 21
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

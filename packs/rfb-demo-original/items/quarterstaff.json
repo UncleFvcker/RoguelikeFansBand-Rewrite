@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-quarterstaff-name",
+  "rfbBaseKind": {
+    "sourceIndex": 122,
+    "sval": 3,
+    "tval": 21
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

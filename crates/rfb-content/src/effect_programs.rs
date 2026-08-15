@@ -98,9 +98,9 @@ fn effect_program_input_for_step(
         ItemUseEffectDefinition::Sequence { .. } => None,
         ItemUseEffectDefinition::Damage { .. }
         | ItemUseEffectDefinition::BeamDamage { .. }
-        | ItemUseEffectDefinition::RandomElementConeDamage { .. } => {
-            Some(EffectProgramInputDefinition::Actor)
-        }
+        | ItemUseEffectDefinition::RandomElementConeDamage { .. }
+        | ItemUseEffectDefinition::TerrainBeam { .. }
+        | ItemUseEffectDefinition::RidingCharge => Some(EffectProgramInputDefinition::Actor),
         ItemUseEffectDefinition::IdentifyItem { .. }
         | ItemUseEffectDefinition::EnchantItem { .. }
         | ItemUseEffectDefinition::MundanifyItem

@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-whip-name",
+  "rfbBaseKind": {
+    "sourceIndex": 121,
+    "sval": 2,
+    "tval": 21
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

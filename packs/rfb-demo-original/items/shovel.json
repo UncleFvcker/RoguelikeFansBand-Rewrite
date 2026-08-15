@@ -17,6 +17,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-shovel-name",
+  "rfbBaseKind": {
+    "sourceIndex": 150,
+    "sval": 1,
+    "tval": 20
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

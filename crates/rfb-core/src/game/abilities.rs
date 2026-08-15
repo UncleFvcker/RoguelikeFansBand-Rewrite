@@ -1,8 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::ego::{
+    materialize_rfb_weapon_ego_with_rng, merge_affix_properties, roll_rfb_craft, roll_rfb_slaying,
+};
 use super::item_use::VisibleBanishmentOutcome;
 use super::terrain::TerrainChangeSource;
 use super::*;
+use crate::rng::rfb_m_bonus;
 
 const DEATH_INVOKE_SPIRITS_ABILITY_ID: &str = "demo.ability.death-invoke-spirits";
 const DEATH_POISON_BRANDING_ABILITY_ID: &str = "demo.ability.death-poison-branding";
@@ -16,6 +20,7 @@ const NATURE_WRATH_ABILITY_ID: &str = "demo.ability.nature-natures-wrath";
 enum EarthquakeSource {
     Ability(String),
     Monster(String),
+    Weapon(String),
 }
 
 pub(super) fn nature_wrath_direction_roll(events: &[DomainEvent]) -> Option<u8> {
@@ -658,7 +663,7 @@ impl Game {
 }
 
 impl Game {
-    fn resolve_player_ability_effect(
+    pub(super) fn resolve_player_ability_effect(
         &mut self,
         ability: AbilityDefinition,
         target_plan: AbilityTargetPlan,
@@ -2369,6 +2374,25 @@ impl Game {
         let AbilityEffectDefinition::TerrainBeam { operation } = ability.effect else {
             unreachable!("terrain-beam executor requires a terrain-beam effect");
         };
+        self.resolve_terrain_beam_effect(
+            &ability.id,
+            operation,
+            path,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    pub(super) fn resolve_terrain_beam_effect(
+        &mut self,
+        source_id: &str,
+        operation: AbilityTerrainBeamOperationDefinition,
+        path: Vec<Position>,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         let stone_to_mud_power = (operation == AbilityTerrainBeamOperationDefinition::StoneToMud)
             .then(|| {
                 u16::try_from(21 + self.rng.bounded(30)).expect("stone-to-mud power must fit u16")
@@ -2434,7 +2458,7 @@ impl Game {
         }
         for ((source_id, target_id), positions) in groups {
             events.push(DomainEvent::AbilityTerrainTransformed {
-                ability_id: ability.id.clone(),
+                ability_id: source_id.to_owned(),
                 resolution: AbilityTerrainTransformResolutionDto {
                     center: self.player.position,
                     radius: 0,
@@ -2457,7 +2481,7 @@ impl Game {
                 })
                 .collect::<Vec<_>>();
             events.push(DomainEvent::AbilityBeamDamage {
-                ability_id: ability.id.clone(),
+                ability_id: source_id.to_owned(),
                 resolution: AbilityBeamDamageResolutionDto {
                     base_raw_damage: i32::from(power),
                     damage_type: DamageType::Disintegrate.into(),
@@ -2476,7 +2500,7 @@ impl Game {
                 };
                 self.resolve_stone_to_mud_damage_to_entity(
                     index,
-                    &ability.id,
+                    source_id,
                     i32::from(power),
                     trace.clone(),
                     events,
@@ -4895,8 +4919,7 @@ impl Game {
 
         self.nutrition = nutrition_before
             .saturating_sub(100)
-            .min(MAXIMUM_NUTRITION_AFTER_VOMITING)
-            .max(1);
+            .clamp(1, MAXIMUM_NUTRITION_AFTER_VOMITING);
         self.resolve_player_area_damage_with_base(
             &ability.id,
             Vec::new(),
@@ -5464,17 +5487,48 @@ impl Game {
                 .resistances
                 .insert(*resistance, ActorResistanceLevel::Resistant);
         }
-        let item = &mut self.items[item_index];
-        item.affix_ids.push(affix_id.clone());
-        item.affix_ids.sort();
-        if properties != AffixPropertyBundleDefinition::default() {
-            item.rolled_affixes.push(RolledAffixState {
-                affix_id: affix_id.clone(),
-                properties,
-            });
-            item.rolled_affixes
-                .sort_by(|left, right| left.affix_id.cmp(&right.affix_id));
+        let affix = self
+            .content
+            .affix(affix_id)
+            .expect("validated branding affix must remain available")
+            .clone();
+        if affix.rfb_ego.is_some() {
+            let item_definition = self
+                .content
+                .item(&item_kind_id)
+                .expect("planned branding item kind must remain available")
+                .clone();
+            let mut materialization = materialize_rfb_weapon_ego_with_rng(
+                &mut self.rng,
+                &item_definition,
+                &affix,
+                self.progress.level,
+            )
+            .expect("planned branding target must accept its RFB weapon ego");
+            if properties != AffixPropertyBundleDefinition::default() {
+                let rolled = materialization
+                    .rolled_affixes
+                    .iter_mut()
+                    .find(|rolled| rolled.affix_id == *affix_id)
+                    .expect("branded RFB ego must record its generated properties");
+                merge_affix_properties(&mut rolled.properties, &properties);
+            }
+            materialization.apply_to(&mut self.items[item_index]);
+        } else {
+            let item = &mut self.items[item_index];
+            item.affix_ids.push(affix_id.clone());
+            item.affix_ids.sort();
+            if properties != AffixPropertyBundleDefinition::default() {
+                item.rolled_affixes.push(RolledAffixState {
+                    affix_id: affix_id.clone(),
+                    properties,
+                    ..RolledAffixState::default()
+                });
+                item.rolled_affixes
+                    .sort_by(|left, right| left.affix_id.cmp(&right.affix_id));
+            }
         }
+        let item = &mut self.items[item_index];
         if item.quality == ItemQualityDto::Ordinary {
             item.quality = ItemQualityDto::Fine;
         }
@@ -6295,44 +6349,6 @@ impl Game {
         events.extend(self.relocate_player(position, changed));
     }
 
-    fn roll_rfb_m_bonus(&mut self, maximum: u16) -> u16 {
-        let level = self.progress.level.min(127);
-        let product = maximum.saturating_mul(level);
-        let mut mean = i32::from(product / 128);
-        if self.rng.bounded(128) < u64::from(product % 128) {
-            mean += 1;
-        }
-        let mut deviation = maximum / 4;
-        if self.rng.bounded(4) < u64::from(maximum % 4) {
-            deviation += 1;
-        }
-        let value = if deviation == 0 {
-            mean
-        } else {
-            let roll = self.rng.bounded(32_768);
-            // Only deviations 1..=3 are reachable by Create Ammo's m_bonus
-            // calls. These are the exact category boundaries from RFB's
-            // 256-entry randnor table after scaling by RANDNOR_STD (64).
-            let thresholds: &[u64] = match deviation {
-                1 => &[22_245, 31_249, 32_677],
-                2 => &[12_367, 22_245, 28_323, 31_249, 32_352, 32_677, 32_752],
-                3 => &[
-                    8_621, 16_166, 22_245, 26_818, 29_619, 31_249, 32_129, 32_515, 32_677, 32_740,
-                    32_760,
-                ],
-                _ => unreachable!("Create Ammo m_bonus deviation is bounded by three"),
-            };
-            let offset = i32::try_from(thresholds.partition_point(|threshold| *threshold < roll))
-                .expect("randnor category count fits i32");
-            if self.rng.bounded(100) < 50 {
-                mean.saturating_sub(offset)
-            } else {
-                mean.saturating_add(offset)
-            }
-        };
-        u16::try_from(value.clamp(0, i32::from(maximum))).expect("bounded RFB bonus must fit u16")
-    }
-
     fn roll_rfb_ammunition_magic_power(&mut self) -> i8 {
         let level = self.progress.level.min(127);
         let good_chance = level.saturating_add(10).min(75);
@@ -6377,84 +6393,19 @@ impl Game {
             < u64::from(slaying_weight)
         {
             let mut properties = AffixPropertyBundleDefinition::default();
-            let slays = [
-                (SlayTarget::Orc, 2_u32, 20_u16),
-                (SlayTarget::Troll, 2, 30),
-                (SlayTarget::Giant, 2, 40),
-                (SlayTarget::Dragon, 3, 80),
-                (SlayTarget::Demon, 3, 90),
-                (SlayTarget::Undead, 3, 95),
-                (SlayTarget::Animal, 2, 60),
-                (SlayTarget::Human, 3, 50),
-                (SlayTarget::Evil, 5, 0),
-                (SlayTarget::Good, 5, 0),
-                (SlayTarget::Living, 20, 0),
-            ];
-            let eligible = slays
-                .iter()
-                .copied()
-                .filter(|(_, _, maximum_level)| *maximum_level == 0 || level <= *maximum_level)
-                .collect::<Vec<_>>();
-            let total = eligible
-                .iter()
-                .map(|(_, rarity, _)| (255 / rarity).max(1))
-                .sum::<u32>();
-            let mut rolls = 1_u16.saturating_add(self.roll_rfb_m_bonus(4));
-            if self.rng.bounded(8) == 0 {
-                rolls = rolls.saturating_mul(2);
-            }
-            rolls = rolls.saturating_add(1) / 2;
-            for _ in 0..rolls {
-                let mut choice = u32::try_from(self.rng.bounded(u64::from(total)))
-                    .expect("slaying choice fits u32");
-                let (target, rarity, _) = eligible
-                    .iter()
-                    .copied()
-                    .find(|(_, rarity, _)| {
-                        let weight = (255 / rarity).max(1);
-                        if choice < weight {
-                            true
-                        } else {
-                            choice -= weight;
-                            false
-                        }
-                    })
-                    .expect("positive slaying weight must select a target");
-                let level = if self.rng.bounded(u64::from(rarity.pow(3))) == 0 {
-                    SlayLevel::Kill
-                } else {
-                    SlayLevel::Slay
-                };
-                properties
-                    .slays
-                    .entry(target)
-                    .and_modify(|current| *current = (*current).max(level))
-                    .or_insert(level);
-            }
+            roll_rfb_slaying(&mut self.rng, &mut properties, level, true);
             RolledAffixState {
                 affix_id: SLAYING_AFFIX_ID.to_owned(),
                 properties,
+                ..RolledAffixState::default()
             }
         } else {
-            let mut properties = AffixPropertyBundleDefinition::default();
-            let mut rolls = 1_u16.saturating_add(self.roll_rfb_m_bonus(4));
-            if self.rng.bounded(8) == 0 {
-                rolls = rolls.saturating_mul(2);
-            }
-            rolls = rolls.saturating_add(1) / 2;
-            for _ in 0..rolls {
-                properties.brands.insert(match self.rng.bounded(5) {
-                    0 => WeaponBrand::Acid,
-                    1 => WeaponBrand::Electricity,
-                    2 => WeaponBrand::Fire,
-                    3 => WeaponBrand::Cold,
-                    _ => WeaponBrand::Poison,
-                });
-            }
-            RolledAffixState {
+            let mut state = RolledAffixState {
                 affix_id: ELEMENTAL_AFFIX_ID.to_owned(),
-                properties,
-            }
+                ..RolledAffixState::default()
+            };
+            roll_rfb_craft(&mut self.rng, &mut state, level, true);
+            state
         }
     }
 
@@ -6474,12 +6425,12 @@ impl Game {
 
         let primary_to_hit = 1_u16
             .saturating_add(u16::try_from(self.rng.bounded(5)).expect("d5 roll fits u16"))
-            .saturating_add(self.roll_rfb_m_bonus(5));
+            .saturating_add(rfb_m_bonus(&mut self.rng, 5, level));
         let primary_to_damage = 1_u16
             .saturating_add(u16::try_from(self.rng.bounded(5)).expect("d5 roll fits u16"))
-            .saturating_add(self.roll_rfb_m_bonus(5));
-        let extra_to_hit = self.roll_rfb_m_bonus(10).saturating_add(1) / 2;
-        let extra_to_damage = self.roll_rfb_m_bonus(10).saturating_add(1) / 2;
+            .saturating_add(rfb_m_bonus(&mut self.rng, 5, level));
+        let extra_to_hit = rfb_m_bonus(&mut self.rng, 10, level).saturating_add(1) / 2;
+        let extra_to_damage = rfb_m_bonus(&mut self.rng, 10, level).saturating_add(1) / 2;
         let sign = if power < 0 { -1_i16 } else { 1_i16 };
         item.enchantments.to_hit = sign.saturating_mul(
             i16::try_from(primary_to_hit.saturating_add(if power.abs() > 1 {
@@ -6558,6 +6509,7 @@ impl Game {
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            enchantments: ItemEnchantmentsDto::default(),
             curse: None,
             activation: None,
             charges: None,
@@ -6701,7 +6653,11 @@ impl Game {
         };
         let maximum_tier = u16::try_from(item_kind_ids.len() - 1)
             .expect("validated ammunition tier count must fit u16");
-        let tier = usize::from(self.roll_rfb_m_bonus(maximum_tier));
+        let tier = usize::from(rfb_m_bonus(
+            &mut self.rng,
+            maximum_tier,
+            self.progress.level,
+        ));
         let item_kind_id = item_kind_ids[tier].clone();
         let quantity = quantity_minimum.saturating_add(
             u32::try_from(
@@ -7078,6 +7034,30 @@ impl Game {
         )
     }
 
+    pub(super) fn resolve_player_impact_earthquake(
+        &mut self,
+        source_item_id: String,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
+        self.resolve_earthquake(
+            self.player.position,
+            10,
+            15,
+            "demo.terrain.floor",
+            &[
+                "demo.terrain.wall".to_owned(),
+                "demo.terrain.quartz-vein".to_owned(),
+                "demo.terrain.magma-vein".to_owned(),
+            ],
+            EarthquakeSource::Weapon(source_item_id),
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn resolve_earthquake(
         &mut self,
@@ -7120,6 +7100,7 @@ impl Game {
         let terrain_change_source = match &source {
             EarthquakeSource::Ability(_) => TerrainChangeSource::Magic,
             EarthquakeSource::Monster(_) => TerrainChangeSource::Monster,
+            EarthquakeSource::Weapon(_) => TerrainChangeSource::Magic,
         };
         let mut captured_balls = self
             .items
@@ -7204,6 +7185,12 @@ impl Game {
                             });
                         }
                     }
+                    EarthquakeSource::Weapon(source_item_id) => {
+                        events.push(DomainEvent::PlayerWeaponEarthquakeHit {
+                            source_item_id: source_item_id.clone(),
+                            damage,
+                        });
+                    }
                 }
                 self.replace_terrain_from_source(
                     *position,
@@ -7279,12 +7266,28 @@ impl Game {
                                 changed,
                                 removed_entities,
                             )?,
+                        EarthquakeSource::Weapon(source_item_id) => self.resolve_actor_death(
+                            actor_index,
+                            DomainEvent::PlayerWeaponEarthquakeSlew {
+                                source_item_id: source_item_id.clone(),
+                                target_kind_id,
+                                damage,
+                            },
+                            events,
+                            changed,
+                            removed_entities,
+                        )?,
                     }
                 } else if let EarthquakeSource::Monster(source_kind_id) = &source {
                     events.push(DomainEvent::MonsterMeleeEntityHit {
                         source_kind_id: source_kind_id.clone(),
                         target_kind_id,
                         method_id: Some("rfb.blow.shatter".to_owned()),
+                        damage,
+                    });
+                } else if let EarthquakeSource::Weapon(source_item_id) = &source {
+                    events.push(DomainEvent::PlayerWeaponEarthquakeHit {
+                        source_item_id: source_item_id.clone(),
                         damage,
                     });
                 }
@@ -7348,6 +7351,12 @@ impl Game {
             EarthquakeSource::Monster(source_kind_id) => {
                 events.push(DomainEvent::MonsterEarthquakeResolved {
                     source_kind_id,
+                    resolution,
+                });
+            }
+            EarthquakeSource::Weapon(source_item_id) => {
+                events.push(DomainEvent::PlayerWeaponEarthquakeResolved {
+                    source_item_id,
                     resolution,
                 });
             }

@@ -698,14 +698,15 @@ impl Game {
         spawn: &ItemSpawn,
         position: ContentPosition,
     ) -> ItemInstance {
-        let (activation, charges) = initial_item_runtime_state(
+        let materialization = materialize_ego_with_rng(
             &self.content,
             &mut self.rng,
             &spawn.kind_id,
-            &spawn.affix_ids,
+            spawn.affix_ids.clone(),
+            |_| definition.depth,
             definition.depth,
         );
-        ItemInstance {
+        let mut item = ItemInstance {
             id: spawn.instance_id.clone(),
             kind_id: spawn.kind_id.clone(),
             quantity: spawn.quantity,
@@ -715,13 +716,13 @@ impl Game {
             damage_dice_override: None,
             discount_percent: 0,
             quality: item_quality_dto(spawn.quality),
-            affix_ids: spawn.affix_ids.clone(),
+            affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
             enchantments: ItemEnchantmentsDto::default(),
             curse: initial_item_curse(&self.content, &spawn.kind_id),
             permanent_destruction_immunities: Default::default(),
-            activation,
-            charges,
+            activation: None,
+            charges: None,
             fuel: initial_item_fuel(&self.content, &spawn.kind_id),
             device_recovery_progress: 0,
             captured_actor: None,
@@ -729,7 +730,9 @@ impl Game {
                 x: i32::from(position.x),
                 y: i32::from(position.y),
             }),
-        }
+        };
+        materialization.apply_to(&mut item);
+        item
     }
 
     fn generate_inline_floor(

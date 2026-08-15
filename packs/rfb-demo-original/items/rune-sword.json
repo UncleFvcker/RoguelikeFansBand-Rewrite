@@ -27,6 +27,11 @@
     "vampiric"
   ],
   "resistsEnchantment": true,
+  "rfbBaseKind": {
+    "sourceIndex": 77,
+    "sval": 34,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

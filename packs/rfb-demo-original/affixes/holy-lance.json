@@ -1,0 +1,1092 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-holy-lance-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "category": "all",
+            "persistent": true,
+            "radius": 18,
+            "subject": "terrain",
+            "throughWalls": true,
+            "type": "detect"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-enlightenment",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "category": "evil",
+            "persistent": true,
+            "radius": 18,
+            "subject": "actor",
+            "throughWalls": true,
+            "type": "detect"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-detect-evil",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 300
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "sourceTerrainIds": [
+              "demo.terrain.floor"
+            ],
+            "targetTerrainId": "demo.terrain.warding-glyph",
+            "type": "create-current-terrain"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-rune-protection",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "type": "banish-evil"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-banish-evil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationTicks": 100,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.protection-from-evil",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-prot-evil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "amount": 250,
+                "type": "heal"
+              },
+              {
+                "durationDice": 1,
+                "durationSides": 50,
+                "durationTicks": 50,
+                "intensity": 1,
+                "stacking": "extend",
+                "statusKindId": "rfb.status.magic-resistance",
+                "type": "apply-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-holy-grail",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationTicks": 25,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.heroism",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-heroism",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "priestly",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "angel",
+            "countDice": 1,
+            "countSides": 1,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 0,
+            "hostileGroupChancePercent": 0,
+            "maximumLevel": 70,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-summon-angel",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 7770
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "lifeForce": 1,
+            "restoreAttributes": true,
+            "type": "restore-vitality"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-restore-stats",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 6000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "effect": {
+            "lifeForce": 1000,
+            "restoreAttributes": false,
+            "type": "restore-vitality"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-restore-exp",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "lifeForce": 1000,
+            "restoreAttributes": true,
+            "type": "restore-vitality"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-restoring",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 8000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "amount": 65,
+                "type": "heal"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-heal",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 45,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "statusKindId": "rfb.status.fear",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.blind",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.confused",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.stun",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.bleeding",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-curing",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "amount": 270,
+                "type": "heal"
+              },
+              {
+                "statusKindId": "rfb.status.blind",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.confused",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.stun",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.bleeding",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-heal-curing",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 9000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "amount": 300,
+                "type": "heal"
+              },
+              {
+                "statusKindId": "rfb.status.blind",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.confused",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.stun",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.bleeding",
+                "type": "remove-status"
+              },
+              {
+                "durationDice": 1,
+                "durationSides": 25,
+                "durationTicks": 25,
+                "intensity": 1,
+                "stacking": "extend",
+                "statusKindId": "rfb.status.heroism",
+                "type": "apply-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-heal-curing-hero",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 9000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "statusKindId": "rfb.status.fear",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-cure-fear",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "statusKindId": "rfb.status.fear",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-cure-fear-pois",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "includeHeavy": false,
+            "type": "remove-equipped-curses"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-remove-curse",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "includeHeavy": true,
+            "type": "remove-equipped-curses"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-remove-all-curse",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "amount": 10,
+          "resourceId": "demo.resource.mana",
+          "type": "restore-resource"
+        },
+        "id": "rfb.device-activation.ego-26-biased-clarity",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 150
+        },
+        "rfbBiases": [
+          "priestly",
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 21
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 80,
+        "effect": {
+          "amount": 30,
+          "resourceId": "demo.resource.mana",
+          "type": "restore-resource"
+        },
+        "id": "rfb.device-activation.ego-26-biased-great-clarity",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 750
+        },
+        "rfbBiases": [
+          "priestly",
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 3
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "damageBonus": 50,
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageType": "mana",
+                "targetCategory": "evil",
+                "type": "visible-damage"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-dispel-evil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "damageBonus": 69,
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageType": "mana",
+                "targetCategory": "evil",
+                "type": "visible-damage"
+              },
+              {
+                "durationDice": 1,
+                "durationSides": 25,
+                "durationTicks": 25,
+                "intensity": 1,
+                "stacking": "extend",
+                "statusKindId": "rfb.status.heroism",
+                "type": "apply-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-dispel-evil-hero",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2500
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "damageBonus": 132,
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageType": "mana",
+                "targetCategory": "undead",
+                "type": "visible-damage"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-dispel-undead",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "damageBonus": 100,
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageType": "holy-fire",
+                "targetCategory": "evil",
+                "type": "visible-damage"
+              },
+              {
+                "amount": 100,
+                "type": "heal"
+              },
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.stun",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.bleeding",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.fear",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-26-biased-holiness",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-holy-lance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2500
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "id": "rfb-legacy.affix.holy-lance",
+  "nameKey": "affix-legacy-holy-lance-name",
+  "namePlacement": "full-name",
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 26,
+    "types": [
+      "weapon"
+    ]
+  },
+  "slays": {
+    "evil": "slay"
+  },
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

@@ -152,6 +152,9 @@ impl Game {
                 self.process_monster_regeneration();
             }
             self.process_equipped_light_fuel(events);
+            if local_floor_active {
+                self.process_equipped_curse_effects(events, changed);
+            }
             self.process_periodic_mutations(
                 local_floor_active,
                 resting,
@@ -379,7 +382,18 @@ impl Game {
                 continue;
             }
             let Some(recovery) = item_device_generation(content, &item.kind_id, &item.affix_ids)
-                .and_then(|generation| generation.recovery)
+                .and_then(|generation| {
+                    item.activation
+                        .as_ref()
+                        .and_then(|activation| {
+                            generation
+                                .activations
+                                .iter()
+                                .find(|profile| profile.id == activation.profile_id)
+                        })
+                        .and_then(|profile| profile.recovery)
+                        .or(generation.recovery)
+                })
             else {
                 continue;
             };
@@ -667,6 +681,7 @@ impl Game {
                 continue;
             }
             self.try_clear_monster_confusion(index, events);
+            self.wake_monster_for_equipped_aggravation(index, events, changed);
             if self.entities[index]
                 .statuses
                 .iter()

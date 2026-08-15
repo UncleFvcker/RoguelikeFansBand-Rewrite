@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-mace-name",
+  "rfbBaseKind": {
+    "sourceIndex": 124,
+    "sval": 5,
+    "tval": 21
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

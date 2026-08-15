@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-ninjato-name",
+  "rfbBaseKind": {
+    "sourceIndex": 62,
+    "sval": 19,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

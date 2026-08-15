@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-long-sword-name",
+  "rfbBaseKind": {
+    "sourceIndex": 60,
+    "sval": 17,
+    "tval": 23
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",

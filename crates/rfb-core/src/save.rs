@@ -635,6 +635,10 @@ fn validate_item_runtime_state(
                             .contains(&charges.maximum)
                         && charges.current <= charges.maximum
                 }),
+            (None, None) => generation
+                .activations
+                .iter()
+                .all(|profile| !profile.rfb_biases.is_empty()),
             _ => false,
         }
     } else {
@@ -689,7 +693,11 @@ fn validate_item_creation_state(
     let origin_is_valid = match origin_kind {
         None => discount_percent == 0,
         Some(ItemOriginKindDto::PlayerMade) => {
-            discount_percent == 99 && (ammunition || definition.melee_profile.is_some())
+            discount_percent == 99
+                && (definition.melee_profile.is_some()
+                    || definition.tags.iter().any(|tag| {
+                        matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")
+                    }))
         }
         Some(ItemOriginKindDto::Acquire) => discount_percent == 0,
         Some(ItemOriginKindDto::Rubble) => discount_percent == 0,
@@ -992,6 +1000,8 @@ fn rolled_affixes_to_save(rolled_affixes: &[RolledAffixState]) -> Vec<RolledAffi
         .iter()
         .map(|rolled| {
             let properties = &rolled.properties;
+            let mut status_immunities = properties.status_immunities.clone();
+            status_immunities.sort();
             RolledAffixSaveDto {
                 affix_id: rolled.affix_id.clone(),
                 modifiers: stat_modifiers_to_dto(&properties.modifiers),
@@ -1004,7 +1014,7 @@ fn rolled_affixes_to_save(rolled_affixes: &[RolledAffixState]) -> Vec<RolledAffi
                         level: resistance_level_dto(*level),
                     })
                     .collect(),
-                status_immunities: properties.status_immunities.clone(),
+                status_immunities,
                 slays: properties
                     .slays
                     .iter()
@@ -1025,6 +1035,10 @@ fn rolled_affixes_to_save(rolled_affixes: &[RolledAffixState]) -> Vec<RolledAffi
                     .copied()
                     .map(equipment_passive_dto)
                     .collect(),
+                enchantment_delta: rolled.enchantment_delta,
+                melee_damage_dice: rolled.melee_damage_dice,
+                weapon_traits: rolled.weapon_traits.iter().copied().collect(),
+                curse_effects: rolled.curse_effects.iter().copied().collect(),
             }
         })
         .collect()
@@ -1065,6 +1079,20 @@ fn rolled_affixes_from_save(
                     .any(|pair| pair[0].target >= pair[1].target)
                 || rolled.brands.windows(2).any(|pair| pair[0] >= pair[1])
                 || rolled.passives.windows(2).any(|pair| pair[0] >= pair[1])
+                || rolled
+                    .weapon_traits
+                    .windows(2)
+                    .any(|pair| pair[0] >= pair[1])
+                || rolled
+                    .curse_effects
+                    .windows(2)
+                    .any(|pair| pair[0] >= pair[1])
+                || rolled
+                    .melee_damage_dice
+                    .is_some_and(|dice| dice.dice == 0 || dice.sides == 0)
+                || !(-15..=15).contains(&rolled.enchantment_delta.to_hit)
+                || !(-15..=15).contains(&rolled.enchantment_delta.to_damage)
+                || !(-15..=15).contains(&rolled.enchantment_delta.to_armor)
             {
                 return Err(CoreError::InvalidSave(
                     "rolled affix instance state is invalid",
@@ -1097,17 +1125,21 @@ fn rolled_affixes_from_save(
                 brands: rolled.brands.into_iter().map(weapon_brand).collect(),
                 passives: rolled.passives.into_iter().map(equipment_passive).collect(),
             };
-            if affix_property_bundle_out_of_range(&properties)
-                || properties == AffixPropertyBundleDefinition::default()
+            let state = RolledAffixState {
+                affix_id: rolled.affix_id,
+                properties,
+                enchantment_delta: rolled.enchantment_delta,
+                melee_damage_dice: rolled.melee_damage_dice,
+                weapon_traits: rolled.weapon_traits.into_iter().collect(),
+                curse_effects: rolled.curse_effects.into_iter().collect(),
+            };
+            if affix_property_bundle_out_of_range(&state.properties) || !state.has_instance_state()
             {
                 return Err(CoreError::InvalidSave(
                     "rolled affix instance state is invalid",
                 ));
             }
-            Ok(RolledAffixState {
-                affix_id: rolled.affix_id,
-                properties,
-            })
+            Ok(state)
         })
         .collect()
 }
@@ -1415,6 +1447,8 @@ const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
         EquipmentPassive::EspDragon => EquipmentPassiveDto::EspDragon,
         EquipmentPassive::EspHuman => EquipmentPassiveDto::EspHuman,
         EquipmentPassive::EspGood => EquipmentPassiveDto::EspGood,
+        EquipmentPassive::EspEvil => EquipmentPassiveDto::EspEvil,
+        EquipmentPassive::EspLiving => EquipmentPassiveDto::EspLiving,
         EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
         EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
         EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
@@ -1442,6 +1476,8 @@ const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
         EquipmentPassiveDto::EspDragon => EquipmentPassive::EspDragon,
         EquipmentPassiveDto::EspHuman => EquipmentPassive::EspHuman,
         EquipmentPassiveDto::EspGood => EquipmentPassive::EspGood,
+        EquipmentPassiveDto::EspEvil => EquipmentPassive::EspEvil,
+        EquipmentPassiveDto::EspLiving => EquipmentPassive::EspLiving,
         EquipmentPassiveDto::SustainStrength => EquipmentPassive::SustainStrength,
         EquipmentPassiveDto::SustainIntelligence => EquipmentPassive::SustainIntelligence,
         EquipmentPassiveDto::SustainWisdom => EquipmentPassive::SustainWisdom,

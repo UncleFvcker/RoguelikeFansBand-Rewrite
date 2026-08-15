@@ -24,15 +24,15 @@ use crate::{
         STATUS_CONFUSION, STATUS_DEMON_LORD_TRANSFORMATION, STATUS_DEVICE_MASTERY, STATUS_FEAR,
         STATUS_FIRE_AURA, STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE,
         STATUS_HOLD_LIFE, STATUS_HOLY_AURA, STATUS_INVENTORY_PROTECTION, STATUS_INVULNERABILITY,
-        STATUS_KUTAR_EXPAND, STATUS_LEVITATION, STATUS_NO_AIR, STATUS_PARALYSIS,
-        STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL, STATUS_REGENERATION,
-        STATUS_SEE_INVISIBLE, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW, STATUS_STUN,
-        STATUS_SUSTAIN_CHARISMA, STATUS_SUSTAIN_CONSTITUTION, STATUS_SUSTAIN_DEXTERITY,
-        STATUS_SUSTAIN_INTELLIGENCE, STATUS_SUSTAIN_STRENGTH, STATUS_SUSTAIN_WISDOM,
-        STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TRANSCENDENCE, STATUS_TSUYOSHI,
-        STATUS_ULTIMATE_RESISTANCE, STATUS_UNDERSTANDING, STATUS_UNWELL, STATUS_VENGEANCE,
-        STATUS_WRAITHFORM, StatusApplication, StatusChange, StatusInstance, StatusStacking,
-        apply_effect, apply_status, resolve_damage,
+        STATUS_LEVITATION, STATUS_LIGHT_SPEED, STATUS_MAGIC_RESISTANCE, STATUS_NO_AIR,
+        STATUS_PARALYSIS, STATUS_PLAYER_POLYMORPH, STATUS_POISON, STATUS_PROTECTION_FROM_EVIL,
+        STATUS_REGENERATION, STATUS_SEE_INVISIBLE, STATUS_SIGHT, STATUS_SLEEP, STATUS_SLOW,
+        STATUS_STUN, STATUS_SUSTAIN_CHARISMA, STATUS_SUSTAIN_CONSTITUTION,
+        STATUS_SUSTAIN_DEXTERITY, STATUS_SUSTAIN_INTELLIGENCE, STATUS_SUSTAIN_STRENGTH,
+        STATUS_SUSTAIN_WISDOM, STATUS_TELEPATHY, STATUS_THERMAL_RESISTANCE, STATUS_TRANSCENDENCE,
+        STATUS_TSUYOSHI, STATUS_ULTIMATE_RESISTANCE, STATUS_UNDERSTANDING, STATUS_UNWELL,
+        STATUS_VENGEANCE, STATUS_WRAITHFORM, StatusApplication, StatusChange, StatusInstance,
+        StatusStacking, apply_effect, apply_status, resolve_damage,
     },
     error::CoreError,
     event::{
@@ -97,7 +97,7 @@ use rfb_protocol::{
     AbilityTerrainTransformResolutionDto, AbilityVisibleDamageResolutionDto, AttackProfileDto,
     AutoGetModeDto, CampaignStatusDto, CellLightDto, CellVisualDto, DamageDiceDto, Direction,
     EntityFactionDto, EquipmentBonusesDto, EquipmentPassiveDto, GameCommandEnvelope, GameUpdate,
-    GoldAppearanceDto, HealingResolutionDto, ItemActivationDto, ItemChargesDto,
+    GoldAppearanceDto, HealingResolutionDto, ItemActivationDto, ItemChargesDto, ItemCurseEffectDto,
     ItemCurseRemovalResolutionDto, ItemCurseResolutionDto, ItemCurseSeverityDto,
     ItemEnchantmentComponentResolutionDto, ItemEnchantmentResolutionDto, ItemEnchantmentsDto,
     ItemIdentificationDto, ItemIdentifyResolutionDto, ItemKnowledgeDto, ItemOriginKindDto,
@@ -111,7 +111,7 @@ use rfb_protocol::{
     RestStopReasonDto, SlayDto, SlayLevelDto, SlayTargetDto, SniperShotModeDto, StatModifiersDto,
     SummonCommandDto, SummonCommandModeDto, SummonCommandResolutionDto, TargetModeDto,
     TargetSelection, TargetSpecDto, TaskStatusKindDto, ThrowProfileDto, VirtueDto, VirtueKindDto,
-    WeaponBrandDto,
+    WeaponBrandDto, WeaponTraitDto,
 };
 
 mod abilities;
@@ -120,17 +120,15 @@ mod capture_ball;
 mod chaos_patron;
 mod damage;
 mod death;
-mod environment_combat;
-// E1 establishes the authoritative selector before any player-reachable
-// generation policy is allowed to consume it.
-#[allow(dead_code)]
 mod ego;
+mod environment_combat;
 mod floor;
 mod gold;
 mod ground_item_effects;
 mod hunger;
 mod inventory;
 mod item_combat;
+mod item_curses;
 mod item_knowledge;
 mod item_use;
 mod lighting;
@@ -184,6 +182,10 @@ use damage::{
     FatalityPolicy, commit_damage_application, commit_final_player_damage, plan_damage_application,
     process_actor_status_tick, process_actor_status_tick_with, scale_damage_outcome,
 };
+use ego::{
+    EgoMaterialization, materialize_ego_with_rng,
+    roll_and_materialize_rfb_ego_from_affixes_with_rng,
+};
 use environment_combat::PlayerTrapOutcome;
 use floor::{
     FloorTransitionTarget, RecallUseAction, dungeon_instance_id, dungeon_instance_storage_key,
@@ -228,7 +230,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 105;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 106;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const VISIBILITY_RADIUS: i32 = 8;
@@ -529,6 +531,7 @@ struct GeneratedItemDraft {
     quality: ItemQualityDto,
     affix_ids: Vec<String>,
     rolled_affixes: Vec<RolledAffixState>,
+    enchantments: ItemEnchantmentsDto,
     curse: Option<ItemCurseSeverityDto>,
     activation: Option<ItemActivationDto>,
     charges: Option<ItemChargesDto>,
@@ -549,7 +552,7 @@ impl GeneratedItemDraft {
             quality: self.quality,
             affix_ids: self.affix_ids,
             rolled_affixes: self.rolled_affixes,
-            enchantments: ItemEnchantmentsDto::default(),
+            enchantments: self.enchantments,
             curse: self.curse,
             permanent_destruction_immunities: Default::default(),
             activation: self.activation,
@@ -1209,12 +1212,15 @@ impl Game {
             build_id.or(world.player_build_id.as_deref()),
             race_id,
         )?;
-        let starting_world_tick = build
+        let starts_at_night = build
             .as_ref()
             .and_then(|identity| content.race(&identity.race_id))
-            .is_some_and(|race| race.tags.iter().any(|tag| tag == "night-start"))
-            .then_some(wilderness::WILDERNESS_NIGHT_START_TICK)
-            .unwrap_or(0);
+            .is_some_and(|race| race.tags.iter().any(|tag| tag == "night-start"));
+        let starting_world_tick = if starts_at_night {
+            wilderness::WILDERNESS_NIGHT_START_TICK
+        } else {
+            0
+        };
         let width = world.width;
         let height = world.height;
         let mut terrain =
@@ -1311,14 +1317,15 @@ impl Game {
             .items
             .iter()
             .map(|spawn| {
-                let (activation, charges) = initial_item_runtime_state(
+                let materialization = materialize_ego_with_rng(
                     &content,
                     &mut rng,
                     &spawn.kind_id,
-                    &spawn.affix_ids,
+                    spawn.affix_ids.clone(),
+                    |_| 1,
                     1,
                 );
-                ItemInstance {
+                let mut item = ItemInstance {
                     id: spawn.instance_id.clone(),
                     kind_id: spawn.kind_id.clone(),
                     quantity: spawn.quantity,
@@ -1328,18 +1335,20 @@ impl Game {
                     damage_dice_override: None,
                     discount_percent: 0,
                     quality: item_quality_dto(spawn.quality),
-                    affix_ids: spawn.affix_ids.clone(),
+                    affix_ids: Vec::new(),
                     rolled_affixes: Vec::new(),
                     enchantments: ItemEnchantmentsDto::default(),
                     curse: initial_item_curse(&content, &spawn.kind_id),
                     permanent_destruction_immunities: Default::default(),
-                    activation,
-                    charges,
+                    activation: None,
+                    charges: None,
                     fuel: initial_item_fuel(&content, &spawn.kind_id),
                     device_recovery_progress: 0,
                     captured_actor: None,
                     location: ItemLocation::Ground(position_from_content(spawn.position)),
-                }
+                };
+                materialization.apply_to(&mut item);
+                item
             })
             .collect::<Vec<_>>();
         let body_slots = resolve_body_slots(&content, build.as_ref())?;
@@ -4542,7 +4551,8 @@ impl Game {
             || matches!(effect, ItemUseEffectDefinition::Genocide { .. })
             || matches!(
                 effect,
-                ItemUseEffectDefinition::IdentifyItem { .. }
+                ItemUseEffectDefinition::AbilityEffect { .. }
+                    | ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. }
                     | ItemUseEffectDefinition::RechargeFromDevice { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }
@@ -5631,26 +5641,30 @@ impl Game {
                     minimum_quality,
                 ),
             };
-            let eligible_affixes = table
-                .affix_weights
-                .iter()
-                .filter(|affix_weight| {
-                    affix_weight.affix_id.as_ref().is_none_or(|affix_id| {
-                        self.content.affix(affix_id).is_some_and(|affix| {
-                            self.content.item(&entry.item_kind_id).is_some_and(|item| {
-                                affix_is_compatible_with_item(affix, item, generation_depth)
+            let preselected_generic_affix_id = (table.rfb_ego_policy
+                != Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger))
+            .then(|| {
+                let eligible_affixes = table
+                    .affix_weights
+                    .iter()
+                    .filter(|affix_weight| {
+                        affix_weight.affix_id.as_ref().is_none_or(|affix_id| {
+                            self.content.affix(affix_id).is_some_and(|affix| {
+                                self.content.item(&entry.item_kind_id).is_some_and(|item| {
+                                    affix_is_compatible_with_item(affix, item, generation_depth)
+                                })
                             })
                         })
                     })
+                    .collect::<Vec<_>>();
+                let affix_weights = eligible_affixes
+                    .iter()
+                    .map(|entry| entry.weight)
+                    .collect::<Vec<_>>();
+                (!eligible_affixes.is_empty()).then(|| {
+                    let affix_index = self.roll_weighted_index(&affix_weights);
+                    eligible_affixes[affix_index].affix_id.clone()
                 })
-                .collect::<Vec<_>>();
-            let affix_weights = eligible_affixes
-                .iter()
-                .map(|entry| entry.weight)
-                .collect::<Vec<_>>();
-            let rolled_affix_id = (!eligible_affixes.is_empty()).then(|| {
-                let affix_index = self.roll_weighted_index(&affix_weights);
-                eligible_affixes[affix_index].affix_id.clone()
             });
             let supports_quality = self.content.item(&entry.item_kind_id).is_some_and(|item| {
                 item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1
@@ -5660,24 +5674,81 @@ impl Game {
             } else {
                 ItemQualityDto::Ordinary
             };
-            let affix_is_required = table
-                .affix_weights
-                .iter()
-                .all(|entry| entry.affix_id.is_some());
-            let affix_ids = if affix_is_required
-                || quality_allows_natural_affix(table.quality_policy, quality)
-            {
-                rolled_affix_id.flatten().iter().cloned().collect()
-            } else {
-                Vec::new()
-            };
-            let rolled_affixes = self.roll_affix_properties(&affix_ids, generation_depth);
-            let (activation, charges) = initial_item_runtime_state(
-                &self.content,
-                &mut self.rng,
-                &entry.item_kind_id,
-                &affix_ids,
-                generation_depth,
+            let rfb_materialization = (table.rfb_ego_policy
+                == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
+                && quality_allows_natural_affix(table.quality_policy, quality))
+            .then(|| {
+                self.content.item(&entry.item_kind_id).and_then(|item| {
+                    roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                        &mut self.rng,
+                        item,
+                        self.content.affix_definitions(),
+                        generation_depth,
+                    )
+                })
+            })
+            .flatten();
+            let materialization = rfb_materialization.unwrap_or_else(|| {
+                let rolled_affix_id = preselected_generic_affix_id.unwrap_or_else(|| {
+                    let eligible_affixes = table
+                        .affix_weights
+                        .iter()
+                        .filter(|affix_weight| {
+                            affix_weight.affix_id.as_ref().is_none_or(|affix_id| {
+                                self.content.affix(affix_id).is_some_and(|affix| {
+                                    self.content.item(&entry.item_kind_id).is_some_and(|item| {
+                                        affix_is_compatible_with_item(affix, item, generation_depth)
+                                    })
+                                })
+                            })
+                        })
+                        .collect::<Vec<_>>();
+                    let affix_weights = eligible_affixes
+                        .iter()
+                        .map(|entry| entry.weight)
+                        .collect::<Vec<_>>();
+                    (!eligible_affixes.is_empty()).then(|| {
+                        let affix_index = self.roll_weighted_index(&affix_weights);
+                        eligible_affixes[affix_index].affix_id.clone()
+                    })
+                });
+                let affix_is_required = table
+                    .affix_weights
+                    .iter()
+                    .all(|entry| entry.affix_id.is_some());
+                let affix_ids = if affix_is_required
+                    || quality_allows_natural_affix(table.quality_policy, quality)
+                {
+                    rolled_affix_id.flatten().iter().cloned().collect()
+                } else {
+                    Vec::new()
+                };
+                materialize_ego_with_rng(
+                    &self.content,
+                    &mut self.rng,
+                    &entry.item_kind_id,
+                    affix_ids,
+                    |_| generation_depth,
+                    generation_depth,
+                )
+            });
+            let EgoMaterialization {
+                affix_ids,
+                rolled_affixes,
+                enchantment_delta,
+                curse,
+                activation,
+                charges,
+                ..
+            } = materialization;
+            let curse = curse.map_or_else(
+                || initial_item_curse(&self.content, &entry.item_kind_id),
+                |generated| {
+                    Some(
+                        initial_item_curse(&self.content, &entry.item_kind_id)
+                            .map_or(generated, |initial| initial.max(generated)),
+                    )
+                },
             );
             generated.push(GeneratedItemDraft {
                 kind_id: entry.item_kind_id.clone(),
@@ -5689,7 +5760,8 @@ impl Game {
                 quality,
                 affix_ids,
                 rolled_affixes,
-                curse: initial_item_curse(&self.content, &entry.item_kind_id),
+                enchantments: enchantment_delta,
+                curse,
                 activation,
                 charges,
                 fuel: initial_item_fuel(&self.content, &entry.item_kind_id),
@@ -5792,12 +5864,19 @@ impl Game {
             .and_then(|item| item.artifact_generation.as_ref())
             .map(|generation| generation.affix_ids.clone())
             .unwrap_or_default();
-        let rolled_affixes = self.roll_affix_properties(&affix_ids, context.depth);
-        let (activation, charges) = initial_item_runtime_state(
+        let EgoMaterialization {
+            affix_ids,
+            rolled_affixes,
+            enchantment_delta,
+            activation,
+            charges,
+            ..
+        } = materialize_ego_with_rng(
             &self.content,
             &mut self.rng,
             &kind_id,
-            &affix_ids,
+            affix_ids,
+            |_| context.depth,
             context.depth,
         );
         GeneratedItemDraft {
@@ -5809,6 +5888,7 @@ impl Game {
             quality: ItemQualityDto::Ordinary,
             affix_ids,
             rolled_affixes,
+            enchantments: enchantment_delta,
             curse: initial_item_curse(&self.content, &kind_id),
             activation,
             charges,
@@ -5935,10 +6015,6 @@ impl Game {
             adjusted = adjusted.saturating_sub(adjusted / 15);
         }
         adjusted
-    }
-
-    fn roll_affix_properties(&mut self, affix_ids: &[String], depth: u16) -> Vec<RolledAffixState> {
-        roll_affix_properties_with_rng(&self.content, &mut self.rng, affix_ids, depth)
     }
 
     fn roll_weighted_index(&mut self, weights: &[u32]) -> usize {
@@ -6719,6 +6795,8 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
         EquipmentPassive::EspDragon => EquipmentPassiveDto::EspDragon,
         EquipmentPassive::EspHuman => EquipmentPassiveDto::EspHuman,
         EquipmentPassive::EspGood => EquipmentPassiveDto::EspGood,
+        EquipmentPassive::EspEvil => EquipmentPassiveDto::EspEvil,
+        EquipmentPassive::EspLiving => EquipmentPassiveDto::EspLiving,
         EquipmentPassive::SustainStrength => EquipmentPassiveDto::SustainStrength,
         EquipmentPassive::SustainIntelligence => EquipmentPassiveDto::SustainIntelligence,
         EquipmentPassive::SustainWisdom => EquipmentPassiveDto::SustainWisdom,
@@ -6752,93 +6830,6 @@ fn roll_weighted_index_with_rng(rng: &mut RfbRng, weights: &[u32]) -> usize {
     unreachable!("validated positive weighted table must select an entry")
 }
 
-fn roll_affix_properties_with_rng(
-    content: &ContentCatalog,
-    rng: &mut RfbRng,
-    affix_ids: &[String],
-    depth: u16,
-) -> Vec<RolledAffixState> {
-    let mut rolled_affixes = Vec::new();
-    for affix_id in affix_ids {
-        let roll_groups = content
-            .affix(affix_id)
-            .expect("selected affix must remain available")
-            .roll_groups
-            .clone();
-        let mut properties = AffixPropertyBundleDefinition::default();
-        for group in roll_groups {
-            let eligible = group
-                .candidates
-                .iter()
-                .filter(|candidate| candidate.min_depth <= depth && depth <= candidate.max_depth)
-                .collect::<Vec<_>>();
-            if eligible.is_empty() {
-                continue;
-            }
-            let weights = eligible
-                .iter()
-                .map(|candidate| candidate.weight)
-                .collect::<Vec<_>>();
-            for _ in 0..group.rolls {
-                let selected = eligible[roll_weighted_index_with_rng(rng, &weights)];
-                merge_affix_properties(&mut properties, &selected.properties);
-            }
-        }
-        if properties != AffixPropertyBundleDefinition::default() {
-            rolled_affixes.push(RolledAffixState {
-                affix_id: affix_id.clone(),
-                properties,
-            });
-        }
-    }
-    rolled_affixes
-}
-
-fn merge_affix_properties(
-    total: &mut AffixPropertyBundleDefinition,
-    addition: &AffixPropertyBundleDefinition,
-) {
-    merge_stat_modifiers(&mut total.modifiers, &addition.modifiers);
-    merge_equipment_bonuses(&mut total.equipment_bonuses, &addition.equipment_bonuses);
-    for (damage_type, level) in &addition.resistances {
-        let current = total.resistances.entry(*damage_type).or_insert(*level);
-        if actor_resistance_rank(*level) > actor_resistance_rank(*current) {
-            *current = *level;
-        }
-    }
-    let mut status_immunities = total
-        .status_immunities
-        .iter()
-        .chain(&addition.status_immunities)
-        .cloned()
-        .collect::<BTreeSet<_>>();
-    total.status_immunities = std::mem::take(&mut status_immunities).into_iter().collect();
-    for (target, level) in &addition.slays {
-        let current = total.slays.entry(*target).or_insert(*level);
-        if *level > *current {
-            *current = *level;
-        }
-    }
-    total.brands.extend(&addition.brands);
-    total.passives.extend(&addition.passives);
-}
-
-fn merge_stat_modifiers(total: &mut StatModifiers, addition: &StatModifiers) {
-    total.attack = total.attack.saturating_add(addition.attack);
-    total.defense = total.defense.saturating_add(addition.defense);
-    total.max_hp = total.max_hp.saturating_add(addition.max_hp);
-    total.strength = total.strength.saturating_add(addition.strength);
-    total.intelligence = total.intelligence.saturating_add(addition.intelligence);
-    total.wisdom = total.wisdom.saturating_add(addition.wisdom);
-    total.dexterity = total.dexterity.saturating_add(addition.dexterity);
-    total.constitution = total.constitution.saturating_add(addition.constitution);
-    total.charisma = total.charisma.saturating_add(addition.charisma);
-    total.speed = total.speed.saturating_add(addition.speed);
-    total.spell_power_bonus = total
-        .spell_power_bonus
-        .saturating_add(addition.spell_power_bonus);
-}
-
 fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBonuses) {
     total.life_percent = total.life_percent.saturating_add(addition.life_percent);
     total.melee_attacks = total.melee_attacks.saturating_add(addition.melee_attacks);
@@ -6861,15 +6852,6 @@ fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBon
     total.digging_skill = total.digging_skill.saturating_add(addition.digging_skill);
     total.infravision = total.infravision.saturating_add(addition.infravision);
     total.light_radius = total.light_radius.saturating_add(addition.light_radius);
-}
-
-const fn actor_resistance_rank(level: ActorResistanceLevel) -> u8 {
-    match level {
-        ActorResistanceLevel::Vulnerable => 0,
-        ActorResistanceLevel::Resistant => 1,
-        ActorResistanceLevel::Strong => 2,
-        ActorResistanceLevel::Immune => 3,
-    }
 }
 
 fn throw_range(weight_tenths_pound: u16, mighty: bool) -> u16 {

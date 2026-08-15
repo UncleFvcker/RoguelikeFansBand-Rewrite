@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "brands": [
+    "poison"
+  ],
+  "descriptionKey": "affix-legacy-morgul-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.morgul",
+  "nameKey": "affix-legacy-morgul-name",
+  "passives": [
+    "see-invisible"
+  ],
+  "rfbEgo": {
+    "rarity": 16,
+    "sourceIndex": 21,
+    "types": [
+      "weapon"
+    ]
+  },
+  "slays": {
+    "good": "slay",
+    "undead": "slay"
+  },
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

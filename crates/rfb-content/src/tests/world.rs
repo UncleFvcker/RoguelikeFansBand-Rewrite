@@ -10996,16 +10996,16 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         })
     );
     assert_eq!(
+        base_items.rfb_ego_policy,
+        Some(LootRfbEgoPolicyDefinition::WeaponDigger)
+    );
+    assert_eq!(
         base_items
             .affix_weights
             .iter()
             .map(|affix| (affix.affix_id.as_deref(), affix.weight))
             .collect::<Vec<_>>(),
-        vec![
-            (None, 9),
-            (Some("rfb-legacy.affix.protection"), 1),
-            (Some("rfb-legacy.affix.slaying"), 1),
-        ]
+        vec![(None, 9), (Some("rfb-legacy.affix.protection"), 1),]
     );
     assert!(!artifact.content.loot_tables.iter().any(|table| {
         matches!(

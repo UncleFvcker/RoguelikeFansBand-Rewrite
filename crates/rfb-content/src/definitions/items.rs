@@ -7,9 +7,9 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    AbilityDetectSubjectDefinition, AbilityStatusStackingDefinition, AbilityTargetDefinition,
-    ActorDamageType, ActorResistanceLevel, EquipmentBonuses, ItemAttributeDefinition,
-    StatModifiers,
+    AbilityDetectSubjectDefinition, AbilityEffectDefinition, AbilityStatusStackingDefinition,
+    AbilityTargetDefinition, AbilityTerrainBeamOperationDefinition, ActorDamageType,
+    ActorResistanceLevel, EquipmentBonuses, ItemAttributeDefinition, StatModifiers,
 };
 
 const fn default_incoming_damage_percent() -> u8 {
@@ -73,6 +73,8 @@ pub enum EquipmentPassive {
     EspDragon,
     EspHuman,
     EspGood,
+    EspEvil,
+    EspLiving,
     SustainStrength,
     SustainIntelligence,
     SustainWisdom,
@@ -127,6 +129,29 @@ pub struct RfbEgoGenerationDefinition {
     pub source_index: u32,
     pub rarity: u16,
     pub types: Vec<RfbEgoTypeDefinition>,
+}
+
+/// Stable identity copied from one authoritative `k_info` base-kind record.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RfbBaseKindDefinition {
+    pub source_index: u32,
+    pub tval: u16,
+    pub sval: u16,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum AffixNamePlacementDefinition {
+    #[default]
+    Automatic,
+    FullName,
+}
+
+fn is_automatic_affix_name_placement(value: &AffixNamePlacementDefinition) -> bool {
+    *value == AffixNamePlacementDefinition::Automatic
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -193,6 +218,9 @@ pub struct AffixDefinition {
     /// Optional authoritative RFB ego identity and allocation metadata.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rfb_ego: Option<RfbEgoGenerationDefinition>,
+    /// Whether this affix composes around or replaces the base item name.
+    #[serde(default, skip_serializing_if = "is_automatic_affix_name_placement")]
+    pub name_placement: AffixNamePlacementDefinition,
     #[serde(default)]
     pub modifiers: StatModifiers,
     /// Equipment-only combat, skill, and sensory bonuses.
@@ -388,7 +416,7 @@ pub enum ItemSummonSelectorDefinition {
     PlayerKin,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(
     tag = "type",
@@ -397,6 +425,12 @@ pub enum ItemSummonSelectorDefinition {
     deny_unknown_fields
 )]
 pub enum ItemUseEffectDefinition {
+    AbilityEffect {
+        effect: Box<AbilityEffectDefinition>,
+        #[serde(default)]
+        affects_ground_items: bool,
+    },
+    #[default]
     NoNumericEffect,
     IncreaseNutrition {
         amount: u16,
@@ -601,6 +635,10 @@ pub enum ItemUseEffectDefinition {
         magma_terrain_id: String,
     },
     DestroyAdjacentTrapsAndDoors,
+    TerrainBeam {
+        operation: AbilityTerrainBeamOperationDefinition,
+    },
+    RidingCharge,
     RemoveStatus {
         status_kind_id: String,
     },
@@ -785,6 +823,23 @@ pub struct ItemDeviceChargeRangeDefinition {
     pub cost: u32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum RfbActivationBiasDefinition {
+    Mage,
+    Chaos,
+    Acid,
+    Electricity,
+    Fire,
+    Cold,
+    Poison,
+    Priestly,
+    Demon,
+    Necromantic,
+    Ranger,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -795,8 +850,17 @@ pub struct ItemDeviceActivationDefinition {
     pub min_depth: u16,
     pub max_depth: u16,
     pub device_check_difficulty: i32,
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub rfb_biases: BTreeSet<RfbActivationBiasDefinition>,
     pub charges: ItemDeviceChargeRangeDefinition,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recovery: Option<ItemDeviceRecoveryDefinition>,
     pub target: AbilityTargetDefinition,
+    /// Source-only effect-program reference. Pack compilation resolves and
+    /// clears this field before encoding compiled content.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub effect_program_id: Option<String>,
+    #[serde(default)]
     pub effect: ItemUseEffectDefinition,
 }
 
@@ -874,6 +938,10 @@ pub struct ItemDefinition {
     /// allocation rarity or a generated quality.
     #[serde(default)]
     pub mogaminator_rare: bool,
+    /// Optional authoritative RFB base-kind identity. Adapted and rewrite-only
+    /// item definitions intentionally leave this unset.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rfb_base_kind: Option<RfbBaseKindDefinition>,
     pub weight_tenths_pound: u16,
     /// Original object pval used by the tunneling flag.
     #[serde(default)]

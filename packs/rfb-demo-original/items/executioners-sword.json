@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-executioners-sword-name",
+  "rfbBaseKind": {
+    "sourceIndex": 71,
+    "sval": 28,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

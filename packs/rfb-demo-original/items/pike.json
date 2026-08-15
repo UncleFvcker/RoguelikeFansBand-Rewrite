@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-pike-name",
+  "rfbBaseKind": {
+    "sourceIndex": 92,
+    "sval": 8,
+    "tval": 22
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

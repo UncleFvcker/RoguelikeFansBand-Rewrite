@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-club-name",
+  "rfbBaseKind": {
+    "sourceIndex": 120,
+    "sval": 1,
+    "tval": 21
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

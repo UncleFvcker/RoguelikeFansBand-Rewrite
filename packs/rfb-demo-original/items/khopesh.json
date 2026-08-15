@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-khopesh-name",
+  "rfbBaseKind": {
+    "sourceIndex": 57,
+    "sval": 14,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

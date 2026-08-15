@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-tulwar-name",
+  "rfbBaseKind": {
+    "sourceIndex": 58,
+    "sval": 15,
+    "tval": 23
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",

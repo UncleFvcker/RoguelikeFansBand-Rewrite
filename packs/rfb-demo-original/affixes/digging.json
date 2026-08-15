@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-digging-description",
+  "elementalDestructionImmunities": [
+    "acid"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 40,
+  "id": "rfb-legacy.affix.digging",
+  "nameKey": "affix-legacy-digging-name",
+  "rfbEgo": {
+    "rarity": 1,
+    "sourceIndex": 40,
+    "types": [
+      "digger"
+    ]
+  },
+  "tags": [
+    "digger",
+    "legacy-import"
+  ]
+}

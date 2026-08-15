@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-order-description",
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "id": "rfb-legacy.affix.order",
+  "nameKey": "affix-legacy-order-name",
+  "resistances": {
+    "shards": "resistant",
+    "sound": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 16,
+    "sourceIndex": 17,
+    "types": [
+      "weapon"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

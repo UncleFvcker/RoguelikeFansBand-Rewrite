@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-falchion-name",
+  "rfbBaseKind": {
+    "sourceIndex": 65,
+    "sval": 22,
+    "tval": 23
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",

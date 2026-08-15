@@ -2549,7 +2549,7 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     assert_eq!(generated[0].location, ItemLocation::Ground(position));
     assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
     assert!(generated[0].id.starts_with("generated.item."));
-    assert_eq!(single.rng_draw_counter(), draws_before + 3);
+    assert_eq!(single.rng_draw_counter(), draws_before + 7);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-acquirement"
             && event.args.get("count").map(String::as_str) == Some("1")
@@ -2705,6 +2705,8 @@ fn p3_5_crafting_splits_ammunition_identifies_ego_and_cancels_invalid_targets() 
         .expect("one crafted unit should be split from the stack");
     assert_eq!(crafted.quantity, 1);
     assert_eq!(crafted.quality, ItemQualityDto::Exceptional);
+    assert_eq!(crafted.origin_kind, Some(ItemOriginKindDto::PlayerMade));
+    assert_eq!(crafted.discount_percent, 99);
     assert_eq!(crafted.affix_ids.len(), 1);
     let knowledge = &game.item_property_knowledge[&crafted.id];
     assert!(knowledge.appraised && knowledge.identified);
@@ -2743,6 +2745,82 @@ fn p3_5_crafting_splits_ammunition_identifies_ego_and_cancels_invalid_targets() 
             .any(|item| item.id == "test.item.crafting.2")
     );
     assert_eq!(update.events[0].kind, "item.use-unavailable");
+}
+
+#[test]
+fn p3_5_crafting_split_allocation_failure_is_atomic() {
+    let mut game = Game::new(524);
+    clear_monsters(&mut game);
+    game.items.clear();
+    give_inventory_item(
+        &mut game,
+        "test.item.crafting.failure",
+        "demo.item.crafting-scroll",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.crafting-target.failure",
+        "demo.item.arrow",
+    );
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.item.crafting-target.failure")
+        .expect("ammunition should exist")
+        .quantity = 3;
+    game.next_item_instance_serial = u64::MAX;
+    let items_before = game.items.clone();
+    let rng_before = game.rng.clone();
+
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.crafting.failure".to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: "test.item.crafting-target.failure".to_owned(),
+            }),
+        },
+    );
+
+    assert_eq!(game.items, items_before);
+    assert_eq!(game.rng, rng_before);
+    assert_eq!(update.events[0].kind, "item.use-unavailable");
+}
+
+#[test]
+fn p3_5_crafting_materializes_player_made_armor() {
+    let mut game = Game::new(525);
+    clear_monsters(&mut game);
+    game.items.clear();
+    give_inventory_item(
+        &mut game,
+        "test.item.crafting.armor",
+        "demo.item.crafting-scroll",
+    );
+    give_inventory_item(
+        &mut game,
+        "test.item.crafting-target.armor",
+        "demo.item.chain-mail",
+    );
+
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.item.crafting.armor".to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: "test.item.crafting-target.armor".to_owned(),
+            }),
+        },
+    );
+
+    let crafted = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.item.crafting-target.armor")
+        .expect("crafted armour should remain in inventory");
+    assert_eq!(crafted.affix_ids, ["demo.affix.regeneration"]);
+    assert_eq!(crafted.origin_kind, Some(ItemOriginKindDto::PlayerMade));
+    assert_eq!(crafted.discount_percent, 99);
+    Game::from_save(game.to_save()).expect("player-made armour should round-trip");
 }
 
 #[test]

@@ -47,6 +47,15 @@ const DRACONIAN_STRENGTH_BLOW: [u16; 38] = [
     120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240,
 ];
 
+pub(in crate::game) fn good_priest_weapon_penalty(
+    priest_class: bool,
+    good_realm: bool,
+    weapon_tval: Option<u16>,
+    blessed: bool,
+) -> bool {
+    priest_class && good_realm && matches!(weapon_tval, Some(22 | 23)) && !blessed
+}
+
 fn draconian_innate_blows(attributes: AttributeSet, weight: u16, maximum: u16) -> u16 {
     let strength_index = usize::from(
         attributes
@@ -913,6 +922,8 @@ impl Game {
             (EquipmentPassive::EspDragon, "dragon"),
             (EquipmentPassive::EspHuman, "human"),
             (EquipmentPassive::EspGood, "good"),
+            (EquipmentPassive::EspEvil, "evil"),
+            (EquipmentPassive::EspLiving, "living"),
         ]
         .into_iter()
         .any(|(passive, tag)| {
@@ -1066,21 +1077,36 @@ impl Game {
         self.content
             .item(&item.kind_id)
             .and_then(|definition| definition.melee_profile.as_ref())
-            .map(|profile| AttackProfileDto {
-                attacks: profile.attacks,
-                to_hit: profile
-                    .to_hit
-                    .saturating_add(i32::from(item.enchantments.to_hit)),
-                to_damage: profile
-                    .to_damage
-                    .saturating_add(i32::from(item.enchantments.to_damage)),
-                damage: DamageDiceDto {
-                    dice: profile.damage_dice,
-                    sides: profile.damage_sides,
-                    damage_type: DamageType::from(profile.damage_type).into(),
-                },
-                source_item_id: Some(item.id.clone()),
+            .map(|profile| {
+                let damage = item
+                    .rolled_affixes
+                    .iter()
+                    .find_map(|rolled| rolled.melee_damage_dice)
+                    .map_or((profile.damage_dice, profile.damage_sides), |damage| {
+                        (damage.dice, damage.sides)
+                    });
+                AttackProfileDto {
+                    attacks: profile.attacks,
+                    to_hit: profile
+                        .to_hit
+                        .saturating_add(i32::from(item.enchantments.to_hit)),
+                    to_damage: profile
+                        .to_damage
+                        .saturating_add(i32::from(item.enchantments.to_damage)),
+                    damage: DamageDiceDto {
+                        dice: damage.0,
+                        sides: damage.1,
+                        damage_type: DamageType::from(profile.damage_type).into(),
+                    },
+                    source_item_id: Some(item.id.clone()),
+                }
             })
+    }
+
+    pub(super) fn item_has_weapon_trait(item: &ItemInstance, trait_: WeaponTraitDto) -> bool {
+        item.rolled_affixes
+            .iter()
+            .any(|rolled| rolled.weapon_traits.contains(&trait_))
     }
 
     pub(super) fn item_projectile_profile(
@@ -1402,50 +1428,105 @@ impl Game {
                 .item(&item.kind_id)
                 .and_then(|item_definition| {
                     item_definition.melee_profile.as_ref().map(|profile| {
+                        let (priest_class, good_realm) = self.character_definitions().map_or(
+                            (false, false),
+                            |(build, _, class, _)| {
+                                (
+                                    class.tags.iter().any(|tag| tag == "priest"),
+                                    [
+                                        build.first_realm_id.as_deref(),
+                                        build.second_realm_id.as_deref(),
+                                    ]
+                                    .into_iter()
+                                    .flatten()
+                                    .any(|realm| matches!(realm, "life" | "crusade")),
+                                )
+                            },
+                        );
                         (
                             item.id.clone(),
                             item.kind_id.clone(),
                             profile,
                             item_definition.riding_weapon_kind,
+                            item_definition.weight_tenths_pound,
+                            item.enchantments.to_hit,
+                            item.rolled_affixes
+                                .iter()
+                                .find_map(|rolled| rolled.melee_damage_dice),
+                            good_priest_weapon_penalty(
+                                priest_class,
+                                good_realm,
+                                item_definition.rfb_base_kind.map(|kind| kind.tval),
+                                Self::item_has_weapon_trait(item, WeaponTraitDto::Blessed),
+                            ),
                         )
                     })
                 })
         });
-        let (source_item_id, source_kind_id, dice, sides, damage_type, to_hit, mounted_to_hit) =
-            equipped_weapon.map_or_else(
-                || {
-                    (
-                        None,
-                        None,
-                        definition.damage_dice,
-                        definition.damage_sides,
-                        definition.damage_type,
-                        0,
-                        0,
-                    )
-                },
-                |(item_id, kind_id, profile, riding_weapon_kind)| {
-                    let (mounted_to_hit, mounted_dice) =
-                        self.riding_mount_level().map_or((0, 0), |mount_level| {
-                            riding_proficiency::mounted_melee_adjustment(
-                                self.character_definitions()
-                                    .is_some_and(|(_, _, class, _)| class.riding_combat_expert),
-                                riding_weapon_kind,
-                                mount_level,
-                                self.progress.riding_proficiency,
-                            )
-                        });
-                    (
-                        Some(item_id),
-                        Some(kind_id),
-                        profile.damage_dice.saturating_add(mounted_dice),
-                        profile.damage_sides,
-                        profile.damage_type,
-                        profile.to_hit.saturating_add(mounted_to_hit),
-                        mounted_to_hit,
-                    )
-                },
-            );
+        let (
+            source_item_id,
+            source_kind_id,
+            dice,
+            sides,
+            damage_type,
+            mut to_hit,
+            mounted_to_hit,
+            critical_weight_tenths_pound,
+            priest_weapon_penalty,
+        ) = equipped_weapon.map_or_else(
+            || {
+                (
+                    None,
+                    None,
+                    definition.damage_dice,
+                    definition.damage_sides,
+                    definition.damage_type,
+                    0,
+                    0,
+                    None,
+                    false,
+                )
+            },
+            |(
+                item_id,
+                kind_id,
+                profile,
+                riding_weapon_kind,
+                weight,
+                enchantment_to_hit,
+                rolled_damage,
+                priest_weapon_penalty,
+            )| {
+                let (mounted_to_hit, mounted_dice) =
+                    self.riding_mount_level().map_or((0, 0), |mount_level| {
+                        riding_proficiency::mounted_melee_adjustment(
+                            self.character_definitions()
+                                .is_some_and(|(_, _, class, _)| class.riding_combat_expert),
+                            riding_weapon_kind,
+                            mount_level,
+                            self.progress.riding_proficiency,
+                        )
+                    });
+                let (damage_dice, damage_sides) = rolled_damage
+                    .map_or((profile.damage_dice, profile.damage_sides), |damage| {
+                        (damage.dice, damage.sides)
+                    });
+                (
+                    Some(item_id),
+                    Some(kind_id),
+                    damage_dice.saturating_add(mounted_dice),
+                    damage_sides,
+                    profile.damage_type,
+                    profile
+                        .to_hit
+                        .saturating_add(i32::from(enchantment_to_hit))
+                        .saturating_add(mounted_to_hit),
+                    mounted_to_hit,
+                    Some(weight),
+                    priest_weapon_penalty,
+                )
+            },
+        );
         let mut melee_skill = source_kind_id
             .as_deref()
             .and_then(|kind_id| self.weapon_proficiency_hit_modifier(kind_id))
@@ -1472,20 +1553,31 @@ impl Game {
                 StatBounds::NON_NEGATIVE,
             );
         }
+        let mut to_damage = stats.melee_damage_bonus.value;
+        if priest_weapon_penalty {
+            melee_skill = melee_skill.with_modifier(
+                StatLayer::Class,
+                "rfb.class.priest-unblessed-weapon",
+                -2,
+                StatBounds::NON_NEGATIVE,
+            );
+            to_hit = to_hit.saturating_sub(2);
+            to_damage = to_damage.saturating_sub(2);
+        }
         ResolvedAttackProfile {
             attacks: u16::try_from(stats.melee_attacks.value)
                 .expect("derived melee attack count must fit u16"),
             extra_attack_chance_percent: 0,
             melee_skill,
             to_hit,
-            to_damage: stats.melee_damage_bonus.value,
+            to_damage,
             damage_dice: dice,
             damage_sides: sides,
             damage_type: DamageType::from(damage_type),
             source_item_id,
             source_mutation_id: None,
             attack_name: None,
-            critical_weight_tenths_pound: None,
+            critical_weight_tenths_pound,
         }
     }
 
@@ -2450,8 +2542,34 @@ impl Game {
         } else {
             max_hp
         };
+        let speed = pipeline.resolve(StatKind::Speed, StatBounds::ACTOR_SPEED);
+        let speed = if include_equipment
+            && self.riding_actor_id.is_none()
+            && self.player_has_status_kind(STATUS_LIGHT_SPEED)
+        {
+            speed.with_modifier(
+                StatLayer::Status,
+                STATUS_LIGHT_SPEED,
+                199_i32.saturating_sub(speed.value),
+                StatBounds::ACTOR_SPEED,
+            )
+        } else {
+            speed
+        };
         let saving_throw_skill =
             pipeline.resolve(StatKind::SavingThrowSkill, StatBounds::NON_NEGATIVE);
+        let saving_throw_skill =
+            if include_equipment && self.player_has_status_kind(STATUS_MAGIC_RESISTANCE) {
+                let minimum = 95_i32.saturating_add(i32::from(self.progress.level));
+                saving_throw_skill.with_modifier(
+                    StatLayer::Status,
+                    STATUS_MAGIC_RESISTANCE,
+                    minimum.saturating_sub(saving_throw_skill.value).max(0),
+                    StatBounds::NON_NEGATIVE,
+                )
+            } else {
+                saving_throw_skill
+            };
         let saving_throw_skill = if let Some((status, value)) =
             actor.statuses.iter().find_map(|status| {
                 status
@@ -2486,7 +2604,7 @@ impl Game {
                 definition,
                 StatBounds::NON_NEGATIVE,
             ),
-            speed: pipeline.resolve(StatKind::Speed, StatBounds::ACTOR_SPEED),
+            speed,
             melee_skill: pipeline.resolve(StatKind::MeleeSkill, StatBounds::NON_NEGATIVE),
             armor_class: apply_monster_power(
                 pipeline.resolve(StatKind::ArmorClass, StatBounds::NON_NEGATIVE),

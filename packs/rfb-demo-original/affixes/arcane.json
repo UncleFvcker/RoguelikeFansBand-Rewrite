@@ -1,0 +1,1229 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-arcane-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "grantsVirtues": false,
+            "telepathyDurationDice": 1,
+            "telepathyDurationSides": 30,
+            "telepathyDurationTicks": 25,
+            "type": "clairvoyance"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-clairvoyance",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "minimumDistance": 10,
+            "power": 20,
+            "type": "teleport-away"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-teleport-away",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "range": 35,
+            "type": "dimension-door"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-dimension-door",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "position"
+          ],
+          "range": 35,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "effect": {
+            "delayBonus": 15,
+            "delayDice": 1,
+            "delaySides": 20,
+            "type": "recall"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-recall",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "power": 100,
+            "type": "recharge-from-player"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-recharge-from-device",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "mage",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 90,
+        "effect": {
+          "effect": {
+            "power": 190,
+            "type": "recharge-from-player"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-recharge-from-player",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "mage",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 15
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "fullIdentifyPower": 1,
+            "fullIdentifyRollSides": 1,
+            "type": "identify-item"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-identify-full",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "type": "probe"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-probing",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "sourceTerrainIds": [
+              "demo.terrain.floor"
+            ],
+            "targetTerrainId": "demo.terrain.warding-glyph",
+            "type": "create-current-terrain"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-rune-explosive",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "maximumDistance": 100,
+            "type": "banish"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-banish-all",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "effect": {
+            "maximumWeightTenthsPound": 3750,
+            "type": "fetch-item"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-telekinesis",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "type": "transmute-item-to-gold",
+            "unitValueCap": 30000,
+            "valueDivisor": 3
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-alchemy",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "item"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "type": "self-knowledge"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-self-knowledge",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.haste",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-speed",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 30,
+            "durationTicks": 25,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.telepathy",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-telepathy",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 90,
+        "effect": {
+          "effect": {
+            "durationBonus": 8,
+            "durationDice": 1,
+            "durationSides": 8,
+            "type": "invulnerability"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-invulnerability",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 7770
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 15
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "monster",
+            "countDice": 1,
+            "countSides": 3,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 10,
+            "hostileGroupChancePercent": 100,
+            "maximumLevel": 30,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-summon-monsters",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "phantom",
+            "countDice": 1,
+            "countSides": 1,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 0,
+            "hostileGroupChancePercent": 0,
+            "maximumLevel": 25,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-summon-phantasmal",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "elemental",
+            "countDice": 1,
+            "countSides": 1,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 67,
+            "hostileGroupChancePercent": 100,
+            "maximumLevel": 30,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-summon-elemental",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "dragon",
+            "countDice": 1,
+            "countSides": 1,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 0,
+            "hostileGroupChancePercent": 0,
+            "maximumLevel": 60,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-summon-dragon",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 6000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "category": "monster",
+            "power": 30,
+            "type": "control"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-charm-monster",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 80,
+        "effect": {
+          "resourceId": "demo.resource.mana",
+          "type": "restore-resource-full"
+        },
+        "id": "rfb.device-activation.ego-6-biased-restore-mana",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 9000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "amount": 10,
+          "resourceId": "demo.resource.mana",
+          "type": "restore-resource"
+        },
+        "id": "rfb.device-activation.ego-6-biased-clarity",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 150
+        },
+        "rfbBiases": [
+          "priestly",
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 21
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 80,
+        "effect": {
+          "amount": 30,
+          "resourceId": "demo.resource.mana",
+          "type": "restore-resource"
+        },
+        "id": "rfb.device-activation.ego-6-biased-great-clarity",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 750
+        },
+        "rfbBiases": [
+          "priestly",
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 3
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 55,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 20,
+            "damageDice": 1,
+            "damageSides": 135,
+            "damageType": "water",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-bolt-water",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 50,
+            "damageDice": 1,
+            "damageSides": 144,
+            "damageType": "mana",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-bolt-mana",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 30,
+            "damageDice": 1,
+            "damageSides": 115,
+            "damageType": "ice",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-bolt-ice",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage",
+          "cold"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 190,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "water",
+            "radius": 4,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-ball-water",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 80,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 237,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "mana",
+            "radius": 2,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-ball-mana",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 42
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 65,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 154,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "water",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-breathe-water",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 80,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 750,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "mana",
+            "radius": 5,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-mana-storm",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "durationTicks": 3,
+            "intensity": 1,
+            "power": 100,
+            "stacking": "replace",
+            "statusKindId": "rfb.status.paralysis",
+            "type": "visible-apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-6-biased-stasis-monsters",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "affix-legacy-arcane-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.arcane",
+  "nameKey": "affix-legacy-arcane-name",
+  "rfbEgo": {
+    "rarity": 6,
+    "sourceIndex": 6,
+    "types": [
+      "weapon"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "weapon"
+  ]
+}

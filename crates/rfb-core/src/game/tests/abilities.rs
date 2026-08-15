@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
+use crate::effect::STATUS_KUTAR_EXPAND;
 use crate::game::monster_ecology as ecology;
 
 fn set_test_virtue(game: &mut Game, slot: usize, kind: VirtueKindDto, value: i16) {
@@ -389,6 +390,7 @@ fn spell_power_uses_shared_formula_and_modifier_sources_in_projection() {
             },
             ..AffixPropertyBundleDefinition::default()
         },
+        ..RolledAffixState::default()
     });
     game.player.statuses.push(StatusInstance {
         kind_id: "test.status.blood-rite".to_owned(),
@@ -891,8 +893,12 @@ fn death_weapon_branding_targets_plain_weapons_across_player_locations() {
         assert_eq!(game.virtue_current(VirtueKindDto::Enchantment), 2);
         assert!((0..=6).contains(&item.enchantments.to_hit));
         assert!((0..=6).contains(&item.enchantments.to_damage));
+        assert_eq!(item.rolled_affixes.len(), 1);
         if ability_id.ends_with("poison-branding") {
-            assert_eq!(item.rolled_affixes.len(), 1);
+            assert!(
+                !item.rolled_affixes[0].properties.slays.is_empty(),
+                "explicit Slaying references must use the shared source-index 1 materializer"
+            );
             assert!(
                 item.rolled_affixes[0]
                     .properties
@@ -907,7 +913,14 @@ fn death_weapon_branding_targets_plain_weapons_across_player_locations() {
                 Some(&ActorResistanceLevel::Resistant)
             );
         } else {
-            assert!(item.rolled_affixes.is_empty());
+            assert_eq!(item.rolled_affixes[0].affix_id, expected_affix_id);
+            assert!(
+                game.content
+                    .affix(expected_affix_id)
+                    .expect("Death affix")
+                    .passives
+                    .contains(&EquipmentPassive::Vampiric)
+            );
         }
         let expected_attempts = events
             .iter()
@@ -3706,6 +3719,20 @@ fn formal_kutar_expansion_fixes_saving_throw_and_adds_thirty_five_armor() {
                 .saving_throw_skill_override,
             Some(10),
         );
+        cast.player.statuses.push(StatusInstance {
+            kind_id: STATUS_MAGIC_RESISTANCE.to_owned(),
+            intensity: 1,
+            remaining_ticks: 10,
+            source_id: Some("test.kutar-magic-resistance".to_owned()),
+            granted_resistances: BTreeMap::new(),
+            granted_brands: BTreeSet::new(),
+            granted_modifiers: StatModifiersDto::default(),
+            granted_equipment_bonuses: EquipmentBonusesDto::default(),
+            granted_status_immunities: BTreeSet::new(),
+            granted_race_id: None,
+            grants_wall_passage: false,
+            incoming_damage_percent: 100,
+        });
         let stats = cast.player_derived_stats();
         assert_eq!(stats.armor_class.value, stats_before.armor_class.value + 35);
         assert_eq!(stats.saving_throw_skill.value, 10);

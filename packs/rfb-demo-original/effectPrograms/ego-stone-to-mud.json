@@ -1,0 +1,9 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.effect.ego-stone-to-mud",
+  "input": "actor",
+  "steps": [
+    { "type": "terrain-beam", "operation": "stone-to-mud" }
+  ]
+}

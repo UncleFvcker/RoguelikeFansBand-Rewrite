@@ -326,6 +326,8 @@
         "esp-dragon",
         "esp-human",
         "esp-good",
+        "esp-evil",
+        "esp-living",
         "sustain-strength",
         "sustain-intelligence",
         "sustain-wisdom",
@@ -408,6 +410,25 @@
         },
         "nameKey": {
           "type": "string"
+        },
+        "recovery": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemDeviceRecoveryDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "rfbBiases": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/RfbActivationBiasDefinition"
+          },
+          "type": "array",
+          "uniqueItems": true
         },
         "target": {
           "$ref": "#/$defs/AbilityTargetDefinition"
@@ -721,6 +742,51 @@
         "toHit",
         "toDamage",
         "ammunitionType"
+      ],
+      "type": "object"
+    },
+    "RfbActivationBiasDefinition": {
+      "enum": [
+        "mage",
+        "chaos",
+        "acid",
+        "electricity",
+        "fire",
+        "cold",
+        "poison",
+        "priestly",
+        "demon",
+        "necromantic",
+        "ranger"
+      ],
+      "type": "string"
+    },
+    "RfbBaseKindDefinition": {
+      "additionalProperties": false,
+      "description": "Stable identity copied from one authoritative `k_info` base-kind record.",
+      "properties": {
+        "sourceIndex": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "sval": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "tval": {
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "sourceIndex",
+        "tval",
+        "sval"
       ],
       "type": "object"
     },
@@ -1236,6 +1302,17 @@
     "resistsProjectionDestruction": {
       "default": false,
       "type": "boolean"
+    },
+    "rfbBaseKind": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RfbBaseKindDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "ridingWeaponKind": {
       "anyOf": [

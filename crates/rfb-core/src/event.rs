@@ -287,6 +287,23 @@ pub(crate) enum DomainEvent {
         source_kind_id: String,
         resolution: AbilityEffectsResolutionDto,
     },
+    PlayerWeaponEarthquakeResolved {
+        source_item_id: String,
+        resolution: AbilityEffectsResolutionDto,
+    },
+    PlayerWeaponEarthquakeHit {
+        source_item_id: String,
+        damage: DamageOutcome,
+    },
+    PlayerWeaponEarthquakeSlew {
+        source_item_id: String,
+        target_kind_id: String,
+        damage: DamageOutcome,
+    },
+    WildWeaponPowerActivated {
+        source_item_id: String,
+        status_kind_id: String,
+    },
     MonsterMeleeAmnesia {
         source_kind_id: String,
         cleared_cells: u32,
@@ -2075,6 +2092,46 @@ impl DomainEvent {
                 "monster-earthquake",
                 [("source", source_kind_id)],
                 GameEventOutcomeDto::AbilityEffects { resolution },
+            ),
+            Self::PlayerWeaponEarthquakeResolved {
+                source_item_id,
+                resolution,
+            } => dto_with_outcome(
+                "weapon.impact-earthquake",
+                "weapon-impact-earthquake",
+                [("source", source_item_id)],
+                GameEventOutcomeDto::AbilityEffects { resolution },
+            ),
+            Self::PlayerWeaponEarthquakeHit {
+                source_item_id,
+                damage,
+            } => dto_with_outcome(
+                "weapon.impact-earthquake-hit",
+                "weapon-impact-earthquake-hit",
+                [("source", source_item_id)],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::PlayerWeaponEarthquakeSlew {
+                source_item_id,
+                target_kind_id,
+                damage,
+            } => dto_with_outcome(
+                "weapon.impact-earthquake-slew",
+                "weapon-impact-earthquake-slew",
+                [("source", source_item_id), ("target", target_kind_id)],
+                GameEventOutcomeDto::Damage {
+                    resolution: damage.into(),
+                },
+            ),
+            Self::WildWeaponPowerActivated {
+                source_item_id,
+                status_kind_id,
+            } => dto(
+                "weapon.wild-power-activated",
+                "weapon-wild-power-activated",
+                [("source", source_item_id), ("status", status_kind_id)],
             ),
             Self::MonsterMeleeAmnesia {
                 source_kind_id,

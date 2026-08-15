@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-broad-spear-name",
+  "rfbBaseKind": {
+    "sourceIndex": 91,
+    "sval": 7,
+    "tval": 22
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",

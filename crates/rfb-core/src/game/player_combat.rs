@@ -31,6 +31,167 @@ fn sniper_explosion_radius(concentration: u8) -> u8 {
     (concentration.saturating_add(1) / 2).saturating_add(1)
 }
 
+fn mana_brand_cost(damage_dice: u16, damage_sides: u16) -> u32 {
+    1_u32.saturating_add(
+        u32::from(damage_dice)
+            .saturating_mul(u32::from(damage_sides))
+            .saturating_div(7),
+    )
+}
+
+fn mana_brand_multiplier(multiplier: i32) -> i32 {
+    multiplier
+        .saturating_mul(3)
+        .saturating_div(2)
+        .saturating_add(14)
+        .min(150)
+}
+
+const WILD_WEAPON_SOURCE_PREFIX: &str = "rfb.weapon.wild.slot.";
+const WILD_WEAPON_SLOT_COUNT: usize = 5;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum WildWeaponPower {
+    Infravision,
+    Bless,
+    Berserk,
+    Speed,
+    Telepathy,
+    ProtectionFromEvil,
+    MagicResistance,
+    BasicResistance,
+    StoneSkin,
+    Passwall,
+    Vengeance,
+    Invulnerability,
+    Wraithform,
+    LightSpeed,
+}
+
+impl WildWeaponPower {
+    fn from_roll(roll: u64) -> Self {
+        match roll {
+            0..=9 => Self::Infravision,
+            10..=19 => Self::Bless,
+            20..=29 => Self::Berserk,
+            30..=38 => Self::Speed,
+            39..=47 => Self::Telepathy,
+            48..=56 => Self::ProtectionFromEvil,
+            57..=64 => Self::MagicResistance,
+            65..=72 => Self::BasicResistance,
+            73..=79 => Self::StoneSkin,
+            80..=85 => Self::Passwall,
+            86..=90 => Self::Vengeance,
+            91..=94 => Self::Invulnerability,
+            95..=97 => Self::Wraithform,
+            _ => Self::LightSpeed,
+        }
+    }
+
+    const fn status_kind_id(self) -> &'static str {
+        match self {
+            Self::Infravision => "rfb.status.infravision",
+            Self::Bless => "rfb.status.blessed",
+            Self::Berserk => STATUS_BERSERK,
+            Self::Speed => STATUS_HASTE,
+            Self::Telepathy => STATUS_TELEPATHY,
+            Self::ProtectionFromEvil => STATUS_PROTECTION_FROM_EVIL,
+            Self::MagicResistance => STATUS_MAGIC_RESISTANCE,
+            Self::BasicResistance => STATUS_BASIC_RESISTANCE,
+            Self::StoneSkin => "rfb.status.stone-skin",
+            Self::Passwall => "rfb.status.passwall",
+            Self::Vengeance => STATUS_VENGEANCE,
+            Self::Invulnerability => "rfb.status.wild-invulnerability",
+            Self::Wraithform => STATUS_WRAITHFORM,
+            Self::LightSpeed => STATUS_LIGHT_SPEED,
+        }
+    }
+}
+
+fn wild_weapon_status(power: WildWeaponPower, slot: usize, level: u16) -> StatusInstance {
+    let mut status = StatusInstance {
+        kind_id: power.status_kind_id().to_owned(),
+        intensity: 1,
+        remaining_ticks: 2,
+        source_id: Some(format!("{WILD_WEAPON_SOURCE_PREFIX}{slot}")),
+        granted_resistances: BTreeMap::new(),
+        granted_brands: BTreeSet::new(),
+        granted_modifiers: StatModifiersDto::default(),
+        granted_equipment_bonuses: EquipmentBonusesDto::default(),
+        granted_status_immunities: BTreeSet::new(),
+        granted_race_id: None,
+        grants_wall_passage: false,
+        incoming_damage_percent: 100,
+    };
+    match power {
+        WildWeaponPower::Infravision => {
+            status.granted_equipment_bonuses.infravision = 3;
+        }
+        WildWeaponPower::Bless => {
+            status.granted_modifiers.defense = 5;
+            status.granted_equipment_bonuses.melee_skill = 10;
+            status.granted_equipment_bonuses.ranged_skill = 10;
+        }
+        WildWeaponPower::Berserk => {
+            status.granted_modifiers.defense = -10;
+            status.granted_modifiers.max_hp = 30;
+            status.granted_equipment_bonuses = EquipmentBonusesDto {
+                melee_skill: 12,
+                melee_damage: 3_i32.saturating_add(i32::from(level) / 5),
+                ranged_skill: -12,
+                throwing_skill: -20,
+                device_skill: -20,
+                saving_throw_skill: -30,
+                stealth_skill: -7,
+                search_skill: -15,
+                perception_skill: -15,
+                digging_skill: 30,
+                ..EquipmentBonusesDto::default()
+            };
+            status
+                .granted_status_immunities
+                .insert(STATUS_FEAR.to_owned());
+        }
+        WildWeaponPower::BasicResistance => {
+            status.granted_resistances = BTreeMap::from([
+                (DamageType::Acid, ResistanceLevel::Resistant),
+                (DamageType::Electricity, ResistanceLevel::Resistant),
+                (DamageType::Fire, ResistanceLevel::Resistant),
+                (DamageType::Cold, ResistanceLevel::Resistant),
+                (DamageType::Poison, ResistanceLevel::Resistant),
+            ]);
+        }
+        WildWeaponPower::StoneSkin => {
+            status.granted_modifiers.defense =
+                10_i32.saturating_add(i32::from(level).saturating_mul(40) / 50);
+        }
+        WildWeaponPower::Passwall => status.grants_wall_passage = true,
+        WildWeaponPower::Invulnerability => {
+            status.incoming_damage_percent = 0;
+            status
+                .granted_status_immunities
+                .insert(STATUS_FEAR.to_owned());
+        }
+        WildWeaponPower::Wraithform => {
+            status
+                .granted_resistances
+                .insert(DamageType::Dark, ResistanceLevel::Immune);
+            status
+                .granted_resistances
+                .insert(DamageType::Light, ResistanceLevel::Vulnerable);
+            status.grants_wall_passage = true;
+            status.incoming_damage_percent = 50;
+        }
+        WildWeaponPower::Speed
+        | WildWeaponPower::Telepathy
+        | WildWeaponPower::ProtectionFromEvil
+        | WildWeaponPower::MagicResistance
+        | WildWeaponPower::Vengeance
+        | WildWeaponPower::LightSpeed => {}
+    }
+    status
+}
+
 fn roll_sniper_needle_vital_hit(
     rng: &mut RfbRng,
     target_level: u32,
@@ -1489,6 +1650,58 @@ impl Game {
         self.confusing_strike_ready = was_ready;
     }
 
+    pub(super) fn resolve_wild_weapon_strike(
+        &mut self,
+        source_item_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let active_power_ids = self
+            .player
+            .statuses
+            .iter()
+            .filter(|status| {
+                status
+                    .source_id
+                    .as_deref()
+                    .is_some_and(|source| source.starts_with(WILD_WEAPON_SOURCE_PREFIX))
+            })
+            .map(|status| status.kind_id.as_str())
+            .collect::<BTreeSet<_>>();
+        let power = loop {
+            let power = WildWeaponPower::from_roll(self.rng.bounded(100));
+            if !active_power_ids.contains(power.status_kind_id()) {
+                break power;
+            }
+        };
+        let slot = (0..WILD_WEAPON_SLOT_COUNT)
+            .find(|slot| {
+                let source = format!("{WILD_WEAPON_SOURCE_PREFIX}{slot}");
+                !self
+                    .player
+                    .statuses
+                    .iter()
+                    .any(|status| status.source_id.as_deref() == Some(source.as_str()))
+            })
+            .unwrap_or_else(|| {
+                usize::try_from(self.rng.bounded(WILD_WEAPON_SLOT_COUNT as u64))
+                    .expect("wild weapon slot roll must fit usize")
+            });
+        let slot_source = format!("{WILD_WEAPON_SOURCE_PREFIX}{slot}");
+        self.player
+            .statuses
+            .retain(|status| status.source_id.as_deref() != Some(slot_source.as_str()));
+        self.player
+            .statuses
+            .retain(|status| status.kind_id != power.status_kind_id());
+        let status = wild_weapon_status(power, slot, self.progress.level);
+        let status_kind_id = status.kind_id.clone();
+        self.player.statuses.push(status);
+        events.push(DomainEvent::WildWeaponPowerActivated {
+            source_item_id: source_item_id.to_owned(),
+            status_kind_id,
+        });
+    }
+
     pub(super) fn resolve_player_melee(
         &mut self,
         index: usize,
@@ -1582,6 +1795,7 @@ impl Game {
         let mut retaliation_blow_index = 0_usize;
         let mut touched_surviving_target = false;
         let mut allow_criticals = true;
+        let mut impact_earthquake_item_id = None;
         'profiles: for (profile, profile_attacks) in profiles {
             let vampiric_weapon =
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
@@ -1594,7 +1808,7 @@ impl Game {
                                     .contains(&EquipmentPassive::Vampiric)
                             })
                     });
-            let damage_multiplier = self.draconian_strike_damage_multiplier(
+            let base_damage_multiplier = self.draconian_strike_damage_multiplier(
                 &profile,
                 &self.entities[index],
                 &definition,
@@ -1626,11 +1840,48 @@ impl Game {
                     continue;
                 }
 
-                let weapon_damage = self.roll_damage(profile.damage_dice, profile.damage_sides);
+                let source_weapon_index = profile
+                    .source_item_id
+                    .as_deref()
+                    .and_then(|item_id| self.items.iter().position(|item| item.id == item_id));
+                let has_trait = |trait_| {
+                    source_weapon_index.is_some_and(|item_index| {
+                        Self::item_has_weapon_trait(&self.items[item_index], trait_)
+                    })
+                };
+                let order = has_trait(WeaponTraitDto::Order);
+                let impact = has_trait(WeaponTraitDto::Impact);
+                let stun = has_trait(WeaponTraitDto::Stun);
+                let wild = has_trait(WeaponTraitDto::Wild);
+                let vorpal_chance = if has_trait(WeaponTraitDto::Vorpal2) {
+                    Some(2_u64)
+                } else if has_trait(WeaponTraitDto::Vorpal) {
+                    Some(4_u64)
+                } else {
+                    None
+                };
+                let mut damage_multiplier = base_damage_multiplier;
+                if has_trait(WeaponTraitDto::ManaBrand)
+                    && let Some(resource_id) = self
+                        .casting_profile()
+                        .map(|profile| profile.resource_id.clone())
+                    && let Some(pool) = self.resources.get_mut(&resource_id)
+                {
+                    let cost = mana_brand_cost(profile.damage_dice, profile.damage_sides);
+                    if pool.current >= cost {
+                        pool.current -= cost;
+                        damage_multiplier = mana_brand_multiplier(damage_multiplier);
+                    }
+                }
+                let weapon_damage = if order {
+                    i32::from(profile.damage_dice).saturating_mul(i32::from(profile.damage_sides))
+                } else {
+                    self.roll_damage(profile.damage_dice, profile.damage_sides)
+                };
                 let mut base_damage = weapon_damage
                     .saturating_mul(damage_multiplier)
                     .saturating_div(10);
-                if let Some(weight) = profile.critical_weight_tenths_pound {
+                if !order && let Some(weight) = profile.critical_weight_tenths_pound {
                     base_damage = base_damage
                         .saturating_mul(self.roll_player_melee_critical_multiplier(
                             weight,
@@ -1638,6 +1889,23 @@ impl Game {
                             &mut allow_criticals,
                         ))
                         .saturating_div(100);
+                }
+                let impact_triggered = impact && (base_damage > 50 || self.rng.bounded(7) == 0);
+                if impact_triggered {
+                    impact_earthquake_item_id = profile.source_item_id.clone();
+                }
+                let weapon_stun = impact_triggered && base_damage > 50
+                    || stun
+                        && self.rng.bounded(100) + 1
+                            < u64::try_from(base_damage.max(0)).unwrap_or(u64::MAX);
+                if let Some(chance) = vorpal_chance
+                    && self.rng.bounded(chance.saturating_mul(3).saturating_div(2)) == 0
+                {
+                    let mut multiplier = 2;
+                    while self.rng.bounded(chance) == 0 {
+                        multiplier += 1;
+                    }
+                    base_damage = base_damage.saturating_mul(multiplier);
                 }
                 let mut rolled_damage = base_damage.saturating_add(profile.to_damage).max(0);
                 if matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vorpal))
@@ -1648,6 +1916,9 @@ impl Game {
                         multiplier += 1;
                     }
                     rolled_damage = rolled_damage.saturating_mul(multiplier);
+                }
+                if wild && let Some(source_item_id) = profile.source_item_id.as_deref() {
+                    self.resolve_wild_weapon_strike(source_item_id, events);
                 }
                 self.check_human_dexterity_sprain(
                     if profile.source_item_id.is_some() {
@@ -1670,6 +1941,20 @@ impl Game {
                 events.push(profile.hit_event(&target_kind, damage));
                 self.wake_entity_after_damage(index, damage.applied, events);
                 if !application.fatal {
+                    if weapon_stun
+                        && !self.actor_has_status_immunity(index, STATUS_STUN)
+                        && !definition.tags.iter().any(|tag| tag == "resist-all")
+                    {
+                        self.apply_actor_melee_status(
+                            index,
+                            STATUS_STUN,
+                            monster_stun_amount(base_damage),
+                            profile
+                                .source_item_id
+                                .as_deref()
+                                .unwrap_or("rfb.weapon.stun"),
+                        );
+                    }
                     match strike_mode {
                         Some(DraconianStrikeModeDefinition::Stun) => {
                             self.resolve_draconian_stunning_strike(
@@ -1761,6 +2046,16 @@ impl Game {
                 .position(|entity| entity.id == target_entity_id)
         {
             self.resolve_monster_fear_aura(index, "contact", false, events);
+        }
+        if !self.player_is_dead()
+            && let Some(source_item_id) = impact_earthquake_item_id
+        {
+            self.resolve_player_impact_earthquake(
+                source_item_id,
+                events,
+                changed,
+                removed_entities,
+            )?;
         }
         Ok(PlayerMeleeOutcome {
             attacks_used,

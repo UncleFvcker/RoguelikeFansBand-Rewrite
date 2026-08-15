@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-flail-name",
+  "rfbBaseKind": {
+    "sourceIndex": 130,
+    "sval": 13,
+    "tval": 21
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",

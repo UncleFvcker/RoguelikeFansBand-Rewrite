@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-battle-axe-name",
+  "rfbBaseKind": {
+    "sourceIndex": 103,
+    "sval": 22,
+    "tval": 22
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

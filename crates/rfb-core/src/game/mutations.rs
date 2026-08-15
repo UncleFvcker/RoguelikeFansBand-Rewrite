@@ -1361,9 +1361,9 @@ impl Game {
     }
 
     pub(super) fn initialize_birth_race_mutations(&mut self) {
-        if !self
+        if self
             .selected_race_definition()
-            .is_some_and(|race| race.id == BEASTMAN_RACE_ID)
+            .is_none_or(|race| race.id != BEASTMAN_RACE_ID)
         {
             return;
         }
@@ -1377,9 +1377,9 @@ impl Game {
         newly_reached_levels: usize,
         events: &mut Vec<DomainEvent>,
     ) {
-        if !self
+        if self
             .selected_race_definition()
-            .is_some_and(|race| race.id == BEASTMAN_RACE_ID)
+            .is_none_or(|race| race.id != BEASTMAN_RACE_ID)
         {
             return;
         }

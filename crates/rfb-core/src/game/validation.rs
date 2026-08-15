@@ -7,7 +7,7 @@ use crate::{
     error::CoreError,
     state::{Actor, FloorConnectionState, FloorRegionState, ItemInstance, ItemLocation},
 };
-use rfb_content::{AffixPropertyBundleDefinition, ContentCatalog};
+use rfb_content::ContentCatalog;
 use rfb_protocol::{MonsterPackRoleDto, Position};
 
 use super::Game;
@@ -112,7 +112,13 @@ pub(super) fn rolled_affixes_are_valid(item: &ItemInstance) -> bool {
         .all(|pair| pair[0].affix_id < pair[1].affix_id)
         && item.rolled_affixes.iter().all(|rolled| {
             item.affix_ids.binary_search(&rolled.affix_id).is_ok()
-                && rolled.properties != AffixPropertyBundleDefinition::default()
+                && rolled.has_instance_state()
+                && rolled
+                    .melee_damage_dice
+                    .is_none_or(|dice| dice.dice > 0 && dice.sides > 0)
+                && (-15..=15).contains(&rolled.enchantment_delta.to_hit)
+                && (-15..=15).contains(&rolled.enchantment_delta.to_damage)
+                && (-15..=15).contains(&rolled.enchantment_delta.to_armor)
         })
 }
 
@@ -124,8 +130,10 @@ fn item_creation_state_is_valid(
         None => item.discount_percent == 0,
         Some(ItemOriginKindDto::PlayerMade) => {
             item.discount_percent == 99
-                && (definition.tags.iter().any(|tag| tag == "ammunition")
-                    || definition.melee_profile.is_some())
+                && (definition.melee_profile.is_some()
+                    || definition.tags.iter().any(|tag| {
+                        matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")
+                    }))
         }
         Some(ItemOriginKindDto::Acquire) => item.discount_percent == 0,
         Some(ItemOriginKindDto::Rubble) => item.discount_percent == 0,

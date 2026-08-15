@@ -1585,3 +1585,23 @@ git diff --stat
   State Hash Schema v105、save v2。新增内容、本地化、importer、核心和 Web 共 6 项聚焦测试通过，
   含 save/state-hash/replay；source lock、typecheck、Rust check/format 和 diff 检查通过。按用户要求未
   运行全量测试或刷新 `contract-v303` fixture；现有 v104 fixture 留给主合并验收统一迁移。
+
+## 87. main 当前交接（武器与挖掘工具 ego 整合）
+
+- 已将 `codex/items-next` 的 13 个增量提交合并到 main；分支 tip 为 `12a717dc6`，覆盖 30 条 RFB
+  武器/挖掘工具 ego 的 source identity、共享随机物化、自然生成、特殊近战性质、装备副作用、
+  重诅咒与 activation。items 分支和工作树按用户要求保留。
+- `RolledAffixSaveDto` 新增附魔增量、逐实例近战骰面、武器性质和具体诅咒效果；随机结果保存后不重掷，
+  save header/payload schema 因此升至 v3。Evil/Living ESP 与上述字段在 main 统一作为 Protocol
+  `1.226` 发布。
+- 并行分支都曾独立占用 State Hash Schema v105：main 用于库塔豁免覆盖，items 用于 ego 实例状态。
+  合并后的联合结构改用 v106，避免同一个 schema 号对应两种不同哈希输入。库塔的最终豁免覆盖仍在
+  Magic Resistance 最低值之后应用；Light Speed 的速度上限逻辑同时保留。
+- 共享协调点为 pack `1.377.0` / content hash
+  `de4b127d6485be038091738760c0900f4616505ce9092d49fc2496f48158a01b`、Protocol `1.226`、
+  State Hash Schema v106、save v3、active baseline `contract-v304`。内容包现有 43 affixes、1837
+  abilities，其余计数保持 133 terrain、1402 actors、345 items、57 races、31 loot tables。
+- 合并验收修正了 Wild ego 状态免疫存档的规范排序、收购术新增 ego RNG 的精确断言、可穿墙怪物在
+  迷宫墙内的合法生成断言，以及 importer 对未实现 ego 的空词缀判定。最终 `rfb-core` 901 项、
+  `rfb-content` 301 项、本地化 33 项、其余 workspace 测试、contract 26 项、Web 164 项、clippy、
+  schema/bindings、source lock、TypeScript 类型检查和生产 UI 构建均通过，零 waiver。

@@ -17,6 +17,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-gnomish-shovel-name",
+  "rfbBaseKind": {
+    "sourceIndex": 151,
+    "sval": 2,
+    "tval": 20
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

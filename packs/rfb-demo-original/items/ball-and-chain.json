@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-ball-and-chain-name",
+  "rfbBaseKind": {
+    "sourceIndex": 125,
+    "sval": 6,
+    "tval": 21
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",

@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-lance-name",
+  "rfbBaseKind": {
+    "sourceIndex": 102,
+    "sval": 20,
+    "tval": 22
+  },
   "ridingWeaponKind": "lance",
   "tags": [
     "equipment",

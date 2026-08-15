@@ -24,6 +24,11 @@
   },
   "mogaminatorRare": true,
   "nameKey": "item-demo-falcon-sword-name",
+  "rfbBaseKind": {
+    "sourceIndex": 76,
+    "sval": 33,
+    "tval": 23
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

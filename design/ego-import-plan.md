@@ -1,6 +1,6 @@
 # Ego 词条导入计划
 
-更新时间：2026-08-14
+更新时间：2026-08-15
 
 工作分支：`codex/items-next`
 
@@ -183,7 +183,7 @@ importer 已逐条写出 source index、rarity 和完整 `T:` 类型集合。
 最高等级、英文重名、多类型、rarity 0 与原创 affix 均有确定性测试。该批未接入 `base-items`、Craft
 或其他玩家可达入口，现有 pack 因可选字段省略而保持原 content hash。
 
-### E2：共享实例化底座
+### E2：共享实例化底座（已完成）
 
 - 把当前 loot、`craft-item` 和指定 affix 路径共用的 materialize 逻辑收敛为一个 owner；
 - 优先落到现有 `rolledAffixes/enchantments/damageDiceOverride/curse/activation` 字段；
@@ -192,14 +192,27 @@ importer 已逐条写出 source index、rarity 和完整 `T:` 类型集合。
 
 提交目标：`refactor: share ego materialization`
 
+E2 已把内容驱动 affix 的静态 ID、动态 `rollGroups`、activation 与 charges 收敛到同一个纯物化入口，
+并由自然掉落、固定神器、任务奖励、世界显式物品和旧 `craft-item` 共同调用。各路径原有的 roll depth
+策略和“先动态属性、后 activation”RNG 顺序保持不变；物化结果完整生成后才写入已有物品。
+
+旧 `craft-item` 继续使用其小型显式候选池，但已通过共享入口提交结果，成功物品标记为 PlayerMade、
+完全鉴定并保留堆叠拆分语义。拆分先分配实例 ID 再减少原堆数量；取消、非法目标或 ID 耗尽均不改变
+物品或 RNG。该批未增加持久字段，也未给尚未导入的 ego 添加占位行为；法术烙印和造箭的专用动态
+分支将在对应 ego 行为批次迁移，避免当前重复执行 `Slaying` 等 roll group。
+
 ### E3：近战武器与挖掘工具 30 条
 
-- 按 `ego.c` 的 weapon/digger 分支逐项实现；
-- 闭合普通属性、slay/kill、元素及特殊 brand、额外攻击、武器骰、祝福、抗性、诅咒和 activation；
-- 未有真实消费者的 `VORPAL`、mana/order/wild brand 等在本批内实现后才开放对应 ego；
-- 选择、属性和关键随机分支采用代表性 exact tests，不为 30 条复制同构测试。
+逐 index 审查与提交级实施方案见
+[`design/weapon-digger-ego-import-plan.md`](weapon-digger-ego-import-plan.md)。审查确认 27 条含 `WEAPON`、
+6 条含 `DIGGER`（其中 3 条跨类型、3 条仅 `DIGGER`），共 30 条且 rarity 全部大于 0；当前没有一条
+可按权威行为直接开放。审计报告中的 28 条
+“可表达”只表示至少生成了一项属性，不是完成度。
 
-提交可继续按行为族拆小，例如“基础武器词条”“特殊品牌与骰面”“诅咒与激活”；每个子批仍独立提交。
+本批需闭合普通属性、精确 Slaying/Craft、共享 pval、独立附魔、基础物品拒绝重试、近战骰面、
+Mana/Vorpal/Order/Wild/Impact/Stun/Blessed、装备副作用、具体重诅咒和 activation。4 条显式 `E:`
+之外还有 9 条分支随机 activation，去重后共 12 条可能带 activation；必须作为独立子批完成，不能用
+占位效果绕过。只有全部消费者完成后才给自然掉落开放 `WEAPON/DIGGER` policy。
 
 ### E4：弹药、发射器与竖琴 16 条
 

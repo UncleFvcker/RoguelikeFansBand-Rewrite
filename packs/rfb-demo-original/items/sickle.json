@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-sickle-name",
+  "rfbBaseKind": {
+    "sourceIndex": 87,
+    "sval": 3,
+    "tval": 22
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",
