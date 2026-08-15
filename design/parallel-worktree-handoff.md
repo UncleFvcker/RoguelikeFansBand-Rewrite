@@ -1510,3 +1510,21 @@ git diff --stat
   State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
   Web 共 6 项聚焦测试通过，含 save/state-hash/replay；schema/source lock、bindings、typecheck、
   格式和 diff 检查通过。按用户要求未运行全量测试或刷新 fixture。
+
+## 83. main 当前交接（英灵战士正式内容、治疗减半与半神选择）
+
+- 种族方向继续拥有 `rfb-legacy.race.einheri` 与 `rfb-legacy.skill-set.race-einheri`；狂暴复用既有
+  `rfb.ability.race.berserk`，其他方向不得复制这些身份。30 级奖励使用 `einheri-talent` 和当前共享的
+  20 项已闭合半神候选。
+- 通用 Race 内容新增 `healingReceivedPercent`，默认 100；英灵战士为 50。共享治疗先应用突变加成再
+  应用有效种族倍率，临时形态因此获得并在解除后失去减疗。自然再生与旅店完整休息不走该事务；没有
+  新增 Protocol、save 字段或 State Hash 输入。
+- 英灵战士完整行为包括权威属性/生命/HP/经验/红外/商店/技能矩阵、生命力保护、再生 +100%、1 级
+  “狂暴”、30 级半神选择、非生命/亡灵身份、标准身体/出生和初始“非生”。它正常进食且白天出生，
+  不得因 undead 标签而获得装置吸收、缓慢消化或夜间出生。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 37。
+- 实现提交为 `8bb8236cf`（`Import Einheri race`）。共享协调点为 pack `1.373.0` / content hash
+  `219d142fb3e7449c7e5d40c4c99c048f1e16c8a91388e18e058369c9cee349ce`、Protocol `1.223`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`。新增内容、本地化、importer、核心和
+  Web 共 7 项聚焦测试通过，含 save/state-hash/replay；schema/source lock、typecheck、格式和 diff
+  检查通过。按用户要求未运行全量测试或刷新 fixture。

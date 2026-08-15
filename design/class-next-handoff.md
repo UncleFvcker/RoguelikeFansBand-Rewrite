@@ -993,3 +993,28 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   能力投影、恐惧/混乱放行、范围毒伤、解毒、营养与空腹边界、额外行动能量、美德及
   save/state-hash/replay。source lock、schema、Protocol bindings、Web typecheck、Rust check/format 和
   diff 检查通过；按用户要求未运行全量测试或刷新 fixture。
+
+## main 当前批次：英灵战士正式内容、治疗减半与半神选择
+
+- 权威来源为 RFB `master:src/races_a.c`、`master:src/effects.c`、`master:src/chaoswar.c`、
+  `master:src/virtue.c` 和 `master:src/birth.c`。种族方向继续拥有既有
+  `rfb-legacy.race.einheri` 与 `rfb-legacy.skill-set.race-einheri`；狂暴复用既有
+  `rfb.ability.race.berserk`，本批没有新增顶层 ability、program、item、material、affix、resource 或
+  actor ID。
+- 英灵战士按原版闭合六维 `+2/0/0/+2/+1/+1`、生命 113%、基础 HP 44、经验 160%、3 格红外、
+  商店 100%、八项技能、生命力保护、再生 +100%、非生命/亡灵身份、标准身体/出生和初始“非生”。
+  它仍正常吃食物并在白天出生，不继承骷髅/僵尸的装置进食、缓慢消化或夜间出生规则。
+- `RaceDefinition.healingReceivedPercent` 是本批唯一新增通用模型，默认 100，英灵战士为 50；共享玩家
+  治疗在突变加成后应用该倍率，自然再生和旅店完整休息继续绕过魔法治疗事务。字段从当前有效种族
+  派生，不增加协议、save 字段或 State Hash 输入。
+- 1 级力量能力“狂暴”消耗 10、基础失败率 50%；30 级 `einheri-talent` 复用 Human 当前 20 项已闭合
+  半神候选。临时形态获得减疗、生命力保护、再生和狂暴，但等级选择只归出生种族。importer 同步
+  映射治疗倍率、标签、生命力保护、再生、狂暴和同一候选池。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数从 36 增至 37。
+  实现提交为 `8bb8236cf`（`Import Einheri race`）。最终协调点为 pack `1.373.0` / content hash
+  `219d142fb3e7449c7e5d40c4c99c048f1e16c8a91388e18e058369c9cee349ce`、Protocol `1.223`、
+  State Hash Schema v104、save v2、active baseline `contract-v303`（26 个 exact fixture）。
+- 新增聚焦测试共 7 项：内容 1、中文名 1、importer 1、核心 3、Web 1，覆盖静态矩阵、治疗减半、
+  神圣活力顺序、自然再生、生命力保护、狂暴、临时形态、30 级选择、美德、标准出生及
+  save/state-hash/replay。source lock、schema、Web typecheck、Rust check/format 和 diff 检查通过；按用户
+  要求未运行全量测试或刷新 fixture。

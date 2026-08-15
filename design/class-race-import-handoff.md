@@ -10,14 +10,14 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.372.0`
-- content hash：`72c8fc68e42729b2da8914951768ee46a2fd1e8854ee221eabff500650a58e4d`
+- demo pack：`1.373.0`
+- content hash：`219d142fb3e7449c7e5d40c4c99c048f1e16c8a91388e18e058369c9cee349ce`
 - Protocol：`1.223`
 - State Hash Schema：`v104`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v303`，26 个 exact fixture
 - 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 36 个种族。
+  6 个职业构筑和 37 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -260,6 +260,26 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
   覆盖静态矩阵、能力投影、恐惧/混乱放行、范围毒伤、解毒、营养边界、空腹自伤/行动能量、美德及
   save/state-hash/replay。`verify-source`、schema、Protocol bindings、Web typecheck、Rust
   check/format 和 diff 检查通过；按用户要求未运行全量测试，也未刷新 fixture。
+
+### 英灵战士导入最终证据
+
+- 实现提交：`8bb8236cf`（`Import Einheri race`）。最终协调点为 pack `1.373.0` / content hash
+  `219d142fb3e7449c7e5d40c4c99c048f1e16c8a91388e18e058369c9cee349ce`；Protocol `1.223`、
+  State Hash Schema v104、save v2 和 `contract-v303` fixture baseline 均未改变。正式 New Game 种族数
+  从 36 增至 37，ability 数保持 1834。
+- 英灵战士闭合六维 `+2/0/0/+2/+1/+1`、生命 113%、基础 HP 44、经验 160%、3 格红外、商店
+  100%、八项技能、生命力保护、再生 +100%、非生命/亡灵身份、标准身体/出生及初始“非生”。它仍
+  正常吃食物并在白天出生，不具有缓慢消化、装置吸收或亡灵夜间出生。
+- 新增通用 `RaceDefinition.healingReceivedPercent`，默认 100；当前有效英灵战士形态为 50。倍率在共享
+  治疗加成之后应用，因此神圣活力的 +20% 先结算再减半；自然再生、旅店完整休息等非魔法治疗路径
+  不受影响。混沌守护神的 5000 点治疗也改走同一共享入口。
+- 复用既有 `rfb.ability.race.berserk`：1 级力量、消耗 10、基础失败率 50%；30 级复用当前 20 项已
+  闭合半神突变池，奖励 ID 为 `einheri-talent`。临时英灵战士形态获得减疗、再生、生命力保护与狂暴，
+  解除后失去，但不会取得出生种族等级奖励。
+- 只运行本批新增聚焦测试：内容 1、本地化 1、importer 1、核心 3、Web 1，均通过，覆盖静态矩阵、
+  治疗截断与加成顺序、自然再生、生命力保护、狂暴、临时形态、30 级选择、美德、标准出生及
+  save/state-hash/replay。`verify-source`、schema、Web typecheck、Rust check/format 和 diff 检查通过；
+  按用户要求未运行全量测试，也未刷新 fixture。
 
 ## 2. 权威来源与不可变规则
 
