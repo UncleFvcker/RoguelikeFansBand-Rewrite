@@ -218,8 +218,9 @@ use status_effects::{
     ability_status_stacking_dto, apply_ability_status_effect, remove_ability_status_effect,
 };
 use tasks::{
-    CampaignState, TaskState, abandoned_task_state, initial_task_states, task_applies_to_floor,
-    task_definition, task_floors, task_initial_state, task_objectives,
+    CampaignState, TaskServiceCompletionOutcome, TaskState, abandoned_task_state,
+    initial_task_states, task_applies_to_floor, task_definition, task_floors, task_initial_state,
+    task_objectives,
 };
 use terrain::{DoorBashOutcome, DoorOpenOutcome, TerrainDigOutcome, TrapDisarmOutcome};
 #[cfg(test)]
@@ -1876,10 +1877,15 @@ impl Game {
                 facility_id,
                 task_id,
             } => match self.claim_task_reward(&facility_id, &task_id) {
-                Ok(outcome) => events.push(DomainEvent::TaskRewarded {
-                    item_kind_id: outcome.item_kind_id,
-                    quantity: outcome.quantity,
-                }),
+                Ok(TaskServiceCompletionOutcome::Rewarded(outcome)) => {
+                    events.push(DomainEvent::TaskRewarded {
+                        item_kind_id: outcome.item_kind_id,
+                        quantity: outcome.quantity,
+                    })
+                }
+                Ok(TaskServiceCompletionOutcome::Concluded { floor_id }) => {
+                    events.push(DomainEvent::TaskCompleted { floor_id });
+                }
                 Err(reason) => events.push(DomainEvent::TaskRewardClaimUnavailable {
                     facility_id,
                     task_id,

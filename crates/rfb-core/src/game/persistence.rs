@@ -248,9 +248,8 @@ fn restore_task_states(
                 }
                 TaskStatusKindDto::RewardAvailable => {
                     saved.active_floor_id.is_none()
-                        && task_definition(world, &saved.task_id).is_some_and(|task| {
-                            task.source_facility_id.is_some() && task.reward.is_some()
-                        })
+                        && task_definition(world, &saved.task_id)
+                            .is_some_and(|task| task.source_facility_id.is_some())
                         && usize::try_from(saved.stage_index)
                             .ok()
                             .is_some_and(|stage| stage + 1 == objectives.len())

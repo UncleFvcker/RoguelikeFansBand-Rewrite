@@ -693,7 +693,7 @@ impl Game {
                 return Ok(None);
             }
             let reward_claim_required = task_definition(world, &task_id)
-                .is_some_and(|task| task.source_facility_id.is_some() && task.reward.is_some());
+                .is_some_and(|task| task.source_facility_id.is_some());
             let resolution = task_resolution_for_departure(
                 Some(source.retakeable),
                 abandon_task,

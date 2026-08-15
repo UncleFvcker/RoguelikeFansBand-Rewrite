@@ -8178,3 +8178,33 @@ task-demo-anambar-lord-bovin-treachery-name = 鲍文大人的背叛 (阿南巴)
 task-demo-anambar-lord-bovin-treachery-description = 曾经备受爱戴的高塔典狱长鲍文（Bovin）大人，与一名黑女巫联手，转向了邪恶。黑暗巫师和死灵法师现在频繁出入高塔，密谋对抗我们的城市。必须在他们唤起一支不可阻挡的恶魔、巨龙和死者大军之前，破坏他们的计划。请帮助我们，拯救我们的城市。
 task-demo-anambar-lord-bovin-treachery-completed-description = 谢谢你！现在阿南巴（Anambar）的人民又可以安全地出行了。
 task-demo-anambar-lord-bovin-treachery-failed-description = 我早该知道你胜任不了这个任务。幸运的是，伟大的英雄格威利姆（Gwilim）大人恰好路过，把我们从叛徒鲍文的黑暗军队手中拯救了出来。
+
+terrain-demo-anambar-cop-quest-entry-name = “冒险者”的据点
+terrain-demo-anambar-cop-quest-entry-description = 那些暴力“冒险者”占据的隐蔽房屋。
+terrain-demo-anambar-cop-quest-entry-available-name = 隐蔽的小房子
+terrain-demo-anambar-cop-quest-entry-available-description = 警察尚未委托你调查这栋房子。
+terrain-demo-anambar-smugglers-den-entry-name = 走私者的房子
+terrain-demo-anambar-smugglers-den-entry-description = 走私者用作行动据点的小房子。
+terrain-demo-anambar-smugglers-den-entry-available-name = 可疑的小房子
+terrain-demo-anambar-smugglers-den-entry-available-description = 警察尚未委托你拜访这栋房子。
+terrain-demo-anambar-cellar-killer-entry-name = 染血的地窖
+terrain-demo-anambar-cellar-killer-entry-description = 邻居残缺不全的尸体被发现的地窖。
+terrain-demo-anambar-cellar-killer-entry-available-name = 邻居家的地窖
+terrain-demo-anambar-cellar-killer-entry-available-description = 警察尚未向你开放这座地窖。
+
+floor-demo-anambar-cop-quest-name = 警察任务 (阿南巴)
+floor-demo-anambar-smugglers-den-name = 走私者巢穴 (阿南巴)
+floor-demo-anambar-cellar-killer-name = 地窖杀手 (阿南巴)
+
+task-demo-anambar-cop-quest-name = 警察任务 (阿南巴)
+task-demo-anambar-cop-quest-description = 不幸的是，最近几个月我们城市的暴力犯罪率飙升。不知什么原因，我们开始吸引各种疯狂的、自诩为“冒险者”的外地人；起初市长对他们很满意，因为他们带来了财富，你大概也能猜到，店主们也很高兴。但现在，他们为了几块钱就会敲碎无辜镇民的脑袋，或者把镇民当成测试新魔杖的活靶子，或者仅仅因为镇民挡了路就把他们劈成两半。有一大群这种吸胡萝卜的混蛋目前驻扎在这里东南方向、靠近南墙的一座隐蔽的小房子里。遗憾的是，我们不能去屠杀他们，因为我们是警察，必须遵守法律；如果你能提供任何帮助，我将不胜感激。
+task-demo-anambar-cop-quest-completed-description = 那些“冒险者”现在已经消失了？太棒了！不，别告诉我到底发生了什么，我不需要知道……既然他们的房子现在空着了，也许你可以搬进去。
+task-demo-anambar-cop-quest-failed-description = 太糟糕了。我只希望你在经历了如此惨痛的失败后，不会考虑自杀。
+task-demo-anambar-smugglers-den-name = 走私者巢穴 (阿南巴)
+task-demo-anambar-smugglers-den-description = 非法的蘑菇开始出现在街道上，甚至学校里，越来越多的人开始上瘾。起初我们认为这要怪那个新的蘑菇种植场，但我们突击搜查了那个地方，没有发现任何非法的东西。看来真正的罪魁祸首是一伙走私者，他们从某个老霍比特人那里廉价收购蘑菇，偷偷把它们运进我们的城镇，然后在这里以可观的利润出售。我们知道他们是谁，也知道他们的行动据点在哪，不幸的是，某个爱吃玉米的老巫婆不肯给我们搜查令，所以在法律上我们绝对无能为力。如果能有一位私家侦探去拜访一下这些吸血蝙蝠养的杂种，并且也许可以在自卫中杀了他们，我们将不胜感激。他们的基地是就在这北边的一栋小房子里。
+task-demo-anambar-smugglers-den-completed-description = 感谢你谨慎的帮助。你可以保留找到的任何有趣的蘑菇；这儿还有一个合法的额外奖品，是我们早些时候登记作为证据的，希望它对你有用。呃……你的确是在自卫时杀了那些走私者的，对吧？
+task-demo-anambar-smugglers-den-failed-description = 好吧，那真是太“棒”了。就当你是意外闯进去，然后碰巧看到了一大堆非法蘑菇？也许我们可以把那个当成证据来用。
+task-demo-anambar-cellar-killer-name = 地窖杀手 (阿南巴)
+task-demo-anambar-cellar-killer-description = 几天前的晚上，当地一位妇女听到隔壁地窖里传来可怕的尖叫声，于是跑下去查看。她发现邻居残缺不全的尸体躺在地窖地板上的血泊中，脸上布满了可怕的抓痕，怀里还抱着柴火；现场没有任何袭击者的踪迹。她吓坏了，拼命逃跑，并立即向我们报告了这起事件。我们派了一名警官进去调查，结果他被一股无形的力量扔了出来，就像扔个破布娃娃一样轻松。我不知道你将面临怎样的恐怖，我只知道这可能会是你迄今为止最危险的任务，我希望我不是在派你去送死。祝你好运，愿众神保佑你。
+task-demo-anambar-cellar-killer-completed-description = 在没有其他人能做到的情况下你挺过来了。请收下这份礼物。
+task-demo-anambar-cellar-killer-failed-description = [已屏蔽]

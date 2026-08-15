@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.227";
+pub const PROTOCOL_VERSION: &str = "1.228";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 4;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 4;
 
@@ -1942,6 +1942,8 @@ pub struct TaskStatusDto {
     pub description_key: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub source_facility_id: Option<String>,
+    #[serde(default)]
+    pub has_item_reward: bool,
     pub status: TaskStatusKindDto,
     #[serde(default)]
     pub current: u32,

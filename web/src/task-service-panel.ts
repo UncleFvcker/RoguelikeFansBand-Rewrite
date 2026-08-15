@@ -493,7 +493,7 @@ export class TaskServicePanel {
       button.dataset.taskId = task.taskId;
       button.disabled = this.#state.busy;
       button.textContent = this.#localization.format(
-        action === "accept" ? "action-task-accept" : "action-task-claim",
+        taskActionLabelKey(action, task.hasItemReward),
       );
       row.append(button);
     }
@@ -507,6 +507,14 @@ export function taskActionForStatus(
   if (status === "available") return "accept";
   if (status === "reward-available") return "claim";
   return undefined;
+}
+
+export function taskActionLabelKey(
+  action: TaskServiceAction,
+  hasItemReward: boolean,
+): "action-task-accept" | "action-task-claim" | "action-task-conclude" {
+  if (action === "accept") return "action-task-accept";
+  return hasItemReward ? "action-task-claim" : "action-task-conclude";
 }
 
 export function bountyMissionAction(

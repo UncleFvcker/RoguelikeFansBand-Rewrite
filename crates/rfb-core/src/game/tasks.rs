@@ -76,6 +76,12 @@ pub(super) struct TaskRewardOutcome {
     pub(super) quantity: u32,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(super) enum TaskServiceCompletionOutcome {
+    Concluded { floor_id: String },
+    Rewarded(TaskRewardOutcome),
+}
+
 pub(super) fn floor_task_id(floor: &ProceduralFloorDefinition) -> &str {
     floor.task_id.as_deref().unwrap_or(&floor.id)
 }
@@ -780,7 +786,7 @@ impl Game {
         &mut self,
         facility_id: &str,
         task_id: &str,
-    ) -> Result<TaskRewardOutcome, &'static str> {
+    ) -> Result<TaskServiceCompletionOutcome, &'static str> {
         let Some(facility) = self.content.town_facility(facility_id) else {
             return Err("unknown-task-service");
         };
@@ -790,20 +796,16 @@ impl Game {
         if !facility.task_ids.iter().any(|id| id == task_id) {
             return Err("task-unavailable");
         }
-        let Some(task) = self
-            .content
-            .world(&self.world_id)
-            .and_then(|world| task_definition(world, task_id))
-            .cloned()
-        else {
+        let Some((task, floor_id)) = self.content.world(&self.world_id).and_then(|world| {
+            let task = task_definition(world, task_id)?;
+            let floor_id = task_floors(world, task_id).next()?.id.clone();
+            Some((task.clone(), floor_id))
+        }) else {
             return Err("task-unavailable");
         };
         if task.source_facility_id.as_deref() != Some(facility_id) {
             return Err("task-source-mismatch");
         }
-        let Some(reward_definition) = task.reward.as_ref() else {
-            return Err("reward-unavailable");
-        };
         if self
             .task_states
             .get(task_id)
@@ -811,6 +813,13 @@ impl Game {
         {
             return Err("reward-unavailable");
         }
+        let Some(reward_definition) = task.reward.as_ref() else {
+            self.task_states
+                .get_mut(task_id)
+                .expect("preflighted task state must remain available")
+                .status = TaskStatusKindDto::Completed;
+            return Ok(TaskServiceCompletionOutcome::Concluded { floor_id });
+        };
         if self.instance_id_exists(&reward_definition.item_instance_id)
             || self.stored_floors.values().any(|floor| {
                 floor
@@ -884,7 +893,7 @@ impl Game {
             .get_mut(task_id)
             .expect("preflighted task state must remain available")
             .status = TaskStatusKindDto::Completed;
-        Ok(outcome)
+        Ok(TaskServiceCompletionOutcome::Rewarded(outcome))
     }
 
     fn bind_external_tasks_to_floor_transitions(&mut self, events: &[DomainEvent]) {

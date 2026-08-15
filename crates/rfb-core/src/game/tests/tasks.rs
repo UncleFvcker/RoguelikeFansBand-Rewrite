@@ -1,7 +1,18 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
-use crate::game::tasks::{TaskResolution, task_resolution_for_departure};
+use crate::game::tasks::{
+    TaskResolution, TaskRewardOutcome, TaskServiceCompletionOutcome, task_resolution_for_departure,
+};
+
+fn item_reward(outcome: TaskServiceCompletionOutcome) -> TaskRewardOutcome {
+    match outcome {
+        TaskServiceCompletionOutcome::Rewarded(reward) => reward,
+        TaskServiceCompletionOutcome::Concluded { .. } => {
+            panic!("task should grant an item reward")
+        }
+    }
+}
 
 fn direct_warrens_death_drops(
     actor_kind_id: &str,
@@ -531,6 +542,94 @@ fn p107_failed_prerequisites_unlock_and_optional_status_descriptions_project() {
 }
 
 #[test]
+fn p107j_rewardless_service_task_waits_for_conclusion_without_creating_an_item() {
+    let mut game = p107_task_service_game(10);
+    game.player.position = Position { x: 26, y: 13 };
+    let root_id = if game
+        .task_states
+        .contains_key("demo.task.test-warrens-depth")
+    {
+        "demo.task.test-warrens-depth"
+    } else {
+        "demo.task.test-warrens-depth-alternate"
+    };
+    let followup_id = if root_id.ends_with("-alternate") {
+        "demo.task.test-prerequisite-alternate"
+    } else {
+        "demo.task.test-prerequisite"
+    };
+    let state = game.task_states.get_mut(root_id).unwrap();
+    state.status = TaskStatusKindDto::RewardAvailable;
+    state.current = state.required;
+    state.active_floor_id = None;
+
+    let projected = game
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == "demo.town-facility.outpost-count")
+        .and_then(|service| {
+            service
+                .tasks
+                .into_iter()
+                .find(|task| task.task_id == root_id)
+        })
+        .expect("rewardless task should remain projected for conclusion");
+    assert_eq!(projected.status, TaskStatusKindDto::RewardAvailable);
+    assert!(!projected.has_item_reward);
+
+    let item_count = game.items.len();
+    let before_draws = game.rng_draw_counter();
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::ClaimTaskReward {
+            facility_id: "demo.town-facility.outpost-count".to_owned(),
+            task_id: root_id.to_owned(),
+        },
+    );
+    assert_eq!(
+        game.task_states[root_id].status,
+        TaskStatusKindDto::Completed
+    );
+    assert_eq!(game.items.len(), item_count);
+    assert_eq!(game.rng_draw_counter(), before_draws);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "task.completed")
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .all(|event| event.kind != "task.rewarded")
+    );
+    assert_eq!(
+        update
+            .task_services
+            .iter()
+            .find(|service| service.id == "demo.town-facility.outpost-count")
+            .and_then(|service| {
+                service
+                    .tasks
+                    .iter()
+                    .find(|task| task.task_id == followup_id)
+            })
+            .map(|task| task.status),
+        Some(TaskStatusKindDto::Available)
+    );
+
+    let content = game.content.clone();
+    let restored = Game::from_save_with_content(game.to_save(), content)
+        .expect("rewardless task conclusion should use the existing task state save");
+    assert_eq!(
+        restored.task_states[root_id].status,
+        TaskStatusKindDto::Completed
+    );
+}
+
+#[test]
 fn external_task_prerequisite_stays_locked_without_materializing_state() {
     let mut game = task_service_game(42);
     let task_id = "demo.task.test-prerequisite";
@@ -653,12 +752,13 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
             },
         );
         let before_draws = game.rng_draw_counter();
-        let reward = game
-            .claim_task_reward(
+        let reward = item_reward(
+            game.claim_task_reward(
                 "demo.town-facility.outpost-count",
                 "demo.task.test-warrens-depth",
             )
-            .expect("weighted task reward should resolve");
+            .expect("weighted task reward should resolve"),
+        );
         assert_eq!(game.rng_draw_counter(), before_draws + 1);
         saw_food |= reward.item_kind_id == "demo.item.ration-of-food";
         saw_water |= reward.item_kind_id == "demo.item.water-potion";
@@ -678,12 +778,13 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
             retakes_used: 0,
         },
     );
-    let reward = game
-        .claim_task_reward(
+    let reward = item_reward(
+        game.claim_task_reward(
             "demo.town-facility.outpost-count",
             "demo.task.test-prerequisite",
         )
-        .expect("Warrior reward override should resolve");
+        .expect("Warrior reward override should resolve"),
+    );
     assert_eq!(reward.item_kind_id, "demo.item.broad-sword");
     let item = game
         .items
@@ -1226,12 +1327,13 @@ fn old_castle_reward_is_forced_even_when_the_artifact_was_generated_before_claim
     game.generated_artifact_ids
         .extend(["demo.item.slayer".to_owned(), "demo.item.pain".to_owned()]);
 
-    let reward = game
-        .claim_task_reward(
+    let reward = item_reward(
+        game.claim_task_reward(
             "demo.town-facility.outpost-white-horse",
             "demo.task.old-castle",
         )
-        .expect("explicit artifact reward should remain forced");
+        .expect("explicit artifact reward should remain forced"),
+    );
     assert!(matches!(
         reward.item_kind_id.as_str(),
         "demo.item.slayer" | "demo.item.pain"

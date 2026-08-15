@@ -561,6 +561,7 @@ task-status-taken = accepted
 action-task-abandon = Abandon
 action-task-accept = Accept task
 action-task-claim = Claim reward
+action-task-conclude = Conclude task
 task-service-eyebrow = Town facility
 task-service-owner = Proprietor: { $owner } · Status: { $membership }
 facility-membership-visitor = Visitor

@@ -14277,3 +14277,136 @@ fn p107h_anambar_mayor_fixed_maps_preserve_source_geometry_and_one_shot_entries(
         }));
     }
 }
+
+#[test]
+fn p107i_anambar_police_line_preserves_rewards_fixed_maps_and_entry_order() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let content = &artifact.content;
+    let police = content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.anambar-police-station")
+        .expect("Anambar police station should exist");
+    assert!(police.bounty_office.is_some());
+    assert_eq!(
+        police.task_ids,
+        [
+            "demo.task.anambar-cop-quest",
+            "demo.task.anambar-smugglers-den",
+            "demo.task.anambar-cellar-killer",
+        ]
+    );
+
+    let world = content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .expect("Middle-earth should exist");
+    let task = |id: &str| {
+        world
+            .tasks
+            .iter()
+            .find(|task| task.id == id)
+            .unwrap_or_else(|| panic!("{id} should exist"))
+    };
+    let cop = task("demo.task.anambar-cop-quest");
+    let smugglers = task("demo.task.anambar-smugglers-den");
+    let cellar = task("demo.task.anambar-cellar-killer");
+    assert!(cop.reward.is_none());
+    assert_eq!(
+        smugglers.prerequisite_task_id.as_deref(),
+        Some(cop.id.as_str())
+    );
+    assert_eq!(
+        cellar.prerequisite_task_id.as_deref(),
+        Some(smugglers.id.as_str())
+    );
+    assert!(smugglers.unlock_when_prerequisite_failed);
+    assert!(cellar.unlock_when_prerequisite_failed);
+    assert_eq!(
+        smugglers.reward.as_ref().unwrap().entries[0].item_kind_id,
+        "demo.item.sixfold-provision"
+    );
+    assert_eq!(
+        cellar.reward.as_ref().unwrap().entries[0].item_kind_id,
+        "demo.item.destruction-staff"
+    );
+
+    for (id, depth, width, height, actor_count, covered_tiles, player_position) in [
+        (
+            "cop-quest",
+            12,
+            25,
+            24,
+            32,
+            363,
+            ContentPosition { x: 9, y: 1 },
+        ),
+        (
+            "smugglers-den",
+            30,
+            20,
+            18,
+            16,
+            223,
+            ContentPosition { x: 4, y: 16 },
+        ),
+        (
+            "cellar-killer",
+            70,
+            11,
+            10,
+            1,
+            63,
+            ContentPosition { x: 9, y: 8 },
+        ),
+    ] {
+        let floor_id = format!("demo.floor.anambar-{id}");
+        let floor = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == floor_id)
+            .unwrap_or_else(|| panic!("{floor_id} should exist"));
+        assert_eq!(floor.lifecycle, FloorLifecycle::OneShot);
+        assert_eq!(
+            (floor.depth, floor.width, floor.height),
+            (depth, width, height)
+        );
+        assert_eq!(
+            floor.task_id.as_deref(),
+            Some(format!("demo.task.anambar-{id}").as_str())
+        );
+        assert_eq!(
+            floor.available_entry_terrain_id.as_deref(),
+            Some(format!("demo.terrain.anambar-{id}-entry-available").as_str())
+        );
+        let inline = floor.inline_map.as_ref().expect("fixed map should exist");
+        assert_eq!(inline.player_position, player_position);
+        assert_eq!(inline.actor_spawns.len(), actor_count);
+        assert_eq!(
+            inline
+                .terrain_overrides
+                .iter()
+                .map(|override_| override_.positions.len())
+                .sum::<usize>(),
+            covered_tiles
+        );
+    }
+
+    let anambar = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.anambar")
+        .and_then(|floor| floor.inline_map.as_ref())
+        .expect("Anambar fixed map should exist");
+    for (id, position) in [
+        ("cop-quest", ContentPosition { x: 19, y: 9 }),
+        ("smugglers-den", ContentPosition { x: 11, y: 1 }),
+        ("cellar-killer", ContentPosition { x: 13, y: 1 }),
+    ] {
+        assert!(anambar.terrain_overrides.iter().any(|override_| {
+            override_.terrain_id == format!("demo.terrain.anambar-{id}-entry-available")
+                && override_.positions == [position]
+        }));
+    }
+}

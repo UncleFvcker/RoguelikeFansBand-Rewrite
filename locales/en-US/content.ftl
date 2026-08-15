@@ -8174,3 +8174,33 @@ task-demo-anambar-lord-bovin-treachery-name = The Treachery of Lord Bovin (Anamb
 task-demo-anambar-lord-bovin-treachery-description = Lord Bovin and a dark witch have turned the High Tower into a base for dragons, demons, necromancers, and other enemies of Anambar.
 task-demo-anambar-lord-bovin-treachery-completed-description = Thank you. The people of Anambar may travel safely again.
 task-demo-anambar-lord-bovin-treachery-failed-description = Lord Gwilim happened to pass by and saved us from Bovin's dark army after you failed.
+
+terrain-demo-anambar-cop-quest-entry-name = adventurers' hideout
+terrain-demo-anambar-cop-quest-entry-description = The hidden house occupied by the violent adventurers.
+terrain-demo-anambar-cop-quest-entry-available-name = hidden house
+terrain-demo-anambar-cop-quest-entry-available-description = The police have not yet asked you to investigate this house.
+terrain-demo-anambar-smugglers-den-entry-name = smugglers' house
+terrain-demo-anambar-smugglers-den-entry-description = The small house used as the smugglers' base.
+terrain-demo-anambar-smugglers-den-entry-available-name = suspicious house
+terrain-demo-anambar-smugglers-den-entry-available-description = The police have not yet asked you to visit this house.
+terrain-demo-anambar-cellar-killer-entry-name = bloodstained cellar
+terrain-demo-anambar-cellar-killer-entry-description = The cellar where a neighbor was found mutilated.
+terrain-demo-anambar-cellar-killer-entry-available-name = neighboring cellar
+terrain-demo-anambar-cellar-killer-entry-available-description = The police have not yet opened this cellar to you.
+
+floor-demo-anambar-cop-quest-name = Cop Quest (Anambar)
+floor-demo-anambar-smugglers-den-name = Smugglers' Den (Anambar)
+floor-demo-anambar-cellar-killer-name = The Killer in the Cellar (Anambar)
+
+task-demo-anambar-cop-quest-name = Cop Quest (Anambar)
+task-demo-anambar-cop-quest-description = Violent self-styled adventurers have terrorized innocent townsfolk. The police must obey the law, but would appreciate help with their hidden house near the south wall.
+task-demo-anambar-cop-quest-completed-description = Those adventurers have vanished? Excellent. Do not tell me what happened; with their house empty, perhaps you could move in.
+task-demo-anambar-cop-quest-failed-description = Terrible. I only hope such a painful failure will not make you consider suicide.
+task-demo-anambar-smugglers-den-name = Smugglers' Den (Anambar)
+task-demo-anambar-smugglers-den-description = Illegal mushrooms are spreading through Anambar. Visit the smugglers' small house to the north and deal with them in self-defense, since the police cannot obtain a warrant.
+task-demo-anambar-smugglers-den-completed-description = Thank you for your discretion. Keep any interesting mushrooms you found, and accept this legal extra prize previously registered as evidence. You did act in self-defense, correct?
+task-demo-anambar-smugglers-den-failed-description = Wonderful. Let us say you wandered in by accident and happened to see a heap of illegal mushrooms; perhaps that can still serve as evidence.
+task-demo-anambar-cellar-killer-name = The Killer in the Cellar (Anambar)
+task-demo-anambar-cellar-killer-description = A woman found her neighbor's mutilated body in a cellar, and an invisible force hurled the investigating officer out. Face whatever horror is hiding below.
+task-demo-anambar-cellar-killer-completed-description = You survived where nobody else could. Please accept this gift.
+task-demo-anambar-cellar-killer-failed-description = [CENSORED]

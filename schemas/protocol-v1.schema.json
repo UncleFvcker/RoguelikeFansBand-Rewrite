@@ -13273,6 +13273,10 @@
         "floorId": {
           "type": "string"
         },
+        "hasItemReward": {
+          "type": "boolean",
+          "default": false
+        },
         "maxRetakes": {
           "type": [
             "integer",
