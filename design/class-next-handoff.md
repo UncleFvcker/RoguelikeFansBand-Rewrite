@@ -5,7 +5,7 @@
 
 更新时间：2026-08-15
 
-当前 main 实现基线：`503893dd4`（安珀人正式 New Game 开放）
+当前 main 实现基线：`435df76b0`（兽化人正式 New Game 开放）
 
 分支：`codex/class-next`
 
@@ -1069,3 +1069,26 @@ ammo-slaying ID。若 items 方向随后导入陶器碎片或断木棍，也应�
   支付、倒计时启动/取消、恢复范围、临时形态、美德及 save/state-hash/replay。`verify-source`、schema、
   Protocol bindings、Web typecheck、Rust check/format 和 diff 检查通过；按用户要求未运行全量测试，
   也未刷新 `contract-v303` fixture。现有 fixture 仍是 v104，主合并验收必须统一迁移到 v105。
+
+## main 当前批次：兽化人正式内容、随机突变成长与再生宽容
+
+- 权威来源为 RFB `master:src/races_a.c`、`master:src/mut.c`、`master:src/xtra2.c` 和
+  `master:src/virtue.c`。种族方向继续拥有既有 `rfb-legacy.race.beastman` 与
+  `rfb-legacy.skill-set.race-beastman`；本批不新增 ability、program、item、material、affix、resource
+  或 actor ID。
+- 兽化人按原版闭合六维 `+2/-2/-1/-1/+2/+1`、生命 102%、基础 HP 22、经验 150%、0 格红外、
+  商店 130%、八项技能、混乱/声音抗性、标准身体/出生和初始“运气”。临时兽化人形态只通过当前
+  有效种族路径取得静态属性与抗性。
+- 永久兽化人出生时按现有权重获得一项 Good/Great 良性突变；首次达到每个新等级时逐级进行 `1/5`
+  判定并复用现有随机突变事务，恢复曾到达等级不会重复判定。未锁定突变前 10 项不惩罚再生，此后
+  每项降低 5%，最低 10%；其他种族继续使用每项 10% 的既有公式。临时形态不触发以上三项规则。
+- 没有新增 Protocol、State Hash 或 save 字段；出生突变、升级 RNG 和突变集合使用现有确定性状态与
+  持久化路径。`rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数
+  从 39 增至 40。
+- 实现提交为 `435df76b0`（`Import Beastman race`）。最终协调点为 pack `1.376.0` / content hash
+  `6abdb4a92ae78be7d6f4b5e6dede4dcfad1d176dc5916b2719e7e092b515f713`、Protocol `1.225`、
+  State Hash Schema v105、save v2。
+- 新增聚焦测试共 6 项：内容 1、中文名 1、importer 1、核心 2、Web 1，覆盖静态矩阵、出生良性突变、
+  升级成功/失败与等级恢复、再生边界、锁定突变、美德、save/state-hash/replay 和 New Game 请求。
+  `verify-source`、Web typecheck、Rust check/format 和 diff 检查通过；按用户要求未运行全量测试，也未
+  刷新 `contract-v303` fixture。现有 fixture 仍是 v104，主合并验收必须统一迁移到 v105。

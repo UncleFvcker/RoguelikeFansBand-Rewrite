@@ -1568,3 +1568,20 @@ git diff --stat
   State Hash Schema v105、save v2。新增内容、本地化、importer、核心和 Web 共 6 项聚焦测试通过，
   含 save/state-hash/replay；schema/source lock、bindings、typecheck、格式和 diff 检查通过。按用户要求
   未运行全量测试或刷新 `contract-v303` fixture；现有 v104 fixture 留给主合并验收统一迁移。
+
+## 86. main 当前交接（兽化人正式内容、随机突变成长与再生宽容）
+
+- 种族方向继续拥有 `rfb-legacy.race.beastman` 与 `rfb-legacy.skill-set.race-beastman`；本批没有新增
+  ability、program、item、material、affix、resource 或 actor ID，其他方向不得复制或改名既有身份。
+- 永久兽化人出生时从现有随机池按权重取得一项 Good/Great 良性突变；首次达到每个新等级时逐级执行
+  `1/5` 随机突变判定，恢复旧等级不重复触发。未锁定突变前 10 项不降低再生，之后每项降低 5%，
+  最低 10%；其他种族仍使用每项 10% 的既有公式。以上规则读取永久选择种族，临时形态不触发。
+- 兽化人完整行为包括权威属性/生命/HP/经验/红外/商店/技能矩阵、混乱/声音抗性、标准身体/出生、
+  初始“运气”、出生良性突变、升级随机突变和专属再生惩罚。既有突变集合与 RNG 已覆盖 save、
+  state hash 和 replay，不增加 Protocol、State Hash 或 save 字段。
+- `rfb-compatibility`、Web option 与 `PLAYTEST_RACE_IDS` 已加入，正式 New Game 种族数为 40。
+- 实现提交为 `435df76b0`（`Import Beastman race`）。共享协调点为 pack `1.376.0` / content hash
+  `6abdb4a92ae78be7d6f4b5e6dede4dcfad1d176dc5916b2719e7e092b515f713`、Protocol `1.225`、
+  State Hash Schema v105、save v2。新增内容、本地化、importer、核心和 Web 共 6 项聚焦测试通过，
+  含 save/state-hash/replay；source lock、typecheck、Rust check/format 和 diff 检查通过。按用户要求未
+  运行全量测试或刷新 `contract-v303` fixture；现有 v104 fixture 留给主合并验收统一迁移。

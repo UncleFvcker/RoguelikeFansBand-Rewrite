@@ -1,7 +1,7 @@
 # 职业与种族导入交接
 
 更新时间：2026-08-15
-当前实现基线：`503893dd4`（安珀人正式 New Game 开放；本次文档提交只做交接封板）
+当前实现基线：`435df76b0`（兽化人正式 New Game 开放；本次文档提交只做交接封板）
 
 本文是继续增加正式 RFB 职业与种族的当前操作入口。历史实现与逐批版本记录见
 [`class-next-handoff.md`](class-next-handoff.md)，跨 worktree 的 ID 和版本协调见
@@ -10,15 +10,15 @@
 
 ## 1. 当前基线
 
-- demo pack：`1.375.0`
-- content hash：`31b8d0c0f3c2824bc5a6cabd36d5661bcac3e5133fdb3d59c02353b6707c0719`
+- demo pack：`1.376.0`
+- content hash：`6abdb4a92ae78be7d6f4b5e6dede4dcfad1d176dc5916b2719e7e092b515f713`
 - Protocol：`1.225`
 - State Hash Schema：`v105`
 - save header/payload schema：`v2`（二进制容器格式仍为 v1）
 - active fixture baseline：`contract-v303`，26 个 exact fixture；现有 fixture 仍是 v104，按用户要求本批
   未运行全量测试或刷新，主合并验收需统一迁移到 v105
 - 正式内容：6 个 Class、13 个 Build、65 个 SkillSet、57 个 Race；其中 New Game 当前开放
-  6 个职业构筑和 39 个种族。
+  6 个职业构筑和 40 个种族。
 
 开始新批次前必须重新读取以上版本；本文中的数值是交接快照，不是永久常量。
 
@@ -326,6 +326,26 @@ AC 从出生龙人亚种、职业、等级和当前属性派生，不保存第�
   `verify-source`、schema、Protocol bindings、Web typecheck、Rust check/format 和 diff 检查通过。按
   用户要求未运行全量测试，也未刷新 `contract-v303` fixture；现有 v104 fixture 仍留给主合并验收
   统一迁移到 v105。
+
+### 兽化人导入最终证据
+
+- 实现提交：`435df76b0`（`Import Beastman race`）。最终协调点为 pack `1.376.0` / content hash
+  `6abdb4a92ae78be7d6f4b5e6dede4dcfad1d176dc5916b2719e7e092b515f713`；Protocol `1.225`、
+  State Hash Schema v105、save v2。正式 New Game 种族数从 39 增至 40，ability 数保持 1837。
+- 兽化人闭合六维 `+2/-2/-1/-1/+2/+1`、生命 102%、基础 HP 22、经验 150%、0 格红外、商店
+  130%、八项技能、混乱/声音抗性、标准身体/出生和初始“运气”。`rfb-compatibility`、Web option 与
+  稳定 `raceId` 请求均已加入。
+- 出生时从现有随机突变池按原版权重取得一项评级为 Good/Great 的良性突变；首次达到每个新等级时
+  独立进行 `1/5` 判定，成功后复用现有随机突变事务。经验流失后的等级恢复不会重复判定。突变状态和
+  RNG 已沿既有 save/state-hash 生命周期往返，没有新增字段。
+- 未锁定突变的再生惩罚保留原版专属公式：前 10 项免费，此后每项降低 5%，最低 10%；其他种族仍为
+  每项降低 10%。出生、升级和再生宽容只读取永久选择种族；临时兽化人形态只取得当前有效种族的
+  静态属性与抗性，不领取突变或改写再生惩罚。
+- 只运行本批新增聚焦测试：内容 1、本地化 1、importer 1、核心 2、Web 1，均通过，覆盖静态矩阵、
+  中文名、出生良性突变、升级成功/失败/等级恢复边界、再生 10/11/12 项边界、锁定突变、美德、
+  save/state-hash/replay 与 New Game 请求。`verify-source`、Web typecheck、Rust check/format 和 diff
+  检查通过。按用户要求未运行全量测试，也未刷新 `contract-v303` fixture；现有 v104 fixture 仍留给
+  主合并验收统一迁移到 v105。
 
 ## 2. 权威来源与不可变规则
 
