@@ -811,3 +811,8 @@ Schema 保持 v104，save header/payload schema 保持 v2。
 独特怪奖励、今日目标与动态地牢任务；它与协议 1.226 的随机 ego 实例状态共同进入
 State Hash Schema v107。由于并行分支各自占用了 save schema v3，合并后的 header/payload
 schema 升至 v4，二进制容器格式仍为 v1，不为旧开发存档提供兼容路径。
+
+协议 1.228 为 `EquipmentBonusesDto` 增加有明确单位的 `launcherMultiplierDeltaPercent` 与
+`baseShotDeltaPercent`，并为四类物品 save DTO 增加 `intrinsicProperties`。基础物品在生成期
+掷出的真实属性原样进入装备聚合、物品投影、save 与 State Hash Schema v108，读档不重掷；
+save header/payload schema 同步升至 v5，二进制容器格式仍为 v1。

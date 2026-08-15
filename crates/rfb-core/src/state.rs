@@ -95,6 +95,7 @@ pub(crate) struct ItemInstance {
     pub(crate) quality: ItemQualityDto,
     pub(crate) affix_ids: Vec<String>,
     pub(crate) rolled_affixes: Vec<RolledAffixState>,
+    pub(crate) intrinsic_properties: AffixPropertyBundleDefinition,
     pub(crate) enchantments: ItemEnchantmentsDto,
     pub(crate) curse: Option<ItemCurseSeverityDto>,
     pub(crate) permanent_destruction_immunities: BTreeSet<ItemDestructionElement>,

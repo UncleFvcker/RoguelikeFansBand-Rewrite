@@ -834,6 +834,7 @@ pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemI
         && left.quality == right.quality
         && left.affix_ids == right.affix_ids
         && left.rolled_affixes == right.rolled_affixes
+        && left.intrinsic_properties == right.intrinsic_properties
         && left.enchantments == right.enchantments
         && left.curse == right.curse
         && left.activation == right.activation

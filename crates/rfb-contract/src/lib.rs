@@ -743,6 +743,7 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             quality: item.quality,
             affix_ids: item.affix_ids.clone(),
             rolled_affixes: item.rolled_affixes.clone(),
+            intrinsic_properties: Default::default(),
             activation: item.activation.clone(),
             charges: item.charges,
             fuel: item.fuel,

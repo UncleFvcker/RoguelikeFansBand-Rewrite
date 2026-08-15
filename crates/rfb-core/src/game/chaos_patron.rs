@@ -784,6 +784,7 @@ impl Game {
                 properties,
                 ..RolledAffixState::default()
             }],
+            intrinsic_properties: Default::default(),
             enchantments: ItemEnchantmentsDto {
                 to_hit: enchantment(&mut self.rng),
                 to_damage: enchantment(&mut self.rng),

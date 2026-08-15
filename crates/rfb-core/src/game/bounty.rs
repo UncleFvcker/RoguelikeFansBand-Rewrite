@@ -561,6 +561,7 @@ impl Game {
             quality: ItemQualityDto::Ordinary,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            intrinsic_properties: Default::default(),
             enchantments: ItemEnchantmentsDto::default(),
             curse: initial_item_curse(&self.content, kind_id),
             permanent_destruction_immunities: Default::default(),

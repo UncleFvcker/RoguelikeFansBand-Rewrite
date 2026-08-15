@@ -593,6 +593,12 @@ impl Game {
                     }
                 }
             }
+            for (damage_type, level) in &item.intrinsic_properties.resistances {
+                record(
+                    DamageType::from(*damage_type),
+                    ResistanceLevel::from(*level),
+                );
+            }
             for rolled in &item.rolled_affixes {
                 for (damage_type, level) in &rolled.properties.resistances {
                     record(
@@ -688,6 +694,7 @@ impl Game {
                     immunities.extend(affix.status_immunities.iter().cloned());
                 }
             }
+            immunities.extend(item.intrinsic_properties.status_immunities.iter().cloned());
             for rolled in &item.rolled_affixes {
                 immunities.extend(rolled.properties.status_immunities.iter().cloned());
             }
@@ -727,6 +734,7 @@ impl Game {
                 }
             },
         );
+        add_stat_modifiers_dto(&mut modifiers, &item.intrinsic_properties.modifiers);
         for rolled in &item.rolled_affixes {
             add_stat_modifiers_dto(&mut modifiers, &rolled.properties.modifiers);
         }
@@ -748,6 +756,7 @@ impl Game {
                 merge_equipment_bonuses(&mut bonuses, &affix.equipment_bonuses);
             }
         }
+        merge_equipment_bonuses(&mut bonuses, &item.intrinsic_properties.equipment_bonuses);
         for rolled in &item.rolled_affixes {
             merge_equipment_bonuses(&mut bonuses, &rolled.properties.equipment_bonuses);
         }
@@ -764,6 +773,7 @@ impl Game {
                 passives.extend(&affix.passives);
             }
         }
+        passives.extend(&item.intrinsic_properties.passives);
         for rolled in &item.rolled_affixes {
             passives.extend(&rolled.properties.passives);
         }
@@ -1281,6 +1291,15 @@ impl Game {
                                 ammunition_brands.extend(affix.brands.iter().copied());
                             }
                         }
+                        ammunition_slays.extend(
+                            ammunition
+                                .intrinsic_properties
+                                .slays
+                                .iter()
+                                .map(|(target, level)| (*target, *level)),
+                        );
+                        ammunition_brands
+                            .extend(ammunition.intrinsic_properties.brands.iter().copied());
                         for rolled in &ammunition.rolled_affixes {
                             ammunition_slays.extend(
                                 rolled
@@ -1843,6 +1862,10 @@ impl Game {
                     apply(&affix.slays, &affix.brands);
                 }
             }
+            apply(
+                &item.intrinsic_properties.slays,
+                &item.intrinsic_properties.brands,
+            );
             for rolled in &item.rolled_affixes {
                 apply(&rolled.properties.slays, &rolled.properties.brands);
             }

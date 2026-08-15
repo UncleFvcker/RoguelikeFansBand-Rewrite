@@ -118,6 +118,12 @@ Blessed 与 `IGNORE` 全部由现有静态属性表达；不得为它增加专�
 
 ### E4.2：扩展发射器与竖琴物化状态
 
+状态：已完成。`EquipmentBonuses`/DTO 增加倍率百分点与 `base_shot` 百分制增量；物品实例及四类
+save DTO 增加 `intrinsicProperties`，并接入装备聚合、可见物品投影、堆叠判定与 State Hash。
+`EgoMaterialization::apply_to` 仅在完整物化提供基础属性时一次提交，普通 ego 应用不会清空既有
+基础属性。Protocol 推进至 `1.228`、save header/payload 推进至 v5、State Hash Schema 推进至
+v108；未刷新或执行全量 fixtures。
+
 - 给 `EquipmentBonuses` 增加 launcher multiplier delta 和 base-shot delta 两个有单位字段；
 - 给物品实例增加 `intrinsicProperties`，仅保存 Harp 这类基础物品在生成期掷出的真实属性；
 - 让两类状态进入装备聚合、物品投影、save 和 state hash，读档不得重掷；

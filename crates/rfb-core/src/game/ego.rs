@@ -28,6 +28,7 @@ use super::{
 pub(super) struct EgoMaterialization {
     pub(super) affix_ids: Vec<String>,
     pub(super) rolled_affixes: Vec<RolledAffixState>,
+    pub(super) intrinsic_properties: Option<AffixPropertyBundleDefinition>,
     pub(super) enchantment_delta: ItemEnchantmentsDto,
     pub(super) melee_damage_dice: Option<MeleeDamageDiceDto>,
     pub(super) weapon_traits: BTreeSet<WeaponTraitDto>,
@@ -41,6 +42,7 @@ impl EgoMaterialization {
     pub(super) fn new(
         affix_ids: Vec<String>,
         rolled_affixes: Vec<RolledAffixState>,
+        intrinsic_properties: Option<AffixPropertyBundleDefinition>,
         curse: Option<ItemCurseSeverityDto>,
         activation: Option<ItemActivationDto>,
         charges: Option<ItemChargesDto>,
@@ -80,6 +82,7 @@ impl EgoMaterialization {
         Self {
             affix_ids,
             rolled_affixes,
+            intrinsic_properties,
             enchantment_delta,
             melee_damage_dice,
             weapon_traits,
@@ -108,6 +111,9 @@ impl EgoMaterialization {
         };
         item.affix_ids = self.affix_ids;
         item.rolled_affixes = self.rolled_affixes;
+        if let Some(properties) = self.intrinsic_properties {
+            item.intrinsic_properties = properties;
+        }
         item.enchantments = enchantments;
         if let Some(curse) = self.curse {
             item.curse = Some(item.curse.map_or(curse, |current| current.max(curse)));
@@ -133,7 +139,7 @@ pub(super) fn materialize_ego_with_rng(
     let rolled_affixes = roll_affix_properties_with_rng(content, rng, &affix_ids, roll_depth);
     let (activation, charges) =
         initial_item_runtime_state(content, rng, kind_id, &affix_ids, activation_depth);
-    EgoMaterialization::new(affix_ids, rolled_affixes, None, activation, charges)
+    EgoMaterialization::new(affix_ids, rolled_affixes, None, None, activation, charges)
 }
 
 /// Selects one authoritative RFB ego without changing any item state.
@@ -693,6 +699,7 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
     Some(EgoMaterialization::new(
         vec![affix.id.clone()],
         rolled_affixes,
+        None,
         roll.curse,
         activation,
         charges,
@@ -1740,7 +1747,7 @@ fn rfb_ego_weight(rarity: u16, min_level: u16, max_level: u16, level: u16) -> u3
 mod tests {
     use std::collections::{BTreeMap, BTreeSet};
 
-    use crate::game::Game;
+    use crate::{STATE_HASH_SCHEMA_VERSION, game::Game};
     use rfb_content::{
         AbilityTargetDefinition, AbilityTargetModeDefinition, AffixDefinition, EquipmentBonuses,
         ItemDefinition, ItemDeviceActivationDefinition, ItemDeviceChargeRangeDefinition,
@@ -2562,6 +2569,7 @@ mod tests {
             quality: ItemQualityDto::Fine,
             affix_ids: Vec::new(),
             rolled_affixes: Vec::new(),
+            intrinsic_properties: Default::default(),
             enchantments: ItemEnchantmentsDto {
                 to_hit: 1,
                 to_damage: 2,
@@ -2606,6 +2614,7 @@ mod tests {
         let materialization = EgoMaterialization::new(
             vec![rolled.affix_id.clone()],
             vec![rolled.clone()],
+            None,
             None,
             None,
             None,
@@ -2660,6 +2669,7 @@ mod tests {
                 ]),
                 ..RolledAffixState::default()
             }],
+            intrinsic_properties: Default::default(),
             enchantments: ItemEnchantmentsDto {
                 to_hit: 2,
                 to_damage: 5,
@@ -2685,6 +2695,146 @@ mod tests {
         item.rolled_affixes[0].melee_damage_dice = Some(MeleeDamageDiceDto { dice: 0, sides: 5 });
         let invalid = crate::save::inventory_to_save(std::slice::from_ref(&item));
         assert!(crate::save::inventory_item_from_dto(invalid[0].clone(), &game.content).is_err());
+    }
+
+    #[test]
+    fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
+        assert_eq!(STATE_HASH_SCHEMA_VERSION, 108);
+        let intrinsic_properties = AffixPropertyBundleDefinition {
+            modifiers: StatModifiers {
+                charisma: 2,
+                ..StatModifiers::default()
+            },
+            equipment_bonuses: EquipmentBonuses {
+                launcher_multiplier_delta_percent: 25,
+                base_shot_delta_percent: 15,
+                ..EquipmentBonuses::default()
+            },
+            ..AffixPropertyBundleDefinition::default()
+        };
+        let mut item = ItemInstance {
+            id: "test.item.harp".to_owned(),
+            kind_id: "demo.item.harp".to_owned(),
+            quantity: 1,
+            inscription: None,
+            origin_actor_kind_id: None,
+            origin_kind: None,
+            damage_dice_override: None,
+            discount_percent: 0,
+            quality: ItemQualityDto::Fine,
+            affix_ids: Vec::new(),
+            rolled_affixes: Vec::new(),
+            intrinsic_properties: Default::default(),
+            enchantments: ItemEnchantmentsDto::default(),
+            curse: None,
+            permanent_destruction_immunities: BTreeSet::new(),
+            activation: None,
+            charges: None,
+            fuel: None,
+            device_recovery_progress: 0,
+            captured_actor: None,
+            location: ItemLocation::Equipped {
+                slot_id: "launcher".to_owned(),
+            },
+        };
+        let before_commit = item.clone();
+        let materialization = EgoMaterialization::new(
+            Vec::new(),
+            Vec::new(),
+            Some(intrinsic_properties.clone()),
+            None,
+            None,
+            None,
+        );
+        assert_eq!(item, before_commit, "preparation must not mutate the item");
+        materialization.apply_to(&mut item);
+        assert_eq!(item.intrinsic_properties, intrinsic_properties);
+
+        let mut game = Game::new(57);
+        for equipped in &mut game.items {
+            if matches!(
+                &equipped.location,
+                ItemLocation::Equipped { slot_id } if slot_id == "launcher"
+            ) {
+                equipped.location = ItemLocation::Inventory;
+            }
+        }
+        let base_charisma = game.effective_player_attributes().charisma;
+        game.items.push(item);
+        let knowledge = game
+            .item_property_knowledge
+            .entry("test.item.harp".to_owned())
+            .or_default();
+        knowledge.discovered = true;
+        knowledge.appraised = true;
+        knowledge.identified = true;
+        assert_eq!(
+            game.effective_player_attributes().charisma,
+            base_charisma + 2
+        );
+        let harp = game
+            .items
+            .iter()
+            .find(|item| item.id == "test.item.harp")
+            .expect("harp should remain equipped");
+        let bonuses = game.item_equipment_bonuses(harp);
+        assert_eq!(bonuses.launcher_multiplier_delta_percent, 25);
+        assert_eq!(bonuses.base_shot_delta_percent, 15);
+        let projected = game
+            .equipment_dto()
+            .into_iter()
+            .find(|item| item.id == "test.item.harp")
+            .expect("equipped harp should be projected");
+        assert_eq!(projected.modifiers.charisma, 2);
+        assert_eq!(
+            projected
+                .equipment_bonuses
+                .launcher_multiplier_delta_percent,
+            25
+        );
+        assert_eq!(projected.equipment_bonuses.base_shot_delta_percent, 15);
+        game.items
+            .iter_mut()
+            .find(|item| item.id == "test.item.harp")
+            .expect("harp should remain present")
+            .location = ItemLocation::Inventory;
+
+        let mut without_intrinsic = game.clone();
+        without_intrinsic
+            .items
+            .iter_mut()
+            .find(|item| item.id == "test.item.harp")
+            .expect("harp should remain present")
+            .intrinsic_properties = Default::default();
+        assert_ne!(game.state_hash(), without_intrinsic.state_hash());
+        let rng_before = game.rng.clone();
+        let saved = game.to_save();
+        assert_eq!(
+            saved
+                .inventory
+                .iter()
+                .find(|item| item.id == "test.item.harp")
+                .expect("harp should be saved")
+                .intrinsic_properties
+                .modifiers
+                .charisma,
+            2
+        );
+        let restored = Game::from_save(saved).expect("ranged item state should round-trip");
+        assert_eq!(
+            restored
+                .items
+                .iter()
+                .find(|item| item.id == "test.item.harp")
+                .expect("harp should restore")
+                .intrinsic_properties,
+            intrinsic_properties
+        );
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(
+            restored.rng, rng_before,
+            "loading must not reroll properties"
+        );
     }
 
     #[test]
