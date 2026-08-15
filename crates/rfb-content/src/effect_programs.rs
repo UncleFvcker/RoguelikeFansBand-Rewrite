@@ -7,8 +7,8 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use super::{
-    AbilityTargetDefinition, AbilityTargetModeDefinition, CompiledContentV1, ContentError,
-    EFFECT_PROGRAM_SCHEMA, ItemUseEffectDefinition,
+    AbilityEffectDefinition, AbilityTargetDefinition, AbilityTargetModeDefinition,
+    CompiledContentV1, ContentError, EFFECT_PROGRAM_SCHEMA, ItemUseEffectDefinition,
 };
 use crate::validation::{
     require_format_version, require_schema, valid_item_effect, validate_definition_id,
@@ -96,6 +96,15 @@ fn effect_program_input_for_step(
 ) -> Option<EffectProgramInputDefinition> {
     match effect {
         ItemUseEffectDefinition::Sequence { .. } => None,
+        ItemUseEffectDefinition::AbilityEffect { effect, .. }
+            if matches!(
+                effect.as_ref(),
+                AbilityEffectDefinition::ConeDamage { .. }
+                    | AbilityEffectDefinition::DrainLife { .. }
+            ) =>
+        {
+            Some(EffectProgramInputDefinition::Actor)
+        }
         ItemUseEffectDefinition::Damage { .. }
         | ItemUseEffectDefinition::AreaDamage { .. }
         | ItemUseEffectDefinition::BeamDamage { .. }

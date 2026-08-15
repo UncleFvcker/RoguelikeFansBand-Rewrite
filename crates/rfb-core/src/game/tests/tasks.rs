@@ -630,6 +630,88 @@ fn p107j_rewardless_service_task_waits_for_conclusion_without_creating_an_item()
 }
 
 #[test]
+fn p110_thalos_projects_five_correlated_tasks_from_each_quest_line() {
+    let projected = |seed: u64, facility_id: &str, position: Position| {
+        let mut game = Game::new_with_build(seed, "demo.build.warrior")
+            .expect("Middle-earth game should start");
+        dispatch_next(
+            &mut game,
+            GameCommand::EnterWorldMap {
+                leave_pets: false,
+                cancel_recall: false,
+            },
+        );
+        game.wilderness_position = Some(Position { x: 17, y: 29 });
+        dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+        game.player.position = position;
+        game.snapshot()
+            .task_services
+            .into_iter()
+            .find(|service| service.id == facility_id)
+            .unwrap_or_else(|| panic!("{facility_id} should be projected"))
+            .tasks
+            .into_iter()
+            .map(|task| (task.task_id, task.status))
+            .collect::<BTreeMap<_, _>>()
+    };
+
+    let first_palace = projected(
+        10,
+        "demo.town-facility.thalos-palace",
+        Position { x: 38, y: 15 },
+    );
+    let second_palace = projected(
+        11,
+        "demo.town-facility.thalos-palace",
+        Position { x: 38, y: 15 },
+    );
+    for palace in [&first_palace, &second_palace] {
+        assert_eq!(palace.len(), 5);
+        assert_eq!(
+            palace["demo.task.thalos-shadow-fairies"],
+            TaskStatusKindDto::Available
+        );
+        assert_eq!(
+            palace.contains_key("demo.task.thalos-djinnis-cavern"),
+            !palace.contains_key("demo.task.thalos-cyclops-lair")
+        );
+    }
+    assert_ne!(first_palace, second_palace);
+
+    let first_academy = projected(
+        10,
+        "demo.town-facility.thalos-royal-academy",
+        Position { x: 58, y: 15 },
+    );
+    let second_academy = projected(
+        11,
+        "demo.town-facility.thalos-royal-academy",
+        Position { x: 58, y: 15 },
+    );
+    for academy in [&first_academy, &second_academy] {
+        assert_eq!(academy.len(), 5);
+        assert_eq!(
+            academy["demo.task.thalos-mushrooms"],
+            TaskStatusKindDto::Available
+        );
+        let basilisk_first = academy.contains_key("demo.task.thalos-basilisk-cave");
+        assert_eq!(
+            basilisk_first,
+            academy.contains_key("demo.task.thalos-staff-recovery")
+        );
+        assert_eq!(
+            !basilisk_first,
+            academy.contains_key("demo.task.thalos-staff-recovery-first")
+        );
+        assert_eq!(
+            !basilisk_first,
+            academy.contains_key("demo.task.thalos-dark-academy")
+        );
+    }
+    assert_ne!(first_academy, second_academy);
+}
+
+#[test]
 fn external_task_prerequisite_stays_locked_without_materializing_state() {
     let mut game = task_service_game(42);
     let task_id = "demo.task.test-prerequisite";

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 10,
+  "schemaVersion": 11,
   "worldId": "demo.world.middle-earth",
   "towns": [
     {
@@ -635,6 +635,179 @@
         "alternateSourceIndex": 83,
         "randomModulus": 64,
         "alternateMinimum": 32
+      }
+    ]
+  },
+  "thalosTaskPlan": {
+    "townId": "demo.town.thalos",
+    "townSourceFile": "lib/edit/t_thalos.txt",
+    "questInfoSourceFile": "lib/edit/q_info.txt",
+    "facilities": [
+      {
+        "facilityId": "demo.town-facility.thalos-palace",
+        "buildingIndex": 1,
+        "name": "宫殿",
+        "ownerName": "苏丹·伊德里斯",
+        "ownerRace": "人类",
+        "entrancePosition": { "x": 1, "y": 9 },
+        "requestActionIndex": 0,
+        "logicalSourceTaskIndexes": [71, 70, 69, 33, 61]
+      },
+      {
+        "facilityId": "demo.town-facility.thalos-royal-academy",
+        "buildingIndex": 13,
+        "name": "皇家书院",
+        "ownerName": "伊祖卡玛领主",
+        "ownerRace": "人类",
+        "entrancePosition": { "x": 21, "y": 9 },
+        "requestActionIndex": 0,
+        "logicalSourceTaskIndexes": [63, 65, 66, 76, 64]
+      }
+    ],
+    "tasks": [
+      {
+        "sourceIndex": 71,
+        "sourceName": "Shadow Fairies (Thalos)",
+        "level": 20,
+        "sourceFile": "lib/edit/q_fairy.txt",
+        "taskId": "demo.task.thalos-shadow-fairies",
+        "facilityId": "demo.town-facility.thalos-palace",
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 70,
+        "sourceName": "Djinni's Cavern (Thalos)",
+        "level": 27,
+        "sourceFile": "lib/edit/q_djinni.txt",
+        "taskId": "demo.task.thalos-djinnis-cavern",
+        "facilityId": "demo.town-facility.thalos-palace",
+        "prerequisiteSourceIndex": 71,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 89,
+        "sourceName": "Cyclops's Lair (Thalos)",
+        "level": 22,
+        "sourceFile": "lib/edit/q_cyclo.txt",
+        "taskId": "demo.task.thalos-cyclops-lair",
+        "facilityId": "demo.town-facility.thalos-palace",
+        "prerequisiteSourceIndex": 71,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 69,
+        "sourceName": "The Old Watchtower (Thalos)",
+        "level": 32,
+        "sourceFile": "lib/edit/q_wtower.txt",
+        "taskId": "demo.task.thalos-old-watchtower",
+        "facilityId": "demo.town-facility.thalos-palace",
+        "prerequisiteSourceIndex": 70,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 33,
+        "sourceName": "The Cloning Pits (Thalos)",
+        "level": 45,
+        "sourceFile": "lib/edit/q_cloning_pits.txt",
+        "taskId": "demo.task.thalos-cloning-pits",
+        "facilityId": "demo.town-facility.thalos-palace",
+        "prerequisiteSourceIndex": 69,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 61,
+        "sourceName": "Clear the Wreckage (Thalos)",
+        "level": 50,
+        "sourceFile": "lib/edit/q_shipwreck.txt",
+        "taskId": "demo.task.thalos-clear-wreckage",
+        "facilityId": "demo.town-facility.thalos-palace",
+        "prerequisiteSourceIndex": 33,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 63,
+        "sourceName": "Mushrooms (Thalos)",
+        "level": 10,
+        "sourceFile": "lib/edit/q_mushrooms.txt",
+        "taskId": "demo.task.thalos-mushrooms",
+        "facilityId": "demo.town-facility.thalos-royal-academy",
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 65,
+        "sourceName": "Tidy the Laboratory (Thalos)",
+        "level": 20,
+        "sourceFile": "lib/edit/q_tidy.txt",
+        "taskId": "demo.task.thalos-tidy-laboratory",
+        "facilityId": "demo.town-facility.thalos-royal-academy",
+        "prerequisiteSourceIndex": 63,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 66,
+        "sourceName": "Basilisk Cave (Thalos)",
+        "level": 40,
+        "sourceFile": "lib/edit/q_basilisk.txt",
+        "taskId": "demo.task.thalos-basilisk-cave",
+        "facilityId": "demo.town-facility.thalos-royal-academy",
+        "prerequisiteSourceIndex": 65,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 90,
+        "sourceName": "Dark Academy (Thalos)",
+        "level": 45,
+        "sourceFile": "lib/edit/q_acadmy.txt",
+        "taskId": "demo.task.thalos-dark-academy",
+        "facilityId": "demo.town-facility.thalos-royal-academy",
+        "prerequisiteSourceIndex": 65,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      },
+      {
+        "sourceIndex": 76,
+        "sourceName": "Staff Recovery (Thalos)",
+        "level": 40,
+        "sourceFile": "lib/edit/q_staff.txt",
+        "taskId": "demo.task.thalos-staff-recovery",
+        "facilityId": "demo.town-facility.thalos-royal-academy",
+        "prerequisiteSourceIndex": 65,
+        "unlockWhenPrerequisiteFailed": true
+      },
+      {
+        "sourceIndex": 64,
+        "sourceName": "The Renegade Sorcerer (Thalos)",
+        "level": 50,
+        "sourceFile": "lib/edit/q_sorcerer.txt",
+        "taskId": "demo.task.thalos-renegade-sorcerer",
+        "facilityId": "demo.town-facility.thalos-royal-academy",
+        "prerequisiteSourceIndex": 76,
+        "unlockWhenPrerequisiteFailed": true,
+        "rewardRequired": true
+      }
+    ],
+    "substitutions": [
+      {
+        "groupId": "demo.task-substitution.thalos-palace-line",
+        "primarySourceIndex": 70,
+        "alternateSourceIndex": 89,
+        "randomModulus": 98,
+        "alternateMinimum": 49
+      },
+      {
+        "groupId": "demo.task-substitution.thalos-academy-line",
+        "primarySourceIndex": 66,
+        "alternateSourceIndex": 90,
+        "randomModulus": 64,
+        "alternateMinimum": 1,
+        "alternateMaximum": 32
       }
     ]
   },

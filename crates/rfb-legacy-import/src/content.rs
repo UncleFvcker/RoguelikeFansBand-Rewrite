@@ -396,6 +396,7 @@ struct DemoWildernessSelection {
     town_plans: Vec<DemoWildernessTownPlan>,
     bounty_offices: Vec<DemoBountyOfficePlan>,
     anambar_task_plan: DemoTaskImportPlan,
+    thalos_task_plan: DemoTaskImportPlan,
     dungeon_plans: Vec<DemoWildernessDungeonPlan>,
 }
 
@@ -483,6 +484,8 @@ struct DemoTaskSubstitutionPlan {
     alternate_source_index: u32,
     random_modulus: u32,
     alternate_minimum: u32,
+    #[serde(default)]
+    alternate_maximum: Option<u32>,
 }
 
 #[derive(Debug, Default)]
@@ -14365,6 +14368,177 @@ fn validate_demo_task_plan(
     Ok(())
 }
 
+fn validate_demo_thalos_task_plan(
+    source: &Path,
+    source_commit: &str,
+    selection: &DemoWildernessSelection,
+) -> Result<(), LegacyImportError> {
+    let plan = &selection.thalos_task_plan;
+    if plan.town_id != "demo.town.thalos"
+        || plan.facilities.len() != 2
+        || plan.tasks.len() != 12
+        || plan.substitutions.len() != 2
+    {
+        return Err(invalid_wilderness_selection(
+            "Thalos task plan must retain two facilities, twelve source tasks, and two substitutions",
+        ));
+    }
+    let town_source = read_legacy_object_at(source, source_commit, &plan.town_source_file)?;
+    let quest_info = read_legacy_object_at(source, source_commit, &plan.quest_info_source_file)?;
+    let quest_records = parse_quest_records(&quest_info)?;
+
+    let mut facility_ids = BTreeSet::new();
+    let mut logical_source_indexes = BTreeSet::new();
+    for facility in &plan.facilities {
+        let identity = format!(
+            "B:{}:N:{}:{}:{}",
+            facility.building_index, facility.name, facility.owner_name, facility.owner_race
+        );
+        let request_action = format!(
+            "B:{}:A:{}:请求任务:0:0:q:6:0",
+            facility.building_index, facility.request_action_index
+        );
+        if !facility_ids.insert(facility.facility_id.as_str())
+            || !facility
+                .logical_source_task_indexes
+                .iter()
+                .all(|index| logical_source_indexes.insert(*index))
+            || !town_source.lines().any(|line| line.trim() == identity)
+            || !town_source
+                .lines()
+                .any(|line| line.trim() == request_action)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos task facility {} drifted",
+                facility.facility_id
+            )));
+        }
+    }
+    if logical_source_indexes != BTreeSet::from([33, 61, 63, 64, 65, 66, 69, 70, 71, 76]) {
+        return Err(invalid_wilderness_selection(
+            "Thalos task facilities must expose ten logical tasks",
+        ));
+    }
+
+    let mut source_indexes = BTreeSet::new();
+    let mut task_ids = BTreeSet::new();
+    for task in &plan.tasks {
+        let Some(record) = quest_records.get(&task.source_index) else {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos task {} is absent from q_info",
+                task.source_index
+            )));
+        };
+        if !source_indexes.insert(task.source_index)
+            || !task_ids.insert(task.task_id.as_str())
+            || !facility_ids.contains(task.facility_id.as_str())
+            || record.name != task.source_name
+            || record.level != task.level
+            || format!("lib/edit/{}", record.source_file) != task.source_file
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos task {} identity or source drifted",
+                task.source_index
+            )));
+        }
+        read_legacy_object_at(source, source_commit, &task.source_file)?;
+        if let Some(prerequisite) = task.prerequisite_source_index
+            && (prerequisite == task.source_index
+                || !plan.tasks.iter().any(|candidate| {
+                    candidate.source_index == prerequisite
+                        && candidate.facility_id == task.facility_id
+                })
+                || !task.unlock_when_prerequisite_failed)
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos task {} prerequisite drifted",
+                task.source_index
+            )));
+        }
+    }
+    if plan
+        .tasks
+        .iter()
+        .filter(|task| !task.reward_required)
+        .map(|task| task.source_index)
+        .collect::<Vec<_>>()
+        != [76]
+    {
+        return Err(invalid_wilderness_selection(
+            "Staff Recovery must remain the sole Thalos task without a separate reward",
+        ));
+    }
+
+    for substitution in &plan.substitutions {
+        let primary = plan
+            .tasks
+            .iter()
+            .find(|task| task.source_index == substitution.primary_source_index)
+            .ok_or_else(|| invalid_wilderness_selection("Thalos substitution primary is absent"))?;
+        let alternate = plan
+            .tasks
+            .iter()
+            .find(|task| task.source_index == substitution.alternate_source_index);
+        let record = quest_records
+            .get(&substitution.primary_source_index)
+            .expect("planned Thalos task should retain its q_info record");
+        let source_text = read_legacy_object_at(source, source_commit, &primary.source_file)?;
+        let minimum = format!(
+            "GEQ [MOD $RANDOM0 {}] {}",
+            substitution.random_modulus, substitution.alternate_minimum
+        );
+        let maximum = substitution.alternate_maximum.map(|maximum| {
+            format!(
+                "LEQ [MOD $RANDOM0 {}] {maximum}",
+                substitution.random_modulus
+            )
+        });
+        if alternate.is_none_or(|alternate| alternate.facility_id != primary.facility_id)
+            || !record.flags.contains(&format!(
+                "SUBSTITUTE_{}",
+                substitution.alternate_source_index
+            ))
+            || !source_text.contains(&minimum)
+            || maximum
+                .as_ref()
+                .is_some_and(|maximum| !source_text.contains(maximum))
+            || !source_text
+                .lines()
+                .any(|line| line.trim() == format!("K:{}", substitution.alternate_source_index))
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos task substitution {} drifted",
+                substitution.primary_source_index
+            )));
+        }
+    }
+
+    for (from, to) in [(71, 70), (70, 69), (69, 33), (33, 61)] {
+        if !town_source.contains(&format!("$QUEST{from} Finished FailedDone"))
+            || !town_source.contains(&format!("BUILDING_1({to})"))
+        {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos palace chain {from} -> {to} drifted"
+            )));
+        }
+    }
+    for index in [63, 65, 66, 76, 64] {
+        if !town_source.contains(&format!("BUILDING_13({index})")) {
+            return Err(invalid_wilderness_selection(format!(
+                "Thalos academy task {index} drifted"
+            )));
+        }
+    }
+    if !town_source.contains("$QUEST66 Finished FailedDone")
+        || !town_source.contains("$QUEST76 Finished FailedDone")
+    {
+        return Err(invalid_wilderness_selection(
+            "Thalos academy order decision drifted",
+        ));
+    }
+    Ok(())
+}
+
 fn validate_demo_wilderness_plans(
     source: &Path,
     source_commit: &str,
@@ -14382,6 +14556,7 @@ fn validate_demo_wilderness_plans(
     )?)?;
 
     validate_demo_task_plan(source, source_commit, selection)?;
+    validate_demo_thalos_task_plan(source, source_commit, selection)?;
 
     for town in &selection.town_plans {
         if !selection
@@ -14726,7 +14901,7 @@ pub fn sync_demo_wilderness(
         ));
     }
     let selection: DemoWildernessSelection = serde_json::from_slice(&fs::read(selection_path)?)?;
-    if selection.schema_version != 10
+    if selection.schema_version != 11
         || selection.towns.is_empty()
         || selection.dungeons.is_empty()
         || selection.town_plans.is_empty()
@@ -14734,7 +14909,7 @@ pub fn sync_demo_wilderness(
         || selection.dungeon_plans.is_empty()
     {
         return Err(LegacyImportError::InvalidDemoWildernessSelection(
-            "selection must use schemaVersion 10 and contain active towns, town plans, three bounty offices, the Anambar task plan, active dungeons, and dungeon plans"
+            "selection must use schemaVersion 11 and contain active towns, town plans, three bounty offices, the Anambar and Thalos task plans, active dungeons, and dungeon plans"
                 .to_owned(),
         ));
     }
@@ -27626,7 +27801,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 10);
+        assert_eq!(selection.schema_version, 11);
         let anambar = selection
             .town_plans
             .iter()
@@ -27677,7 +27852,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 10);
+        assert_eq!(selection.schema_version, 11);
         let anambar = selection
             .town_plans
             .iter()
@@ -27774,7 +27949,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 10);
+        assert_eq!(selection.schema_version, 11);
         assert_eq!(selection.bounty_offices.len(), 3);
         let office = |town_id: &str| {
             selection
@@ -27825,7 +28000,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 10);
+        assert_eq!(selection.schema_version, 11);
         let plan = &selection.anambar_task_plan;
         assert_eq!(plan.town_id, "demo.town.anambar");
         assert_eq!(plan.town_source_file, "lib/edit/t_ana.txt");
@@ -27912,7 +28087,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 10);
+        assert_eq!(selection.schema_version, 11);
         assert!(selection.towns.iter().any(|town| {
             town.source_index == 6 && town.source_name == "萨洛斯" && town.id == "demo.town.thalos"
         }));
@@ -27981,7 +28156,7 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
             "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
         ))
         .expect("demo wilderness selection should parse");
-        assert_eq!(selection.schema_version, 10);
+        assert_eq!(selection.schema_version, 11);
         let thalos = selection
             .town_plans
             .iter()
@@ -28007,6 +28182,98 @@ S:1_IN_3 | MIND_BLAST | BRAIN_SMASH(200) | PSY_SPEAR
                 && service.minimum_cost == 500
                 && service.maximum_cost == 500
         }));
+    }
+
+    #[test]
+    fn p110a_thalos_plan_locks_palace_and_academy_task_lines() {
+        let selection: DemoWildernessSelection = serde_json::from_slice(include_bytes!(
+            "../../../packs/rfb-demo-original/legacy-wilderness-selection.json"
+        ))
+        .expect("demo wilderness selection should parse");
+        assert_eq!(selection.schema_version, 11);
+        let plan = &selection.thalos_task_plan;
+        assert_eq!(plan.town_id, "demo.town.thalos");
+        assert_eq!(plan.facilities.len(), 2);
+        assert_eq!(plan.tasks.len(), 12);
+        assert_eq!(
+            plan.facilities
+                .iter()
+                .map(|facility| (
+                    facility.building_index,
+                    facility.name.as_str(),
+                    facility.owner_name.as_str(),
+                    facility.logical_source_task_indexes.as_slice(),
+                ))
+                .collect::<Vec<_>>(),
+            [
+                (1, "宫殿", "苏丹·伊德里斯", [71, 70, 69, 33, 61].as_slice()),
+                (
+                    13,
+                    "皇家书院",
+                    "伊祖卡玛领主",
+                    [63, 65, 66, 76, 64].as_slice()
+                ),
+            ]
+        );
+        assert_eq!(
+            plan.tasks
+                .iter()
+                .map(|task| (task.source_index, task.source_file.as_str()))
+                .collect::<Vec<_>>(),
+            [
+                (71, "lib/edit/q_fairy.txt"),
+                (70, "lib/edit/q_djinni.txt"),
+                (89, "lib/edit/q_cyclo.txt"),
+                (69, "lib/edit/q_wtower.txt"),
+                (33, "lib/edit/q_cloning_pits.txt"),
+                (61, "lib/edit/q_shipwreck.txt"),
+                (63, "lib/edit/q_mushrooms.txt"),
+                (65, "lib/edit/q_tidy.txt"),
+                (66, "lib/edit/q_basilisk.txt"),
+                (90, "lib/edit/q_acadmy.txt"),
+                (76, "lib/edit/q_staff.txt"),
+                (64, "lib/edit/q_sorcerer.txt"),
+            ]
+        );
+        assert_eq!(
+            plan.substitutions
+                .iter()
+                .map(|substitution| (
+                    substitution.group_id.as_str(),
+                    substitution.primary_source_index,
+                    substitution.alternate_source_index,
+                    substitution.random_modulus,
+                    substitution.alternate_minimum,
+                    substitution.alternate_maximum,
+                ))
+                .collect::<Vec<_>>(),
+            [
+                (
+                    "demo.task-substitution.thalos-palace-line",
+                    70,
+                    89,
+                    98,
+                    49,
+                    None
+                ),
+                (
+                    "demo.task-substitution.thalos-academy-line",
+                    66,
+                    90,
+                    64,
+                    1,
+                    Some(32)
+                ),
+            ]
+        );
+        assert_eq!(
+            plan.tasks
+                .iter()
+                .filter(|task| !task.reward_required)
+                .map(|task| task.source_index)
+                .collect::<Vec<_>>(),
+            [76]
+        );
     }
 
     #[test]

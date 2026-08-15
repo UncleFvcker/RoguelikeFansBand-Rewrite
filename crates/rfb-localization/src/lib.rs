@@ -1052,6 +1052,42 @@ mod tests {
     }
 
     #[test]
+    fn p110_thalos_quest_facilities_rewards_and_activations_use_chinese_text() {
+        let localizer = Localizer::new(Locale::ZhCn).expect("resources should load");
+        for (key, expected) in [
+            ("town-facility-demo-thalos-palace-name", "宫殿"),
+            (
+                "town-facility-demo-thalos-palace-owner-name",
+                "苏丹·伊德里斯",
+            ),
+            ("town-facility-demo-thalos-royal-academy-name", "皇家书院"),
+            (
+                "town-facility-demo-thalos-royal-academy-owner-name",
+                "伊祖卡玛领主",
+            ),
+            ("item-demo-feanorian-lamp-name", "费诺提灯"),
+            ("item-demo-wizardstaff-name", "巫师法杖"),
+            (
+                "item-demo-wizardstaff-of-mokomagi-name",
+                "莫科玛吉的巫师法杖",
+            ),
+            ("device-activation-demo-drain-life-name", "吸血"),
+            ("device-activation-demo-tsunami-name", "海啸"),
+            ("affix-legacy-seeing-name", "视觉之"),
+            ("affix-legacy-wizard-gloves-name", "巫师的"),
+            ("affix-legacy-wizardry-ring-name", "巫术之"),
+            ("affix-legacy-magi-amulet-name", "贤者的"),
+        ] {
+            assert_eq!(
+                localizer
+                    .format_exact(Locale::ZhCn, key, None)
+                    .expect("P110 text should format"),
+                expected
+            );
+        }
+    }
+
+    #[test]
     fn chinese_ego_prefixes_follow_original_composition() {
         assert_eq!(chinese_prefix("杀戮之"), Some("杀戮之"));
         assert_eq!(chinese_prefix("(受祝福的)"), Some("受祝福的"));

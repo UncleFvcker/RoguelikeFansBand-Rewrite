@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.equipment-am-quest",
+  "nameKey": "affix-legacy-equipment-am-quest-name",
+  "descriptionKey": "affix-legacy-equipment-am-quest-description",
+  "generationLevel": 45,
+  "rollGroups": [{
+    "rolls": 3,
+    "candidates": [
+      { "weight": 2, "properties": { "modifiers": { "defense": 2 } } },
+      { "weight": 1, "properties": { "modifiers": { "strength": 1 } } },
+      { "weight": 1, "properties": { "modifiers": { "dexterity": 1 } } },
+      { "weight": 1, "properties": { "resistances": { "fire": "resistant" } } },
+      { "weight": 1, "properties": { "resistances": { "cold": "resistant" } } },
+      { "weight": 1, "properties": { "statusImmunities": ["rfb.status.paralysis"] } }
+    ]
+  }],
+  "tags": ["equipment", "legacy-import", "task-reward"]
+}

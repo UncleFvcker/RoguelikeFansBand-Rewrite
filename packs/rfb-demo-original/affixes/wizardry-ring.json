@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.wizardry-ring",
+  "nameKey": "affix-legacy-wizardry-ring-name",
+  "descriptionKey": "affix-legacy-wizardry-ring-description",
+  "generationLevel": 25,
+  "rfbEgo": { "sourceIndex": 208, "rarity": 3, "types": ["ring"] },
+  "rollGroups": [{
+    "rolls": 2,
+    "candidates": [
+      { "weight": 2, "properties": { "modifiers": { "intelligence": 1 } } },
+      { "weight": 2, "properties": { "equipmentBonuses": { "deviceSkill": 5 } } },
+      { "weight": 1, "properties": { "resistances": { "confusion": "resistant" } } },
+      { "weight": 1, "properties": { "passives": ["see-invisible"] } }
+    ]
+  }],
+  "tags": ["jewelry", "legacy-import", "ring", "task-reward"]
+}

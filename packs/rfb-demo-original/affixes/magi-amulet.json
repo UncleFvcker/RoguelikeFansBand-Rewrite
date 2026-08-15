@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.magi-amulet",
+  "nameKey": "affix-legacy-magi-amulet-name",
+  "descriptionKey": "affix-legacy-magi-amulet-description",
+  "generationLevel": 30,
+  "rfbEgo": { "sourceIndex": 224, "rarity": 3, "types": ["amulet"] },
+  "rollGroups": [{
+    "rolls": 2,
+    "candidates": [
+      { "weight": 2, "properties": { "modifiers": { "intelligence": 1 } } },
+      { "weight": 2, "properties": { "equipmentBonuses": { "deviceSkill": 5 } } },
+      { "weight": 1, "properties": { "resistances": { "blindness": "resistant" } } },
+      { "weight": 1, "properties": { "resistances": { "confusion": "resistant" } } },
+      { "weight": 1, "properties": { "passives": ["sustain-intelligence"] } }
+    ]
+  }],
+  "tags": ["amulet", "jewelry", "legacy-import", "task-reward"]
+}

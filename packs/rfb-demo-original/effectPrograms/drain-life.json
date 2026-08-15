@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "demo.effect.drain-life",
+  "input": "actor",
+  "steps": [{
+    "type": "ability-effect",
+    "effect": {
+      "type": "drain-life",
+      "damageDice": 0,
+      "damageSides": 0,
+      "damageBonus": 90,
+      "damageType": "nether",
+      "targetCategory": "living"
+    }
+  }]
+}

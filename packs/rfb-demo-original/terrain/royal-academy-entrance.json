@@ -1,0 +1,11 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/terrain.schema.json",
+  "formatVersion": 1,
+  "id": "demo.terrain.royal-academy-entrance",
+  "nameKey": "terrain-demo-royal-academy-entrance-name",
+  "descriptionKey": "terrain-demo-royal-academy-entrance-description",
+  "glyph": "0",
+  "walkable": true,
+  "blocksSight": false,
+  "tags": ["academy", "surface", "town-facility-entrance"]
+}

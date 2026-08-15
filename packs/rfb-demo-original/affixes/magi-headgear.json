@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "formatVersion": 1,
+  "id": "rfb-legacy.affix.magi-headgear",
+  "nameKey": "affix-legacy-magi-headgear-name",
+  "descriptionKey": "affix-legacy-magi-headgear-description",
+  "generationLevel": 30,
+  "rfbEgo": { "sourceIndex": 126, "rarity": 8, "types": ["helmet", "crown"] },
+  "modifiers": { "intelligence": 3 },
+  "passives": ["sustain-intelligence"],
+  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "rollGroups": [{
+    "rolls": 1,
+    "candidates": [
+      { "weight": 1, "properties": { "resistances": { "blindness": "resistant" } } },
+      { "weight": 1, "properties": { "resistances": { "confusion": "resistant" } } },
+      { "weight": 1, "properties": { "passives": ["see-invisible"] } }
+    ]
+  }],
+  "tags": ["headgear", "legacy-import", "task-reward"]
+}
