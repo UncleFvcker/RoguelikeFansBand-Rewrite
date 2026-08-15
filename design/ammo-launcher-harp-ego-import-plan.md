@@ -205,6 +205,13 @@ HARP 使用独立选择池，基础 `NO_ENCHANT`、launcher 槽和无 `projectil
 
 ### E4.7：导入内容并开放自然生成
 
+状态：已完成。新增 `sync-demo-ranged-egos`，从权威 master Git 对象可重复生成 8 BOW、6 AMMO、
+2 HARP affix 及双语消息；Ammo Slaying 固定为 source/type 消歧后的 `slaying-180`，Endurance 保持
+稳定 ID，临时 `ammo-elemental` 已无定义或引用。`base-items` 加入 Harp 的权威 `A:25/4` 条目，现有
+RFB policy 允许带基础身份的弹药参与 quality，随后复用既有分类型 selector/materializer；固定种子自然
+生成测试锁定武器、挖掘、发射器、弹药和竖琴，并验证三个 launcher 限制及 BOW/HARP 隔离。内容包推进
+到 `1.381.0` 并刷新 content lock；没有新增持久字段或 DTO，Protocol、save 与 State Hash 均不推进。
+
 - importer 生成并核对 16 条正式 affix 和 16 组权威中英文消息；E4.5 已落地的六条 AMMO 定义必须与
   importer 输出一致，英文重名的 Ammo Slaying 继续使用 source index/type 消歧，不能覆盖 WEAPON source 1；
 - E4.5 已保留 `rfb-legacy.affix.endurance` 稳定 ID、补齐 source 184 元数据，并用正式 source 181
@@ -238,12 +245,12 @@ E4.2 额外生成并核对 Protocol bindings、content/protocol schema，且只�
 
 E4 只有同时满足以下条件才完成：
 
-- [ ] audit 恰好得到 8 BOW、6 AMMO、2 HARP，16 条全有权威中文名和非零 rarity；
-- [ ] 18 个基础物品有唯一 `rfbBaseKind`，普通 Harp 及其非 Bard pval 可自然生成并稳定读档；
-- [ ] 三个发射器子类型限制严格重试，所有倍率、伤害附魔、射程和额外射击使用最终实例结果；
+- [x] audit 恰好得到 8 BOW、6 AMMO、2 HARP，16 条全有权威中文名和非零 rarity；
+- [x] 18 个基础物品有唯一 `rfbBaseKind`，普通 Harp 及其非 Bard pval 可自然生成并稳定读档；
+- [x] 三个发射器子类型限制严格重试，所有倍率、伤害附魔、射程和额外射击使用最终实例结果；
 - [x] 六种弹药共享一个 selector/materializer，Archer 不再维护二候选近似池；
-- [ ] 整堆弹药只物化一次，拆分、发射和读档不重掷；
-- [ ] Returning、Exploding、Endurance 都有真实消费者和顺序测试，不存在仅显示名称的 no-op；
-- [ ] 16 条无 activation 的事实被锁定，没有虚构 effect 或无关 DTO；
-- [ ] 自然生成仅扩到 `BOW/AMMO/HARP`，E5 前不开放护甲 ego；
-- [ ] 每个子批只运行新增测试并单独提交，完整测试明确留给合并工作树。
+- [x] 整堆弹药只物化一次，拆分、发射和读档不重掷；
+- [x] Returning、Exploding、Endurance 都有真实消费者和顺序测试，不存在仅显示名称的 no-op；
+- [x] 16 条无 activation 的事实被锁定，没有虚构 effect 或无关 DTO；
+- [x] 自然生成仅扩到 `BOW/AMMO/HARP`，E5 前不开放护甲 ego；
+- [x] 每个子批只运行新增测试并单独提交，完整测试明确留给合并工作树。

@@ -1,11 +1,20 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "ammunitionBehavior": "returning",
+  "descriptionKey": "affix-legacy-returning-description",
   "formatVersion": 1,
+  "generationLevel": 40,
   "id": "rfb-legacy.affix.returning",
   "nameKey": "affix-legacy-returning-name",
-  "descriptionKey": "affix-legacy-returning-description",
-  "generationLevel": 40,
-  "rfbEgo": { "sourceIndex": 183, "rarity": 4, "types": ["ammo"] },
-  "ammunitionBehavior": "returning",
-  "tags": ["ammo", "legacy-import"]
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 183,
+    "types": [
+      "ammo"
+    ]
+  },
+  "tags": [
+    "ammo",
+    "legacy-import"
+  ]
 }

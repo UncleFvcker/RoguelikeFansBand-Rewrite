@@ -5739,7 +5739,11 @@ impl Game {
                 })
             });
             let supports_quality = self.content.item(&entry.item_kind_id).is_some_and(|item| {
-                item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1
+                (item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1)
+                    || (table.rfb_ego_policy
+                        == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
+                        && item.rfb_base_kind.is_some()
+                        && item.ammunition_profile.is_some())
             });
             let quality = if supports_quality {
                 rolled_quality

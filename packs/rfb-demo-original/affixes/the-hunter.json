@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-hunter-description",
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "id": "rfb-legacy.affix.the-hunter",
+  "nameKey": "affix-legacy-the-hunter-name",
+  "rfbEgo": {
+    "rarity": 3,
+    "sourceIndex": 167,
+    "types": [
+      "bow"
+    ]
+  },
+  "tags": [
+    "bow",
+    "legacy-import"
+  ]
+}

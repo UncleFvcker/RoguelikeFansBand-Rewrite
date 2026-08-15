@@ -3021,8 +3021,6 @@ affix-legacy-combat-name = of Combat
 affix-legacy-combat-description = Improves fighting attributes or combat skill, or grants protection from fear.
 affix-legacy-protection-name = of Protection
 affix-legacy-protection-description = Grants a uniformly rolled +1 to +10 defense bonus when generated at depth 0–30.
-affix-legacy-endurance-name = of Endurance
-affix-legacy-endurance-description = Protects ammunition from elemental, magical, and monster destruction.
 affix-legacy-quiver-protection-name = of Protection
 affix-legacy-quiver-protection-description = This quiver protects its contents from accidental destruction.
 affix-legacy-olog-hai-name = of the Olog-hai
@@ -3785,16 +3783,6 @@ item-demo-shard-of-pottery-name = Shard of Pottery
 item-demo-shard-of-pottery-description = A worthless ceramic fragment that an archer can turn into ammunition.
 item-demo-broken-stick-name = Broken Stick
 item-demo-broken-stick-description = A snapped length of wood that an archer can turn into ammunition.
-affix-legacy-slaying-180-name = of Slaying
-affix-legacy-slaying-180-description = Grants randomly selected slaying properties to ammunition.
-affix-legacy-elemental-name = (Elemental)
-affix-legacy-elemental-description = Grants randomly selected elemental brands to ammunition.
-affix-legacy-holy-might-name = of Holy Might
-affix-legacy-holy-might-description = Slays evil, demons, and undead with blessed, fire-branded ammunition.
-affix-legacy-returning-name = of Returning
-affix-legacy-returning-description = Gives fired ammunition a chance to return instead of being consumed.
-affix-legacy-exploding-name = of Exploding
-affix-legacy-exploding-description = Explodes on impact and is always destroyed.
 actor-demo-bert-the-stone-troll-name = Bert the Stone Troll
 actor-demo-bert-the-stone-troll-description = A creature recorded in the original RFB bestiary as Bert the Stone Troll.
 actor-demo-bill-the-stone-troll-name = Bill the Stone Troll
@@ -8182,5 +8170,44 @@ task-demo-anambar-lord-bovin-treachery-name = The Treachery of Lord Bovin (Anamb
 task-demo-anambar-lord-bovin-treachery-description = Lord Bovin and a dark witch have turned the High Tower into a base for dragons, demons, necromancers, and other enemies of Anambar.
 task-demo-anambar-lord-bovin-treachery-completed-description = Thank you. The people of Anambar may travel safely again.
 task-demo-anambar-lord-bovin-treachery-failed-description = Lord Gwilim happened to pass by and saved us from Bovin's dark army after you failed.
+
+
+
+
 item-demo-harp-name = Harp
 item-demo-harp-description = A stringed instrument favored by bards.
+
+# E4 launcher, ammunition, and harp egos (generated)
+affix-legacy-accuracy-name = of Accuracy
+affix-legacy-accuracy-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-velocity-name = of Velocity
+affix-legacy-velocity-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-extra-might-name = of Extra Might
+affix-legacy-extra-might-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-extra-shots-name = of Extra Shots
+affix-legacy-extra-shots-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-lothlorien-name = of Lothlorien
+affix-legacy-lothlorien-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-the-haradrim-name = of the Haradrim
+affix-legacy-the-haradrim-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-buckland-name = of Buckland
+affix-legacy-buckland-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-the-hunter-name = of the Hunter
+affix-legacy-the-hunter-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-slaying-180-name = of Slaying
+affix-legacy-slaying-180-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-elemental-name = (Elemental)
+affix-legacy-elemental-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-holy-might-name = of Holy Might
+affix-legacy-holy-might-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-returning-name = of Returning
+affix-legacy-returning-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-endurance-name = of Endurance
+affix-legacy-endurance-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-exploding-name = of Exploding
+affix-legacy-exploding-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-the-vanyar-name = of the Vanyar
+affix-legacy-the-vanyar-description = An authoritative RFB launcher, ammunition, or harp ego.
+affix-legacy-erebor-name = of Erebor
+affix-legacy-erebor-description = An authoritative RFB launcher, ammunition, or harp ego.
+# /E4 launcher, ammunition, and harp egos

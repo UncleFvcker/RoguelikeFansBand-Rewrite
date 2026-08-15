@@ -3025,8 +3025,6 @@ affix-legacy-combat-name = 战斗之
 affix-legacy-combat-description = 提升战斗属性或战斗技巧，或赋予对恐惧的防护。
 affix-legacy-protection-name = 保护之
 affix-legacy-protection-description = 在 0–30 层生成时，均匀获得 +1 至 +10 防御加值。
-affix-legacy-endurance-name = 耐力之
-affix-legacy-endurance-description = 保护弹药免受元素、魔法和怪物销毁。
 affix-legacy-quiver-protection-name = 保护之
 affix-legacy-quiver-protection-description = 这个箭袋能保护其里面的东西免遭意外破坏。
 affix-legacy-olog-hai-name = 食人妖的
@@ -3789,16 +3787,6 @@ item-demo-shard-of-pottery-name = 陶器碎片
 item-demo-shard-of-pottery-description = 毫无价值的陶器残片，弓箭手可以将其制成弹药。
 item-demo-broken-stick-name = 断木棍
 item-demo-broken-stick-description = 折断的木棍，弓箭手可以将其制成弹药。
-affix-legacy-slaying-180-name = 杀戮之
-affix-legacy-slaying-180-description = 为弹药赋予随机的杀戮能力。
-affix-legacy-elemental-name = (元素的)
-affix-legacy-elemental-description = 为弹药赋予随机的元素烙印。
-affix-legacy-holy-might-name = 神圣力量之
-affix-legacy-holy-might-description = 祝福弹药，使其以火焰克制邪恶、恶魔和不死生物。
-affix-legacy-returning-name = 返回之
-affix-legacy-returning-description = 使射出的弹药有机会返回而不被消耗。
-affix-legacy-exploding-name = 爆炸之
-affix-legacy-exploding-description = 命中时爆炸，并必定被毁坏。
 actor-demo-bert-the-stone-troll-name = 石巨魔伯特
 actor-demo-bert-the-stone-troll-description = 原版怪物：石巨魔伯特。
 actor-demo-bill-the-stone-troll-name = 石巨魔比尔
@@ -8186,5 +8174,44 @@ task-demo-anambar-lord-bovin-treachery-name = 鲍文大人的背叛 (阿南巴)
 task-demo-anambar-lord-bovin-treachery-description = 曾经备受爱戴的高塔典狱长鲍文（Bovin）大人，与一名黑女巫联手，转向了邪恶。黑暗巫师和死灵法师现在频繁出入高塔，密谋对抗我们的城市。必须在他们唤起一支不可阻挡的恶魔、巨龙和死者大军之前，破坏他们的计划。请帮助我们，拯救我们的城市。
 task-demo-anambar-lord-bovin-treachery-completed-description = 谢谢你！现在阿南巴（Anambar）的人民又可以安全地出行了。
 task-demo-anambar-lord-bovin-treachery-failed-description = 我早该知道你胜任不了这个任务。幸运的是，伟大的英雄格威利姆（Gwilim）大人恰好路过，把我们从叛徒鲍文的黑暗军队手中拯救了出来。
+
+
+
+
 item-demo-harp-name = 竖琴
 item-demo-harp-description = 游吟诗人偏爱的弦乐器。
+
+# E4 launcher, ammunition, and harp egos (generated)
+affix-legacy-accuracy-name = 精度之
+affix-legacy-accuracy-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-velocity-name = 极速之
+affix-legacy-velocity-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-extra-might-name = 额外力量之
+affix-legacy-extra-might-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-extra-shots-name = 额外射击之
+affix-legacy-extra-shots-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-lothlorien-name = 罗斯洛立安的
+affix-legacy-lothlorien-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-the-haradrim-name = 哈拉德人的
+affix-legacy-the-haradrim-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-buckland-name = 雄鹿地的
+affix-legacy-buckland-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-the-hunter-name = 猎人的
+affix-legacy-the-hunter-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-slaying-180-name = 杀戮之
+affix-legacy-slaying-180-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-elemental-name = (元素的)
+affix-legacy-elemental-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-holy-might-name = 神圣力量之
+affix-legacy-holy-might-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-returning-name = 返回之
+affix-legacy-returning-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-endurance-name = 耐力之
+affix-legacy-endurance-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-exploding-name = 爆炸之
+affix-legacy-exploding-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-the-vanyar-name = 凡雅精灵的
+affix-legacy-the-vanyar-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+affix-legacy-erebor-name = 伊鲁伯的
+affix-legacy-erebor-description = RFB 发射器、弹药或竖琴的权威 ego 属性。
+# /E4 launcher, ammunition, and harp egos

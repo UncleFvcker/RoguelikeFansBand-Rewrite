@@ -714,6 +714,12 @@
       "minDepth": 10
     },
     {
+      "itemKindId": "demo.item.harp",
+      "weight": 25,
+      "quantity": 1,
+      "minDepth": 25
+    },
+    {
       "itemKindId": "demo.item.hatchet",
       "weight": 50,
       "quantity": 1,

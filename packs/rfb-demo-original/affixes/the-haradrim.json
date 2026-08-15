@@ -1,25 +1,23 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
-  "descriptionKey": "affix-legacy-elemental-description",
+  "descriptionKey": "affix-legacy-the-haradrim-description",
   "elementalDestructionImmunities": [
     "acid",
-    "electricity",
-    "fire",
-    "cold"
+    "fire"
   ],
   "formatVersion": 1,
-  "generationLevel": 20,
-  "id": "rfb-legacy.affix.elemental",
-  "nameKey": "affix-legacy-elemental-name",
+  "generationLevel": 70,
+  "id": "rfb-legacy.affix.the-haradrim",
+  "nameKey": "affix-legacy-the-haradrim-name",
   "rfbEgo": {
-    "rarity": 3,
-    "sourceIndex": 181,
+    "rarity": 6,
+    "sourceIndex": 165,
     "types": [
-      "ammo"
+      "bow"
     ]
   },
   "tags": [
-    "ammo",
+    "bow",
     "legacy-import"
   ]
 }

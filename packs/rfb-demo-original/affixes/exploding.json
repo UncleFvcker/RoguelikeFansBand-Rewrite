@@ -1,12 +1,21 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
-  "formatVersion": 1,
-  "id": "rfb-legacy.affix.exploding",
-  "nameKey": "affix-legacy-exploding-name",
+  "ammunitionBehavior": "exploding",
   "descriptionKey": "affix-legacy-exploding-description",
+  "formatVersion": 1,
   "generationLevel": 1,
   "generationMaxLevel": 60,
-  "rfbEgo": { "sourceIndex": 185, "rarity": 5, "types": ["ammo"] },
-  "ammunitionBehavior": "exploding",
-  "tags": ["ammo", "legacy-import"]
+  "id": "rfb-legacy.affix.exploding",
+  "nameKey": "affix-legacy-exploding-name",
+  "rfbEgo": {
+    "rarity": 5,
+    "sourceIndex": 185,
+    "types": [
+      "ammo"
+    ]
+  },
+  "tags": [
+    "ammo",
+    "legacy-import"
+  ]
 }

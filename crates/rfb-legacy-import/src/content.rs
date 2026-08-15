@@ -4788,7 +4788,7 @@ fn ego_json_with_activation_candidates(
     report: &mut ContentImportReport,
     activation_candidates: &[LegacyEgoActivationCandidate],
 ) -> serde_json::Value {
-    let shared_weapon_materialization = uses_shared_weapon_materialization(entry);
+    let shared_weapon_materialization = uses_shared_ego_materialization(entry);
     // C: maxima become fixed modifiers unless a recipe below materializes the
     // original generation-time roll.
     let mut modifiers = serde_json::Map::new();
@@ -4895,6 +4895,11 @@ fn ego_json_with_activation_candidates(
         value["resistsMonsterDestruction"] = serde_json::json!(true);
         value["resistsProjectionDestruction"] = serde_json::json!(true);
     }
+    match (entry.index, entry.name.as_str()) {
+        (183, "of Returning") => value["ammunitionBehavior"] = serde_json::json!("returning"),
+        (185, "of Exploding") => value["ammunitionBehavior"] = serde_json::json!("exploding"),
+        _ => {}
+    }
     value
 }
 
@@ -4923,12 +4928,17 @@ fn weapon_ego_device_generation(
     }
 }
 
-fn uses_shared_weapon_materialization(entry: &LegacyEgoEntry) -> bool {
-    matches!(entry.index, 1..=27 | 40..=42)
+fn uses_shared_ego_materialization(entry: &LegacyEgoEntry) -> bool {
+    (matches!(entry.index, 1..=27 | 40..=42)
         && entry
             .slots
             .iter()
-            .any(|slot| matches!(slot.as_str(), "WEAPON" | "DIGGER"))
+            .any(|slot| matches!(slot.as_str(), "WEAPON" | "DIGGER")))
+        || (matches!(entry.index, 160..=167 | 180..=185 | 195..=196)
+            && entry
+                .slots
+                .iter()
+                .any(|slot| matches!(slot.as_str(), "BOW" | "AMMO" | "HARP")))
 }
 
 fn ego_json_has_substance(entry: &LegacyEgoEntry, value: &serde_json::Value) -> bool {
@@ -4949,7 +4959,7 @@ fn ego_json_has_substance(entry: &LegacyEgoEntry, value: &serde_json::Value) -> 
     ]
     .iter()
     .any(|field| value.get(field).is_some())
-        || uses_shared_weapon_materialization(entry)
+        || uses_shared_ego_materialization(entry)
 }
 
 fn fixed_weapon_ego_device_generation(entry: &LegacyEgoEntry) -> Option<serde_json::Value> {
@@ -17768,21 +17778,24 @@ pub fn audit_egos(source: &Path) -> Result<EgoAuditReport, LegacyImportError> {
     audit_ego_sources(source_commit, &egos, &chinese_names)
 }
 
-fn write_weapon_ego_locale_block(
+#[allow(clippy::too_many_arguments)]
+fn write_ego_locale_block(
     path: &Path,
     entries: &[(String, String, String)],
     chinese: bool,
+    start_marker: &str,
+    end_marker: &str,
+    english_description: &str,
+    chinese_description: &str,
 ) -> Result<(), LegacyImportError> {
-    const START: &str = "# E3 weapon and digger egos (generated)";
-    const END: &str = "# /E3 weapon and digger egos";
     let mut source = fs::read_to_string(path)?;
-    if let Some(start) = source.find(START) {
+    if let Some(start) = source.find(start_marker) {
         let end = source[start..]
-            .find(END)
-            .map(|offset| start + offset + END.len())
+            .find(end_marker)
+            .map(|offset| start + offset + end_marker.len())
             .ok_or_else(|| {
                 LegacyImportError::InvalidEgoAudit(format!(
-                    "{} has an unterminated E3 ego locale block",
+                    "{} has an unterminated ego locale block",
                     path.display()
                 ))
             })?;
@@ -17805,22 +17818,54 @@ fn write_weapon_ego_locale_block(
         .trim_end()
         .to_owned();
     source.push_str("\n\n");
-    source.push_str(START);
+    source.push_str(start_marker);
     source.push('\n');
     for (id, english_name, chinese_name) in entries {
         let (name, description) = if chinese {
-            (chinese_name, "RFB 武器或挖掘工具的权威 ego 属性。")
+            (chinese_name, chinese_description)
         } else {
-            (english_name, "An authoritative RFB weapon or digger ego.")
+            (english_name, english_description)
         };
         source.push_str(&format!(
             "affix-legacy-{id}-name = {name}\naffix-legacy-{id}-description = {description}\n"
         ));
     }
-    source.push_str(END);
+    source.push_str(end_marker);
     source.push('\n');
     fs::write(path, source)?;
     Ok(())
+}
+
+fn write_weapon_ego_locale_block(
+    path: &Path,
+    entries: &[(String, String, String)],
+    chinese: bool,
+) -> Result<(), LegacyImportError> {
+    write_ego_locale_block(
+        path,
+        entries,
+        chinese,
+        "# E3 weapon and digger egos (generated)",
+        "# /E3 weapon and digger egos",
+        "An authoritative RFB weapon or digger ego.",
+        "RFB 武器或挖掘工具的权威 ego 属性。",
+    )
+}
+
+fn write_ranged_ego_locale_block(
+    path: &Path,
+    entries: &[(String, String, String)],
+    chinese: bool,
+) -> Result<(), LegacyImportError> {
+    write_ego_locale_block(
+        path,
+        entries,
+        chinese,
+        "# E4 launcher, ammunition, and harp egos (generated)",
+        "# /E4 launcher, ammunition, and harp egos",
+        "An authoritative RFB launcher, ammunition, or harp ego.",
+        "RFB 发射器、弹药或竖琴的权威 ego 属性。",
+    )
 }
 
 #[derive(Debug)]
@@ -17977,9 +18022,16 @@ fn validate_ranged_base_kind_contract(
         }
         if expectation.source_index == 168 {
             let chinese_name = chinese_names.get(168).and_then(Option::as_deref);
-            if entry.name != "Harp" || chinese_name != Some("& 把~竖琴") {
+            if entry.name != "Harp"
+                || chinese_name != Some("& 把~竖琴")
+                || entry.allocations
+                    != [LegacyItemAllocation {
+                        level: 25,
+                        chance: 4,
+                    }]
+            {
                 return Err(LegacyImportError::InvalidDemoItemSelection(
-                    "Harp no longer has its authoritative English and Chinese names".to_owned(),
+                    "Harp no longer has its authoritative names or allocation".to_owned(),
                 ));
             }
         } else if !selected.iter().any(|(selected_entry, selected_item)| {
@@ -18076,7 +18128,6 @@ pub fn sync_demo_ranged_ego_identities(
         pack_root.join("items/harp.json"),
         serde_json::to_string_pretty(&harp_json)? + "\n",
     )?;
-
     let workspace_root = pack_root
         .parent()
         .and_then(Path::parent)
@@ -18096,6 +18147,72 @@ pub fn sync_demo_ranged_ego_identities(
         true,
     )?;
     Ok(RANGED_BASE_KIND_EXPECTATIONS.len())
+}
+
+fn ranged_ego_id(entry: &LegacyEgoEntry) -> String {
+    let id = kebab(entry.name.trim_start_matches("of "));
+    if entry.index == 180 && entry.slots.iter().any(|slot| slot == "AMMO") {
+        format!("{id}-180")
+    } else {
+        id
+    }
+}
+
+/// Regenerates the completed E4 launcher, ammunition, and Harp ego batch,
+/// authoritative display names, and ranged base-kind identities.
+pub fn sync_demo_ranged_egos(source: &Path, pack_root: &Path) -> Result<usize, LegacyImportError> {
+    sync_demo_ranged_ego_identities(source, pack_root)?;
+    let source_commit = resolve_legacy_content_commit(source)?;
+    let egos = parse_e_info(&read_legacy_object_at(
+        source,
+        &source_commit,
+        E_INFO_SOURCE,
+    )?)?;
+    let chinese_names = parse_chinese_name_table(
+        &read_legacy_object_at(source, &source_commit, E_NAME_ZH_SOURCE)?,
+        E_NAME_ZH_SOURCE,
+    )?;
+    validate_ranged_ego_contract(&egos, &chinese_names)?;
+
+    let affixes_output = pack_root.join("affixes");
+    fs::create_dir_all(&affixes_output)?;
+    let mut report = ContentImportReport::default();
+    let mut locale_entries = Vec::with_capacity(RANGED_EGO_EXPECTATIONS.len());
+    for expectation in RANGED_EGO_EXPECTATIONS {
+        let entry = egos
+            .iter()
+            .find(|entry| entry.index == expectation.index)
+            .expect("validated E4 ego source must remain available");
+        let id = ranged_ego_id(entry);
+        let value = ego_json(entry, &id, &mut report);
+        fs::write(
+            affixes_output.join(format!("{id}.json")),
+            serde_json::to_string_pretty(&value)? + "\n",
+        )?;
+        locale_entries.push((
+            id,
+            entry.name.clone(),
+            chinese_names[entry.index as usize]
+                .clone()
+                .expect("validated E4 ego Chinese name must remain available"),
+        ));
+    }
+
+    let workspace_root = pack_root
+        .parent()
+        .and_then(Path::parent)
+        .unwrap_or(pack_root);
+    write_ranged_ego_locale_block(
+        &workspace_root.join("locales/en-US/content.ftl"),
+        &locale_entries,
+        false,
+    )?;
+    write_ranged_ego_locale_block(
+        &workspace_root.join("locales/zh-CN/content.ftl"),
+        &locale_entries,
+        true,
+    )?;
+    Ok(locale_entries.len())
 }
 
 fn sync_demo_weapon_digger_base_kinds(
@@ -25740,6 +25857,38 @@ static cptr _ego_name_zh[] =
                 && !expectation.chinese_name.is_empty()
                 && !expectation.flags.contains(&"FULL_NAME")
         }));
+    }
+
+    #[test]
+    fn ranged_ego_import_disambiguates_ammo_slaying_and_emits_typed_behaviors() {
+        let egos = parse_e_info(
+            "N:160:of Accuracy\nT:BOW\nW:0:40:1\nC:10:5:0:0\nF:AWARE\n\
+             N:180:of Slaying\nT:AMMO\nW:10:*:2\n\
+             N:183:of Returning\nT:AMMO\nW:40:*:4\n\
+             N:185:of Exploding\nT:AMMO\nW:1:60:5\n",
+        )
+        .expect("ranged ego import sample should parse");
+        let mut report = ContentImportReport::default();
+        let imported = egos
+            .iter()
+            .map(|entry| {
+                let id = ranged_ego_id(entry);
+                let value = ego_json(entry, &id, &mut report);
+                (entry.index, id, value)
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(imported[0].1, "accuracy");
+        assert!(imported[0].2.get("modifiers").is_none());
+        assert_eq!(imported[1].1, "slaying-180");
+        assert_eq!(imported[1].2["id"], "rfb-legacy.affix.slaying-180");
+        assert_eq!(imported[2].2["ammunitionBehavior"], "returning");
+        assert_eq!(imported[3].2["ammunitionBehavior"], "exploding");
+        assert!(
+            egos.iter()
+                .zip(&imported)
+                .all(|(entry, (_, _, value))| ego_json_has_substance(entry, value))
+        );
     }
 
     #[test]
