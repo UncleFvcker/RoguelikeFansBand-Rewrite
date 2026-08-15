@@ -263,10 +263,14 @@ const SV_BLADE_OF_CHAOS: u16 = 30;
 const SV_DIAMOND_EDGE: u16 = 31;
 const SV_FALCON_SWORD: u16 = 33;
 const SV_MATTOCK: u16 = 7;
+const SV_SLING: u16 = 2;
+const SV_LONG_BOW: u16 = 13;
+const SV_HEAVY_XBOW: u16 = 24;
 
 #[derive(Debug, Default)]
 struct RfbLauncherRoll {
     state: RolledAffixState,
+    extra_shots: bool,
 }
 
 /// Materializes one selected RFB launcher ego without changing item state.
@@ -290,6 +294,7 @@ pub(crate) fn materialize_rfb_launcher_ego_with_rng(
             affix_id: affix.id.clone(),
             ..RolledAffixState::default()
         },
+        extra_shots: false,
     };
     match source_index {
         160 => roll.state.enchantment_delta.to_hit = 10,
@@ -310,15 +315,58 @@ pub(crate) fn materialize_rfb_launcher_ego_with_rng(
         ),
         163 => {
             let pval = 1_u16.saturating_add(rfb_m_bonus(rng, 4, generation_level));
-            apply_rfb_pval(
+            apply_rfb_launcher_pval(&mut roll.state.properties, source_index, pval, true);
+        }
+        164 => {
+            if base_kind.sval != SV_LONG_BOW {
+                return None;
+            }
+            add_launcher_multiplier(
                 &mut roll.state.properties,
-                source_index,
-                pval,
-                false,
-                false,
-                false,
-                false,
+                25_u16
+                    .saturating_add(randint1(rng, 35))
+                    .saturating_add(rfb_m_bonus(rng, 50, generation_level)),
+                profile.shot_energy,
             );
+            if one_in(rng, 3) {
+                roll.extra_shots = true;
+            } else {
+                add_one_high_resistance(rng, &mut roll.state.properties);
+            }
+        }
+        165 => {
+            if base_kind.sval != SV_HEAVY_XBOW {
+                return None;
+            }
+            add_launcher_multiplier(
+                &mut roll.state.properties,
+                25_u16
+                    .saturating_add(randint1(rng, 35))
+                    .saturating_add(rfb_m_bonus(rng, 50, generation_level)),
+                profile.shot_energy,
+            );
+            if one_in(rng, 6) {
+                roll.extra_shots = true;
+            } else {
+                add_one_high_resistance(rng, &mut roll.state.properties);
+            }
+        }
+        166 => {
+            if base_kind.sval != SV_SLING {
+                return None;
+            }
+            roll.extra_shots = true;
+            if one_in(rng, 3) {
+                add_launcher_multiplier(
+                    &mut roll.state.properties,
+                    25_u16
+                        .saturating_add(randint1(rng, 25))
+                        .saturating_add(rfb_m_bonus(rng, 50, generation_level)),
+                    profile.shot_energy,
+                );
+            } else {
+                add_one_high_resistance(rng, &mut roll.state.properties);
+            }
         }
         167 => {
             if one_in(rng, 5) {
@@ -392,14 +440,11 @@ fn finalize_rfb_launcher_ego(
         .to_armor
         .saturating_add(roll_signed(rng, max_to_armor));
     if max_pval > 0 {
-        apply_rfb_pval(
+        apply_rfb_launcher_pval(
             &mut roll.state.properties,
             source_index,
             randint1(rng, max_pval),
-            false,
-            false,
-            false,
-            false,
+            roll.extra_shots,
         );
     }
     roll.state.enchantment_delta.to_damage = i16::try_from(
@@ -407,6 +452,40 @@ fn finalize_rfb_launcher_ego(
             / 7_150,
     )
     .expect("launcher ego damage bonus fits i16");
+}
+
+fn apply_rfb_launcher_pval(
+    properties: &mut AffixPropertyBundleDefinition,
+    source_index: u32,
+    pval: u16,
+    extra_shots: bool,
+) {
+    let pval = i32::from(pval);
+    match source_index {
+        162 => properties.modifiers.strength = pval,
+        163 => properties.equipment_bonuses.base_shot_delta_percent = pval.saturating_mul(15),
+        164 => {
+            properties.modifiers.dexterity = pval;
+            properties.equipment_bonuses.stealth_skill = pval;
+            if extra_shots {
+                properties.equipment_bonuses.base_shot_delta_percent = pval.saturating_mul(15);
+            }
+        }
+        165 => {
+            properties.modifiers.strength = pval;
+            if extra_shots {
+                properties.modifiers.speed = -pval;
+                properties.equipment_bonuses.stealth_skill = -pval;
+                properties.equipment_bonuses.base_shot_delta_percent = pval.saturating_mul(15);
+            }
+        }
+        166 => {
+            properties.modifiers.speed = pval;
+            properties.equipment_bonuses.base_shot_delta_percent = pval.saturating_mul(15);
+        }
+        167 => properties.equipment_bonuses.stealth_skill = pval,
+        _ => {}
+    }
 }
 
 #[derive(Debug, Default)]
@@ -997,6 +1076,9 @@ fn rfb_ego_can_apply_to_base(
         1..=27 => matches!(tval, TV_HAFTED | TV_POLEARM | TV_SWORD) || tval == TV_DIGGING,
         40 | 41 => tval == TV_DIGGING,
         160..=163 | 167 => tval == TV_BOW,
+        164 => tval == TV_BOW && sval == SV_LONG_BOW,
+        165 => tval == TV_BOW && sval == SV_HEAVY_XBOW,
+        166 => tval == TV_BOW && sval == SV_SLING,
         _ => false,
     }
 }
@@ -1175,9 +1257,6 @@ fn apply_rfb_pval(
             properties.equipment_bonuses.digging_skill = pval_i32;
             properties.modifiers.strength = pval_i32;
         }
-        162 => properties.modifiers.strength = pval_i32,
-        163 => properties.equipment_bonuses.base_shot_delta_percent = pval_i32.saturating_mul(15),
-        167 => properties.equipment_bonuses.stealth_skill = pval_i32,
         _ => {}
     }
 }
@@ -1211,6 +1290,9 @@ fn rfb_ego_maxima(source_index: u32) -> (i16, i16, i16, u16) {
         161 => (5, 5, 0, 0),
         162 => (2, 4, 0, 3),
         163 => (4, 2, 0, 0),
+        164 => (10, 10, 0, 3),
+        165 => (5, 10, 0, 3),
+        166 => (10, 5, 0, 3),
         167 => (10, 5, 0, 4),
         _ => (0, 0, 0, 0),
     }
@@ -3272,6 +3354,139 @@ mod tests {
             .expect("extra shots bow should resolve");
         assert_eq!(shots_profile.base_shot, base.base_shot + 60);
         assert_eq!(shots_profile.energy_cost, 10_000 / shots_profile.base_shot);
+    }
+
+    #[test]
+    fn restricted_launcher_egos_retry_without_partial_rolls() {
+        let affixes = [164, 165, 166].map(|source_index| {
+            ego_affix(
+                &format!("test.affix.launcher-{source_index}"),
+                source_index,
+                1,
+                0,
+                u16::MAX,
+                vec![RfbEgoTypeDefinition::Bow],
+            )
+        });
+
+        for (source_index, wrong_kind) in [
+            (164, "demo.item.short-bow"),
+            (165, "demo.item.long-bow"),
+            (166, "demo.item.long-bow"),
+        ] {
+            let mut rng = RfbRng::seeded(11);
+            let before = rng.clone();
+            assert!(
+                materialize_rfb_launcher_ego_with_rng(
+                    &mut rng,
+                    &rfb_launcher_item(wrong_kind),
+                    affixes
+                        .iter()
+                        .find(|affix| affix.rfb_ego.as_ref().unwrap().source_index == source_index)
+                        .unwrap(),
+                    80,
+                )
+                .is_none()
+            );
+            assert_eq!(
+                rng, before,
+                "source {source_index} rejection must be atomic"
+            );
+        }
+
+        for (kind_id, seed, expected_affix, selection_draws, total_draws) in [
+            ("demo.item.long-bow", 1, "test.affix.launcher-164", 5, 15),
+            (
+                "demo.item.heavy-crossbow",
+                1,
+                "test.affix.launcher-165",
+                2,
+                12,
+            ),
+            ("demo.item.sling", 2, "test.affix.launcher-166", 3, 8),
+        ] {
+            let mut rng = RfbRng::seeded(seed);
+            let materialization = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                &mut rng,
+                &rfb_launcher_item(kind_id),
+                affixes.iter(),
+                80,
+            )
+            .expect("compatible restricted ego should eventually be selected");
+            assert_eq!(materialization.affix_ids, [expected_affix]);
+            assert_eq!(rng.draw_counter, total_draws);
+
+            let mut selection_rng = RfbRng::seeded(seed);
+            while roll_rfb_ego_from_affixes(
+                affixes.iter(),
+                &mut selection_rng,
+                80,
+                &[RfbEgoTypeDefinition::Bow],
+            ) != Some(expected_affix)
+            {}
+            assert_eq!(selection_rng.draw_counter, selection_draws);
+        }
+
+        for (source_index, seed, kind_id, expected) in [
+            (164, 2, "demo.item.long-bow", (9, 7, 11, 0, 2, 0, 2, 71, 30)),
+            (
+                165,
+                2,
+                "demo.item.heavy-crossbow",
+                (9, 2, 14, 2, 0, -2, -2, 94, 30),
+            ),
+            (166, 7, "demo.item.sling", (9, 7, 2, 0, 0, 2, 0, 58, 30)),
+        ] {
+            let (materialization, draws) = roll_launcher_ego(source_index, seed, kind_id);
+            let state = &materialization.rolled_affixes[0];
+            let modifiers = &state.properties.modifiers;
+            let bonuses = &state.properties.equipment_bonuses;
+            assert_eq!(
+                (
+                    draws,
+                    state.enchantment_delta.to_hit,
+                    state.enchantment_delta.to_damage,
+                    modifiers.strength,
+                    modifiers.dexterity,
+                    modifiers.speed,
+                    bonuses.stealth_skill,
+                    bonuses.launcher_multiplier_delta_percent,
+                    bonuses.base_shot_delta_percent,
+                ),
+                expected,
+                "source {source_index}"
+            );
+        }
+
+        for (source_index, seed, kind_id, damage_type) in [
+            (
+                164,
+                0xE4_3164,
+                "demo.item.long-bow",
+                ActorDamageType::Nether,
+            ),
+            (
+                165,
+                0xE4_3165,
+                "demo.item.heavy-crossbow",
+                ActorDamageType::Chaos,
+            ),
+            (
+                166,
+                0xE4_3166,
+                "demo.item.sling",
+                ActorDamageType::Disenchant,
+            ),
+        ] {
+            let (materialization, _) = roll_launcher_ego(source_index, seed, kind_id);
+            assert_eq!(
+                materialization.rolled_affixes[0]
+                    .properties
+                    .resistances
+                    .get(&damage_type),
+                Some(&ActorResistanceLevel::Resistant)
+            );
+        }
     }
 
     #[test]

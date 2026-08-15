@@ -135,6 +135,12 @@ v108；未刷新或执行全量 fixtures。
 
 ### E4.3：实现 8 条发射器 source-index 分支
 
+状态：已完成。160–163/167 共用发射器原子物化、独立 `C:`、共享 pval 与强/弱 ESP helper；
+164–166 在任何分支 RNG 前校验长弓、重弩和投石索，不相容选择保留选择 RNG 后重试。倍率增量先按
+`bow_energy/10000` 换算，最终伤害附魔按 `bow_energy/7150` 缩放；最终倍率统一进入伤害与
+`min(18,13+mult/80)` 射程，额外射击在职业、Sniper 和骑乘基础射速之后进入能量计算。Hunter
+所需的永久 Telepathy/Nonliving ESP 令 Protocol 推进至 `1.229`，save 与 State Hash schema 保持不变。
+
 - 按原顺序实现 160–167 的分支、独立 `C:` 掷骰、共享 pval、倍率能量换算与最终 `to_d` rescale；
 - Lothlorien 仅长弓、Haradrim 仅重弩、Buckland 仅投石索；拒绝后重新选择并保留额外 RNG 消耗；
 - Hunter 复用 E3 强/弱 ESP helper，Lothlorien/Haradrim/Buckland 复用高抗 helper；
