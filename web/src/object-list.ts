@@ -46,6 +46,7 @@ export interface ObjectListProjection {
 
 interface ObjectListDom {
   readonly dialog: HTMLDialogElement;
+  readonly open: HTMLButtonElement;
   readonly close: HTMLButtonElement;
   readonly stairsToggle: HTMLButtonElement;
   readonly host: HTMLElement;
@@ -87,6 +88,7 @@ export class ObjectListPanel {
   install(): void {
     if (this.#installed) return;
     this.#installed = true;
+    this.#dom.open.addEventListener("click", this.#open);
     this.#dom.close.addEventListener("click", this.#close);
     this.#dom.stairsToggle.addEventListener("click", this.#toggleStairs);
     this.#dom.host.addEventListener("click", this.#selectRow);
@@ -96,6 +98,7 @@ export class ObjectListPanel {
   dispose(): void {
     if (!this.#installed) return;
     this.#installed = false;
+    this.#dom.open.removeEventListener("click", this.#open);
     this.#dom.close.removeEventListener("click", this.#close);
     this.#dom.stairsToggle.removeEventListener("click", this.#toggleStairs);
     this.#dom.host.removeEventListener("click", this.#selectRow);
@@ -128,6 +131,7 @@ export class ObjectListPanel {
     this.#focusSelected();
   }
 
+  readonly #open = (): void => this.open();
   readonly #close = (): void => this.close();
 
   readonly #toggleStairs = (): void => {
@@ -450,6 +454,7 @@ function createObjectListDom(document: Document): ObjectListDom {
   };
   return {
     dialog: element<HTMLDialogElement>("object-list-dialog"),
+    open: element<HTMLButtonElement>("nearby-open-object-list"),
     close: element<HTMLButtonElement>("object-list-close"),
     stairsToggle: element<HTMLButtonElement>("object-list-stairs-toggle"),
     host: element<HTMLElement>("object-list-host"),

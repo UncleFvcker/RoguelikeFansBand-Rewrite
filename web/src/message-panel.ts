@@ -94,17 +94,21 @@ export class MessagePanel {
   }
 
   render(): void {
+    const followEnd = this.#isAtEnd();
+    const scrollTop = this.#list.scrollTop;
     this.#list.replaceChildren();
     for (const record of this.#history.records) this.#renderRecord(record);
-    this.#scrollToEnd();
+    if (followEnd) this.#scrollToEnd();
+    else this.#list.scrollTop = scrollTop;
   }
 
   #append(record: MessageRecord): void {
+    const followEnd = this.#isAtEnd();
     if (this.#history.append(record)) {
       this.#list.firstElementChild?.remove();
     }
     this.#renderRecord(record);
-    this.#scrollToEnd();
+    if (followEnd) this.#scrollToEnd();
   }
 
   #renderRecord(record: MessageRecord): void {
@@ -124,5 +128,9 @@ export class MessagePanel {
 
   #scrollToEnd(): void {
     this.#list.scrollTop = this.#list.scrollHeight;
+  }
+
+  #isAtEnd(): boolean {
+    return this.#list.scrollHeight - this.#list.clientHeight - this.#list.scrollTop <= 2;
   }
 }

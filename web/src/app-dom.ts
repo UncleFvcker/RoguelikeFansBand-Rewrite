@@ -11,18 +11,14 @@ export interface AppDom {
   readonly targetModeToggle: HTMLButtonElement;
   readonly lookModeToggle: HTMLButtonElement;
   readonly targetModeStatus: HTMLElement;
+  readonly combatContext: HTMLElement;
+  readonly combatSummaryList: HTMLOListElement;
   readonly connectionStatus: HTMLElement;
-  readonly journeyPanel: HTMLElement;
-  readonly journeyDungeonName: HTMLElement;
-  readonly journeyDepth: HTMLElement;
-  readonly journeyBoss: HTMLElement;
-  readonly onboardingKind: HTMLElement;
-  readonly onboardingTitle: HTMLElement;
-  readonly onboardingDetail: HTMLElement;
-  readonly onboardingControl: HTMLElement;
-  readonly onboardingProgress: HTMLElement;
-  readonly onboardingHideOptional: HTMLInputElement;
-  readonly onboardingReset: HTMLButtonElement;
+  readonly dungeonInfoName: HTMLElement;
+  readonly dungeonInfoDepthRow: HTMLElement;
+  readonly dungeonInfoDepth: HTMLElement;
+  readonly dungeonInfoBossRow: HTMLElement;
+  readonly dungeonInfoBoss: HTMLElement;
   readonly journeyResult: HTMLElement;
   readonly resultKind: HTMLElement;
   readonly resultTitle: HTMLElement;
@@ -53,17 +49,15 @@ export interface AppDom {
   readonly effectsValue: HTMLElement;
   readonly positionValue: HTMLElement;
   readonly hashValue: HTMLElement;
-  readonly progressionNameValue: HTMLElement;
+  readonly progressionIdentityValue: HTMLElement;
   readonly progressionLevelValue: HTMLElement;
   readonly progressionExperienceValue: HTMLElement;
   readonly progressionCapValue: HTMLElement;
   readonly progressionPointsValue: HTMLElement;
-  readonly progressionBuildValue: HTMLElement;
-  readonly progressionRaceValue: HTMLElement;
-  readonly progressionClassValue: HTMLElement;
   readonly progressionPersonalityValue: HTMLElement;
   readonly progressionMultipliersValue: HTMLElement;
   readonly attributeList: HTMLUListElement;
+  readonly hudAttributeList: HTMLUListElement;
   readonly skillList: HTMLUListElement;
   readonly weaponProficiencyMeleeList: HTMLUListElement;
   readonly weaponProficiencyLauncherList: HTMLUListElement;
@@ -124,18 +118,14 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     targetModeToggle: element<HTMLButtonElement>(document, "target-mode-toggle"),
     lookModeToggle: element<HTMLButtonElement>(document, "look-mode-toggle"),
     targetModeStatus: element<HTMLElement>(document, "target-mode-status"),
+    combatContext: element<HTMLElement>(document, "combat-context"),
+    combatSummaryList: element<HTMLOListElement>(document, "combat-summary-list"),
     connectionStatus: element<HTMLElement>(document, "connection-status"),
-    journeyPanel: element<HTMLElement>(document, "journey-panel"),
-    journeyDungeonName: element<HTMLElement>(document, "journey-dungeon-name"),
-    journeyDepth: element<HTMLElement>(document, "journey-depth"),
-    journeyBoss: element<HTMLElement>(document, "journey-boss"),
-    onboardingKind: element<HTMLElement>(document, "onboarding-kind"),
-    onboardingTitle: element<HTMLElement>(document, "onboarding-title"),
-    onboardingDetail: element<HTMLElement>(document, "onboarding-detail"),
-    onboardingControl: element<HTMLElement>(document, "onboarding-control"),
-    onboardingProgress: element<HTMLElement>(document, "onboarding-progress"),
-    onboardingHideOptional: element<HTMLInputElement>(document, "onboarding-hide-optional"),
-    onboardingReset: element<HTMLButtonElement>(document, "onboarding-reset"),
+    dungeonInfoName: element<HTMLElement>(document, "dungeon-info-name"),
+    dungeonInfoDepthRow: element<HTMLElement>(document, "dungeon-info-depth-row"),
+    dungeonInfoDepth: element<HTMLElement>(document, "dungeon-info-depth"),
+    dungeonInfoBossRow: element<HTMLElement>(document, "dungeon-info-boss-row"),
+    dungeonInfoBoss: element<HTMLElement>(document, "dungeon-info-boss"),
     journeyResult: element<HTMLElement>(document, "journey-result"),
     resultKind: element<HTMLElement>(document, "result-kind"),
     resultTitle: element<HTMLElement>(document, "result-title"),
@@ -166,14 +156,11 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     effectsValue: element<HTMLElement>(document, "effects-value"),
     positionValue: element<HTMLElement>(document, "position-value"),
     hashValue: element<HTMLElement>(document, "hash-value"),
-    progressionNameValue: element<HTMLElement>(document, "progression-name-value"),
+    progressionIdentityValue: element<HTMLElement>(document, "progression-identity-value"),
     progressionLevelValue: element<HTMLElement>(document, "progression-level-value"),
     progressionExperienceValue: element<HTMLElement>(document, "progression-experience-value"),
     progressionCapValue: element<HTMLElement>(document, "progression-cap-value"),
     progressionPointsValue: element<HTMLElement>(document, "progression-points-value"),
-    progressionBuildValue: element<HTMLElement>(document, "progression-build-value"),
-    progressionRaceValue: element<HTMLElement>(document, "progression-race-value"),
-    progressionClassValue: element<HTMLElement>(document, "progression-class-value"),
     progressionPersonalityValue: element<HTMLElement>(
       document,
       "progression-personality-value",
@@ -183,6 +170,7 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
       "progression-multipliers-value",
     ),
     attributeList: element<HTMLUListElement>(document, "attribute-list"),
+    hudAttributeList: element<HTMLUListElement>(document, "hud-attribute-list"),
     skillList: element<HTMLUListElement>(document, "skill-list"),
     weaponProficiencyMeleeList: element<HTMLUListElement>(
       document,

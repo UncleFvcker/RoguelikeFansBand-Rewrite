@@ -181,10 +181,10 @@ export class PixiRendererBackend implements RendererBackend {
     this.#zoom = transform.zoom;
     const canvasWidth = transform.cullingEnabled
       ? transform.viewportWidth
-      : this.#width * MAP_CELL_SIZE * this.#zoom;
+      : Math.max(transform.viewportWidth, this.#width * MAP_CELL_SIZE * this.#zoom);
     const canvasHeight = transform.cullingEnabled
       ? transform.viewportHeight
-      : this.#height * MAP_CELL_SIZE * this.#zoom;
+      : Math.max(transform.viewportHeight, this.#height * MAP_CELL_SIZE * this.#zoom);
     if (
       this.#application.renderer.screen.width !== canvasWidth ||
       this.#application.renderer.screen.height !== canvasHeight
@@ -603,11 +603,12 @@ function drawLighting(
   cellY: number,
   cell: RenderCell,
 ): void {
+  lightColor.clear();
+  darkness.clear();
+  if (cell.visibility !== "visible") return;
   const x = cellX * MAP_CELL_SIZE;
   const y = cellY * MAP_CELL_SIZE;
   const intensity = Math.max(0, Math.min(1, cell.light.intensity));
-  lightColor.clear();
-  darkness.clear();
   const colorAlpha = Math.max(0, intensity - 0.5) * 0.18;
   if (colorAlpha > 0) {
     lightColor

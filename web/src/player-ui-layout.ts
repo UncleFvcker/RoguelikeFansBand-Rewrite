@@ -2,71 +2,72 @@
 
 import type { Localization } from "./localization";
 
-export type PlayerPage = "inventory" | "ability";
-export type PanelPresentation = "page" | "column";
-
-const STORAGE_KEYS: Record<PlayerPage, string> = {
-  inventory: "rfb.panel.inventory-presentation",
-  ability: "rfb.panel.ability-presentation",
-};
+export type PlayerPage = "inventory" | "ability" | "character";
 
 interface PlayerUiDom {
   readonly app: HTMLElement;
+  readonly intelSidebar: HTMLElement;
+  readonly intelNearbyTab: HTMLButtonElement;
+  readonly intelMessageTab: HTMLButtonElement;
+  readonly hudIdentityHost: HTMLElement;
+  readonly hudVitalsHost: HTMLElement;
+  readonly hudMenuContent: HTMLElement;
   readonly settingsOpen: HTMLButtonElement;
   readonly settingsClose: HTMLButtonElement;
   readonly settingsDialog: HTMLDialogElement;
   readonly gameplaySettingsHost: HTMLElement;
-  readonly inventoryPresentation: HTMLSelectElement;
-  readonly abilityPresentation: HTMLSelectElement;
   readonly inventoryOpen: HTMLButtonElement;
   readonly abilityOpen: HTMLButtonElement;
+  readonly characterOpen: HTMLButtonElement;
   readonly pageDialog: HTMLDialogElement;
   readonly pageTitle: HTMLElement;
   readonly pageClose: HTMLButtonElement;
   readonly pageHost: HTMLElement;
   readonly parking: HTMLElement;
-  readonly toolColumn: HTMLElement;
   readonly inventoryPanel: HTMLElement;
   readonly abilityPanel: HTMLElement;
+  readonly characterPanel: HTMLElement;
   readonly messagePanel: HTMLElement;
   readonly messagePanelHost: HTMLElement;
   readonly supportPanelHost: HTMLElement;
   readonly supportPanels: readonly HTMLElement[];
+  readonly progressionPanel: HTMLElement;
+  readonly statusPanel: HTMLElement;
+  readonly resourcePanel: HTMLElement;
+  readonly hudAttributeList: HTMLUListElement;
+  readonly playerPageActions: HTMLElement;
 }
 
 export class PlayerUiLayout {
   readonly #document: Document;
   readonly #window: Window;
-  readonly #storage: Storage;
   readonly #localization: Localization;
   readonly #dom: PlayerUiDom;
-  #inventoryPresentation: PanelPresentation;
-  #abilityPresentation: PanelPresentation;
   #openPage: PlayerPage | undefined;
   #installed = false;
 
   constructor(options: {
     document: Document;
     window: Window;
-    storage: Storage;
     localization: Localization;
   }) {
     this.#document = options.document;
     this.#window = options.window;
-    this.#storage = options.storage;
     this.#localization = options.localization;
     this.#dom = createPlayerUiDom(this.#document);
-    this.#inventoryPresentation = readPanelPresentation(this.#storage, "inventory");
-    this.#abilityPresentation = readPanelPresentation(this.#storage, "ability");
   }
 
   initialize(): void {
+    this.#moveTopHud();
     this.#moveGameplaySettings();
     this.#dom.messagePanelHost.append(this.#dom.messagePanel);
     this.#dom.supportPanelHost.append(...this.#dom.supportPanels);
-    this.#dom.inventoryPresentation.value = this.#inventoryPresentation;
-    this.#dom.abilityPresentation.value = this.#abilityPresentation;
-    this.#applyPanelLayout();
+    this.#dom.parking.append(
+      this.#dom.inventoryPanel,
+      this.#dom.abilityPanel,
+      this.#dom.characterPanel,
+    );
+    this.#selectIntelPanel("nearby");
   }
 
   install(): void {
@@ -76,17 +77,12 @@ export class PlayerUiLayout {
     this.#dom.settingsClose.addEventListener("click", this.#closeSettings);
     this.#dom.inventoryOpen.addEventListener("click", this.#openInventory);
     this.#dom.abilityOpen.addEventListener("click", this.#openAbility);
+    this.#dom.characterOpen.addEventListener("click", this.#openCharacter);
+    this.#dom.intelNearbyTab.addEventListener("click", this.#showNearbyIntel);
+    this.#dom.intelMessageTab.addEventListener("click", this.#showMessageIntel);
     this.#dom.pageClose.addEventListener("click", this.#closePageFromButton);
     this.#dom.pageDialog.addEventListener("close", this.#handlePageClosed);
     this.#dom.pageDialog.addEventListener("click", this.#handlePageAction, true);
-    this.#dom.inventoryPresentation.addEventListener(
-      "change",
-      this.#handleInventoryPresentation,
-    );
-    this.#dom.abilityPresentation.addEventListener(
-      "change",
-      this.#handleAbilityPresentation,
-    );
     this.#window.addEventListener("keydown", this.#handleShortcut);
   }
 
@@ -97,17 +93,12 @@ export class PlayerUiLayout {
     this.#dom.settingsClose.removeEventListener("click", this.#closeSettings);
     this.#dom.inventoryOpen.removeEventListener("click", this.#openInventory);
     this.#dom.abilityOpen.removeEventListener("click", this.#openAbility);
+    this.#dom.characterOpen.removeEventListener("click", this.#openCharacter);
+    this.#dom.intelNearbyTab.removeEventListener("click", this.#showNearbyIntel);
+    this.#dom.intelMessageTab.removeEventListener("click", this.#showMessageIntel);
     this.#dom.pageClose.removeEventListener("click", this.#closePageFromButton);
     this.#dom.pageDialog.removeEventListener("close", this.#handlePageClosed);
     this.#dom.pageDialog.removeEventListener("click", this.#handlePageAction, true);
-    this.#dom.inventoryPresentation.removeEventListener(
-      "change",
-      this.#handleInventoryPresentation,
-    );
-    this.#dom.abilityPresentation.removeEventListener(
-      "change",
-      this.#handleAbilityPresentation,
-    );
     this.#window.removeEventListener("keydown", this.#handleShortcut);
   }
 
@@ -122,14 +113,6 @@ export class PlayerUiLayout {
   }
 
   open(page: PlayerPage): void {
-    if (this.#presentationFor(page) === "column") {
-      const panel = this.#panelFor(page);
-      panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      panel.focus({ preventScroll: true });
-      panel.classList.remove("panel-attention");
-      this.#window.requestAnimationFrame(() => panel.classList.add("panel-attention"));
-      return;
-    }
     if (this.#dom.pageDialog.open && this.#openPage === page) {
       this.closePage();
       return;
@@ -152,6 +135,9 @@ export class PlayerUiLayout {
 
   readonly #openInventory = (): void => this.open("inventory");
   readonly #openAbility = (): void => this.open("ability");
+  readonly #openCharacter = (): void => this.open("character");
+  readonly #showNearbyIntel = (): void => this.#selectIntelPanel("nearby");
+  readonly #showMessageIntel = (): void => this.#selectIntelPanel("message");
   readonly #closePageFromButton = (): void => this.closePage();
 
   readonly #handlePageClosed = (): void => {
@@ -159,7 +145,7 @@ export class PlayerUiLayout {
   };
 
   readonly #handlePageAction = (event: Event): void => {
-    if (!this.#openPage || this.#presentationFor(this.#openPage) !== "page") return;
+    if (!this.#openPage) return;
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     if (
@@ -169,22 +155,6 @@ export class PlayerUiLayout {
     ) {
       this.closePage();
     }
-  };
-
-  readonly #handleInventoryPresentation = (): void => {
-    this.#inventoryPresentation = panelPresentationOrDefault(
-      this.#dom.inventoryPresentation.value,
-    );
-    this.#persistPresentation("inventory", this.#inventoryPresentation);
-    this.#applyPanelLayout();
-  };
-
-  readonly #handleAbilityPresentation = (): void => {
-    this.#abilityPresentation = panelPresentationOrDefault(
-      this.#dom.abilityPresentation.value,
-    );
-    this.#persistPresentation("ability", this.#abilityPresentation);
-    this.#applyPanelLayout();
   };
 
   readonly #handleShortcut = (event: KeyboardEvent): void => {
@@ -207,49 +177,41 @@ export class PlayerUiLayout {
     this.open(page);
   };
 
-  #applyPanelLayout(): void {
-    if (this.#dom.pageDialog.open) this.closePage();
-    for (const page of ["inventory", "ability"] as const) {
-      const panel = this.#panelFor(page);
-      const presentation = this.#presentationFor(page);
-      panel.tabIndex = presentation === "column" ? -1 : 0;
-      (presentation === "column" ? this.#dom.toolColumn : this.#dom.parking).append(panel);
-    }
-    const hasToolColumn =
-      this.#inventoryPresentation === "column" || this.#abilityPresentation === "column";
-    this.#dom.toolColumn.hidden = !hasToolColumn;
-    this.#dom.app.dataset.toolColumn = hasToolColumn ? "visible" : "hidden";
-  }
-
   #returnOpenPanel(): void {
     if (!this.#openPage) return;
     const page = this.#openPage;
     this.#openPage = undefined;
-    const destination =
-      this.#presentationFor(page) === "column" ? this.#dom.toolColumn : this.#dom.parking;
-    destination.append(this.#panelFor(page));
+    this.#dom.parking.append(this.#panelFor(page));
   }
 
   #updatePageTitle(page: PlayerPage): void {
-    this.#dom.pageTitle.textContent = this.#localization.format(
-      page === "inventory" ? "panel-inventory-title" : "panel-ability-title",
-    );
+    const titleKey =
+      page === "inventory"
+        ? "panel-inventory-title"
+        : page === "ability"
+          ? "panel-ability-title"
+          : "panel-character-details-title";
+    this.#dom.pageTitle.textContent = this.#localization.format(titleKey);
   }
 
   #panelFor(page: PlayerPage): HTMLElement {
-    return page === "inventory" ? this.#dom.inventoryPanel : this.#dom.abilityPanel;
+    return page === "inventory"
+      ? this.#dom.inventoryPanel
+      : page === "ability"
+        ? this.#dom.abilityPanel
+        : this.#dom.characterPanel;
   }
 
-  #presentationFor(page: PlayerPage): PanelPresentation {
-    return page === "inventory" ? this.#inventoryPresentation : this.#abilityPresentation;
-  }
-
-  #persistPresentation(page: PlayerPage, presentation: PanelPresentation): void {
-    try {
-      this.#storage.setItem(STORAGE_KEYS[page], presentation);
-    } catch {
-      // The setting still applies for this session when storage is unavailable.
-    }
+  #selectIntelPanel(panel: "nearby" | "message"): void {
+    this.#dom.intelSidebar.dataset.intelPanel = panel;
+    this.#dom.intelNearbyTab.setAttribute(
+      "aria-pressed",
+      String(panel === "nearby"),
+    );
+    this.#dom.intelMessageTab.setAttribute(
+      "aria-pressed",
+      String(panel === "message"),
+    );
   }
 
   #moveGameplaySettings(): void {
@@ -267,26 +229,20 @@ export class PlayerUiLayout {
     const controls = this.#document.getElementById("controls-help");
     if (controls) this.#dom.gameplaySettingsHost.append(controls);
   }
-}
 
-export function readPanelPresentation(
-  storage: Pick<Storage, "getItem">,
-  page: PlayerPage,
-): PanelPresentation {
-  try {
-    return panelPresentationOrDefault(storage.getItem(STORAGE_KEYS[page]));
-  } catch {
-    return "page";
+  #moveTopHud(): void {
+    this.#dom.hudIdentityHost.append(
+      this.#dom.progressionPanel,
+      this.#dom.hudAttributeList,
+    );
+    this.#dom.hudVitalsHost.append(this.#dom.statusPanel, this.#dom.resourcePanel);
+    this.#dom.hudMenuContent.append(this.#dom.playerPageActions);
   }
 }
 
 export function playerPageForShortcut(key: string): PlayerPage | undefined {
   const normalized = key.toLowerCase();
   return normalized === "i" ? "inventory" : normalized === "m" ? "ability" : undefined;
-}
-
-function panelPresentationOrDefault(value: string | null): PanelPresentation {
-  return value === "column" ? "column" : "page";
 }
 
 function isEditableTarget(target: EventTarget | null): boolean {
@@ -306,30 +262,41 @@ function createPlayerUiDom(document: Document): PlayerUiDom {
   };
   return {
     app: element("app"),
+    intelSidebar: element("player-sidebar"),
+    intelNearbyTab: element<HTMLButtonElement>("intel-nearby-tab"),
+    intelMessageTab: element<HTMLButtonElement>("intel-message-tab"),
+    hudIdentityHost: element("hud-identity-host"),
+    hudVitalsHost: element("hud-vitals-host"),
+    hudMenuContent: element("hud-menu-content"),
     settingsOpen: element("player-ui-settings-open"),
     settingsClose: element("player-ui-settings-close"),
     settingsDialog: element("player-ui-settings-dialog"),
     gameplaySettingsHost: element("gameplay-settings-host"),
-    inventoryPresentation: element("inventory-presentation"),
-    abilityPresentation: element("ability-presentation"),
     inventoryOpen: element("player-ui-inventory-open"),
     abilityOpen: element("player-ui-ability-open"),
+    characterOpen: element("player-ui-character-open"),
     pageDialog: element("player-page-dialog"),
     pageTitle: element("player-page-title"),
     pageClose: element("player-page-close"),
     pageHost: element("player-page-host"),
     parking: element("player-page-parking"),
-    toolColumn: element("player-tool-column"),
     inventoryPanel: element("inventory-panel"),
     abilityPanel: element("ability-panel"),
+    characterPanel: element("character-details-panel"),
     messagePanel: element("message-panel"),
     messagePanelHost: element("message-panel-host"),
     supportPanelHost: element("support-panel-host"),
     supportPanels: [
+      element("dungeon-info-panel"),
       element("summon-command-panel"),
       element("campaign-panel"),
       element("task-log-panel"),
       element("native-save-panel"),
     ],
+    progressionPanel: element("progression-panel"),
+    statusPanel: element("status-panel"),
+    resourcePanel: element("resource-panel"),
+    hudAttributeList: element<HTMLUListElement>("hud-attribute-list"),
+    playerPageActions: element("player-page-actions"),
   };
 }

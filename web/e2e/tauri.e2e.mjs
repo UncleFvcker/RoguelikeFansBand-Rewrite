@@ -204,24 +204,25 @@ async function runScenario(driver) {
   assert.equal(initialGuidance.kind, "journey");
 
   const playerUiStructure = await driver.execute(`
-    const sidebar = document.querySelector("#player-sidebar");
     const resource = document.querySelector("#resource-panel");
     const nearby = document.querySelector("#nearby-panel");
     return {
       messageDocked: document.querySelector("#message-panel")?.parentElement?.id,
       supportDocked: document.querySelector("#native-save-panel")?.parentElement?.id,
-      resourceInSidebar: resource?.parentElement === sidebar,
+      resourceInHud: resource?.parentElement?.id === "hud-vitals-host",
       nearbyFollowsResources: Boolean(
         resource?.compareDocumentPosition(nearby) & Node.DOCUMENT_POSITION_FOLLOWING
       ),
-      toolColumnHidden: document.querySelector("#player-tool-column")?.hidden,
+       advancedPanelInGameLayout: Boolean(
+         document.querySelector(".game-layout #inventory-panel, .game-layout #ability-panel")
+       ),
     };
   `);
   assert.equal(playerUiStructure.messageDocked, "message-panel-host");
   assert.equal(playerUiStructure.supportDocked, "support-panel-host");
-  assert.equal(playerUiStructure.resourceInSidebar, true);
+  assert.equal(playerUiStructure.resourceInHud, true);
   assert.equal(playerUiStructure.nearbyFollowsResources, true);
-  assert.equal(playerUiStructure.toolColumnHidden, true);
+  assert.equal(playerUiStructure.advancedPanelInGameLayout, false);
 
   await dispatchKey(driver, "KeyI", "i");
   await driver.waitFor(
@@ -233,24 +234,12 @@ async function runScenario(driver) {
     `return !document.querySelector("#player-page-dialog")?.open && document.querySelector("#inventory-panel")?.parentElement?.id === "player-page-parking"`,
     "inventory shortcut page closes",
   );
-  await click(driver, "#player-ui-settings-open");
-  await driver.execute(`
-    const presentation = document.querySelector("#inventory-presentation");
-    presentation.value = "column";
-    presentation.dispatchEvent(new Event("change", { bubbles: true }));
-    return true;
-  `);
+  await click(driver, "#player-ui-character-open");
   await driver.waitFor(
-    `return !document.querySelector("#player-tool-column")?.hidden && document.querySelector("#inventory-panel")?.parentElement?.id === "player-tool-column"`,
-    "inventory pinned column",
+    `return document.querySelector("#player-page-dialog")?.open && document.querySelector("#character-details-panel")?.parentElement?.id === "player-page-host"`,
+    "character details page",
   );
-  await driver.execute(`
-    const presentation = document.querySelector("#inventory-presentation");
-    presentation.value = "page";
-    presentation.dispatchEvent(new Event("change", { bubbles: true }));
-    document.querySelector("#player-ui-settings-close").click();
-    return true;
-  `);
+  await click(driver, "#player-page-close");
 
   await driver.execute(`
     const input = document.querySelector("#input-preset");

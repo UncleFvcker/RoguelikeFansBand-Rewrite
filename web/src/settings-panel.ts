@@ -167,7 +167,7 @@ export class SettingsPanel {
   readonly #handleCameraModeChange = (): void => {
     this.#cameraMode = isCameraMode(this.#dom.cameraModeSelect.value)
       ? this.#dom.cameraModeSelect.value
-      : "full-map";
+      : "player-centered";
     this.#storage.setItem(CAMERA_MODE_STORAGE_KEY, this.#cameraMode);
     this.#renderer.setCameraMode(this.#cameraMode);
     this.#renderTargeting();
@@ -261,7 +261,7 @@ function readTilesetPreset(storage: Pick<Storage, "getItem">): TilesetPreset {
 
 function readCameraMode(storage: Pick<Storage, "getItem">): CameraMode {
   const stored = storage.getItem(CAMERA_MODE_STORAGE_KEY);
-  return isCameraMode(stored) ? stored : "full-map";
+  return isCameraMode(stored) ? stored : "player-centered";
 }
 
 function readZoomLevel(storage: Pick<Storage, "getItem">): ZoomLevel {

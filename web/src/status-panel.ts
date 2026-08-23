@@ -29,6 +29,7 @@ import type {
 import { REST_UNTIL_RECOVERED_TURNS } from "./rest.ts";
 import { goldVisualId } from "./render-world.ts";
 import { equippedLightText } from "./shop-panel.ts";
+import { selectJourneyDungeonStatus } from "./journey-guidance.ts";
 
 type StatusDom = Pick<
   AppDom,
@@ -45,17 +46,15 @@ type StatusDom = Pick<
   | "effectsValue"
   | "positionValue"
   | "hashValue"
-  | "progressionNameValue"
+  | "progressionIdentityValue"
   | "progressionLevelValue"
   | "progressionExperienceValue"
   | "progressionCapValue"
   | "progressionPointsValue"
-  | "progressionBuildValue"
-  | "progressionRaceValue"
-  | "progressionClassValue"
   | "progressionPersonalityValue"
   | "progressionMultipliersValue"
   | "attributeList"
+  | "hudAttributeList"
   | "skillList"
   | "weaponProficiencyMeleeList"
   | "weaponProficiencyLauncherList"
@@ -78,6 +77,11 @@ type StatusDom = Pick<
   | "campaignDungeonsValue"
   | "campaignTasksValue"
   | "campaignRetire"
+  | "dungeonInfoName"
+  | "dungeonInfoDepthRow"
+  | "dungeonInfoDepth"
+  | "dungeonInfoBossRow"
+  | "dungeonInfoBoss"
 >;
 
 const ATTRIBUTE_KINDS: AttributeKindDto[] = [
@@ -142,6 +146,7 @@ export class StatusPanel {
   readonly #reconcileTargeting: (state: GameSnapshot | GameUpdate) => void;
   readonly #renderTargeting: () => void;
   readonly #refreshInventoryActions: () => void;
+  #worldId: string | undefined;
   #installed = false;
 
   constructor(options: {
@@ -203,6 +208,7 @@ export class StatusPanel {
 
   render(state: GameSnapshot | GameUpdate): void {
     this.#state.status = state;
+    if ("worldId" in state) this.#worldId = state.worldId;
     this.#state.playerDead = state.player.isDead;
     this.#state.campaignEnded = state.campaign.status === "retired";
     this.#reconcileTargeting(state);
@@ -248,6 +254,21 @@ export class StatusPanel {
       this.#localization,
       this.#contentName,
     );
+    const dungeon = selectJourneyDungeonStatus(state, this.#worldId);
+    this.#dom.dungeonInfoName.textContent = this.#localization.format(dungeon.dungeonNameKey);
+    this.#dom.dungeonInfoDepthRow.hidden =
+      dungeon.currentDepth === undefined || dungeon.maximumDepth === undefined;
+    this.#dom.dungeonInfoDepth.textContent =
+      dungeon.currentDepth === undefined || dungeon.maximumDepth === undefined
+        ? ""
+        : this.#localization.format("journey-dungeon-depth", {
+            current: dungeon.currentDepth,
+            maximum: dungeon.maximumDepth,
+          });
+    this.#dom.dungeonInfoBossRow.hidden = dungeon.bossNameKey === undefined;
+    this.#dom.dungeonInfoBoss.textContent = dungeon.bossNameKey
+      ? this.#localization.format(dungeon.bossNameKey)
+      : "";
     this.#renderCombatStat(
       this.#dom.attackValue,
       state.player.attack,
@@ -258,8 +279,7 @@ export class StatusPanel {
       state.player.defense,
       state.player.equipmentModifiers.defense,
     );
-    this.#dom.progressionNameValue.textContent = state.player.name;
-    this.#renderProgression(state.player.progress, state.player.build);
+    this.#renderProgression(state.player.name, state.player.progress, state.player.build);
     this.#renderVirtues(state.player.virtues);
     this.#renderMutations(
       state.player.mutations ?? [],
@@ -395,21 +415,27 @@ export class StatusPanel {
   }
 
   #renderProgression(
+    playerName: string,
     progress: PlayerProgressDto | undefined,
     build: PlayerBuildDto | null | undefined,
   ): void {
+    this.#dom.progressionIdentityValue.textContent = build
+      ? this.#localization.format("progression-identity-value", {
+          name: playerName,
+          race: this.#localization.format(build.raceNameKey as MessageKey),
+          class: this.#localization.format(build.classNameKey as MessageKey),
+        })
+      : playerName;
     if (!progress) {
       const unavailable = this.#localization.format("progression-unavailable");
       this.#dom.progressionLevelValue.textContent = unavailable;
       this.#dom.progressionExperienceValue.textContent = unavailable;
       this.#dom.progressionCapValue.textContent = unavailable;
       this.#dom.progressionPointsValue.textContent = unavailable;
-      this.#dom.progressionBuildValue.textContent = unavailable;
-      this.#dom.progressionRaceValue.textContent = unavailable;
-      this.#dom.progressionClassValue.textContent = unavailable;
       this.#dom.progressionPersonalityValue.textContent = unavailable;
       this.#dom.progressionMultipliersValue.textContent = unavailable;
       this.#dom.attributeList.replaceChildren();
+      this.#dom.hudAttributeList.replaceChildren();
       this.#dom.skillList.replaceChildren();
       this.#dom.weaponProficiencyMeleeList.replaceChildren();
       this.#dom.weaponProficiencyLauncherList.replaceChildren();
@@ -441,15 +467,6 @@ export class StatusPanel {
       },
     );
     this.#dom.progressionPointsValue.textContent = String(progress.pendingAttributeIncreases);
-    this.#dom.progressionBuildValue.textContent = build
-      ? this.#localization.format(build.buildNameKey as MessageKey)
-      : this.#localization.format("progression-unavailable");
-    this.#dom.progressionRaceValue.textContent = build
-      ? this.#localization.format(build.raceNameKey as MessageKey)
-      : this.#localization.format("progression-unavailable");
-    this.#dom.progressionClassValue.textContent = build
-      ? this.#localization.format(build.classNameKey as MessageKey)
-      : this.#localization.format("progression-unavailable");
     this.#dom.progressionPersonalityValue.textContent = build
       ? this.#localization.format(build.personalityNameKey as MessageKey)
       : this.#localization.format("progression-unavailable");
@@ -460,8 +477,7 @@ export class StatusPanel {
         })
       : this.#localization.format("progression-unavailable");
     const document = this.#dom.attributeList.ownerDocument;
-    this.#dom.attributeList.replaceChildren(
-      ...ATTRIBUTE_KINDS.map((attribute) => {
+    const attributeRows = ATTRIBUTE_KINDS.map((attribute) => {
         const value = progress.attributes[attribute];
         const row = document.createElement("li");
         row.className = "attribute-row";
@@ -492,6 +508,19 @@ export class StatusPanel {
         );
         row.append(label, values, increase);
         return row;
+      });
+    this.#dom.attributeList.replaceChildren(...attributeRows);
+    this.#dom.hudAttributeList.replaceChildren(
+      ...attributeRows.map((row, index) => {
+        const compactRow = row.cloneNode(true) as HTMLLIElement;
+        compactRow.querySelector(".attribute-increase")?.remove();
+        const value = compactRow.querySelector<HTMLElement>(".attribute-value");
+        if (value) {
+          value.textContent = formatAttributeValue(
+            progress.attributes[ATTRIBUTE_KINDS[index]!].effective,
+          );
+        }
+        return compactRow;
       }),
     );
     this.#dom.skillList.replaceChildren(

@@ -192,27 +192,26 @@
       </section>
     </main>
 
-    <div id="app" hidden>
+    <div id="app" class="game-shell" hidden>
       <header class="app-header">
-        <div>
-          <p class="eyebrow" data-l10n-id="app-eyebrow"></p>
-          <h1 data-l10n-id="app-heading"></h1>
-          <p class="run-metadata">
-            <span data-l10n-id="run-build-label"></span>
-            <strong id="run-build-value">--</strong>
-            <span aria-hidden="true" data-l10n-id="run-metadata-separator"></span>
-            <span data-l10n-id="run-seed-label"></span>
-            <strong id="run-seed-value">--</strong>
-          </p>
-        </div>
-        <div class="header-actions">
-          <button id="player-ui-settings-open" class="quiet-button" type="button" data-l10n-id="action-game-settings"></button>
-          <button id="replay-button" type="button" data-l10n-id="action-export-replay"></button>
-          <button id="save-button" type="button" data-l10n-id="action-export-save"></button>
-          <label class="file-button">
-            <span data-l10n-id="action-load-save"></span>
-            <input id="load-input" type="file" accept=".rfbsave,application/octet-stream" />
-          </label>
+        <h1 id="app-heading" class="visually-hidden" data-l10n-id="app-heading"></h1>
+        <div id="hud-identity-host" class="hud-identity-host"></div>
+        <div id="hud-vitals-host" class="hud-vitals-host"></div>
+        <div id="hud-menu-host" class="hud-menu-host">
+          <details class="hud-menu">
+            <summary data-l10n-id="hud-menu-title"></summary>
+            <div id="hud-menu-content" class="hud-menu-content">
+              <div class="header-actions">
+                <button id="player-ui-settings-open" class="quiet-button" type="button" data-l10n-id="action-game-settings"></button>
+                <button id="replay-button" type="button" data-l10n-id="action-export-replay"></button>
+                <button id="save-button" type="button" data-l10n-id="action-export-save"></button>
+                <label class="file-button">
+                  <span data-l10n-id="action-load-save"></span>
+                  <input id="load-input" type="file" accept=".rfbsave,application/octet-stream" />
+                </label>
+              </div>
+            </div>
+          </details>
         </div>
       </header>
 
@@ -241,34 +240,6 @@
         </div>
       </section>
 
-      <section id="journey-panel" class="journey-panel" aria-labelledby="journey-panel-title">
-        <div class="journey-dungeon">
-          <div class="panel-heading journey-heading">
-            <span id="journey-panel-title" data-l10n-id="panel-journey-title"></span>
-            <span id="journey-depth" class="journey-depth"></span>
-          </div>
-          <p class="journey-label" data-l10n-id="journey-current-dungeon-label"></p>
-          <h2 id="journey-dungeon-name"></h2>
-          <p id="journey-boss" class="journey-boss"></p>
-        </div>
-        <div class="onboarding-card" aria-live="polite">
-          <div class="onboarding-meta">
-            <span id="onboarding-kind" class="onboarding-kind"></span>
-            <span id="onboarding-progress"></span>
-          </div>
-          <h3 id="onboarding-title"></h3>
-          <p id="onboarding-detail"></p>
-          <p id="onboarding-control" class="onboarding-control"></p>
-          <div class="onboarding-settings">
-            <label for="onboarding-hide-optional">
-              <input id="onboarding-hide-optional" type="checkbox" />
-              <span data-l10n-id="onboarding-hide-optional-label"></span>
-            </label>
-            <button id="onboarding-reset" class="quiet-button" type="button" data-l10n-id="action-onboarding-reset"></button>
-          </div>
-        </div>
-      </section>
-
       <main class="game-layout">
         <div class="play-column">
         <section class="map-panel" data-l10n-aria-label="map-aria-label">
@@ -284,7 +255,6 @@
               <button id="traverse-stairs" type="button" disabled></button>
               <button id="look-mode-toggle" type="button"></button>
               <button id="target-mode-toggle" type="button"></button>
-              <span id="target-mode-status" aria-live="polite"></span>
             </div>
             <label for="input-preset">
               <span data-l10n-id="settings-input-label"></span>
@@ -329,17 +299,50 @@
           </div>
         </section>
 
-        <div id="message-panel-host" class="message-panel-host"></div>
+        <section class="context-panel" aria-labelledby="context-effects-title combat-context-title">
+          <div class="context-effects" aria-labelledby="context-effects-title">
+            <div class="context-heading">
+              <span id="context-effects-title" data-l10n-id="status-effects"></span>
+            </div>
+            <p id="effects-value" class="context-effects-value">--</p>
+          </div>
+          <div id="combat-context" class="combat-context" data-targeting="false" aria-labelledby="combat-context-title">
+            <div class="context-heading">
+              <span id="combat-context-title" data-l10n-id="panel-combat-summary-title"></span>
+            </div>
+            <p id="target-mode-status" class="target-context-status" aria-live="polite"></p>
+            <ol id="combat-summary-list" class="combat-summary-list" aria-live="polite"></ol>
+          </div>
+        </section>
+
         <details class="support-drawer">
           <summary data-l10n-id="support-drawer-title"></summary>
           <div id="support-panel-host" class="support-panel-host"></div>
         </details>
+
+        <section class="shortcut-bar" aria-labelledby="shortcut-bar-title">
+          <div class="shortcut-bar-heading">
+            <span id="shortcut-bar-title" class="shortcut-bar-title" data-l10n-id="shortcut-bar-title"></span>
+            <span class="shortcut-bar-status" data-l10n-id="shortcut-bar-not-connected"></span>
+          </div>
+          <div class="shortcut-bar-slots" aria-hidden="true">
+            <span class="shortcut-slot" data-shortcut-slot="1"></span>
+            <span class="shortcut-slot" data-shortcut-slot="2"></span>
+            <span class="shortcut-slot" data-shortcut-slot="3"></span>
+            <span class="shortcut-slot" data-shortcut-slot="4"></span>
+            <span class="shortcut-slot" data-shortcut-slot="5"></span>
+            <span class="shortcut-slot" data-shortcut-slot="6"></span>
+          </div>
+        </section>
         </div>
 
-        <aside id="player-sidebar" class="ui-column player-sidebar">
-          <section id="status-panel" class="status-panel player-status-panel" aria-labelledby="status-title">
-            <div class="panel-heading">
-              <span id="status-title" data-l10n-id="panel-status-title"></span>
+        <aside id="player-sidebar" class="ui-column player-sidebar" data-intel-panel="nearby">
+          <div class="intel-tabs">
+            <button id="intel-nearby-tab" type="button" aria-controls="nearby-panel" aria-pressed="true" data-l10n-id="panel-nearby-title"></button>
+            <button id="intel-message-tab" type="button" aria-controls="message-panel" aria-pressed="false" data-l10n-id="panel-message-title"></button>
+          </div>
+          <section id="status-panel" class="status-panel player-status-panel">
+            <div class="status-turn-row">
               <span class="turn-indicator"><span data-l10n-id="status-turn"></span> <strong id="turn-value">0</strong></span>
             </div>
             <div id="health-meter" class="health-meter" data-health-state="healthy">
@@ -355,7 +358,6 @@
               <div class="status-light"><dt data-l10n-id="status-light"></dt><dd id="light-value">--</dd></div>
               <div><dt data-l10n-id="status-attack"></dt><dd id="attack-value">--</dd></div>
               <div><dt data-l10n-id="status-defense"></dt><dd id="defense-value">--</dd></div>
-              <div class="status-effects"><dt data-l10n-id="status-effects"></dt><dd id="effects-value">--</dd></div>
             </dl>
             <details class="technical-details">
               <summary data-l10n-id="status-technical-details"></summary>
@@ -366,76 +368,54 @@
             </details>
           </section>
 
-          <section id="progression-panel" class="status-panel progression-panel" aria-labelledby="progression-title">
-            <div class="panel-heading">
-              <span id="progression-title" data-l10n-id="panel-progression-title"></span>
-            </div>
+          <section id="progression-panel" class="status-panel progression-panel">
             <dl class="status-grid player-identity-grid">
-              <div><dt data-l10n-id="progression-name"></dt><dd id="progression-name-value">--</dd></div>
+              <div class="player-identity-line"><dd id="progression-identity-value">--</dd></div>
               <div><dt data-l10n-id="progression-level"></dt><dd id="progression-level-value">--</dd></div>
-              <div><dt data-l10n-id="progression-build"></dt><dd id="progression-build-value">--</dd></div>
-              <div><dt data-l10n-id="progression-race"></dt><dd id="progression-race-value">--</dd></div>
-              <div><dt data-l10n-id="progression-class"></dt><dd id="progression-class-value">--</dd></div>
             </dl>
-            <details class="player-details">
-              <summary data-l10n-id="progression-details"></summary>
-              <dl class="status-grid progression-detail-grid">
-                <div><dt data-l10n-id="progression-experience"></dt><dd id="progression-experience-value">--</dd></div>
-                <div><dt data-l10n-id="progression-cap"></dt><dd id="progression-cap-value">--</dd></div>
-                <div><dt data-l10n-id="progression-points"></dt><dd id="progression-points-value">--</dd></div>
-                <div><dt data-l10n-id="progression-personality"></dt><dd id="progression-personality-value">--</dd></div>
-                <div><dt data-l10n-id="progression-multipliers"></dt><dd id="progression-multipliers-value">--</dd></div>
-              </dl>
-              <ul id="attribute-list" class="attribute-list" aria-live="polite"></ul>
-              <div class="progression-subheading" data-l10n-id="progression-skills"></div>
-              <ul id="skill-list" class="skill-list" aria-live="polite"></ul>
-              <div class="progression-subheading" data-l10n-id="progression-virtues"></div>
-              <ul id="virtue-list" class="virtue-list" aria-live="polite"></ul>
-              <div class="progression-subheading" data-l10n-id="progression-mutations"></div>
-              <ul id="mutation-list" class="mutation-list" aria-live="polite"></ul>
-            </details>
-            <details class="player-details weapon-proficiency-details">
-              <summary data-l10n-id="progression-weapon-proficiencies"></summary>
-              <div class="weapon-proficiency-groups">
-                <section aria-labelledby="weapon-proficiency-melee-title">
-                  <div id="weapon-proficiency-melee-title" class="progression-subheading" data-l10n-id="weapon-proficiency-melee"></div>
-                  <ul id="weapon-proficiency-melee-list" class="weapon-proficiency-list" aria-live="polite"></ul>
-                </section>
-                <section aria-labelledby="weapon-proficiency-launcher-title">
-                  <div id="weapon-proficiency-launcher-title" class="progression-subheading" data-l10n-id="weapon-proficiency-launchers"></div>
-                  <ul id="weapon-proficiency-launcher-list" class="weapon-proficiency-list" aria-live="polite"></ul>
-                </section>
-              </div>
-            </details>
-            <details class="player-details weapon-proficiency-details">
-              <summary data-l10n-id="progression-misc-proficiencies"></summary>
-              <ul id="mining-proficiency-list" class="weapon-proficiency-list" aria-live="polite"></ul>
-            </details>
-            <details class="player-details weapon-proficiency-details">
-              <summary data-l10n-id="progression-materials"></summary>
-              <ul id="material-list" class="weapon-proficiency-list" aria-live="polite"></ul>
-            </details>
           </section>
+          <ul id="hud-attribute-list" class="hud-attribute-list" aria-live="polite"></ul>
 
-          <section id="resource-panel" class="status-panel resource-panel" aria-labelledby="resource-title">
-            <div class="panel-heading">
-              <span id="resource-title" data-l10n-id="panel-resource-title"></span>
-            </div>
+          <section id="resource-panel" class="status-panel resource-panel">
             <ul id="resource-list" class="resource-list" aria-live="polite"></ul>
           </section>
 
-          <nav class="player-page-actions" data-l10n-aria-label="player-pages-aria-label">
+          <nav id="player-page-actions" class="player-page-actions" data-l10n-aria-label="player-pages-aria-label">
             <button id="player-ui-inventory-open" type="button" aria-keyshortcuts="I"><span data-l10n-id="action-open-inventory"></span><kbd data-l10n-id="shortcut-inventory"></kbd></button>
             <button id="player-ui-ability-open" type="button" aria-keyshortcuts="M"><span data-l10n-id="action-open-abilities"></span><kbd data-l10n-id="shortcut-abilities"></kbd></button>
+            <button id="player-ui-character-open" type="button"><span data-l10n-id="action-open-character-details"></span></button>
             <button id="resource-rest" type="button" aria-keyshortcuts="R"><span data-l10n-id="action-resource-rest"></span><kbd data-l10n-id="shortcut-rest"></kbd></button>
           </nav>
 
           <section id="nearby-panel" class="status-panel nearby-panel" aria-labelledby="nearby-title">
             <div class="panel-heading">
               <span id="nearby-title" data-l10n-id="panel-nearby-title"></span>
+              <button id="nearby-open-object-list" class="quiet-button" type="button" data-l10n-id="action-open-object-list"></button>
             </div>
             <p id="nearby-current" class="nearby-current"></p>
             <ul id="nearby-list" class="nearby-list" aria-live="polite"></ul>
+          </section>
+
+          <div id="message-panel-host" class="message-panel-host"></div>
+
+          <section id="dungeon-info-panel" class="status-panel dungeon-info-panel" aria-labelledby="dungeon-info-title">
+            <div class="panel-heading">
+              <span id="dungeon-info-title" data-l10n-id="panel-journey-title"></span>
+            </div>
+            <dl class="dungeon-info-grid">
+              <div>
+                <dt data-l10n-id="journey-current-dungeon-label"></dt>
+                <dd id="dungeon-info-name">--</dd>
+              </div>
+              <div id="dungeon-info-depth-row">
+                <dt data-l10n-id="status-depth"></dt>
+                <dd id="dungeon-info-depth">--</dd>
+              </div>
+              <div id="dungeon-info-boss-row">
+                <dt data-l10n-id="status-boss"></dt>
+                <dd id="dungeon-info-boss">--</dd>
+              </div>
+            </dl>
           </section>
 
           <section id="ability-panel" class="status-panel ability-panel" aria-labelledby="ability-title">
@@ -535,10 +515,50 @@
           </section>
         </aside>
 
-        <aside id="player-tool-column" class="tool-column" aria-label="" hidden></aside>
       </main>
 
-      <div id="player-page-parking" hidden></div>
+      <div id="player-page-parking" hidden>
+        <section id="character-details-panel" class="status-panel character-details-panel" aria-labelledby="character-details-title">
+          <div class="panel-heading">
+            <span id="character-details-title" data-l10n-id="panel-character-details-title"></span>
+          </div>
+          <dl class="status-grid progression-detail-grid">
+            <div><dt data-l10n-id="progression-experience"></dt><dd id="progression-experience-value">--</dd></div>
+            <div><dt data-l10n-id="progression-cap"></dt><dd id="progression-cap-value">--</dd></div>
+            <div><dt data-l10n-id="progression-points"></dt><dd id="progression-points-value">--</dd></div>
+            <div><dt data-l10n-id="progression-personality"></dt><dd id="progression-personality-value">--</dd></div>
+            <div><dt data-l10n-id="progression-multipliers"></dt><dd id="progression-multipliers-value">--</dd></div>
+          </dl>
+          <ul id="attribute-list" class="attribute-list" aria-live="polite"></ul>
+          <div class="progression-subheading" data-l10n-id="progression-skills"></div>
+          <ul id="skill-list" class="skill-list" aria-live="polite"></ul>
+          <div class="progression-subheading" data-l10n-id="progression-virtues"></div>
+          <ul id="virtue-list" class="virtue-list" aria-live="polite"></ul>
+          <div class="progression-subheading" data-l10n-id="progression-mutations"></div>
+          <ul id="mutation-list" class="mutation-list" aria-live="polite"></ul>
+          <details class="player-details weapon-proficiency-details">
+            <summary data-l10n-id="progression-weapon-proficiencies"></summary>
+            <div class="weapon-proficiency-groups">
+              <section aria-labelledby="weapon-proficiency-melee-title">
+                <div id="weapon-proficiency-melee-title" class="progression-subheading" data-l10n-id="weapon-proficiency-melee"></div>
+                <ul id="weapon-proficiency-melee-list" class="weapon-proficiency-list" aria-live="polite"></ul>
+              </section>
+              <section aria-labelledby="weapon-proficiency-launcher-title">
+                <div id="weapon-proficiency-launcher-title" class="progression-subheading" data-l10n-id="weapon-proficiency-launchers"></div>
+                <ul id="weapon-proficiency-launcher-list" class="weapon-proficiency-list" aria-live="polite"></ul>
+              </section>
+            </div>
+          </details>
+          <details class="player-details weapon-proficiency-details">
+            <summary data-l10n-id="progression-misc-proficiencies"></summary>
+            <ul id="mining-proficiency-list" class="weapon-proficiency-list" aria-live="polite"></ul>
+          </details>
+          <details class="player-details weapon-proficiency-details">
+            <summary data-l10n-id="progression-materials"></summary>
+            <ul id="material-list" class="weapon-proficiency-list" aria-live="polite"></ul>
+          </details>
+        </section>
+      </div>
 
       <dialog id="player-page-dialog" class="player-page-dialog" aria-labelledby="player-page-title">
         <header>
@@ -746,29 +766,19 @@
           <button id="player-ui-settings-close" class="quiet-button dialog-close" type="button" data-l10n-id="action-dialog-close"></button>
         </header>
         <div class="settings-section">
-          <h3 data-l10n-id="settings-panel-layout-title"></h3>
-          <p data-l10n-id="settings-panel-layout-description"></p>
-          <div class="settings-grid">
-            <label for="inventory-presentation">
-              <span data-l10n-id="settings-inventory-presentation"></span>
-              <select id="inventory-presentation">
-                <option value="page" data-l10n-id="settings-presentation-page"></option>
-                <option value="column" data-l10n-id="settings-presentation-column"></option>
-              </select>
-            </label>
-            <label for="ability-presentation">
-              <span data-l10n-id="settings-ability-presentation"></span>
-              <select id="ability-presentation">
-                <option value="page" data-l10n-id="settings-presentation-page"></option>
-                <option value="column" data-l10n-id="settings-presentation-column"></option>
-              </select>
-            </label>
-          </div>
-        </div>
-        <div class="settings-section">
           <h3 data-l10n-id="settings-gameplay-title"></h3>
           <div id="gameplay-settings-host" class="settings-grid gameplay-settings-host"></div>
         </div>
+        <details class="run-details">
+          <summary data-l10n-id="status-technical-details"></summary>
+          <p class="run-metadata">
+            <span data-l10n-id="run-build-label"></span>
+            <strong id="run-build-value">--</strong>
+            <span aria-hidden="true" data-l10n-id="run-metadata-separator"></span>
+            <span data-l10n-id="run-seed-label"></span>
+            <strong id="run-seed-value">--</strong>
+          </p>
+        </details>
       </dialog>
     </div>
     <script type="module" src="/src/main.ts"></script>

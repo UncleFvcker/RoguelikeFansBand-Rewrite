@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
 
-import type { AppDom } from "./app-dom";
 import type { InputPreset } from "./input-controller";
 import type { Localization, MessageKey } from "./localization";
 import type { GameCommand, GameSnapshot, GameUpdate } from "./protocol";
@@ -38,20 +37,19 @@ export interface OnboardingPrompt {
 
 export type GuidanceInteraction = "look" | "inventory" | "targeting" | "save";
 
-type GuidanceDom = Pick<
-  AppDom,
-  | "journeyPanel"
-  | "journeyDungeonName"
-  | "journeyDepth"
-  | "journeyBoss"
-  | "onboardingKind"
-  | "onboardingTitle"
-  | "onboardingDetail"
-  | "onboardingControl"
-  | "onboardingProgress"
-  | "onboardingHideOptional"
-  | "onboardingReset"
->;
+type GuidanceDom = {
+  readonly journeyPanel: HTMLElement;
+  readonly journeyDungeonName: HTMLElement;
+  readonly journeyDepth: HTMLElement;
+  readonly journeyBoss: HTMLElement;
+  readonly onboardingKind: HTMLElement;
+  readonly onboardingTitle: HTMLElement;
+  readonly onboardingDetail: HTMLElement;
+  readonly onboardingControl: HTMLElement;
+  readonly onboardingProgress: HTMLElement;
+  readonly onboardingHideOptional: HTMLInputElement;
+  readonly onboardingReset: HTMLButtonElement;
+};
 
 type GuidanceStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 

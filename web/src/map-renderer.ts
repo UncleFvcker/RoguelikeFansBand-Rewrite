@@ -23,7 +23,7 @@ export class MapRenderer {
   readonly #backend: RendererBackend;
   #world: RenderWorld | undefined;
   #host: HTMLElement | undefined;
-  #cameraMode: CameraMode = "full-map";
+  #cameraMode: CameraMode = "player-centered";
   #zoom: ZoomLevel = 1;
   #resizeObserver: ResizeObserver | undefined;
   #width = 0;
@@ -42,7 +42,7 @@ export class MapRenderer {
     tilesetManifestUrl: string,
     contentGlyphs: Readonly<Record<string, string>>,
     canvasLabel: string,
-    cameraMode: CameraMode = "full-map",
+    cameraMode: CameraMode = "player-centered",
     zoom: ZoomLevel = 1,
   ): Promise<TilesetChangeResult> {
     this.#host = host;
@@ -96,6 +96,10 @@ export class MapRenderer {
 
   setCameraFocus(position: Position | undefined): void {
     this.#cameraFocus = position ? { ...position } : undefined;
+    this.#updateCamera();
+  }
+
+  refreshLayout(): void {
     this.#updateCamera();
   }
 

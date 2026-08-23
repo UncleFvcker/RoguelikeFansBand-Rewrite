@@ -41,6 +41,7 @@ type InputDom = Pick<
   | "targetModeToggle"
   | "lookModeToggle"
   | "targetModeStatus"
+  | "combatContext"
 >;
 
 export class InputController {
@@ -54,7 +55,6 @@ export class InputController {
   readonly #describeLook: (position: { readonly x: number; readonly y: number }) => string;
   readonly #openObjectList: () => void;
   readonly #openMogaminator: () => void;
-  readonly #onLookOrTargeting: (interaction: "look" | "targeting") => void;
   readonly #onLookFocusChange: (position: Position | undefined) => void;
   readonly #announce: (
     key: MessageKey,
@@ -78,7 +78,6 @@ export class InputController {
     describeLook: (position: { readonly x: number; readonly y: number }) => string;
     openObjectList: () => void;
     openMogaminator: () => void;
-    onLookOrTargeting: (interaction: "look" | "targeting") => void;
     onLookFocusChange: (position: Position | undefined) => void;
     announce: (
       key: MessageKey,
@@ -96,7 +95,6 @@ export class InputController {
     this.#describeLook = options.describeLook;
     this.#openObjectList = options.openObjectList;
     this.#openMogaminator = options.openMogaminator;
-    this.#onLookOrTargeting = options.onLookOrTargeting;
     this.#onLookFocusChange = options.onLookFocusChange;
     this.#announce = options.announce;
   }
@@ -141,7 +139,6 @@ export class InputController {
     this.#state.targeting = next;
     this.#state.targetingIntent = { type: "look" };
     this.#announce("message-look-mode-started", undefined, "system");
-    this.#onLookOrTargeting("look");
     this.#onLookFocusChange(next.cursor);
     this.render();
   }
@@ -222,7 +219,6 @@ export class InputController {
     this.#state.targeting = next;
     this.#state.targetingIntent = intent;
     this.#announce("message-target-mode-started", undefined, "system");
-    this.#onLookOrTargeting("targeting");
     this.render();
   }
 
@@ -300,7 +296,6 @@ export class InputController {
         this.#state.targeting = targeting;
         this.#state.targetingIntent = { type: "mutation-direction" };
         this.#announce("message-mutation-direction-required", undefined, "mutation");
-        this.#onLookOrTargeting("targeting");
       }
     } else if (!pendingDirection && this.#state.targetingIntent?.type === "mutation-direction") {
       this.cancelTargeting(false);
@@ -321,7 +316,6 @@ export class InputController {
         this.#state.targeting = targeting;
         this.#state.targetingIntent = { type: "ability-direction" };
         this.#announce("message-ability-direction-required", undefined, "ability");
-        this.#onLookOrTargeting("targeting");
       }
     } else if (
       !pendingAbilityDirection &&
@@ -385,6 +379,7 @@ export class InputController {
     this.#dom.lookModeToggle.disabled = this.#state.busy || this.#state.commandBlocked;
     this.#dom.mapHost.dataset.targeting = this.#state.targeting ? "true" : "false";
     this.#dom.mapHost.dataset.targetingAction = this.#state.targetingIntent?.type ?? "none";
+    this.#dom.combatContext.dataset.targeting = this.#state.targeting ? "true" : "false";
     this.#dom.targetCursor.hidden = !this.#state.targeting;
     if (!this.#state.targeting) {
       this.#dom.targetModeStatus.textContent = this.#localization.format(
@@ -395,7 +390,7 @@ export class InputController {
       return;
     }
 
-    const { cursor, spec } = this.#state.targeting;
+    const { origin, cursor, spec } = this.#state.targeting;
     const cameraX = Number(this.#dom.mapHost.dataset.cameraX ?? 0);
     const cameraY = Number(this.#dom.mapHost.dataset.cameraY ?? 0);
     const renderedCellSize = MAP_CELL_SIZE * this.#getZoom();
@@ -416,8 +411,11 @@ export class InputController {
             },
           )
         : this.#localization.format("target-status-active", {
-            x: cursor.x,
-            y: cursor.y,
+            contents: this.#describeLook(cursor),
+            direction: this.#localization.format(
+              `nearby-direction-${targetDirectionKey(origin, cursor)}`,
+            ),
+            distance: gridDistance(origin, cursor),
             range: spec.range,
           });
   }
@@ -619,7 +617,6 @@ export class InputController {
       this.#state.targetingIntent?.type === "look" ||
       this.#state.targetingIntent?.type === "local-travel"
     ) {
-      this.#onLookOrTargeting("look");
       this.#onLookFocusChange(this.#state.targeting.cursor);
     }
     this.render();
@@ -1024,6 +1021,19 @@ function gridDistance(from: Position | undefined, to: Position): number {
   return from
     ? Math.max(Math.abs(to.x - from.x), Math.abs(to.y - from.y))
     : 0;
+}
+
+function targetDirectionKey(
+  from: Position,
+  to: Position,
+): "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw" | "here" {
+  const x = Math.sign(to.x - from.x);
+  const y = Math.sign(to.y - from.y);
+  if (x === 0 && y === 0) return "here";
+  if (x === 0) return y < 0 ? "n" : "s";
+  if (y === 0) return x < 0 ? "w" : "e";
+  if (x > 0) return y < 0 ? "ne" : "se";
+  return y < 0 ? "nw" : "sw";
 }
 
 function samePosition(left: Position, right: Position): boolean {
