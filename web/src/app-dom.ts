@@ -50,6 +50,17 @@ export interface AppDom {
   readonly positionValue: HTMLElement;
   readonly hashValue: HTMLElement;
   readonly progressionIdentityValue: HTMLElement;
+  readonly hudLocationValue: HTMLElement;
+  readonly hudExperience: HTMLProgressElement;
+  readonly characterNameValue: HTMLElement;
+  readonly characterRaceValue: HTMLElement;
+  readonly characterClassValue: HTMLElement;
+  readonly characterLevelValue: HTMLElement;
+  readonly characterMaximumExperienceValue: HTMLElement;
+  readonly characterNextExperienceValue: HTMLElement;
+  readonly characterGoldValue: HTMLElement;
+  readonly characterWorldTimeValue: HTMLElement;
+  readonly characterVitalsList: HTMLElement;
   readonly progressionLevelValue: HTMLElement;
   readonly progressionExperienceValue: HTMLElement;
   readonly progressionCapValue: HTMLElement;
@@ -59,9 +70,10 @@ export interface AppDom {
   readonly attributeList: HTMLUListElement;
   readonly hudAttributeList: HTMLUListElement;
   readonly skillList: HTMLUListElement;
-  readonly weaponProficiencyMeleeList: HTMLUListElement;
-  readonly weaponProficiencyLauncherList: HTMLUListElement;
-  readonly miningProficiencyList: HTMLUListElement;
+  readonly characterProficiencyTables: HTMLDivElement;
+  readonly characterAttributeSources: HTMLDivElement;
+  readonly characterTraitDefenses: HTMLDivElement;
+  readonly characterTraitAttacks: HTMLDivElement;
   readonly materialList: HTMLUListElement;
   readonly virtueList: HTMLUListElement;
   readonly mutationList: HTMLUListElement;
@@ -81,6 +93,24 @@ export interface AppDom {
   readonly campaignTasksValue: HTMLElement;
   readonly campaignRetire: HTMLButtonElement;
   readonly inventoryCount: HTMLElement;
+  readonly inventoryFilters: HTMLElement;
+  readonly inventorySearch: HTMLInputElement;
+  readonly inventoryFilterReset: HTMLButtonElement;
+  readonly inventoryDetailDialog: HTMLDialogElement;
+  readonly inventoryDetailTitle: HTMLElement;
+  readonly inventoryDetailBody: HTMLElement;
+  readonly inventoryDetailClose: HTMLButtonElement;
+  readonly inventoryDetailActions: HTMLElement;
+  readonly inventoryMore: HTMLButtonElement;
+  readonly inventoryMoreDialog: HTMLDialogElement;
+  readonly inventoryActionDialog: HTMLDialogElement;
+  readonly inventoryActionForm: HTMLFormElement;
+  readonly inventoryActionTitle: HTMLElement;
+  readonly inventoryActionItem: HTMLElement;
+  readonly inventoryQuantityField: HTMLElement;
+  readonly inventoryInscriptionField: HTMLElement;
+  readonly inventoryActionCancel: HTMLButtonElement;
+  readonly inventoryActionConfirm: HTMLButtonElement;
   readonly inventorySelectionCount: HTMLElement;
   readonly inventoryUse: HTMLButtonElement;
   readonly inventoryAbsorb: HTMLButtonElement;
@@ -157,6 +187,17 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     positionValue: element<HTMLElement>(document, "position-value"),
     hashValue: element<HTMLElement>(document, "hash-value"),
     progressionIdentityValue: element<HTMLElement>(document, "progression-identity-value"),
+    hudLocationValue: element<HTMLElement>(document, "hud-location-value"),
+    hudExperience: element<HTMLProgressElement>(document, "hud-experience"),
+    characterNameValue: element<HTMLElement>(document, "character-name-value"),
+    characterRaceValue: element<HTMLElement>(document, "character-race-value"),
+    characterClassValue: element<HTMLElement>(document, "character-class-value"),
+    characterLevelValue: element<HTMLElement>(document, "character-level-value"),
+    characterMaximumExperienceValue: element<HTMLElement>(document, "character-maximum-experience-value"),
+    characterNextExperienceValue: element<HTMLElement>(document, "character-next-experience-value"),
+    characterGoldValue: element<HTMLElement>(document, "character-gold-value"),
+    characterWorldTimeValue: element<HTMLElement>(document, "character-world-time-value"),
+    characterVitalsList: element<HTMLElement>(document, "character-vitals-list"),
     progressionLevelValue: element<HTMLElement>(document, "progression-level-value"),
     progressionExperienceValue: element<HTMLElement>(document, "progression-experience-value"),
     progressionCapValue: element<HTMLElement>(document, "progression-cap-value"),
@@ -172,15 +213,10 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     attributeList: element<HTMLUListElement>(document, "attribute-list"),
     hudAttributeList: element<HTMLUListElement>(document, "hud-attribute-list"),
     skillList: element<HTMLUListElement>(document, "skill-list"),
-    weaponProficiencyMeleeList: element<HTMLUListElement>(
-      document,
-      "weapon-proficiency-melee-list",
-    ),
-    weaponProficiencyLauncherList: element<HTMLUListElement>(
-      document,
-      "weapon-proficiency-launcher-list",
-    ),
-    miningProficiencyList: element<HTMLUListElement>(document, "mining-proficiency-list"),
+    characterProficiencyTables: element<HTMLDivElement>(document, "character-proficiency-tables"),
+    characterAttributeSources: element<HTMLDivElement>(document, "character-attribute-sources"),
+    characterTraitDefenses: element<HTMLDivElement>(document, "character-trait-defenses"),
+    characterTraitAttacks: element<HTMLDivElement>(document, "character-trait-attacks"),
     materialList: element<HTMLUListElement>(document, "material-list"),
     virtueList: element<HTMLUListElement>(document, "virtue-list"),
     mutationList: element<HTMLUListElement>(document, "mutation-list"),
@@ -205,6 +241,24 @@ export function createAppDom(document: DocumentLookup): Readonly<AppDom> {
     campaignTasksValue: element<HTMLElement>(document, "campaign-tasks-value"),
     campaignRetire: element<HTMLButtonElement>(document, "campaign-retire"),
     inventoryCount: element<HTMLElement>(document, "inventory-count"),
+    inventoryFilters: element<HTMLElement>(document, "inventory-filters"),
+    inventorySearch: element<HTMLInputElement>(document, "inventory-search"),
+    inventoryFilterReset: element<HTMLButtonElement>(document, "inventory-filter-reset"),
+    inventoryDetailDialog: element<HTMLDialogElement>(document, "inventory-detail-dialog"),
+    inventoryDetailTitle: element<HTMLElement>(document, "inventory-detail-title"),
+    inventoryDetailBody: element<HTMLElement>(document, "inventory-detail-body"),
+    inventoryDetailClose: element<HTMLButtonElement>(document, "inventory-detail-close"),
+    inventoryDetailActions: element<HTMLElement>(document, "inventory-detail-actions"),
+    inventoryMore: element<HTMLButtonElement>(document, "inventory-more"),
+    inventoryMoreDialog: element<HTMLDialogElement>(document, "inventory-more-dialog"),
+    inventoryActionDialog: element<HTMLDialogElement>(document, "inventory-action-dialog"),
+    inventoryActionForm: element<HTMLFormElement>(document, "inventory-action-form"),
+    inventoryActionTitle: element<HTMLElement>(document, "inventory-action-title"),
+    inventoryActionItem: element<HTMLElement>(document, "inventory-action-item"),
+    inventoryQuantityField: element<HTMLElement>(document, "inventory-quantity-field"),
+    inventoryInscriptionField: element<HTMLElement>(document, "inventory-inscription-field"),
+    inventoryActionCancel: element<HTMLButtonElement>(document, "inventory-action-cancel"),
+    inventoryActionConfirm: element<HTMLButtonElement>(document, "inventory-action-confirm"),
     inventorySelectionCount: element<HTMLElement>(document, "inventory-selection-count"),
     inventoryUse: element<HTMLButtonElement>(document, "inventory-use"),
     inventoryAbsorb: element<HTMLButtonElement>(document, "inventory-absorb"),

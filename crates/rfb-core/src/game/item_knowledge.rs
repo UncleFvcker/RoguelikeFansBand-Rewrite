@@ -179,11 +179,27 @@ impl Game {
     /// knowledge.
     pub(super) fn visible_item_resistances(&self, item: &ItemInstance) -> Vec<ResistanceDto> {
         let mut profile = ResistanceProfile::default();
-        let mut record = |damage_type: DamageType, level: ResistanceLevel| {
+        for source in self.visible_item_resistance_sources(item) {
+            let damage_type = DamageType::from(source.damage_type);
+            let level = ResistanceLevel::from(source.level);
             let current = profile.level(damage_type);
             if resistance_rank(level) > resistance_rank(current) {
                 profile.set(damage_type, level);
             }
+        }
+        profile.to_dtos()
+    }
+
+    pub(super) fn visible_item_resistance_sources(
+        &self,
+        item: &ItemInstance,
+    ) -> Vec<ResistanceDto> {
+        let mut sources = Vec::new();
+        let mut record = |damage_type: DamageType, level: ResistanceLevel| {
+            sources.push(ResistanceDto {
+                damage_type: damage_type.into(),
+                level: level.into(),
+            });
         };
         if self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware
             && let Some(definition) = self.content.item(&item.kind_id)
@@ -224,7 +240,7 @@ impl Game {
                 }
             }
         }
-        profile.to_dtos()
+        sources
     }
 
     pub(super) fn visible_item_status_immunities(&self, item: &ItemInstance) -> Vec<String> {

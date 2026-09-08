@@ -26,6 +26,24 @@ import type {
 type InventoryDom = Pick<
   AppDom,
   | "inventoryCount"
+  | "inventoryFilters"
+  | "inventorySearch"
+  | "inventoryFilterReset"
+  | "inventoryDetailDialog"
+  | "inventoryDetailTitle"
+  | "inventoryDetailBody"
+  | "inventoryDetailClose"
+  | "inventoryDetailActions"
+  | "inventoryMore"
+  | "inventoryMoreDialog"
+  | "inventoryActionDialog"
+  | "inventoryActionForm"
+  | "inventoryActionTitle"
+  | "inventoryActionItem"
+  | "inventoryQuantityField"
+  | "inventoryInscriptionField"
+  | "inventoryActionCancel"
+  | "inventoryActionConfirm"
   | "inventorySelectionCount"
   | "inventoryUse"
   | "inventoryAbsorb"
@@ -71,6 +89,8 @@ export class InventoryPanel {
     curse: ItemCurseSeverityDto | string | undefined,
   ) => string;
   #installed = false;
+  #detailItemId: string | undefined;
+  #pendingAction: { kind: "drop" | "inscribe" | "destroy"; itemId: string } | undefined;
 
   constructor(options: {
     dom: InventoryDom;
@@ -108,6 +128,15 @@ export class InventoryPanel {
   install(): void {
     if (this.#installed) return;
     this.#installed = true;
+    this.#dom.inventoryDetailClose.addEventListener("click", this.#closeDetail);
+    this.#dom.inventoryDetailDialog.addEventListener("close", this.#handleDetailClosed);
+    this.#dom.inventoryMore.addEventListener("click", this.#openMore);
+    this.#dom.inventoryActionForm.addEventListener("submit", this.#submitAction);
+    this.#dom.inventoryActionCancel.addEventListener("click", this.#closeAction);
+    this.#dom.inventoryActionDialog.addEventListener("close", this.#handleActionClosed);
+    this.#dom.inventoryFilters.addEventListener("change", this.#handleFilterChange);
+    this.#dom.inventorySearch.addEventListener("input", this.#handleFilterChange);
+    this.#dom.inventoryFilterReset.addEventListener("click", this.#handleFilterReset);
     this.#dom.inventoryUse.addEventListener("click", this.#handleUse);
     this.#dom.inventoryAbsorb.addEventListener("click", this.#handleAbsorb);
     this.#dom.inventoryUseOnMount.addEventListener("click", this.#handleUseOnMount);
@@ -122,6 +151,18 @@ export class InventoryPanel {
   dispose(): void {
     if (!this.#installed) return;
     this.#installed = false;
+    this.#dom.inventoryDetailClose.removeEventListener("click", this.#closeDetail);
+    this.#dom.inventoryDetailDialog.removeEventListener("close", this.#handleDetailClosed);
+    this.#closeDetail();
+    this.#dom.inventoryMore.removeEventListener("click", this.#openMore);
+    this.#dom.inventoryActionForm.removeEventListener("submit", this.#submitAction);
+    this.#dom.inventoryActionCancel.removeEventListener("click", this.#closeAction);
+    this.#dom.inventoryActionDialog.removeEventListener("close", this.#handleActionClosed);
+    this.#closeMore();
+    this.#closeAction();
+    this.#dom.inventoryFilters.removeEventListener("change", this.#handleFilterChange);
+    this.#dom.inventorySearch.removeEventListener("input", this.#handleFilterChange);
+    this.#dom.inventoryFilterReset.removeEventListener("click", this.#handleFilterReset);
     this.#dom.inventoryUse.removeEventListener("click", this.#handleUse);
     this.#dom.inventoryAbsorb.removeEventListener("click", this.#handleAbsorb);
     this.#dom.inventoryUseOnMount.removeEventListener("click", this.#handleUseOnMount);
@@ -136,10 +177,6 @@ export class InventoryPanel {
   render(inventory: InventoryItemDto[], equipment: EquipmentItemDto[]): void {
     this.#state.inventory = inventory.map((item) => ({ ...item }));
     this.#state.equipment = equipment.map((item) => ({ ...item }));
-    const availableIds = new Set(inventory.map((item) => item.id));
-    for (const itemId of this.#state.selectedInventoryIds) {
-      if (!availableIds.has(itemId)) this.#state.selectedInventoryIds.delete(itemId);
-    }
     const stacks = this.#localization.format("inventory-stack-count", {
       count: inventory.length,
     });
@@ -171,6 +208,7 @@ export class InventoryPanel {
       : stacks;
     this.#renderInventoryItems(inventory);
     this.#renderEquipment(equipment);
+    if (this.#dom.inventoryDetailDialog.open) this.#renderDetail();
     this.updateActions();
   }
 
@@ -182,91 +220,53 @@ export class InventoryPanel {
       "inventory-selected-count",
       { count: selected.length },
     );
-    this.#dom.inventoryEquip.disabled =
-      this.#state.busy ||
-      this.#state.playerDead ||
-      worldMap ||
-      selected.length !== 1 ||
-      !selected[0]?.equipmentSlot;
-    this.#dom.inventoryUse.disabled =
-      this.#state.busy ||
-      this.#state.playerDead ||
-      worldMap ||
-      !(
-        (selected.length === 1 &&
-          selected[0]?.usable &&
-          !selected[0].requiresRechargeTargets) ||
-        selectedRechargingItems(selected)
-      );
-    this.#dom.inventoryAbsorb.disabled =
-      this.#state.busy ||
-      this.#state.playerDead ||
-      worldMap ||
-      absorbableItemCandidates(
-        this.#state,
-        (displayNameKey, kindId) => this.#formatter.visibleItemName(displayNameKey, kindId),
-      ).length === 0;
-    this.#dom.inventoryUseOnMount.disabled =
-      this.#state.busy ||
-      this.#state.playerDead ||
-      worldMap ||
-      selected.length !== 1 ||
-      !selected[0]?.mountUsable ||
-      !this.#state.status?.player.ridingActorId;
-    this.#dom.inventoryAppraise.disabled =
-      this.#state.busy ||
-      this.#state.playerDead ||
-      worldMap ||
-      selected.length !== 1 ||
-      selected[0]?.identification !== "unexamined";
-    const [item] = selected;
-    if (selected.length === 1 && item) {
-      if (this.#state.dropQuantityItemId !== item.id) {
-        this.#state.dropQuantityItemId = item.id;
-        this.#dom.inventoryDropQuantity.value = String(item.quantity);
+    const blocked = this.#state.busy || this.#state.playerDead || worldMap;
+    const item = selected.length === 1 ? selected[0] : undefined;
+    const actions: [HTMLButtonElement, boolean][] = [
+      [this.#dom.inventoryEquip, Boolean(item?.equipmentSlot)],
+      [this.#dom.inventoryUse, Boolean((item?.usable && !item.requiresRechargeTargets) || selectedRechargingItems(selected))],
+      [this.#dom.inventoryAbsorb, absorbableItemCandidates(this.#state,
+        (key, kindId) => this.#formatter.visibleItemName(key, kindId)).length > 0],
+      [this.#dom.inventoryUseOnMount, Boolean(item?.mountUsable && this.#state.status?.player.ridingActorId)],
+      [this.#dom.inventoryAppraise, item?.identification === "unexamined"],
+      [this.#dom.inventoryDrop, selected.length > 0],
+      [this.#dom.inventoryInscribe, Boolean(item)],
+      [this.#dom.inventoryDestroy, Boolean(item)],
+    ];
+    for (const [button, available] of actions) {
+      button.hidden = !available;
+      button.disabled = blocked || !available;
+    }
+    this.#dom.inventoryMore.hidden = [
+      this.#dom.inventoryAbsorb, this.#dom.inventoryUseOnMount, this.#dom.inventoryAppraise,
+      this.#dom.inventoryInscribe, this.#dom.inventoryDestroy,
+    ].every((button) => button.hidden);
+    this.#dom.inventoryMore.disabled = blocked;
+    if (this.#pendingAction) {
+      if (!item || item.id !== this.#pendingAction.itemId) {
+        this.#closeAction();
+      } else {
+        const inscription = this.#pendingAction.kind === "inscribe";
+        this.#dom.inventoryDropQuantity.max = String(item.quantity);
+        this.#dom.inventoryDropQuantity.disabled = blocked || inscription;
+        this.#dom.inventoryInscription.disabled = blocked || !inscription;
+        this.#dom.inventoryActionConfirm.disabled = blocked ||
+          (!inscription && parseDropQuantity(this.#dom.inventoryDropQuantity.value, item.quantity) === undefined);
       }
-      if (
-        this.#dom.inventoryInscription.ownerDocument.activeElement !==
-        this.#dom.inventoryInscription
-      ) {
-        this.#dom.inventoryInscription.value = item.inscription ?? "";
-      }
-      this.#dom.inventoryDropQuantity.min = "1";
-      this.#dom.inventoryDropQuantity.max = String(item.quantity);
-      this.#dom.inventoryDropQuantity.disabled =
-        this.#state.busy || this.#state.playerDead || worldMap;
-      this.#dom.inventoryDrop.disabled =
-        this.#state.busy ||
-        this.#state.playerDead ||
-        worldMap ||
-        parseDropQuantity(this.#dom.inventoryDropQuantity.value, item.quantity) === undefined;
-      this.#dom.inventoryInscription.disabled =
-        this.#state.busy || this.#state.playerDead || worldMap;
-      this.#dom.inventoryInscribe.disabled =
-        this.#state.busy || this.#state.playerDead || worldMap;
-      this.#dom.inventoryDestroy.disabled = this.#dom.inventoryDrop.disabled;
-    } else {
-      this.#state.dropQuantityItemId = undefined;
-      this.#dom.inventoryDropQuantity.value = "";
-      this.#dom.inventoryDropQuantity.disabled = true;
-      this.#dom.inventoryDrop.disabled =
-        this.#state.busy || this.#state.playerDead || worldMap || selected.length === 0;
-      this.#dom.inventoryInscription.value = "";
-      this.#dom.inventoryInscription.disabled = true;
-      this.#dom.inventoryInscribe.disabled = true;
-      this.#dom.inventoryDestroy.disabled = true;
     }
     for (const checkbox of this.#dom.inventoryList.querySelectorAll<HTMLInputElement>(
       'input[type="checkbox"]',
     )) {
       checkbox.disabled = this.#state.busy || this.#state.playerDead || worldMap;
     }
-    for (const button of this.#dom.equipmentList.querySelectorAll<HTMLButtonElement>("button")) {
+    for (const button of this.#dom.inventoryDetailActions.querySelectorAll<HTMLButtonElement>("button")) {
       const refuelTargetId = button.dataset.refuelTargetId;
       button.disabled =
         this.#state.busy ||
         this.#state.playerDead ||
         worldMap ||
+        (button.dataset.activationItemId !== undefined &&
+          !this.#state.equipment.find((item) => item.id === button.dataset.activationItemId)?.usable) ||
         (refuelTargetId !== undefined && this.#refuelSourceForTarget(refuelTargetId) === undefined);
     }
   }
@@ -288,6 +288,7 @@ export class InventoryPanel {
   };
 
   readonly #handleAbsorb = (): void => {
+    this.#closeMore();
     if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
     this.#onInventoryInteraction();
     this.#selectItemTargetFrom(
@@ -300,10 +301,12 @@ export class InventoryPanel {
   };
 
   readonly #handleUseOnMount = (): void => {
+    this.#closeMore();
     void this.#useSelectedItemOnMount();
   };
 
   readonly #handleAppraise = (): void => {
+    this.#closeMore();
     void this.#appraiseSelectedItem();
   };
 
@@ -312,32 +315,108 @@ export class InventoryPanel {
   };
 
   readonly #handleDrop = (): void => {
-    void this.#dropSelectedItems();
+    if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+    const selected = this.#selectedItems();
+    if (selected.length === 1 && selected[0]!.quantity > 1) {
+      this.#openAction("drop");
+    } else {
+      this.#dom.inventoryDropQuantity.value = "1";
+      void this.#dropSelectedItems();
+    }
   };
 
   readonly #handleInscribe = (): void => {
-    void this.#inscribeSelectedItem();
+    this.#openAction("inscribe");
   };
 
   readonly #handleDestroy = (): void => {
-    void this.#destroySelectedItem();
+    this.#openAction("destroy");
+  };
+
+  readonly #openMore = (): void => {
+    if (!this.#dom.inventoryMore.disabled && !this.#dom.inventoryMoreDialog.open) {
+      this.#dom.inventoryMoreDialog.showModal();
+    }
+  };
+
+  readonly #closeMore = (): void => {
+    if (this.#dom.inventoryMoreDialog.open) this.#dom.inventoryMoreDialog.close();
+  };
+
+  #openAction(kind: "drop" | "inscribe" | "destroy"): void {
+    this.#closeMore();
+    const selected = this.#selectedItems();
+    const item = selected[0];
+    if (this.#state.busy || this.#state.playerDead || this.#state.worldMap || selected.length !== 1 || !item) return;
+    this.#pendingAction = { kind, itemId: item.id };
+    const title = this.#localization.format(`action-inventory-${kind}`);
+    this.#dom.inventoryActionTitle.textContent = title;
+    this.#dom.inventoryActionConfirm.textContent = title;
+    this.#dom.inventoryActionItem.textContent = this.#itemName(item);
+    this.#dom.inventoryDropQuantity.value = String(item.quantity);
+    this.#dom.inventoryInscription.value = item.inscription ?? "";
+    this.#dom.inventoryQuantityField.hidden = kind === "inscribe";
+    this.#dom.inventoryInscriptionField.hidden = kind !== "inscribe";
+    this.updateActions();
+    this.#dom.inventoryActionDialog.showModal();
+    (kind === "inscribe" ? this.#dom.inventoryInscription : this.#dom.inventoryDropQuantity).focus();
+  }
+
+  readonly #closeAction = (): void => {
+    this.#pendingAction = undefined;
+    if (this.#dom.inventoryActionDialog.open) this.#dom.inventoryActionDialog.close();
+  };
+
+  readonly #handleActionClosed = (): void => {
+    if (!this.#dom.inventoryActionDialog.open) this.#pendingAction = undefined;
+  };
+
+  readonly #submitAction = (event: Event): void => {
+    event.preventDefault();
+    this.updateActions();
+    const pending = this.#pendingAction;
+    if (!pending || !this.#dom.inventoryActionDialog.open || this.#dom.inventoryActionConfirm.disabled) return;
+    if (pending.kind === "drop") void this.#dropSelectedItems();
+    else if (pending.kind === "inscribe") void this.#inscribeSelectedItem();
+    else void this.#destroySelectedItem();
+    this.#closeAction();
   };
 
   readonly #handleQuantityInput = (): void => {
     this.updateActions();
   };
 
+  readonly #handleFilterChange = (): void => {
+    this.#renderInventoryItems(this.#state.inventory);
+    this.#dom.inventoryList.scrollTop = 0;
+    this.updateActions();
+    this.#onInventoryInteraction();
+  };
+
+  readonly #handleFilterReset = (): void => {
+    this.#dom.inventoryFilters.querySelector<HTMLInputElement>('input[value="all"]')!.checked = true;
+    this.#dom.inventorySearch.value = "";
+    this.#handleFilterChange();
+  };
+
   #renderInventoryItems(inventory: InventoryItemDto[]): void {
+    const filter = this.#dom.inventoryFilters.querySelector<HTMLInputElement>("input:checked")!.value as InventoryFilter;
+    const visible = filterInventoryItems(inventory, filter, this.#dom.inventorySearch.value, (item) => this.#itemName(item));
+    const visibleIds = new Set(visible.map((item) => item.id));
+    for (const itemId of this.#state.selectedInventoryIds) {
+      if (!visibleIds.has(itemId)) this.#state.selectedInventoryIds.delete(itemId);
+    }
     const document = this.#dom.inventoryList.ownerDocument;
-    this.#dom.inventoryList.replaceChildren();
-    if (inventory.length === 0) {
+    const scrollTop = this.#dom.inventoryList.scrollTop;
+    const rows: HTMLElement[] = [];
+    if (visible.length === 0) {
       const empty = document.createElement("li");
       empty.className = "inventory-empty";
-      empty.textContent = this.#localization.format("inventory-empty");
-      this.#dom.inventoryList.append(empty);
+      empty.textContent = this.#localization.format(inventory.length === 0 ? "inventory-empty" : "inventory-filter-empty");
+      this.#dom.inventoryList.replaceChildren(empty);
       return;
     }
-    for (const item of inventory) {
+    for (const item of visible) {
       const row = document.createElement("li");
       row.className = "inventory-item";
       row.dataset.itemId = item.id;
@@ -352,23 +431,42 @@ export class InventoryPanel {
         this.#onInventoryInteraction();
         this.updateActions();
       });
-      const details = document.createElement("span");
-      details.className = "inventory-item-details";
-      this.#appendItemDetails(details, item);
+      const name = document.createElement("span");
+      name.className = "inventory-item-name";
+      name.textContent = this.#itemName(item);
+      name.title = name.textContent;
       const quantity = document.createElement("span");
       quantity.className = "inventory-quantity";
       quantity.textContent = this.#localization.format("inventory-quantity", {
         quantity: item.quantity,
       });
-      label.append(checkbox, details, quantity);
-      row.append(label);
-      this.#dom.inventoryList.append(row);
+      const status = document.createElement("span");
+      status.className = "inventory-item-status";
+      status.textContent = this.#briefStatus(item);
+      status.title = status.textContent;
+      const weight = document.createElement("span");
+      weight.className = "inventory-item-weight";
+      weight.textContent = this.#localization.format("inventory-item-weight", {
+        weight: formatTenthsPound(item.weightTenthsPound * item.quantity),
+      });
+      const inspect = document.createElement("button");
+      inspect.type = "button";
+      inspect.className = "inventory-item-inspect";
+      inspect.textContent = this.#localization.format("action-inventory-details");
+      inspect.setAttribute("aria-label", this.#localization.format("inventory-details-for", { name: this.#itemName(item) }));
+      inspect.addEventListener("click", () => this.#openDetail(item.id));
+      label.append(checkbox, this.#itemGlyph(item), name, quantity, status, weight);
+      row.append(label, inspect);
+      rows.push(row);
     }
+    this.#dom.inventoryList.replaceChildren(...rows);
+    this.#dom.inventoryList.scrollTop = scrollTop;
   }
 
   #renderEquipment(equipment: EquipmentItemDto[]): void {
     const document = this.#dom.equipmentList.ownerDocument;
-    this.#dom.equipmentList.replaceChildren();
+    const scrollTop = this.#dom.equipmentList.scrollTop;
+    const rows: HTMLElement[] = [];
     const slots: BodySlotDto[] =
       this.#state.bodySlots.length > 0
         ? this.#state.bodySlots
@@ -377,7 +475,7 @@ export class InventoryPanel {
       const empty = document.createElement("li");
       empty.className = "equipment-empty";
       empty.textContent = this.#localization.format("equipment-empty");
-      this.#dom.equipmentList.append(empty);
+      this.#dom.equipmentList.replaceChildren(empty);
       return;
     }
     const byInstance = new Map(equipment.map((item) => [item.slotId, item]));
@@ -399,84 +497,166 @@ export class InventoryPanel {
       const row = document.createElement("li");
       row.dataset.slotId = slot.id;
       const item = byInstance.get(slot.id);
-      const details = document.createElement("span");
-      details.className = "equipment-item-details";
+      const slotButton = document.createElement("button");
+      slotButton.type = "button";
+      slotButton.className = "equipment-slot-button";
       const slotTag = document.createElement("span");
       slotTag.className = "equipment-slot";
       slotTag.textContent = slotLabel;
-      if (item) {
-        row.className = "equipment-item";
-        const name = document.createElement("span");
-        name.textContent = this.#itemName(item);
-        details.append(name, slotTag);
-        this.#appendInscription(details, item.inscription);
-        this.#appendItemFuel(details, item);
-        this.#appendKnownDetails(details, item);
-        if (item.usable || item.activation || (item.captureBall && item.useTargetSpec)) {
-          const activate = document.createElement("button");
-          activate.type = "button";
-          activate.className = "equipment-activate";
-          activate.textContent = this.#localization.format("action-equipment-activate");
-          activate.disabled = this.#state.busy || (Boolean(item.activation) && !item.usable);
-          activate.addEventListener("click", () => {
-            if (item.useTargetSpec?.modes.includes("self")) {
-              void this.#dispatch({ type: "use-item", itemId: item.id, target: { type: "self" } });
-            } else if (item.useTargetSpec) {
-              this.#startTargeting(item.useTargetSpec, { type: "item", itemId: item.id });
-            } else {
-              void this.#dispatch({ type: "use-item", itemId: item.id });
-            }
-          });
-          row.append(activate);
-        }
-        if (item.fuel && item.fuel.kind !== "oil" && item.fuel.current < item.fuel.maximum) {
-          const refuel = document.createElement("button");
-          refuel.type = "button";
-          refuel.className = "equipment-refuel";
-          refuel.dataset.refuelTargetId = item.id;
-          refuel.textContent = this.#localization.format("action-equipment-refuel");
-          refuel.disabled = this.#refuelSourceForTarget(item.id) === undefined;
-          refuel.addEventListener("click", () => {
-            const source = this.#refuelSourceForTarget(item.id);
-            if (!source) return;
-            void this.#dispatch({
-              type: "refuel-light",
-              targetItemId: item.id,
-              sourceItemId: source.id,
-            });
-          });
-          row.append(refuel);
-        }
-        const unequip = document.createElement("button");
-        unequip.type = "button";
-        unequip.textContent = this.#localization.format("action-equipment-unequip");
-        unequip.disabled = this.#state.busy;
-        unequip.addEventListener("click", () => void this.#unequipItem(item.slotId));
-        row.append(details, unequip);
-      } else {
-        row.className = "equipment-item equipment-slot-vacant";
-        const vacant = document.createElement("span");
-        vacant.className = "equipment-vacant-label";
-        vacant.textContent = this.#localization.format("equipment-slot-vacant");
-        details.append(slotTag, vacant);
-        row.append(details);
-      }
-      this.#dom.equipmentList.append(row);
+      const name = document.createElement("span");
+      name.className = "equipment-slot-name";
+      name.textContent = item ? this.#itemName(item) : this.#localization.format("equipment-slot-vacant");
+      slotButton.title = this.#localization.format("equipment-slot-summary", { slot: slotLabel, name: name.textContent });
+      slotButton.append(slotTag, this.#itemGlyph(item), name);
+      slotButton.addEventListener("click", () => {
+        const current = this.#state.equipment.find((entry) => entry.slotId === slot.id);
+        if (current) this.#openDetail(current.id);
+        else this.#chooseSlotItem(slot.id);
+      });
+      row.className = item ? "equipment-item" : "equipment-item equipment-slot-vacant";
+      row.append(slotButton);
+      rows.push(row);
     }
+    this.#dom.equipmentList.replaceChildren(...rows);
+    this.#dom.equipmentList.scrollTop = scrollTop;
   }
 
-  #appendItemDetails(container: HTMLElement, item: InventoryItemDto): void {
+  #itemGlyph(item?: InventoryItemDto | EquipmentItemDto): HTMLElement {
+    const glyph = this.#dom.inventoryList.ownerDocument.createElement("span");
+    glyph.className = "inventory-item-glyph";
+    glyph.setAttribute("aria-hidden", "true");
+    if (item) glyph.textContent = this.#state.contentGlyphs.get(item.kindId) ?? "?";
+    return glyph;
+  }
+
+  #briefStatus(item: InventoryItemDto): string {
+    if (item.charges) return this.#localization.format("inventory-charges", item.charges);
+    if (item.fuel) return this.#localization.format("inventory-fuel", {
+      current: item.fuel.current, maximum: item.fuel.maximum,
+    });
+    if (item.curse) return this.#itemCurseSeverityName(item.curse);
+    return item.equipmentSlot ? this.#localization.format(itemIdentificationMessageKey(
+      item.identification, item.knownProperties?.length ?? 0,
+    ), { count: item.knownProperties?.length ?? 0 }) : "";
+  }
+
+  #chooseSlotItem(slotId: string): void {
+    if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+    const slot = this.#state.bodySlots.find((entry) => entry.id === slotId);
+    if (!slot) return;
+    const candidates = this.#state.inventory.filter((item) => itemFitsBodySlot(item, slot));
+    this.#selectItemTargetFrom(candidates.map((item) => ({ id: item.id, label: this.#itemName(item) })), async (itemId) => {
+      const currentSlot = this.#state.bodySlots.find((entry) => entry.id === slotId);
+      const currentItem = this.#state.inventory.find((entry) => entry.id === itemId);
+      if (this.#state.busy || this.#state.playerDead || this.#state.worldMap ||
+        !currentSlot || !currentItem || !itemFitsBodySlot(currentItem, currentSlot) ||
+        this.#state.equipment.some((entry) => entry.slotId === slotId)) return;
+      await this.#dispatch({ type: "equip", itemId, slotId });
+    });
+  }
+
+  #openDetail(itemId: string): void {
+    this.#detailItemId = itemId;
+    this.#renderDetail();
+    if (this.#detailItemId && !this.#dom.inventoryDetailDialog.open) {
+      this.#dom.inventoryDetailDialog.showModal();
+    }
+    this.updateActions();
+  }
+
+  readonly #closeDetail = (): void => {
+    this.#detailItemId = undefined;
+    if (this.#dom.inventoryDetailDialog.open) this.#dom.inventoryDetailDialog.close();
+  };
+
+  readonly #handleDetailClosed = (): void => {
+    if (!this.#dom.inventoryDetailDialog.open) this.#detailItemId = undefined;
+  };
+
+  #renderDetail(): void {
+    const item = [...this.#state.inventory, ...this.#state.equipment].find((entry) => entry.id === this.#detailItemId);
+    if (!item) { this.#closeDetail(); return; }
+    this.#dom.inventoryDetailTitle.textContent = this.#itemName(item);
+    const body = this.#dom.inventoryDetailBody;
+    const scrollTop = body.scrollTop;
+    body.replaceChildren();
+    this.#appendItemDetails(body, item);
+    this.#dom.inventoryDetailActions.replaceChildren();
+    if ("slotId" in item) this.#appendEquipmentActions(this.#dom.inventoryDetailActions, item);
+    body.scrollTop = scrollTop;
+  }
+
+  #appendEquipmentActions(container: HTMLElement, item: EquipmentItemDto): void {
+    const document = container.ownerDocument;
+    const row = document.createElement("div");
+    row.className = "equipment-actions";
+    if (item.usable || item.activation || (item.captureBall && item.useTargetSpec)) {
+      const activate = document.createElement("button");
+      activate.type = "button";
+      activate.className = "equipment-activate";
+      if (item.activation) activate.dataset.activationItemId = item.id;
+      activate.textContent = this.#localization.format("action-equipment-activate");
+      activate.disabled = this.#state.busy || (Boolean(item.activation) && !item.usable);
+      activate.addEventListener("click", () => {
+        if (this.#state.busy || this.#state.playerDead || this.#state.worldMap || (item.activation && !item.usable)) return;
+        if (item.useTargetSpec?.modes.includes("self")) {
+          void this.#dispatch({ type: "use-item", itemId: item.id, target: { type: "self" } });
+        } else if (item.useTargetSpec) {
+          this.#closeDetail();
+          this.#startTargeting(item.useTargetSpec, { type: "item", itemId: item.id });
+        } else {
+          void this.#dispatch({ type: "use-item", itemId: item.id });
+        }
+      });
+      row.append(activate);
+    }
+    if (item.fuel && item.fuel.kind !== "oil" && item.fuel.current < item.fuel.maximum) {
+      const refuel = document.createElement("button");
+      refuel.type = "button";
+      refuel.className = "equipment-refuel";
+      refuel.dataset.refuelTargetId = item.id;
+      refuel.textContent = this.#localization.format("action-equipment-refuel");
+      refuel.disabled = this.#refuelSourceForTarget(item.id) === undefined;
+      refuel.addEventListener("click", () => {
+        if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+        const source = this.#refuelSourceForTarget(item.id);
+        if (!source) return;
+        void this.#dispatch({
+          type: "refuel-light",
+          targetItemId: item.id,
+          sourceItemId: source.id,
+        });
+      });
+      row.append(refuel);
+    }
+    const unequip = document.createElement("button");
+    unequip.type = "button";
+    unequip.textContent = this.#localization.format("action-equipment-unequip");
+    unequip.disabled = this.#state.busy;
+    unequip.addEventListener("click", () => void this.#unequipItem(item.slotId));
+    row.append(unequip);
+    container.append(row);
+  }
+
+  #appendItemDetails(container: HTMLElement, item: InventoryItemDto | EquipmentItemDto): void {
     const document = container.ownerDocument;
     const name = document.createElement("span");
     name.className = "inventory-item-name";
     name.textContent = this.#itemName(item);
     container.append(name);
+    this.#appendDetail(container, "inventory-quantity", this.#localization.format("inventory-quantity", { quantity: item.quantity }));
+    this.#appendDetail(container, "inventory-item-weight", this.#localization.format("inventory-item-weight", {
+      weight: formatTenthsPound(item.weightTenthsPound * item.quantity),
+    }));
     this.#appendInscription(container, item.inscription);
-    if (item.equipmentSlot) {
+    const slotType = "slotId" in item
+      ? this.#state.bodySlots.find((slot) => slot.id === item.slotId)?.slotType ?? item.slotId
+      : item.equipmentSlot;
+    if (slotType) {
       const equippable = document.createElement("span");
       equippable.className = "inventory-equippable";
       equippable.textContent = this.#localization.format("inventory-equippable", {
-        slot: this.#formatter.equipmentSlotName(item.equipmentSlot),
+        slot: this.#formatter.equipmentSlotName(slotType),
       });
       container.append(equippable);
     }
@@ -720,7 +900,7 @@ export class InventoryPanel {
   }
 
   async #unequipItem(slotId: string): Promise<void> {
-    if (this.#state.busy) return;
+    if (this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
     await this.#dispatch({ type: "unequip", slotId });
   }
 
@@ -1084,6 +1264,34 @@ export class InventoryPanel {
   #weaponBrandName(brand: WeaponBrandDto): string {
     return this.#localization.format(`weapon-brand-${brand}-name` as MessageKey);
   }
+}
+
+export type InventoryFilter = "all" | "equippable" | "usable" | "devices" | "light";
+
+export function itemFitsBodySlot(item: InventoryItemDto, slot: BodySlotDto): boolean {
+  return item.equipmentSlot === slot.slotType || (item.equipmentSlot === "tool" && slot.slotType === "weapon");
+}
+
+export function filterInventoryItems(
+  inventory: readonly InventoryItemDto[],
+  filter: InventoryFilter,
+  search: string,
+  visibleName: (item: InventoryItemDto) => string,
+): InventoryItemDto[] {
+  const query = search.trim().toLocaleLowerCase();
+  return inventory.filter((item) => {
+    let matches: boolean;
+    switch (filter) {
+      case "all": matches = true; break;
+      case "equippable": matches = Boolean(item.equipmentSlot); break;
+      case "usable": matches = item.usable; break;
+      case "devices": matches = Boolean(item.charges || item.canReceiveRecharge || item.canSupplyRecharge); break;
+      case "light": matches = item.equipmentSlot === "light" || item.fuel?.kind === "torch" || item.fuel?.kind === "lantern"; break;
+    }
+    return matches && (query.length === 0 || [visibleName(item), item.inscription ?? ""].some(
+      (text) => text.toLocaleLowerCase().includes(query),
+    ));
+  });
 }
 
 export function createItemCurseSeverityName(

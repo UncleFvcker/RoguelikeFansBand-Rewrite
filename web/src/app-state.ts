@@ -42,7 +42,6 @@ export class AppState {
   readonly cells = new Map<string, CellDto>();
   readonly cellVisibility = new Map<string, CellVisualDto["visibility"]>();
   readonly contentGlyphs = new Map<string, string>();
-  dropQuantityItemId: string | undefined;
   targeting: TargetingState | undefined;
   targetingIntent: TargetingIntent | undefined;
   terrainInteractionMode: TerrainInteractionMode | undefined;

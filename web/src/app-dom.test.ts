@@ -2,6 +2,7 @@
 // @ts-nocheck -- Executed directly by Node's built-in TypeScript test runner.
 
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 
 import { createAppDom } from "./app-dom.ts";
@@ -42,16 +43,21 @@ test("the application DOM registry is immutable and preserves stable element IDs
   assert.equal(dom.nearbyList.id, "nearby-list");
   assert.equal(dom.virtueList.id, "virtue-list");
   assert.equal(dom.mutationList.id, "mutation-list");
-  assert.equal(dom.weaponProficiencyMeleeList.id, "weapon-proficiency-melee-list");
-  assert.equal(dom.weaponProficiencyLauncherList.id, "weapon-proficiency-launcher-list");
-  assert.equal(dom.miningProficiencyList.id, "mining-proficiency-list");
+  assert.equal(dom.characterProficiencyTables.id, "character-proficiency-tables");
   assert.equal(dom.materialList.id, "material-list");
   assert.equal(dom.summonCommandButtons["keep-distance"].id, "summon-command-keep-distance");
   assert.equal(dom.dismissPets.id, "dismiss-pets");
   assert.equal(dom.petList.id, "pet-list");
   assert.equal(dom.inventoryUseOnMount.id, "inventory-use-on-mount");
   assert.equal(dom.inventoryAbsorb.id, "inventory-absorb");
-  assert.equal(elements.size, 106);
+  assert.equal(dom.characterAttributeSources.id, "character-attribute-sources");
+  assert.equal(dom.characterTraitDefenses.id, "character-trait-defenses");
+  assert.equal(dom.characterTraitAttacks.id, "character-trait-attacks");
+  assert.equal(elements.size, 136);
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  for (const id of elements.keys()) {
+    assert.equal(html.split(` id="${id}"`).length - 1, 1, `unique DOM binding: ${id}`);
+  }
   assert.equal(Object.isFrozen(dom), true);
   assert.equal(Object.isFrozen(dom.summonCommandButtons), true);
 });

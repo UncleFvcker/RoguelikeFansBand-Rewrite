@@ -2,7 +2,14 @@
 
 import type { Localization } from "./localization";
 
-export type PlayerPage = "inventory" | "ability" | "character";
+const PLAYER_PAGE_TITLES = {
+  ability: "player-page-ability",
+  character: "player-page-character",
+  inventory: "player-page-inventory",
+  tasks: "panel-task-log-title",
+} as const;
+
+export type PlayerPage = keyof typeof PLAYER_PAGE_TITLES;
 
 interface PlayerUiDom {
   readonly app: HTMLElement;
@@ -19,6 +26,10 @@ interface PlayerUiDom {
   readonly inventoryOpen: HTMLButtonElement;
   readonly abilityOpen: HTMLButtonElement;
   readonly characterOpen: HTMLButtonElement;
+  readonly tasksOpen: HTMLButtonElement;
+  readonly pageTabs: Record<PlayerPage, HTMLButtonElement>;
+  readonly characterTabs: readonly HTMLButtonElement[];
+  readonly characterDetailTabs: readonly HTMLButtonElement[];
   readonly pageDialog: HTMLDialogElement;
   readonly pageTitle: HTMLElement;
   readonly pageClose: HTMLButtonElement;
@@ -27,6 +38,7 @@ interface PlayerUiDom {
   readonly inventoryPanel: HTMLElement;
   readonly abilityPanel: HTMLElement;
   readonly characterPanel: HTMLElement;
+  readonly taskPanel: HTMLElement;
   readonly messagePanel: HTMLElement;
   readonly messagePanelHost: HTMLElement;
   readonly supportPanelHost: HTMLElement;
@@ -44,6 +56,7 @@ export class PlayerUiLayout {
   readonly #localization: Localization;
   readonly #dom: PlayerUiDom;
   #openPage: PlayerPage | undefined;
+  readonly #characterScrollPositions = new Map<string, number>();
   #installed = false;
 
   constructor(options: {
@@ -66,6 +79,7 @@ export class PlayerUiLayout {
       this.#dom.inventoryPanel,
       this.#dom.abilityPanel,
       this.#dom.characterPanel,
+      this.#dom.taskPanel,
     );
     this.#selectIntelPanel("nearby");
   }
@@ -78,10 +92,16 @@ export class PlayerUiLayout {
     this.#dom.inventoryOpen.addEventListener("click", this.#openInventory);
     this.#dom.abilityOpen.addEventListener("click", this.#openAbility);
     this.#dom.characterOpen.addEventListener("click", this.#openCharacter);
+    this.#dom.tasksOpen.addEventListener("click", this.#openTasks);
+    for (const tab of [...Object.values(this.#dom.pageTabs), ...this.#dom.characterTabs, ...this.#dom.characterDetailTabs]) {
+      tab.addEventListener("click", this.#handleTabClick);
+      tab.addEventListener("keydown", this.#handleTabKeydown);
+    }
     this.#dom.intelNearbyTab.addEventListener("click", this.#showNearbyIntel);
     this.#dom.intelMessageTab.addEventListener("click", this.#showMessageIntel);
     this.#dom.pageClose.addEventListener("click", this.#closePageFromButton);
     this.#dom.pageDialog.addEventListener("close", this.#handlePageClosed);
+    this.#dom.pageDialog.addEventListener("cancel", this.#handlePageCancel);
     this.#dom.pageDialog.addEventListener("click", this.#handlePageAction, true);
     this.#window.addEventListener("keydown", this.#handleShortcut);
   }
@@ -94,10 +114,16 @@ export class PlayerUiLayout {
     this.#dom.inventoryOpen.removeEventListener("click", this.#openInventory);
     this.#dom.abilityOpen.removeEventListener("click", this.#openAbility);
     this.#dom.characterOpen.removeEventListener("click", this.#openCharacter);
+    this.#dom.tasksOpen.removeEventListener("click", this.#openTasks);
+    for (const tab of [...Object.values(this.#dom.pageTabs), ...this.#dom.characterTabs, ...this.#dom.characterDetailTabs]) {
+      tab.removeEventListener("click", this.#handleTabClick);
+      tab.removeEventListener("keydown", this.#handleTabKeydown);
+    }
     this.#dom.intelNearbyTab.removeEventListener("click", this.#showNearbyIntel);
     this.#dom.intelMessageTab.removeEventListener("click", this.#showMessageIntel);
     this.#dom.pageClose.removeEventListener("click", this.#closePageFromButton);
     this.#dom.pageDialog.removeEventListener("close", this.#handlePageClosed);
+    this.#dom.pageDialog.removeEventListener("cancel", this.#handlePageCancel);
     this.#dom.pageDialog.removeEventListener("click", this.#handlePageAction, true);
     this.#window.removeEventListener("keydown", this.#handleShortcut);
   }
@@ -113,16 +139,22 @@ export class PlayerUiLayout {
   }
 
   open(page: PlayerPage): void {
-    if (this.#dom.pageDialog.open && this.#openPage === page) {
-      this.closePage();
-      return;
-    }
-    if (this.#dom.pageDialog.open) this.closePage();
+    if (this.#dom.pageDialog.open && this.#openPage === page) return;
+    this.#returnOpenPanel();
     const panel = this.#panelFor(page);
     this.#openPage = page;
     this.#dom.pageHost.append(panel);
+    this.#dom.pageDialog.dataset.page = page;
     this.#updatePageTitle(page);
-    this.#dom.pageDialog.showModal();
+    for (const [key, tab] of Object.entries(this.#dom.pageTabs)) {
+      tab.setAttribute("aria-selected", String(key === page));
+      tab.tabIndex = key === page ? 0 : -1;
+    }
+    const activeTab = this.#dom.pageTabs[page];
+    this.#dom.pageHost.setAttribute("aria-labelledby", activeTab.id);
+    if (!this.#dom.pageDialog.open) this.#dom.pageDialog.showModal();
+    activeTab.focus();
+    if (page === "character") this.#restoreCharacterScroll();
   }
 
   readonly #showSettings = (): void => {
@@ -136,12 +168,88 @@ export class PlayerUiLayout {
   readonly #openInventory = (): void => this.open("inventory");
   readonly #openAbility = (): void => this.open("ability");
   readonly #openCharacter = (): void => this.open("character");
+  readonly #openTasks = (): void => this.open("tasks");
   readonly #showNearbyIntel = (): void => this.#selectIntelPanel("nearby");
   readonly #showMessageIntel = (): void => this.#selectIntelPanel("message");
   readonly #closePageFromButton = (): void => this.closePage();
 
   readonly #handlePageClosed = (): void => {
-    this.#returnOpenPanel();
+    if (!this.#dom.pageDialog.open) this.#returnOpenPanel();
+  };
+
+  readonly #handlePageCancel = (): void => {
+    if (this.#openPage === "character") this.#saveCharacterScroll();
+  };
+
+  readonly #handleTabClick = (event: Event): void => {
+    const tab = event.currentTarget as HTMLButtonElement;
+    this.#activateTab(tab);
+  };
+
+  #activateTab(tab: HTMLButtonElement): void {
+    if (tab.dataset.playerPage) {
+      this.open(tab.dataset.playerPage as PlayerPage);
+      return;
+    }
+    this.#saveCharacterScroll();
+    for (const candidate of this.#tabsFor(tab)) {
+      const selected = candidate === tab;
+      candidate.setAttribute("aria-selected", String(selected));
+      candidate.tabIndex = selected ? 0 : -1;
+      // Keep each pane mounted so live data bindings stay intact.
+      this.#document.getElementById(candidate.getAttribute("aria-controls")!)!.hidden = !selected;
+    }
+    tab.focus();
+    this.#restoreCharacterScroll();
+  }
+
+  #saveCharacterScroll(): void {
+    for (const pane of this.#activeCharacterPanes()) {
+      this.#characterScrollPositions.set(pane.id, pane.scrollTop);
+    }
+  }
+
+  #restoreCharacterScroll(): void {
+    for (const pane of this.#activeCharacterPanes()) {
+      pane.scrollTop = this.#characterScrollPositions.get(pane.id) ?? 0;
+    }
+  }
+
+  #activeCharacterPanes(): HTMLElement[] {
+    const panes: HTMLElement[] = [];
+    for (const tab of this.#dom.characterTabs) {
+      if (tab.getAttribute("aria-selected") !== "true") continue;
+      panes.push(this.#document.getElementById(tab.getAttribute("aria-controls")!)!);
+      if (tab.dataset.characterPage === "details") {
+        for (const detail of this.#dom.characterDetailTabs) {
+          if (detail.getAttribute("aria-selected") === "true") {
+            panes.push(this.#document.getElementById(detail.getAttribute("aria-controls")!)!);
+          }
+        }
+      }
+    }
+    return panes;
+  }
+
+  #tabsFor(tab: HTMLButtonElement): readonly HTMLButtonElement[] {
+    if (tab.dataset.characterDetail) return this.#dom.characterDetailTabs;
+    return tab.dataset.characterPage ? this.#dom.characterTabs : Object.values(this.#dom.pageTabs);
+  }
+
+  readonly #handleTabKeydown = (event: KeyboardEvent): void => {
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const tabs = this.#tabsFor(event.currentTarget as HTMLButtonElement);
+    const index = tabs.indexOf(event.currentTarget as HTMLButtonElement);
+    let next: number;
+    switch (event.key) {
+      case "ArrowLeft": next = (index + tabs.length - 1) % tabs.length; break;
+      case "ArrowRight": next = (index + 1) % tabs.length; break;
+      case "Home": next = 0; break;
+      case "End": next = tabs.length - 1; break;
+      default: return;
+    }
+    event.preventDefault();
+    this.#activateTab(tabs[next]!);
   };
 
   readonly #handlePageAction = (event: Event): void => {
@@ -149,8 +257,6 @@ export class PlayerUiLayout {
     const target = event.target;
     if (!(target instanceof HTMLElement)) return;
     if (
-      (this.#openPage === "inventory" &&
-        target.closest("#inventory-use, #inventory-absorb")) ||
       (this.#openPage === "ability" && target.closest(".ability-cast-action"))
     ) {
       this.closePage();
@@ -171,27 +277,28 @@ export class PlayerUiLayout {
     }
     const page = playerPageForShortcut(event.key);
     if (!page) return;
-    const openDialog = this.#document.querySelector<HTMLDialogElement>("dialog[open]");
-    if (openDialog && openDialog !== this.#dom.pageDialog) return;
+    if (this.#document.querySelector("dialog[open]:not(#player-page-dialog)")) return;
     event.preventDefault();
-    this.open(page);
+    if (this.#dom.pageDialog.open && this.#openPage === page) this.closePage();
+    else this.open(page);
   };
 
   #returnOpenPanel(): void {
     if (!this.#openPage) return;
+    if (this.#openPage === "character" && this.#dom.pageDialog.open) this.#saveCharacterScroll();
+    if (this.#openPage === "inventory") {
+      for (const id of ["inventory-detail-dialog", "inventory-action-dialog", "inventory-more-dialog"]) {
+        const dialog = this.#document.getElementById(id) as HTMLDialogElement;
+        if (dialog.open) dialog.close();
+      }
+    }
     const page = this.#openPage;
     this.#openPage = undefined;
     this.#dom.parking.append(this.#panelFor(page));
   }
 
   #updatePageTitle(page: PlayerPage): void {
-    const titleKey =
-      page === "inventory"
-        ? "panel-inventory-title"
-        : page === "ability"
-          ? "panel-ability-title"
-          : "panel-character-details-title";
-    this.#dom.pageTitle.textContent = this.#localization.format(titleKey);
+    this.#dom.pageTitle.textContent = this.#localization.format(PLAYER_PAGE_TITLES[page]);
   }
 
   #panelFor(page: PlayerPage): HTMLElement {
@@ -199,7 +306,9 @@ export class PlayerUiLayout {
       ? this.#dom.inventoryPanel
       : page === "ability"
         ? this.#dom.abilityPanel
-        : this.#dom.characterPanel;
+        : page === "character"
+          ? this.#dom.characterPanel
+          : this.#dom.taskPanel;
   }
 
   #selectIntelPanel(panel: "nearby" | "message"): void {
@@ -275,6 +384,19 @@ function createPlayerUiDom(document: Document): PlayerUiDom {
     inventoryOpen: element("player-ui-inventory-open"),
     abilityOpen: element("player-ui-ability-open"),
     characterOpen: element("player-ui-character-open"),
+    tasksOpen: element("player-ui-tasks-open"),
+    pageTabs: {
+      ability: element("player-page-tab-ability"),
+      character: element("player-page-tab-character"),
+      inventory: element("player-page-tab-inventory"),
+      tasks: element("player-page-tab-tasks"),
+    },
+    characterTabs: ["overview", "details", "proficiencies", "other"].map(
+      (page) => element<HTMLButtonElement>(`character-tab-${page}`),
+    ),
+    characterDetailTabs: ["sources", "defenses", "offense"].map(
+      (page) => element<HTMLButtonElement>(`character-detail-tab-${page}`),
+    ),
     pageDialog: element("player-page-dialog"),
     pageTitle: element("player-page-title"),
     pageClose: element("player-page-close"),
@@ -283,6 +405,7 @@ function createPlayerUiDom(document: Document): PlayerUiDom {
     inventoryPanel: element("inventory-panel"),
     abilityPanel: element("ability-panel"),
     characterPanel: element("character-details-panel"),
+    taskPanel: element("task-log-panel"),
     messagePanel: element("message-panel"),
     messagePanelHost: element("message-panel-host"),
     supportPanelHost: element("support-panel-host"),
@@ -290,7 +413,7 @@ function createPlayerUiDom(document: Document): PlayerUiDom {
       element("dungeon-info-panel"),
       element("summon-command-panel"),
       element("campaign-panel"),
-      element("task-log-panel"),
+      element("task-log-entry"),
       element("native-save-panel"),
     ],
     progressionPanel: element("progression-panel"),

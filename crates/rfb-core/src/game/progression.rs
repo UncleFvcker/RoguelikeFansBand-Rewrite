@@ -6,7 +6,10 @@ use rfb_content::{
     CharacterBuildDefinition, ClassDefinition, ContentCatalog, PersonalityDefinition,
     RaceDefinition, RaceMutationSelectionDefinition, SkillSetDefinition, StatModifiers,
 };
-use rfb_protocol::StatModifiersDto;
+use rfb_protocol::{
+    AttributeBreakdownDto, AttributeKindDto, AttributeSourceDto, AttributeSourceKindDto,
+    ItemIdentificationDto, ItemKnowledgeDto, StatModifiersDto,
+};
 
 use crate::{
     effect::STATUS_UNWELL,
@@ -20,7 +23,7 @@ use crate::{
     },
 };
 
-use super::{Game, player_stats::apply_equipment_life_percent};
+use super::{Game, ItemLocation, player_stats::apply_equipment_life_percent, stat_modifiers_dto};
 
 pub(super) type CharacterDefinitions<'a> = (
     &'a CharacterBuildDefinition,
@@ -349,21 +352,6 @@ pub(super) fn combine_percentages(percentages: [u16; 3]) -> u16 {
     u16::try_from(product.saturating_add(5_000).saturating_div(10_000)).unwrap_or(u16::MAX)
 }
 
-fn apply_attribute_modifiers(
-    attributes: AttributeSet,
-    modifiers: &StatModifiers,
-    cap: u16,
-) -> AttributeSet {
-    AttributeSet {
-        strength: modify_attribute_value(attributes.strength, modifiers.strength, cap),
-        intelligence: modify_attribute_value(attributes.intelligence, modifiers.intelligence, cap),
-        wisdom: modify_attribute_value(attributes.wisdom, modifiers.wisdom, cap),
-        dexterity: modify_attribute_value(attributes.dexterity, modifiers.dexterity, cap),
-        constitution: modify_attribute_value(attributes.constitution, modifiers.constitution, cap),
-        charisma: modify_attribute_value(attributes.charisma, modifiers.charisma, cap),
-    }
-}
-
 fn apply_attribute_dto_modifiers(
     attributes: AttributeSet,
     modifiers: StatModifiersDto,
@@ -379,33 +367,41 @@ fn apply_attribute_dto_modifiers(
     }
 }
 
+struct AttributeStep<'a> {
+    kind: AttributeSourceKindDto,
+    source_id: Option<&'a str>,
+    name_key: Option<&'a str>,
+    modifiers: StatModifiersDto,
+}
+
 fn effective_attributes<'a>(
     mut attributes: AttributeSet,
-    character_modifiers: Option<[&StatModifiers; 3]>,
-    mutation_modifiers: impl IntoIterator<Item = &'a StatModifiers>,
-    equipment_modifiers: StatModifiersDto,
-    status_modifiers: impl IntoIterator<Item = StatModifiersDto>,
+    steps: impl IntoIterator<Item = AttributeStep<'a>>,
     normal_appearance_minimum: Option<u16>,
     cap: u16,
+    mut observe: impl FnMut(&AttributeStep<'a>, AttributeSet, AttributeSet),
 ) -> AttributeSet {
-    if let Some(modifiers) = character_modifiers {
-        for modifiers in modifiers {
-            attributes = apply_attribute_modifiers(attributes, modifiers, cap);
+    for step in steps {
+        let before = attributes;
+        attributes = apply_attribute_dto_modifiers(attributes, step.modifiers, cap);
+        if step.kind == AttributeSourceKindDto::Mutation && normal_appearance_minimum.is_some() {
+            attributes.charisma = before.charisma;
         }
-    }
-    for modifiers in mutation_modifiers {
-        let charisma = attributes.charisma;
-        attributes = apply_attribute_modifiers(attributes, modifiers, cap);
-        if normal_appearance_minimum.is_some() {
-            attributes.charisma = charisma;
-        }
-    }
-    attributes = apply_attribute_dto_modifiers(attributes, equipment_modifiers, cap);
-    for modifiers in status_modifiers {
-        attributes = apply_attribute_dto_modifiers(attributes, modifiers, cap);
+        observe(&step, before, attributes);
     }
     if let Some(minimum) = normal_appearance_minimum {
+        let before = attributes;
         attributes.charisma = attributes.charisma.max(minimum.min(cap));
+        observe(
+            &AttributeStep {
+                kind: AttributeSourceKindDto::NormalAppearance,
+                source_id: None,
+                name_key: None,
+                modifiers: StatModifiersDto::default(),
+            },
+            before,
+            attributes,
+        );
     }
     attributes
 }
@@ -603,6 +599,13 @@ impl Game {
     }
 
     pub(super) fn effective_player_attributes(&self) -> AttributeSet {
+        self.player_attributes_with_sources(None)
+    }
+
+    pub(super) fn player_attributes_with_sources(
+        &self,
+        mut breakdown: Option<&mut Vec<AttributeBreakdownDto>>,
+    ) -> AttributeSet {
         let cap = CharacterProgress::attribute_cap(self.victory_level_cap_unlocked());
         let active_mutations = self
             .content
@@ -613,40 +616,166 @@ impl Game {
             .iter()
             .any(|mutation| mutation.normal_appearance)
             .then(|| 8_u16.saturating_add(self.progress.level.saturating_mul(2)));
-        let character_modifiers =
-            self.character_definitions()
-                .map(|(_, race, class, personality)| {
-                    [&race.modifiers, &class.modifiers, &personality.modifiers]
+        let mut steps = Vec::new();
+        if let Some((_, race, class, personality)) = self.character_definitions() {
+            for (kind, id, name, modifiers) in [
+                (
+                    AttributeSourceKindDto::Race,
+                    &race.id,
+                    &race.name_key,
+                    &race.modifiers,
+                ),
+                (
+                    AttributeSourceKindDto::Class,
+                    &class.id,
+                    &class.name_key,
+                    &class.modifiers,
+                ),
+                (
+                    AttributeSourceKindDto::Personality,
+                    &personality.id,
+                    &personality.name_key,
+                    &personality.modifiers,
+                ),
+            ] {
+                steps.push(AttributeStep {
+                    kind,
+                    source_id: Some(id),
+                    name_key: Some(name),
+                    modifiers: stat_modifiers_dto(modifiers),
                 });
-        let status_modifiers = self
-            .player
-            .statuses
-            .iter()
-            .map(|status| {
-                let mut modifiers = status.granted_modifiers;
-                if status.kind_id == STATUS_UNWELL {
-                    let penalty = if status.remaining_ticks > 55 {
-                        0
-                    } else if status.remaining_ticks > 30 {
-                        4
-                    } else {
-                        i32::try_from(status.remaining_ticks.div_ceil(10)).unwrap_or(i32::MAX)
-                    };
-                    modifiers.dexterity = modifiers.dexterity.saturating_sub(penalty);
-                    modifiers.constitution = modifiers.constitution.saturating_sub(penalty);
-                }
-                modifiers
-            })
-            .collect::<Vec<_>>();
-        effective_attributes(
+            }
+        }
+        steps.extend(active_mutations.iter().map(|mutation| AttributeStep {
+            kind: AttributeSourceKindDto::Mutation,
+            source_id: Some(&mutation.id),
+            name_key: None,
+            modifiers: stat_modifiers_dto(&mutation.modifiers),
+        }));
+        steps.push(AttributeStep {
+            kind: AttributeSourceKindDto::Equipment,
+            source_id: None,
+            name_key: None,
+            modifiers: self.equipment_modifiers(),
+        });
+        steps.extend(self.player.statuses.iter().map(|status| {
+            let mut modifiers = status.granted_modifiers;
+            if status.kind_id == STATUS_UNWELL {
+                let penalty = if status.remaining_ticks > 55 {
+                    0
+                } else if status.remaining_ticks > 30 {
+                    4
+                } else {
+                    i32::try_from(status.remaining_ticks.div_ceil(10)).unwrap_or(i32::MAX)
+                };
+                modifiers.dexterity = modifiers.dexterity.saturating_sub(penalty);
+                modifiers.constitution = modifiers.constitution.saturating_sub(penalty);
+            }
+            AttributeStep {
+                kind: AttributeSourceKindDto::TemporaryEffect,
+                source_id: Some(&status.kind_id),
+                name_key: None,
+                modifiers,
+            }
+        }));
+        let kinds = [
+            (AttributeKind::Strength, AttributeKindDto::Strength),
+            (AttributeKind::Intelligence, AttributeKindDto::Intelligence),
+            (AttributeKind::Wisdom, AttributeKindDto::Wisdom),
+            (AttributeKind::Dexterity, AttributeKindDto::Dexterity),
+            (AttributeKind::Constitution, AttributeKindDto::Constitution),
+            (AttributeKind::Charisma, AttributeKindDto::Charisma),
+        ];
+        let mut equipment_complete = true;
+        let mut known_equipment = StatModifiersDto::default();
+        if let Some(rows) = breakdown.as_deref_mut() {
+            *rows = kinds
+                .iter()
+                .map(|(kind, dto)| AttributeBreakdownDto {
+                    attribute: *dto,
+                    natural: self.progress.attributes.value(*kind),
+                    effective: 0, // Filled from the same calculation below, never serialized as a placeholder.
+                    minimum: 3,
+                    maximum: cap,
+                    normal_appearance_minimum: (*kind == AttributeKind::Charisma)
+                        .then_some(normal_appearance_minimum.map(|minimum| minimum.min(cap)))
+                        .flatten(),
+                    sources: Vec::new(),
+                })
+                .collect();
+            for item in self.items.iter().filter(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+            }) {
+                let visible = self.visible_item_modifiers(item);
+                known_equipment.strength = known_equipment.strength.saturating_add(visible.strength);
+                known_equipment.intelligence = known_equipment.intelligence.saturating_add(visible.intelligence);
+                known_equipment.wisdom = known_equipment.wisdom.saturating_add(visible.wisdom);
+                known_equipment.dexterity = known_equipment.dexterity.saturating_add(visible.dexterity);
+                known_equipment.constitution = known_equipment.constitution.saturating_add(visible.constitution);
+                known_equipment.charisma = known_equipment.charisma.saturating_add(visible.charisma);
+                equipment_complete &= self.item_knowledge_dto(&item.kind_id) == ItemKnowledgeDto::Aware
+                    && self.item_identification(item) == ItemIdentificationDto::Identified;
+            }
+        }
+        let mut results_known = true;
+        let effective = effective_attributes(
             self.progress.attributes,
-            character_modifiers,
-            active_mutations.iter().map(|mutation| &mutation.modifiers),
-            self.equipment_modifiers(),
-            status_modifiers,
+            steps,
             normal_appearance_minimum,
             cap,
-        )
+            |step, before, after| {
+                let Some(rows) = breakdown.as_deref_mut() else {
+                    return;
+                };
+                let equipment = step.kind == AttributeSourceKindDto::Equipment;
+                let complete = !equipment || equipment_complete;
+                results_known &= complete;
+                let modifiers = if equipment {
+                    known_equipment
+                } else {
+                    step.modifiers
+                };
+                let modifiers = [
+                    modifiers.strength,
+                    modifiers.intelligence,
+                    modifiers.wisdom,
+                    modifiers.dexterity,
+                    modifiers.constitution,
+                    modifiers.charisma,
+                ];
+                for ((row, (kind, _)), modifier) in rows.iter_mut().zip(kinds).zip(modifiers) {
+                    if step.kind == AttributeSourceKindDto::NormalAppearance
+                        && kind != AttributeKind::Charisma
+                    {
+                        continue;
+                    }
+                    let suppressed = kind == AttributeKind::Charisma
+                        && step.kind == AttributeSourceKindDto::Mutation
+                        && normal_appearance_minimum.is_some();
+                    row.sources.push(AttributeSourceDto {
+                        kind: step.kind,
+                        source_id: step.source_id.map(str::to_owned),
+                        name_key: step.name_key.map(str::to_owned),
+                        modifier,
+                        complete,
+                        effective_after: results_known.then_some(after.value(kind)),
+                        upper_limit_applied: results_known.then(|| {
+                            !suppressed
+                                && step.kind != AttributeSourceKindDto::NormalAppearance
+                                && modify_attribute_value(before.value(kind), modifier, u16::MAX)
+                                    != after.value(kind)
+                        }),
+                        suppressed,
+                    });
+                }
+            },
+        );
+        if let Some(rows) = breakdown {
+            for (row, (kind, _)) in rows.iter_mut().zip(kinds) {
+                row.effective = effective.value(kind);
+            }
+        }
+        effective
     }
 
     pub(super) fn effective_player_skill_progress(&self) -> BTreeMap<String, SkillProgress> {
@@ -983,20 +1112,30 @@ mod tests {
             charisma: -1,
             ..StatModifiersDto::default()
         };
+        let steps = || {
+            [
+                (AttributeSourceKindDto::Race, stat_modifiers_dto(&character)),
+                (AttributeSourceKindDto::Class, StatModifiersDto::default()),
+                (
+                    AttributeSourceKindDto::Personality,
+                    StatModifiersDto::default(),
+                ),
+                (
+                    AttributeSourceKindDto::Mutation,
+                    stat_modifiers_dto(&mutation),
+                ),
+                (AttributeSourceKindDto::Equipment, equipment),
+                (AttributeSourceKindDto::TemporaryEffect, status),
+            ]
+            .map(|(kind, modifiers)| AttributeStep {
+                kind,
+                source_id: None,
+                name_key: None,
+                modifiers,
+            })
+        };
 
-        let attributes = effective_attributes(
-            base,
-            Some([
-                &character,
-                &StatModifiers::default(),
-                &StatModifiers::default(),
-            ]),
-            [&mutation],
-            equipment,
-            [status],
-            Some(18),
-            118,
-        );
+        let attributes = effective_attributes(base, steps(), Some(18), 118, |_, _, _| {});
 
         assert_eq!(
             attributes.strength, 14,
@@ -1009,16 +1148,10 @@ mod tests {
                 charisma: 18,
                 ..AttributeSet::default()
             },
-            Some([
-                &character,
-                &StatModifiers::default(),
-                &StatModifiers::default(),
-            ]),
-            [&mutation],
-            equipment,
-            [status],
+            steps(),
             Some(8),
             118,
+            |_, _, _| {},
         );
         assert_eq!(
             above_floor.charisma, 28,

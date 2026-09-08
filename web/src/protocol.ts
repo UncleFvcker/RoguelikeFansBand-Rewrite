@@ -51,17 +51,83 @@ export type AttributeKindDto = "strength" | "intelligence" | "wisdom" | "dexteri
 
 export type AttributeValueDto = { natural: number, maximumNatural: number, potential: number, effective: number, index: number, };
 
+export type AttributeSourceKindDto = "race" | "class" | "personality" | "mutation" | "equipment" | "temporary-effect" | "normal-appearance";
+
+export type TraitSourceKindDto = "base" | "race" | "class" | "mutation" | "equipment" | "temporary-effect";
+
+export type CharacterTraitSourceDto = { kind: TraitSourceKindDto, sourceId: string, resistances: Array<ResistanceDto>, statusImmunities: Array<string>, passives: Array<EquipmentPassiveDto>, reflectsBolts: boolean, passesWalls: boolean, lifePercent: number, };
+
+export type CharacterResistanceDto = { damageType: DamageTypeDto,
+/**
+ * Withheld when equipment knowledge is incomplete, not a known-only estimate.
+ */
+level: ResistanceLevelDto | null, reductionPercent: number | null, };
+
+export type CharacterPassiveDto = { passive: EquipmentPassiveDto, active: boolean | null,
+/**
+ * Only Hold Life and See Invisible currently use source counts in rules.
+ */
+sourceCount: number | null, };
+
+export type CharacterStatSourceDto = { sourceId: string, amount: number, };
+
+export type CharacterStatDto = { id: string, value: number | null, sources: Array<CharacterStatSourceDto>, };
+
+export type TraitAttackScopeDto = "armed-melee" | "current-ammunition" | "own-weapon";
+
+export type CharacterAttackTraitDto = { sourceId: string, scope: TraitAttackScopeDto, slays: Array<SlayDto>, brands: Array<WeaponBrandDto>, vampiric: boolean, };
+
+export type CharacterTraitDetailsDto = { equipmentComplete: boolean, sources: Array<CharacterTraitSourceDto>, resistances: Array<CharacterResistanceDto>, passives: Array<CharacterPassiveDto>,
+/**
+ * None means unknown; an empty list means no immunity, not unimplemented.
+ */
+statusImmunities: Array<string> | null, reflectsBolts: boolean | null, passesWalls: boolean, stats: Array<CharacterStatDto>, attacks: Array<CharacterAttackTraitDto>, activeWeaponId: string | null, activeLauncherId: string | null, auras: Array<CharacterAuraDto>, negatives: Array<CharacterNegativeDto>, };
+
+export type CharacterAuraDto = { damageType: DamageTypeDto, sourceIds: Array<string>, evilOnly: boolean, };
+
+export type CharacterNegativeDto = { sourceId: string, curse: ItemCurseSeverityDto | null, effects: Array<CharacterCurseEffectDto>, };
+
+export type CharacterCurseEffectDto = { effect: ItemCurseEffectDto,
+/**
+ * None when appraisal is insufficient to reveal whether a curse is active.
+ */
+active: boolean | null, asStealthPenalty: boolean, };
+
+export type ItemCurseEffectDto = "ty-curse" | "aggravate" | "drain-experience" | "add-heavy-curse" | "call-demon" | "call-dragon" | "teleport" | "by-curse" | "danger" | "crappy-mutation";
+
+export type AttributeSourceDto = { kind: AttributeSourceKindDto, sourceId: string | null, nameKey: string | null,
+/**
+ * Equipment contains only the modifiers already known to the player.
+ */
+modifier: number, complete: boolean,
+/**
+ * Hidden after incomplete equipment knowledge; never a known-only estimate.
+ */
+effectiveAfter: number | null, upperLimitApplied: boolean | null,
+/**
+ * Normal Appearance suppresses mutation charisma modifiers.
+ */
+suppressed: boolean, };
+
+export type AttributeBreakdownDto = { attribute: AttributeKindDto, natural: number,
+/**
+ * The same public effective value as AttributeValueDto, not a reconstructed total.
+ */
+effective: number, minimum: number, maximum: number, normalAppearanceMinimum: number | null, sources: Array<AttributeSourceDto>, };
+
 export type AttributeSetDto = { strength: AttributeValueDto, intelligence: AttributeValueDto, wisdom: AttributeValueDto, dexterity: AttributeValueDto, constitution: AttributeValueDto, charisma: AttributeValueDto, };
 
-export type PlayerProgressDto = { level: number, maxLevel: number, experience: bigint, maximumExperience: bigint, lifeForce: number, levelCap: number, attributeCap: number, attributeIndexCap: number, experienceForNextLevel?: bigint | null, pendingAttributeIncreases: number, victoryLevelCapUnlocked: boolean, attributes: AttributeSetDto, skills: Array<SkillProgressDto>, weaponProficiencies: Array<WeaponProficiencyDto>, ridingProficiency: RidingProficiencyDto, miningProficiency: MiningProficiencyDto, materials: Array<MaterialDto>, };
+export type PlayerProgressDto = { level: number, maxLevel: number, experience: bigint, maximumExperience: bigint, lifeForce: number, levelCap: number, attributeCap: number, attributeIndexCap: number, experienceForNextLevel?: bigint | null, pendingAttributeIncreases: number, victoryLevelCapUnlocked: boolean, attributes: AttributeSetDto, attributeSources: Array<AttributeBreakdownDto>, skills: Array<SkillProgressDto>, weaponProficiencies: Array<WeaponProficiencyDto>, ridingProficiency: RidingProficiencyDto, miningProficiency: MiningProficiencyDto, materials: Array<MaterialDto>, };
 
 export type SkillProgressDto = { id: string, nameKey: string, current: number, maximum: number, base: number, growthPerTenLevels: number, };
 
 export type WeaponProficiencyCategoryDto = "melee" | "launcher";
 
+export type WeaponProficiencyGroupDto = "sword" | "polearm" | "hafted" | "digging" | "bow" | "other";
+
 export type ProficiencyRankDto = "unskilled" | "beginner" | "skilled" | "expert" | "master";
 
-export type WeaponProficiencyDto = { itemKindId: string, nameKey: string, category: WeaponProficiencyCategoryDto, rank: ProficiencyRankDto, current: number, maximum: number, hitBonus: number, };
+export type WeaponProficiencyDto = { itemKindId: string, nameKey: string, category: WeaponProficiencyCategoryDto, group: WeaponProficiencyGroupDto, equipped: boolean, rank: ProficiencyRankDto, current: number, maximum: number, hitBonus: number, };
 
 export type MiningProficiencyDto = { diggingPower: number, rank: ProficiencyRankDto, current: number, maximum: number, };
 
@@ -276,7 +342,7 @@ export type VirtueKindDto = "compassion" | "honour" | "justice" | "sacrifice" | 
 
 export type VirtueDto = { kind: VirtueKindDto, value: number, };
 
-export type PlayerDto = { id: string, name: string, kindId: string, position: Position, hp: number, maxHp: number, gold: number, nutrition: number, fasting: boolean, nutritionState: NutritionStateDto, speed: number, energyNeed: number, minorSlow: number, realityChangeTicks: number, pendingMutationDirection?: PendingMutationDirectionDto | null, pendingAbilityDirection?: PendingAbilityDirectionDto | null, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, encumbranceSpeedPenalty: number, inventoryUsedSlots: number, inventorySlotCapacity: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, confusingStrikeReady: boolean, sniperConcentration?: SniperConcentrationDto | null, resistances: Array<ResistanceDto>, progress?: PlayerProgressDto, build?: PlayerBuildDto | null, resources?: Array<ResourcePoolDto>, mutations?: Array<PlayerMutationDto>, pendingRaceMutationChoice?: PendingRaceMutationChoiceDto | null, virtues: Array<VirtueDto>, abilityLearning?: AbilityLearningDto | null, abilities?: Array<AbilityDto>, summonCommand?: SummonCommandDto, petUpkeep: PetUpkeepDto, recall?: RecallStateDto | null, ridingActorId?: string | null, pets?: Array<PetDto>, };
+export type PlayerDto = { traitDetails: CharacterTraitDetailsDto, id: string, name: string, kindId: string, position: Position, hp: number, maxHp: number, gold: number, nutrition: number, fasting: boolean, nutritionState: NutritionStateDto, speed: number, energyNeed: number, minorSlow: number, realityChangeTicks: number, pendingMutationDirection?: PendingMutationDirectionDto | null, pendingAbilityDirection?: PendingAbilityDirectionDto | null, carriedWeightTenthsPound: number, carryCapacityTenthsPound: number, encumbranceSpeedPenalty: number, inventoryUsedSlots: number, inventorySlotCapacity: number, baseMaxHp: number, attack: number, baseAttack: number, defense: number, baseDefense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, projectileProfile?: ProjectileProfileDto | null, isDead: boolean, equipmentModifiers: StatModifiersDto, statuses: Array<StatusDto>, confusingStrikeReady: boolean, sniperConcentration?: SniperConcentrationDto | null, resistances: Array<ResistanceDto>, progress?: PlayerProgressDto, build?: PlayerBuildDto | null, resources?: Array<ResourcePoolDto>, mutations?: Array<PlayerMutationDto>, pendingRaceMutationChoice?: PendingRaceMutationChoiceDto | null, virtues: Array<VirtueDto>, abilityLearning?: AbilityLearningDto | null, abilities?: Array<AbilityDto>, summonCommand?: SummonCommandDto, petUpkeep: PetUpkeepDto, recall?: RecallStateDto | null, ridingActorId?: string | null, pets?: Array<PetDto>, };
 
 export type EntityFactionDto = "hostile" | "player" | "friendly";
 

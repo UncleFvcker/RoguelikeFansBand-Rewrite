@@ -66,6 +66,70 @@ fn place_training_target(game: &mut Game) -> Direction {
 }
 
 #[test]
+fn display_groups_follow_rfb_tval_and_equipment_resolves_to_base_kind() {
+    use rfb_protocol::WeaponProficiencyGroupDto as Group;
+    let mut game = Game::new(0x5052_4f46);
+    let before = game.to_save();
+    let projected = game.player_weapon_proficiencies();
+    for (tval, group) in [
+        (23, Group::Sword),
+        (22, Group::Polearm),
+        (21, Group::Hafted),
+        (20, Group::Digging),
+        (19, Group::Bow),
+    ] {
+        let entries: Vec<_> = projected
+            .iter()
+            .filter(|entry| {
+                game.content
+                    .item(&entry.item_kind_id)
+                    .unwrap()
+                    .rfb_base_kind
+                    .is_some_and(|kind| kind.tval == tval)
+            })
+            .collect();
+        assert!(!entries.is_empty(), "missing RFB tval {tval}");
+        assert!(entries.iter().all(|entry| entry.group == group));
+    }
+    assert_eq!(
+        game.to_save(),
+        before,
+        "display projection must not change saved state"
+    );
+    let weapon_id = equipped_item_id(&game, "weapon");
+    let alias = game
+        .content
+        .item_definitions()
+        .find(|item| item.weapon_proficiency_base_item_id.is_some() && item.melee_profile.is_some())
+        .expect("content should include a weapon sharing base proficiency");
+    let alias_id = alias.id.clone();
+    let base_id = alias.weapon_proficiency_base_item_id.clone().unwrap();
+    game.items
+        .iter_mut()
+        .find(|item| item.id == weapon_id)
+        .unwrap()
+        .kind_id = alias_id;
+    let equipped = game.player_weapon_proficiencies();
+    assert!(
+        equipped
+            .iter()
+            .find(|entry| entry.item_kind_id == base_id)
+            .unwrap()
+            .equipped
+    );
+    for item in &mut game.items {
+        if matches!(item.location, ItemLocation::Equipped { .. }) {
+            item.location = ItemLocation::Inventory;
+        }
+    }
+    assert!(
+        game.player_weapon_proficiencies()
+            .iter()
+            .all(|entry| !entry.equipped)
+    );
+}
+
+#[test]
 fn growth_uses_original_gates_rng_remainders_and_bonus_notifications() {
     let mut game = Game::new(0x5052_4f46);
     let weapon_id = equipped_item_id(&game, "weapon");

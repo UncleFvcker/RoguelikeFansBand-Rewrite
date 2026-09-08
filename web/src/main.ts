@@ -583,7 +583,6 @@ function applyLoadedSnapshot(snapshot: GameSnapshot): void {
   renderer.applySnapshot(snapshot);
   appState.replaceVisualCells(snapshot.visualCells);
   statusPanel.render(snapshot);
-  appState.bodySlots = snapshot.bodySlots ?? [];
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
   shopPanel.render(snapshot);
   homePanel.render(snapshot);
@@ -654,7 +653,6 @@ async function initializeGameView(snapshot: GameSnapshot): Promise<void> {
   statusPanel.render(snapshot);
   mogaminatorEditor?.render(snapshot.mogaminator);
   promptMogaminatorQuery(snapshot.mogaminator);
-  appState.bodySlots = snapshot.bodySlots ?? [];
   inventoryPanel.render(snapshot.inventory, snapshot.equipment);
   shopPanel.render(snapshot);
   homePanel.render(snapshot);

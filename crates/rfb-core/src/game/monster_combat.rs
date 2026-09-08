@@ -2001,6 +2001,40 @@ impl Game {
         Ok(false)
     }
 
+    /// Each group contributes one level; overlapping timed fire auras share a level.
+    pub(super) fn player_elemental_contact_aura_sources(
+        &self,
+        damage_type: DamageType,
+    ) -> Vec<Vec<String>> {
+        let mut groups: Vec<_> = self
+            .content
+            .mutations()
+            .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
+            .filter(|mutation| {
+                self.birth_race_mutation_override(&mutation.id)
+                    .and_then(|override_| override_.contact_aura)
+                    .or(mutation.contact_aura)
+                    .map(DamageType::from)
+                    == Some(damage_type)
+            })
+            .map(|mutation| vec![mutation.id.clone()])
+            .collect();
+        if self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE) {
+            groups.push(vec![STATUS_ULTIMATE_RESISTANCE.to_owned()]);
+        }
+        if damage_type == DamageType::Fire {
+            let timed: Vec<_> = [STATUS_FIRE_AURA, STATUS_DEMON_LORD_TRANSFORMATION]
+                .into_iter()
+                .filter(|id| self.player_has_status_kind(id))
+                .map(str::to_owned)
+                .collect();
+            if !timed.is_empty() {
+                groups.push(timed);
+            }
+        }
+        groups
+    }
+
     fn resolve_mutation_contact_auras(
         &mut self,
         target_index: usize,
@@ -2010,23 +2044,8 @@ impl Game {
     ) -> Result<bool, CoreError> {
         for damage_type in [DamageType::Fire, DamageType::Electricity, DamageType::Cold] {
             let level = self
-                .content
-                .mutations()
-                .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
-                .filter(|mutation| {
-                    self.birth_race_mutation_override(&mutation.id)
-                        .and_then(|override_| override_.contact_aura)
-                        .or(mutation.contact_aura)
-                        .map(DamageType::from)
-                        == Some(damage_type)
-                })
-                .count()
-                + usize::from(self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE))
-                + usize::from(
-                    damage_type == DamageType::Fire
-                        && (self.player_has_status_kind(STATUS_FIRE_AURA)
-                            || self.player_has_status_kind(STATUS_DEMON_LORD_TRANSFORMATION)),
-                );
+                .player_elemental_contact_aura_sources(damage_type)
+                .len();
             if level == 0 {
                 continue;
             }

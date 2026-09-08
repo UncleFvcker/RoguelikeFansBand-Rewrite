@@ -96,7 +96,7 @@ fn draconian_innate_blows(attributes: AttributeSet, weight: u16, maximum: u16) -
         .min(maximum)
 }
 
-fn temporary_sustain_passive(status_kind_id: &str) -> Option<EquipmentPassive> {
+pub(super) fn temporary_sustain_passive(status_kind_id: &str) -> Option<EquipmentPassive> {
     match status_kind_id {
         STATUS_HOLD_LIFE => Some(EquipmentPassive::HoldLife),
         STATUS_SUSTAIN_STRENGTH => Some(EquipmentPassive::SustainStrength),

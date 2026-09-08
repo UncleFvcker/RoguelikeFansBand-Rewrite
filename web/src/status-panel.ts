@@ -8,11 +8,17 @@ import type {
   AbilityLearningDto,
   AbilityStudyModeDto,
   AttributeKindDto,
+  AttributeSourceDto,
+  AttributeBreakdownDto,
+  EquipmentItemDto,
+  BodySlotDto,
   GameCommand,
   GameSnapshot,
   GameUpdate,
   PlayerBuildDto,
+  PlayerDto,
   PlayerMutationDto,
+  MaterialDto,
   PetUpkeepDto,
   PetDto,
   PendingRaceMutationChoiceDto,
@@ -22,7 +28,9 @@ import type {
   SniperConcentrationDto,
   SummonCommandDto,
   SummonCommandModeDto,
-  WeaponProficiencyCategoryDto,
+  TaskStatusDto,
+  TaskStatusKindDto,
+  WeaponProficiencyGroupDto,
   WeaponProficiencyDto,
   VirtueDto,
 } from "./protocol";
@@ -30,8 +38,23 @@ import { REST_UNTIL_RECOVERED_TURNS } from "./rest.ts";
 import { goldVisualId } from "./render-world.ts";
 import { equippedLightText } from "./shop-panel.ts";
 import { selectJourneyDungeonStatus } from "./journey-guidance.ts";
+import { renderCharacterTraitsDetails } from "./character-traits-panel.ts";
 
-type StatusDom = Pick<
+type CharacterOverviewDom = Pick<AppDom,
+  | "progressionExperienceValue"
+  | "progressionPersonalityValue"
+  | "characterNameValue"
+  | "characterRaceValue"
+  | "characterClassValue"
+  | "characterLevelValue"
+  | "characterMaximumExperienceValue"
+  | "characterNextExperienceValue"
+  | "characterGoldValue"
+  | "characterWorldTimeValue"
+  | "characterVitalsList"
+>;
+
+type StatusDom = CharacterOverviewDom & Pick<
   AppDom,
   | "mapHost"
   | "turnValue"
@@ -47,6 +70,8 @@ type StatusDom = Pick<
   | "positionValue"
   | "hashValue"
   | "progressionIdentityValue"
+  | "hudLocationValue"
+  | "hudExperience"
   | "progressionLevelValue"
   | "progressionExperienceValue"
   | "progressionCapValue"
@@ -56,9 +81,10 @@ type StatusDom = Pick<
   | "attributeList"
   | "hudAttributeList"
   | "skillList"
-  | "weaponProficiencyMeleeList"
-  | "weaponProficiencyLauncherList"
-  | "miningProficiencyList"
+  | "characterProficiencyTables"
+  | "characterAttributeSources"
+  | "characterTraitDefenses"
+  | "characterTraitAttacks"
   | "materialList"
   | "virtueList"
   | "mutationList"
@@ -95,6 +121,463 @@ const ATTRIBUTE_KINDS: AttributeKindDto[] = [
 
 const WILDERNESS_DAY_TICKS = 100_000;
 
+export function renderTaskLog(list: HTMLUListElement, tasks: readonly TaskStatusDto[],
+  localization: Localization, disabled: boolean, abandon: (task: TaskStatusDto) => void): void {
+  const document = list.ownerDocument;
+  const previous = new Map([...list.querySelectorAll<HTMLDetailsElement>('details[data-task-log-key]')]
+    .map((node) => [node.dataset.taskLogKey!, node.open]));
+  const active = document.activeElement as HTMLElement | null;
+  const focusKey = active && list.contains(active) ? active.closest<HTMLElement>('details[data-task-log-key]')?.dataset.taskLogKey : undefined;
+  const focusButton = active?.tagName === 'BUTTON';
+  const scrollHost = list.parentElement!;
+  const scrollTop = scrollHost.scrollTop;
+  let focusTarget: HTMLElement | undefined;
+  const text = (tag: string, className: string, value: string): HTMLElement => {
+    const node = document.createElement(tag);
+    node.className = className;
+    node.textContent = value;
+    return node;
+  };
+  const groups: readonly [string, readonly TaskStatusKindDto[]][] = [
+    ['current', ['reward-available', 'active', 'taken', 'paused']],
+    ['available', ['available']], ['locked', ['locked']],
+    ['history', ['completed', 'failed', 'abandoned']],
+  ];
+  const rows: HTMLElement[] = [];
+  for (const [group, statuses] of groups) {
+    const entries = statuses.flatMap((status) => tasks.filter((task) => task.status === status));
+    if (!entries.length) continue;
+    const row = document.createElement('li');
+    const section = document.createElement('details');
+    section.className = 'task-log-group';
+    section.dataset.taskLogKey = `group:${group}`;
+    section.open = previous.get(section.dataset.taskLogKey) ?? (group === 'current' || group === 'available');
+    const heading = document.createElement('summary');
+    heading.append(text('span', 'task-log-group-name', localization.format(`task-log-group-${group}`)),
+      text('span', 'task-log-count', localization.format('task-log-count', { count: entries.length })));
+    if (focusKey === section.dataset.taskLogKey) focusTarget = heading;
+    const items = document.createElement('ul');
+    items.className = 'task-log-items';
+    for (const task of entries) {
+      const item = document.createElement('li');
+      const details = document.createElement('details');
+      details.className = 'task-log-task';
+      details.dataset.taskLogKey = `task:${task.taskId}`;
+      details.open = previous.get(details.dataset.taskLogKey) ?? false;
+      const summary = document.createElement('summary');
+      const title = text('span', 'task-log-name', localization.format(task.nameKey));
+      const status = text('span', 'task-log-status', localization.format(`task-status-${task.status}`));
+      status.dataset.status = task.status;
+      summary.append(title, status);
+      const progress = document.createElement('span');
+      progress.className = 'task-log-progress';
+      progress.append(text('span', 'task-log-objective', localization.format('task-service-progress', {
+        current: task.current, required: task.required,
+      })));
+      if (task.stages > 1) progress.append(text('span', 'task-log-stage', localization.format('task-log-stage', {
+        stage: task.stage, stages: task.stages,
+      })));
+      summary.append(progress);
+      const body = document.createElement('div');
+      body.className = 'task-log-body';
+      body.append(text('p', 'task-log-description', localization.format(task.descriptionKey ?? 'task-log-no-description')));
+      if (task.maxRetakes != null) body.append(text('p', 'task-log-retakes', localization.format('task-log-retakes', {
+        used: task.retakesUsed, maximum: task.maxRetakes,
+      })));
+      if (focusKey === details.dataset.taskLogKey) focusTarget = section.open ? summary : heading;
+      if (task.status === 'active' || task.status === 'paused') {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = localization.format('action-task-abandon');
+        button.disabled = disabled;
+        button.addEventListener('click', () => abandon(task));
+        body.append(button);
+        if (focusKey === details.dataset.taskLogKey && focusButton && !disabled && section.open) focusTarget = button;
+      }
+      details.append(summary, body);
+      item.append(details);
+      items.append(item);
+    }
+    section.append(heading, items);
+    row.append(section);
+    rows.push(row);
+  }
+  if (!rows.length) rows.push(text('li', 'task-log-empty', localization.format('task-log-empty')));
+  list.replaceChildren(...rows);
+  focusTarget?.focus({ preventScroll: true });
+  scrollHost.scrollTop = scrollTop;
+}
+
+export function renderHudExperience(meter: HTMLProgressElement, progress: PlayerProgressDto | undefined,
+  localization: Localization): void {
+  meter.hidden = !progress;
+  if (!progress) return;
+  const next = progress.experienceForNextLevel;
+  // The projection exposes cumulative XP thresholds, not this level's starting XP.
+  meter.value = next == null ? 1000 : next > 0n
+    ? Math.max(0, Math.min(1000, Number(BigInt(progress.experience) * 1000n / BigInt(next)))) : 0;
+  const description = localization.format("hud-experience-detail", {
+    experience: String(progress.experience),
+    next: next == null ? localization.format("character-no-next-level") : String(next),
+  });
+  meter.title = description;
+  meter.setAttribute("aria-valuetext", description);
+}
+
+export function hudLocationText(state: Pick<GameSnapshot, "mapScale" | "floorId" | "town">,
+  localization: Localization, contentName: (id: string) => string): string {
+  if (state.mapScale === "world") return localization.format("hud-location-world");
+  if (state.town) return localization.format(state.town.nameKey);
+  if (state.floorId === "core.floor.wilderness") return localization.format("hud-location-wilderness");
+  // Content floor IDs encode depth; the shared name key omits the numeric suffix.
+  const floor = /^(demo\.floor\..+-depth)-(\d+)$/.exec(state.floorId);
+  return floor ? localization.format("hud-location-depth", { name: contentName(floor[1]!), depth: floor[2]! })
+    : contentName(state.floorId);
+}
+
+function attachStatTooltip(row: HTMLElement, id: string, text: string, clickTrigger?: HTMLButtonElement,
+  showWhen: () => boolean = () => true): () => void {
+  const tooltip = row.ownerDocument.createElement("div");
+  tooltip.id = id;
+  tooltip.className = "character-stat-tooltip";
+  tooltip.popover = "auto";
+  tooltip.setAttribute("role", "tooltip");
+  tooltip.textContent = text;
+  const trigger = clickTrigger ?? row;
+  trigger.tabIndex = 0;
+  trigger.setAttribute("aria-describedby", id);
+  row.append(tooltip);
+  let anchor = row.getBoundingClientRect();
+  const hide = () => tooltip.hidePopover();
+  const show = () => {
+    if (!showWhen()) return;
+    if (tooltip.matches(":popover-open")) return;
+    anchor = row.getBoundingClientRect();
+    const viewport = row.ownerDocument.documentElement;
+    const pane = row.closest(".character-detail-pane, .character-subpage")?.getBoundingClientRect();
+    const left = Math.max(8, pane?.left ?? 0);
+    const right = Math.min(viewport.clientWidth - 8, pane?.right ?? viewport.clientWidth);
+    const top = Math.max(8, pane?.top ?? 0);
+    const bottom = Math.min(viewport.clientHeight - 8, pane?.bottom ?? viewport.clientHeight);
+    tooltip.style.maxWidth = `${right - left}px`;
+    tooltip.style.maxHeight = `${bottom - top}px`;
+    tooltip.showPopover();
+    const bounds = tooltip.getBoundingClientRect();
+    tooltip.style.left = `${Math.max(left, Math.min(anchor.left, right - bounds.width))}px`;
+    tooltip.style.top = `${Math.max(top, Math.min(bottom - bounds.height,
+      anchor.bottom + bounds.height <= bottom ? anchor.bottom : anchor.top - bounds.height))}px`;
+  };
+  const leave = () => {
+    if (!row.matches(":hover") && !row.contains(row.ownerDocument.activeElement)) hide();
+  };
+  if (clickTrigger) {
+    clickTrigger.setAttribute("aria-expanded", "false");
+    clickTrigger.addEventListener("click", () => tooltip.matches(":popover-open") ? hide() : show());
+    row.addEventListener("focusout", (event) => {
+      if (!row.contains(event.relatedTarget as Node | null)) hide();
+    });
+  } else {
+    row.addEventListener("pointerenter", show);
+    row.addEventListener("pointerleave", leave);
+    // Native popover dismissal can restore focus during another show operation.
+    // Wait until that operation finishes before opening the focused row's tooltip.
+    row.addEventListener("focusin", () => row.ownerDocument.defaultView!.requestAnimationFrame(() => {
+      if (row.isConnected && row.contains(row.ownerDocument.activeElement)) show();
+    }));
+    row.addEventListener("focusout", leave);
+  }
+  // Only listen while open: scrolling/resize dismisses a now-displaced tooltip.
+  let dismissListeners: AbortController | undefined;
+  tooltip.addEventListener("beforetoggle", (event) => {
+    clickTrigger?.setAttribute("aria-expanded", String((event as ToggleEvent).newState === "open"));
+    dismissListeners?.abort();
+    if ((event as ToggleEvent).newState !== "open") return;
+    dismissListeners = new AbortController();
+    const options = { capture: true, signal: dismissListeners.signal };
+    row.ownerDocument.addEventListener("scroll", (event) => {
+      const current = row.getBoundingClientRect();
+      if (event.target !== tooltip && (current.top !== anchor.top || current.left !== anchor.left)) hide();
+    }, options);
+    row.ownerDocument.defaultView?.addEventListener("resize", hide, options);
+  });
+  tooltip.addEventListener("toggle", (event) => {
+    if ((event as ToggleEvent).newState === "closed") dismissListeners?.abort();
+  });
+  return hide;
+}
+
+export function attributeSourceCell(sources: readonly AttributeSourceDto[], localization: Localization): string {
+  if (!sources.length) return "—";
+  const values = sources.filter((source) => source.modifier !== 0 || source.kind === "normal-appearance").map((source) =>
+    source.kind === "normal-appearance" ? localization.format("attribute-source-rule")
+      : `${signedModifier(source.modifier)}${source.suppressed ? localization.format("attribute-source-suppressed-short") : ""}`);
+  const text = values.join(" · ") || "0";
+  return sources.some((source) => !source.complete)
+    ? localization.format("attribute-source-known-value", { value: text }) : text;
+}
+
+export function renderCharacterAttributeSources(
+  host: HTMLElement, rows: readonly AttributeBreakdownDto[], equipment: readonly EquipmentItemDto[],
+  slots: readonly BodySlotDto[], mutations: readonly PlayerMutationDto[], localization: Localization,
+  statusName: (id: string | undefined) => string,
+): void {
+  const document = host.ownerDocument;
+  const openPanel = host.querySelector<HTMLElement>(".attribute-source-detail:popover-open");
+  const openAttribute = openPanel?.dataset.attribute;
+  const previousOpener = openPanel?.dataset.sourceOpener;
+  const detailScroll = openPanel?.querySelector(".attribute-source-detail-body")?.scrollTop ?? 0;
+  const equipmentExpanded = openPanel?.querySelector("details")?.open ?? false;
+  const inlineExpanded = host.querySelector<HTMLDetailsElement>(".attribute-source-inline details")?.open ?? false;
+  const focused = host.contains(document.activeElement)
+    ? (document.activeElement as HTMLElement).dataset.sourceFocus : undefined;
+  for (const popover of host.querySelectorAll<HTMLElement>(":popover-open")) popover.hidePopover();
+  const text = (tag: string, value: string, className = "") => {
+    const element = document.createElement(tag);
+    element.textContent = value;
+    element.className = className;
+    return element;
+  };
+  if (!rows.length) {
+    host.replaceChildren(text("p", localization.format("progression-unavailable"), "character-detail-empty"));
+    return;
+  }
+  const note = text("p", localization.format("attribute-source-guide"), "attribute-source-guide");
+  const table = document.createElement("table");
+  table.className = "attribute-source-table";
+  table.setAttribute("aria-label", localization.format("character-detail-sources"));
+  const columns = ["attribute", "base", "race", "class", "personality", "equipment", "other", "current"] as const;
+  const header = table.createTHead().insertRow();
+  for (const column of columns) {
+    const th = document.createElement("th");
+    th.scope = "col";
+    th.textContent = localization.format(`attribute-source-column-${column}` as MessageKey);
+    header.append(th);
+  }
+  const body = table.createTBody();
+  const panels: HTMLElement[] = [];
+  for (const row of rows) {
+    const name = localization.format(`attribute-${row.attribute}` as MessageKey);
+    const detail = document.createElement("div");
+    detail.className = "attribute-source-detail";
+    detail.id = `attribute-source-detail-${row.attribute}`;
+    detail.dataset.attribute = row.attribute;
+    detail.popover = "auto";
+    detail.setAttribute("role", "dialog");
+    detail.setAttribute("aria-labelledby", `${detail.id}-title`);
+    const heading = text("h3", localization.format("attribute-source-detail-title", { name }));
+    heading.id = `${detail.id}-title`;
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = localization.format("attribute-source-close");
+    close.dataset.sourceFocus = `${row.attribute}-close`;
+    const top = document.createElement("header");
+    top.append(heading, close);
+    const content = document.createElement("div");
+    content.className = "attribute-source-detail-body";
+    content.append(text("p", localization.format("attribute-source-range", {
+      base: formatAttributeValue(row.natural), current: formatAttributeValue(row.effective),
+      minimum: formatAttributeValue(row.minimum), maximum: formatAttributeValue(row.maximum),
+    })), text("p", localization.format("attribute-source-guide")));
+    if (row.sources.some((source) => !source.complete)) {
+      content.append(text("p", localization.format("attribute-source-incomplete"), "attribute-source-warning"));
+    }
+    const list = document.createElement("ol");
+    for (const source of row.sources) {
+      const entry = document.createElement("li");
+      const kind = localization.format(`attribute-source-kind-${source.kind}` as MessageKey);
+      const sourceName = source.nameKey ? localization.format(source.nameKey as MessageKey)
+        : source.kind === "mutation" ? mutations.find((mutation) => mutation.id === source.sourceId)?.name
+        : source.kind === "temporary-effect" ? statusName(source.sourceId ?? undefined) : undefined;
+      const label = sourceName ? `${kind} · ${sourceName}` : kind;
+      const result = source.effectiveAfter == null ? localization.format("attribute-source-result-hidden")
+        : formatAttributeValue(source.effectiveAfter);
+      const line = localization.format("attribute-source-step", {
+        name: label, modifier: attributeSourceCell([source], localization), result,
+      });
+      entry.append(text("p", line));
+      if (source.upperLimitApplied) entry.append(text("p", localization.format("attribute-source-capped"), "attribute-source-warning"));
+      if (source.suppressed) entry.append(text("p", localization.format("attribute-source-suppressed"), "attribute-source-warning"));
+      if (source.kind === "normal-appearance" && row.normalAppearanceMinimum != null) {
+        entry.append(text("p", localization.format("attribute-source-charisma-floor", {
+          value: formatAttributeValue(row.normalAppearanceMinimum),
+        })));
+      }
+      if (source.kind === "equipment") {
+        const items = equipment.filter((item) => slots.find((slot) => slot.id === item.slotId)?.slotType !== "tool");
+        const equipmentDetails = document.createElement("details");
+        const summary = text("summary", localization.format("attribute-source-equipment-details"));
+        summary.dataset.sourceFocus = `${row.attribute}-equipment-detail`;
+        equipmentDetails.append(summary);
+        for (const item of items) {
+          const slot = slots.find((slot) => slot.id === item.slotId)!;
+          const known = item.knowledge === "aware" && item.identification === "identified";
+          const value = signedModifier(item.modifiers[row.attribute]);
+          equipmentDetails.append(text("p", localization.format("attribute-source-item", {
+            slot: `${localization.format(`equipment-slot-${slot.slotType}` as MessageKey)} (${slot.id})`,
+            name: localization.format(item.displayNameKey as MessageKey),
+            value: known ? value : localization.format("attribute-source-known-value", { value }),
+          })));
+        }
+        if (!items.length) equipmentDetails.append(text("p", localization.format("attribute-source-no-equipment")));
+        entry.append(equipmentDetails);
+      }
+      list.append(entry);
+    }
+    content.append(list);
+    detail.append(top, content);
+    panels.push(detail);
+    const tr = body.insertRow();
+    let opener: HTMLButtonElement | undefined;
+    const triggers: HTMLButtonElement[] = [];
+    close.addEventListener("click", () => {
+      detail.hidePopover();
+      (opener ?? host.querySelector<HTMLButtonElement>(`[data-source-focus="${detail.dataset.sourceOpener}"]`))?.focus();
+    });
+    detail.addEventListener("beforetoggle", (event) => {
+      for (const trigger of triggers) trigger.setAttribute("aria-expanded", String((event as ToggleEvent).newState === "open"));
+    });
+    for (const column of columns) {
+      const sources = row.sources.filter((source) => column === "other"
+        ? ["mutation", "temporary-effect", "normal-appearance"].includes(source.kind) : source.kind === column);
+      const value = column === "attribute" ? name : column === "base" ? formatAttributeValue(row.natural)
+        : column === "current" ? formatAttributeValue(row.effective) : attributeSourceCell(sources, localization);
+      const cell = document.createElement(column === "attribute" ? "th" : "td");
+      if (cell instanceof HTMLTableCellElement && column === "attribute") cell.scope = "row";
+      const trigger = document.createElement("button");
+      trigger.type = "button";
+      trigger.textContent = value;
+      trigger.dataset.sourceFocus = `${row.attribute}-${column}`;
+      trigger.setAttribute("aria-label", localization.format("attribute-source-cell-label", {
+        name, column: localization.format(`attribute-source-column-${column}` as MessageKey), value,
+      }));
+      trigger.setAttribute("aria-controls", detail.id);
+      trigger.setAttribute("aria-haspopup", "dialog");
+      trigger.setAttribute("aria-expanded", "false");
+      cell.append(trigger);
+      const hideTooltip = attachStatTooltip(cell, `attribute-source-tip-${row.attribute}-${column}`,
+        `${name} · ${localization.format(`attribute-source-column-${column}` as MessageKey)}: ${value}\n${localization.format("attribute-source-hover")}`,
+        undefined, () => !host.querySelector(".attribute-source-detail:popover-open"));
+      cell.tabIndex = -1; // The button is the single keyboard stop for this cell.
+      trigger.setAttribute("aria-describedby", `attribute-source-tip-${row.attribute}-${column}`);
+      trigger.addEventListener("click", () => {
+        hideTooltip();
+        opener = trigger;
+        detail.dataset.sourceOpener = trigger.dataset.sourceFocus;
+        detail.showPopover();
+        close.focus();
+      });
+      triggers.push(trigger);
+      tr.append(cell);
+    }
+  }
+  const matrix = text("div", "", "attribute-source-matrix");
+  matrix.append(table);
+  const narrow = text("div", "", "attribute-source-narrow");
+  const label = text("label", localization.format("attribute-source-column-attribute"), "detail-selector");
+  const select = document.createElement("select");
+  select.dataset.sourceFocus = "narrow-select";
+  for (const row of rows) {
+    const option = document.createElement("option");
+    option.value = row.attribute;
+    option.textContent = localization.format(`attribute-${row.attribute}` as MessageKey);
+    select.append(option);
+  }
+  select.value = rows.some((row) => row.attribute === host.dataset.sourceAttribute)
+    ? host.dataset.sourceAttribute! : rows[0]!.attribute;
+  const inline = text("div", "", "attribute-source-inline");
+  const selectAttribute = () => {
+    host.dataset.sourceAttribute = select.value;
+    // Reuse formatted, knowledge-filtered sources. Native details need no handlers.
+    const content = panels.find((panel) => panel.dataset.attribute === select.value)!
+      .querySelector(".attribute-source-detail-body")!.cloneNode(true) as HTMLElement;
+    content.className = "attribute-source-inline-body";
+    content.querySelectorAll("[data-source-focus]").forEach((element) => element.removeAttribute("data-source-focus"));
+    const equipmentDetails = content.querySelector("details");
+    if (equipmentDetails) equipmentDetails.open = inlineExpanded;
+    inline.replaceChildren(content);
+  };
+  select.addEventListener("change", selectAttribute);
+  selectAttribute();
+  label.append(select);
+  narrow.append(label, inline);
+  host.replaceChildren(note, matrix, narrow, ...panels);
+  if (openAttribute) {
+    const panel = panels.find((panel) => panel.dataset.attribute === openAttribute);
+    if (panel) {
+      if (previousOpener) panel.dataset.sourceOpener = previousOpener;
+      panel.showPopover();
+      panel.querySelector("details")!.open = equipmentExpanded;
+      panel.querySelector(".attribute-source-detail-body")!.scrollTop = detailScroll;
+    }
+  }
+  if (focused) host.querySelector<HTMLElement>(`[data-source-focus="${focused}"]`)?.focus();
+}
+
+export function renderCharacterTraits(
+  dom: Pick<AppDom, "attributeList" | "hudAttributeList" | "skillList">,
+  progress: PlayerProgressDto,
+  state: Pick<AppState, "busy" | "playerDead" | "worldMap">,
+  localization: Localization,
+  dispatch: (command: GameCommand) => Promise<void>,
+): void {
+  const document = dom.attributeList.ownerDocument;
+  // Close before replacement, including the temporary document listeners.
+  for (const tooltip of document.querySelectorAll<HTMLElement>(".character-stat-tooltip:popover-open")) {
+    tooltip.hidePopover();
+  }
+  const attributeRows = ATTRIBUTE_KINDS.map((attribute) => {
+    const value = progress.attributes[attribute];
+    const row = document.createElement("li");
+    row.className = "attribute-row";
+    const label = document.createElement("span");
+    label.className = "attribute-name";
+    label.textContent = localization.format(`attribute-${attribute}` as MessageKey);
+    const current = document.createElement("span");
+    current.className = "attribute-value";
+    current.textContent = formatAttributeValue(value.effective);
+    row.append(label, current);
+    return row;
+  });
+  dom.hudAttributeList.replaceChildren(...attributeRows.map((row) => row.cloneNode(true)));
+  attributeRows.forEach((row, index) => {
+    const attribute = ATTRIBUTE_KINDS[index]!;
+    const value = progress.attributes[attribute];
+    attachStatTooltip(row, `character-attribute-${attribute}-tooltip`, localization.format("character-attribute-detail", {
+      natural: formatAttributeValue(value.natural),
+      maximumNatural: formatAttributeValue(value.maximumNatural),
+      potential: formatAttributeValue(value.potential),
+      effective: formatAttributeValue(value.effective),
+      index: value.index,
+    }));
+    if (progress.pendingAttributeIncreases > 0) {
+      const increase = document.createElement("button");
+      increase.type = "button";
+      increase.className = "attribute-increase";
+      increase.textContent = localization.format("action-increase-attribute");
+      increase.disabled = state.busy || state.playerDead || state.worldMap ||
+        value.maximumNatural >= Math.min(progress.attributeCap, value.potential);
+      increase.addEventListener("click", () => void dispatch({ type: "increase-attribute", attribute }));
+      row.append(increase);
+    }
+  });
+  dom.attributeList.replaceChildren(...attributeRows);
+  dom.skillList.replaceChildren(...progress.skills.map((skill, index) => {
+    const row = document.createElement("li");
+    row.className = "skill-row";
+    const name = document.createElement("span");
+    name.className = "skill-name";
+    name.textContent = localization.format(skill.nameKey as MessageKey);
+    const value = document.createElement("span");
+    value.className = "skill-value";
+    value.textContent = String(skill.current);
+    row.append(name, value);
+    attachStatTooltip(row, `character-skill-${index}-tooltip`, `${name.textContent}\n${localization.format("character-skill-detail", {
+      current: skill.current, maximum: skill.maximum, growth: skill.growthPerTenLevels,
+    })}`);
+    return row;
+  }));
+}
+
 export type WildernessClock = {
   day: number;
   hour: number;
@@ -120,15 +603,272 @@ export function abilityConfirmationMessageKey(abilityId: string): MessageKey | u
     : undefined;
 }
 
-export function weaponProficienciesByCategory(
+export function renderCharacterOverview(
+  dom: CharacterOverviewDom,
+  player: PlayerDto,
+  worldTick: number,
+  localization: Localization,
+): void {
+  const unavailable = localization.format("progression-unavailable");
+  const { build, progress } = player;
+  dom.characterNameValue.textContent = player.name;
+  dom.characterNameValue.title = player.name;
+  dom.characterRaceValue.textContent = build ? localization.format(build.raceNameKey) : unavailable;
+  dom.characterClassValue.textContent = build ? localization.format(build.classNameKey) : unavailable;
+  dom.progressionPersonalityValue.textContent = build ? localization.format(build.personalityNameKey) : unavailable;
+  dom.characterLevelValue.textContent = progress ? String(progress.level) : unavailable;
+  dom.progressionExperienceValue.textContent = progress ? String(progress.experience) : unavailable;
+  dom.characterMaximumExperienceValue.textContent = progress ? String(progress.maximumExperience) : unavailable;
+  dom.characterNextExperienceValue.textContent = progress
+    ? progress.experienceForNextLevel == null ? localization.format("character-no-next-level") : String(progress.experienceForNextLevel)
+    : unavailable;
+  dom.characterGoldValue.textContent = player.gold.toLocaleString(localization.locale);
+  const clock = wildernessClock(worldTick);
+  dom.characterWorldTimeValue.textContent = localization.format("character-world-time-value", {
+    day: clock.day, hour: String(clock.hour).padStart(2, "0"), minute: String(clock.minute).padStart(2, "0"),
+  });
+  const values: [MessageKey, string][] = [
+    ["status-health", localization.format("status-health-value", { hp: player.hp, maxHp: player.maxHp })],
+    ...(player.resources ?? []).map((resource): [MessageKey, string] =>
+      [resource.nameKey, `${resource.current} / ${resource.maximum}`]),
+  ];
+  if (player.sniperConcentration) {
+    values.push(["sniper-concentration", `${player.sniperConcentration.current} / ${player.sniperConcentration.maximum}`]);
+  }
+  values.push(["character-armor-class", String(player.armorClass)], ["character-speed", String(player.speed)]);
+  const document = dom.characterVitalsList.ownerDocument;
+  dom.characterVitalsList.replaceChildren(...values.map(([key, value]) => {
+    const row = document.createElement("div");
+    const label = document.createElement("dt");
+    label.textContent = localization.format(key);
+    const text = document.createElement("dd");
+    text.textContent = value;
+    row.append(label, text);
+    return row;
+  }));
+}
+
+export function weaponProficienciesByGroup(
   proficiencies: readonly WeaponProficiencyDto[],
-  category: WeaponProficiencyCategoryDto,
+  group: WeaponProficiencyGroupDto,
 ): WeaponProficiencyDto[] {
-  return proficiencies.filter((proficiency) => proficiency.category === category);
+  return proficiencies.filter((proficiency) => proficiency.group === group);
 }
 
 export function proficiencyRankMessageKey(rank: ProficiencyRankDto): MessageKey {
   return `proficiency-rank-${rank}` as MessageKey;
+}
+
+export function renderCharacterProficiencies(
+  host: HTMLElement, progress: PlayerProgressDto, localization: Localization,
+): void {
+  for (const tooltip of host.querySelectorAll<HTMLElement>(":popover-open")) tooltip.hidePopover();
+  const document = host.ownerDocument;
+  const selectedGroup = host.querySelector<HTMLInputElement>("input:checked")?.value;
+  let rowIndex = 0;
+  const makeRow = (name: string, rank: ProficiencyRankDto, details: string, equipped = false) => {
+    const row = document.createElement("tr");
+    const cell = document.createElement("td");
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "proficiency-entry";
+    button.classList.toggle("is-equipped", equipped);
+    const label = document.createElement("span");
+    label.className = "proficiency-name";
+    label.textContent = name;
+    button.append(label);
+    if (equipped) {
+      const marker = document.createElement("span");
+      marker.className = "proficiency-equipped";
+      marker.textContent = localization.format("proficiency-equipped");
+      button.append(marker);
+    }
+    const value = document.createElement("span");
+    value.className = "proficiency-rank";
+    value.dataset.rank = rank;
+    value.textContent = `[${localization.format(proficiencyRankMessageKey(rank))}]`;
+    button.append(value);
+    cell.append(button);
+    attachStatTooltip(cell, `character-proficiency-${rowIndex++}-detail`, `${name}\n${details}`, button);
+    row.append(cell);
+    return row;
+  };
+  const makeTable = (group: string, title: string, rows: HTMLTableRowElement[]) => {
+    const table = document.createElement("table");
+    table.className = "proficiency-table";
+    table.dataset.group = group;
+    const heading = document.createElement("th");
+    heading.scope = "col";
+    heading.textContent = title;
+    const headRow = table.createTHead().insertRow();
+    headRow.append(heading);
+    table.createTBody().append(...rows);
+    return table;
+  };
+  const groups: WeaponProficiencyGroupDto[] = ["sword", "polearm", "bow", "hafted", "digging", "other"];
+  // Chromium does not repeat table headers across CSS columns. Split long groups
+  // into named, unbroken tables sized from this projection, without spacer rows.
+  const rowsPerTable = Math.max(1, Math.ceil((progress.weaponProficiencies.length + 2) / 3));
+  const tables = groups.flatMap((group) => {
+    const entries = weaponProficienciesByGroup(progress.weaponProficiencies, group);
+    const parts: HTMLTableElement[] = [];
+    for (let offset = 0; offset < entries.length; offset += rowsPerTable) {
+      const title = localization.format(`proficiency-group-${group}` as MessageKey);
+      parts.push(makeTable(group, offset ? localization.format("proficiency-continued", { name: title }) : title,
+        entries.slice(offset, offset + rowsPerTable).map((entry) =>
+          makeRow(localization.format(entry.nameKey as MessageKey), entry.rank,
+            localization.format("weapon-proficiency-value", {
+              rank: localization.format(proficiencyRankMessageKey(entry.rank)),
+              current: entry.current, maximum: entry.maximum,
+              hit: `${entry.hitBonus >= 0 ? "+" : ""}${entry.hitBonus}`,
+            }), entry.equipped))));
+    }
+    return parts;
+  });
+  const riding = progress.ridingProficiency;
+  const mining = progress.miningProficiency;
+  tables.push(makeTable("misc", localization.format("proficiency-group-misc"), [
+    makeRow(localization.format("riding-proficiency"), riding.rank,
+      localization.format("riding-proficiency-value", {
+        rank: localization.format(proficiencyRankMessageKey(riding.rank)), current: riding.current, maximum: riding.maximum,
+      })),
+    makeRow(localization.format("mining-proficiency"), mining.rank,
+      localization.format("mining-proficiency-value", {
+        rank: localization.format(proficiencyRankMessageKey(mining.rank)), current: mining.current,
+        maximum: mining.maximum, power: mining.diggingPower,
+      })),
+  ]));
+  const switcher = document.createElement("div");
+  switcher.className = "character-group-switch";
+  switcher.setAttribute("role", "group");
+  switcher.setAttribute("aria-label", localization.format("character-proficiency-groups"));
+  const available = [...new Set(tables.map((table) => table.dataset.group!))];
+  const selected = available.includes(selectedGroup ?? "") ? selectedGroup : available[0];
+  for (const group of available) {
+    const label = document.createElement("label");
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "character-proficiency-group";
+    radio.value = group;
+    radio.checked = group === selected;
+    const name = document.createElement("span");
+    name.textContent = localization.format(`proficiency-group-${group}` as MessageKey);
+    label.append(radio, name);
+    switcher.append(label);
+  }
+  host.replaceChildren(switcher, ...tables);
+}
+
+export function renderCharacterOtherLists(
+  dom: Pick<AppDom, "virtueList" | "materialList">,
+  virtues: VirtueDto[], materials: MaterialDto[], localization: Localization,
+): void {
+  const render = (list: HTMLUListElement, entries: [string, number][], emptyKey: MessageKey) => {
+    const document = list.ownerDocument;
+    const rows = entries.map(([name, value]) => {
+      const row = document.createElement("li");
+      row.className = "character-other-row";
+      const label = document.createElement("span");
+      label.className = "character-other-name";
+      label.textContent = name;
+      const amount = document.createElement("span");
+      amount.className = "character-other-value";
+      amount.textContent = String(value);
+      row.append(label, amount);
+      return row;
+    });
+    if (!rows.length) {
+      const empty = document.createElement("li");
+      empty.className = "character-other-empty";
+      empty.textContent = localization.format(emptyKey);
+      rows.push(empty);
+    }
+    list.replaceChildren(...rows);
+  };
+  render(dom.virtueList, virtues.map((entry) => [localization.format(`virtue-${entry.kind}`), entry.value]), "character-virtues-empty");
+  render(dom.materialList, materials.map((entry) => [localization.format(entry.nameKey as MessageKey), entry.quantity]), "character-materials-empty");
+}
+
+export function renderCharacterMutations(
+  list: HTMLUListElement, mutations: PlayerMutationDto[],
+  pendingChoice: PendingRaceMutationChoiceDto | null | undefined,
+  state: Pick<AppState, "busy" | "playerDead" | "campaignEnded">,
+  localization: Localization, dispatch: (command: GameCommand) => Promise<void>,
+): void {
+  const document = list.ownerDocument;
+  const expanded = new Set([...list.querySelectorAll<HTMLDetailsElement>("details[open]")]
+    .map((details) => details.dataset.mutationId));
+  const disclosure = (mutation: Pick<PlayerMutationDto, "id" | "name" | "description" | "rating">, key: string, locked = false) => {
+    const details = document.createElement("details");
+    details.className = "mutation-details";
+    details.dataset.mutationId = key;
+    details.open = expanded.has(key);
+    const summary = document.createElement("summary");
+    const heading = document.createElement("span");
+    heading.className = "mutation-heading";
+    const name = document.createElement("span");
+    name.className = "mutation-name";
+    name.textContent = mutation.name;
+    const badges = document.createElement("span");
+    badges.className = "mutation-badges";
+    const rating = document.createElement("span");
+    rating.className = "mutation-rating";
+    rating.textContent = localization.format(mutationRatingMessageKey(mutation.rating));
+    badges.append(rating);
+    if (locked) {
+      const badge = document.createElement("span");
+      badge.className = "mutation-locked";
+      badge.textContent = localization.format("mutation-locked");
+      badges.append(badge);
+    }
+    heading.append(name, badges);
+    summary.append(heading);
+    const description = document.createElement("p");
+    description.className = "mutation-description";
+    description.textContent = mutation.description;
+    details.append(summary, description);
+    return details;
+  };
+  const rows: HTMLLIElement[] = [];
+  if (pendingChoice) {
+    const choice = document.createElement("li");
+    choice.className = "mutation-choice-card";
+    const title = document.createElement("strong");
+    title.textContent = localization.format("mutation-choice-required");
+    const prompt = document.createElement("p");
+    prompt.textContent = localization.format("mutation-choice-prompt");
+    choice.append(title, prompt);
+    for (const candidate of pendingChoice.candidates) {
+      const row = document.createElement("div");
+      row.className = "mutation-choice-row";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "mutation-choice-candidate";
+      button.textContent = localization.format("mutation-choice-select");
+      button.setAttribute("aria-label", localization.format("mutation-choice-action", { mutation: candidate.name }));
+      button.disabled = state.busy || state.playerDead || state.campaignEnded;
+      button.addEventListener("click", () => void dispatch({
+        type: "choose-race-mutation", rewardId: pendingChoice.rewardId, mutationId: candidate.id,
+      }));
+      row.append(disclosure(candidate, `choice:${pendingChoice.rewardId}:${candidate.id}`), button);
+      choice.append(row);
+    }
+    rows.push(choice);
+  }
+  for (const mutation of mutations) {
+    const row = document.createElement("li");
+    row.className = "mutation-row";
+    row.dataset.rating = mutation.rating;
+    row.append(disclosure(mutation, mutation.id, mutation.locked));
+    rows.push(row);
+  }
+  if (!rows.length) {
+    const empty = document.createElement("li");
+    empty.className = "character-other-empty";
+    empty.textContent = localization.format("mutation-empty");
+    rows.push(empty);
+  }
+  list.replaceChildren(...rows);
 }
 
 export class StatusPanel {
@@ -208,6 +948,7 @@ export class StatusPanel {
 
   render(state: GameSnapshot | GameUpdate): void {
     this.#state.status = state;
+    if ("bodySlots" in state) this.#state.bodySlots = state.bodySlots;
     if ("worldId" in state) this.#worldId = state.worldId;
     this.#state.playerDead = state.player.isDead;
     this.#state.campaignEnded = state.campaign.status === "retired";
@@ -266,6 +1007,8 @@ export class StatusPanel {
             maximum: dungeon.maximumDepth,
           });
     this.#dom.dungeonInfoBossRow.hidden = dungeon.bossNameKey === undefined;
+    this.#dom.hudLocationValue.textContent = hudLocationText(state, this.#localization, this.#contentName);
+    this.#dom.hudLocationValue.title = this.#dom.hudLocationValue.textContent;
     this.#dom.dungeonInfoBoss.textContent = dungeon.bossNameKey
       ? this.#localization.format(dungeon.bossNameKey)
       : "";
@@ -280,10 +1023,17 @@ export class StatusPanel {
       state.player.equipmentModifiers.defense,
     );
     this.#renderProgression(state.player.name, state.player.progress, state.player.build);
-    this.#renderVirtues(state.player.virtues);
-    this.#renderMutations(
+    renderCharacterOverview(this.#dom, state.player, state.worldTick, this.#localization);
+    renderCharacterAttributeSources(this.#dom.characterAttributeSources,
+      state.player.progress?.attributeSources ?? [], state.equipment, this.#state.bodySlots,
+      state.player.mutations ?? [], this.#localization, this.#statusName);
+    renderCharacterTraitsDetails(this.#dom.characterTraitDefenses, this.#dom.characterTraitAttacks,
+      state.player, [...state.equipment, ...state.inventory], this.#localization, this.#statusName, this.#state.bodySlots);
+    renderCharacterOtherLists(this.#dom, state.player.virtues, state.player.progress?.materials ?? [], this.#localization);
+    renderCharacterMutations(this.#dom.mutationList,
       state.player.mutations ?? [],
       state.player.pendingRaceMutationChoice,
+      this.#state, this.#localization, this.#dispatch,
     );
     this.#renderAbilities(
       state.player.abilities ?? [],
@@ -373,45 +1123,10 @@ export class StatusPanel {
   };
 
   #renderTasks(state: GameSnapshot | GameUpdate): void {
-    const document = this.#dom.taskLogList.ownerDocument;
-    this.#dom.taskLogList.replaceChildren(
-      ...state.tasks.map((task) => {
-        const row = document.createElement("li");
-        row.textContent = this.#localization.format("task-log-entry", {
-          task: this.#localization.format(task.nameKey),
-          status: this.#localization.format(`task-status-${task.status}` as MessageKey),
-          stage: task.stage,
-          stages: task.stages,
-          current: task.current,
-          required: task.required,
-        });
-        const maxRetakes = task.maxRetakes;
-        if (maxRetakes !== undefined && maxRetakes !== null) {
-          row.append(
-            " ",
-            this.#localization.format("task-log-retakes", {
-              used: task.retakesUsed,
-              maximum: maxRetakes,
-            }),
-          );
-        }
-        if (task.status === "active" || task.status === "paused") {
-          const abandon = document.createElement("button");
-          abandon.type = "button";
-          abandon.textContent = this.#localization.format("action-task-abandon");
-          abandon.disabled = this.#state.busy || this.#state.worldMap;
-          abandon.addEventListener("click", () =>
-            void this.#dispatch(
-              task.status === "active"
-                ? { type: "abandon-task" }
-                : { type: "abandon-paused-task", taskId: task.taskId },
-            ),
-          );
-          row.append(" ", abandon);
-        }
-        return row;
-      }),
-    );
+    renderTaskLog(this.#dom.taskLogList, state.tasks, this.#localization,
+      this.#state.busy || this.#state.worldMap, (task) => void this.#dispatch(
+        task.status === 'active' ? { type: 'abandon-task' } : { type: 'abandon-paused-task', taskId: task.taskId },
+      ));
   }
 
   #renderProgression(
@@ -426,37 +1141,22 @@ export class StatusPanel {
           class: this.#localization.format(build.classNameKey as MessageKey),
         })
       : playerName;
+    renderHudExperience(this.#dom.hudExperience, progress, this.#localization);
     if (!progress) {
       const unavailable = this.#localization.format("progression-unavailable");
       this.#dom.progressionLevelValue.textContent = unavailable;
-      this.#dom.progressionExperienceValue.textContent = unavailable;
       this.#dom.progressionCapValue.textContent = unavailable;
       this.#dom.progressionPointsValue.textContent = unavailable;
-      this.#dom.progressionPersonalityValue.textContent = unavailable;
       this.#dom.progressionMultipliersValue.textContent = unavailable;
       this.#dom.attributeList.replaceChildren();
       this.#dom.hudAttributeList.replaceChildren();
       this.#dom.skillList.replaceChildren();
-      this.#dom.weaponProficiencyMeleeList.replaceChildren();
-      this.#dom.weaponProficiencyLauncherList.replaceChildren();
-      this.#dom.miningProficiencyList.replaceChildren();
-      this.#dom.materialList.replaceChildren();
+      this.#dom.characterProficiencyTables.replaceChildren();
       return;
     }
     this.#dom.progressionLevelValue.textContent = this.#localization.format(
       "progression-level-value",
       { level: progress.level, maxLevel: progress.maxLevel },
-    );
-    this.#dom.progressionExperienceValue.textContent = this.#localization.format(
-      "progression-experience-value",
-      {
-        experience: String(progress.experience),
-        next:
-          progress.experienceForNextLevel === undefined ||
-          progress.experienceForNextLevel === null
-            ? "\u2014"
-            : String(progress.experienceForNextLevel),
-      },
     );
     this.#dom.progressionCapValue.textContent = this.#localization.format(
       "progression-cap-value",
@@ -467,151 +1167,14 @@ export class StatusPanel {
       },
     );
     this.#dom.progressionPointsValue.textContent = String(progress.pendingAttributeIncreases);
-    this.#dom.progressionPersonalityValue.textContent = build
-      ? this.#localization.format(build.personalityNameKey as MessageKey)
-      : this.#localization.format("progression-unavailable");
     this.#dom.progressionMultipliersValue.textContent = build
       ? this.#localization.format("progression-multipliers-value", {
           life: build.lifePercent,
           experience: build.experiencePercent,
         })
       : this.#localization.format("progression-unavailable");
-    const document = this.#dom.attributeList.ownerDocument;
-    const attributeRows = ATTRIBUTE_KINDS.map((attribute) => {
-        const value = progress.attributes[attribute];
-        const row = document.createElement("li");
-        row.className = "attribute-row";
-        const label = document.createElement("span");
-        label.className = "attribute-name";
-        label.textContent = this.#localization.format(`attribute-${attribute}` as MessageKey);
-        const values = document.createElement("span");
-        values.className = "attribute-value";
-        values.textContent = this.#localization.format("attribute-value", {
-          natural: formatAttributeValue(value.natural),
-          maximumNatural: formatAttributeValue(value.maximumNatural),
-          potential: formatAttributeValue(value.potential),
-          effective: formatAttributeValue(value.effective),
-          index: value.index,
-        });
-        const increase = document.createElement("button");
-        increase.type = "button";
-        increase.className = "attribute-increase";
-        increase.textContent = this.#localization.format("action-increase-attribute");
-        increase.disabled =
-          this.#state.busy ||
-          this.#state.playerDead ||
-          this.#state.worldMap ||
-          progress.pendingAttributeIncreases === 0 ||
-          value.maximumNatural >= Math.min(progress.attributeCap, value.potential);
-        increase.addEventListener("click", () =>
-          void this.#dispatch({ type: "increase-attribute", attribute }),
-        );
-        row.append(label, values, increase);
-        return row;
-      });
-    this.#dom.attributeList.replaceChildren(...attributeRows);
-    this.#dom.hudAttributeList.replaceChildren(
-      ...attributeRows.map((row, index) => {
-        const compactRow = row.cloneNode(true) as HTMLLIElement;
-        compactRow.querySelector(".attribute-increase")?.remove();
-        const value = compactRow.querySelector<HTMLElement>(".attribute-value");
-        if (value) {
-          value.textContent = formatAttributeValue(
-            progress.attributes[ATTRIBUTE_KINDS[index]!].effective,
-          );
-        }
-        return compactRow;
-      }),
-    );
-    this.#dom.skillList.replaceChildren(
-      ...progress.skills.map((skill) => {
-        const row = document.createElement("li");
-        row.className = "skill-row";
-        const name = document.createElement("span");
-        name.className = "skill-name";
-        name.textContent = this.#localization.format(skill.nameKey as MessageKey);
-        const value = document.createElement("span");
-        value.className = "skill-value";
-        value.textContent = this.#localization.format("skill-value", {
-          current: skill.current,
-          maximum: skill.maximum,
-          growth: skill.growthPerTenLevels,
-        });
-        row.append(name, value);
-        return row;
-      }),
-    );
-    const renderWeaponProficiencies = (
-      list: HTMLUListElement,
-      category: WeaponProficiencyCategoryDto,
-    ) =>
-      list.replaceChildren(
-        ...weaponProficienciesByCategory(progress.weaponProficiencies, category).map(
-          (proficiency) => {
-            const row = document.createElement("li");
-            row.className = "weapon-proficiency-row";
-            const name = document.createElement("span");
-            name.className = "weapon-proficiency-name";
-            name.textContent = this.#localization.format(proficiency.nameKey as MessageKey);
-            const value = document.createElement("span");
-            value.className = "weapon-proficiency-value";
-            value.textContent = this.#localization.format("weapon-proficiency-value", {
-              rank: this.#localization.format(proficiencyRankMessageKey(proficiency.rank)),
-              current: proficiency.current,
-              maximum: proficiency.maximum,
-              hit: `${proficiency.hitBonus >= 0 ? "+" : ""}${proficiency.hitBonus}`,
-            });
-            row.append(name, value);
-            return row;
-          },
-        ),
-      );
-    renderWeaponProficiencies(this.#dom.weaponProficiencyMeleeList, "melee");
-    renderWeaponProficiencies(this.#dom.weaponProficiencyLauncherList, "launcher");
-    const mining = progress.miningProficiency;
-    const riding = progress.ridingProficiency;
-    const ridingRow = document.createElement("li");
-    ridingRow.className = "weapon-proficiency-row";
-    const ridingName = document.createElement("span");
-    ridingName.className = "weapon-proficiency-name";
-    ridingName.textContent = this.#localization.format("riding-proficiency");
-    const ridingValue = document.createElement("span");
-    ridingValue.className = "weapon-proficiency-value";
-    ridingValue.textContent = this.#localization.format("riding-proficiency-value", {
-      rank: this.#localization.format(proficiencyRankMessageKey(riding.rank)),
-      current: riding.current,
-      maximum: riding.maximum,
-    });
-    ridingRow.append(ridingName, ridingValue);
-    const miningRow = document.createElement("li");
-    miningRow.className = "weapon-proficiency-row";
-    const miningName = document.createElement("span");
-    miningName.className = "weapon-proficiency-name";
-    miningName.textContent = this.#localization.format("mining-proficiency");
-    const miningValue = document.createElement("span");
-    miningValue.className = "weapon-proficiency-value";
-    miningValue.textContent = this.#localization.format("mining-proficiency-value", {
-      power: mining.diggingPower,
-      rank: this.#localization.format(proficiencyRankMessageKey(mining.rank)),
-      current: mining.current,
-      maximum: mining.maximum,
-    });
-    miningRow.append(miningName, miningValue);
-    this.#dom.miningProficiencyList.replaceChildren(ridingRow, miningRow);
-    this.#dom.materialList.replaceChildren(
-      ...progress.materials.map((material) => {
-        const row = document.createElement("li");
-        row.className = "weapon-proficiency-row";
-        const name = document.createElement("span");
-        name.className = "weapon-proficiency-name";
-        name.textContent = this.#localization.format(material.nameKey as MessageKey);
-        const value = document.createElement("span");
-        value.className = "weapon-proficiency-value";
-        value.textContent = String(material.quantity);
-        row.append(name, value);
-        return row;
-      }),
-    );
+    renderCharacterTraits(this.#dom, progress, this.#state, this.#localization, this.#dispatch);
+    renderCharacterProficiencies(this.#dom.characterProficiencyTables, progress, this.#localization);
   }
 
   #renderSummonCommand(
@@ -673,114 +1236,6 @@ export class StatusPanel {
     );
   }
 
-  #renderVirtues(virtues: VirtueDto[]): void {
-    const document = this.#dom.virtueList.ownerDocument;
-    this.#dom.virtueList.replaceChildren(
-      ...virtues.map((virtue) => {
-        const row = document.createElement("li");
-        row.className = "virtue-row";
-        const name = document.createElement("span");
-        name.className = "virtue-name";
-        name.textContent = this.#localization.format(`virtue-${virtue.kind}`);
-        const value = document.createElement("span");
-        value.className = "virtue-value";
-        value.textContent = String(virtue.value);
-        row.append(name, value);
-        return row;
-      }),
-    );
-  }
-
-  #renderMutations(
-    mutations: PlayerMutationDto[],
-    pendingChoice: PendingRaceMutationChoiceDto | null | undefined,
-  ): void {
-    const document = this.#dom.mutationList.ownerDocument;
-    const rows: HTMLLIElement[] = [];
-    if (pendingChoice) {
-      const card = document.createElement("li");
-      card.className = "mutation-choice-card";
-      const title = document.createElement("strong");
-      title.textContent = this.#localization.format("mutation-choice-required");
-      const prompt = document.createElement("p");
-      prompt.textContent = this.#localization.format("mutation-choice-prompt");
-      const candidates = document.createElement("div");
-      candidates.className = "mutation-choice-candidates";
-      for (const candidate of pendingChoice.candidates) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "mutation-choice-candidate";
-        button.disabled = this.#state.busy || this.#state.playerDead || this.#state.campaignEnded;
-        button.setAttribute(
-          "aria-label",
-          this.#localization.format("mutation-choice-action", { mutation: candidate.name }),
-        );
-        const heading = document.createElement("span");
-        heading.className = "mutation-heading";
-        const name = document.createElement("strong");
-        name.className = "mutation-name";
-        name.textContent = candidate.name;
-        const rating = document.createElement("span");
-        rating.className = "mutation-rating";
-        rating.textContent = this.#localization.format(
-          mutationRatingMessageKey(candidate.rating),
-        );
-        const description = document.createElement("span");
-        description.className = "mutation-description";
-        description.textContent = candidate.description;
-        heading.append(name, rating);
-        button.append(heading, description);
-        button.addEventListener("click", () =>
-          void this.#dispatch({
-            type: "choose-race-mutation",
-            rewardId: pendingChoice.rewardId,
-            mutationId: candidate.id,
-          }),
-        );
-        candidates.append(button);
-      }
-      card.append(title, prompt, candidates);
-      rows.push(card);
-    }
-    if (mutations.length === 0 && !pendingChoice) {
-      const empty = document.createElement("li");
-      empty.className = "mutation-empty";
-      empty.textContent = this.#localization.format("mutation-empty");
-      this.#dom.mutationList.replaceChildren(empty);
-      return;
-    }
-    rows.push(
-      ...mutations.map((mutation) => {
-        const row = document.createElement("li");
-        row.className = "mutation-row";
-        row.dataset.rating = mutation.rating;
-        const heading = document.createElement("div");
-        heading.className = "mutation-heading";
-        const name = document.createElement("strong");
-        name.className = "mutation-name";
-        name.textContent = mutation.name;
-        const badges = document.createElement("span");
-        badges.className = "mutation-badges";
-        const rating = document.createElement("span");
-        rating.className = "mutation-rating";
-        rating.textContent = this.#localization.format(mutationRatingMessageKey(mutation.rating));
-        badges.append(rating);
-        if (mutation.locked) {
-          const locked = document.createElement("span");
-          locked.className = "mutation-locked";
-          locked.textContent = this.#localization.format("mutation-locked");
-          badges.append(locked);
-        }
-        const description = document.createElement("p");
-        description.className = "mutation-description";
-        description.textContent = mutation.description;
-        heading.append(name, badges);
-        row.append(heading, description);
-        return row;
-      }),
-    );
-    this.#dom.mutationList.replaceChildren(...rows);
-  }
 
   #renderAbilities(
     abilities: AbilityDto[],
@@ -792,6 +1247,7 @@ export class StatusPanel {
     const document = this.#dom.abilityList.ownerDocument;
     this.#dom.resourceList.replaceChildren();
     this.#dom.abilityList.replaceChildren();
+    const presentation = abilityPresentation(abilities, playerLevel);
     this.#dom.resourceRest.disabled =
       this.#state.busy ||
       this.#state.playerDead ||
@@ -807,12 +1263,11 @@ export class StatusPanel {
       unavailable.textContent = this.#localization.format("resource-unavailable");
       this.#dom.resourceList.append(unavailable);
     }
-    if (resources.length === 0 && !concentration && abilities.length === 0) {
+    if (presentation.length === 0) {
       const unavailable = document.createElement("li");
       unavailable.className = "ability-empty";
       unavailable.textContent = this.#localization.format("ability-unavailable");
       this.#dom.abilityList.append(unavailable);
-      return;
     }
     if (concentration) {
       const row = document.createElement("li");
@@ -885,7 +1340,7 @@ export class StatusPanel {
       this.#dom.resourceList.append(row);
     }
     const studyMode = learning?.studyMode ?? "chosen";
-    for (const entry of abilityPresentation(abilities, playerLevel)) {
+    for (const entry of presentation) {
       if (entry.type === "heading") {
         const heading = document.createElement("li");
         heading.className = "ability-book-heading";

@@ -6545,6 +6545,62 @@
         "damage"
       ]
     },
+    "AttributeBreakdownDto": {
+      "type": "object",
+      "properties": {
+        "attribute": {
+          "$ref": "#/$defs/AttributeKindDto"
+        },
+        "effective": {
+          "description": "The same public effective value as AttributeValueDto, not a reconstructed total.",
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "maximum": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "minimum": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "natural": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "normalAppearanceMinimum": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AttributeSourceDto"
+          }
+        }
+      },
+      "required": [
+        "attribute",
+        "natural",
+        "effective",
+        "minimum",
+        "maximum",
+        "sources"
+      ]
+    },
     "AttributeKindDto": {
       "type": "string",
       "enum": [
@@ -6585,6 +6641,73 @@
         "dexterity",
         "constitution",
         "charisma"
+      ]
+    },
+    "AttributeSourceDto": {
+      "description": "One step in calculation order. Modifiers use stat steps, not raw-value deltas.",
+      "type": "object",
+      "properties": {
+        "complete": {
+          "type": "boolean"
+        },
+        "effectiveAfter": {
+          "description": "Hidden after incomplete equipment knowledge; never a known-only estimate.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "kind": {
+          "$ref": "#/$defs/AttributeSourceKindDto"
+        },
+        "modifier": {
+          "description": "Equipment contains only the modifiers already known to the player.",
+          "type": "integer",
+          "format": "int32"
+        },
+        "nameKey": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sourceId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "suppressed": {
+          "description": "Normal Appearance suppresses mutation charisma modifiers.",
+          "type": "boolean"
+        },
+        "upperLimitApplied": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "modifier",
+        "complete",
+        "suppressed"
+      ]
+    },
+    "AttributeSourceKindDto": {
+      "type": "string",
+      "enum": [
+        "race",
+        "class",
+        "personality",
+        "mutation",
+        "equipment",
+        "temporary-effect",
+        "normal-appearance"
       ]
     },
     "AttributeValueDto": {
@@ -7068,6 +7191,349 @@
         "position",
         "visibility",
         "light"
+      ]
+    },
+    "CharacterAttackTraitDto": {
+      "type": "object",
+      "properties": {
+        "brands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WeaponBrandDto"
+          }
+        },
+        "scope": {
+          "$ref": "#/$defs/TraitAttackScopeDto"
+        },
+        "slays": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SlayDto"
+          }
+        },
+        "sourceId": {
+          "type": "string"
+        },
+        "vampiric": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sourceId",
+        "scope",
+        "slays",
+        "brands",
+        "vampiric"
+      ]
+    },
+    "CharacterAuraDto": {
+      "type": "object",
+      "properties": {
+        "damageType": {
+          "$ref": "#/$defs/DamageTypeDto"
+        },
+        "evilOnly": {
+          "type": "boolean"
+        },
+        "sourceIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "damageType",
+        "sourceIds",
+        "evilOnly"
+      ]
+    },
+    "CharacterCurseEffectDto": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "description": "None when appraisal is insufficient to reveal whether a curse is active.",
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "asStealthPenalty": {
+          "type": "boolean"
+        },
+        "effect": {
+          "$ref": "#/$defs/ItemCurseEffectDto"
+        }
+      },
+      "required": [
+        "effect",
+        "asStealthPenalty"
+      ]
+    },
+    "CharacterNegativeDto": {
+      "type": "object",
+      "properties": {
+        "curse": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ItemCurseSeverityDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CharacterCurseEffectDto"
+          }
+        },
+        "sourceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sourceId",
+        "effects"
+      ]
+    },
+    "CharacterPassiveDto": {
+      "type": "object",
+      "properties": {
+        "active": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "passive": {
+          "$ref": "#/$defs/EquipmentPassiveDto"
+        },
+        "sourceCount": {
+          "description": "Only Hold Life and See Invisible currently use source counts in rules.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "passive"
+      ]
+    },
+    "CharacterResistanceDto": {
+      "type": "object",
+      "properties": {
+        "damageType": {
+          "$ref": "#/$defs/DamageTypeDto"
+        },
+        "level": {
+          "description": "Withheld when equipment knowledge is incomplete, not a known-only estimate.",
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResistanceLevelDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reductionPercent": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int32"
+        }
+      },
+      "required": [
+        "damageType"
+      ]
+    },
+    "CharacterStatDto": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CharacterStatSourceDto"
+          }
+        },
+        "value": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "int32"
+        }
+      },
+      "required": [
+        "id",
+        "sources"
+      ]
+    },
+    "CharacterStatSourceDto": {
+      "type": "object",
+      "properties": {
+        "amount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "sourceId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "sourceId",
+        "amount"
+      ]
+    },
+    "CharacterTraitDetailsDto": {
+      "type": "object",
+      "properties": {
+        "activeLauncherId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "activeWeaponId": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attacks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CharacterAttackTraitDto"
+          }
+        },
+        "auras": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CharacterAuraDto"
+          }
+        },
+        "equipmentComplete": {
+          "type": "boolean"
+        },
+        "negatives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CharacterNegativeDto"
+          }
+        },
+        "passesWalls": {
+          "type": "boolean"
+        },
+        "passives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CharacterPassiveDto"
+          }
+        },
+        "reflectsBolts": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "resistances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CharacterResistanceDto"
+          }
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CharacterTraitSourceDto"
+          }
+        },
+        "stats": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CharacterStatDto"
+          }
+        },
+        "statusImmunities": {
+          "description": "None means unknown; an empty list means no immunity, not unimplemented.",
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "equipmentComplete",
+        "sources",
+        "resistances",
+        "passives",
+        "passesWalls",
+        "stats",
+        "attacks",
+        "auras",
+        "negatives"
+      ]
+    },
+    "CharacterTraitSourceDto": {
+      "description": "Known properties only. Repeated resistance entries preserve conflicting sources.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/TraitSourceKindDto"
+        },
+        "lifePercent": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "passesWalls": {
+          "type": "boolean"
+        },
+        "passives": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/EquipmentPassiveDto"
+          }
+        },
+        "reflectsBolts": {
+          "type": "boolean"
+        },
+        "resistances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResistanceDto"
+          }
+        },
+        "sourceId": {
+          "type": "string"
+        },
+        "statusImmunities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "sourceId",
+        "resistances",
+        "statusImmunities",
+        "passives",
+        "reflectsBolts",
+        "passesWalls",
+        "lifePercent"
       ]
     },
     "CheckOutcomeDto": {
@@ -10380,6 +10846,21 @@
         "maximum"
       ]
     },
+    "ItemCurseEffectDto": {
+      "type": "string",
+      "enum": [
+        "ty-curse",
+        "aggravate",
+        "drain-experience",
+        "add-heavy-curse",
+        "call-demon",
+        "call-dragon",
+        "teleport",
+        "by-curse",
+        "danger",
+        "crappy-mutation"
+      ]
+    },
     "ItemCurseRemovalResolutionDto": {
       "type": "object",
       "properties": {
@@ -11885,6 +12366,9 @@
         "summonCommand": {
           "$ref": "#/$defs/SummonCommandDto"
         },
+        "traitDetails": {
+          "$ref": "#/$defs/CharacterTraitDetailsDto"
+        },
         "virtues": {
           "type": "array",
           "items": {
@@ -11893,6 +12377,7 @@
         }
       },
       "required": [
+        "traitDetails",
         "id",
         "name",
         "kindId",
@@ -11945,6 +12430,12 @@
           "format": "uint8",
           "maximum": 255,
           "minimum": 0
+        },
+        "attributeSources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AttributeBreakdownDto"
+          }
         },
         "attributes": {
           "$ref": "#/$defs/AttributeSetDto"
@@ -12049,7 +12540,8 @@
         "attributeIndexCap",
         "pendingAttributeIncreases",
         "victoryLevelCapUnlocked",
-        "attributes"
+        "attributes",
+        "attributeSources"
       ]
     },
     "Position": {
@@ -13477,6 +13969,25 @@
         "visited"
       ]
     },
+    "TraitAttackScopeDto": {
+      "type": "string",
+      "enum": [
+        "armed-melee",
+        "current-ammunition",
+        "own-weapon"
+      ]
+    },
+    "TraitSourceKindDto": {
+      "type": "string",
+      "enum": [
+        "base",
+        "race",
+        "class",
+        "mutation",
+        "equipment",
+        "temporary-effect"
+      ]
+    },
     "VirtueDto": {
       "type": "object",
       "properties": {
@@ -13557,6 +14068,12 @@
           "maximum": 65535,
           "minimum": 0
         },
+        "equipped": {
+          "type": "boolean"
+        },
+        "group": {
+          "$ref": "#/$defs/WeaponProficiencyGroupDto"
+        },
         "hitBonus": {
           "type": "integer",
           "format": "int32"
@@ -13581,10 +14098,23 @@
         "itemKindId",
         "nameKey",
         "category",
+        "group",
+        "equipped",
         "rank",
         "current",
         "maximum",
         "hitBonus"
+      ]
+    },
+    "WeaponProficiencyGroupDto": {
+      "type": "string",
+      "enum": [
+        "sword",
+        "polearm",
+        "hafted",
+        "digging",
+        "bow",
+        "other"
       ]
     },
     "WildernessLocationDto": {

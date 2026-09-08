@@ -150,6 +150,7 @@ mod pet_upkeep;
 mod player_abilities;
 mod player_combat;
 mod player_stats;
+mod trait_details;
 mod progression;
 mod riding_bond;
 mod riding_proficiency;

@@ -11,6 +11,7 @@ use super::*;
 
 mod abilities;
 mod archer;
+mod attribute_sources;
 mod capture_ball;
 mod cavalry;
 mod combat;
@@ -42,6 +43,7 @@ mod sniper;
 mod snow;
 pub(crate) mod support;
 mod tasks;
+mod trait_details;
 mod town;
 mod virtue_state;
 mod weapon_ego_activations;

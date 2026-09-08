@@ -101,6 +101,7 @@ impl Game {
             .actor(&self.player.kind_id)
             .expect("player actor definition must remain available");
         PlayerDto {
+            trait_details: self.character_trait_details(&stats),
             id: self.player.id.clone(),
             name: self.player_name.clone(),
             kind_id: self.player.kind_id.clone(),
@@ -678,7 +679,8 @@ impl Game {
 
     fn player_progress_dto(&self) -> PlayerProgressDto {
         let natural = self.progress.attributes;
-        let effective = self.effective_player_attributes();
+        let mut attribute_sources = Vec::new();
+        let effective = self.player_attributes_with_sources(Some(&mut attribute_sources));
         let skills = self.effective_player_skill_progress();
         let value = |kind| AttributeValueDto {
             natural: natural.value(kind),
@@ -710,6 +712,7 @@ impl Game {
                 constitution: value(AttributeKind::Constitution),
                 charisma: value(AttributeKind::Charisma),
             },
+            attribute_sources,
             skills: skills
                 .iter()
                 .map(|(id, skill)| SkillProgressDto {

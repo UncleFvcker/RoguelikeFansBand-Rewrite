@@ -1720,6 +1720,183 @@ pub struct AttributeSetDto {
     pub charisma: AttributeValueDto,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum AttributeSourceKindDto {
+    Race,
+    Class,
+    Personality,
+    Mutation,
+    Equipment,
+    TemporaryEffect,
+    NormalAppearance,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum TraitSourceKindDto {
+    Base,
+    Race,
+    Class,
+    Mutation,
+    Equipment,
+    TemporaryEffect,
+}
+
+/// Known properties only. Repeated resistance entries preserve conflicting sources.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterTraitSourceDto {
+    pub kind: TraitSourceKindDto,
+    pub source_id: String,
+    pub resistances: Vec<ResistanceDto>,
+    pub status_immunities: Vec<String>,
+    pub passives: Vec<EquipmentPassiveDto>,
+    pub reflects_bolts: bool,
+    pub passes_walls: bool,
+    pub life_percent: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterResistanceDto {
+    pub damage_type: DamageTypeDto,
+    /// Withheld when equipment knowledge is incomplete, not a known-only estimate.
+    pub level: Option<ResistanceLevelDto>,
+    pub reduction_percent: Option<i32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterPassiveDto {
+    pub passive: EquipmentPassiveDto,
+    pub active: Option<bool>,
+    /// Only Hold Life and See Invisible currently use source counts in rules.
+    pub source_count: Option<u32>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterStatSourceDto {
+    pub source_id: String,
+    pub amount: i32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterStatDto {
+    pub id: String,
+    pub value: Option<i32>,
+    pub sources: Vec<CharacterStatSourceDto>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum TraitAttackScopeDto {
+    ArmedMelee,
+    CurrentAmmunition,
+    OwnWeapon,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterAttackTraitDto {
+    pub source_id: String,
+    pub scope: TraitAttackScopeDto,
+    pub slays: Vec<SlayDto>,
+    pub brands: Vec<WeaponBrandDto>,
+    pub vampiric: bool,
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterTraitDetailsDto {
+    pub equipment_complete: bool,
+    pub sources: Vec<CharacterTraitSourceDto>,
+    pub resistances: Vec<CharacterResistanceDto>,
+    pub passives: Vec<CharacterPassiveDto>,
+    /// None means unknown; an empty list means no immunity, not unimplemented.
+    pub status_immunities: Option<Vec<String>>,
+    pub reflects_bolts: Option<bool>,
+    pub passes_walls: bool,
+    pub stats: Vec<CharacterStatDto>,
+    pub attacks: Vec<CharacterAttackTraitDto>,
+    pub active_weapon_id: Option<String>,
+    pub active_launcher_id: Option<String>,
+    pub auras: Vec<CharacterAuraDto>,
+    pub negatives: Vec<CharacterNegativeDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterAuraDto {
+    pub damage_type: DamageTypeDto,
+    pub source_ids: Vec<String>,
+    pub evil_only: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterNegativeDto {
+    pub source_id: String,
+    pub curse: Option<ItemCurseSeverityDto>,
+    pub effects: Vec<CharacterCurseEffectDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterCurseEffectDto {
+    pub effect: ItemCurseEffectDto,
+    /// None when appraisal is insufficient to reveal whether a curse is active.
+    pub active: Option<bool>,
+    pub as_stealth_penalty: bool,
+}
+
+/// One step in calculation order. Modifiers use stat steps, not raw-value deltas.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AttributeSourceDto {
+    pub kind: AttributeSourceKindDto,
+    pub source_id: Option<String>,
+    pub name_key: Option<String>,
+    /// Equipment contains only the modifiers already known to the player.
+    pub modifier: i32,
+    pub complete: bool,
+    /// Hidden after incomplete equipment knowledge; never a known-only estimate.
+    pub effective_after: Option<u16>,
+    pub upper_limit_applied: Option<bool>,
+    /// Normal Appearance suppresses mutation charisma modifiers.
+    pub suppressed: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct AttributeBreakdownDto {
+    pub attribute: AttributeKindDto,
+    pub natural: u16,
+    /// The same public effective value as AttributeValueDto, not a reconstructed total.
+    pub effective: u16,
+    pub minimum: u16,
+    pub maximum: u16,
+    pub normal_appearance_minimum: Option<u16>,
+    pub sources: Vec<AttributeSourceDto>,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
@@ -1740,6 +1917,7 @@ pub struct PlayerProgressDto {
     pub pending_attribute_increases: u16,
     pub victory_level_cap_unlocked: bool,
     pub attributes: AttributeSetDto,
+    pub attribute_sources: Vec<AttributeBreakdownDto>,
     #[serde(default)]
     pub skills: Vec<SkillProgressDto>,
     #[serde(default)]
@@ -1758,6 +1936,18 @@ pub struct PlayerProgressDto {
 pub enum WeaponProficiencyCategoryDto {
     Melee,
     Launcher,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum WeaponProficiencyGroupDto {
+    Sword,
+    Polearm,
+    Hafted,
+    Digging,
+    Bow,
+    Other,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1779,6 +1969,8 @@ pub struct WeaponProficiencyDto {
     pub item_kind_id: String,
     pub name_key: String,
     pub category: WeaponProficiencyCategoryDto,
+    pub group: WeaponProficiencyGroupDto,
+    pub equipped: bool,
     pub rank: ProficiencyRankDto,
     pub current: u16,
     pub maximum: u16,
@@ -3262,6 +3454,7 @@ pub struct SniperConcentrationDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerDto {
+    pub trait_details: CharacterTraitDetailsDto,
     pub id: String,
     pub name: String,
     pub kind_id: String,
@@ -4359,10 +4552,27 @@ pub fn generated_typescript() -> String {
     push_declaration!(EquipmentPassiveDto);
     push_declaration!(AttributeKindDto);
     push_declaration!(AttributeValueDto);
+    push_declaration!(AttributeSourceKindDto);
+    push_declaration!(TraitSourceKindDto);
+    push_declaration!(CharacterTraitSourceDto);
+    push_declaration!(CharacterResistanceDto);
+    push_declaration!(CharacterPassiveDto);
+    push_declaration!(CharacterStatSourceDto);
+    push_declaration!(CharacterStatDto);
+    push_declaration!(TraitAttackScopeDto);
+    push_declaration!(CharacterAttackTraitDto);
+    push_declaration!(CharacterTraitDetailsDto);
+    push_declaration!(CharacterAuraDto);
+    push_declaration!(CharacterNegativeDto);
+    push_declaration!(CharacterCurseEffectDto);
+    push_declaration!(ItemCurseEffectDto);
+    push_declaration!(AttributeSourceDto);
+    push_declaration!(AttributeBreakdownDto);
     push_declaration!(AttributeSetDto);
     push_declaration!(PlayerProgressDto);
     push_declaration!(SkillProgressDto);
     push_declaration!(WeaponProficiencyCategoryDto);
+    push_declaration!(WeaponProficiencyGroupDto);
     push_declaration!(ProficiencyRankDto);
     push_declaration!(WeaponProficiencyDto);
     push_declaration!(MiningProficiencyDto);
@@ -5646,6 +5856,7 @@ mod tests {
                 glow: vec![false],
             },
             player: PlayerDto {
+                trait_details: CharacterTraitDetailsDto::default(),
                 id: "demo.player".to_owned(),
                 kind_id: "demo.actor.explorer".to_owned(),
                 name: "Adventurer".to_owned(),

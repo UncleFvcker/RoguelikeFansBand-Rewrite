@@ -12,10 +12,125 @@ import {
   formatAttributeValue,
   mutationRatingMessageKey,
   nutritionPercentage,
-  weaponProficienciesByCategory,
+  weaponProficienciesByGroup,
   proficiencyRankMessageKey,
   wildernessClock,
+  renderCharacterOverview,
+  renderHudExperience,
+  hudLocationText,
+  attributeSourceCell,
+  StatusPanel,
 } from "./status-panel.ts";
+import { AppState } from "./app-state.ts";
+
+test("HUD experience uses exact cumulative XP, clamps the meter and labels the next threshold", () => {
+  const meter = { setAttribute(key, value) { this[key] = value; } };
+  const localization = { format: (key, args) => args ? `${args.experience} / ${args.next}` : key };
+  for (const [experience, next, expected] of [
+    [0, 10, 0], [25, 100, 250], [25n, 100, 250], [25, 100n, 250],
+    [0n, 10n, 0], [25n, 100n, 250], [100n, 100n, 1000], [120n, 100n, 1000],
+    [9007199254740993n, 18014398509481986n, 500], [10n, null, 1000], [10n, 0n, 0],
+  ]) {
+    renderHudExperience(meter, { experience, experienceForNextLevel: next }, localization);
+    assert.equal(meter.hidden, false);
+    assert.equal(meter.value, expected);
+    assert.equal(meter.title, `${experience} / ${next ?? 'character-no-next-level'}`);
+    assert.equal(meter['aria-valuetext'], meter.title);
+  }
+  renderHudExperience(meter, undefined, localization);
+  assert.equal(meter.hidden, true);
+});
+
+test("HUD location distinguishes the world map, towns, wilderness and content dungeon depths", () => {
+  const localization = { format: (key, args) => args ? `${args.name} · ${args.depth}` : key };
+  const contentName = (id) => `content:${id}`;
+  const state = { mapScale: 'local', floorId: 'demo.floor.hideout-depth-8', town: null };
+  assert.equal(hudLocationText(state, localization, contentName), 'content:demo.floor.hideout-depth · 8');
+  assert.equal(hudLocationText({ ...state, floorId: 'demo.floor.surface' }, localization, contentName), 'content:demo.floor.surface');
+  assert.equal(hudLocationText({ ...state, town: { nameKey: 'town-existing-name' } }, localization, contentName), 'town-existing-name');
+  assert.equal(hudLocationText({ ...state, floorId: 'core.floor.wilderness' }, localization, contentName), 'hud-location-wilderness');
+  assert.equal(hudLocationText({ ...state, mapScale: 'world' }, localization, contentName), 'hud-location-world');
+});
+
+test("snapshot slots are available before any status render callback, including new and loaded games", () => {
+  const state = new AppState();
+  const slots = [{ id: "new-ring-2", slotType: "ring" }];
+  const snapshot = { bodySlots: slots, player: { isDead: false }, campaign: { status: "active" } };
+  const stop = new Error("stop after checking render inputs");
+  const panel = new StatusPanel({
+    state,
+    reconcileTargeting: (value) => {
+      assert.equal(state.status, value);
+      assert.equal(state.bodySlots, slots);
+      assert.equal(state.bodySlots.find((slot) => slot.id === "new-ring-2").slotType, "ring");
+      throw stop;
+    },
+  });
+  // First session starts with no slots; loading another body must replace stale slots.
+  for (const previous of [[], [{ id: "old-hand", slotType: "weapon" }]]) {
+    state.bodySlots = previous;
+    assert.throws(() => panel.render(snapshot), (error) => error === stop);
+  }
+  const { bodySlots, ...update } = snapshot;
+  assert.throws(() => panel.render(update), (error) => error === stop);
+});
+
+test("attribute source summaries preserve ordered steps, suppression and incomplete knowledge", () => {
+  const localization = { format: (key, args) => args ? `${key}:${args.value}` : key };
+  const source = (modifier, extra = {}) => ({ kind: "mutation", modifier, complete: true, suppressed: false, ...extra });
+  assert.equal(attributeSourceCell([], localization), "—");
+  assert.equal(attributeSourceCell([source(0)], localization), "0");
+  assert.equal(attributeSourceCell([source(3), source(-2)], localization), "+3 · -2");
+  assert.equal(attributeSourceCell([source(0, { complete: false })], localization), "attribute-source-known-value:0");
+  assert.equal(attributeSourceCell([source(-3, { suppressed: true })], localization), "-3attribute-source-suppressed-short");
+  assert.equal(attributeSourceCell([source(0, { kind: "normal-appearance" })], localization), "attribute-source-rule");
+});
+
+test("character overview projects exact experience, actual resources and current combat values", () => {
+  class Element {
+    children = [];
+    textContent = "";
+    get ownerDocument() { return document; }
+    append(...children) { this.children.push(...children); }
+    replaceChildren(...children) { this.children = children; }
+  }
+  const document = { createElement: () => new Element() };
+  const dom = Object.fromEntries([
+    "characterNameValue", "characterRaceValue", "characterClassValue", "characterLevelValue",
+    "characterMaximumExperienceValue", "characterNextExperienceValue", "characterGoldValue",
+    "characterWorldTimeValue", "characterVitalsList", "progressionExperienceValue", "progressionPersonalityValue",
+  ].map((key) => [key, new Element()]));
+  const localization = { locale: "en-US", format: (key, args) => args ? `${key} ${JSON.stringify(args)}` : key };
+  const player = {
+    name: "Long character name", gold: 12345, hp: 12, maxHp: 56, armorClass: 104, defense: 7, speed: 113,
+    build: { raceNameKey: "race", classNameKey: "class", personalityNameKey: "personality" },
+    progress: { level: 27, experience: 9007199254740993n, maximumExperience: 9007199254740995n, experienceForNextLevel: 9007199254741995n },
+    resources: [{ nameKey: "mana", current: 0, maximum: 24 }, { nameKey: "other-resource", current: 3, maximum: 5 }],
+    sniperConcentration: { current: 0, maximum: 5 },
+  };
+  renderCharacterOverview(dom, player, 50000, localization);
+  assert.equal(dom.characterNameValue.textContent, player.name);
+  assert.equal(dom.characterLevelValue.textContent, "27");
+  assert.equal(dom.progressionExperienceValue.textContent, "9007199254740993");
+  assert.equal(dom.characterMaximumExperienceValue.textContent, "9007199254740995");
+  assert.equal(dom.characterNextExperienceValue.textContent, "9007199254741995");
+  assert.equal(dom.characterGoldValue.textContent, "12,345");
+  assert.match(dom.characterWorldTimeValue.textContent, /"day":1,"hour":"18","minute":"00"/);
+  const rows = () => dom.characterVitalsList.children.map((row) => row.children.map((cell) => cell.textContent));
+  assert.deepEqual(rows().slice(1), [
+    ["mana", "0 / 24"], ["other-resource", "3 / 5"], ["sniper-concentration", "0 / 5"],
+    ["character-armor-class", "104"], ["character-speed", "113"],
+  ]);
+  renderCharacterOverview(dom, { ...player, progress: { ...player.progress, experienceForNextLevel: null } }, 50000, localization);
+  assert.equal(dom.characterNextExperienceValue.textContent, "character-no-next-level");
+  renderCharacterOverview(dom, { ...player, build: null, progress: undefined, resources: [], sniperConcentration: null }, 75000, localization);
+  assert.equal(dom.characterRaceValue.textContent, "progression-unavailable");
+  assert.equal(dom.progressionExperienceValue.textContent, "progression-unavailable");
+  assert.equal(dom.characterMaximumExperienceValue.textContent, "progression-unavailable");
+  assert.equal(dom.characterNextExperienceValue.textContent, "progression-unavailable");
+  assert.equal(rows().length, 3);
+  assert.match(dom.characterWorldTimeValue.textContent, /"day":2,"hour":"00","minute":"00"/);
+});
 
 test("Snotling Devour Flesh requires its dedicated confirmation", () => {
   assert.equal(
@@ -127,11 +242,11 @@ test("status panel displays nutrition relative to the 10000 baseline", () => {
 });
 
 test("weapon proficiency presentation keeps original groups and rank names", () => {
-  const melee = { itemKindId: "sword", category: "melee", rank: "beginner" };
-  const launcher = { itemKindId: "bow", category: "launcher", rank: "expert" };
+  const melee = { itemKindId: "sword", group: "sword", rank: "beginner" };
+  const launcher = { itemKindId: "bow", group: "bow", rank: "expert" };
 
-  assert.deepEqual(weaponProficienciesByCategory([launcher, melee], "melee"), [melee]);
-  assert.deepEqual(weaponProficienciesByCategory([launcher, melee], "launcher"), [launcher]);
+  assert.deepEqual(weaponProficienciesByGroup([launcher, melee], "sword"), [melee]);
+  assert.deepEqual(weaponProficienciesByGroup([launcher, melee], "bow"), [launcher]);
   assert.equal(proficiencyRankMessageKey("unskilled"), "proficiency-rank-unskilled");
   assert.equal(proficiencyRankMessageKey("master"), "proficiency-rank-master");
 });

@@ -169,6 +169,13 @@ impl Game {
     }
 
     pub(super) fn player_weapon_proficiencies(&self) -> Vec<rfb_protocol::WeaponProficiencyDto> {
+        let equipped: std::collections::BTreeSet<_> = self
+            .items
+            .iter()
+            .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+            .filter_map(|item| self.weapon_proficiency(&item.kind_id))
+            .map(|resolved| resolved.base_item_id)
+            .collect();
         self.content
             .item_definitions()
             .filter(|item| item.weapon_proficiency_base_item_id.is_none())
@@ -181,10 +188,22 @@ impl Game {
                     return None;
                 };
                 let resolved = self.weapon_proficiency(&item.id)?;
+                // RFB master: defines.h TV_* and cmd4.c _prof_weapon_heading.
+                use rfb_protocol::WeaponProficiencyGroupDto as Group;
+                let group = match item.rfb_base_kind.map(|kind| kind.tval) {
+                    Some(23) => Group::Sword,
+                    Some(22) => Group::Polearm,
+                    Some(21) => Group::Hafted,
+                    Some(20) => Group::Digging,
+                    Some(19) => Group::Bow,
+                    _ => Group::Other,
+                };
                 Some(rfb_protocol::WeaponProficiencyDto {
                     item_kind_id: item.id.clone(),
                     name_key: item.name_key.clone(),
                     category,
+                    group,
+                    equipped: equipped.contains(&resolved.base_item_id),
                     rank: proficiency_rank(resolved.current),
                     current: resolved.current,
                     maximum: resolved.maximum,

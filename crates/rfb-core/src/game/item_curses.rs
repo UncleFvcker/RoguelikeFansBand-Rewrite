@@ -14,7 +14,7 @@ fn rfb_ego_intrinsic_curse_effect(source_index: Option<u32>, effect: ItemCurseEf
 }
 
 impl Game {
-    fn item_has_active_equipped_curse_effect(
+    pub(super) fn item_has_active_equipped_curse_effect(
         &self,
         item: &ItemInstance,
         effect: ItemCurseEffectDto,

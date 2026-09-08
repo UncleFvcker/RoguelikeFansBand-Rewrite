@@ -5,6 +5,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 
+test("the main window explicitly permits the close command used by both exit buttons", () => {
+  const capability = JSON.parse(readFileSync(new URL("../src-tauri/capabilities/default.json", import.meta.url), "utf8"));
+  assert.deepEqual(capability.windows, ["main"]);
+  assert.deepEqual(capability.permissions, ["core:default", "core:window:allow-close"]);
+});
+
 import {
   PLAYTEST_BUILD_IDS,
   PLAYTEST_RACE_IDS,

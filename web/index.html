@@ -371,8 +371,10 @@
           <section id="progression-panel" class="status-panel progression-panel">
             <dl class="status-grid player-identity-grid">
               <div class="player-identity-line"><dd id="progression-identity-value">--</dd></div>
+              <div class="hud-location-row"><dd id="hud-location-value">--</dd></div>
               <div><dt data-l10n-id="progression-level"></dt><dd id="progression-level-value">--</dd></div>
             </dl>
+            <progress id="hud-experience" class="hud-experience" max="1000" value="0" tabindex="0" data-l10n-aria-label="progression-experience" hidden></progress>
           </section>
           <ul id="hud-attribute-list" class="hud-attribute-list" aria-live="polite"></ul>
 
@@ -453,6 +455,10 @@
             <button id="campaign-retire" type="button" data-l10n-id="action-campaign-retire"></button>
           </section>
 
+          <div id="task-log-entry" class="task-log-entry">
+            <button id="player-ui-tasks-open" type="button" data-l10n-id="action-open-task-log"></button>
+          </div>
+
           <section id="task-log-panel" class="inventory-panel" aria-labelledby="task-log-title">
             <div class="panel-heading">
               <span id="task-log-title" data-l10n-id="panel-task-log-title"></span>
@@ -463,32 +469,29 @@
           <section id="inventory-panel" class="inventory-panel" aria-labelledby="inventory-title">
             <div class="panel-heading">
               <span id="inventory-title" data-l10n-id="panel-inventory-title"></span>
-              <span id="inventory-count"></span>
             </div>
-            <div class="inventory-actions">
-              <span id="inventory-selection-count"></span>
-              <div class="inventory-action-controls">
-                <label class="inventory-drop-quantity" for="inventory-drop-quantity">
-                  <span data-l10n-id="inventory-drop-quantity-label"></span>
-                  <input id="inventory-drop-quantity" type="number" min="1" step="1" inputmode="numeric" />
-                </label>
-                <label class="inventory-inscription-control" for="inventory-inscription">
-                  <span data-l10n-id="inventory-inscription-label"></span>
-                  <input id="inventory-inscription" type="text" maxlength="120" />
-                </label>
-                <button id="inventory-use" type="button" data-l10n-id="action-inventory-use"></button>
-                <button id="inventory-absorb" type="button" data-l10n-id="action-inventory-absorb"></button>
-                <button id="inventory-use-on-mount" type="button" data-l10n-id="action-inventory-use-on-mount"></button>
-                <button id="inventory-appraise" type="button" data-l10n-id="action-inventory-appraise"></button>
-                <button id="inventory-equip" type="button" data-l10n-id="action-inventory-equip"></button>
-                <button id="inventory-drop" type="button" data-l10n-id="action-inventory-drop"></button>
-                <button id="inventory-inscribe" type="button" data-l10n-id="action-inventory-inscribe"></button>
-                <button id="inventory-destroy" type="button" data-l10n-id="action-inventory-destroy"></button>
+            <div class="inventory-workspace">
+              <div id="inventory-view-switch" role="group" data-l10n-aria-label="inventory-view-label">
+                <label><input class="visually-hidden" type="radio" name="inventory-view" value="equipment" aria-controls="inventory-equipment-column" /><span data-l10n-id="panel-equipment-title"></span></label>
+                <label><input class="visually-hidden" type="radio" name="inventory-view" value="pack" aria-controls="inventory-pack-column" checked /><span data-l10n-id="panel-inventory-title"></span></label>
               </div>
+              <section id="inventory-equipment-column" class="inventory-equipment-column" aria-labelledby="inventory-equipment-title">
+                <div id="inventory-equipment-title" class="equipment-heading" data-l10n-id="panel-equipment-title"></div>
+                <ul id="equipment-list" class="equipment-list" aria-live="polite"></ul>
+              </section>
+              <section id="inventory-pack-column" class="inventory-pack-column" aria-labelledby="inventory-pack-title">
+                <div id="inventory-pack-title" class="equipment-heading" data-l10n-id="panel-inventory-title"></div>
+                <ul id="inventory-list" class="inventory-list" aria-live="polite"></ul>
+              </section>
             </div>
-            <ul id="inventory-list" class="inventory-list" aria-live="polite"></ul>
-            <div class="equipment-heading" data-l10n-id="panel-equipment-title"></div>
-            <ul id="equipment-list" class="equipment-list" aria-live="polite"></ul>
+            <dialog id="inventory-detail-dialog" aria-labelledby="inventory-detail-title">
+              <header>
+                <h2 id="inventory-detail-title"></h2>
+                <button id="inventory-detail-close" type="button" class="quiet-button" data-l10n-id="action-dialog-close"></button>
+              </header>
+              <div id="inventory-detail-body"></div>
+              <footer id="inventory-detail-actions"></footer>
+            </dialog>
           </section>
 
           <section id="native-save-panel" class="save-panel" aria-labelledby="native-save-title">
@@ -522,53 +525,179 @@
           <div class="panel-heading">
             <span id="character-details-title" data-l10n-id="panel-character-details-title"></span>
           </div>
-          <dl class="status-grid progression-detail-grid">
-            <div><dt data-l10n-id="progression-experience"></dt><dd id="progression-experience-value">--</dd></div>
-            <div><dt data-l10n-id="progression-cap"></dt><dd id="progression-cap-value">--</dd></div>
-            <div><dt data-l10n-id="progression-points"></dt><dd id="progression-points-value">--</dd></div>
-            <div><dt data-l10n-id="progression-personality"></dt><dd id="progression-personality-value">--</dd></div>
-            <div><dt data-l10n-id="progression-multipliers"></dt><dd id="progression-multipliers-value">--</dd></div>
-          </dl>
-          <ul id="attribute-list" class="attribute-list" aria-live="polite"></ul>
-          <div class="progression-subheading" data-l10n-id="progression-skills"></div>
-          <ul id="skill-list" class="skill-list" aria-live="polite"></ul>
-          <div class="progression-subheading" data-l10n-id="progression-virtues"></div>
-          <ul id="virtue-list" class="virtue-list" aria-live="polite"></ul>
-          <div class="progression-subheading" data-l10n-id="progression-mutations"></div>
-          <ul id="mutation-list" class="mutation-list" aria-live="polite"></ul>
-          <details class="player-details weapon-proficiency-details">
-            <summary data-l10n-id="progression-weapon-proficiencies"></summary>
-            <div class="weapon-proficiency-groups">
-              <section aria-labelledby="weapon-proficiency-melee-title">
-                <div id="weapon-proficiency-melee-title" class="progression-subheading" data-l10n-id="weapon-proficiency-melee"></div>
-                <ul id="weapon-proficiency-melee-list" class="weapon-proficiency-list" aria-live="polite"></ul>
-              </section>
-              <section aria-labelledby="weapon-proficiency-launcher-title">
-                <div id="weapon-proficiency-launcher-title" class="progression-subheading" data-l10n-id="weapon-proficiency-launchers"></div>
-                <ul id="weapon-proficiency-launcher-list" class="weapon-proficiency-list" aria-live="polite"></ul>
-              </section>
+          <nav id="character-page-tabs" role="tablist" data-l10n-aria-label="character-pages-aria-label">
+            <button id="character-tab-overview" type="button" role="tab" data-character-page="overview" aria-controls="character-page-overview" aria-selected="true" tabindex="0" data-l10n-id="character-page-overview"></button>
+            <button id="character-tab-details" type="button" role="tab" data-character-page="details" aria-controls="character-page-details" aria-selected="false" tabindex="-1" data-l10n-id="character-page-details"></button>
+            <button id="character-tab-proficiencies" type="button" role="tab" data-character-page="proficiencies" aria-controls="character-page-proficiencies" aria-selected="false" tabindex="-1" data-l10n-id="character-page-proficiencies"></button>
+            <button id="character-tab-other" type="button" role="tab" data-character-page="other" aria-controls="character-page-other" aria-selected="false" tabindex="-1" data-l10n-id="character-page-other"></button>
+          </nav>
+          <section id="character-page-overview" class="character-subpage" role="tabpanel" aria-labelledby="character-tab-overview" tabindex="0">
+            <div class="character-group-switch" role="group" data-l10n-aria-label="character-overview-groups">
+              <label><input type="radio" name="character-overview-group" value="identity" checked /><span data-l10n-id="character-identity-title"></span></label>
+              <label><input type="radio" name="character-overview-group" value="progress" /><span data-l10n-id="character-progress-title"></span></label>
+              <label><input type="radio" name="character-overview-group" value="journey" /><span data-l10n-id="character-journey-title"></span></label>
+              <label><input type="radio" name="character-overview-group" value="attributes" /><span data-l10n-id="character-attributes-title"></span></label>
+              <label><input type="radio" name="character-overview-group" value="vitals" /><span data-l10n-id="character-vitals-title"></span></label>
+              <label><input type="radio" name="character-overview-group" value="skills" /><span data-l10n-id="progression-skills"></span></label>
             </div>
-          </details>
-          <details class="player-details weapon-proficiency-details">
-            <summary data-l10n-id="progression-misc-proficiencies"></summary>
-            <ul id="mining-proficiency-list" class="weapon-proficiency-list" aria-live="polite"></ul>
-          </details>
-          <details class="player-details weapon-proficiency-details">
-            <summary data-l10n-id="progression-materials"></summary>
-            <ul id="material-list" class="weapon-proficiency-list" aria-live="polite"></ul>
-          </details>
+            <div class="character-overview-columns">
+              <div class="character-overview-column">
+                <section class="character-overview-group" data-overview-group="identity" aria-labelledby="character-identity-title">
+                  <h3 id="character-identity-title" data-l10n-id="character-identity-title"></h3>
+                  <dl class="character-facts">
+                    <div><dt data-l10n-id="progression-name"></dt><dd id="character-name-value"></dd></div>
+                    <div><dt data-l10n-id="progression-race"></dt><dd id="character-race-value"></dd></div>
+                    <div><dt data-l10n-id="progression-class"></dt><dd id="character-class-value"></dd></div>
+                    <div><dt data-l10n-id="progression-personality"></dt><dd id="progression-personality-value">--</dd></div>
+                  </dl>
+                </section>
+                <section class="character-overview-group" data-overview-group="progress" aria-labelledby="character-progress-title">
+                  <h3 id="character-progress-title" data-l10n-id="character-progress-title"></h3>
+                  <dl class="character-facts">
+                    <div><dt data-l10n-id="progression-level"></dt><dd id="character-level-value"></dd></div>
+                    <div><dt data-l10n-id="character-current-experience"></dt><dd id="progression-experience-value">--</dd></div>
+                    <div><dt data-l10n-id="character-maximum-experience"></dt><dd id="character-maximum-experience-value"></dd></div>
+                    <div><dt data-l10n-id="character-next-experience"></dt><dd id="character-next-experience-value"></dd></div>
+                    <div><dt data-l10n-id="progression-points"></dt><dd id="progression-points-value">--</dd></div>
+                  </dl>
+                </section>
+                <section class="character-overview-group" data-overview-group="journey" aria-labelledby="character-journey-title">
+                  <h3 id="character-journey-title" data-l10n-id="character-journey-title"></h3>
+                  <dl class="character-facts">
+                    <div><dt data-l10n-id="status-gold"></dt><dd id="character-gold-value"></dd></div>
+                    <div><dt data-l10n-id="character-world-time"></dt><dd id="character-world-time-value"></dd></div>
+                  </dl>
+                </section>
+              </div>
+              <div class="character-overview-column">
+                <section class="character-overview-group" data-overview-group="attributes" aria-labelledby="character-attributes-title">
+                  <h3 id="character-attributes-title" data-l10n-id="character-attributes-title"></h3>
+                  <ul id="attribute-list" class="attribute-list" aria-live="polite"></ul>
+                </section>
+                <section class="character-overview-group" data-overview-group="vitals" aria-labelledby="character-vitals-title">
+                  <h3 id="character-vitals-title" data-l10n-id="character-vitals-title"></h3>
+                  <dl id="character-vitals-list" class="character-facts"></dl>
+                </section>
+                <section class="character-overview-group" data-overview-group="skills" aria-labelledby="character-skills-title">
+                  <h3 id="character-skills-title" data-l10n-id="progression-skills"></h3>
+                  <ul id="skill-list" class="skill-list" aria-live="polite"></ul>
+                </section>
+              </div>
+            </div>
+          </section>
+          <section id="character-page-details" class="character-subpage" role="tabpanel" aria-labelledby="character-tab-details" hidden>
+            <nav id="character-detail-tabs" role="tablist" data-l10n-aria-label="character-detail-categories">
+              <button id="character-detail-tab-sources" type="button" role="tab" data-character-detail="sources" aria-controls="character-detail-sources" aria-selected="true" tabindex="0" data-l10n-id="character-detail-sources"></button>
+              <button id="character-detail-tab-defenses" type="button" role="tab" data-character-detail="defenses" aria-controls="character-detail-defenses" aria-selected="false" tabindex="-1" data-l10n-id="character-detail-defenses"></button>
+              <button id="character-detail-tab-offense" type="button" role="tab" data-character-detail="offense" aria-controls="character-detail-offense" aria-selected="false" tabindex="-1" data-l10n-id="character-detail-offense"></button>
+            </nav>
+            <section id="character-detail-sources" class="character-detail-pane" role="tabpanel" aria-labelledby="character-detail-tab-sources" tabindex="0">
+              <div id="character-attribute-sources"></div>
+            </section>
+            <section id="character-detail-defenses" class="character-detail-pane" role="tabpanel" aria-labelledby="character-detail-tab-defenses" tabindex="0" hidden>
+              <div id="character-trait-defenses"></div>
+            </section>
+            <section id="character-detail-offense" class="character-detail-pane" role="tabpanel" aria-labelledby="character-detail-tab-offense" tabindex="0" hidden>
+              <div id="character-trait-attacks"></div>
+            </section>
+          </section>
+          <section id="character-page-proficiencies" class="character-subpage" role="tabpanel" aria-labelledby="character-tab-proficiencies" tabindex="0" hidden>
+            <p class="proficiency-guide" data-l10n-id="proficiency-guide"></p>
+            <div id="character-proficiency-tables" aria-live="polite"></div>
+          </section>
+          <section id="character-page-other" class="character-subpage" role="tabpanel" aria-labelledby="character-tab-other" tabindex="0" hidden>
+            <section class="character-other-group" aria-labelledby="character-virtues-title">
+              <h3 id="character-virtues-title" data-l10n-id="progression-virtues"></h3>
+              <ul id="virtue-list" class="virtue-list" aria-live="polite"></ul>
+            </section>
+            <section class="character-other-group" aria-labelledby="character-mutations-title">
+              <h3 id="character-mutations-title" data-l10n-id="progression-mutations"></h3>
+              <ul id="mutation-list" class="mutation-list" aria-live="polite"></ul>
+            </section>
+            <section class="character-other-group" aria-labelledby="character-materials-title">
+              <h3 id="character-materials-title" data-l10n-id="progression-materials"></h3>
+              <ul id="material-list" class="weapon-proficiency-list" aria-live="polite"></ul>
+            </section>
+            <details class="character-growth-details">
+              <summary data-l10n-id="character-growth-details"></summary>
+              <dl class="character-facts">
+                <div><dt data-l10n-id="progression-cap"></dt><dd id="progression-cap-value">--</dd></div>
+                <div><dt data-l10n-id="progression-multipliers"></dt><dd id="progression-multipliers-value">--</dd></div>
+              </dl>
+            </details>
+          </section>
         </section>
       </div>
 
       <dialog id="player-page-dialog" class="player-page-dialog" aria-labelledby="player-page-title">
         <header>
-          <div>
-            <p class="eyebrow" data-l10n-id="player-page-eyebrow"></p>
-            <h2 id="player-page-title"></h2>
-          </div>
+          <h2 id="player-page-title" class="visually-hidden"></h2>
+          <nav id="player-page-tabs" role="tablist" data-l10n-aria-label="player-pages-aria-label">
+            <button id="player-page-tab-ability" type="button" role="tab" data-player-page="ability" aria-controls="player-page-host" aria-selected="false" tabindex="-1" data-l10n-id="player-page-ability"></button>
+            <button id="player-page-tab-character" type="button" role="tab" data-player-page="character" aria-controls="player-page-host" aria-selected="false" tabindex="-1" data-l10n-id="player-page-character"></button>
+            <button id="player-page-tab-inventory" type="button" role="tab" data-player-page="inventory" aria-controls="player-page-host" aria-selected="false" tabindex="-1" data-l10n-id="player-page-inventory"></button>
+            <button id="player-page-tab-tasks" type="button" role="tab" data-player-page="tasks" aria-controls="player-page-host" aria-selected="false" tabindex="-1" data-l10n-id="panel-task-log-title"></button>
+          </nav>
           <button id="player-page-close" class="quiet-button dialog-close" type="button" data-l10n-id="action-dialog-close"></button>
         </header>
-        <div id="player-page-host" class="player-page-host"></div>
+        <div id="player-page-filters">
+          <div id="inventory-filters" role="group" data-l10n-aria-label="inventory-filter-label">
+            <label><input class="visually-hidden" type="radio" name="inventory-filter" value="all" checked /><span data-l10n-id="inventory-filter-all"></span></label>
+            <label><input class="visually-hidden" type="radio" name="inventory-filter" value="equippable" /><span data-l10n-id="inventory-filter-equippable"></span></label>
+            <label><input class="visually-hidden" type="radio" name="inventory-filter" value="usable" /><span data-l10n-id="inventory-filter-usable"></span></label>
+            <label><input class="visually-hidden" type="radio" name="inventory-filter" value="devices" /><span data-l10n-id="inventory-filter-devices"></span></label>
+            <label><input class="visually-hidden" type="radio" name="inventory-filter" value="light" /><span data-l10n-id="inventory-filter-light"></span></label>
+          </div>
+          <label class="inventory-search-control">
+            <span data-l10n-id="inventory-search-label"></span>
+            <input id="inventory-search" type="search" autocomplete="off" spellcheck="false" />
+          </label>
+          <button id="inventory-filter-reset" class="quiet-button" type="button" data-l10n-id="inventory-filter-reset"></button>
+          <span id="inventory-count" aria-live="polite"></span>
+        </div>
+        <div id="player-page-host" class="player-page-host" role="tabpanel" tabindex="0"></div>
+        <footer id="player-page-footer">
+          <div class="player-page-guide">
+            <span class="inventory-guide" data-l10n-id="inventory-operation-guide"></span>
+            <span><kbd data-l10n-id="shortcut-close"></kbd> <span data-l10n-id="action-dialog-close"></span></span>
+          </div>
+          <div id="inventory-footer-actions">
+            <span id="inventory-selection-count" aria-live="polite"></span>
+            <button id="inventory-use" type="button" data-l10n-id="action-inventory-use"></button>
+            <button id="inventory-equip" type="button" data-l10n-id="action-inventory-equip"></button>
+            <button id="inventory-drop" type="button" data-l10n-id="action-inventory-drop"></button>
+            <button id="inventory-more" type="button" aria-haspopup="dialog" data-l10n-id="inventory-more-actions"></button>
+          </div>
+          <dialog id="inventory-more-dialog" class="inventory-operation-dialog" aria-labelledby="inventory-more-title">
+            <h2 id="inventory-more-title" data-l10n-id="inventory-more-actions"></h2>
+            <div class="inventory-more-actions">
+              <button id="inventory-absorb" type="button" data-l10n-id="action-inventory-absorb"></button>
+              <button id="inventory-use-on-mount" type="button" data-l10n-id="action-inventory-use-on-mount"></button>
+              <button id="inventory-appraise" type="button" data-l10n-id="action-inventory-appraise"></button>
+              <button id="inventory-inscribe" type="button" data-l10n-id="action-inventory-inscribe"></button>
+              <button id="inventory-destroy" type="button" data-l10n-id="action-inventory-destroy"></button>
+            </div>
+            <form method="dialog"><button type="submit" data-l10n-id="action-dialog-close"></button></form>
+          </dialog>
+          <dialog id="inventory-action-dialog" class="inventory-operation-dialog" aria-labelledby="inventory-action-title">
+            <form id="inventory-action-form">
+              <h2 id="inventory-action-title"></h2>
+              <p id="inventory-action-item"></p>
+              <label id="inventory-quantity-field" for="inventory-drop-quantity">
+                <span data-l10n-id="inventory-drop-quantity-label"></span>
+                <input id="inventory-drop-quantity" type="number" min="1" step="1" inputmode="numeric" required />
+              </label>
+              <label id="inventory-inscription-field" for="inventory-inscription">
+                <span data-l10n-id="inventory-inscription-label"></span>
+                <input id="inventory-inscription" type="text" maxlength="120" />
+              </label>
+              <div class="inventory-operation-buttons">
+                <button id="inventory-action-cancel" type="button" data-l10n-id="action-dialog-cancel"></button>
+                <button id="inventory-action-confirm" type="submit"></button>
+              </div>
+            </form>
+          </dialog>
+        </footer>
       </dialog>
 
       <dialog id="object-list-dialog" class="player-page-dialog object-list-dialog" aria-labelledby="object-list-title">
