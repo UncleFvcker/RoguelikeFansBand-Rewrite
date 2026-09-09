@@ -555,6 +555,110 @@ fn tomte_form_grants_intrinsics_and_free_probing() {
 }
 
 #[test]
+fn tonberry_passives_and_level_slowing_follow_the_effective_race() {
+    const RACE: &str = "rfb-legacy.race.tonberry";
+    const HUMAN: &str = "demo.race.rfb-human";
+    let assert_intrinsics = |game: &Game, active: bool, speed: i32| {
+        assert_eq!(
+            species_contribution(&game.player_derived_stats().speed, RACE),
+            speed,
+            "Tonberry speed at level {}",
+            game.progress.level
+        );
+        assert_eq!(game.player_infravision_range(), if active { 2 } else { 0 });
+        assert_eq!(
+            game.effective_player_resistances().level(DamageType::Fear),
+            if active {
+                ResistanceLevel::Resistant
+            } else {
+                ResistanceLevel::Normal
+            }
+        );
+        for attribute in [AttributeKind::Strength, AttributeKind::Constitution] {
+            assert_eq!(game.player_sustains_attribute(attribute), active);
+        }
+        assert!(!game.player_sustains_attribute(AttributeKind::Dexterity));
+        let details = game.character_trait_details(&game.player_derived_stats());
+        let source = details
+            .sources
+            .iter()
+            .find(|source| source.source_id == RACE);
+        assert_eq!(source.is_some(), active);
+        if let Some(source) = source {
+            assert!(
+                source
+                    .passives
+                    .contains(&rfb_protocol::EquipmentPassiveDto::SustainStrength)
+            );
+            assert!(
+                source
+                    .passives
+                    .contains(&rfb_protocol::EquipmentPassiveDto::SustainConstitution)
+            );
+            assert!(source.resistances.iter().any(|resistance| {
+                resistance.damage_type == rfb_protocol::DamageTypeDto::Fear
+                    && resistance.level == rfb_protocol::ResistanceLevelDto::Resistant
+            }));
+        }
+    };
+    for native in [false, true] {
+        let mut game = Game::new_with_build_race_and_name(
+            425,
+            "demo.build.warrior",
+            HUMAN,
+            Game::DEFAULT_PLAYER_NAME,
+        )
+        .expect("Human warrior");
+        game.items.clear();
+        let mut form =
+            monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.tonberry-form").status;
+        form.granted_race_id = Some(RACE.to_owned());
+        if native {
+            // Native-race precondition only: the unfinished race remains unavailable at birth.
+            game.build.as_mut().unwrap().race_id = RACE.to_owned();
+        } else {
+            game.player.statuses.push(form.clone());
+        }
+        assert_intrinsics(&game, true, -1);
+        let attributes = game.progress.attributes;
+        let rng = game.rng.clone();
+        game.resolve_monster_attribute_drain(AttributeKind::Strength);
+        game.resolve_monster_attribute_drain(AttributeKind::Constitution);
+        assert_eq!(game.progress.attributes, attributes);
+        assert_eq!(game.rng, rng, "sustained drains consume no RNG");
+
+        for (level, speed) in [
+            (29, -1),
+            (30, -2),
+            (39, -2),
+            (40, -3),
+            (44, -3),
+            (45, -4),
+            (49, -4),
+            (50, -5),
+        ] {
+            game.apply_unscaled_player_experience(
+                experience_required_for_level(level) - game.progress.experience,
+                &mut Vec::new(),
+            );
+            assert_eq!(game.progress.level, level);
+            assert_intrinsics(&game, true, speed);
+        }
+
+        game.player.statuses.clear();
+        if native {
+            form.granted_race_id = Some(HUMAN.to_owned());
+            game.player.statuses.push(form);
+        }
+        assert_intrinsics(&game, false, 0);
+        if native {
+            game.player.statuses.clear();
+            assert_intrinsics(&game, true, -5);
+        }
+    }
+}
+
+#[test]
 fn race_level_stat_scaling_preserves_klackon_and_enables_formal_golem_intrinsics() {
     for level in [1, 3, 5, 9, 10, 15, 16, 31, 32, 34, 35, 47, 48, 50] {
         let mut golem = golem_game(358);

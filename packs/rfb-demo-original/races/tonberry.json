@@ -1,5 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/race.schema.json",
+  "attributeSustains": ["constitution", "strength"],
   "baseHp": 26,
   "bodySlots": [
     {
@@ -67,6 +68,7 @@
   "experiencePercent": 175,
   "formatVersion": 1,
   "id": "rfb-legacy.race.tonberry",
+  "infravision": 2,
   "kinCategory": "kin-glyph-104",
   "legacyIndex": 1,
   "lifePercent": 108,
@@ -78,6 +80,9 @@
     "wisdom": -2
   },
   "nameKey": "race-legacy-tonberry-name",
+  "resistances": {
+    "fear": "resistant"
+  },
   "shopAdjustPercent": 115,
   "skillSetId": "rfb-legacy.skill-set.race-tonberry",
   "tags": [

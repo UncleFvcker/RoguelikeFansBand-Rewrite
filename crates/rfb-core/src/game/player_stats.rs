@@ -1988,12 +1988,21 @@ impl Game {
                     )
                 })
         };
+        let mut speed = level_scaling(rfb_content::RaceLevelStatDefinition::Speed);
+        if race.id == "rfb-legacy.race.tonberry" {
+            // RFB master a0d92b6378: races_k.c::_tonberry_calc_bonuses.
+            // Include the base -1 as well as the four level thresholds for this form.
+            speed = speed.saturating_add(race.modifiers.speed);
+            for threshold in [30, 40, 45, 50] {
+                speed -= i32::from(self.progress.level >= threshold);
+            }
+        }
         add_nonzero_stat(
             pipeline,
             StatKind::Speed,
             StatLayer::Species,
             &race.id,
-            level_scaling(rfb_content::RaceLevelStatDefinition::Speed),
+            speed,
         );
         add_nonzero_stat(
             pipeline,
