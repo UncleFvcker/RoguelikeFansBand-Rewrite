@@ -101,6 +101,7 @@ fn effect_program_input_for_step(
                 effect.as_ref(),
                 AbilityEffectDefinition::ConeDamage { .. }
                     | AbilityEffectDefinition::DrainLife { .. }
+                    | AbilityEffectDefinition::FetchItem { .. }
             ) =>
         {
             Some(EffectProgramInputDefinition::Actor)
@@ -159,6 +160,7 @@ pub(super) fn resolve_source_item_effect(
 pub(super) fn effect_program_input_matches_device_target(
     input: EffectProgramInputDefinition,
     target: &AbilityTargetDefinition,
+    effect: &ItemUseEffectDefinition,
 ) -> bool {
     match input {
         EffectProgramInputDefinition::SelfTarget => {
@@ -180,7 +182,9 @@ pub(super) fn effect_program_input_matches_device_target(
                     )
                 })
                 && (1..=64).contains(&target.range)
-                && target.requires_line_of_effect
+                && (target.requires_line_of_effect
+                    || matches!(effect, ItemUseEffectDefinition::AbilityEffect { effect, .. }
+                        if matches!(effect.as_ref(), AbilityEffectDefinition::FetchItem { .. })))
         }
         EffectProgramInputDefinition::Area => false,
         EffectProgramInputDefinition::Item => {
@@ -403,18 +407,30 @@ mod tests {
         assert!(effect_program_input_matches_device_target(
             EffectProgramInputDefinition::SelfTarget,
             &self_target,
+            &ItemUseEffectDefinition::Heal { amount: 1 },
         ));
         assert!(effect_program_input_matches_device_target(
             EffectProgramInputDefinition::Actor,
             &actor_target,
+            &ItemUseEffectDefinition::Heal { amount: 1 },
         ));
         assert!(!effect_program_input_matches_device_target(
             EffectProgramInputDefinition::Actor,
             &self_target,
+            &ItemUseEffectDefinition::Heal { amount: 1 },
         ));
         assert!(!effect_program_input_matches_device_target(
             EffectProgramInputDefinition::Glyph,
             &self_target,
+            &ItemUseEffectDefinition::Heal { amount: 1 },
+        ));
+        assert!(!effect_program_input_matches_device_target(
+            EffectProgramInputDefinition::Actor,
+            &AbilityTargetDefinition {
+                requires_line_of_effect: false,
+                ..actor_target
+            },
+            &ItemUseEffectDefinition::Heal { amount: 1 },
         ));
     }
 }

@@ -1685,6 +1685,24 @@ fn p93c_smaug_drops_arkenstone_with_clairvoyance_and_replacement() {
     assert!(game.glow.iter().all(|glow| *glow));
     assert_eq!(game.items[arkenstone_index].charges.unwrap().current, 0);
 
+    let mut recovery_events = Vec::new();
+    for _ in 0..1_001 {
+        game.world_tick += 1;
+        game.process_inventory_device_recovery(&mut recovery_events);
+    }
+    assert!(game.items[arkenstone_index].device_recovery_progress > 1_000);
+    let restored = Game::from_save(game.to_save()).expect("long artifact cooldown should restore");
+    let restored_stone = restored
+        .items
+        .iter()
+        .find(|item| item.kind_id == "demo.item.arkenstone-of-thrain")
+        .unwrap();
+    assert_eq!(
+        restored_stone.device_recovery_progress,
+        game.items[arkenstone_index].device_recovery_progress
+    );
+    assert_eq!(restored_stone.charges.unwrap().current, 0);
+
     let mut replacement = final_floor;
     replacement
         .generated_artifact_ids

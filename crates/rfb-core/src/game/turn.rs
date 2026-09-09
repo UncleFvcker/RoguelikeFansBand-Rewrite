@@ -397,9 +397,6 @@ impl Game {
             else {
                 continue;
             };
-            if !world_tick.is_multiple_of(u32::from(recovery.interval_ticks)) {
-                continue;
-            }
             let Some(charges) = item.charges.as_mut() else {
                 continue;
             };
@@ -407,13 +404,26 @@ impl Game {
                 item.device_recovery_progress = 0;
                 continue;
             }
-            let scaled = u64::from(charges.maximum)
-                .saturating_mul(u64::from(recovery.energy_per_mille))
-                .saturating_add(u64::from(item.device_recovery_progress));
-            let gain =
-                u32::try_from(scaled / 1_000).expect("validated device recovery gain must fit u32");
-            item.device_recovery_progress =
-                u16::try_from(scaled % 1_000).expect("recovery remainder must fit u16");
+            // Single-charge activations recover after their own elapsed cooldown.
+            let gain = if charges.maximum == 1 && recovery.energy_per_mille == 1_000 {
+                item.device_recovery_progress += 1;
+                if item.device_recovery_progress < recovery.interval_ticks {
+                    continue;
+                }
+                1
+            } else {
+                if !world_tick.is_multiple_of(u32::from(recovery.interval_ticks)) {
+                    continue;
+                }
+                let scaled = u64::from(charges.maximum)
+                    .saturating_mul(u64::from(recovery.energy_per_mille))
+                    .saturating_add(u64::from(item.device_recovery_progress));
+                let gain = u32::try_from(scaled / 1_000)
+                    .expect("validated device recovery gain must fit u32");
+                item.device_recovery_progress =
+                    u16::try_from(scaled % 1_000).expect("recovery remainder must fit u16");
+                gain
+            };
             if gain == 0 {
                 continue;
             }

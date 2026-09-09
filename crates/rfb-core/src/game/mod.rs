@@ -743,6 +743,15 @@ fn initial_item_runtime_state(
     let current = selected.charges.cost.saturating_add(
         u32::try_from(rng.bounded(current_span)).expect("bounded current charge roll must fit u32"),
     );
+    let power = if content
+        .item(kind_id)
+        .is_some_and(|item| item.artifact_generation.is_some())
+    {
+        u16::try_from(selected.device_check_difficulty)
+            .expect("validated fixed artifact effect power must fit u16")
+    } else {
+        power
+    };
     (
         Some(ItemActivationDto {
             profile_id: selected.id.clone(),

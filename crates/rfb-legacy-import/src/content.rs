@@ -4334,7 +4334,7 @@ pub fn parse_a_info(text: &str) -> Result<Vec<LegacyArtifactEntry>, LegacyImport
                 .is_some_and(|token| token.bytes().all(|b| b.is_ascii()) && !token.is_empty())
             {
                 entry.has_activation = true;
-                if parts.len() == 4 {
+                if matches!(parts.len(), 3 | 4) {
                     entry.activation = Some(LegacyArtifactActivation {
                         token: parts[0].to_owned(),
                         power: parse_number(
@@ -4353,7 +4353,7 @@ pub fn parse_a_info(text: &str) -> Result<Vec<LegacyArtifactEntry>, LegacyImport
                             A_INFO_SOURCE,
                             line_number,
                             "E.extra",
-                            parts.get(3).copied(),
+                            Some(parts.get(3).copied().unwrap_or("0")),
                         )?,
                     });
                 }
@@ -5187,6 +5187,12 @@ fn device_damage_effect(
     device_ability_effect(effect)
 }
 
+fn device_fetch_item_effect(power: u16) -> serde_json::Value {
+    device_ability_effect(serde_json::json!({
+        "type": "fetch-item", "maximumWeightTenthsPound": u32::from(power) * 7,
+    }))
+}
+
 fn device_status_effect(
     status: &str,
     duration_dice: u16,
@@ -5753,9 +5759,7 @@ fn legacy_device_item_effect(
             )
         }
         "TELEKINESIS" => (
-            device_ability_effect(
-                serde_json::json!({"type": "fetch-item", "maximumWeightTenthsPound": level * 7}),
-            ),
+            device_fetch_item_effect(level),
             serde_json::json!({"modes": ["direction", "position", "entity"], "range": 18, "requiresLineOfEffect": false}),
             false,
         ),
@@ -5981,8 +5985,23 @@ fn artifact_json(
     if let Some(activation) = entry
         .activation
         .as_ref()
-        .filter(|activation| activation.token == "BEAM_COLD")
+        .filter(|activation| matches!(activation.token.as_str(), "BEAM_COLD" | "TELEKINESIS"))
     {
+        let (activation_id, name_key, target, effect) = if activation.token == "TELEKINESIS" {
+            (
+                "rfb-legacy.item-activation.telekinesis",
+                "item-activation-demo-dr-jones-telekinesis-name",
+                serde_json::json!({"modes": ["direction", "position", "entity"], "range": 18, "requiresLineOfEffect": false}),
+                device_fetch_item_effect(activation.power),
+            )
+        } else {
+            (
+                "rfb-legacy.item-activation.cold-beam",
+                "item-activation-demo-cold-beam-name",
+                serde_json::json!({"modes": ["direction"], "range": 18, "requiresLineOfEffect": true}),
+                serde_json::json!({"type": "beam-damage", "damageDice": 0, "damageSides": 0, "damageBonus": activation.extra, "damageType": "cold"}),
+            )
+        };
         value["tags"]
             .as_array_mut()
             .expect("artifact tags should be an array")
@@ -5993,25 +6012,15 @@ fn artifact_json(
                 "energyPerMille": 1_000
             },
             "activations": [{
-                "id": "rfb-legacy.item-activation.cold-beam",
-                "nameKey": "item-activation-demo-cold-beam-name",
+                "id": activation_id,
+                "nameKey": name_key,
                 "weight": 1,
                 "minDepth": 1,
                 "maxDepth": 100,
                 "deviceCheckDifficulty": activation.power,
                 "charges": {"minimum": 1, "maximum": 1, "cost": 1},
-                "target": {
-                    "modes": ["direction"],
-                    "range": 18,
-                    "requiresLineOfEffect": true
-                },
-                "effect": {
-                    "type": "beam-damage",
-                    "damageDice": 0,
-                    "damageSides": 0,
-                    "damageBonus": activation.extra,
-                    "damageType": "cold"
-                }
+                "target": target,
+                "effect": effect
             }]
         });
     } else if entry.has_activation {
@@ -13380,6 +13389,7 @@ fn effect_program_from_inline(
             .ok_or_else(|| format!("{id} step has no effect type"))?;
         let step_input = match step_type {
             "damage" | "beam-damage" | "random-element-cone-damage" => "actor",
+            "ability-effect" if step["effect"]["type"] == "fetch-item" => "actor",
             "identify-item" | "enchant-item" | "recharge-from-device" => "item",
             "genocide" => "glyph",
             _ => "self",
@@ -28036,6 +28046,43 @@ E:BREATHE_ONE_MULTIHUED:40:70:250
             activation["effect"].clone(),
         )
         .expect("random breath should compile as a directional item effect");
+        assert_eq!(program["input"], "actor");
+    }
+
+    #[test]
+    fn dr_jones_whip_imports_telekinesis_without_an_activation_gap() {
+        // RFB master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c, a_info.txt N:162.
+        let entries = parse_a_info("N:162:of Dr. Jones\nI:21:2:1\nW:8:5:30:18000\nP:0:1d7:16:13:0\nF:INT | WIS | LEVITATION | SHOW_MODS | SEE_INVIS\nE:TELEKINESIS:25:30\nE:你伸展开了你的鞭子。\n").unwrap();
+        let mut report = ContentImportReport::default();
+        let item = artifact_json(
+            &entries[0],
+            "dr-jones-whip",
+            Some("demo.item.whip"),
+            &LauncherAmmoIndex::default(),
+            &mut report,
+        );
+        assert_eq!(item["artifactGeneration"]["sourceIndex"], 162);
+        assert_eq!(item["modifiers"]["intelligence"], 1);
+        assert_eq!(item["modifiers"]["wisdom"], 1);
+        assert_eq!(item["meleeProfile"]["damageSides"], 7);
+        assert_eq!(item["deviceGeneration"]["recovery"]["intervalTicks"], 300);
+        let activation = &item["deviceGeneration"]["activations"][0];
+        assert_eq!(activation["deviceCheckDifficulty"], 25);
+        assert_eq!(activation["target"]["requiresLineOfEffect"], false);
+        assert_eq!(
+            activation["effect"]["effect"]["maximumWeightTenthsPound"],
+            175
+        );
+        assert!(
+            !report
+                .item_behavior_gaps
+                .contains_key("artifact-activation")
+        );
+        let program = effect_program_from_inline(
+            "demo.effect.dr-jones-telekinesis",
+            activation["effect"].clone(),
+        )
+        .unwrap();
         assert_eq!(program["input"], "actor");
     }
 

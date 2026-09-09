@@ -102,6 +102,7 @@ pub(crate) struct ItemInstance {
     pub(crate) activation: Option<ItemActivationDto>,
     pub(crate) charges: Option<ItemChargesDto>,
     pub(crate) fuel: Option<ItemFuelDto>,
+    // Elapsed ticks for single-charge cooldowns; fractional per-mille energy otherwise.
     pub(crate) device_recovery_progress: u16,
     pub(crate) captured_actor: Option<CapturedActor>,
     pub(crate) location: ItemLocation,

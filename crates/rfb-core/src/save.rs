@@ -659,11 +659,26 @@ fn validate_item_runtime_state(
         }
     };
     let valid_recovery_progress = match (
-        device_generation.and_then(|generation| generation.recovery),
+        device_generation.and_then(|generation| {
+            activation
+                .and_then(|activation| {
+                    generation
+                        .activations
+                        .iter()
+                        .find(|profile| profile.id == activation.profile_id)
+                })
+                .and_then(|profile| profile.recovery)
+                .or(generation.recovery)
+        }),
         charges,
     ) {
-        (Some(_), Some(charges)) => {
-            device_recovery_progress < 1_000
+        (Some(recovery), Some(charges)) => {
+            let limit = if charges.maximum == 1 && recovery.energy_per_mille == 1_000 {
+                recovery.interval_ticks
+            } else {
+                1_000
+            };
+            device_recovery_progress < limit
                 && (charges.current < charges.maximum || device_recovery_progress == 0)
         }
         _ => device_recovery_progress == 0,

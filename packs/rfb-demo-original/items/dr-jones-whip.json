@@ -1,0 +1,47 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dr-jones-whip",
+  "nameKey": "item-demo-dr-jones-whip-name",
+  "descriptionKey": "item-demo-dr-jones-whip-description",
+  "elementalDestructionVulnerabilities": ["acid"],
+  "glyph": "\\",
+  "generationLevel": 8,
+  "weightTenthsPound": 30,
+  "maxStack": 1,
+  "baseValue": 18000,
+  "equipmentSlot": "weapon",
+  "weaponProficiencyBaseItemId": "demo.item.whip",
+  "artifactGeneration": {
+    "sourceIndex": 162,
+    "baseItemKindId": "demo.item.whip",
+    "rarityOneIn": 5,
+    "instant": false
+  },
+  "modifiers": { "intelligence": 1, "wisdom": 1 },
+  "meleeProfile": {
+    "attacks": 1,
+    "toHit": 16,
+    "toDamage": 13,
+    "damageDice": 1,
+    "damageSides": 7
+  },
+  "passives": ["levitation", "see-invisible"],
+  "deviceGeneration": {
+    "recovery": { "intervalTicks": 300, "energyPerMille": 1000 },
+    "activations": [{
+      "id": "demo.item-activation.dr-jones-telekinesis",
+      "nameKey": "item-activation-demo-dr-jones-telekinesis-name",
+      "weight": 1,
+      "minDepth": 1,
+      "maxDepth": 100,
+      "deviceCheckDifficulty": 25,
+      "charges": { "minimum": 1, "maximum": 1, "cost": 1 },
+      "target": { "modes": ["direction", "position", "entity"], "range": 18, "requiresLineOfEffect": false },
+      "effectProgramId": "demo.effect.dr-jones-telekinesis"
+    }]
+  },
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "tags": ["artifact", "equipment", "weapon"]
+}

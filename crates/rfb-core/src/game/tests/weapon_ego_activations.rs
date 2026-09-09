@@ -293,8 +293,10 @@ fn riding_charge_moves_mount_attacks_and_uses_profile_recovery() {
         Some(0)
     );
 
-    game.world_tick = 999;
-    game.process_inventory_device_recovery(&mut events);
+    for tick in 1..1_000 {
+        game.world_tick = tick;
+        game.process_inventory_device_recovery(&mut events);
+    }
     assert_eq!(
         game.items
             .iter()
