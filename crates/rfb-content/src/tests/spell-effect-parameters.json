@@ -537,7 +537,7 @@
   },
   {
     "id": "demo.ability.daemon-polymorph-demonlord",
-    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.demon-lord-transformation", "/intensity": 1, "/durationTicks": 15, "/durationDice": 1, "/durationSides": 15, "/stacking": "replace", "/grantedRaceId": "demo.race.demon-lord", "/grantsWallPassage": true},
+    "effectFields": {"/type": "apply-status", "/statusKindId": "rfb.status.demon-lord-transformation", "/intensity": 1, "/durationTicks": 15, "/durationDice": 1, "/durationSides": 15, "/stacking": "replace", "/grantedRaceId": "demo.race.demon-lord", "/grantsWallPassage": false},
     "levelScaling": [],
     "spellPowerFields": [{"effectIndex": 0, "field": "status-duration-ticks"}, {"effectIndex": 0, "field": "status-duration-sides"}],
     "effectCount": 1,

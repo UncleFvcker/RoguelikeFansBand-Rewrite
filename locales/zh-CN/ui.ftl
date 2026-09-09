@@ -1118,3 +1118,5 @@ bounty-mission-progress = 前往{ $floor }（深度 { $depth }）消灭{ $actor 
 action-bounty-abandon-mission = 放弃悬赏任务
 bounty-mission-complete = 悬赏已完成：{ $actor }，奖励{ $item }
 action-bounty-claim-mission = 领取悬赏奖励
+status-life-force = 生命力
+status-life-force-detail = 生命力：{ $lifeForce } / 1000

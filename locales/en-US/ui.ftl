@@ -1122,3 +1122,5 @@ bounty-mission-progress = Kill { $actor } on { $floor } (depth { $depth }): { $r
 action-bounty-abandon-mission = Abandon bounty mission
 bounty-mission-complete = Bounty complete: { $actor }; reward { $item }
 action-bounty-claim-mission = Claim bounty reward
+status-life-force = Life force
+status-life-force-detail = Life force: { $lifeForce } / 1000

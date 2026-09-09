@@ -23,6 +23,42 @@ const formatter = createPresentationFormatter(localization, () => state, {
   itemCurseSeverityName: () => "?",
 });
 
+test("life force exhaustion, permanent race change, recovery and death use localized events", () => {
+  const event = (messageKey, args = {}) => ({ kind: "test", messageKey, args });
+  for (const [locale, expected] of [
+    ["en-US", ["Your life force is exhausted!", "Your race permanently changes from Human to Spectre.", "You die from life force exhaustion."]],
+    ["zh-CN", ["你的生命力枯竭了！", "你的本体由人类永久转化为幽灵。", "你因生命力枯竭而死。"]],
+  ]) {
+    localization.setLocale(locale);
+    assert.equal(formatter.formatEvent(event("player-life-force-exhausted")), expected[0]);
+    assert.equal(formatter.formatEvent(event("player-race-changed", {
+      previousRace: "demo.race.rfb-human", race: "rfb-legacy.race.spectre",
+    })), expected[1]);
+    assert.equal(formatter.formatEvent(event("combat-player-death", {
+      source: "demo.actor.barrow-wight", method: "rfb.life-force-exhaustion",
+    })), expected[2]);
+    assert.equal(formatter.formatEvent(event("player-level-lost", { level: "15", maxHp: "70" })),
+      localization.format("message-player-level-lost", { level: "15", maxHp: "70" }));
+    assert.equal(formatter.formatEvent(event("player-experience-drained", {
+      source: "demo.actor.barrow-wight", amount: "130", total: "10000",
+    })), localization.format("message-player-experience-drained", {
+      source: formatter.contentName("demo.actor.barrow-wight"), amount: "130", total: "10000",
+    }));
+    for (const key of ["monster-unlife-drained", "monster-unlife-drained-restored", "monster-unlife-drained-ranged"]) {
+      const args = { source: "demo.actor.barrow-wight", amount: "8", lifeForceAfter: "0", lifeForceFinal: "1000" };
+      assert.equal(formatter.formatEvent(event(key, args)), localization.format(key, {
+        ...args, source: formatter.contentName(args.source),
+      }));
+    }
+    for (const key of ["player-sunlight-burn", "player-light-death"]) {
+      assert.equal(formatter.formatEvent(event(key)), localization.format(key));
+    }
+    assert.equal(formatter.formatEvent(event("player-light-source-burn", { source: "demo.item.torch" })),
+      localization.format("player-light-source-burn", { source: formatter.contentName("demo.item.torch") }));
+  }
+  localization.setLocale("en-US");
+});
+
 test("Fast Recovery uses the localized regeneration status name", () => {
   assert.equal(formatter.statusName("rfb.status.regeneration"), "regeneration");
   localization.setLocale("zh-CN");

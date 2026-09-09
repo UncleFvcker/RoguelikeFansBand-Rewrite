@@ -36,6 +36,25 @@ export function createPresentationFormatter(
 
   function formatEvent(event: GameEventDto): string {
     switch (event.messageKey) {
+      case "player-life-force-exhausted":
+        return localization.format(event.messageKey);
+      case "player-race-changed":
+        return localization.format(event.messageKey, {
+          previousRace: contentName(event.args.previousRace),
+          race: contentName(event.args.race),
+        });
+      case "monster-unlife-drained":
+      case "monster-unlife-drained-restored":
+      case "monster-unlife-drained-ranged":
+        return localization.format(event.messageKey, {
+          ...event.args,
+          source: contentName(event.args.source),
+        });
+      case "player-light-source-burn":
+        return localization.format(event.messageKey, { source: contentName(event.args.source) });
+      case "player-light-death":
+      case "player-sunlight-burn":
+        return localization.format(event.messageKey);
       case "mutation-gained":
         return localization.format("message-mutation-gained", {
           mutation: event.args.name ?? event.args.target ?? "?",
@@ -431,11 +450,22 @@ export function createPresentationFormatter(
           amount: event.args.amount ?? "?",
           total: event.args.total ?? "?",
         });
+      case "player-experience-drained":
+        return localization.format("message-player-experience-drained", {
+          source: contentName(event.args.source),
+          amount: event.args.amount ?? "?",
+          total: event.args.total ?? "?",
+        });
       case "player-level-gained":
         return localization.format("message-player-level-gained", {
           level: event.args.level ?? "?",
           maxHp: event.args.maxHp ?? "?",
           pending: event.args.pendingAttributeIncreases ?? "?",
+        });
+      case "player-level-lost":
+        return localization.format("message-player-level-lost", {
+          level: event.args.level ?? "?",
+          maxHp: event.args.maxHp ?? "?",
         });
       case "player-level-cap-unlocked":
         return localization.format("message-player-level-cap-unlocked", {
@@ -656,6 +686,9 @@ export function createPresentationFormatter(
           target: contentName(event.args.target),
         });
       case "combat-player-death":
+        if (event.args.method === "rfb.life-force-exhaustion") {
+          return localization.format("player-life-force-death");
+        }
         return localization.format("message-combat-player-death", {
           source: contentName(event.args.source),
         });
@@ -1705,7 +1738,8 @@ export function createPresentationFormatter(
     }
     if (id) {
       const [namespace, kind, ...nameParts] = id.split(".");
-      const derivedNameKey = `${kind}-${namespace}-${nameParts.join("-")}-name`;
+      const nameNamespace = kind === "race" && namespace === "rfb-legacy" ? "legacy" : namespace;
+      const derivedNameKey = `${kind}-${nameNamespace}-${nameParts.join("-")}-name`;
       if (
         localization.hasMessage(localization.locale, derivedNameKey) ||
         localization.hasMessage("en-US", derivedNameKey)

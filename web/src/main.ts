@@ -477,6 +477,9 @@ function installSupplyE2eHook(): void {
     const snapshot = await core.prepareSupplyE2e(amount);
     applyLoadedSnapshot(snapshot);
   };
+  window.__rfbPrepareLifeForceE2e = async (seed: number): Promise<void> => {
+    applyLoadedSnapshot(await core.prepareLifeForceE2e(seed));
+  };
 }
 
 function recordFrontendCrash(kind: "window-error" | "unhandled-rejection"): void {

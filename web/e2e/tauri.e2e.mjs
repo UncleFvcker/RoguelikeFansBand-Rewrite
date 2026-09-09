@@ -51,6 +51,7 @@ const tomteOnly = process.argv.includes("--tomte");
 const tonberryOnly = process.argv.includes("--tonberry");
 const entOnly = process.argv.includes("--ent");
 const spectreOnly = process.argv.includes("--spectre");
+const lifeForceOnly = process.argv.includes("--life-force");
 const logs = [];
 let child;
 let client;
@@ -91,6 +92,8 @@ async function main() {
     client = await WebDriverClient.create(port, child);
     if (renderProfileOnly) {
       await runRendererProfile(client, artifactDirectory);
+    } else if (lifeForceOnly) {
+      await runLifeForceScenario(client);
     } else if (tomteOnly || tonberryOnly || entOnly || spectreOnly) {
       await runRaceScenario(client, spectreOnly ? "spectre" : entOnly ? "ent" : tonberryOnly ? "tonberry" : "tomte");
     } else {
@@ -533,6 +536,138 @@ async function dispatchKey(driver, code, key) {
     }));
     return true;
   `, [code, key]);
+}
+
+async function runLifeForceScenario(driver) {
+  const expected = await loadExpectedIdentity();
+  const report = { identity: expected, precondition: "Level 19, life force 1, awake original barrow-wight east of player, daylight suppressed on both tiles, simulation RNG seed 0. No forced hit, damage, saving throw or conversion target.", checks: [] };
+  const state = () => driver.execute(`return {
+    hash: document.querySelector("#hash-value").title,
+    turn: parseInt(document.querySelector("#turn-value").textContent, 10),
+    race: document.querySelector("#character-race-value").textContent,
+    class: document.querySelector("#character-class-value").textContent,
+    level: document.querySelector("#character-level-value").textContent,
+    hp: document.querySelector("#hp-value").textContent,
+    lifeForce: document.querySelector("#health-meter").title,
+    position: document.querySelector("#position-value").textContent,
+    nutrition: document.querySelector("#nutrition-value").textContent,
+    light: document.querySelector("#light-value").textContent,
+    equipment: [...document.querySelectorAll("#equipment-list .equipment-slot-name")].map(node => node.textContent),
+    inventory: [...document.querySelectorAll("#inventory-list [data-item-id]")].map(node => [node.dataset.itemId, node.dataset.itemKindId]),
+    abilities: [...document.querySelectorAll("#ability-list .ability-name")].map(node => node.textContent),
+    alive: document.documentElement.dataset.playerState === "alive",
+    errors: window.__lifeForceErrors,
+  };`);
+  const afterTurn = turn => driver.waitFor(`return parseInt(document.querySelector("#turn-value").textContent, 10) > arguments[0]`, "life force action", 10_000, [turn]);
+  await driver.waitFor(`return document.documentElement.dataset.appMode === "title"`, "life force title", 60_000);
+  await driver.execute(`localStorage.setItem("rfb.locale", "zh-CN"); localStorage.setItem("rfb.input-preset", "numpad"); setTimeout(() => location.reload(), 100); return true;`);
+  await driver.waitFor(`return performance.getEntriesByType("navigation")[0]?.type === "reload" && document.documentElement.dataset.appMode === "title"`, "Chinese title", 60_000);
+  await mkdir(artifactDirectory, { recursive: true });
+  for (const [build, raceId, targetName] of [
+    ["warrior", "demo.race.rfb-human", "吸血鬼"],
+    ["high-mage-death", "rfb-legacy.race.imp", "幽灵"],
+    ["archer", "demo.race.rfb-human", "吸血鬼"],
+  ]) {
+    await click(driver, "#session-new-game");
+    await driver.execute(`
+      window.__lifeForceErrors = [];
+      window.addEventListener("error", event => window.__lifeForceErrors.push(event.message));
+      const race = document.querySelector("#session-race"); race.value = arguments[1];
+      race.dispatchEvent(new Event("change", { bubbles: true }));
+      const build = document.querySelector("#session-build-" + arguments[0]); build.checked = true;
+      build.dispatchEvent(new Event("change", { bubbles: true }));
+      document.querySelector("#session-seed").value = "83";
+      document.querySelector("#session-character-name").value = "生命力验收";
+      document.querySelector("#session-start-game").click(); return true;
+    `, [build, raceId]);
+    await driver.waitFor(`return document.documentElement.dataset.appMode === "playing" && document.querySelector("#connection-status").classList.contains("ready")`, "life force creation", 60_000);
+    await driver.execute(`window.__lifeForcePrepared = false; window.__rfbPrepareLifeForceE2e(0).then(() => window.__lifeForcePrepared = true).catch(error => window.__lifeForceErrors.push(String(error))); return true;`);
+    await driver.waitFor(`return window.__lifeForcePrepared`, "explicit life force precondition");
+    assert.equal(await driver.execute(`return document.querySelector("#map-host").dataset.protocolVersion`), expected.protocolVersion);
+    assert.equal(await driver.execute(`return document.querySelector("#map-host").dataset.contentHash`), expected.contentHash);
+    const before = await state();
+    assert.equal(before.lifeForce, "生命力：1 / 1000");
+    assert.equal(before.level, "19");
+    if (raceId.endsWith(".imp")) assert.ok(before.abilities.includes("火焰箭/火球术"));
+    for (let attack = 0; attack < 5 && (await state()).race !== targetName; attack += 1) {
+      const turn = (await state()).turn;
+      await dispatchKey(driver, "Numpad5", "5");
+      await afterTurn(turn);
+    }
+    const transformed = await state();
+    assert.equal(transformed.race, targetName);
+    assert.equal(transformed.alive, true);
+    assert.equal(transformed.class, before.class);
+    assert.equal(transformed.lifeForce, "生命力：1000 / 1000");
+    assert.deepEqual(transformed.equipment, before.equipment);
+    assert.deepEqual(transformed.inventory, before.inventory);
+    if (raceId.endsWith(".imp")) {
+      assert.ok(!transformed.abilities.includes("火焰箭/火球术"));
+      assert.ok(transformed.abilities.includes("恐吓怪物"));
+    } else {
+      assert.ok(transformed.abilities.includes("吸血"));
+    }
+    const messages = await driver.execute(`return [...document.querySelectorAll("#message-list li")].map(node => node.textContent);`);
+    const exhausted = messages.findIndex(text => text.includes("你的生命力枯竭了"));
+    const changed = messages.findIndex(text => text.includes("永久转化为" + targetName));
+    const restored = messages.findIndex(text => text.includes("生命力恢复至1000"));
+    assert.ok(exhausted >= 0 && exhausted < changed && changed < restored, messages.join("\n"));
+    assert.ok(!messages.some(text => /\[[a-z][a-z-]+\]|未知事件|unknown event/i.test(text)), messages.join("\n"));
+    await click(driver, "#player-ui-character-open");
+    await click(driver, "#character-tab-overview");
+    assert.equal(await driver.execute(`return [...document.querySelectorAll("#character-vitals-list > div")].find(row => row.querySelector("dt").textContent === "生命力").querySelector("dd").textContent;`), "1000 / 1000");
+    await writeFile(path.join(artifactDirectory, `life-force-${build}-character.png`), await driver.screenshot(), "base64");
+    await click(driver, "#player-page-close");
+    await click(driver, "#player-ui-ability-open");
+    const powerName = targetName === "幽灵" ? "恐吓怪物" : "吸血";
+    await driver.execute(`
+      const row = [...document.querySelectorAll("#ability-list .ability-row")].find(row => row.querySelector(".ability-name").textContent === arguments[0]);
+      if (row.querySelector(".ability-cast-action").disabled) throw new Error("New racial power unavailable");
+      row.scrollIntoView({ block: "center" }); return true;
+    `, [powerName]);
+    await writeFile(path.join(artifactDirectory, `life-force-${build}-abilities.png`), await driver.screenshot(), "base64");
+    await driver.execute(`
+      const row = [...document.querySelectorAll("#ability-list .ability-row")].find(row => row.querySelector(".ability-name").textContent === arguments[0]);
+      row.querySelector(".ability-cast-action").click(); return true;
+    `, [powerName]);
+    await driver.waitFor(`return document.querySelector("#map-host").dataset.targetingAction === "ability"`, "new racial targeting");
+    await dispatchKey(driver, "Escape", "Escape");
+    await driver.waitFor(`return document.querySelector("#map-host").dataset.targetingAction === "none"`, "cancel racial targeting");
+    const turn = (await state()).turn;
+    await dispatchKey(driver, "Numpad4", "4"); await afterTurn(turn);
+    await driver.execute(`
+      window.__rfbE2eDownloads = [];
+      URL.createObjectURL = blob => { window.__rfbE2eDownloads.push({ blob, size: blob.size }); return "blob:life-force-acceptance"; };
+      URL.revokeObjectURL = () => {};
+      HTMLAnchorElement.prototype.click = function () { window.__rfbE2eDownloads.at(-1).fileName = this.download; };
+      document.querySelector(".hud-menu").open = true; return true;
+    `);
+    const saved = await state();
+    await click(driver, "#save-button");
+    await driver.waitFor(`return window.__rfbE2eDownloads.some(item => item.fileName?.endsWith(".rfbsave"))`, "life force save export");
+    await driver.execute(`document.querySelector(".hud-menu").open = false; return true;`);
+    await dispatchKey(driver, "Numpad4", "4"); await afterTurn(saved.turn);
+    const continued = await state();
+    await driver.execute(`
+      const saved = window.__rfbE2eDownloads.find(item => item.fileName?.endsWith(".rfbsave"));
+      const transfer = new DataTransfer(); transfer.items.add(new File([saved.blob], saved.fileName));
+      const input = document.querySelector("#load-input"); input.files = transfer.files;
+      input.dispatchEvent(new Event("change", { bubbles: true })); return true;
+    `);
+    await driver.waitFor(`return document.querySelector("#hash-value").title === arguments[0]`, "life force exact restore", 10_000, [saved.hash]);
+    assert.deepEqual(await state(), saved);
+    await dispatchKey(driver, "Numpad4", "4"); await afterTurn(saved.turn);
+    assert.deepEqual(await state(), continued);
+    assert.equal(continued.alive, true);
+    assert.deepEqual(continued.errors, []);
+    report.checks.push({ build, before, transformed, saved, continued, messages });
+    process.stdout.write(`Life force: ${build} -> ${targetName} passed.\n`);
+    if (build !== "archer") {
+      await driver.execute(`setTimeout(() => location.reload(), 100); return true;`);
+      await driver.waitFor(`return document.documentElement.dataset.appMode === "title"`, "next life force class", 60_000);
+    }
+  }
+  await writeFile(path.join(artifactDirectory, "life-force-acceptance.json"), JSON.stringify(report, null, 2) + "\n");
 }
 
 async function click(driver, selector) {

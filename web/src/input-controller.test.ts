@@ -262,6 +262,29 @@ test("look and targeting cursors follow wilderness map translations", () => {
   assert.deepEqual(focused, [{ x: 38, y: 20 }]);
 });
 
+test("authoritative race and level changes clear unavailable ability targeting", () => {
+  const state = new AppState();
+  const controller = new InputController({
+    state, dom: {}, localization: {}, window: {},
+    getInputPreset: () => "vi", getZoom: () => 1, dispatch: async () => {},
+    describeLook: () => "", openObjectList: () => {}, openMogaminator: () => {},
+    onLookOrTargeting: () => {}, onLookFocusChange: () => {}, announce: () => {},
+  });
+  controller.render = () => {};
+  const targetSpec = { modes: ["direction"], range: 10, requiresLineOfEffect: true };
+  for (const abilities of [[], [{ id: "old-race-power", canCast: false, targetSpec }], [{ id: "old-race-power", canCast: true, targetSpec }]]) {
+    state.targeting = { origin: { x: 1, y: 1 }, cursor: { x: 2, y: 1 }, spec: targetSpec };
+    state.targetingIntent = { type: "ability", abilityId: "old-race-power" };
+    controller.reconcileStatus({
+      mapScale: "local", floorId: "test.floor", width: 10, height: 10,
+      player: { position: { x: 1, y: 1 }, abilities },
+    });
+    const remainsAvailable = abilities.some((ability) => ability.canCast);
+    assert.equal(Boolean(state.targeting), remainsAvailable);
+    assert.equal(Boolean(state.targetingIntent), remainsAvailable);
+  }
+});
+
 test("a pending Produce Mana effect opens mandatory direction targeting", () => {
   const state = new AppState();
   const announcements = [];

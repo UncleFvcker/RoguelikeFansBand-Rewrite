@@ -2623,3 +2623,114 @@ fn unlife_endpoint_later_blows_use_the_transformed_body_or_stop_after_death() {
         );
     }
 }
+
+#[test]
+fn life_force_acceptance_six_classes_survive_original_attack_save_and_continue() {
+    for (build, race) in [
+        ("demo.build.warrior", "demo.race.rfb-human"),
+        ("demo.build.high-mage-death", "rfb-legacy.race.imp"),
+        ("demo.build.archer", "demo.race.rfb-human"),
+        ("demo.build.paladin-death", "demo.race.rfb-human"),
+        ("demo.build.cavalry", "demo.race.rfb-human"),
+        ("demo.build.sniper", "rfb-legacy.race.imp"),
+    ] {
+        let mut game =
+            Game::new_with_build_race_and_name(83, build, race, "Life Force Acceptance").unwrap();
+        game.debug_prepare_life_force_e2e(0);
+        let initial_growth = game.progress.hp_progression.clone();
+        let identity = game.build.clone().unwrap();
+        let items = game
+            .items
+            .iter()
+            .map(|item| (item.id.clone(), item.quantity))
+            .collect::<BTreeMap<_, _>>();
+        let mut events = Vec::new();
+        for _ in 0..5 {
+            let update = dispatch_next(&mut game, GameCommand::Wait);
+            events.extend(update.events);
+            if game.build.as_ref().unwrap().race_id != race || game.player_is_dead() {
+                break;
+            }
+        }
+        let target = game.build.as_ref().unwrap().race_id.clone();
+        eprintln!(
+            "{build}: {race} -> {target}, HP {}, level {}, LF {}",
+            game.player.hp, game.progress.level, game.progress.life_force
+        );
+        assert!(UNLIFE_TARGETS.contains(&target.as_str()), "{build}");
+        assert_eq!(
+            target,
+            if race == "demo.race.rfb-human" {
+                UNLIFE_TARGETS[0]
+            } else {
+                UNLIFE_TARGETS[3]
+            }
+        );
+        assert!(!game.player_is_dead(), "{build}");
+        assert_eq!(game.progress.life_force, 1_000);
+        assert_ne!(game.progress.hp_progression, initial_growth);
+        let current = game.build.as_ref().unwrap();
+        assert_eq!(
+            (
+                &current.build_id,
+                &current.class_id,
+                &current.personality_id
+            ),
+            (
+                &identity.build_id,
+                &identity.class_id,
+                &identity.personality_id
+            )
+        );
+        assert_eq!(
+            game.items
+                .iter()
+                .map(|item| (item.id.clone(), item.quantity))
+                .collect::<BTreeMap<_, _>>(),
+            items
+        );
+        let exhausted = events
+            .iter()
+            .position(|event| event.kind == "player.life-force-exhausted")
+            .unwrap();
+        let changed = events
+            .iter()
+            .position(|event| event.kind == "player.race-changed")
+            .unwrap();
+        let drained = events
+            .iter()
+            .position(|event| event.kind == "combat.monster-unlife-drained")
+            .unwrap();
+        assert!(exhausted < changed && changed < drained);
+        let amount: u16 = events[drained].args["amount"].parse().unwrap();
+        assert_eq!(
+            game.entities
+                .iter()
+                .find(|actor| actor.id == "test.life-force")
+                .unwrap()
+                .power_per_mille,
+            1_000 + amount
+        );
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.rng, game.rng);
+        assert_eq!(
+            dispatch_next(
+                &mut restored,
+                GameCommand::Move {
+                    direction: Direction::West
+                }
+            ),
+            dispatch_next(
+                &mut game,
+                GameCommand::Move {
+                    direction: Direction::West
+                }
+            )
+        );
+        assert!(
+            !game.player_is_dead(),
+            "{build} must continue after loading"
+        );
+    }
+}

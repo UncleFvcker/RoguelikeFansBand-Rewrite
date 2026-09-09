@@ -142,6 +142,18 @@ impl AppState {
         Ok(session.recorder.game().snapshot())
     }
 
+    #[cfg(feature = "webdriver")]
+    fn prepare_life_force_e2e(&self, seed: u64) -> Result<GameSnapshot, String> {
+        let mut session = self.lock_session()?;
+        let session = session
+            .as_mut()
+            .ok_or_else(|| "game session is not initialized".to_owned())?;
+        let mut game = session.recorder.game().clone();
+        game.debug_prepare_life_force_e2e(seed);
+        session.recorder = ReplayRecorder::new(game);
+        Ok(session.recorder.game().snapshot())
+    }
+
     fn lock_session(&self) -> Result<std::sync::MutexGuard<'_, Option<GameSession>>, String> {
         self.session
             .lock()
@@ -256,6 +268,22 @@ fn prepare_supply_e2e(
 #[tauri::command(rename_all = "camelCase")]
 fn save_game(state: tauri::State<'_, AppState>, saved_at: String) -> Result<Vec<u8>, String> {
     state.save(saved_at)
+}
+
+#[tauri::command]
+fn prepare_life_force_e2e(
+    state: tauri::State<'_, AppState>,
+    seed: u64,
+) -> Result<GameSnapshot, String> {
+    #[cfg(feature = "webdriver")]
+    {
+        state.prepare_life_force_e2e(seed)
+    }
+    #[cfg(not(feature = "webdriver"))]
+    {
+        let _ = (state, seed);
+        Err("life force E2E fixture is unavailable".to_owned())
+    }
 }
 
 #[tauri::command]
@@ -432,6 +460,7 @@ pub fn run() {
             initialize_game,
             dispatch_game_command,
             prepare_supply_e2e,
+            prepare_life_force_e2e,
             save_game,
             load_game,
             export_replay,

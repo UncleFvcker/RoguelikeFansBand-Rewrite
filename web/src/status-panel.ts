@@ -632,6 +632,7 @@ export function renderCharacterOverview(
     ...(player.resources ?? []).map((resource): [MessageKey, string] =>
       [resource.nameKey, `${resource.current} / ${resource.maximum}`]),
   ];
+  if (progress) values.push(["status-life-force", `${progress.lifeForce} / 1000`]);
   if (player.sniperConcentration) {
     values.push(["sniper-concentration", `${player.sniperConcentration.current} / ${player.sniperConcentration.maximum}`]);
   }
@@ -985,6 +986,9 @@ export class StatusPanel {
     this.#dom.healthMeter.setAttribute("aria-valuemin", "0");
     this.#dom.healthMeter.setAttribute("aria-valuemax", String(state.player.maxHp));
     this.#dom.healthMeter.setAttribute("aria-valuenow", String(state.player.hp));
+    this.#dom.healthMeter.title = state.player.progress
+      ? this.#localization.format("status-life-force-detail", { lifeForce: String(state.player.progress.lifeForce) })
+      : "";
     this.#dom.goldValue.textContent = state.player.gold.toLocaleString(this.#localization.locale);
     this.#dom.nutritionValue.textContent = this.#localization.format("status-nutrition-value", {
       state: this.#localization.format(`nutrition-state-${state.player.nutritionState}`),

@@ -2482,6 +2482,40 @@ impl Game {
         Ok(())
     }
 
+    /// Desktop acceptance precondition: a living level-19 player at one life force,
+    /// beside an awake original barrow-wight. The actual attack and conversion stay random.
+    #[doc(hidden)]
+    pub fn debug_prepare_life_force_e2e(&mut self, seed: u64) {
+        self.entities.clear();
+        self.items
+            .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
+        self.apply_player_experience(self.experience_required_for_level(19), &mut Vec::new());
+        let east = Position {
+            x: self.player.position.x + 1,
+            y: self.player.position.y,
+        };
+        for position in [self.player.position, east] {
+            let index = self
+                .index(position)
+                .expect("acceptance positions must be on the local map");
+            self.terrain[index] = "demo.terrain.floor".to_owned();
+            self.daylight_suppressed[index] = true;
+        }
+        let mut actor = self.generated_actor(
+            "test.life-force".to_owned(),
+            "demo.actor.barrow-wight",
+            east,
+        );
+        actor.energy_need = 0;
+        actor.nice = false;
+        actor.statuses.clear();
+        self.entities.push(actor);
+        self.progress.life_force = 1;
+        self.player.hp = self.effective_player_max_hp();
+        self.rng = RfbRng::seeded(seed);
+        self.reveal_current_visibility();
+    }
+
     #[must_use]
     pub fn content_id(&self) -> &str {
         self.content.pack_id()

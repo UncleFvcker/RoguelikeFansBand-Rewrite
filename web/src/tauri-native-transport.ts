@@ -58,6 +58,12 @@ export class TauriNativeTransport implements CoreTransport {
     return snapshot;
   }
 
+  async prepareLifeForceE2e(seed: number): Promise<GameSnapshot> {
+    const snapshot = await invoke<GameSnapshot>("prepare_life_force_e2e", { seed });
+    this.#syncSnapshot(snapshot);
+    return snapshot;
+  }
+
   dispose(): void {
     // The native game session is owned by the Tauri application and ends with it.
   }

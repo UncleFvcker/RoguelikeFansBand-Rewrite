@@ -1773,7 +1773,7 @@ fn check_daemon_fourth_book(content: &CompiledContentV1) {
             duration_dice: 1,
             duration_sides: 15,
             granted_race_id: Some(race_id),
-            grants_wall_passage: true,
+            grants_wall_passage: false,
             ..
         } if status_kind_id == "rfb.status.demon-lord-transformation"
             && race_id == "demo.race.demon-lord"

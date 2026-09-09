@@ -104,7 +104,7 @@ test("character overview projects exact experience, actual resources and current
   const player = {
     name: "Long character name", gold: 12345, hp: 12, maxHp: 56, armorClass: 104, defense: 7, speed: 113,
     build: { raceNameKey: "race", classNameKey: "class", personalityNameKey: "personality" },
-    progress: { level: 27, experience: 9007199254740993n, maximumExperience: 9007199254740995n, experienceForNextLevel: 9007199254741995n },
+    progress: { level: 27, lifeForce: 1, experience: 9007199254740993n, maximumExperience: 9007199254740995n, experienceForNextLevel: 9007199254741995n },
     resources: [{ nameKey: "mana", current: 0, maximum: 24 }, { nameKey: "other-resource", current: 3, maximum: 5 }],
     sniperConcentration: { current: 0, maximum: 5 },
   };
@@ -118,11 +118,12 @@ test("character overview projects exact experience, actual resources and current
   assert.match(dom.characterWorldTimeValue.textContent, /"day":1,"hour":"18","minute":"00"/);
   const rows = () => dom.characterVitalsList.children.map((row) => row.children.map((cell) => cell.textContent));
   assert.deepEqual(rows().slice(1), [
-    ["mana", "0 / 24"], ["other-resource", "3 / 5"], ["sniper-concentration", "0 / 5"],
+    ["mana", "0 / 24"], ["other-resource", "3 / 5"], ["status-life-force", "1 / 1000"], ["sniper-concentration", "0 / 5"],
     ["character-armor-class", "104"], ["character-speed", "113"],
   ]);
-  renderCharacterOverview(dom, { ...player, progress: { ...player.progress, experienceForNextLevel: null } }, 50000, localization);
+  renderCharacterOverview(dom, { ...player, progress: { ...player.progress, lifeForce: 1000, experienceForNextLevel: null } }, 50000, localization);
   assert.equal(dom.characterNextExperienceValue.textContent, "character-no-next-level");
+  assert.deepEqual(rows().find(([key]) => key === "status-life-force"), ["status-life-force", "1000 / 1000"]);
   renderCharacterOverview(dom, { ...player, build: null, progress: undefined, resources: [], sniperConcentration: null }, 75000, localization);
   assert.equal(dom.characterRaceValue.textContent, "progression-unavailable");
   assert.equal(dom.progressionExperienceValue.textContent, "progression-unavailable");
