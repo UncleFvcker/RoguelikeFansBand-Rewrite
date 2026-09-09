@@ -617,6 +617,7 @@ impl Game {
             .any(|mutation| mutation.normal_appearance)
             .then(|| 8_u16.saturating_add(self.progress.level.saturating_mul(2)));
         let mut steps = Vec::new();
+        let headgear_excess = self.player_tomte_headgear_excess_weight();
         if let Some((_, race, class, personality)) = self.character_definitions() {
             for (kind, id, name, modifiers) in [
                 (
@@ -638,11 +639,15 @@ impl Game {
                     &personality.modifiers,
                 ),
             ] {
+                let mut modifiers = stat_modifiers_dto(modifiers);
+                if kind == AttributeSourceKindDto::Race && headgear_excess > 0 {
+                    modifiers.intelligence -= i32::from(headgear_excess / 10) + 1;
+                }
                 steps.push(AttributeStep {
                     kind,
                     source_id: Some(id),
                     name_key: Some(name),
-                    modifiers: stat_modifiers_dto(modifiers),
+                    modifiers,
                 });
             }
         }

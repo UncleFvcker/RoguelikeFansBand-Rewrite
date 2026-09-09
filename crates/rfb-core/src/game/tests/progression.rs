@@ -228,6 +228,189 @@ fn species_contribution(stat: &DerivedStat, race_id: &str) -> i32 {
 }
 
 #[test]
+fn tomte_headgear_penalties_follow_weight_boundaries_and_effective_race() {
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
+    enable_test_caster(&mut content);
+    let helmet = content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.iron-helm")
+        .unwrap()
+        .clone();
+    let cases = [
+        (8, 0, 0),
+        (10, 0, 0),
+        (11, 1, 3),
+        (12, 1, 4),
+        (19, 1, 7),
+        (20, 2, 8),
+        (21, 2, 8),
+        (75, 7, 35),
+    ];
+    for (weight, _, _) in cases {
+        let mut item = helmet.clone();
+        item.id = format!("test.item.headgear-{weight}");
+        item.weight_tenths_pound = weight;
+        content.items.push(item);
+    }
+    // Crowns use the same head slot as helmets; no crown is imported yet.
+    let mut crown = helmet;
+    crown.id = "test.item.crown".to_owned();
+    crown.weight_tenths_pound = 12;
+    content.items.push(crown);
+    let catalog = Arc::new(ContentCatalog::from_artifact(
+        rfb_content::encode_content(content).unwrap(),
+    ));
+    let mut base =
+        Game::from_content_with_build(424, catalog, DEFAULT_WORLD_ID, "test.build.caster").unwrap();
+    base.progress.attributes.intelligence = 10;
+    base.items.clear();
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.tomte-headgear").status;
+    form.granted_race_id = Some("rfb-legacy.race.tomte".to_owned());
+    base.player.statuses.push(form);
+    for (kind, int_penalty, device_penalty) in cases
+        .into_iter()
+        .map(|(weight, intelligence, device)| {
+            (format!("test.item.headgear-{weight}"), intelligence, device)
+        })
+        .chain([("test.item.crown".to_owned(), 1, 4)])
+    {
+        let mut game = base.clone();
+        give_inventory_item(&mut game, "test.headgear", &kind);
+        assert_eq!(
+            game.player_tomte_headgear_excess_weight(),
+            0,
+            "carried {kind}"
+        );
+        assert!(
+            game.equip_inventory_item("test.headgear", Some("head"))
+                .is_some()
+        );
+        assert_eq!(
+            game.effective_player_attributes().intelligence,
+            15 - int_penalty,
+            "{kind}"
+        );
+        let mut rows = Vec::new();
+        game.player_attributes_with_sources(Some(&mut rows));
+        let race = rows
+            .iter()
+            .find(|row| row.attribute == AttributeKindDto::Intelligence)
+            .unwrap()
+            .sources
+            .iter()
+            .find(|source| source.kind == rfb_protocol::AttributeSourceKindDto::Race)
+            .unwrap();
+        assert_eq!(race.modifier, 2 - i32::from(int_penalty), "{kind}");
+        assert_eq!(
+            species_contribution(
+                &game.player_derived_stats().device_skill,
+                "rfb-legacy.race.tomte"
+            ),
+            15 - device_penalty,
+            "{kind}"
+        );
+
+        let equipped = game.clone();
+        assert!(game.unequip_slot("head").is_some());
+        assert_eq!(game.effective_player_attributes().intelligence, 15);
+        assert_eq!(
+            species_contribution(
+                &game.player_derived_stats().device_skill,
+                "rfb-legacy.race.tomte"
+            ),
+            15
+        );
+        game = equipped;
+        game.player.statuses.clear();
+        assert_eq!(
+            game.player_tomte_headgear_excess_weight(),
+            0,
+            "form ended: {kind}"
+        );
+        assert_eq!(game.effective_player_attributes().intelligence, 13);
+    }
+}
+
+#[test]
+fn tomte_heavy_helmet_updates_casting_and_preserves_other_auto_identification() {
+    let mut game = test_caster_game(424);
+    clear_monsters(&mut game);
+    game.progress.attributes.intelligence = 10;
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.tomte-casting").status;
+    form.granted_race_id = Some("rfb-legacy.race.tomte".to_owned());
+    game.player.statuses.push(form);
+    game.player.hp = game.effective_player_max_hp();
+    game.refresh_player_ability_state();
+    let probe_failure = |game: &Game| {
+        game.snapshot()
+            .player
+            .abilities
+            .iter()
+            .find(|ability| ability.id == "rfb.ability.race.probe-monsters")
+            .unwrap()
+            .failure_percent
+    };
+    let light_failure = probe_failure(&game);
+    let light_mana = game.resources["demo.resource.mana"].maximum;
+    give_inventory_item(&mut game, "test.heavy-helmet", "demo.item.iron-helm");
+    dispatch_next(
+        &mut game,
+        GameCommand::Equip {
+            item_id: "test.heavy-helmet".to_owned(),
+            slot_id: Some("head".to_owned()),
+        },
+    );
+    assert_eq!(game.effective_player_attributes().intelligence, 8);
+    assert!(probe_failure(&game) > light_failure);
+    assert!(game.resources["demo.resource.mana"].maximum < light_mana);
+    assert!(
+        game.resources["demo.resource.mana"].current
+            <= game.resources["demo.resource.mana"].maximum
+    );
+    let heavy = game.clone();
+    dispatch_next(
+        &mut game,
+        GameCommand::Unequip {
+            slot_id: "head".to_owned(),
+        },
+    );
+    assert_eq!(probe_failure(&game), light_failure);
+    assert_eq!(game.resources["demo.resource.mana"].maximum, light_mana);
+
+    for mutation in [true, false] {
+        let mut game = heavy.clone();
+        give_inventory_item(
+            &mut game,
+            "test.identification-target",
+            "demo.item.iron-helm",
+        );
+        assert!(!game.player_auto_identifies_items());
+        if mutation {
+            game.progress
+                .active_mutation_ids
+                .insert("rfb.mutation.draconian-lore".to_owned());
+            assert!(game.player_auto_identifies_items());
+        } else {
+            game.player.statuses.push(
+                monster_combat::melee_status(STATUS_UNDERSTANDING, 20, "test.understanding").status,
+            );
+        }
+        dispatch_next(&mut game, GameCommand::Wait);
+        assert!(game.item_property_knowledge["test.identification-target"].appraised);
+        assert_eq!(
+            game.item_knowledge_dto("demo.item.iron-helm"),
+            ItemKnowledgeDto::Aware
+        );
+        assert_eq!(game.player_tomte_headgear_excess_weight(), 65);
+    }
+}
+
+#[test]
 fn hidden_tomte_form_grants_intrinsics_and_free_probing_without_unlocking_birth() {
     const RACE: &str = "rfb-legacy.race.tomte";
     const PROBE: &str = "rfb.ability.race.probe-monsters";

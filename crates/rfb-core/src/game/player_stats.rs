@@ -1187,6 +1187,23 @@ impl Game {
         })
     }
 
+    pub(super) fn player_tomte_headgear_excess_weight(&self) -> u16 {
+        if self
+            .character_definitions()
+            .is_none_or(|(_, race, _, _)| race.id != "rfb-legacy.race.tomte")
+        {
+            return 0;
+        }
+        // RFB master a0d92b6378: races_k.c::tomte_heavy_armor.
+        // Helmets and crowns share the head equipment slot in this runtime.
+        self.items
+            .iter()
+            .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+            .filter_map(|item| self.content.item(&item.kind_id))
+            .find(|item| item.equipment_slot.as_deref() == Some("head"))
+            .map_or(0, |item| item.weight_tenths_pound.saturating_sub(10))
+    }
+
     pub(super) fn item_weight_tenths_pound(&self, kind_id: &str) -> u16 {
         self.content
             .item(kind_id)
@@ -2024,6 +2041,7 @@ impl Game {
         let Some((_, race, class, personality)) = self.character_definitions() else {
             return;
         };
+        let headgear_excess = self.player_tomte_headgear_excess_weight();
         for (layer, source_id, skill_set_id) in [
             (
                 StatLayer::Species,
@@ -2081,6 +2099,11 @@ impl Game {
                         add_nonzero_stat(pipeline, StatKind::DigSkill, layer, source_id, amount)
                     }
                     SkillKind::Device => {
+                        let amount = if layer == StatLayer::Species && headgear_excess > 0 {
+                            amount - (i32::from(headgear_excess) + 6) / 2
+                        } else {
+                            amount
+                        };
                         add_nonzero_stat(pipeline, StatKind::DeviceSkill, layer, source_id, amount)
                     }
                     SkillKind::SavingThrow => add_nonzero_stat(
