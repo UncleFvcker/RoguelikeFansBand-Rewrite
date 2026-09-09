@@ -229,16 +229,6 @@ fn species_contribution(stat: &DerivedStat, race_id: &str) -> i32 {
 
 #[test]
 fn tomte_headgear_penalties_follow_weight_boundaries_and_effective_race() {
-    let path =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
-    let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
-    enable_test_caster(&mut content);
-    let helmet = content
-        .items
-        .iter()
-        .find(|item| item.id == "demo.item.iron-helm")
-        .unwrap()
-        .clone();
     let cases = [
         (8, 0, 0),
         (10, 0, 0),
@@ -249,37 +239,21 @@ fn tomte_headgear_penalties_follow_weight_boundaries_and_effective_race() {
         (21, 2, 8),
         (75, 7, 35),
     ];
-    for (weight, _, _) in cases {
-        let mut item = helmet.clone();
-        item.id = format!("test.item.headgear-{weight}");
-        item.weight_tenths_pound = weight;
-        content.items.push(item);
-    }
-    // Crowns use the same head slot as helmets; no crown is imported yet.
-    let mut crown = helmet;
-    crown.id = "test.item.crown".to_owned();
-    crown.weight_tenths_pound = 12;
-    content.items.push(crown);
-    let catalog = Arc::new(ContentCatalog::from_artifact(
-        rfb_content::encode_content(content).unwrap(),
-    ));
-    let mut base =
-        Game::from_content_with_build(424, catalog, DEFAULT_WORLD_ID, "test.build.caster").unwrap();
+    let mut base = test_caster_game(424);
     base.progress.attributes.intelligence = 10;
     base.items.clear();
     let mut form =
         monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.tomte-headgear").status;
     form.granted_race_id = Some("rfb-legacy.race.tomte".to_owned());
     base.player.statuses.push(form);
-    for (kind, int_penalty, device_penalty) in cases
+    for (kind, weight, int_penalty, device_penalty) in cases
         .into_iter()
-        .map(|(weight, intelligence, device)| {
-            (format!("test.item.headgear-{weight}"), intelligence, device)
-        })
-        .chain([("test.item.crown".to_owned(), 1, 4)])
+        .map(|(weight, intelligence, device)| ("demo.item.iron-helm", weight, intelligence, device))
+        .chain([("demo.item.iron-crown", 12, 1, 4)])
     {
         let mut game = base.clone();
-        give_inventory_item(&mut game, "test.headgear", &kind);
+        give_inventory_item(&mut game, "test.headgear", kind);
+        game.items.last_mut().unwrap().intrinsic_weight_tenths_pound = Some(weight);
         assert_eq!(
             game.player_tomte_headgear_excess_weight(),
             0,
@@ -1707,7 +1681,7 @@ fn draconian_metamorphosis_replaces_body_and_derives_combat_save_and_hash_state(
     assert!(stats.armor_class.contributions.iter().any(|contribution| {
         contribution.source_id == DRACONIAN_METAMORPHOSIS_MUTATION_ID && contribution.amount == 67
     }));
-    let attacks = game.player_mutation_innate_attack_profiles(&stats, None);
+    let attacks = game.player_mutation_innate_attack_profiles(&stats);
     let metamorphosis_attacks = attacks
         .iter()
         .filter(|attack| {

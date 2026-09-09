@@ -407,9 +407,8 @@ impl Game {
             }
         }
         self.body_slots = next_slots;
-        // Quiver ammunition and container capacity are derived from equipped items;
-        // removing either releases their contents into ordinary inventory accounting.
-        while self.inventory_used_slots() > self.inventory_slot_capacity() {
+        unequipped.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
+        while !self.inventory_fits(&self.items) {
             let item_index = unequipped.pop().or_else(|| {
                 self.items
                     .iter()
@@ -599,6 +598,14 @@ impl Game {
     ) -> AbilityEffectResolutionDto {
         let raw_damage = self.scale_monster_damage(source_entity_id, raw_damage);
         let prepared_damage = self.scale_monster_damage(source_entity_id, prepared_damage);
+        let magic_resistance = if self.monster_ability_is_innate(ability_id) {
+            0
+        } else {
+            self.player_equipment_bonuses()
+                .magic_resistance_percent
+                .clamp(0, 15)
+        };
+        let prepared_damage = prepared_damage - prepared_damage * magic_resistance / 100;
         let resistance = self.effective_player_resistances().level(damage_type);
         self.record_monster_player_resistance(source_entity_id, damage_type, resistance);
         let damage = self.resist_player_damage(resolve_damage(
@@ -676,34 +683,38 @@ impl Game {
         damage
     }
 
+    fn monster_ability_is_innate(&self, ability_id: &str) -> bool {
+        self.content.ability(ability_id).is_some_and(|ability| {
+            ability
+                .effect
+                .ordered_effects()
+                .iter()
+                .any(|effect| match effect {
+                    AbilityEffectDefinition::BreathDamage { .. } => true,
+                    AbilityEffectDefinition::AreaDamage {
+                        damage_dice,
+                        damage_sides,
+                        damage_type: ActorDamageType::Shards,
+                        ..
+                    }
+                    | AbilityEffectDefinition::Damage {
+                        damage_dice,
+                        damage_sides,
+                        damage_type: ActorDamageType::Physical,
+                        ..
+                    } => *damage_dice == 1 && *damage_sides == 1,
+                    _ => false,
+                })
+        })
+    }
+
     pub(super) fn apply_evasion_to_monster_ability_damage(
         &mut self,
         ability_id: &str,
         damage: DamageOutcome,
     ) -> DamageOutcome {
         if !self.player_evades_innate_monster_attacks()
-            || !self.content.ability(ability_id).is_some_and(|ability| {
-                ability
-                    .effect
-                    .ordered_effects()
-                    .iter()
-                    .any(|effect| match effect {
-                        AbilityEffectDefinition::BreathDamage { .. } => true,
-                        AbilityEffectDefinition::AreaDamage {
-                            damage_dice,
-                            damage_sides,
-                            damage_type: ActorDamageType::Shards,
-                            ..
-                        }
-                        | AbilityEffectDefinition::Damage {
-                            damage_dice,
-                            damage_sides,
-                            damage_type: ActorDamageType::Physical,
-                            ..
-                        } => *damage_dice == 1 && *damage_sides == 1,
-                        _ => false,
-                    })
-            })
+            || !self.monster_ability_is_innate(ability_id)
         {
             return damage;
         }
@@ -1312,11 +1323,7 @@ impl Game {
             .iter()
             .enumerate()
             .filter(|(_, item)| item.location == ItemLocation::Inventory)
-            .filter(|(_, item)| {
-                self.content
-                    .item(&item.kind_id)
-                    .is_some_and(|definition| !definition.tags.iter().any(|tag| tag == "artifact"))
-            })
+            .filter(|(_, item)| !item.is_artifact(&self.content))
             .map(|(item_index, item)| (item.id.clone(), item_index))
             .collect::<Vec<_>>();
         candidates.sort_by(|left, right| left.0.cmp(&right.0));
@@ -1373,7 +1380,7 @@ impl Game {
             .filter(|(_, item)| {
                 self.content.item(&item.kind_id).is_some_and(|definition| {
                     definition.tags.iter().any(|tag| tag == "food")
-                        && !definition.tags.iter().any(|tag| tag == "artifact")
+                        && !item.is_artifact(&self.content)
                 })
             })
             .map(|(item_index, item)| (item.id.clone(), item_index))
@@ -1405,10 +1412,7 @@ impl Game {
         let Some(item_index) = self.items.iter().position(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "light")
                 && item.fuel.is_some_and(|fuel| fuel.current > 0)
-                && self
-                    .content
-                    .item(&item.kind_id)
-                    .is_some_and(|definition| !definition.tags.iter().any(|tag| tag == "artifact"))
+                && !item.is_artifact(&self.content)
         }) else {
             return;
         };
@@ -1498,10 +1502,7 @@ impl Game {
         if enchantments.is_empty() {
             return;
         }
-        let is_artifact = self
-            .content
-            .item(&self.items[item_index].kind_id)
-            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        let is_artifact = self.items[item_index].is_artifact(&self.content);
         if is_artifact && self.rng.bounded(100) < 71 {
             return;
         }
@@ -1809,12 +1810,21 @@ impl Game {
                                     usize::try_from(self.rng.bounded(candidates.len() as u64))
                                         .expect("device candidate roll must fit usize");
                                 let item_index = candidates[candidate];
+                                let holds_energy = super::ego::item_has_ego(
+                                    &self.content,
+                                    &self.items[item_index],
+                                    255,
+                                );
                                 let target_kind_id = self.items[item_index].kind_id.clone();
                                 let charges = self.items[item_index]
                                     .charges
                                     .as_mut()
                                     .expect("selected device must retain charges");
-                                let drained = charges.current.min(definition.level);
+                                let drained = if holds_energy {
+                                    0
+                                } else {
+                                    charges.current.min(definition.level)
+                                };
                                 charges.current -= drained;
                                 let caster = &mut self.entities[index];
                                 caster.hp =
@@ -2091,6 +2101,34 @@ impl Game {
                     return Ok(false);
                 }
             }
+            if only_blow_index.is_none()
+                && melee_method_triggers_contact_aura(blow.method_id.as_deref())
+                && self
+                    .player_equipment_passives()
+                    .contains(&EquipmentPassive::RevengeAura)
+                && !self.player_is_dead()
+                && self.entity_is_visible_to_player(&self.entities[index])
+                && ![STATUS_CONFUSION, STATUS_BLINDNESS, STATUS_PARALYSIS]
+                    .iter()
+                    .any(|status| self.player_has_status_kind(status))
+            {
+                let stun = self
+                    .player
+                    .statuses
+                    .iter()
+                    .find(|status| status.kind_id == STATUS_STUN)
+                    .map_or(0, |status| status.intensity);
+                if (stun == 0 || self.rng.bounded(35) >= u64::from(stun))
+                    && self
+                        .resolve_player_revenge_blow(index, events, changed, removed_entities)?
+                        .killed
+                {
+                    return Ok(false);
+                }
+            }
+            if self.player_is_dead() {
+                return Ok(false);
+            }
             if melee_method_triggers_contact_aura(blow.method_id.as_deref())
                 && self.resolve_mutation_contact_auras(index, events, changed, removed_entities)?
             {
@@ -2121,7 +2159,11 @@ impl Game {
             })
             .map(|mutation| vec![mutation.id.clone()])
             .collect();
-        if self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE) {
+        if matches!(
+            damage_type,
+            DamageType::Fire | DamageType::Electricity | DamageType::Cold
+        ) && self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
+        {
             groups.push(vec![STATUS_ULTIMATE_RESISTANCE.to_owned()]);
         }
         if damage_type == DamageType::Fire {
@@ -2134,6 +2176,19 @@ impl Game {
                 groups.push(timed);
             }
         }
+        let passive = match damage_type {
+            DamageType::Fire => Some(EquipmentPassive::FireAura),
+            DamageType::Cold => Some(EquipmentPassive::ColdAura),
+            DamageType::Electricity => Some(EquipmentPassive::ElectricityAura),
+            DamageType::Shards => Some(EquipmentPassive::ShardsAura),
+            _ => None,
+        };
+        if let Some(passive) = passive {
+            groups.extend(self.items.iter().filter(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+                    && self.item_passives(item).contains(&passive)
+            }).map(|item| vec![item.id.clone()]));
+        }
         groups
     }
 
@@ -2144,7 +2199,12 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
-        for damage_type in [DamageType::Fire, DamageType::Electricity, DamageType::Cold] {
+        for damage_type in [
+            DamageType::Fire,
+            DamageType::Electricity,
+            DamageType::Cold,
+            DamageType::Shards,
+        ] {
             let level = self
                 .player_elemental_contact_aura_sources(damage_type)
                 .len();
@@ -2449,6 +2509,112 @@ impl Game {
             });
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod artifact_identity_tests {
+    use super::*;
+
+    fn weapon_game() -> Game {
+        let mut game = Game::new_with_build(85, "demo.build.warrior").unwrap();
+        let mut weapon = game
+            .items
+            .iter()
+            .find(|item| {
+                game.content
+                    .item(&item.kind_id)
+                    .unwrap()
+                    .melee_profile
+                    .is_some()
+            })
+            .unwrap()
+            .clone();
+        weapon.artifact_name = Some("(永恒蘑菇)".to_owned());
+        weapon.enchantments = ItemEnchantmentsDto {
+            to_hit: 4,
+            to_damage: 4,
+            to_armor: 0,
+        };
+        game.items = vec![weapon];
+        game
+    }
+
+    #[test]
+    fn artifact_identity_disenchantment_uses_the_source_seventy_one_percent_save() {
+        let game = weapon_game();
+        let mut resisted = 0;
+        let mut reduced = 0;
+        for seed in 0..128 {
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(seed);
+            let mut expected_rng = trial.rng.clone();
+            let status_branch = expected_rng.bounded(5) != 0;
+            let protected = if status_branch {
+                true
+            } else {
+                expected_rng.bounded(1);
+                expected_rng.bounded(100) < 71
+            };
+            trial.resolve_player_disenchantment();
+            assert_eq!(
+                trial.items[0].enchantments.to_hit,
+                if protected { 4 } else { 3 }
+            );
+            assert_eq!(trial.rng, expected_rng);
+            if !status_branch {
+                if protected {
+                    resisted += 1;
+                } else {
+                    reduced += 1;
+                }
+            }
+        }
+        assert!(resisted > 0 && reduced > 0);
+    }
+
+    #[test]
+    fn artifact_identity_monster_theft_and_light_drain_exclude_the_instance() {
+        let mut game = weapon_game();
+        game.entities = vec![game.player.clone()];
+        apply_status_application(
+            &mut game.player.statuses,
+            melee_status(STATUS_PARALYSIS, 100, "test.monster"),
+        );
+        game.items[0].location = ItemLocation::Inventory;
+        let before = game.items.clone();
+        let rng = game.rng.clone();
+        assert!(!game.monster_steal_item(0, &mut Vec::new()).unwrap());
+        assert_eq!(game.items, before);
+        assert_eq!(game.rng, rng);
+        game.items[0].artifact_name = None;
+        assert!(game.monster_steal_item(0, &mut Vec::new()).unwrap());
+        assert!(matches!(
+            game.items[0].location,
+            ItemLocation::CarriedBy { .. }
+        ));
+
+        let mut game = Game::new_with_build(85, "demo.build.warrior").unwrap();
+        game.entities = vec![game.player.clone()];
+        let mut light = game
+            .items
+            .iter()
+            .find(|item| item.fuel.is_some())
+            .unwrap()
+            .clone();
+        light.location = ItemLocation::Equipped {
+            slot_id: "light".to_owned(),
+        };
+        light.artifact_name = Some("(永恒蘑菇)".to_owned());
+        game.items = vec![light];
+        let before = game.items.clone();
+        let rng = game.rng.clone();
+        game.monster_eat_light(0, &mut Vec::new());
+        assert_eq!(game.items, before);
+        assert_eq!(game.rng, rng);
+        game.items[0].artifact_name = None;
+        game.monster_eat_light(0, &mut Vec::new());
+        assert!(game.items[0].fuel.unwrap().current < before[0].fuel.unwrap().current);
     }
 }
 

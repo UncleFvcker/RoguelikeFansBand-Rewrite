@@ -355,8 +355,8 @@ fn trait_details_curses_do_not_infer_effects_from_severity_or_reveal_unknown_aff
     assert_eq!(data.negatives[0].curse, Some(ItemCurseSeverityDto::Heavy));
     assert_eq!(
         data.negatives[0].effects.len(),
-        2,
-        "inert effects must not be projected as active rules"
+        3,
+        "every identified curse with a runtime consumer is projected"
     );
     assert!(
         data.negatives[0]
@@ -417,7 +417,7 @@ fn trait_details_curses_do_not_infer_effects_from_severity_or_reveal_unknown_aff
 }
 
 #[test]
-fn trait_details_attack_counts_follow_the_selected_weapon_and_launcher() {
+fn trait_details_attack_counts_include_each_equipped_weapon_and_the_launcher() {
     let mut game = game();
     equip(&mut game, "test.first", "demo.item.short-sword", "weapon");
     let mut slot = game
@@ -454,6 +454,7 @@ fn trait_details_attack_counts_follow_the_selected_weapon_and_launcher() {
         game.player_melee_profile(&stats).source_item_id
     );
     assert_eq!(data.active_weapon_id.as_deref(), Some("test.first"));
+    assert_eq!(data.active_weapon_ids, ["test.first", "test.second"]);
     assert_eq!(data.active_launcher_id.as_deref(), Some("test.launcher"));
     assert_eq!(
         data.stats
@@ -461,7 +462,13 @@ fn trait_details_attack_counts_follow_the_selected_weapon_and_launcher() {
             .find(|row| row.id == "melee-attacks-hundredths")
             .unwrap()
             .value,
-        Some(i32::from(game.player_melee_profile(&stats).attacks) * 100)
+        Some(
+            game.player_melee_profiles(&stats)
+                .iter()
+                .map(|profile| i32::from(profile.attacks) * 100
+                    + i32::from(profile.extra_attack_chance_percent))
+                .sum()
+        )
     );
     let projectile = game.player_projectile_profile().unwrap();
     assert_eq!(

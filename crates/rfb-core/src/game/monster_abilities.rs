@@ -114,7 +114,13 @@ impl Game {
     ) {
         if self.actor_is_player_side(&self.entities[source_index])
             || !self.player_has_cult_of_personality()
-            || self.rng.bounded(2) != 0
+            || self.rng.bounded(
+                if self.player_has_equipped_curse_effect(ItemCurseEffectDto::Danger) {
+                    4
+                } else {
+                    2
+                },
+            ) != 0
         {
             return;
         }
@@ -1160,6 +1166,11 @@ impl Game {
             .clone();
         let owner_id = self.entities[source_index].id.clone();
         let mut entity_ids = Vec::with_capacity(positions.len());
+        let positions = positions
+            .iter()
+            .copied()
+            .filter(|_| !self.equipment_blocks_summoning())
+            .collect::<Vec<_>>();
         for (ordinal, position) in positions.iter().copied().enumerate() {
             let id = self.summon_entity_id(&plan.ability.id, ordinal);
             let mut entity = spawn_actor_from_definition(
@@ -2313,7 +2324,13 @@ impl Game {
                         .bounded(u64::try_from(destinations.len()).expect("candidate count fits")),
                 )
                 .expect("bounded draw fits usize");
-                let destination = destinations[choice];
+                let destination = if matches!(target, MonsterHostileTarget::Player { .. })
+                    && self.player_has_anti_teleport()
+                {
+                    self.player.position
+                } else {
+                    destinations[choice]
+                };
                 match target {
                     MonsterHostileTarget::Player { .. } => {
                         let from = self.player.position;
@@ -2389,7 +2406,13 @@ impl Game {
                 trace,
                 destination,
             } => {
-                let destination = *destination;
+                let destination = if matches!(target, MonsterHostileTarget::Player { .. })
+                    && self.player_has_anti_teleport()
+                {
+                    self.player.position
+                } else {
+                    *destination
+                };
                 match target {
                     MonsterHostileTarget::Player { .. } => {
                         let from = self.player.position;
@@ -2952,7 +2975,10 @@ impl Game {
                     );
                     let nexus_resisted = self.rng.bounded(55)
                         < u64::try_from(nexus.reduction_percent().max(0)).unwrap_or(0);
-                    if nexus_resisted || self.monster_curse_save(source_kind_id, events) {
+                    if self.player_has_anti_teleport()
+                        || nexus_resisted
+                        || self.monster_curse_save(source_kind_id, events)
+                    {
                         AbilityEffectResolutionDto::Skipped {
                             effect_index,
                             reason: AbilityEffectSkipReasonDto::Saved,
@@ -3348,6 +3374,11 @@ impl Game {
                 // Candidate kinds are filtered without RNG. Ordinary
                 // categories enumerate in stable id order; batch candidates
                 // preserve their declared weighted order for execution.
+                let maximum_level = if self.actor_is_player_side(&self.entities[index]) {
+                    *maximum_level
+                } else {
+                    self.curse_danger_level(*maximum_level, true)
+                };
                 let current_task_id = self.current_floor_task_id();
                 let eligible = |definition: &rfb_content::ActorDefinition| {
                     let unique = definition
@@ -3357,7 +3388,7 @@ impl Game {
                     definition.role == ActorRole::Monster
                         && (category != "unique"
                             || definition.level >= u32::from(maximum_level.saturating_sub(40)))
-                        && definition.level <= u32::from(*maximum_level)
+                        && definition.level <= u32::from(maximum_level)
                         && definition.tags.iter().any(|tag| tag == category)
                         && (category == "guardian"
                             || !definition.tags.iter().any(|tag| tag == "guardian"))
@@ -3481,7 +3512,7 @@ impl Game {
             {
                 (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
             }
-            AbilityEffectDefinition::BlinkSelf { radius } => {
+            AbilityEffectDefinition::BlinkSelf { radius, .. } => {
                 let radius = u32::from(*radius);
                 let destinations = self.displacement_destinations(index, |position| {
                     origin

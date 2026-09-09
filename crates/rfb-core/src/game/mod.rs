@@ -19,7 +19,7 @@ use crate::{
         rating_to_combat_value, resolve_armored_damage,
     },
     effect::{
-        DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget, STATUS_ANTI_MAGIC,
+        DamageOutcome, DamagePacket, EffectOutcome, EffectSpec, EffectTarget,
         STATUS_BASIC_RESISTANCE, STATUS_BERSERK, STATUS_BLEEDING, STATUS_BLINDNESS,
         STATUS_CONFUSION, STATUS_DEMON_LORD_TRANSFORMATION, STATUS_FEAR, STATUS_FIRE_AURA,
         STATUS_GIANT_STRENGTH, STATUS_HALLUCINATION, STATUS_HASTE, STATUS_HOLD_LIFE,
@@ -114,6 +114,7 @@ mod chaos_patron;
 mod damage;
 mod death;
 mod ego;
+pub(crate) use ego::{device_capacity, device_difficulty};
 mod environment_combat;
 mod floor;
 mod gold;
@@ -125,6 +126,9 @@ mod item_combat;
 mod item_curses;
 mod item_knowledge;
 mod item_use;
+// E8.1 supplies COST_REAL; value-gated generation is enabled by E8.2/E8.5/E8.6.
+#[allow(dead_code)]
+mod item_value;
 mod lighting;
 mod loot;
 mod mining;
@@ -226,7 +230,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 112;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 116;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -275,6 +279,8 @@ struct GenocideResolution {
 
 #[derive(Debug, Clone, Copy)]
 struct CategorySummonSpec<'a> {
+    // summon_specific also places environmental creatures; NO_SUMMON only blocks spells.
+    is_spell: bool,
     source_id: &'a str,
     owner_id: &'a str,
     category: &'a str,
@@ -626,6 +632,7 @@ fn body_slot_instance_for_type<'a>(
 
 fn item_can_occupy_slot_type(declared_slot_type: &str, target_slot_type: &str) -> bool {
     declared_slot_type == target_slot_type
+        || (declared_slot_type == "weapon" && target_slot_type == "shield")
         || (declared_slot_type == "tool" && target_slot_type == "weapon")
 }
 
@@ -680,15 +687,45 @@ pub(crate) fn item_device_generation<'a>(
     content: &'a ContentCatalog,
     kind_id: &str,
     affix_ids: &[String],
+    profile_id: Option<&str>,
+    random_artifact: bool,
 ) -> Option<&'a ItemDeviceGenerationDefinition> {
     let definition = content.item(kind_id)?;
-    definition.device_generation.as_ref().or_else(|| {
-        affix_ids.iter().find_map(|affix_id| {
+    // Instance activations outlive an Ego identity and are independent of the base kind.
+    if (random_artifact || affix_ids.iter().any(|id| id == "rfb-legacy.affix.blasted"))
+        && let Some(id) = profile_id
+    {
+        return content
+            .item_definitions()
+            .filter_map(|item| item.device_generation.as_ref())
+            .chain(
+                content
+                    .affix_definitions()
+                    .filter_map(|affix| affix.device_generation.as_ref()),
+            )
+            .find(|generation| {
+                generation
+                    .activations
+                    .iter()
+                    .any(|profile| profile.id == id)
+            });
+    }
+    definition
+        .device_generation
+        .iter()
+        .chain(affix_ids.iter().filter_map(|affix_id| {
             content
                 .affix(affix_id)
                 .and_then(|affix| affix.device_generation.as_ref())
+        }))
+        .find(|generation| {
+            profile_id.is_none_or(|id| {
+                generation
+                    .activations
+                    .iter()
+                    .any(|profile| profile.id == id)
+            })
         })
-    })
 }
 
 fn initial_item_runtime_state(
@@ -701,7 +738,7 @@ fn initial_item_runtime_state(
     if content.item(kind_id).is_none() {
         return (None, None);
     }
-    let Some(generation) = item_device_generation(content, kind_id, affix_ids) else {
+    let Some(generation) = item_device_generation(content, kind_id, affix_ids, None, false) else {
         return (None, initial_item_charges(content, kind_id));
     };
     let power = depth.clamp(1, 100);
@@ -743,6 +780,13 @@ fn initial_item_runtime_state(
     let current = selected.charges.cost.saturating_add(
         u32::try_from(rng.bounded(current_span)).expect("bounded current charge roll must fit u32"),
     );
+    // Original equipment effects have their own fixed effect level; object
+    // generation depth only selects the profile. Devices retain depth power.
+    let power = if selected.rfb_value.is_some() {
+        u16::try_from(selected.device_check_difficulty).expect("validated equipment effect level")
+    } else {
+        power
+    };
     (
         Some(ItemActivationDto {
             profile_id: selected.id.clone(),
@@ -1133,6 +1177,12 @@ impl Game {
             action.energy_cost()
         };
         action_cost = self.player_mutation_action_energy_cost(&action, action_cost);
+        if let GameAction::UseItem { item_id, .. } = &action
+            && let Some(item) = self.items.iter().find(|item| item.id == *item_id)
+            && ego::item_has_ego(&self.content, item, 256)
+        {
+            action_cost -= action_cost * i32::from(ego::device_pval(item)) / 10;
+        }
         let astral_guide_blink = match &action {
             GameAction::CastAbility { ability_id, .. }
                 if self.player_has_astral_guide()
@@ -2440,6 +2490,11 @@ impl Game {
             initial_item_runtime_state(&self.content, &mut self.rng, kind_id, &[], depth);
         self.items.push(ItemInstance {
             previously_worn: false,
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: id.to_owned(),
             kind_id: kind_id.to_owned(),
             quantity: 1,
@@ -2711,7 +2766,10 @@ impl Game {
         positions: Vec<Position>,
         changed: &mut BTreeSet<Position>,
     ) -> AbilitySummonResolutionDto {
-        if candidates.is_empty() || positions.is_empty() {
+        if candidates.is_empty()
+            || positions.is_empty()
+            || (spec.is_spell && self.equipment_blocks_summoning())
+        {
             return AbilitySummonResolutionDto {
                 owner_id: spec.owner_id.to_owned(),
                 actor_kind_id: spec.category.to_owned(),
@@ -3063,10 +3121,10 @@ impl Game {
                     || (!through_walls && !self.is_visible(*position))
                     || !self.content.item(&item.kind_id).is_some_and(|definition| {
                         category == "item"
+                            || (category == "artifact" && item.is_artifact(&self.content))
                             || definition.tags.iter().any(|tag| tag == category)
                             || (category == "magic-item"
-                                && (definition.artifact_generation.is_some()
-                                    || definition.tags.iter().any(|tag| tag == "artifact")
+                                && (item.is_artifact(&self.content)
                                     || !item.affix_ids.is_empty()
                                     || !item.rolled_affixes.is_empty()
                                     || definition.device_generation.is_some()
@@ -3375,14 +3433,22 @@ impl Game {
             return Ok(None);
         }
         if let Some(activation) = &item.activation
-            && item_device_generation(&self.content, &item.kind_id, &item.affix_ids)
-                .and_then(|generation| {
-                    generation
-                        .activations
-                        .iter()
-                        .find(|profile| profile.id == activation.profile_id)
-                })
-                .is_none()
+            && item_device_generation(
+                &self.content,
+                &item.kind_id,
+                &item.affix_ids,
+                item.activation
+                    .as_ref()
+                    .map(|activation| activation.profile_id.as_str()),
+                item.artifact_name.is_some(),
+            )
+            .and_then(|generation| {
+                generation
+                    .activations
+                    .iter()
+                    .find(|profile| profile.id == activation.profile_id)
+            })
+            .is_none()
         {
             return Err(CoreError::Invariant(format!(
                 "dynamic item {} references missing activation profile {}",
@@ -3405,10 +3471,18 @@ impl Game {
         })?;
         let definition = self.content.item(&item.kind_id)?;
         if let Some(activation) = &item.activation {
-            let profile = item_device_generation(&self.content, &item.kind_id, &item.affix_ids)?
-                .activations
-                .iter()
-                .find(|candidate| candidate.id == activation.profile_id)?;
+            let profile = item_device_generation(
+                &self.content,
+                &item.kind_id,
+                &item.affix_ids,
+                item.activation
+                    .as_ref()
+                    .map(|activation| activation.profile_id.as_str()),
+                item.artifact_name.is_some(),
+            )?
+            .activations
+            .iter()
+            .find(|candidate| candidate.id == activation.profile_id)?;
             Some((&profile.effect, Some(&profile.target)))
         } else {
             definition
@@ -3438,6 +3512,7 @@ impl Game {
                 ItemUseEffectDefinition::AbilityEffect { .. }
                     | ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. }
+                    | ItemUseEffectDefinition::CraftItem { .. }
                     | ItemUseEffectDefinition::RechargeFromDevice { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }
                     | ItemUseEffectDefinition::TeleportLevel
@@ -3466,6 +3541,7 @@ impl Game {
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
+            TargetSelection::CraftingItem { .. } => return None,
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         target_definition
@@ -4367,6 +4443,10 @@ fn equipment_bonuses_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
         life_percent: bonuses.life_percent,
         launcher_multiplier_delta_percent: bonuses.launcher_multiplier_delta_percent,
         base_shot_delta_percent: bonuses.base_shot_delta_percent,
+        weapon_dice_bonus: bonuses.weapon_dice_bonus,
+        melee_attacks_delta_percent: bonuses.melee_attacks_delta_percent,
+        spell_capacity_bonus: bonuses.spell_capacity_bonus,
+        magic_resistance_percent: bonuses.magic_resistance_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -4394,6 +4474,23 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
         EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
         EquipmentPassive::Warning => EquipmentPassiveDto::Warning,
         EquipmentPassive::SlowDigestion => EquipmentPassiveDto::SlowDigestion,
+        EquipmentPassive::ReflectsBolts => EquipmentPassiveDto::ReflectsBolts,
+        EquipmentPassive::FireAura => EquipmentPassiveDto::FireAura,
+        EquipmentPassive::ColdAura => EquipmentPassiveDto::ColdAura,
+        EquipmentPassive::ElectricityAura => EquipmentPassiveDto::ElectricityAura,
+        EquipmentPassive::RevengeAura => EquipmentPassiveDto::RevengeAura,
+        EquipmentPassive::ManaRegeneration => EquipmentPassiveDto::ManaRegeneration,
+        EquipmentPassive::AntiMagic => EquipmentPassiveDto::AntiMagic,
+        EquipmentPassive::AntiTeleport => EquipmentPassiveDto::AntiTeleport,
+        EquipmentPassive::AntiSummoning => EquipmentPassiveDto::AntiSummoning,
+        EquipmentPassive::NightVision => EquipmentPassiveDto::NightVision,
+        EquipmentPassive::DualWielding => EquipmentPassiveDto::DualWielding,
+        EquipmentPassive::NoEnchant => EquipmentPassiveDto::NoEnchant,
+        EquipmentPassive::ShardsAura => EquipmentPassiveDto::ShardsAura,
+        EquipmentPassive::ReducedManaCost => EquipmentPassiveDto::ReducedManaCost,
+        EquipmentPassive::EasySpell => EquipmentPassiveDto::EasySpell,
+        EquipmentPassive::AutoIdentify => EquipmentPassiveDto::AutoIdentify,
+        EquipmentPassive::Blessed => EquipmentPassiveDto::Blessed,
         EquipmentPassive::EspAnimal => EquipmentPassiveDto::EspAnimal,
         EquipmentPassive::EspUndead => EquipmentPassiveDto::EspUndead,
         EquipmentPassive::EspDemon => EquipmentPassiveDto::EspDemon,
@@ -4441,6 +4538,12 @@ fn roll_weighted_index_with_rng(rng: &mut RfbRng, weights: &[u32]) -> usize {
 }
 
 fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBonuses) {
+    total.weapon_dice_bonus = total
+        .weapon_dice_bonus
+        .saturating_add(addition.weapon_dice_bonus);
+    total.melee_attacks_delta_percent += addition.melee_attacks_delta_percent;
+    total.spell_capacity_bonus += addition.spell_capacity_bonus;
+    total.magic_resistance_percent += addition.magic_resistance_percent;
     total.life_percent = total.life_percent.saturating_add(addition.life_percent);
     total.launcher_multiplier_delta_percent = total
         .launcher_multiplier_delta_percent

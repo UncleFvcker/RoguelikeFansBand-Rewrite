@@ -1,41 +1,77 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.arkenstone-of-thrain",
-  "nameKey": "item-demo-arkenstone-of-thrain-name",
-  "descriptionKey": "item-demo-arkenstone-of-thrain-description",
-  "glyph": "*",
-  "generationLevel": 50,
-  "weightTenthsPound": 20,
-  "maxStack": 1,
-  "baseValue": 100000,
-  "equipmentSlot": "light",
   "artifactGeneration": {
-    "sourceIndex": 329,
     "baseItemKindId": "demo.item.arkenstone",
+    "instant": true,
     "rarityOneIn": 5,
-    "instant": true
+    "sourceIndex": 329
   },
-  "equipmentBonuses": { "lightRadius": 3 },
-  "resistances": { "light": "resistant", "dark": "resistant" },
-  "passives": ["see-invisible", "hold-life"],
+  "baseValue": 100000,
+  "descriptionKey": "item-demo-arkenstone-of-thrain-description",
   "deviceGeneration": {
-    "recovery": { "intervalTicks": 1500, "energyPerMille": 1000 },
     "activations": [
       {
-        "id": "demo.item-activation.arkenstone-clairvoyance",
-        "nameKey": "item-activation-demo-arkenstone-clairvoyance-name",
-        "weight": 1,
-        "minDepth": 1,
-        "maxDepth": 100,
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
         "deviceCheckDifficulty": 50,
-        "charges": { "minimum": 1, "maximum": 1, "cost": 1 },
-        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
-        "effectProgramId": "demo.effect.arkenstone-clairvoyance"
+        "effectProgramId": "demo.effect.arkenstone-clairvoyance",
+        "id": "demo.item-activation.arkenstone-clairvoyance",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "item-activation-demo-arkenstone-clairvoyance-name",
+        "rfbValue": 10000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
       }
-    ]
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 1500
+    }
+  },
+  "equipmentBonuses": {
+    "lightRadius": 3
+  },
+  "equipmentSlot": "light",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "*",
+  "id": "demo.item.arkenstone-of-thrain",
+  "maxStack": 1,
+  "nameKey": "item-demo-arkenstone-of-thrain-name",
+  "passives": [
+    "see-invisible",
+    "hold-life"
+  ],
+  "resistances": {
+    "dark": "resistant",
+    "light": "resistant"
   },
   "resistsMonsterDestruction": true,
   "resistsProjectionDestruction": true,
-  "tags": ["artifact", "equipment", "light-source"]
+  "rfbValue": {
+    "flags": [
+      "HOLD_LIFE",
+      "RES_DARK",
+      "RES_LITE",
+      "SEE_INVIS"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "equipment",
+    "light-source"
+  ],
+  "weightTenthsPound": 20
 }

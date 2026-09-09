@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-yeek-description",
+  "elementalDestructionImmunities": [
+    "acid"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 50,
+  "id": "rfb-legacy.affix.the-yeek",
+  "nameKey": "affix-legacy-the-yeek-name",
+  "resistances": {
+    "acid": "resistant"
+  },
+  "rfbEgo": {
+    "flags": [
+      "DEC_CHR",
+      "DEC_CON",
+      "DEC_DEX",
+      "DEC_STR",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "RES_ACID",
+      "STEALTH"
+    ],
+    "rarity": 16,
+    "sourceIndex": 139,
+    "types": [
+      "gloves"
+    ]
+  },
+  "tags": [
+    "gloves",
+    "legacy-import"
+  ]
+}

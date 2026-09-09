@@ -7,7 +7,6 @@
   "generationLevel": 20,
   "glyph": "~",
   "id": "demo.item.fabric-bag",
-  "inventorySlotBonus": 4,
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-fabric-bag-name",
@@ -16,5 +15,17 @@
     "equipment",
     "rfb-compatibility"
   ],
-  "weightTenthsPound": 10
+  "weightTenthsPound": 10,
+  "rfbBaseKind": {
+    "sourceIndex": 722,
+    "tval": 46,
+    "sval": 1
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  }
 }

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-scrying-light-description",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "id": "rfb-legacy.affix.scrying-light",
+  "nameKey": "affix-legacy-scrying-light-name",
+  "rfbEgo": {
+    "flags": [],
+    "rarity": 8,
+    "sourceIndex": 243,
+    "types": [
+      "lite"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "lite"
+  ]
+}

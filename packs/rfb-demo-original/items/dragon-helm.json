@@ -1,0 +1,46 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dragon-helm",
+  "nameKey": "item-demo-dragon-helm-name",
+  "descriptionKey": "item-demo-dragon-helm-description",
+  "glyph": "]",
+  "generationLevel": 60,
+  "weightTenthsPound": 50,
+  "baseValue": 10000,
+  "maxStack": 1,
+  "equipmentSlot": "head",
+  "mogaminatorRare": true,
+  "rfbBaseKind": {
+    "sourceIndex": 218,
+    "tval": 32,
+    "sval": 8
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE"
+    ],
+    "pval": 0,
+    "toArmor": 10
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "modifiers": {
+    "defense": 18
+  }
+}

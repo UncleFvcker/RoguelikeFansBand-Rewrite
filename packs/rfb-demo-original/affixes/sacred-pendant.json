@@ -1,45 +1,617 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-sacred-pendant-description",
+  "deviceGeneration": {
+    "activationOptional": true,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "type": "banish-evil"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-banish-evil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-banish-evil-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "rfbValue": 5000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationTicks": 100,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.protection-from-evil",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-prot-evil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-prot-evil-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "rfbValue": 3000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 13,
+            "damageSides": 8,
+            "damageType": "sound",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-bolt-sound",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-bolt-sound-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [],
+        "rfbValue": 2610,
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 15,
+            "damageSides": 8,
+            "damageType": "shards",
+            "type": "damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-bolt-shards",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-bolt-shards-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [],
+        "rfbValue": 3015,
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 45,
+        "effect": {
+          "effect": {
+            "damageBonus": 0,
+            "damageDice": 14,
+            "damageSides": 8,
+            "damageType": "sound",
+            "type": "beam-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-beam-sound",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-beam-sound-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [],
+        "rfbValue": 3150,
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "damageBonus": 114,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "sound",
+            "radius": 3,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-ball-sound",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-ball-sound-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [],
+        "rfbValue": 5700,
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "damageBonus": 175,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "shards",
+            "radius": 2,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-ball-shards",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-ball-shards-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [],
+        "rfbValue": 8750,
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "damageBonus": 190,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "sound",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-breathe-sound",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-sound-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [],
+        "rfbValue": 10450,
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "damageBonus": 240,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "shards",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-breathe-shards",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-shards-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [],
+        "rfbValue": 13200,
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "damageBonus": 50,
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageType": "mana",
+                "targetCategory": "evil",
+                "type": "visible-damage"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-dispel-evil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-dispel-evil-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "rfbValue": 1500,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "damageBonus": 132,
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageType": "mana",
+                "targetCategory": "demon",
+                "type": "visible-damage"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-dispel-demon",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-dispel-demon-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [],
+        "rfbValue": 2640,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 80,
+        "effect": {
+          "type": "star-ball"
+        },
+        "id": "rfb.device-activation.ego-221-star-ball",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-star-ball-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 9000
+        },
+        "rfbBiases": [],
+        "rfbValue": 7500,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 3
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 80,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damage": 145,
+            "type": "wrath-of-god"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-wrath-of-god",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-wrath-of-god-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2500
+        },
+        "rfbBiases": [],
+        "rfbValue": 7250,
+        "target": {
+          "modes": [
+            "direction",
+            "position",
+            "entity"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 7
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "damageBonus": 100,
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageType": "holy-fire",
+                "targetCategory": "evil",
+                "type": "visible-damage"
+              },
+              {
+                "durationTicks": 50,
+                "intensity": 1,
+                "stacking": "extend",
+                "statusKindId": "rfb.status.protection-from-evil",
+                "type": "apply-status"
+              },
+              {
+                "amount": 100,
+                "type": "heal"
+              },
+              {
+                "statusKindId": "rfb.status.stun",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.bleeding",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-221-holiness",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-holiness-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2500
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "rfbValue": 8000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "damage": 375,
+          "type": "starburst"
+        },
+        "id": "rfb.device-activation.ego-221-starburst",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-starburst-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [],
+        "rfbValue": 16875,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 7
+      }
+    ]
+  },
   "formatVersion": 1,
+  "generationLevel": 30,
   "id": "rfb-legacy.affix.sacred-pendant",
   "nameKey": "affix-legacy-sacred-pendant-name",
-  "descriptionKey": "affix-legacy-sacred-pendant-description",
-  "generationLevel": 30,
-  "rfbEgo": { "sourceIndex": 221, "rarity": 2, "types": ["amulet"] },
-  "rollGroups": [
-    {
-      "rolls": 1,
-      "candidates": [
-        { "weight": 1, "properties": { "modifiers": { "defense": 1 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 2 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 3 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 4 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 5 } } }
-      ]
-    },
-    {
-      "rolls": 1,
-      "candidates": [
-        { "weight": 1, "properties": {} },
-        { "weight": 1, "properties": { "equipmentBonuses": { "lightRadius": 1 } } }
-      ]
-    },
-    {
-      "rolls": 5,
-      "candidates": [
-        { "weight": 45, "properties": { "modifiers": { "strength": 1 } } },
-        { "weight": 45, "properties": { "modifiers": { "wisdom": 1 } } },
-        { "weight": 22, "properties": { "statusImmunities": ["rfb.status.paralysis"] } },
-        { "weight": 23, "properties": { "statusImmunities": ["rfb.status.paralysis"], "passives": ["see-invisible"] } },
-        { "weight": 9, "properties": { "resistances": { "chaos": "resistant" } } },
-        { "weight": 12, "properties": { "resistances": { "confusion": "resistant" } } },
-        { "weight": 8, "properties": { "resistances": { "nether": "resistant" } } },
-        { "weight": 16, "properties": { "resistances": { "fear": "resistant" } } },
-        { "weight": 22, "properties": { "passives": ["regeneration"] } },
-        { "weight": 23, "properties": { "passives": ["hold-life"] } },
-        { "weight": 135, "properties": { "modifiers": { "defense": 1 } } }
-      ]
-    }
-  ],
-  "tags": ["amulet", "blessed-weapon", "legacy-import", "task-reward"]
+  "namePlacement": "full-name",
+  "rfbEgo": {
+    "flags": [
+      "FULL_NAME",
+      "HIDE_TYPE"
+    ],
+    "rarity": 2,
+    "sourceIndex": 221,
+    "types": [
+      "amulet"
+    ]
+  },
+  "tags": [
+    "amulet",
+    "legacy-import"
+  ]
 }

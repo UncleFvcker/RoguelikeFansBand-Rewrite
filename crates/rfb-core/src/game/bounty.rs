@@ -551,6 +551,11 @@ impl Game {
             initial_item_runtime_state(&self.content, &mut self.rng, kind_id, &[], 1);
         Ok(ItemInstance {
             previously_worn: false,
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id,
             kind_id: kind_id.to_owned(),
             quantity: 1,
@@ -584,7 +589,7 @@ impl Game {
         if let Some(existing) = self.items.iter_mut().find(|item| {
             item.location == ItemLocation::Inventory
                 && item.quantity < definition.max_stack
-                && item_instances_stack_compatible(item, &reward)
+                && item_instances_stack_compatible(&self.content, item, &reward)
         }) {
             existing.quantity += 1;
         } else {

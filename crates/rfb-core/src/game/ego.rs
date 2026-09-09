@@ -2,6 +2,20 @@
 
 use std::collections::BTreeSet;
 
+mod armor;
+pub(super) mod curses;
+mod jewelry;
+pub(super) use jewelry::roll as roll_jewelry;
+#[cfg(test)]
+mod contracts;
+pub(super) mod dragon;
+mod noncraft;
+pub(super) use noncraft::base_bag_capacity;
+pub(super) use noncraft::item_has_ego;
+pub(super) use noncraft::roll_container_capacity;
+pub(crate) use noncraft::{device_capacity, device_difficulty};
+pub(super) use noncraft::{device_pval, materialize_device};
+
 use rfb_content::{
     ActorDamageType, ActorResistanceLevel, AffixDefinition, AffixPropertyBundleDefinition,
     ContentCatalog, EquipmentPassive, ItemDefinition, ItemDeviceActivationDefinition,
@@ -24,6 +38,13 @@ use super::{initial_item_runtime_state, merge_equipment_bonuses, roll_weighted_i
 /// Complete generated affix state shared by content-driven consumers.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct EgoMaterialization {
+    /// Jewelry may change its local power before the final curse step.
+    pub(super) curse_on_finalize: bool,
+    pub(super) extinguish_fuel: bool,
+    pub(super) kind_id_override: Option<String>,
+    pub(super) clear_armor_enchantment: bool,
+    pub(super) clear_hit_enchantment: bool,
+    pub(super) clear_damage_enchantment: bool,
     pub(super) affix_ids: Vec<String>,
     pub(super) rolled_affixes: Vec<RolledAffixState>,
     pub(super) intrinsic_properties: Option<AffixPropertyBundleDefinition>,
@@ -79,6 +100,12 @@ impl EgoMaterialization {
             .flat_map(|rolled| rolled.curse_effects.iter().copied())
             .collect();
         Self {
+            curse_on_finalize: false,
+            extinguish_fuel: false,
+            kind_id_override: None,
+            clear_armor_enchantment: false,
+            clear_hit_enchantment: false,
+            clear_damage_enchantment: false,
             affix_ids,
             rolled_affixes,
             intrinsic_properties,
@@ -95,6 +122,23 @@ impl EgoMaterialization {
 
     /// Commits a fully prepared materialization to an existing item in one step.
     pub(super) fn apply_to(self, item: &mut ItemInstance) {
+        if self.extinguish_fuel
+            && let Some(fuel) = &mut item.fuel
+        {
+            fuel.current = 0;
+        }
+        if let Some(kind_id) = self.kind_id_override {
+            item.kind_id = kind_id;
+        }
+        if self.clear_armor_enchantment {
+            item.enchantments.to_armor = 0;
+        }
+        if self.clear_hit_enchantment {
+            item.enchantments.to_hit = 0;
+        }
+        if self.clear_damage_enchantment {
+            item.enchantments.to_damage = 0;
+        }
         let enchantments = ItemEnchantmentsDto {
             to_hit: item
                 .enchantments
@@ -134,8 +178,85 @@ pub(super) fn materialize_ego_with_rng(
     mut affix_ids: Vec<String>,
     roll_depth: impl Fn(&AffixDefinition) -> u16,
     activation_depth: u16,
+    power: i16,
 ) -> EgoMaterialization {
     affix_ids.sort();
+    if let [affix_id] = affix_ids.as_slice()
+        && let Some(item) = content.item(kind_id)
+        && let Some(affix) = content.affix(affix_id)
+        && let Some(mut result) = jewelry::materialize(rng, item, affix, roll_depth(affix), power)
+    {
+        if result.curse_on_finalize {
+            curses::finalize_materialization(content, rng, kind_id, &mut result);
+        }
+        return result;
+    }
+    if let [affix_id] = affix_ids.as_slice()
+        && let Some(item) = content.item(kind_id)
+        && let Some(affix) = content.affix(affix_id)
+        && let Some(result) =
+            noncraft::materialize_device(content, rng, item, roll_depth(affix), true, Some(affix))
+    {
+        return result;
+    }
+    if let [affix_id] = affix_ids.as_slice()
+        && let Some(item) = content.item(kind_id)
+        && let Some(affix) = content.affix(affix_id)
+        && !affix.preserves_ordinary_quality
+        && let Some(result) = noncraft::materialize_quiver(
+            item,
+            affix,
+            base_bag_capacity(item).unwrap_or(item.ammunition_capacity),
+        )
+    {
+        return result;
+    }
+    if let [affix_id] = affix_ids.as_slice()
+        && let Some(item) = content.item(kind_id)
+        && let Some(affix) = content.affix(affix_id)
+        && let Some(result) = noncraft::materialize_light(rng, item, affix, roll_depth(affix))
+    {
+        return result;
+    }
+    if let [affix_id] = affix_ids.as_slice()
+        && let Some(item) = content.item(kind_id)
+        && let Some(affix) = content.affix(affix_id)
+        && let Some(ego) = affix.rfb_ego.as_ref()
+        && let Some(base) = item.rfb_base_kind
+        && rfb_ego_can_apply_to_base(ego.source_index, base.tval, base.sval, item)
+    {
+        let level = roll_depth(affix);
+        let result = match ego.source_index {
+            1..=27 | 40..=42 => materialize_rfb_weapon_ego_with_rng(rng, item, affix, level),
+            160..=167 => materialize_rfb_launcher_ego_with_rng(
+                rfb_protocol::ItemEnchantmentsDto::default(),
+                rng,
+                item,
+                affix,
+                level,
+            ),
+            180..=185 => materialize_rfb_ammunition_ego_with_rng(rng, item, affix, level),
+            195 | 196 => materialize_rfb_harp_intrinsic_with_rng(rng, item, level)
+                .and_then(|properties| materialize_rfb_harp_ego(item, affix, &properties)),
+            _ => None,
+        };
+        if let Some(result) = result {
+            return result;
+        }
+    }
+    if let [affix_id] = affix_ids.as_slice()
+        && let Some(item) = content.item(kind_id)
+        && let Some(affix) = content.affix(affix_id)
+        && let Some(ego) = affix.rfb_ego.as_ref()
+        && let Some(base) = item.rfb_base_kind
+        && armor::can_apply(ego.source_index, base.tval, base.sval)
+    {
+        loop {
+            if let Some(result) = armor::materialize(rng, item, affix, roll_depth(affix), None) {
+                return result;
+            }
+        }
+    }
     debug_assert!(affix_ids.windows(2).all(|pair| pair[0] != pair[1]));
     let rolled_affixes = roll_affix_properties_with_rng(content, rng, &affix_ids, roll_depth);
     let (activation, charges) =
@@ -207,6 +328,17 @@ pub(super) fn merge_affix_properties(
     total: &mut AffixPropertyBundleDefinition,
     addition: &AffixPropertyBundleDefinition,
 ) {
+    total.rfb_flags.extend(addition.rfb_flags.iter().cloned());
+    total.rfb_heavy_curse |= addition.rfb_heavy_curse;
+    if let Some(pval) = &addition.rfb_pval {
+        remember_rfb_pval(total, pval.flags.iter().copied(), i32::from(pval.value));
+    }
+    if addition.ammunition_capacity.is_some() {
+        total.ammunition_capacity = addition.ammunition_capacity;
+    }
+    if addition.bag_capacity.is_some() {
+        total.bag_capacity = addition.bag_capacity;
+    }
     merge_stat_modifiers(&mut total.modifiers, &addition.modifiers);
     merge_equipment_bonuses(&mut total.equipment_bonuses, &addition.equipment_bonuses);
     for (damage_type, level) in &addition.resistances {
@@ -248,6 +380,16 @@ fn merge_stat_modifiers(total: &mut StatModifiers, addition: &StatModifiers) {
         .saturating_add(addition.spell_power_bonus);
 }
 
+pub(super) fn remember_rfb_pval(
+    properties: &mut AffixPropertyBundleDefinition,
+    flags: impl IntoIterator<Item = rfb_content::RfbPvalFlagDefinition>,
+    value: i32,
+) {
+    let pval = properties.rfb_pval.get_or_insert_with(Default::default);
+    pval.value = i16::try_from(value).expect("RFB pval fits its signed source field");
+    pval.flags.extend(flags);
+}
+
 const TV_SHOT: u16 = 16;
 const TV_ARROW: u16 = 17;
 const TV_BOLT: u16 = 18;
@@ -282,13 +424,10 @@ pub(super) fn materialize_rfb_harp_intrinsic_with_rng(
     if base_kind.tval != TV_BOW || base_kind.sval != SV_HARP {
         return None;
     }
-    Some(AffixPropertyBundleDefinition {
-        modifiers: StatModifiers {
-            charisma: i32::from(1_u16.saturating_add(rfb_m_bonus(rng, 1, generation_level))),
-            ..StatModifiers::default()
-        },
-        ..AffixPropertyBundleDefinition::default()
-    })
+    let mut properties = AffixPropertyBundleDefinition::default();
+    let pval = i32::from(1_u16.saturating_add(rfb_m_bonus(rng, 1, generation_level)));
+    armor::apply_pval(&mut properties, armor::Pval::Charisma, pval);
+    Some(properties)
 }
 
 /// Materializes one selected RFB Harp ego from the already rolled base pval.
@@ -313,7 +452,7 @@ pub(crate) fn materialize_rfb_harp_ego(
     };
     match source_index {
         195 => {
-            state.properties.modifiers.wisdom = pval;
+            armor::apply_pval(&mut state.properties, armor::Pval::Wisdom, pval);
             state.properties.passives.extend([
                 EquipmentPassive::SustainCharisma,
                 EquipmentPassive::SustainWisdom,
@@ -410,6 +549,7 @@ struct RfbLauncherRoll {
 /// Restricted launcher egos return `None` so a caller can preserve the
 /// original choose-reject-retry RNG sequence.
 pub(crate) fn materialize_rfb_launcher_ego_with_rng(
+    base_enchantments: ItemEnchantmentsDto,
     rng: &mut RfbRng,
     item: &ItemDefinition,
     affix: &AffixDefinition,
@@ -518,7 +658,12 @@ pub(crate) fn materialize_rfb_launcher_ego_with_rng(
         _ => return None,
     }
 
-    finalize_rfb_launcher_ego(rng, &mut roll, source_index, profile.shot_energy);
+    roll.state.enchantment_delta.to_hit += base_enchantments.to_hit;
+    roll.state.enchantment_delta.to_damage = ((i32::from(roll.state.enchantment_delta.to_damage)
+        + i32::from(base_enchantments.to_damage))
+        * i32::from(profile.shot_energy)
+        / 7_150) as i16;
+    finalize_rfb_launcher_ego(rng, &mut roll, source_index);
     let rolled_affixes = roll
         .state
         .has_instance_state()
@@ -550,12 +695,7 @@ fn add_launcher_multiplier(
         );
 }
 
-fn finalize_rfb_launcher_ego(
-    rng: &mut RfbRng,
-    roll: &mut RfbLauncherRoll,
-    source_index: u32,
-    shot_energy: u16,
-) {
+fn finalize_rfb_launcher_ego(rng: &mut RfbRng, roll: &mut RfbLauncherRoll, source_index: u32) {
     let (max_to_hit, max_to_damage, max_to_armor, max_pval) = rfb_ego_maxima(source_index);
     roll.state.enchantment_delta.to_hit = roll
         .state
@@ -580,11 +720,6 @@ fn finalize_rfb_launcher_ego(
             roll.extra_shots,
         );
     }
-    roll.state.enchantment_delta.to_damage = i16::try_from(
-        i32::from(roll.state.enchantment_delta.to_damage).saturating_mul(i32::from(shot_energy))
-            / 7_150,
-    )
-    .expect("launcher ego damage bonus fits i16");
 }
 
 fn apply_rfb_launcher_pval(
@@ -593,6 +728,31 @@ fn apply_rfb_launcher_pval(
     pval: u16,
     extra_shots: bool,
 ) {
+    use armor::Pval::*;
+    let flags = match source_index {
+        162 => vec![Strength],
+        163 => vec![Shots],
+        164 => {
+            if extra_shots {
+                vec![Dexterity, Stealth, Shots]
+            } else {
+                vec![Dexterity, Stealth]
+            }
+        }
+        165 => {
+            if extra_shots {
+                vec![Strength, LessSpeed, LessStealth, Shots]
+            } else {
+                vec![Strength]
+            }
+        }
+        166 => vec![Speed, Shots],
+        167 => vec![Stealth],
+        _ => vec![],
+    };
+    if !flags.is_empty() {
+        remember_rfb_pval(properties, flags, i32::from(pval));
+    }
     let pval = i32::from(pval);
     match source_index {
         162 => properties.modifiers.strength = pval,
@@ -803,6 +963,10 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
                 roll.state
                     .curse_effects
                     .insert(ItemCurseEffectDto::Aggravate);
+                roll.state
+                    .properties
+                    .rfb_flags
+                    .insert("AGGRAVATE".to_owned());
             } else {
                 roll.stealth_penalty_pval = true;
             }
@@ -905,6 +1069,10 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
         }
         21 if is_weapon => {
             roll.curse = Some(ItemCurseSeverityDto::Heavy);
+            roll.state
+                .properties
+                .rfb_flags
+                .insert("AGGRAVATE".to_owned());
             roll.state
                 .curse_effects
                 .insert(ItemCurseEffectDto::Aggravate);
@@ -1141,7 +1309,67 @@ fn materialize_rfb_activation(
     )
 }
 
+pub(super) fn roll_rfb_weapon_enchantment(
+    rng: &mut RfbRng,
+    item: &ItemDefinition,
+    level: u16,
+    power: i16,
+) -> Option<ItemEnchantmentsDto> {
+    let mut to_hit = randint1(rng, 5) + rfb_m_bonus(rng, 5, level);
+    let mut to_damage = randint1(rng, 5) + rfb_m_bonus(rng, 5, level);
+    let mut extra_hit = rfb_m_bonus(rng, 10, level);
+    let mut extra_damage = rfb_m_bonus(rng, 10, level);
+    let base = item.rfb_base_kind?;
+    if base.tval == TV_SWORD && base.sval == SV_DIAMOND_EDGE && power >= 2 && !one_in(rng, 7) {
+        return None;
+    }
+    if matches!(base.tval, TV_SHOT | TV_ARROW | TV_BOLT) {
+        extra_hit = extra_hit.div_ceil(2);
+        extra_damage = extra_damage.div_ceil(2);
+    }
+    if power.abs() >= 2 {
+        to_hit += extra_hit;
+        to_damage += extra_damage;
+    }
+    Some(if base.tval == TV_BOW && base.sval == SV_HARP {
+        ItemEnchantmentsDto::default()
+    } else {
+        ItemEnchantmentsDto {
+            to_hit: to_hit as i16
+                * if power == -1 {
+                    -1
+                } else {
+                    power.signum().abs()
+                },
+            to_damage: to_damage as i16
+                * if power == -1 {
+                    -1
+                } else {
+                    power.signum().abs()
+                },
+            to_armor: 0,
+        }
+    })
+}
+
+pub(super) fn roll_rfb_armor_enchantment(rng: &mut RfbRng, level: u16, power: i16) -> i16 {
+    let first = randint1(rng, 5) + rfb_m_bonus(rng, 5, level);
+    let second = rfb_m_bonus(rng, 10, level);
+    let amount = if power.abs() >= 2 {
+        first + second
+    } else {
+        first
+    };
+    amount as i16
+        * if power == -1 {
+            -1
+        } else {
+            power.signum().abs()
+        }
+}
+
 pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
+    weapon_enchantments: ItemEnchantmentsDto,
     rng: &mut RfbRng,
     item: &ItemDefinition,
     affixes: impl Iterator<Item = &'a AffixDefinition> + Clone,
@@ -1159,6 +1387,30 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
         RfbEgoTypeDefinition::Harp
     } else if base_kind.tval == TV_BOW {
         RfbEgoTypeDefinition::Bow
+    } else if base_kind.tval == 46 && base_kind.sval <= 1 {
+        RfbEgoTypeDefinition::Quiver
+    } else if base_kind.tval == 39 {
+        RfbEgoTypeDefinition::Lite
+    } else if base_kind.tval == 30 {
+        RfbEgoTypeDefinition::Boots
+    } else if base_kind.tval == 31 {
+        RfbEgoTypeDefinition::Gloves
+    } else if base_kind.tval == 32 {
+        RfbEgoTypeDefinition::Helmet
+    } else if base_kind.tval == 33 {
+        RfbEgoTypeDefinition::Crown
+    } else if base_kind.tval == 35 {
+        RfbEgoTypeDefinition::Cloak
+    } else if base_kind.tval == 34 {
+        RfbEgoTypeDefinition::Shield
+    } else if base_kind.tval == 38 {
+        RfbEgoTypeDefinition::DragonArmor
+    } else if matches!(base_kind.tval, 36 | 37) {
+        if base_kind.tval == 36 && base_kind.sval == 2 && generation_level >= 30 && one_in(rng, 7) {
+            RfbEgoTypeDefinition::Robe
+        } else {
+            RfbEgoTypeDefinition::BodyArmor
+        }
     } else {
         return None;
     };
@@ -1169,7 +1421,8 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
     }
     if !affixes.clone().any(|affix| {
         affix.rfb_ego.as_ref().is_some_and(|ego| {
-            ego.types.contains(&allowed_type)
+            ego.rarity > 0
+                && ego.types.contains(&allowed_type)
                 && rfb_ego_can_apply_to_base(ego.source_index, base_kind.tval, base_kind.sval, item)
         })
     }) {
@@ -1188,12 +1441,39 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
             .find(|affix| affix.id == affix_id)
             .expect("selected ego affix remains available");
         let materialized = match allowed_type {
+            RfbEgoTypeDefinition::Quiver => noncraft::materialize_quiver(
+                item,
+                affix,
+                intrinsic_properties
+                    .and_then(|properties| {
+                        properties.bag_capacity.or(properties.ammunition_capacity)
+                    })
+                    .unwrap_or_else(|| base_bag_capacity(item).unwrap_or(item.ammunition_capacity)),
+            ),
+            RfbEgoTypeDefinition::Lite => {
+                noncraft::materialize_light(rng, item, affix, generation_level)
+            }
+            RfbEgoTypeDefinition::Boots
+            | RfbEgoTypeDefinition::Gloves
+            | RfbEgoTypeDefinition::Helmet
+            | RfbEgoTypeDefinition::Crown
+            | RfbEgoTypeDefinition::Cloak
+            | RfbEgoTypeDefinition::Shield
+            | RfbEgoTypeDefinition::BodyArmor
+            | RfbEgoTypeDefinition::Robe
+            | RfbEgoTypeDefinition::DragonArmor => {
+                armor::materialize(rng, item, affix, generation_level, intrinsic_properties)
+            }
             RfbEgoTypeDefinition::Ammo => {
                 materialize_rfb_ammunition_ego_with_rng(rng, item, affix, generation_level)
             }
-            RfbEgoTypeDefinition::Bow => {
-                materialize_rfb_launcher_ego_with_rng(rng, item, affix, generation_level)
-            }
+            RfbEgoTypeDefinition::Bow => materialize_rfb_launcher_ego_with_rng(
+                weapon_enchantments,
+                rng,
+                item,
+                affix,
+                generation_level,
+            ),
             RfbEgoTypeDefinition::Harp => intrinsic_properties
                 .and_then(|properties| materialize_rfb_harp_ego(item, affix, properties)),
             _ => materialize_rfb_weapon_ego_with_rng(rng, item, affix, generation_level),
@@ -1216,6 +1496,10 @@ fn rfb_ego_can_apply_to_base(
         .map(|profile| profile.damage_dice.saturating_mul(profile.damage_sides))
         .unwrap_or_default();
     match source_index {
+        200..=201 | 205..=211 | 220..=227 => jewelry::can_apply(source_index, tval),
+        265..=268 => tval == 46 && sval <= 1,
+        235..=243 => noncraft::light_can_apply(source_index, tval, sval),
+        50..=152 => armor::can_apply(source_index, tval, sval),
         2 => matches!(tval, TV_POLEARM | TV_SWORD),
         6 => tval == TV_HAFTED && sval == SV_WIZSTAFF,
         23 => tval == TV_SWORD && sval != SV_BLADE_OF_CHAOS && dice_product >= 10,
@@ -1224,7 +1508,7 @@ fn rfb_ego_can_apply_to_base(
         42 => tval == TV_DIGGING && sval == SV_MATTOCK,
         1..=27 => matches!(tval, TV_HAFTED | TV_POLEARM | TV_SWORD) || tval == TV_DIGGING,
         40 | 41 => tval == TV_DIGGING,
-        160..=163 | 167 => tval == TV_BOW,
+        160..=163 | 167 => tval == TV_BOW && sval != SV_HARP,
         164 => tval == TV_BOW && sval == SV_LONG_BOW,
         165 => tval == TV_BOW && sval == SV_HEAVY_XBOW,
         166 => tval == TV_BOW && sval == SV_SLING,
@@ -1345,6 +1629,39 @@ fn apply_rfb_pval(
     blows_pval: bool,
     stealth_penalty_pval: bool,
 ) {
+    use armor::Pval::*;
+    let mut flags = match source_index {
+        2 | 40 | 41 => vec![Digging],
+        3 => vec![Intelligence, Wisdom],
+        4 => vec![Wisdom],
+        5 => vec![Blows],
+        10 => vec![Wisdom],
+        11 => vec![Blows, Strength, Dexterity, LessWisdom],
+        6 => vec![SpellPower, LessStrength, LessDexterity, LessConstitution],
+        13 => vec![Life],
+        14 => vec![Intelligence],
+        15 => vec![Search],
+        19 => vec![Strength, Dexterity, Constitution],
+        22 => vec![Strength, Constitution],
+        23 => vec![Charisma, Speed],
+        42 => vec![Digging, Strength],
+        _ => vec![],
+    };
+    if matches!(source_index, 10 | 27) && blows_pval {
+        flags.push(Blows);
+    }
+    if source_index == 11 && stealth_penalty_pval {
+        flags.push(LessStealth);
+    }
+    if source_index == 15 && charisma_pval {
+        flags.push(Charisma);
+    }
+    if source_index == 22 && dexterity_pval {
+        flags.push(Dexterity);
+    }
+    if !flags.is_empty() {
+        remember_rfb_pval(properties, flags, i32::from(pval));
+    }
     let pval_i32 = i32::from(pval);
     match source_index {
         2 | 40 | 41 => properties.equipment_bonuses.digging_skill = pval_i32,
@@ -1489,25 +1806,26 @@ fn roll_extra_attacks_pval(
     pval
 }
 
+const SLAYS: [(SlayTarget, EquipmentPassive, u16, u16); 11] = [
+    (SlayTarget::Orc, EquipmentPassive::EspOrc, 2, 20),
+    (SlayTarget::Troll, EquipmentPassive::EspTroll, 2, 30),
+    (SlayTarget::Giant, EquipmentPassive::EspGiant, 2, 40),
+    (SlayTarget::Dragon, EquipmentPassive::EspDragon, 3, 80),
+    (SlayTarget::Demon, EquipmentPassive::EspDemon, 3, 90),
+    (SlayTarget::Undead, EquipmentPassive::EspUndead, 3, 95),
+    (SlayTarget::Animal, EquipmentPassive::EspAnimal, 2, 60),
+    (SlayTarget::Human, EquipmentPassive::EspHuman, 3, 50),
+    (SlayTarget::Evil, EquipmentPassive::EspEvil, 5, 0),
+    (SlayTarget::Good, EquipmentPassive::EspGood, 5, 0),
+    (SlayTarget::Living, EquipmentPassive::EspLiving, 20, 0),
+];
+
 pub(super) fn roll_rfb_slaying(
     rng: &mut RfbRng,
     properties: &mut AffixPropertyBundleDefinition,
     generation_level: u16,
     is_ammunition: bool,
 ) {
-    const SLAYS: [(SlayTarget, EquipmentPassive, u16, u16); 11] = [
-        (SlayTarget::Orc, EquipmentPassive::EspOrc, 2, 20),
-        (SlayTarget::Troll, EquipmentPassive::EspTroll, 2, 30),
-        (SlayTarget::Giant, EquipmentPassive::EspGiant, 2, 40),
-        (SlayTarget::Dragon, EquipmentPassive::EspDragon, 3, 80),
-        (SlayTarget::Demon, EquipmentPassive::EspDemon, 3, 90),
-        (SlayTarget::Undead, EquipmentPassive::EspUndead, 3, 95),
-        (SlayTarget::Animal, EquipmentPassive::EspAnimal, 2, 60),
-        (SlayTarget::Human, EquipmentPassive::EspHuman, 3, 50),
-        (SlayTarget::Evil, EquipmentPassive::EspEvil, 5, 0),
-        (SlayTarget::Good, EquipmentPassive::EspGood, 5, 0),
-        (SlayTarget::Living, EquipmentPassive::EspLiving, 20, 0),
-    ];
     let eligible = SLAYS
         .iter()
         .copied()
@@ -1691,12 +2009,14 @@ fn roll_rfb_death(rng: &mut RfbRng, roll: &mut RfbWeaponRoll, dice: &mut MeleeDa
     let state = &mut roll.state;
     if one_in(rng, 16) {
         state.properties.equipment_bonuses.light_radius = -1;
+        state.properties.rfb_flags.insert("DARKNESS".to_owned());
         add_resistance(&mut state.properties, ActorDamageType::Dark);
         if one_in(rng, 6) {
             state
                 .properties
                 .resistances
                 .insert(ActorDamageType::Light, ActorResistanceLevel::Vulnerable);
+            state.properties.rfb_flags.insert("VULN_LITE".to_owned());
         }
     }
     if one_in(rng, 3) {
@@ -1733,22 +2053,7 @@ fn roll_rfb_death(rng: &mut RfbRng, roll: &mut RfbWeaponRoll, dice: &mut MeleeDa
 }
 
 fn roll_rfb_heavy_curse_effect(rng: &mut RfbRng) -> ItemCurseEffectDto {
-    loop {
-        let effect = match rng.bounded(28) {
-            0 => ItemCurseEffectDto::TyCurse,
-            1 => ItemCurseEffectDto::Aggravate,
-            2 => ItemCurseEffectDto::DrainExperience,
-            5 => ItemCurseEffectDto::AddHeavyCurse,
-            7 => ItemCurseEffectDto::CallDemon,
-            8 => ItemCurseEffectDto::CallDragon,
-            10 => ItemCurseEffectDto::Teleport,
-            19 => ItemCurseEffectDto::ByCurse,
-            20 => ItemCurseEffectDto::Danger,
-            23 => ItemCurseEffectDto::CrappyMutation,
-            _ => continue,
-        };
-        return effect;
-    }
+    curses::get_curse(rng, 2, 0)
 }
 
 fn roll_rfb_troika(
@@ -1802,6 +2107,10 @@ fn roll_rfb_troika(
         gained_power = true;
     }
     if one_in(rng, lva) || roll.state.weapon_traits.contains(&WeaponTraitDto::Vorpal2) {
+        roll.state
+            .properties
+            .rfb_flags
+            .insert("AGGRAVATE".to_owned());
         roll.state
             .curse_effects
             .insert(ItemCurseEffectDto::Aggravate);
@@ -2062,6 +2371,24 @@ const fn weak_esp(index: u64) -> EquipmentPassive {
 }
 
 fn add_slay(properties: &mut AffixPropertyBundleDefinition, target: SlayTarget, level: SlayLevel) {
+    let name = match target {
+        SlayTarget::Animal => "ANIMAL",
+        SlayTarget::Evil => "EVIL",
+        SlayTarget::Good => "GOOD",
+        SlayTarget::Living => "LIVING",
+        SlayTarget::Human => "HUMAN",
+        SlayTarget::Undead => "UNDEAD",
+        SlayTarget::Demon => "DEMON",
+        SlayTarget::Orc => "ORC",
+        SlayTarget::Troll => "TROLL",
+        SlayTarget::Giant => "GIANT",
+        SlayTarget::Dragon => "DRAGON",
+    };
+    let prefix = match level {
+        SlayLevel::Slay => "SLAY",
+        SlayLevel::Kill => "KILL",
+    };
+    properties.rfb_flags.insert(format!("{prefix}_{name}"));
     properties
         .slays
         .entry(target)
@@ -2071,9 +2398,35 @@ fn add_slay(properties: &mut AffixPropertyBundleDefinition, target: SlayTarget, 
 
 fn add_resistance(properties: &mut AffixPropertyBundleDefinition, damage_type: ActorDamageType) {
     properties
+        .rfb_flags
+        .insert(format!("RES_{}", rfb_resistance_element(damage_type)));
+    properties
         .resistances
         .entry(damage_type)
         .or_insert(ActorResistanceLevel::Resistant);
+}
+
+fn rfb_resistance_element(element: ActorDamageType) -> &'static str {
+    match element {
+        ActorDamageType::Acid => "ACID",
+        ActorDamageType::Electricity => "ELEC",
+        ActorDamageType::Fire => "FIRE",
+        ActorDamageType::Cold => "COLD",
+        ActorDamageType::Poison => "POIS",
+        ActorDamageType::Light => "LITE",
+        ActorDamageType::Dark => "DARK",
+        ActorDamageType::Blindness => "BLIND",
+        ActorDamageType::Fear => "FEAR",
+        ActorDamageType::Confusion => "CONF",
+        ActorDamageType::Nether => "NETHER",
+        ActorDamageType::Nexus => "NEXUS",
+        ActorDamageType::Sound => "SOUND",
+        ActorDamageType::Shards => "SHARDS",
+        ActorDamageType::Chaos => "CHAOS",
+        ActorDamageType::Disenchant => "DISEN",
+        ActorDamageType::Time => "TIME",
+        _ => unreachable!("RFB equipment resistance"),
+    }
 }
 
 fn add_status_immunity(properties: &mut AffixPropertyBundleDefinition, status_id: &str) {
@@ -2083,21 +2436,26 @@ fn add_status_immunity(properties: &mut AffixPropertyBundleDefinition, status_id
         .any(|id| id == status_id)
     {
         properties.status_immunities.push(status_id.to_owned());
+        properties.status_immunities.sort();
     }
 }
 
 fn add_light(properties: &mut AffixPropertyBundleDefinition) {
+    properties.rfb_flags.insert("LITE".to_owned());
     properties.equipment_bonuses.light_radius = properties.equipment_bonuses.light_radius.max(1);
 }
 
-fn one_in(rng: &mut RfbRng, odds: u16) -> bool {
+pub(super) fn one_in(rng: &mut RfbRng, odds: u16) -> bool {
     debug_assert!(odds > 0);
-    rng.bounded(u64::from(odds)) == 0
+    odds == 1 || rng.bounded(u64::from(odds)) == 0
 }
 
-fn randint1(rng: &mut RfbRng, maximum: u16) -> u16 {
-    debug_assert!(maximum > 0);
-    u16::try_from(rng.bounded(u64::from(maximum))).expect("bounded roll fits u16") + 1
+pub(super) fn randint1(rng: &mut RfbRng, maximum: u16) -> u16 {
+    if maximum <= 1 {
+        1
+    } else {
+        u16::try_from(rng.bounded(u64::from(maximum))).expect("bounded roll fits u16") + 1
+    }
 }
 
 const fn actor_resistance_rank(level: ActorResistanceLevel) -> u8 {
@@ -2201,6 +2559,7 @@ mod tests {
             generation_level: min_level,
             generation_max_level: max_level,
             rfb_ego: Some(RfbEgoGenerationDefinition {
+                flags: Default::default(),
                 source_index,
                 rarity,
                 types,
@@ -2252,6 +2611,11 @@ mod tests {
     fn launcher_instance(kind_id: &str) -> ItemInstance {
         ItemInstance {
             previously_worn: false,
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: "test.item.launcher".to_owned(),
             kind_id: kind_id.to_owned(),
             quantity: 1,
@@ -2289,6 +2653,7 @@ mod tests {
         );
         let mut rng = RfbRng::seeded(seed);
         let materialization = materialize_rfb_launcher_ego_with_rng(
+            rfb_protocol::ItemEnchantmentsDto::default(),
             &mut rng,
             &rfb_launcher_item(kind_id),
             &affix,
@@ -2305,6 +2670,7 @@ mod tests {
         difficulty: i32,
     ) -> ItemDeviceActivationDefinition {
         ItemDeviceActivationDefinition {
+            rfb_value: None,
             id: id.to_owned(),
             name_key: format!("{id}-name"),
             weight,
@@ -2372,6 +2738,7 @@ mod tests {
                 }],
             );
             affix.device_generation = Some(ItemDeviceGenerationDefinition {
+                activation_optional: false,
                 activations: vec![ego_activation_profile(
                     profile_id,
                     1,
@@ -2409,6 +2776,7 @@ mod tests {
         );
         excluded.max_depth = 49;
         let generation = ItemDeviceGenerationDefinition {
+            activation_optional: false,
             activations: vec![
                 ego_activation_profile("test.activation.fixed", 1, BTreeSet::new(), 1),
                 excluded,
@@ -2452,6 +2820,7 @@ mod tests {
             vec![RfbEgoTypeDefinition::Weapon],
         );
         affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            activation_optional: false,
             activations: vec![
                 ego_activation_profile("test.activation.destruction", 1, BTreeSet::new(), 50),
                 ego_activation_profile(
@@ -2504,6 +2873,7 @@ mod tests {
             vec![RfbEgoTypeDefinition::Weapon],
         );
         mana_affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            activation_optional: false,
             activations: vec![activation.clone()],
             recovery: None,
         });
@@ -2527,6 +2897,7 @@ mod tests {
             vec![RfbEgoTypeDefinition::Weapon],
         );
         arcane_affix.device_generation = Some(ItemDeviceGenerationDefinition {
+            activation_optional: false,
             activations: vec![activation],
             recovery: None,
         });
@@ -2942,6 +3313,7 @@ mod tests {
         );
         let mut rng = RfbRng::seeded(1);
         let materialized = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            rfb_protocol::ItemEnchantmentsDto::default(),
             &mut rng,
             &item,
             [disruption, digging].iter(),
@@ -3006,19 +3378,20 @@ mod tests {
     }
 
     #[test]
-    fn ego_materialization_preserves_roll_then_activation_rng_order() {
+    fn fixed_armor_rewards_use_the_same_materializer_as_natural_egos() {
         let game = Game::new(91);
         let affix_ids = vec!["rfb-legacy.affix.olog-hai".to_owned()];
         let mut expected_rng = RfbRng::seeded(91);
-        let expected_rolls =
-            roll_affix_properties_with_rng(&game.content, &mut expected_rng, &affix_ids, |_| 36);
-        let (expected_activation, expected_charges) = initial_item_runtime_state(
-            &game.content,
+        let expected = armor::materialize(
             &mut expected_rng,
-            "demo.item.metal-lamellar-armour",
-            &affix_ids,
+            game.content
+                .item("demo.item.metal-lamellar-armour")
+                .unwrap(),
+            game.content.affix(&affix_ids[0]).unwrap(),
             36,
-        );
+            None,
+        )
+        .unwrap();
 
         let mut rng = RfbRng::seeded(91);
         let materialized = materialize_ego_with_rng(
@@ -3028,12 +3401,11 @@ mod tests {
             affix_ids.clone(),
             |_| 36,
             36,
+            2,
         );
 
         assert_eq!(materialized.affix_ids, affix_ids);
-        assert_eq!(materialized.rolled_affixes, expected_rolls);
-        assert_eq!(materialized.activation, expected_activation);
-        assert_eq!(materialized.charges, expected_charges);
+        assert_eq!(materialized, expected);
         assert_eq!(rng, expected_rng);
     }
 
@@ -3041,6 +3413,11 @@ mod tests {
     fn ego_materialization_commits_complete_instance_state_only_after_success() {
         let mut item = ItemInstance {
             previously_worn: false,
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: "test.item.weapon".to_owned(),
             kind_id: "demo.item.long-sword".to_owned(),
             quantity: 1,
@@ -3128,6 +3505,11 @@ mod tests {
         let game = Game::new(57);
         let mut item = ItemInstance {
             previously_worn: false,
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: "test.item.weapon".to_owned(),
             kind_id: "demo.item.long-sword".to_owned(),
             quantity: 1,
@@ -3183,7 +3565,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(STATE_HASH_SCHEMA_VERSION, 112);
+        assert_eq!(STATE_HASH_SCHEMA_VERSION, 116);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,
@@ -3198,6 +3580,11 @@ mod tests {
         };
         let mut item = ItemInstance {
             previously_worn: false,
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: "test.item.harp".to_owned(),
             kind_id: "demo.item.harp".to_owned(),
             quantity: 1,
@@ -3381,6 +3768,7 @@ mod tests {
         let mut missing_base_rng = RfbRng::seeded(0xE4_4195);
         assert!(
             roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                rfb_protocol::ItemEnchantmentsDto::default(),
                 &mut missing_base_rng,
                 &definition,
                 std::iter::once(&vanyar),
@@ -3391,6 +3779,7 @@ mod tests {
         );
         assert_eq!(missing_base_rng.draw_counter, 0);
         let materialization = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            rfb_protocol::ItemEnchantmentsDto::default(),
             &mut rng,
             &definition,
             std::iter::once(&vanyar),
@@ -3462,7 +3851,7 @@ mod tests {
         );
         assert_eq!(
             rolled.properties.status_immunities,
-            ["rfb.status.fear", "rfb.status.blindness"]
+            ["rfb.status.blindness", "rfb.status.fear"]
         );
     }
 
@@ -3553,7 +3942,7 @@ mod tests {
                 accuracy.enchantment_delta.to_hit,
                 accuracy.enchantment_delta.to_damage
             ),
-            (2, 12, 5)
+            (2, 12, 4)
         );
 
         let (velocity, draws) = roll_launcher_ego(161, 0xE4_3161, "demo.item.long-bow");
@@ -3564,7 +3953,7 @@ mod tests {
                 velocity.enchantment_delta.to_hit,
                 velocity.enchantment_delta.to_damage
             ),
-            (6, 4, 9)
+            (6, 4, 8)
         );
         assert_eq!(
             velocity
@@ -3616,7 +4005,7 @@ mod tests {
                 strong_hunter.enchantment_delta.to_hit,
                 strong_hunter.enchantment_delta.to_damage
             ),
-            (6, 4, 4)
+            (6, 4, 3)
         );
         assert_eq!(
             strong_hunter.properties.passives,
@@ -3757,6 +4146,7 @@ mod tests {
             let before = rng.clone();
             assert!(
                 materialize_rfb_launcher_ego_with_rng(
+                    rfb_protocol::ItemEnchantmentsDto::default(),
                     &mut rng,
                     &rfb_launcher_item(wrong_kind),
                     affixes
@@ -3786,6 +4176,7 @@ mod tests {
         ] {
             let mut rng = RfbRng::seeded(seed);
             let materialization = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                rfb_protocol::ItemEnchantmentsDto::default(),
                 &mut rng,
                 &rfb_launcher_item(kind_id),
                 affixes.iter(),
@@ -3808,12 +4199,12 @@ mod tests {
         }
 
         for (source_index, seed, kind_id, expected) in [
-            (164, 2, "demo.item.long-bow", (9, 7, 11, 0, 2, 0, 2, 71, 30)),
+            (164, 2, "demo.item.long-bow", (9, 7, 8, 0, 2, 0, 2, 71, 30)),
             (
                 165,
                 2,
                 "demo.item.heavy-crossbow",
-                (9, 2, 14, 2, 0, -2, -2, 94, 30),
+                (9, 2, 8, 2, 0, -2, -2, 94, 30),
             ),
             (166, 7, "demo.item.sling", (9, 7, 2, 0, 0, 2, 0, 58, 30)),
         ] {

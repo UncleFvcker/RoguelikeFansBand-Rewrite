@@ -48,35 +48,35 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 2,
-      "turn": 2,
+      "goldPiles": {
+        "generated.gold.1": {
+          "amount": 66,
+          "discovered": true,
+          "position": {
+            "x": 44,
+            "y": 15
+          }
+        }
+      },
       "lastCommandSeq": 2,
-      "stateHash": "8952b87481c61bc3564b7f5d9f5367a3381747562e2be11f9c555f6bbbcb9a6b",
       "playerAttributes": {
-        "miningProficiency": {
-          "current": 4059,
-          "rank": "beginner"
-        },
         "materials": {
           "rfb.material.iron-ore": {
             "quantity": 3
           }
-        }
-      },
-      "goldPiles": {
-        "generated.gold.1": {
-          "position": {
-            "x": 44,
-            "y": 15
-          },
-          "amount": 66,
-          "discovered": true
+        },
+        "miningProficiency": {
+          "current": 4059,
+          "rank": "beginner"
         }
       },
       "playerPosition": {
         "x": 44,
         "y": 16
-      }
+      },
+      "revision": 2,
+      "stateHash": "d4ac21d26eaee1211ec6364c66ac06884cb4290a4bd3f03e8617aff5fdfdb268",
+      "turn": 2
     },
     "events": [
       {
@@ -106,6 +106,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "8952b87481c61bc3564b7f5d9f5367a3381747562e2be11f9c555f6bbbcb9a6b"
+    "saveRoundTripStateHash": "d4ac21d26eaee1211ec6364c66ac06884cb4290a4bd3f03e8617aff5fdfdb268"
   }
 }

@@ -91,8 +91,15 @@ impl Game {
         };
         let upkeep = self.pet_upkeep().percent;
         if upkeep <= 100 {
-            let class_recovery =
-                base.saturating_mul(u32::from(profile.resource_recovery_percent)) / 100;
+            let recovery_percent = if self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::ManaRegeneration)
+            {
+                profile.resource_recovery_percent.max(200)
+            } else {
+                profile.resource_recovery_percent
+            };
+            let class_recovery = base.saturating_mul(u32::from(recovery_percent)) / 100;
             return i64::from(
                 class_recovery.saturating_mul(u32::from(100_u16.saturating_sub(upkeep))) / 100,
             );

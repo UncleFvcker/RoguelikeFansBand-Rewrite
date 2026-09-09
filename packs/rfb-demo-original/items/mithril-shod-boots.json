@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 1000,
+  "descriptionKey": "item-demo-mithril-shod-boots-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "meleeDamage": 2
+  },
+  "equipmentSlot": "boots",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "]",
+  "id": "demo.item.mithril-shod-boots",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 6
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-mithril-shod-boots-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 209,
+    "sval": 6,
+    "tval": 30
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 50
+}

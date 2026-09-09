@@ -6,6 +6,36 @@
 
 工作分支：`codex/items-next`
 
+2026-09-09 接手补充：当前方向为 `codex/realms-items`，起点 `main@62f959f3b`，权威 master 为
+`a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。E3/E4 已在起点内；本批补入
+`demo.item.mattock`（k_info 156、tval 20 / sval 7），并接入 `base-items` 的 `A:50/1` 普通获取。
+source 42 `rfb-legacy.affix.disruption` 及 `rfb.effect.ego-stone-to-mud` 直接复用，
+因此下文“缺少 Mattock”只描述历史批次；Wizardstaff 仍未导入。新增核心测试使用正式内容、
+生成等级 50 / seed 1927 锁定瓦解之鹤嘴锄的生成、读档与激活，未声明桌面或人工试玩通过。
+共享修改为 importer 基础武器/工具的 TUNNEL→tunnelingPval 映射、base-items、双语 Fluent、
+像素 tileset、pack/lock 与状态文档；不需要跨方向先行提交，不改变协议、save、State Hash 或公共初始化。
+
+本批验证均通过：
+
+```powershell
+cargo test -q -p rfb-legacy-import mattock_import_preserves_base_tunneling_pval
+cargo test -q -p rfb-legacy-import item
+cargo test -q -p rfb-content mattock_identity_and_allocation_match_authoritative_source
+cargo test -q -p rfb-content equipment_and_ego_identities_match_source
+cargo test -q -p rfb-core original_diggers_use_weight_and_tunneling_pval_without_stacking_with_weapons
+cargo test -q -p rfb-core base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types
+cargo test -q -p rfb-core game::tests::weapon_ego_activations::
+cargo run -q -p rfb-contract -- verify-category tests/fixtures/active/baseline-policy.json equipment progression
+cargo run -q -p rfb-content --bin rfb-contentc -- verify-source packs/rfb-demo-original
+cargo clippy -q -p rfb-legacy-import -p rfb-core --all-targets -- -D warnings
+cargo fmt --all -- --check
+git diff --check
+```
+
+7 条 equipment/progression exact fixture 无漂移；未刷新 fixture，未运行全量回放、桌面或前端全套。
+单项 `audit-demo-item-names` 亦通过；物品由 `sync-demo-items` 读取 master 生成，lock 取自
+`inspect-source`。无新增名称 unresolved。主线按本批提交普通合并，再结合其他方向更新 pack 版本与 lock。
+
 ## 1. 审计结论
 
 本次只通过 Git 对象读取 `D:/codex/Frogcomposband` 的 `master`；解析到的权威提交为

@@ -21,8 +21,22 @@
     "toHit": 0
   },
   "mogaminatorRare": false,
-  "ridingWeaponKind": "compatible",
   "nameKey": "item-demo-broad-sword-name",
+  "rfbBaseKind": {
+    "sourceIndex": 59,
+    "sval": 16,
+    "tval": 23
+  },
+  "rfbValue": {
+    "flags": [
+      "RIDING",
+      "SHOW_MODS",
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",
     "weapon",

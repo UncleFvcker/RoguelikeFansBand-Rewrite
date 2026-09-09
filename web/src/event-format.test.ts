@@ -56,6 +56,15 @@ test("life force exhaustion, permanent race change, recovery and death use local
     assert.equal(formatter.formatEvent(event("player-light-source-burn", { source: "demo.item.torch" })),
       localization.format("player-light-source-burn", { source: formatter.contentName("demo.item.torch") }));
   }
+});
+
+test("instance artifact names retain their source text in either locale", () => {
+  for (const locale of ["en-US", "zh-CN"]) {
+    localization.setLocale(locale);
+    const base = formatter.visibleItemName("item-dagger", "demo.item.dagger");
+    assert.equal(formatter.visibleItemName("item-dagger", "demo.item.dagger", "(永恒蘑菇)"), `${base} (永恒蘑菇)`);
+    assert.equal(formatter.visibleItemName("item-dagger", "demo.item.dagger", null), base);
+  }
   localization.setLocale("en-US");
 });
 

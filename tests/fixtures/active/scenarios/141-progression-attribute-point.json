@@ -7,8 +7,8 @@
   "seed": "42",
   "preconditions": {
     "world": "demo.world.middle-earth",
-    "playerLevel": 6,
     "playerHp": 63,
+    "playerLevel": 6,
     "playerExperience": 100,
     "playerMaximumExperience": 100,
     "playerPendingAttributeIncreases": 1
@@ -24,22 +24,22 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "b97646162112859e10eda4063c1be144d860873aa9bb1f14ec2b2bc8de810708",
       "playerAttributes": {
-        "pendingAttributeIncreases": 0,
         "attributes": {
           "strength": {
-            "natural": 14,
-            "maximumNatural": 14,
-            "potential": 108,
             "effective": 18,
-            "index": 15
+            "index": 15,
+            "maximumNatural": 14,
+            "natural": 14,
+            "potential": 108
           }
-        }
-      }
+        },
+        "pendingAttributeIncreases": 0
+      },
+      "revision": 1,
+      "stateHash": "6c610bccf373d238025d081d9e6f9bb71c72b8a418a66e152e23a4fc829840eb",
+      "turn": 1
     },
     "events": [
       {
@@ -54,6 +54,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "b97646162112859e10eda4063c1be144d860873aa9bb1f14ec2b2bc8de810708"
+    "saveRoundTripStateHash": "6c610bccf373d238025d081d9e6f9bb71c72b8a418a66e152e23a4fc829840eb"
   }
 }

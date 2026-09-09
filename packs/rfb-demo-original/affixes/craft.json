@@ -36,6 +36,7 @@
         "rfbBiases": [
           "acid"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -78,6 +79,7 @@
         "rfbBiases": [
           "electricity"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -121,6 +123,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -163,6 +166,7 @@
         "rfbBiases": [
           "cold"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -205,6 +209,7 @@
         "rfbBiases": [
           "poison"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "self"
@@ -246,6 +251,7 @@
           "priestly",
           "ranger"
         ],
+        "rfbValue": 500,
         "target": {
           "modes": [
             "self"
@@ -284,6 +290,7 @@
         "rfbBiases": [
           "acid"
         ],
+        "rfbValue": 1080,
         "target": {
           "modes": [
             "direction",
@@ -324,6 +331,7 @@
         "rfbBiases": [
           "electricity"
         ],
+        "rfbValue": 550,
         "target": {
           "modes": [
             "direction",
@@ -365,6 +373,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "direction",
@@ -405,6 +414,7 @@
         "rfbBiases": [
           "cold"
         ],
+        "rfbValue": 675,
         "target": {
           "modes": [
             "direction",
@@ -445,6 +455,7 @@
         "rfbBiases": [
           "poison"
         ],
+        "rfbValue": 540,
         "target": {
           "modes": [
             "direction",
@@ -486,6 +497,7 @@
           "mage",
           "cold"
         ],
+        "rfbValue": 3520,
         "target": {
           "modes": [
             "direction",
@@ -526,6 +538,7 @@
         "rfbBiases": [
           "fire"
         ],
+        "rfbValue": 3920,
         "target": {
           "modes": [
             "direction",
@@ -566,6 +579,7 @@
         "rfbBiases": [
           "acid"
         ],
+        "rfbValue": 910,
         "target": {
           "modes": [
             "direction",
@@ -606,6 +620,7 @@
         "rfbBiases": [
           "electricity"
         ],
+        "rfbValue": 720,
         "target": {
           "modes": [
             "direction",
@@ -647,6 +662,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 780,
         "target": {
           "modes": [
             "direction",
@@ -687,6 +703,7 @@
         "rfbBiases": [
           "cold"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "direction",
@@ -728,6 +745,7 @@
         "rfbBiases": [
           "acid"
         ],
+        "rfbValue": 1820,
         "target": {
           "modes": [
             "direction",
@@ -769,6 +787,7 @@
         "rfbBiases": [
           "electricity"
         ],
+        "rfbValue": 1380,
         "target": {
           "modes": [
             "direction",
@@ -811,6 +830,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1710,
         "target": {
           "modes": [
             "direction",
@@ -852,6 +872,7 @@
         "rfbBiases": [
           "cold"
         ],
+        "rfbValue": 1440,
         "target": {
           "modes": [
             "direction",
@@ -893,6 +914,7 @@
         "rfbBiases": [
           "poison"
         ],
+        "rfbValue": 280,
         "target": {
           "modes": [
             "direction",
@@ -934,6 +956,7 @@
         "rfbBiases": [
           "acid"
         ],
+        "rfbValue": 8800,
         "target": {
           "modes": [
             "direction",
@@ -975,6 +998,7 @@
         "rfbBiases": [
           "electricity"
         ],
+        "rfbValue": 6650,
         "target": {
           "modes": [
             "direction",
@@ -1016,6 +1040,7 @@
         "rfbBiases": [
           "fire"
         ],
+        "rfbValue": 5600,
         "target": {
           "modes": [
             "direction",
@@ -1057,6 +1082,7 @@
         "rfbBiases": [
           "cold"
         ],
+        "rfbValue": 5250,
         "target": {
           "modes": [
             "direction",
@@ -1098,6 +1124,7 @@
         "rfbBiases": [
           "poison"
         ],
+        "rfbValue": 4200,
         "target": {
           "modes": [
             "direction",
@@ -1122,6 +1149,11 @@
   "id": "rfb-legacy.affix.craft",
   "nameKey": "affix-legacy-craft-name",
   "rfbEgo": {
+    "flags": [
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE"
+    ],
     "rarity": 2,
     "sourceIndex": 9,
     "types": [

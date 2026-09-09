@@ -13,12 +13,10 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 0,
-      "turn": 0,
       "lastCommandSeq": 0,
-      "stateHash": "2c05e734c984db4cc0fbd70fbd900cc95955081b85c11596c0ecfeab6b0b6081",
-      "playerGold": 405
+      "playerGold": 405,
+      "stateHash": "8aa2473d9ef706164b4c7604297aa2543a833d3d77b59259a636f51a778c1bf9"
     },
-    "saveRoundTripStateHash": "2c05e734c984db4cc0fbd70fbd900cc95955081b85c11596c0ecfeab6b0b6081"
+    "saveRoundTripStateHash": "8aa2473d9ef706164b4c7604297aa2543a833d3d77b59259a636f51a778c1bf9"
   }
 }

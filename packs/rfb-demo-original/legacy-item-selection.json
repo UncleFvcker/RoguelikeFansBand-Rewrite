@@ -1,6 +1,12 @@
 {
   "schemaVersion": 1,
   "items": [
+    {"sourceIndex":78,"id":"dragon-fang"},
+    {"sourceIndex":200,"sourceId":"pair-of-dragon-wings","id":"dragon-wings"},
+    {"sourceIndex":207,"sourceId":"pair-of-dragon-boots","id":"dragon-boots"},
+    {"sourceIndex":218,"id":"dragon-helm"},
+    {"sourceIndex":232,"sourceId":"set-of-dragon-gloves","id":"dragon-gloves"},
+    {"sourceIndex":239,"id":"dragon-shield"},
     { "sourceIndex": 45, "id": "broken-dagger" },
     { "sourceIndex": 46, "id": "broken-sword" },
     { "sourceIndex": 47, "id": "dagger" },
@@ -63,6 +69,7 @@
     { "sourceIndex": 151, "id": "gnomish-shovel" },
     { "sourceIndex": 153, "id": "pick" },
     { "sourceIndex": 154, "id": "orcish-pick" },
+    { "sourceIndex": 156, "id": "mattock" },
     { "sourceIndex": 160, "id": "sling" },
     { "sourceIndex": 161, "id": "short-bow" },
     { "sourceIndex": 162, "id": "long-bow" },
@@ -122,6 +129,12 @@
     { "sourceIndex": 722, "id": "fabric-bag" },
     { "sourceIndex": 723, "id": "leather-pouch" },
     { "sourceIndex": 724, "id": "dwarven-backpack" },
-    { "sourceIndex": 310, "id": "ring" }
+    { "sourceIndex": 310, "id": "ring" },
+    {"id":"yoiyami-robe","sourceId":"robe","sourceIndex":261},
+    {"id":"law-dragon-scale-mail","sourceId":"law-dragon-scale-mail","sourceIndex":299},
+    {"id":"gold-dragon-scale-mail","sourceId":"gold-dragon-scale-mail","sourceIndex":302},
+    {"id":"chaos-dragon-scale-mail","sourceId":"chaos-dragon-scale-mail","sourceIndex":303},
+    {"id":"mithril-shod-boots","sourceId":"pair-of-mithril-shod-boots","sourceIndex":209},
+    {"id":"iron-crown","sourceId":"iron-crown","sourceIndex":220}
   ]
 }

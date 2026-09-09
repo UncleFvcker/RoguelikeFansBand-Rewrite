@@ -297,7 +297,8 @@ impl Game {
                 }
             }
             MutationPeriodicEffectDefinition::RandomTeleport => {
-                if !self.periodic_resistance_save(DamageType::Nexus, "")
+                if !self.player_has_anti_teleport()
+                    && !self.periodic_resistance_save(DamageType::Nexus, "")
                     && self.rng.bounded(5_000) == 87
                 {
                     let candidates = self.random_teleport_candidates(40);
@@ -656,6 +657,7 @@ impl Game {
         let owner_id = self.player.id.clone();
         let resolution = self.resolve_category_summon(
             CategorySummonSpec {
+                is_spell: false,
                 source_id: &mutation.id,
                 owner_id: &owner_id,
                 category,
@@ -696,10 +698,7 @@ impl Game {
         let light_index = self.items.iter().position(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "light")
                 && item.fuel.is_some_and(|fuel| fuel.current > 0)
-                && self
-                    .content
-                    .item(&item.kind_id)
-                    .is_some_and(|definition| !definition.tags.iter().any(|tag| tag == "artifact"))
+                && !item.is_artifact(&self.content)
         });
         if let Some(index) = light_index {
             let item = &mut self.items[index];
@@ -899,7 +898,7 @@ impl Game {
                 let _lose_all_information = self.rng.bounded(3) == 0;
                 self.clear_current_floor_memory(changed);
                 let candidates = self.random_teleport_candidates(100);
-                if !candidates.is_empty() {
+                if !self.player_has_anti_teleport() && !candidates.is_empty() {
                     let index = usize::try_from(self.rng.bounded(candidates.len() as u64))
                         .expect("bounded teleport candidate index must fit usize");
                     events.extend(self.relocate_player(candidates[index], changed));
@@ -1332,6 +1331,26 @@ impl Game {
         let gained = self.gain_mutation(&mutation_id, events);
         debug_assert!(gained, "selected mutation must remain gainable");
         gained.then_some(mutation_id)
+    }
+
+    pub(super) fn gain_random_bad_mutation(
+        &mut self,
+        events: &mut Vec<DomainEvent>,
+    ) -> Option<String> {
+        let candidates = self
+            .random_mutation_candidates(RandomMutationOperation::Gain)
+            .into_iter()
+            .filter(|(_, id, _)| {
+                self.content.mutation(id).is_some_and(|mutation| {
+                    matches!(
+                        mutation.rating,
+                        MutationRatingDefinition::Bad | MutationRatingDefinition::Awful
+                    )
+                })
+            })
+            .collect();
+        let id = self.select_mutation_from_candidates(candidates)?;
+        self.gain_mutation(&id, events).then_some(id)
     }
 
     pub(super) fn gain_random_mutation_without_refresh(
@@ -1817,9 +1836,15 @@ impl Game {
         self.content
             .mutations()
             .filter(|mutation| self.progress.active_mutation_ids.contains(&mutation.id))
-            .fold(0_i32, |total, mutation| {
-                total.saturating_add(mutation.spell_failure_modifier_percent)
-            })
+            .fold(
+                self.items
+                    .iter()
+                    .map(|item| {
+                        self.equipped_curse_penalty(item, ItemCurseEffectDto::LowMagic, 3, 10)
+                    })
+                    .sum::<i32>(),
+                |total, mutation| total.saturating_add(mutation.spell_failure_modifier_percent),
+            )
     }
 
     pub(super) fn player_has_mutation(&self, mutation_id: &str) -> bool {
@@ -1944,6 +1969,9 @@ impl Game {
 
     pub(super) fn player_auto_identifies_items(&self) -> bool {
         (self.progress.level >= 40 && self.player_has_tomte_item_sensing())
+            || self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::AutoIdentify)
             || self.content.mutations().any(|mutation| {
                 mutation.auto_identify_items
                     && self.progress.active_mutation_ids.contains(&mutation.id)

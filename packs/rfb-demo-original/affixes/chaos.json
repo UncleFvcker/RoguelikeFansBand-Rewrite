@@ -43,6 +43,7 @@
           "chaos",
           "demon"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -88,6 +89,7 @@
         "rfbBiases": [
           "chaos"
         ],
+        "rfbValue": 7500,
         "target": {
           "modes": [
             "self"
@@ -124,6 +126,7 @@
           "chaos",
           "demon"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "direction",
@@ -164,6 +167,7 @@
         "rfbBiases": [
           "chaos"
         ],
+        "rfbValue": 2345,
         "target": {
           "modes": [
             "direction",
@@ -204,6 +208,7 @@
         "rfbBiases": [
           "chaos"
         ],
+        "rfbValue": 2880,
         "target": {
           "modes": [
             "direction",
@@ -245,6 +250,7 @@
         "rfbBiases": [
           "chaos"
         ],
+        "rfbValue": 6000,
         "target": {
           "modes": [
             "direction",
@@ -286,6 +292,7 @@
         "rfbBiases": [
           "chaos"
         ],
+        "rfbValue": 10125,
         "target": {
           "modes": [
             "direction",
@@ -310,25 +317,41 @@
               {
                 "durationTicks": 3,
                 "intensity": 1,
-                "power": 60,
+                "power": 120,
                 "stacking": "replace",
-                "statusKindId": "rfb.status.confused",
+                "statusKindId": "rfb.status.slow",
                 "type": "visible-apply-status"
               },
               {
                 "durationTicks": 3,
                 "intensity": 1,
-                "power": 60,
-                "stacking": "replace",
-                "statusKindId": "rfb.status.blind",
-                "type": "visible-apply-status"
-              },
-              {
-                "durationTicks": 3,
-                "intensity": 1,
-                "power": 60,
+                "power": 17,
                 "stacking": "replace",
                 "statusKindId": "rfb.status.stun",
+                "type": "visible-apply-status"
+              },
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 120,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.confusion",
+                "type": "visible-apply-status"
+              },
+              {
+                "durationTicks": 3,
+                "intensity": 1,
+                "power": 120,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.fear",
+                "type": "visible-apply-status"
+              },
+              {
+                "durationTicks": 500,
+                "intensity": 1,
+                "power": 40,
+                "stacking": "replace",
+                "statusKindId": "rfb.status.paralysis",
                 "type": "visible-apply-status"
               }
             ],
@@ -347,6 +370,7 @@
         "rfbBiases": [
           "chaos"
         ],
+        "rfbValue": 7200,
         "target": {
           "modes": [
             "self"
@@ -380,6 +404,7 @@
         "rfbBiases": [
           "chaos"
         ],
+        "rfbValue": 500,
         "target": {
           "modes": [
             "self"
@@ -400,9 +425,9 @@
           "effect": {
             "durationTicks": 3,
             "intensity": 1,
-            "power": 25,
+            "power": 75,
             "stacking": "replace",
-            "statusKindId": "rfb.status.confused",
+            "statusKindId": "rfb.status.confusion",
             "type": "visible-apply-status"
           },
           "type": "ability-effect"
@@ -418,6 +443,7 @@
         "rfbBiases": [
           "chaos"
         ],
+        "rfbValue": 1125,
         "target": {
           "modes": [
             "self"
@@ -451,6 +477,7 @@
         "rfbBiases": [
           "chaos"
         ],
+        "rfbValue": 500,
         "target": {
           "modes": [
             "direction",
@@ -477,6 +504,14 @@
     "chaos": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "BRAND_CHAOS",
+      "IGNORE_ACID",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_CHAOS",
+      "XTRA_RES"
+    ],
     "rarity": 4,
     "sourceIndex": 8,
     "types": [

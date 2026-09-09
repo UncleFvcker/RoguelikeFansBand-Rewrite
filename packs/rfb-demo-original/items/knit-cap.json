@@ -16,6 +16,19 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-knit-cap-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 224,
+    "sval": 1,
+    "tval": 32
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

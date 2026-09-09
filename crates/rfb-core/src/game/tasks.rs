@@ -657,6 +657,7 @@ pub(super) fn reward_item(
         entry.affix_ids,
         |affix| affix.generation_level.max(1),
         1,
+        2,
     );
     if let Some(charges) = &mut materialization.charges {
         charges.current = charges.maximum;
@@ -668,6 +669,11 @@ pub(super) fn reward_item(
     };
     let mut item = ItemInstance {
         previously_worn: false,
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
         id: reward.item_instance_id.clone(),
         kind_id: entry.item_kind_id.clone(),
         quantity: entry.quantity,
@@ -872,7 +878,7 @@ impl Game {
             .filter(|(_, item)| {
                 item.location == ItemLocation::Inventory
                     && item.quantity < definition.max_stack
-                    && item_instances_stack_compatible(item, &reward)
+                    && item_instances_stack_compatible(&self.content, item, &reward)
             })
             .map(|(index, _)| index)
             .collect::<Vec<_>>();

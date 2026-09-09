@@ -1,0 +1,55 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-endless-quiver-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "type": "refill-quiver"
+        },
+        "id": "rfb.device-activation.endless-quiver",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-endless-quiver-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbValue": 1500,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.endless-quiver",
+  "nameKey": "affix-legacy-endless-quiver-name",
+  "namePlacement": "full-name",
+  "rfbEgo": {
+    "flags": [
+      "FULL_NAME"
+    ],
+    "rarity": 4,
+    "sourceIndex": 267,
+    "types": [
+      "quiver"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "quiver"
+  ]
+}

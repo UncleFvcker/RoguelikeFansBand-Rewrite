@@ -466,3 +466,37 @@ E4.2 为地面、背包、装备和怪物携带四类物品 save DTO 增加 `int
 百分点，额外射击使用 RFB `base_shot` 百分制；两者随同实例属性原样恢复且不抽 RNG。Protocol
 升至 1.228，save header/payload schema 升至 v5，State Hash Schema 升至 v108；二进制容器
 格式仍为 v1。
+
+E7（contract-v310）将 Protocol 升至 1.234，save header/payload schema 升至 v6，State Hash
+Schema 升至 v111。`RolledAffixSaveDto.devicePval` 保存装置 Ego 的 1–5 pval；属性包的
+`ammunitionCapacity` 保存生成期箭袋容量；`EquipmentBonusesDto.weaponDiceBonus` 保存首饰
+武器伤害骰加值。仅对应装置/箭袋允许这些实例字段，只有 `(炸毁的)` 可持有 0d0 武器骰子。
+反传送与抑制召唤使用已存档属性包中的 passive；不另存派生开关。正式神器炸毁后返回底材，
+仍通过既有 profile ID 恢复保留下来的激活。所有结果原样恢复，不在读档时重新生成。
+二进制容器仍为 v1，测试从新档开始，不增加旧开发存档兼容分支。
+
+E8.1（contract-v312）将 Protocol 升至 1.235、save header/payload schema 升至 v7、State Hash Schema
+升至 v112，容器仍为 v1。固有属性和 rolled affix 的 `rfbPval` 保存有符号共享 pval 与其 source flags；
+`rfbFlags` 保存投影不能反推的 OF 标记。标记按字典序唯一保存，恢复拒绝未知、重复或乱序值；
+空 pval 标记集允许炸毁后的原始 pval 保留。字段进入状态哈希，恢复不抽 RNG、不重新生成。
+不提供旧开发存档迁移。详见 [E8.1](../../../../design/contract-v312-real-equipment-value.md)。
+
+E8.2（contract-v313）将 Protocol 升至 1.236、save header/payload schema 升至 v8、State Hash
+Schema 升至 v113，容器仍为 v1。属性包的 `rfbHeavyCurse` 独立保存 PERMA 上的 HEAVY 位，
+不能从 severity 推断；`curseEffects` 覆盖 get_curse 可生成的 26 种 CF。解除诅咒清除 CF、
+独立 HEAVY 位及空 rolled 记录，保留 OF 标记与负 pval。保存/恢复不重新抽样，正式 RFB Ego
+可保持 Ordinary 显示品质；不提供旧开发存档迁移。详见 [E8.2](../../../../design/contract-v313-negative-equipment.md)。
+
+E8.4（contract-v315）将 Protocol 升至 1.237、save header/payload schema 升至 v9、State Hash
+Schema 升至 v114，容器仍为 v1。属性包新增 `bagCapacity`，表示非弹药物品格的最终容量，
+不是叠加值；保存生成后的结果，恢复不抽 RNG。它只允许在 SV_BAG 上出现，数值必须属于
+该底材的普通、Good 或 Holding 容量。Phase 复用既有重量覆盖字段。统一库存按实际
+非弹药格和箭袋数量重新校验，拒绝弹药侵占背包格的非法存档；不增加旧开发存档迁移。
+详见 [E8.4](../../../../design/contract-v315-bag-containers.md)。
+
+E8.5a（contract-v316）将 Protocol 升至 1.238、save header/payload 升至 v10、State Hash
+Schema 升至 v115，容器仍为 v1。四类物品 save DTO 增加 artifactName、intrinsicMeleeDamageDice、
+intrinsicWeightTenthsPound、intrinsicWeaponTraits、intrinsicCurseEffects；覆盖地面/离层、背包、
+装备、怪物携带、家与商店。随机神器保留普通底材与独立实例身份，恢复不重新抽样。非法名称、
+数量、底材组合、骰数/重量和非规范集合被拒绝；不添加旧开发存档兼容。详见
+[E8.5a](../../../../design/contract-v316-random-artifact-identity.md)。

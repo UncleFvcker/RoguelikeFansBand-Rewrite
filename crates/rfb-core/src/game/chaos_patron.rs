@@ -254,14 +254,14 @@ impl Game {
                 self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
             }
             ChaosPatronRewardKind::CurseWeapon => {
-                self.curse_equipped_item(CurseEquippedItemRequest::new(
-                    EquippedItemCurseTarget::Weapon,
-                ));
+                self.curse_equipped_item(
+                    CurseEquippedItemRequest::new(EquippedItemCurseTarget::Weapon).blasting(),
+                );
             }
             ChaosPatronRewardKind::CurseArmor => {
-                self.curse_equipped_item(CurseEquippedItemRequest::new(
-                    EquippedItemCurseTarget::Armor,
-                ));
+                self.curse_equipped_item(
+                    CurseEquippedItemRequest::new(EquippedItemCurseTarget::Armor).blasting(),
+                );
             }
             ChaosPatronRewardKind::Anger => {
                 self.apply_patron_anger(&patron.id, level, events, changed, removed_entities);
@@ -449,7 +449,7 @@ impl Game {
                 } else {
                     EquippedItemCurseTarget::Armor
                 };
-                self.curse_equipped_item(CurseEquippedItemRequest::new(target));
+                self.curse_equipped_item(CurseEquippedItemRequest::new(target).blasting());
             }
             _ => self.ruin_patron_attributes(true),
         }
@@ -480,14 +480,14 @@ impl Game {
         self.high_patron_summon(patron_id, level, events, changed);
         self.apply_nonlethal_ty_curse(level, patron_id);
         if self.rng.bounded(2) == 0 {
-            self.curse_equipped_item(CurseEquippedItemRequest::new(
-                EquippedItemCurseTarget::Weapon,
-            ));
+            self.curse_equipped_item(
+                CurseEquippedItemRequest::new(EquippedItemCurseTarget::Weapon).blasting(),
+            );
         }
         if self.rng.bounded(2) == 0 {
-            self.curse_equipped_item(CurseEquippedItemRequest::new(
-                EquippedItemCurseTarget::Armor,
-            ));
+            self.curse_equipped_item(
+                CurseEquippedItemRequest::new(EquippedItemCurseTarget::Armor).blasting(),
+            );
         }
     }
 
@@ -659,6 +659,7 @@ impl Game {
         let owner_id = self.player.id.clone();
         let resolution = self.resolve_category_summon(
             CategorySummonSpec {
+                is_spell: false,
                 source_id: patron_id,
                 owner_id: &owner_id,
                 category,
@@ -772,6 +773,11 @@ impl Game {
         );
         self.items.push(ItemInstance {
             previously_worn: false,
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id,
             kind_id: kind_id.to_owned(),
             quantity: 1,

@@ -49,23 +49,23 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 2,
-      "turn": 2,
-      "lastCommandSeq": 2,
-      "stateHash": "b37c4211a03c296cdd6121f437fd9442590cf3dec2a87f40cb1273bd05f4180b",
       "equipment": {
         "test.item.torch.target.459": {
-          "kindId": "demo.item.wooden-torch",
-          "slotId": "light",
           "fuel": {
-            "kind": "torch",
             "current": 3004,
-            "maximum": 5000,
-            "lightRadius": 1
-          }
+            "kind": "torch",
+            "lightRadius": 1,
+            "maximum": 5000
+          },
+          "kindId": "demo.item.wooden-torch",
+          "slotId": "light"
         }
       },
-      "inventoryStackCount": 8
+      "inventoryStackCount": 8,
+      "lastCommandSeq": 2,
+      "revision": 2,
+      "stateHash": "59de39e7a48d7d59e6b5e110798aac14056f1aec8f8f697ec74b071d84a16426",
+      "turn": 2
     },
     "events": [
       {
@@ -89,6 +89,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "b37c4211a03c296cdd6121f437fd9442590cf3dec2a87f40cb1273bd05f4180b"
+    "saveRoundTripStateHash": "59de39e7a48d7d59e6b5e110798aac14056f1aec8f8f697ec74b071d84a16426"
   }
 }

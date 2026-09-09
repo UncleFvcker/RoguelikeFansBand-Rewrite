@@ -357,9 +357,10 @@ impl Game {
                     .is_some_and(|affix| affix.elemental_destruction_immunities.contains(&element))
             })
             || item.rolled_affixes.iter().any(|rolled| {
-                self.content
-                    .affix(&rolled.affix_id)
-                    .is_some_and(|affix| affix.elemental_destruction_immunities.contains(&element))
+                rolled.elemental_destruction_immunities.contains(&element)
+                    || self.content.affix(&rolled.affix_id).is_some_and(|affix| {
+                        affix.elemental_destruction_immunities.contains(&element)
+                    })
             })
     }
 
@@ -394,7 +395,10 @@ impl Game {
         let Some(definition) = self.content.item(&item.kind_id) else {
             return true;
         };
-        definition.resistances.contains_key(&ActorDamageType::Chaos)
+        item.intrinsic_properties
+            .resistances
+            .contains_key(&ActorDamageType::Chaos)
+            || definition.resistances.contains_key(&ActorDamageType::Chaos)
             || item.affix_ids.iter().any(|affix_id| {
                 self.content
                     .affix(affix_id)
@@ -411,7 +415,8 @@ impl Game {
         let Some(definition) = self.content.item(&item.kind_id) else {
             return true;
         };
-        definition.resists_projection_destruction
+        item.is_artifact(&self.content)
+            || definition.resists_projection_destruction
             || item.affix_ids.iter().any(|affix_id| {
                 self.content
                     .affix(affix_id)

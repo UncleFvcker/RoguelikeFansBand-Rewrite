@@ -2,6 +2,7 @@
 
 use crate::game::player_combat::ProjectileMode;
 use crate::game::projectile_geometry::rfb_distance;
+use crate::game::visibility::has_line_of_sight;
 use crate::game::{
     AbilityDefinition, AbilityEffectDefinition, AbilityGenocideScopeDefinition,
     AbilityTargetModeDefinition, Direction, FloorTransitionTarget, Game, ItemLocation, Position,
@@ -176,7 +177,10 @@ impl Game {
                 self.teleport_destination(ability, *position)
                     .map(|destination| AbilityTargetPlan::Teleport { destination })
             }
-            AbilityEffectDefinition::BlinkSelf { radius } => {
+            AbilityEffectDefinition::BlinkSelf {
+                radius,
+                line_of_sight,
+            } => {
                 if !matches!(target, TargetSelection::SelfTarget)
                     || !ability
                         .target
@@ -185,7 +189,13 @@ impl Game {
                 {
                     return None;
                 }
-                let candidates = self.random_teleport_candidates(u16::from(radius));
+                let candidates = self
+                    .random_teleport_candidates(u16::from(radius))
+                    .into_iter()
+                    .filter(|position| {
+                        !line_of_sight || has_line_of_sight(self, self.player.position, *position)
+                    })
+                    .collect::<Vec<_>>();
                 (!candidates.is_empty()).then_some(AbilityTargetPlan::RandomTeleport { candidates })
             }
             AbilityEffectDefinition::DimensionDoor { range } => {
@@ -889,7 +899,7 @@ impl Game {
                         })
                 }
             }
-            AbilityEffectDefinition::WrathOfGod => {
+            AbilityEffectDefinition::WrathOfGod { .. } => {
                 self.ability_path(ability, target)
                     .map(|path| AbilityTargetPlan::Projectile {
                         path,

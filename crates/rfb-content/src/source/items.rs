@@ -41,6 +41,8 @@ pub(crate) struct SourceItemDefinition {
     mogaminator_rare: bool,
     #[serde(default)]
     rfb_base_kind: Option<RfbBaseKindDefinition>,
+    #[serde(default)]
+    rfb_value: Option<crate::RfbItemValueDefinition>,
     weight_tenths_pound: u16,
     #[serde(default)]
     tunneling_pval: i16,
@@ -59,8 +61,6 @@ pub(crate) struct SourceItemDefinition {
     vorpal: bool,
     #[serde(default)]
     artifact_generation: Option<ArtifactGenerationDefinition>,
-    #[serde(default)]
-    inventory_slot_bonus: u16,
     #[serde(default)]
     ammunition_capacity: u16,
     #[serde(default)]
@@ -156,6 +156,8 @@ struct SourceItemDeviceActivationDefinition {
     max_depth: u16,
     device_check_difficulty: i32,
     #[serde(default)]
+    rfb_value: Option<i32>,
+    #[serde(default)]
     rfb_biases: BTreeSet<RfbActivationBiasDefinition>,
     charges: ItemDeviceChargeRangeDefinition,
     #[serde(default)]
@@ -172,6 +174,8 @@ struct SourceItemDeviceActivationDefinition {
 )]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct SourceItemDeviceGenerationDefinition {
+    #[serde(default)]
+    activation_optional: bool,
     activations: Vec<SourceItemDeviceActivationDefinition>,
     #[serde(default)]
     recovery: Option<ItemDeviceRecoveryDefinition>,
@@ -210,6 +214,7 @@ impl SourceItemDeviceActivationDefinition {
             max_depth: self.max_depth,
             device_check_difficulty: self.device_check_difficulty,
             rfb_biases: self.rfb_biases,
+            rfb_value: self.rfb_value,
             charges: self.charges,
             recovery: self.recovery,
             target: self.target,
@@ -225,6 +230,7 @@ impl SourceItemDeviceGenerationDefinition {
         programs: &BTreeMap<String, ResolvedEffectProgram>,
     ) -> Result<ItemDeviceGenerationDefinition, ContentError> {
         Ok(ItemDeviceGenerationDefinition {
+            activation_optional: self.activation_optional,
             activations: self
                 .activations
                 .into_iter()
@@ -275,6 +281,7 @@ impl SourceItemDefinition {
             generation_level: self.generation_level,
             mogaminator_rare: self.mogaminator_rare,
             rfb_base_kind: self.rfb_base_kind,
+            rfb_value: self.rfb_value,
             weight_tenths_pound: self.weight_tenths_pound,
             tunneling_pval: self.tunneling_pval,
             potion_nutrition: self.potion_nutrition,
@@ -285,7 +292,6 @@ impl SourceItemDefinition {
             riding_weapon_kind: self.riding_weapon_kind,
             vorpal: self.vorpal,
             artifact_generation: self.artifact_generation,
-            inventory_slot_bonus: self.inventory_slot_bonus,
             ammunition_capacity: self.ammunition_capacity,
             capture_ball: self.capture_ball,
             initial_curse: self.initial_curse,

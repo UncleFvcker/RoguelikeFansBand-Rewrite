@@ -18,16 +18,15 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "223defb3b22cf2cb3e130e7399bbdf7b2f17e845a93398d323d578a8fec1f5ce",
-      "worldTick": 10,
       "playerPosition": {
         "x": 45,
         "y": 16
       },
-      "playerEnergyNeed": 0
+      "revision": 1,
+      "stateHash": "2d84893ec0ba6cb6fc6d2b31ca1c9c85dc7f1023dc21c2d901a90faa1a2fd6e6",
+      "turn": 1,
+      "worldTick": 10
     },
     "changedCells": [
       {

@@ -1,18 +1,24 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-wizard-gloves-description",
   "formatVersion": 1,
+  "generationLevel": 30,
   "id": "rfb-legacy.affix.wizard-gloves",
   "nameKey": "affix-legacy-wizard-gloves-name",
-  "descriptionKey": "affix-legacy-wizard-gloves-description",
-  "generationLevel": 30,
-  "rfbEgo": { "sourceIndex": 138, "rarity": 4, "types": ["gloves"] },
-  "rollGroups": [{
-    "rolls": 1,
-    "candidates": [
-      { "weight": 1, "properties": { "modifiers": { "intelligence": 1 }, "equipmentBonuses": { "deviceSkill": 5 } } },
-      { "weight": 1, "properties": { "modifiers": { "intelligence": 2 }, "equipmentBonuses": { "deviceSkill": 10 } } },
-      { "weight": 1, "properties": { "modifiers": { "intelligence": 3 }, "equipmentBonuses": { "deviceSkill": 15 } } }
+  "rfbEgo": {
+    "flags": [
+      "HIDE_TYPE",
+      "INT",
+      "MAGIC_MASTERY"
+    ],
+    "rarity": 4,
+    "sourceIndex": 138,
+    "types": [
+      "gloves"
     ]
-  }],
-  "tags": ["gloves", "legacy-import", "task-reward"]
+  },
+  "tags": [
+    "gloves",
+    "legacy-import"
+  ]
 }

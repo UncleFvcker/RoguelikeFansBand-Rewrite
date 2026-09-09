@@ -260,6 +260,10 @@ impl Game {
                     });
             };
         inspect_properties(&definition.slays, &definition.brands);
+        inspect_properties(
+            &item.intrinsic_properties.slays,
+            &item.intrinsic_properties.brands,
+        );
         for affix_id in &item.affix_ids {
             if let Some(affix) = self.content.affix(affix_id) {
                 inspect_properties(&affix.slays, &affix.brands);
@@ -280,9 +284,7 @@ impl Game {
         let Some(definition) = self.content.item(&item.kind_id) else {
             return true;
         };
-        if definition.resists_monster_destruction
-            || definition.tags.iter().any(|tag| tag == "artifact")
-        {
+        if definition.resists_monster_destruction || item.is_artifact(&self.content) {
             return true;
         }
         definition.resists_monster_destruction
@@ -321,9 +323,9 @@ impl Game {
             .filter(|(_, item)| {
                 self.content.item(&item.kind_id).is_some_and(|definition| {
                     !definition.tags.iter().any(|tag| {
-                        matches!(tag.as_str(), "artifact" | "corpse" | "skeleton" | "statue")
+                        matches!(tag.as_str(), "corpse" | "skeleton" | "statue")
                     })
-                }) && !self.item_harms_monster(item, &actor, &actor_definition)
+                }) && !item.is_artifact(&self.content) && !self.item_harms_monster(item, &actor, &actor_definition)
             })
             .map(|(index, item)| (index, item.id.clone(), item.kind_id.clone(), item.quantity))
             .collect::<Vec<_>>();

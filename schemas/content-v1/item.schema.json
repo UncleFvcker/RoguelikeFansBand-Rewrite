@@ -262,8 +262,16 @@
           "format": "int32",
           "type": "integer"
         },
+        "magicResistancePercent": {
+          "format": "int32",
+          "type": "integer"
+        },
         "meleeAttacks": {
           "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "meleeAttacksDeltaPercent": {
           "format": "int32",
           "type": "integer"
         },
@@ -305,6 +313,10 @@
           "format": "int32",
           "type": "integer"
         },
+        "spellCapacityBonus": {
+          "format": "int32",
+          "type": "integer"
+        },
         "stealthSkill": {
           "default": 0,
           "format": "int32",
@@ -312,6 +324,11 @@
         },
         "throwingSkill": {
           "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "weaponDiceBonus": {
+          "description": "RFB weapon mastery adds dice to equipped melee weapons.",
           "format": "int32",
           "type": "integer"
         }
@@ -327,6 +344,23 @@
         "levitation",
         "warning",
         "slow-digestion",
+        "reflects-bolts",
+        "fire-aura",
+        "cold-aura",
+        "electricity-aura",
+        "revenge-aura",
+        "mana-regeneration",
+        "anti-magic",
+        "anti-teleport",
+        "anti-summoning",
+        "night-vision",
+        "dual-wielding",
+        "no-enchant",
+        "shards-aura",
+        "reduced-mana-cost",
+        "easy-spell",
+        "auto-identify",
+        "blessed",
         "esp-animal",
         "esp-undead",
         "esp-demon",
@@ -442,6 +476,14 @@
           "type": "array",
           "uniqueItems": true
         },
+        "rfbValue": {
+          "default": null,
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "target": {
           "$ref": "#/$defs/AbilityTargetDefinition"
         },
@@ -493,6 +535,10 @@
     "ItemDeviceGenerationDefinition": {
       "additionalProperties": false,
       "properties": {
+        "activationOptional": {
+          "default": false,
+          "type": "boolean"
+        },
         "activations": {
           "items": {
             "$ref": "#/$defs/ItemDeviceActivationDefinition"
@@ -759,6 +805,7 @@
     },
     "RfbActivationBiasDefinition": {
       "enum": [
+        "warrior",
         "mage",
         "chaos",
         "acid",
@@ -799,6 +846,37 @@
         "sourceIndex",
         "tval",
         "sval"
+      ],
+      "type": "object"
+    },
+    "RfbItemValueDefinition": {
+      "additionalProperties": false,
+      "description": "Source information lost when flags/pval and base AC/+AC are projected into\ngameplay bonuses. Runtime enchantments and generated properties remain separate.",
+      "properties": {
+        "flags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "pval": {
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "integer"
+        },
+        "toArmor": {
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "flags",
+        "pval",
+        "toArmor"
       ],
       "type": "object"
     },
@@ -1105,13 +1183,6 @@
       "default": null,
       "description": "Curse stamped onto newly generated instances. Save data remains\nauthoritative after generation and never re-derives this field."
     },
-    "inventorySlotBonus": {
-      "default": 0,
-      "format": "uint16",
-      "maximum": 65535,
-      "minimum": 0,
-      "type": "integer"
-    },
     "maxStack": {
       "format": "uint32",
       "minimum": 0,
@@ -1326,6 +1397,17 @@
       "anyOf": [
         {
           "$ref": "#/$defs/RfbBaseKindDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "rfbValue": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RfbItemValueDefinition"
         },
         {
           "type": "null"

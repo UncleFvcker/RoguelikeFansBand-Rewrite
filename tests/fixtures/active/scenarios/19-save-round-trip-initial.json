@@ -12,11 +12,9 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 0,
-      "turn": 0,
       "lastCommandSeq": 0,
-      "stateHash": "9fa4947423ce89506fdd936640c4dc07685eca8af4788a26eb384f43ade73e56"
+      "stateHash": "1b495a7f3b4bc2aec4de4178e0d2e669808ac24deddd4aeaf56f2e830b53d928"
     },
-    "saveRoundTripStateHash": "9fa4947423ce89506fdd936640c4dc07685eca8af4788a26eb384f43ade73e56"
+    "saveRoundTripStateHash": "1b495a7f3b4bc2aec4de4178e0d2e669808ac24deddd4aeaf56f2e830b53d928"
   }
 }

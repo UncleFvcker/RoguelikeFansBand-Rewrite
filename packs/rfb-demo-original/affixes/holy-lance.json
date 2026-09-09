@@ -32,6 +32,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -70,6 +71,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 500,
         "target": {
           "modes": [
             "self"
@@ -107,6 +109,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -140,6 +143,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -179,6 +183,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "self"
@@ -227,6 +232,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -267,6 +273,7 @@
           "priestly",
           "demon"
         ],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -312,6 +319,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -347,6 +355,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -382,6 +391,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -417,6 +427,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 6000,
         "target": {
           "modes": [
             "self"
@@ -456,6 +467,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 975,
         "target": {
           "modes": [
             "self"
@@ -484,11 +496,11 @@
                 "type": "remove-status"
               },
               {
-                "statusKindId": "rfb.status.blind",
+                "statusKindId": "rfb.status.blindness",
                 "type": "remove-status"
               },
               {
-                "statusKindId": "rfb.status.confused",
+                "statusKindId": "rfb.status.confusion",
                 "type": "remove-status"
               },
               {
@@ -515,6 +527,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -539,11 +552,11 @@
                 "type": "heal"
               },
               {
-                "statusKindId": "rfb.status.blind",
+                "statusKindId": "rfb.status.blindness",
                 "type": "remove-status"
               },
               {
-                "statusKindId": "rfb.status.confused",
+                "statusKindId": "rfb.status.confusion",
                 "type": "remove-status"
               },
               {
@@ -574,6 +587,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 11210,
         "target": {
           "modes": [
             "self"
@@ -598,11 +612,11 @@
                 "type": "heal"
               },
               {
-                "statusKindId": "rfb.status.blind",
+                "statusKindId": "rfb.status.blindness",
                 "type": "remove-status"
               },
               {
-                "statusKindId": "rfb.status.confused",
+                "statusKindId": "rfb.status.confusion",
                 "type": "remove-status"
               },
               {
@@ -642,6 +656,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 5250,
         "target": {
           "modes": [
             "self"
@@ -681,6 +696,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "self"
@@ -724,6 +740,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 1250,
         "target": {
           "modes": [
             "self"
@@ -758,6 +775,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -792,6 +810,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -825,6 +844,7 @@
           "priestly",
           "mage"
         ],
+        "rfbValue": 1750,
         "target": {
           "modes": [
             "self"
@@ -858,6 +878,7 @@
           "priestly",
           "mage"
         ],
+        "rfbValue": 4750,
         "target": {
           "modes": [
             "self"
@@ -901,6 +922,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -953,6 +975,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 4100,
         "target": {
           "modes": [
             "self"
@@ -996,6 +1019,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 2640,
         "target": {
           "modes": [
             "self"
@@ -1024,12 +1048,15 @@
                 "type": "visible-damage"
               },
               {
-                "amount": 100,
-                "type": "heal"
+                "durationTicks": 50,
+                "intensity": 1,
+                "stacking": "extend",
+                "statusKindId": "rfb.status.protection-from-evil",
+                "type": "apply-status"
               },
               {
-                "statusKindId": "rfb.status.poison",
-                "type": "remove-status"
+                "amount": 100,
+                "type": "heal"
               },
               {
                 "statusKindId": "rfb.status.stun",
@@ -1037,10 +1064,6 @@
               },
               {
                 "statusKindId": "rfb.status.bleeding",
-                "type": "remove-status"
-              },
-              {
-                "statusKindId": "rfb.status.fear",
                 "type": "remove-status"
               }
             ],
@@ -1059,6 +1082,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 8000,
         "target": {
           "modes": [
             "self"
@@ -1076,6 +1100,11 @@
   "nameKey": "affix-legacy-holy-lance-name",
   "namePlacement": "full-name",
   "rfbEgo": {
+    "flags": [
+      "BLESSED",
+      "FULL_NAME",
+      "SLAY_EVIL"
+    ],
     "rarity": 4,
     "sourceIndex": 26,
     "types": [

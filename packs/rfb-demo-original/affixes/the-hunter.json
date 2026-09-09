@@ -6,6 +6,9 @@
   "id": "rfb-legacy.affix.the-hunter",
   "nameKey": "affix-legacy-the-hunter-name",
   "rfbEgo": {
+    "flags": [
+      "STEALTH"
+    ],
     "rarity": 3,
     "sourceIndex": 167,
     "types": [

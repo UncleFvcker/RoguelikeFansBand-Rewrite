@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-reflection-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.reflection",
+  "nameKey": "affix-legacy-reflection-name",
+  "passives": [
+    "reflects-bolts"
+  ],
+  "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "REFLECT"
+    ],
+    "rarity": 6,
+    "sourceIndex": 62,
+    "types": [
+      "shield"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "shield"
+  ]
+}

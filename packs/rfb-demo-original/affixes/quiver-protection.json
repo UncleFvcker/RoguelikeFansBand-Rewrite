@@ -1,11 +1,22 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-quiver-protection-description",
   "formatVersion": 1,
+  "generationLevel": 1,
   "id": "rfb-legacy.affix.quiver-protection",
   "nameKey": "affix-legacy-quiver-protection-name",
-  "descriptionKey": "affix-legacy-quiver-protection-description",
-  "generationLevel": 1,
-  "protectsQuiverAmmunition": true,
   "preservesOrdinaryQuality": true,
-  "tags": ["legacy-import", "quiver"]
+  "protectsQuiverAmmunition": true,
+  "rfbEgo": {
+    "flags": [],
+    "rarity": 1,
+    "sourceIndex": 266,
+    "types": [
+      "quiver"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "quiver"
+  ]
 }

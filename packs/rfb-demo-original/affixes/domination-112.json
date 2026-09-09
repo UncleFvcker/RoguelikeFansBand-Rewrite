@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-domination-112-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 40,
+  "id": "rfb-legacy.affix.domination-112",
+  "nameKey": "affix-legacy-domination-112-name",
+  "passives": [
+    "sustain-charisma"
+  ],
+  "rfbEgo": {
+    "flags": [
+      "CHR",
+      "RES_FEAR",
+      "SUST_CHR"
+    ],
+    "rarity": 2,
+    "sourceIndex": 112,
+    "types": [
+      "helmet"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "helmet",
+    "legacy-import"
+  ]
+}

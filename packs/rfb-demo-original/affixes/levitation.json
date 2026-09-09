@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-levitation-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 70,
+  "id": "rfb-legacy.affix.levitation",
+  "nameKey": "affix-legacy-levitation-name",
+  "passives": [
+    "levitation"
+  ],
+  "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "LEVITATION"
+    ],
+    "rarity": 1,
+    "sourceIndex": 145,
+    "types": [
+      "boots"
+    ]
+  },
+  "tags": [
+    "boots",
+    "legacy-import"
+  ]
+}

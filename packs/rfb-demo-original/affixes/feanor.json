@@ -1,0 +1,84 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-feanor-description",
+  "deviceGeneration": {
+    "activationOptional": false,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.haste",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-150-speed",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-speed-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [],
+        "rfbValue": 3000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 100,
+  "id": "rfb-legacy.affix.feanor",
+  "nameKey": "affix-legacy-feanor-name",
+  "resistances": {
+    "nexus": "resistant"
+  },
+  "rfbEgo": {
+    "flags": [
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_NEXUS",
+      "SPEED"
+    ],
+    "rarity": 250,
+    "sourceIndex": 150,
+    "types": [
+      "boots"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "boots",
+    "legacy-import"
+  ]
+}

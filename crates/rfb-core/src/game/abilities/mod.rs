@@ -8,7 +8,7 @@ mod items;
 mod restoration;
 mod summoning;
 mod targeting;
-mod terrain;
+pub(in crate::game) mod terrain;
 mod travel;
 
 pub(super) use casting::nature_wrath_direction_roll;
@@ -300,7 +300,7 @@ impl Game {
                 self.resolve_player_banish_evil_effect(&ability, events, changed);
             }
             (
-                AbilityEffectDefinition::WrathOfGod,
+                AbilityEffectDefinition::WrathOfGod { .. },
                 AbilityTargetPlan::Projectile {
                     path,
                     stop_at_actor,

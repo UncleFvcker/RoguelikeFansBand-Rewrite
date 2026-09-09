@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-stealth-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 40,
+  "id": "rfb-legacy.affix.stealth",
+  "nameKey": "affix-legacy-stealth-name",
+  "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "STEALTH"
+    ],
+    "rarity": 2,
+    "sourceIndex": 54,
+    "types": [
+      "cloak",
+      "boots"
+    ]
+  },
+  "tags": [
+    "boots",
+    "cloak",
+    "legacy-import"
+  ]
+}

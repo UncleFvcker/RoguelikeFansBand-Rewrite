@@ -45,24 +45,24 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "7ce49b5ccd832958fd996f8d51929f7baee0b89bfa49cf3b92ba1c751bc033d6",
       "playerAttributes": {
         "weaponProficiencies": {
           "demo.item.broad-sword": {
             "current": 4008,
-            "rank": "beginner",
-            "hitBonus": 0
+            "hitBonus": 0,
+            "rank": "beginner"
           }
         }
       },
-      "rngDrawCounter": 200,
       "playerPosition": {
         "x": 44,
         "y": 16
-      }
+      },
+      "revision": 1,
+      "rngDrawCounter": 200,
+      "stateHash": "ba8b5631589deaca4098045c8036501490d8147db94891e1d96a5a44278fe21d",
+      "turn": 1
     },
     "events": [
       {

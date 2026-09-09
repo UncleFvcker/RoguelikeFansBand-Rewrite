@@ -17,6 +17,18 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-soft-leather-boots-name",
+  "rfbBaseKind": {
+    "sourceIndex": 205,
+    "sval": 2,
+    "tval": 30
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

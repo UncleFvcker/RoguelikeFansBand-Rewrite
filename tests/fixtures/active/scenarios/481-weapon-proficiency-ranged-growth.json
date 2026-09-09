@@ -45,24 +45,24 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "ab94853de2adb5050d1ef10a3339c8325f822b8c5d028feb6cfe208d2d11fba1",
       "playerAttributes": {
         "weaponProficiencies": {
           "demo.item.short-bow": {
             "current": 4008,
-            "rank": "beginner",
-            "hitBonus": 0
+            "hitBonus": 0,
+            "rank": "beginner"
           }
         }
       },
-      "rngDrawCounter": 194,
       "playerPosition": {
         "x": 44,
         "y": 16
-      }
+      },
+      "revision": 1,
+      "rngDrawCounter": 194,
+      "stateHash": "c96d09604240056e2510c54ac4c2d004a9c23fd8e5ab8eaf169291b44fbc5a25",
+      "turn": 1
     },
     "events": [
       {

@@ -2400,6 +2400,10 @@
     "nameKey": {
       "type": "string"
     },
+    "noEgos": {
+      "description": "RFB birth rule: suppress non-jewelry ego quality rolls in this world.",
+      "type": "boolean"
+    },
     "player": {
       "$ref": "#/$defs/ActorSpawn"
     },

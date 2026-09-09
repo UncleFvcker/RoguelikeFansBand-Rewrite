@@ -22,7 +22,7 @@ impl Game {
     pub(in crate::game) fn resolve_player_summon_effect(
         &mut self,
         ability: &AbilityDefinition,
-        positions: Vec<Position>,
+        mut positions: Vec<Position>,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
@@ -37,6 +37,7 @@ impl Game {
             unreachable!("summon executor requires a fixed summon effect");
         };
         debug_assert!(positions.len() <= usize::from(*count));
+        positions.retain(|_| !self.equipment_blocks_summoning());
         let definition = self
             .content
             .actor(actor_kind_id)
@@ -132,6 +133,7 @@ impl Game {
         let owner_id = self.player.id.clone();
         let resolution = self.resolve_category_summon(
             CategorySummonSpec {
+                is_spell: true,
                 source_id: &ability.id,
                 owner_id: &owner_id,
                 category: selected_category,
@@ -241,6 +243,7 @@ impl Game {
             .collect::<Vec<_>>();
         let resolution = self.resolve_category_summon(
             CategorySummonSpec {
+                is_spell: true,
                 source_id: &ability.id,
                 owner_id: &owner_id,
                 category,
@@ -371,6 +374,7 @@ impl Game {
             .collect::<Vec<_>>();
         let resolution = self.resolve_category_summon(
             CategorySummonSpec {
+                is_spell: true,
                 source_id: &ability.id,
                 owner_id: &owner_id,
                 category,
@@ -431,6 +435,7 @@ impl Game {
             };
             self.resolve_category_summon(
                 CategorySummonSpec {
+                    is_spell: true,
                     source_id: &ability.id,
                     owner_id: &owner_id,
                     category: "greater-demon",

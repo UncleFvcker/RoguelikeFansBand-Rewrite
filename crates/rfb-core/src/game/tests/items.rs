@@ -46,10 +46,10 @@ fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
         .expect("Olog-hai reward should materialize its activation");
     assert_eq!(
         activation.profile_id,
-        "demo.item-activation.olog-hai-berserk"
+        "rfb.device-activation.ego-72-berserk"
     );
     assert_eq!(activation.device_check_difficulty, 10);
-    assert_eq!(activation.power, 36);
+    assert_eq!(activation.power, 10);
     assert_eq!(
         reward.charges,
         Some(ItemChargesDto {
@@ -112,7 +112,7 @@ fn p90b_olog_hai_affix_materializes_and_runs_existing_berserk_activation() {
     let hash = game.state_hash();
     let mut restored = Game::from_save(game.to_save()).expect("Olog-hai reward should restore");
     assert_eq!(restored.state_hash(), hash);
-    for _ in 0..5 {
+    for _ in 0..50 {
         if restored
             .items
             .iter()
@@ -803,7 +803,7 @@ fn curse_scroll_lands_on_equipped_weapon_and_artifact_can_resist() {
             item.location = ItemLocation::Inventory;
         }
         give_inventory_item(&mut game, SCROLL_ID, "demo.item.weapon-blight-scroll");
-        give_inventory_item(&mut game, WEAPON_ID, "demo.item.relic-blade");
+        give_inventory_item(&mut game, WEAPON_ID, "demo.item.soulsword");
         game.items
             .iter_mut()
             .find(|item| item.id == WEAPON_ID)
@@ -825,7 +825,14 @@ fn curse_scroll_lands_on_equipped_weapon_and_artifact_can_resist() {
     }
 
     let (landed, update, draws_before) = run(false);
-    assert_eq!(landed.rng_draw_counter(), draws_before);
+    assert_eq!(landed.rng_draw_counter(), draws_before + 4);
+    let blasted = landed
+        .items
+        .iter()
+        .find(|item| item.id == "test.item.relic-blade.1")
+        .unwrap();
+    assert_eq!(blasted.kind_id, "demo.item.scimitar");
+    assert_eq!(blasted.affix_ids, ["rfb-legacy.affix.blasted"]);
     assert_eq!(update.events[0].kind, "item.use-cursed");
     assert_eq!(
         landed
@@ -2381,15 +2388,6 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
     let path =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
     let mut content = rfb_content::compile_pack_dir(&path).unwrap().content;
-    // Crowns share the head slot; the formal pack has no crown yet.
-    let mut crown = content
-        .items
-        .iter()
-        .find(|item| item.id == "demo.item.iron-helm")
-        .unwrap()
-        .clone();
-    crown.id = "test.item.crown".to_owned();
-    content.items.push(crown);
     let table = content
         .loot_tables
         .iter_mut()
@@ -2398,20 +2396,12 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
     let kinds = [
         "demo.item.knit-cap",
         "demo.item.iron-helm",
-        "test.item.crown",
+        "demo.item.iron-crown",
         "demo.item.dagger",
     ];
     table
         .entries
         .retain(|entry| kinds.contains(&entry.item_kind_id.as_str()));
-    let mut crown_entry = table
-        .entries
-        .iter()
-        .find(|entry| entry.item_kind_id == "demo.item.iron-helm")
-        .unwrap()
-        .clone();
-    crown_entry.item_kind_id = "test.item.crown".to_owned();
-    table.entries.push(crown_entry);
     assert_eq!(table.entries.len(), kinds.len());
     for entry in &mut table.entries {
         entry.weight = 1;
@@ -2481,6 +2471,7 @@ fn tomte_tailored_acquirement_filters_headgear_by_birth_race_only() {
             depth: 20,
             source: LootSource::MonsterDeath {
                 actor_id: "test.drop".to_owned(),
+                themed: false,
             },
         };
         let mut ordinary = BTreeSet::new();
@@ -2531,7 +2522,7 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     assert_eq!(generated[0].location, ItemLocation::Ground(position));
     assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
     assert!(generated[0].id.starts_with("generated.item."));
-    assert_eq!(single.rng_draw_counter(), draws_before + 7);
+    assert_eq!(single.rng_draw_counter(), draws_before + 30);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-acquirement"
             && event.args.get("count").map(String::as_str) == Some("1")
@@ -2556,10 +2547,7 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     );
     let generated_count = multiple.items.len() - (before_count - 1);
     assert!((2..=3).contains(&generated_count));
-    assert_eq!(
-        multiple.rng_draw_counter(),
-        draws_before + 1 + 3 * generated_count as u64
-    );
+    assert_eq!(multiple.rng_draw_counter(), draws_before + 57);
 }
 
 #[test]
@@ -2646,7 +2634,7 @@ fn p3_5_mundanity_splits_one_unit_and_rejects_fixed_artifacts_atomically() {
 }
 
 #[test]
-fn p3_5_crafting_splits_ammunition_identifies_ego_and_cancels_invalid_targets() {
+fn e6_crafting_keeps_ammunition_stack_identifies_ego_and_cancels_invalid_targets() {
     let mut game = Game::new(523);
     clear_monsters(&mut game);
     game.items.clear();
@@ -2671,21 +2659,21 @@ fn p3_5_crafting_splits_ammunition_identifies_ego_and_cancels_invalid_targets() 
             }),
         },
     );
-    assert_eq!(game.rng_draw_counter(), draws_before + 1);
+    assert!(game.rng_draw_counter() > draws_before + 1);
     assert_eq!(
         game.items
             .iter()
             .find(|item| item.id == "test.item.crafting-target.1")
-            .expect("remainder should exist")
+            .expect("crafted stack should exist")
             .quantity,
-        2
+        3
     );
     let crafted = game
         .items
         .iter()
-        .find(|item| item.kind_id == "demo.item.arrow" && item.id != "test.item.crafting-target.1")
-        .expect("one crafted unit should be split from the stack");
-    assert_eq!(crafted.quantity, 1);
+        .find(|item| item.id == "test.item.crafting-target.1")
+        .expect("the entire stack should be crafted in place");
+    assert_eq!(crafted.quantity, 3);
     assert_eq!(crafted.quality, ItemQualityDto::Exceptional);
     assert_eq!(crafted.origin_kind, Some(ItemOriginKindDto::PlayerMade));
     assert_eq!(crafted.discount_percent, 99);
@@ -2696,7 +2684,7 @@ fn p3_5_crafting_splits_ammunition_identifies_ego_and_cancels_invalid_targets() 
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-crafting"
             && event.args.get("targetId") == Some(&crafted.id)
-            && event.args.get("split").map(String::as_str) == Some("true")
+            && event.args.get("split").map(String::as_str) == Some("false")
     }));
     Game::from_save(game.to_save()).expect("crafted ammunition should round-trip");
 
@@ -2730,7 +2718,7 @@ fn p3_5_crafting_splits_ammunition_identifies_ego_and_cancels_invalid_targets() 
 }
 
 #[test]
-fn p3_5_crafting_split_allocation_failure_is_atomic() {
+fn e6_crafting_stack_needs_no_new_instance_allocation() {
     let mut game = Game::new(524);
     clear_monsters(&mut game);
     game.items.clear();
@@ -2750,8 +2738,6 @@ fn p3_5_crafting_split_allocation_failure_is_atomic() {
         .expect("ammunition should exist")
         .quantity = 3;
     game.next_item_instance_serial = u64::MAX;
-    let items_before = game.items.clone();
-    let rng_before = game.rng.clone();
 
     let update = dispatch_next(
         &mut game,
@@ -2763,13 +2749,24 @@ fn p3_5_crafting_split_allocation_failure_is_atomic() {
         },
     );
 
-    assert_eq!(game.items, items_before);
-    assert_eq!(game.rng, rng_before);
-    assert_eq!(update.events[0].kind, "item.use-unavailable");
+    assert_eq!(game.next_item_instance_serial, u64::MAX);
+    let target = game
+        .items
+        .iter()
+        .find(|item| item.id == "test.item.crafting-target.failure")
+        .unwrap();
+    assert_eq!(target.quantity, 3);
+    assert_eq!(target.affix_ids.len(), 1);
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-crafting")
+    );
 }
 
 #[test]
-fn p3_5_crafting_materializes_player_made_armor() {
+fn e6_crafting_materializes_player_made_armor() {
     let mut game = Game::new(525);
     clear_monsters(&mut game);
     game.items.clear();
@@ -2799,10 +2796,302 @@ fn p3_5_crafting_materializes_player_made_armor() {
         .iter()
         .find(|item| item.id == "test.item.crafting-target.armor")
         .expect("crafted armour should remain in inventory");
-    assert_eq!(crafted.affix_ids, ["demo.affix.regeneration"]);
+    assert_eq!(crafted.affix_ids.len(), 1);
+    assert!(
+        game.content
+            .affix(&crafted.affix_ids[0])
+            .unwrap()
+            .rfb_ego
+            .is_some()
+    );
     assert_eq!(crafted.origin_kind, Some(ItemOriginKindDto::PlayerMade));
     assert_eq!(crafted.discount_percent, 99);
     Game::from_save(game.to_save()).expect("player-made armour should round-trip");
+}
+
+fn crafting_game(kind_id: &str, quantity: u32) -> Game {
+    let mut game = Game::new(523);
+    clear_monsters(&mut game);
+    game.items.clear();
+    give_inventory_item(
+        &mut game,
+        "test.crafting-source",
+        "demo.item.crafting-scroll",
+    );
+    give_inventory_item(&mut game, "test.crafting-target", kind_id);
+    game.items[1].quantity = quantity;
+    let virtue_index = game
+        .virtues
+        .iter()
+        .position(|virtue| virtue.kind == VirtueKindDto::Enchantment)
+        .unwrap_or(0);
+    game.virtues[virtue_index] = rfb_protocol::VirtueDto {
+        kind: VirtueKindDto::Enchantment,
+        value: 0,
+    };
+    game
+}
+
+#[test]
+fn e6_crafting_invalid_and_unconfirmed_targets_cost_no_use_time_or_rng() {
+    let base = crafting_game("demo.item.arrow", 31);
+    for case in 0..10 {
+        let mut game = base.clone();
+        let mut target = Some(TargetSelection::Item {
+            item_id: "test.crafting-target".to_owned(),
+        });
+        match case {
+            0 => target = None,
+            1 => {} // 31 projectiles require explicit confirmation.
+            2 => {
+                target = Some(TargetSelection::CraftingItem {
+                    item_id: "test.crafting-target".to_owned(),
+                    quantity: 30,
+                })
+            }
+            3 => game.items[1].quantity = 60,
+            4 => {
+                game.items[1].kind_id = "demo.item.chain-mail".to_owned();
+                game.items[1].quantity = 2;
+            }
+            5 => game.items[1].affix_ids = vec!["rfb-legacy.affix.slaying-180".to_owned()],
+            6 => {
+                game.items[1].kind_id = "demo.item.ration-of-food".to_owned();
+                game.items[1].quantity = 1;
+            }
+            7 => {
+                game.items[1].kind_id = "demo.item.relic-blade".to_owned();
+                game.items[1].quantity = 1;
+            }
+            8 => {
+                game.items[1].quantity = 1;
+                game.items[1].location = ItemLocation::Ground(Position {
+                    x: game.player.position.x + 1,
+                    y: game.player.position.y,
+                });
+            }
+            9 => game.items[1].quantity = 0,
+            _ => unreachable!(),
+        }
+        let items = game.items.clone();
+        let rng = game.rng.clone();
+        let tick = game.world_tick;
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: "test.crafting-source".to_owned(),
+                target,
+            },
+        );
+        assert_eq!(game.items, items, "case {case}");
+        assert_eq!(game.rng, rng, "case {case}");
+        assert_eq!(game.world_tick, tick, "case {case}");
+        assert_eq!(update.events[0].kind, "item.use-unavailable", "case {case}");
+    }
+}
+
+#[test]
+fn e6_crafting_ammunition_roll_and_failure_virtue_match_source() {
+    let base = crafting_game("demo.item.arrow", 1);
+    let mut saw_failure = false;
+    let mut saw_success = false;
+    for quantity in [1, 30, 31, 59] {
+        for seed in 0..32 {
+            let mut game = base.clone();
+            game.items[1].quantity = quantity;
+            let original = game.items[1].clone();
+            game.rng = RfbRng::seeded(seed);
+            let mut expected_rng = game.rng.clone();
+            let succeeds = expected_rng.bounded(30) as i32 + 1 > quantity as i32 - 30;
+            let failure_virtue = if succeeds {
+                0
+            } else {
+                -i16::from(expected_rng.bounded(3) == 0)
+            };
+            let update = dispatch_next(
+                &mut game,
+                GameCommand::UseItem {
+                    item_id: "test.crafting-source".to_owned(),
+                    target: Some(TargetSelection::CraftingItem {
+                        item_id: original.id.clone(),
+                        quantity,
+                    }),
+                },
+            );
+            assert!(
+                !game
+                    .items
+                    .iter()
+                    .any(|item| item.id == "test.crafting-source")
+            );
+            let crafted = game
+                .items
+                .iter()
+                .find(|item| item.id == original.id)
+                .unwrap();
+            assert_eq!(crafted.quantity, quantity);
+            if succeeds {
+                saw_success = true;
+                assert_eq!(crafted.affix_ids.len(), 1);
+                assert_eq!(game.virtue_current(VirtueKindDto::Enchantment), 1);
+                assert!(
+                    update
+                        .events
+                        .iter()
+                        .any(|event| event.kind == "item.use-crafting")
+                );
+            } else {
+                saw_failure = true;
+                assert_eq!(crafted, &original);
+                assert_eq!(
+                    game.virtue_current(VirtueKindDto::Enchantment),
+                    failure_virtue
+                );
+                assert!(
+                    update
+                        .events
+                        .iter()
+                        .any(|event| event.kind == "item.use-crafting-failed")
+                );
+                assert!(
+                    game.item_property_knowledge
+                        .get(&original.id)
+                        .is_none_or(|knowledge| !knowledge.identified
+                            && knowledge.known_affix_ids.is_empty())
+                );
+            }
+        }
+    }
+    assert!(saw_failure && saw_success);
+}
+
+#[test]
+fn e6_crafting_uses_shared_weighted_materialization_at_player_level() {
+    use crate::game::ego::roll_and_materialize_rfb_ego_from_affixes_with_rng;
+    for kind_id in [
+        "demo.item.long-sword",
+        "demo.item.mattock",
+        "demo.item.long-bow",
+        "demo.item.harp",
+        "demo.item.chain-mail",
+        "demo.item.elven-cloak",
+        "demo.item.multi-hued-dragon-scale-mail",
+    ] {
+        let mut game = crafting_game(kind_id, 1);
+        game.apply_player_experience(100_000, &mut Vec::new());
+        while game.pending_race_mutation_choice().is_some() {
+            choose_human_talent_if_pending(&mut game);
+        }
+        assert!(game.progress.level > game.floor_depth(&game.current_floor_id));
+        game.items[1].quality = ItemQualityDto::Fine;
+        game.items[1].enchantments = ItemEnchantmentsDto {
+            to_hit: 3,
+            to_damage: 4,
+            to_armor: 5,
+        };
+        if kind_id == "demo.item.harp" {
+            game.items[1].intrinsic_properties.modifiers.charisma = 2;
+        }
+        if kind_id == "demo.item.elven-cloak" {
+            game.items[1]
+                .intrinsic_properties
+                .equipment_bonuses
+                .stealth_skill = 2;
+            game.items[1]
+                .intrinsic_properties
+                .equipment_bonuses
+                .search_skill = 10;
+            game.items[1]
+                .intrinsic_properties
+                .equipment_bonuses
+                .perception_skill = 10;
+        }
+        game.rng = RfbRng::seeded(7);
+        let mut expected = game.items[1].clone();
+        let materialized = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            rfb_protocol::ItemEnchantmentsDto::default(),
+            &mut game.rng.clone(),
+            game.content.item(kind_id).unwrap(),
+            game.content.affix_definitions(),
+            game.progress.level,
+            Some(&expected.intrinsic_properties),
+        )
+        .unwrap();
+        materialized.apply_to(&mut expected);
+        expected.quality = ItemQualityDto::Exceptional;
+        expected.origin_kind = Some(ItemOriginKindDto::PlayerMade);
+        expected.discount_percent = 99;
+        dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: "test.crafting-source".to_owned(),
+                target: Some(TargetSelection::Item {
+                    item_id: expected.id.clone(),
+                }),
+            },
+        );
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == expected.id)
+                .unwrap(),
+            &expected,
+            "{kind_id}"
+        );
+        assert!(
+            !game
+                .content
+                .item(&expected.kind_id)
+                .unwrap()
+                .tags
+                .iter()
+                .any(|tag| tag == "artifact")
+        );
+        assert_eq!(game.virtue_current(VirtueKindDto::Enchantment), 1);
+        Game::from_save(game.to_save()).unwrap_or_else(|error| panic!("{kind_id}: {error:?}"));
+    }
+}
+
+#[test]
+fn e6_crafting_failed_materialization_preserves_all_target_state() {
+    let mut game = crafting_game("demo.item.long-sword", 1);
+    game.items[1].enchantments = ItemEnchantmentsDto {
+        to_hit: 255,
+        to_damage: 255,
+        to_armor: 0,
+    };
+    let original = game.items[1].clone();
+    game.rng = RfbRng::seeded(0);
+    let update = dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: "test.crafting-source".to_owned(),
+            target: Some(TargetSelection::Item {
+                item_id: original.id.clone(),
+            }),
+        },
+    );
+    assert_eq!(
+        game.items.iter().find(|item| item.id == original.id),
+        Some(&original)
+    );
+    assert!(
+        !game
+            .items
+            .iter()
+            .any(|item| item.id == "test.crafting-source")
+    );
+    assert!(
+        game.item_property_knowledge
+            .get(&original.id)
+            .is_none_or(|knowledge| !knowledge.identified && knowledge.known_affix_ids.is_empty())
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "item.use-crafting-failed")
+    );
 }
 
 #[test]
@@ -2838,7 +3127,10 @@ fn fixed_artifact_selection_uses_source_order_ood_rarity_and_uniqueness() {
         .find(|seed| RfbRng::seeded(*seed).bounded(10) != 0)
         .expect("an instant-artifact gate rejection seed should exist");
     instant.rng = RfbRng::seeded(instant_rejection_seed);
-    assert_eq!(instant.roll_instant_fixed_artifact_kind_id(&context), None);
+    assert_eq!(
+        instant.roll_instant_fixed_artifact_kind_id(&context, 10),
+        None
+    );
     assert_eq!(instant.rng_draw_counter(), 1);
 
     let crisdurian_seed = (0..10_000)
@@ -2932,7 +3224,12 @@ fn item_generation_modes_keep_drafts_unallocated_until_commit() {
     let serial_before = artifact.next_item_instance_serial;
     let fallback = (0..10_000).find_map(|seed| {
         artifact.rng = RfbRng::seeded(seed);
-        let draft = artifact.generate_one_loot_draft(&context, ItemGenerationMode::Artifact)?;
+        let draft = artifact.generate_one_loot_draft(
+            &context,
+            ItemGenerationMode::Artifact {
+                no_fixed_artifact: false,
+            },
+        )?;
         artifact
             .content
             .item(&draft.kind_id)

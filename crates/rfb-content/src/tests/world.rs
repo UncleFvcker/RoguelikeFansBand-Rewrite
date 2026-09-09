@@ -964,7 +964,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         ability.id == "demo.ability.blink"
             && matches!(
                 ability.effect,
-                AbilityEffectDefinition::BlinkSelf { radius: 10 }
+                AbilityEffectDefinition::BlinkSelf {
+                    radius: 10,
+                    line_of_sight: false
+                }
             )
     }));
     assert!(
@@ -4552,23 +4555,15 @@ fn room_dungeon_bindings_match_source() {
         assert_eq!(reward.entries[0].item_kind_id, "demo.item.ring");
         assert_eq!(
             reward.affix_weights[0].affix_id.as_deref(),
-            Some("rfb-legacy.affix.combat")
+            Some("rfb-legacy.affix.combat-ring")
         );
         let combat = content
             .affixes
             .iter()
-            .find(|affix| affix.id == "rfb-legacy.affix.combat")
+            .find(|affix| affix.id == "rfb-legacy.affix.combat-ring")
             .expect("the Combat ego should be imported");
-        assert_eq!(combat.roll_groups.len(), 1);
-        assert_eq!(combat.roll_groups[0].rolls, 3);
-        assert_eq!(
-            combat.roll_groups[0]
-                .candidates
-                .iter()
-                .map(|candidate| candidate.weight)
-                .sum::<u32>(),
-            100
-        );
+        assert_eq!(combat.rfb_ego.as_ref().unwrap().source_index, 206);
+        assert!(combat.roll_groups.is_empty());
     }
 
     {
@@ -11009,24 +11004,9 @@ fn fixed_wilderness_task_geometry_and_rewards_match_source() {
             .iter()
             .find(|affix| affix.id == "rfb-legacy.affix.elemental-jewelry")
             .expect("the Elemental jewelry ego should exist");
-        assert_eq!(elemental.generation_level, 22);
-        assert_eq!(elemental.roll_groups.len(), 2);
-        assert_eq!(
-            elemental.roll_groups[0]
-                .candidates
-                .iter()
-                .map(|candidate| candidate.weight)
-                .sum::<u32>(),
-            4
-        );
-        assert_eq!(
-            elemental.roll_groups[1]
-                .candidates
-                .iter()
-                .map(|candidate| candidate.weight)
-                .sum::<u32>(),
-            12
-        );
+        assert_eq!(elemental.generation_level, 10);
+        assert_eq!(elemental.rfb_ego.as_ref().unwrap().source_index, 201);
+        assert!(elemental.roll_groups.is_empty());
     }
 
     {
@@ -12059,7 +12039,16 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 344);
+    assert_eq!(base_items.entries.len(), 360);
+    let amulet = base_items
+        .entries
+        .iter()
+        .find(|entry| entry.item_kind_id == "demo.item.amulet")
+        .unwrap();
+    assert_eq!(
+        (amulet.min_depth, amulet.weight, amulet.quantity),
+        (10, 100, 1)
+    );
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -12107,22 +12096,27 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 319);
+    assert_eq!(active_source_items.len(), 334);
 
     let source_items_without_allocations =
-        BTreeSet::from([33, 34, 36, 37, 345, 346, 347, 400, 401, 460]);
+        BTreeSet::from([33, 34, 36, 37, 261, 345, 346, 347, 400, 401, 460]);
     let expected_item_ids = active_source_items
         .iter()
         .filter(|(source_index, _)| !source_items_without_allocations.contains(source_index))
         .map(|(_, item_id)| item_id.as_str())
-        .chain(["demo.item.diamond-edge"])
+        .chain([
+            "demo.item.diamond-edge",
+            "demo.item.quiver",
+            "demo.item.feanorian-lamp",
+            "demo.item.amulet",
+        ])
         .collect::<BTreeSet<_>>();
     let actual_item_ids = base_items
         .entries
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 310);
+    assert_eq!(expected_item_ids.len(), 326);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -12139,14 +12133,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         base_items.rfb_ego_policy,
         Some(LootRfbEgoPolicyDefinition::WeaponDigger)
     );
-    assert_eq!(
-        base_items
-            .affix_weights
-            .iter()
-            .map(|affix| (affix.affix_id.as_deref(), affix.weight))
-            .collect::<Vec<_>>(),
-        vec![(None, 9), (Some("rfb-legacy.affix.protection"), 1),]
-    );
+    assert!(base_items.affix_weights.is_empty());
     assert!(!artifact.content.loot_tables.iter().any(|table| {
         matches!(
             table.id.as_str(),
@@ -12241,6 +12228,9 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
         ("demo.loot-table.dwarf", 6),
         ("demo.loot-table.ninja", 3),
         ("demo.loot-table.hobbit", 32),
+        ("demo.loot-table.evil-paladin", 6),
+        ("demo.loot-table.rogue", 8),
+        ("demo.loot-table.samurai", 3),
     ] {
         let table = artifact
             .content
@@ -12251,44 +12241,18 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
         assert_eq!(table.entries.len(), expected_entries, "{table_id}");
         assert_eq!(table.quality_policy, policy, "{table_id}");
         assert!(table.quality_weights.is_empty(), "{table_id}");
+        assert_eq!(
+            table.rfb_ego_policy,
+            Some(LootRfbEgoPolicyDefinition::WeaponDigger),
+            "{table_id}"
+        );
+        assert!(table.affix_weights.is_empty(), "{table_id}");
         assert!(
             table
                 .entries
                 .iter()
                 .all(|entry| !matches!(entry.max_depth, 9 | 32)),
             "{table_id} should not retain a dungeon depth cap"
-        );
-    }
-
-    for table_id in [
-        "demo.loot-table.warrior",
-        "demo.loot-table.paladin",
-        "demo.loot-table.dwarf",
-        "demo.loot-table.mage",
-    ] {
-        let table = artifact
-            .content
-            .loot_tables
-            .iter()
-            .find(|table| table.id == table_id)
-            .expect("Protection theme table should exist");
-        let expected = if table_id == "demo.loot-table.warrior" {
-            vec![
-                (None, 9),
-                (Some("rfb-legacy.affix.protection"), 1),
-                (Some("rfb-legacy.affix.slaying"), 1),
-            ]
-        } else {
-            vec![(None, 9), (Some("rfb-legacy.affix.protection"), 1)]
-        };
-        assert_eq!(
-            table
-                .affix_weights
-                .iter()
-                .map(|entry| (entry.affix_id.as_deref(), entry.weight))
-                .collect::<Vec<_>>(),
-            expected,
-            "{table_id}"
         );
     }
 
@@ -12360,14 +12324,6 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
             .collect::<BTreeSet<_>>()
             .len(),
         26
-    );
-    assert_eq!(
-        hobbit
-            .affix_weights
-            .iter()
-            .map(|entry| (entry.affix_id.as_deref(), entry.weight))
-            .collect::<Vec<_>>(),
-        vec![(None, 1)]
     );
     assert_eq!(
         hobbit
@@ -13427,9 +13383,14 @@ fn anambar_service_roles_and_rewards_match_source() {
             .expect("Sacred Pendant should retain EGO identity");
         assert_eq!((ego.source_index, ego.rarity), (221, 2));
         assert_eq!(ego.types, [RfbEgoTypeDefinition::Amulet]);
-        assert_eq!(sacred.roll_groups.len(), 3);
-        assert_eq!(sacred.roll_groups[2].rolls, 5);
-        assert!(sacred.tags.contains(&"blessed-weapon".to_owned()));
+        assert!(sacred.roll_groups.is_empty());
+        assert!(
+            sacred
+                .device_generation
+                .as_ref()
+                .unwrap()
+                .activation_optional
+        );
     }
 }
 

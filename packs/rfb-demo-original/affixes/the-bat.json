@@ -1,0 +1,36 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-bat-description",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.the-bat",
+  "nameKey": "affix-legacy-the-bat-name",
+  "passives": [
+    "levitation",
+    "see-invisible"
+  ],
+  "resistances": {
+    "dark": "resistant"
+  },
+  "rfbEgo": {
+    "flags": [
+      "HIDE_TYPE",
+      "INFRA",
+      "LEVITATION",
+      "RES_DARK",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SPEED",
+      "STEALTH"
+    ],
+    "rarity": 16,
+    "sourceIndex": 102,
+    "types": [
+      "cloak"
+    ]
+  },
+  "tags": [
+    "cloak",
+    "legacy-import"
+  ]
+}

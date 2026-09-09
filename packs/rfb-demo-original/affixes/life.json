@@ -9,6 +9,13 @@
     "hold-life"
   ],
   "rfbEgo": {
+    "flags": [
+      "BLESSED",
+      "HOLD_LIFE",
+      "LIFE",
+      "SLAY_DEMON",
+      "SLAY_UNDEAD"
+    ],
     "rarity": 4,
     "sourceIndex": 13,
     "types": [

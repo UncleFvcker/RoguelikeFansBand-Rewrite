@@ -540,6 +540,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
+        if self.player_has_anti_teleport() {
+            return Ok(());
+        }
         let prefer_upward = self.rng.bounded(2) == 0;
         let targets = if prefer_upward {
             if upward_targets.is_empty() {
@@ -621,6 +624,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
+        if self.player_has_anti_teleport() {
+            return;
+        }
         let candidate_index = usize::try_from(self.rng.bounded(candidates.len() as u64))
             .expect("bounded teleport candidate index must fit usize");
         let destination = candidates[candidate_index];
@@ -734,6 +740,7 @@ impl Game {
         let owner_id = self.player.id.clone();
         let resolution = self.resolve_category_summon(
             CategorySummonSpec {
+                is_spell: true,
                 source_id: &source_kind_id,
                 owner_id: &owner_id,
                 category: &category,
@@ -1763,7 +1770,7 @@ impl Game {
             ItemCurseTargetDefinition::Weapon => EquippedItemCurseTarget::Weapon,
             ItemCurseTargetDefinition::Armor => EquippedItemCurseTarget::Armor,
         };
-        let outcome = self.curse_equipped_item(CurseEquippedItemRequest::new(target));
+        let outcome = self.curse_equipped_item(CurseEquippedItemRequest::new(target).blasting());
         if outcome.item_id.is_some() {
             self.mark_item_aware(source_kind_id);
         }
@@ -1832,9 +1839,7 @@ impl Game {
             let Some(definition) = self.content.item(&item.kind_id) else {
                 return false;
             };
-            if definition.resists_enchantment
-                || definition.tags.iter().any(|tag| tag == "no-enchant")
-            {
+            if self.item_resists_enchantment(item) {
                 return false;
             }
             if to_armor.is_some() {
@@ -1864,15 +1869,20 @@ impl Game {
                 && (matches!(item.location, ItemLocation::Inventory | ItemLocation::Equipped { .. })
                     || matches!(item.location, ItemLocation::Ground(position) if position == self.player.position))
         })?;
-        let split_fits = item.quantity == 1
-            || !matches!(item.location, ItemLocation::Inventory)
-            || self.inventory_used_slots() + 1
-                - u16::from(self.items.iter().any(|source| {
-                    source.id == source_item_id
-                        && source.quantity == 1
-                        && source.location == ItemLocation::Inventory
-                }))
-                <= self.inventory_slot_capacity();
+        let split_fits =
+            item.quantity == 1 || !matches!(item.location, ItemLocation::Inventory) || {
+                let mut projected = self.items.clone();
+                projected.retain(|source| !(source.id == source_item_id && source.quantity == 1));
+                projected
+                    .iter_mut()
+                    .find(|target| target.id == target_item_id)?
+                    .quantity -= 1;
+                let mut split = item.clone();
+                split.id = format!("projected-mutation-{}", projected.len());
+                split.quantity = 1;
+                projected.push(split);
+                self.inventory_fits(&projected)
+            };
         split_fits.then_some(item).filter(|_| {
             self.next_item_instance_serial.checked_add(1).is_some() || item.quantity == 1
         })
@@ -1882,30 +1892,48 @@ impl Game {
         let Some(item) = self.item_mutation_target(source_item_id, target_item_id) else {
             return false;
         };
-        self.content.item(&item.kind_id).is_some_and(|definition| {
+        let eligible = self.content.item(&item.kind_id).is_some_and(|definition| {
             !definition.tags.iter().any(|tag| tag == "artifact")
-                && (item.quality != ItemQualityDto::Ordinary
+                && (item.artifact_name.is_some()
+                    || item.quality != ItemQualityDto::Ordinary
                     || !item.affix_ids.is_empty()
                     || !item.enchantments.is_empty()
                     || item.curse.is_some())
-        })
+        });
+        if !eligible {
+            return false;
+        }
+        let mut projected = self.items.clone();
+        let target = projected
+            .iter_mut()
+            .find(|item| item.id == target_item_id)
+            .unwrap();
+        Self::clear_random_artifact_state(target);
+        projected.retain(|item| item.id != source_item_id || item.quantity > 1);
+        self.inventory_fits(&projected)
     }
 
     fn item_is_valid_crafting_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
-        let Some(item) = self.item_mutation_target(source_item_id, target_item_id) else {
+        let Some(item) = self.items.iter().find(|item| {
+            item.id == target_item_id && item.id != source_item_id && item.quantity > 0
+                && (matches!(item.location, ItemLocation::Inventory | ItemLocation::Equipped { .. })
+                    || matches!(item.location, ItemLocation::Ground(position) if position == self.player.position))
+        }) else {
             return false;
         };
         self.content.item(&item.kind_id).is_some_and(|definition| {
-            item.quality == ItemQualityDto::Ordinary
-                && item.affix_ids.is_empty()
-                && definition.tags.iter().any(|tag| {
-                    matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")
+            item.affix_ids.is_empty()
+                && item.rolled_affixes.is_empty()
+                && definition.rfb_base_kind.is_some_and(|base| {
+                    matches!(base.tval, 16..=23 | 30..=38)
+                        && !matches!((base.tval, base.sval), (23, 32 | 34) | (22, 50))
+                        && if matches!(base.tval, 16..=18) {
+                            item.quantity <= 59
+                        } else {
+                            item.quantity == 1
+                        }
                 })
-                && !definition
-                    .tags
-                    .iter()
-                    .any(|tag| matches!(tag.as_str(), "artifact" | "no-enchant"))
-                && !definition.resists_enchantment
+                && !item.is_artifact(&self.content)
         })
     }
 
@@ -1990,6 +2018,7 @@ impl Game {
         self.items[index].quality = ItemQualityDto::Ordinary;
         self.items[index].affix_ids.clear();
         self.items[index].rolled_affixes.clear();
+        Self::clear_random_artifact_state(&mut self.items[index]);
         self.items[index].enchantments = ItemEnchantmentsDto::default();
         self.items[index].curse = None;
         self.item_property_knowledge.insert(
@@ -2013,62 +2042,90 @@ impl Game {
         Ok(())
     }
 
+    fn clear_random_artifact_state(item: &mut ItemInstance) {
+        if item.artifact_name.take().is_some() {
+            item.intrinsic_properties = Default::default();
+            item.intrinsic_melee_damage_dice = None;
+            item.intrinsic_weight_tenths_pound = None;
+            item.intrinsic_weapon_traits.clear();
+            item.intrinsic_curse_effects.clear();
+            item.permanent_destruction_immunities.clear();
+            item.activation = None;
+            item.charges = None;
+            item.device_recovery_progress = 0;
+        }
+    }
+
     fn resolve_item_crafting(
         &mut self,
         source_kind_id: &str,
         target_item_id: &str,
-        weapon_affix_ids: Vec<String>,
-        armor_affix_ids: Vec<String>,
         events: &mut Vec<DomainEvent>,
     ) -> Result<(), CoreError> {
-        let definition = self
+        let index = self
             .items
             .iter()
-            .find(|item| item.id == target_item_id)
-            .and_then(|item| self.content.item(&item.kind_id))
-            .expect("preflighted crafting target must retain its definition");
-        let candidates = if definition.tags.iter().any(|tag| tag == "armor") {
-            armor_affix_ids
-        } else {
-            weapon_affix_ids
-        };
-        let (index, split) = self.split_item_for_mutation(target_item_id)?;
-        let target_item_id = self.items[index].id.clone();
+            .position(|item| item.id == target_item_id)
+            .expect("preflighted crafting target must remain available");
         let target_kind_id = self.items[index].kind_id.clone();
-        let selected = usize::try_from(self.rng.bounded(candidates.len() as u64))
-            .expect("validated crafting candidate count must fit usize");
-        let affix_id = candidates[selected].clone();
-        let depth = self.floor_depth(&self.current_floor_id);
-        let materialization = materialize_ego_with_rng(
-            &self.content,
-            &mut self.rng,
-            &target_kind_id,
-            vec![affix_id.clone()],
-            |_| depth,
-            depth,
-        );
-        materialization.apply_to(&mut self.items[index]);
-        self.items[index].quality = ItemQualityDto::Exceptional;
-        self.items[index].origin_kind = Some(ItemOriginKindDto::PlayerMade);
-        self.items[index].discount_percent = 99;
-        self.item_property_knowledge.insert(
-            target_item_id.clone(),
-            ItemPropertyKnowledgeState {
-                discovered: true,
-                appraised: true,
-                identified: true,
-                feeling: None,
-                known_affix_ids: BTreeSet::from([affix_id.clone()]),
-            },
-        );
+        let definition = self
+            .content
+            .item(&target_kind_id)
+            .expect("preflighted crafting target must retain its definition");
+        // Prepare the entire result before touching the target. Quantity failure
+        // consumes the use, but never splits, enchants or partially brands it.
+        let ammo = definition
+            .rfb_base_kind
+            .is_some_and(|base| matches!(base.tval, 16..=18));
+        let quantity_succeeds =
+            !ammo || self.rng.bounded(30) as i32 + 1 > self.items[index].quantity as i32 - 30;
+        let materialization = quantity_succeeds
+            .then(|| {
+                super::ego::roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    rfb_protocol::ItemEnchantmentsDto::default(),
+                    &mut self.rng,
+                    definition,
+                    self.content.affix_definitions(),
+                    self.progress.level,
+                    Some(&self.items[index].intrinsic_properties),
+                )
+            })
+            .flatten()
+            .and_then(|materialization| {
+                let mut crafted = self.items[index].clone();
+                let affix_id = materialization.affix_ids[0].clone();
+                materialization.apply_to(&mut crafted);
+                crafted.quality = ItemQualityDto::Exceptional;
+                crafted.origin_kind = Some(ItemOriginKindDto::PlayerMade);
+                crafted.discount_percent = 99;
+                self.content
+                    .item(&crafted.kind_id)
+                    .is_some_and(|definition| {
+                        super::validation::item_creation_state_is_valid(&crafted, definition)
+                    })
+                    .then_some((affix_id, crafted))
+            });
         self.mark_item_aware(source_kind_id);
+        let Some((affix_id, crafted)) = materialization else {
+            if self.rng.bounded(3) == 0 {
+                self.add_virtue(VirtueKindDto::Enchantment, -1);
+            }
+            events.push(DomainEvent::ItemCraftingFailed {
+                target_item_id: target_item_id.to_owned(),
+                target_kind_id,
+            });
+            return Ok(());
+        };
+        self.items[index] = crafted;
+        self.identify_item_instance(target_item_id, ItemIdentificationRequest::new(true));
+        self.add_virtue(VirtueKindDto::Enchantment, 1);
         events.push(DomainEvent::ItemCrafted {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
-            target_item_id,
-            target_kind_id,
+            target_item_id: target_item_id.to_owned(),
+            target_kind_id: self.items[index].kind_id.clone(),
             affix_id,
-            split,
+            split: false,
         });
         Ok(())
     }
@@ -2558,6 +2615,8 @@ impl Game {
                     &self.content,
                     &self.items[index].kind_id,
                     &self.items[index].affix_ids,
+                    Some(&activation.profile_id),
+                    self.items[index].artifact_name.is_some(),
                 )
                 .and_then(|generation| {
                     generation
@@ -2667,6 +2726,12 @@ impl Game {
             }
         }
 
+        let item_device_power_bonus =
+            if super::ego::item_has_ego(&self.content, &self.items[index], 254) {
+                i32::from(super::ego::device_pval(&self.items[index]))
+            } else {
+                0
+            };
         if let Some(cost) = cost {
             self.items[index]
                 .charges
@@ -2681,7 +2746,8 @@ impl Game {
         }
         let device_power_bonus = difficulty
             .map(|_| self.effective_player_device_power_bonus())
-            .unwrap_or(0);
+            .unwrap_or(0)
+            + item_device_power_bonus;
         self.resolve_inventory_item_effect(
             SettledItemUse {
                 kind_id,
@@ -2719,6 +2785,54 @@ impl Game {
         Ok(())
     }
 
+    fn boost_item_ability_effect(&mut self, effect: &mut AbilityEffectDefinition, bonus: i32) {
+        if bonus == 0 {
+            return;
+        }
+        match effect {
+            AbilityEffectDefinition::Sequence { effects } => {
+                for effect in effects {
+                    self.boost_item_ability_effect(effect, bonus);
+                }
+            }
+            AbilityEffectDefinition::DrainLife { damage_bonus, .. }
+            | AbilityEffectDefinition::ConeDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::VisibleDamage { damage_bonus, .. } => {
+                *damage_bonus = device_power_value(u64::from(*damage_bonus), bonus) as u16;
+            }
+            AbilityEffectDefinition::WrathOfGod {
+                damage: Some(damage),
+            } => {
+                *damage = device_power_value(u64::from(*damage), bonus) as u16;
+            }
+            AbilityEffectDefinition::Heal { amount } => {
+                *amount = device_power_value(u64::from(*amount), bonus) as u32;
+            }
+            AbilityEffectDefinition::ApplyStatus {
+                duration_ticks,
+                duration_dice,
+                duration_sides,
+                ..
+            } => {
+                let rolled: u64 = (0..*duration_dice)
+                    .map(|_| self.rng.bounded(u64::from(*duration_sides)) + 1)
+                    .sum();
+                *duration_ticks =
+                    device_power_value(u64::from(*duration_ticks) + rolled, bonus) as u32;
+                *duration_dice = 0;
+                *duration_sides = 0;
+            }
+            AbilityEffectDefinition::VisibleApplyStatus {
+                power: Some(power), ..
+            }
+            | AbilityEffectDefinition::Control { power, .. }
+            | AbilityEffectDefinition::TeleportAway { power, .. } => {
+                *power = device_power_value(u64::from(*power), bonus) as u16;
+            }
+            _ => {}
+        }
+    }
+
     fn resolve_inventory_item_effect(
         &mut self,
         settled: SettledItemUse,
@@ -2734,19 +2848,143 @@ impl Game {
             device_power_bonus,
         } = settled;
         match (effect, plan) {
+            (ItemUseEffectDefinition::RefillQuiver, ItemUsePlan::SelfTarget) => {
+                self.refill_quiver(&kind_id, profile_id.as_deref(), events)?;
+            }
+            (ItemUseEffectDefinition::Escape, ItemUsePlan::SelfTarget) => {
+                let effect = match self.rng.bounded(13) {
+                    0..=4 => AbilityEffectDefinition::BlinkSelf {
+                        radius: 10,
+                        line_of_sight: false,
+                    },
+                    5..=9 => AbilityEffectDefinition::BlinkSelf {
+                        radius: 222,
+                        line_of_sight: false,
+                    },
+                    10..=11 => AbilityEffectDefinition::CreateStair {
+                        up_terrain_id: "demo.terrain.stairs-up".to_owned(),
+                        down_terrain_id: "demo.terrain.stairs-down".to_owned(),
+                    },
+                    _ => AbilityEffectDefinition::TeleportLevel,
+                };
+                let target = AbilityTargetDefinition {
+                    modes: vec![AbilityTargetModeDefinition::SelfTarget],
+                    range: 0,
+                    requires_line_of_effect: false,
+                };
+                if let Some(ItemUsePlan::AbilityEffect {
+                    ability,
+                    target_plan,
+                }) = self.item_use_plan(
+                    &kind_id,
+                    &ItemUseEffectDefinition::AbilityEffect {
+                        effect: Box::new(effect),
+                        affects_ground_items: false,
+                    },
+                    Some(&target),
+                    None,
+                    None,
+                ) {
+                    self.resolve_player_ability_effect(
+                        *ability,
+                        target_plan,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            }
+            (ItemUseEffectDefinition::StarBall, ItemUsePlan::SelfTarget) => {
+                let count = self.roll_damage(5, 3);
+                let count = device_power_value(count as u64, device_power_bonus);
+                let damage = device_power_value(150, device_power_bonus) as i32;
+                for _ in 0..count {
+                    let mut target = self.player.position;
+                    for _ in 0..1000 {
+                        target = Position {
+                            x: self.player.position.x + self.rng.bounded(9) as i32 - 4,
+                            y: self.player.position.y + self.rng.bounded(9) as i32 - 4,
+                        };
+                        if super::projectile_geometry::rfb_distance(self.player.position, target)
+                            <= 4
+                            && target != self.player.position
+                            && self.is_walkable(target)
+                        {
+                            break;
+                        }
+                    }
+                    if let Some(path) = super::projectile_geometry::projectile_path_through_target(
+                        self.player.position,
+                        target,
+                        self.width.max(self.height),
+                    ) {
+                        self.resolve_player_area_damage_with_base_policy(
+                            &kind_id,
+                            path,
+                            true,
+                            DamageType::Electricity,
+                            3,
+                            None,
+                            damage,
+                            true,
+                            true,
+                            events,
+                            changed,
+                            removed_entities,
+                        )?;
+                    }
+                }
+            }
+            (ItemUseEffectDefinition::Starburst { damage }, ItemUsePlan::SelfTarget) => {
+                if !self.item_status_resisted(ActorDamageType::Blindness, STATUS_BLINDNESS)
+                    && !self.item_status_resisted(ActorDamageType::Light, "")
+                {
+                    self.resolve_item_status(
+                        &kind_id,
+                        STATUS_BLINDNESS,
+                        1,
+                        5,
+                        3,
+                        AbilityStatusStackingDefinition::Extend,
+                        None,
+                        &BTreeMap::new(),
+                        &StatModifiers::default(),
+                        &EquipmentBonuses::default(),
+                        100,
+                        events,
+                    );
+                }
+                self.resolve_player_area_damage_with_base_policy(
+                    &kind_id,
+                    Vec::new(),
+                    false,
+                    DamageType::Light,
+                    5,
+                    None,
+                    device_power_value(u64::from(damage) * 2, device_power_bonus) as i32,
+                    true,
+                    true,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             (
                 ItemUseEffectDefinition::AbilityEffect { .. },
                 ItemUsePlan::AbilityEffect {
-                    ability,
+                    mut ability,
                     target_plan,
                 },
-            ) => self.resolve_player_ability_effect(
-                *ability,
-                target_plan,
-                events,
-                changed,
-                removed_entities,
-            )?,
+            ) => {
+                self.boost_item_ability_effect(&mut ability.effect, device_power_bonus);
+                self.resolve_player_ability_effect(
+                    *ability,
+                    target_plan,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             (
                 effect @ (ItemUseEffectDefinition::Heal { .. }
                 | ItemUseEffectDefinition::NoNumericEffect
@@ -2756,6 +2994,7 @@ impl Game {
                 | ItemUseEffectDefinition::Bless { .. }
                 | ItemUseEffectDefinition::ApplySlowness { .. }
                 | ItemUseEffectDefinition::ApplySpeed { .. }
+                | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
                 | ItemUseEffectDefinition::ApplyHeroism { .. }
                 | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
@@ -2835,17 +3074,10 @@ impl Game {
             }
             (
                 ItemUseEffectDefinition::CraftItem {
-                    weapon_affix_ids,
-                    armor_affix_ids,
+                    rfb_ego_policy: rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger,
                 },
                 ItemUsePlan::Item { item_id },
-            ) => self.resolve_item_crafting(
-                &kind_id,
-                &item_id,
-                weapon_affix_ids,
-                armor_affix_ids,
-                events,
-            )?,
+            ) => self.resolve_item_crafting(&kind_id, &item_id, events)?,
             (ItemUseEffectDefinition::ShowRumour { message_key }, ItemUsePlan::SelfTarget) => {
                 self.mark_item_aware(&kind_id);
                 events.push(DomainEvent::ItemRumour {
@@ -3229,6 +3461,7 @@ impl Game {
             | ItemUseEffectDefinition::Bless { .. }
             | ItemUseEffectDefinition::ApplySlowness { .. }
             | ItemUseEffectDefinition::ApplySpeed { .. }
+            | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
             | ItemUseEffectDefinition::ApplyHeroism { .. }
             | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
             | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
@@ -3276,6 +3509,10 @@ impl Game {
             | ItemUseEffectDefinition::DrainResourceFull { .. }
             | ItemUseEffectDefinition::IdentifyInventory
             | ItemUseEffectDefinition::SelfKnowledge
+            | ItemUseEffectDefinition::RefillQuiver
+            | ItemUseEffectDefinition::StarBall
+            | ItemUseEffectDefinition::Escape
+            | ItemUseEffectDefinition::Starburst { .. }
             | ItemUseEffectDefinition::ShowRumour { .. }
             | ItemUseEffectDefinition::Sequence { .. }
             | ItemUseEffectDefinition::CurseEquippedItem { .. }
@@ -3448,16 +3685,20 @@ impl Game {
                     })
             }
             ItemUseEffectDefinition::CraftItem { .. } => {
-                let TargetSelection::Item {
-                    item_id: target_item_id,
-                } = target?
-                else {
-                    return None;
+                let (target_item_id, confirmed_quantity) = match target? {
+                    TargetSelection::Item { item_id } => (item_id, None),
+                    TargetSelection::CraftingItem { item_id, quantity } => {
+                        (item_id, Some(*quantity))
+                    }
+                    _ => return None,
                 };
-                self.item_is_valid_crafting_target(source_item_id, target_item_id)
-                    .then(|| ItemUsePlan::Item {
-                        item_id: target_item_id.clone(),
-                    })
+                let item = self.items.iter().find(|item| item.id == *target_item_id)?;
+                (self.item_is_valid_crafting_target(source_item_id, target_item_id)
+                    && confirmed_quantity.is_none_or(|quantity| quantity == item.quantity)
+                    && (item.quantity <= 30 || confirmed_quantity == Some(item.quantity)))
+                .then(|| ItemUsePlan::Item {
+                    item_id: target_item_id.clone(),
+                })
             }
             effect @ ItemUseEffectDefinition::EnchantItem { .. } => {
                 let TargetSelection::Item {
@@ -4076,7 +4317,7 @@ impl Game {
         noticed
     }
 
-    fn resolve_item_experience_loss(
+    pub(super) fn resolve_item_experience_loss(
         &mut self,
         source_kind_id: &str,
         divisor: u8,
@@ -5116,6 +5357,43 @@ impl Game {
                 *duration_bonus,
                 events,
             ),
+            ItemUseEffectDefinition::ApplyHeroicSpeed {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => {
+                let duration = self.roll_damage(*duration_dice, *duration_sides as u16) as u32
+                    + *duration_bonus;
+                let mut haste =
+                    super::monster_combat::melee_status(STATUS_HASTE, duration, source_kind_id);
+                haste.stacking = StatusStacking::KeepStrongest;
+                let speed = matches!(
+                    apply_status_application(&mut self.player.statuses, haste).change,
+                    StatusChange::Added
+                );
+                events.push(DomainEvent::ItemSpeedResolved {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    duration,
+                });
+                let existing = self
+                    .player
+                    .statuses
+                    .iter()
+                    .find(|status| status.kind_id == "rfb.status.hero")
+                    .map_or(0, |status| status.remaining_ticks);
+                let heroism = self.resolve_item_heroism(
+                    source_kind_id,
+                    0,
+                    0,
+                    duration.saturating_sub(existing),
+                    events,
+                );
+                if speed {
+                    self.mark_item_aware(source_kind_id);
+                }
+                speed || heroism
+            }
             ItemUseEffectDefinition::ApplyHeroism {
                 duration_dice,
                 duration_sides,
@@ -5429,6 +5707,10 @@ impl Game {
             | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
             | ItemUseEffectDefinition::CreateCurrentTerrain { .. }
             | ItemUseEffectDefinition::SetFloorGlow { .. }
+            | ItemUseEffectDefinition::RefillQuiver
+            | ItemUseEffectDefinition::StarBall
+            | ItemUseEffectDefinition::Escape
+            | ItemUseEffectDefinition::Starburst { .. }
             | ItemUseEffectDefinition::AreaDestruction { .. }
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }

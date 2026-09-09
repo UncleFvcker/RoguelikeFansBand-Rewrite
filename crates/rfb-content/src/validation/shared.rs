@@ -172,7 +172,11 @@ pub(super) fn equipment_bonuses_out_of_range(bonuses: &EquipmentBonuses) -> bool
     !(-100..=100).contains(&bonuses.life_percent)
         || !(-1_000..=1_000).contains(&bonuses.launcher_multiplier_delta_percent)
         || !(-1_000..=1_000).contains(&bonuses.base_shot_delta_percent)
+        || !(-800..=800).contains(&bonuses.melee_attacks_delta_percent)
+        || !(-100..=100).contains(&bonuses.spell_capacity_bonus)
+        || !(0..=100).contains(&bonuses.magic_resistance_percent)
         || !(-8..=8).contains(&bonuses.melee_attacks)
+        || !(-100..=100).contains(&bonuses.weapon_dice_bonus)
         || [
             bonuses.melee_skill,
             bonuses.melee_damage,
@@ -196,7 +200,11 @@ pub(super) fn equipment_bonuses_out_of_range(bonuses: &EquipmentBonuses) -> bool
 }
 
 pub(super) fn affix_property_bundle_out_of_range(bundle: &AffixPropertyBundleDefinition) -> bool {
-    bundle.modifiers.max_hp < -1_000_000
+    bundle
+        .rfb_flags
+        .iter()
+        .any(|flag| !crate::valid_rfb_runtime_flag(flag))
+        || bundle.modifiers.max_hp < -1_000_000
         || bundle.modifiers.max_hp > 1_000_000
         || bundle.modifiers.attack < -1_000_000
         || bundle.modifiers.attack > 1_000_000

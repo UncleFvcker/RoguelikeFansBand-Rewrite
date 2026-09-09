@@ -1136,7 +1136,7 @@ fn check_crusade_fourth_book(content: &CompiledContentV1) {
             .find(|ability| ability.id == "demo.ability.crusade-wrath-of-the-god")
             .expect("Wrath of the God should compile")
             .effect,
-        AbilityEffectDefinition::WrathOfGod
+        AbilityEffectDefinition::WrathOfGod { .. }
     ));
     assert!(matches!(
         content
@@ -3654,7 +3654,10 @@ fn check_arcane_third_book(content: &CompiledContentV1) {
         .expect("Teleport should compile");
     assert!(matches!(
         teleport.effect,
-        AbilityEffectDefinition::BlinkSelf { radius: 5 }
+        AbilityEffectDefinition::BlinkSelf {
+            radius: 5,
+            line_of_sight: false
+        }
     ));
     assert_eq!(teleport.level_scaling.len(), 1);
     let identify = content

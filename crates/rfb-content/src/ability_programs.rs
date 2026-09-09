@@ -301,7 +301,7 @@ fn ability_program_input_accepts_step(
                     | AbilityEffectDefinition::CurseDamage { .. }
                     | AbilityEffectDefinition::DeathRay { .. }
                     | AbilityEffectDefinition::DoomHand
-                    | AbilityEffectDefinition::WrathOfGod
+                    | AbilityEffectDefinition::WrathOfGod { .. }
                     | AbilityEffectDefinition::Hellfire { .. }
                     | AbilityEffectDefinition::TeleportAway { .. }
                     | AbilityEffectDefinition::BirdDrop

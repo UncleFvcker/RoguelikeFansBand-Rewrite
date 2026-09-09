@@ -12,6 +12,17 @@
     "see-invisible"
   ],
   "rfbEgo": {
+    "flags": [
+      "AGGRAVATE",
+      "BRAND_POIS",
+      "CURSED",
+      "ESP_UNDEAD",
+      "HEAVY_CURSE",
+      "RANDOM_CURSE2",
+      "SEE_INVIS",
+      "SLAY_GOOD",
+      "SLAY_UNDEAD"
+    ],
     "rarity": 16,
     "sourceIndex": 21,
     "types": [

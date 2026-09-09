@@ -86,6 +86,13 @@ pub(crate) enum ItemLocation {
 pub(crate) struct ItemInstance {
     pub(crate) id: String,
     pub(crate) kind_id: String,
+    /// Original art_name: its presence is the random artifact identity.
+    pub(crate) artifact_name: Option<String>,
+    /// Intrinsic instance values, independent of any replaceable Ego contribution.
+    pub(crate) intrinsic_melee_damage_dice: Option<MeleeDamageDiceDto>,
+    pub(crate) intrinsic_weight_tenths_pound: Option<u16>,
+    pub(crate) intrinsic_weapon_traits: BTreeSet<WeaponTraitDto>,
+    pub(crate) intrinsic_curse_effects: BTreeSet<ItemCurseEffectDto>,
     pub(crate) quantity: u32,
     pub(crate) inscription: Option<String>,
     pub(crate) previously_worn: bool,
@@ -108,6 +115,30 @@ pub(crate) struct ItemInstance {
     pub(crate) location: ItemLocation,
 }
 
+impl ItemInstance {
+    pub(crate) fn is_artifact(&self, content: &rfb_content::ContentCatalog) -> bool {
+        self.artifact_name.is_some()
+            || content.item(&self.kind_id).is_some_and(|definition| {
+                definition.artifact_generation.is_some()
+                    || definition.tags.iter().any(|tag| tag == "artifact")
+            })
+    }
+
+    pub(crate) fn melee_damage_dice(&self) -> Option<MeleeDamageDiceDto> {
+        self.rolled_affixes
+            .iter()
+            .find_map(|roll| roll.melee_damage_dice)
+            .or(self.intrinsic_melee_damage_dice)
+    }
+
+    pub(crate) fn weight_override(&self) -> Option<u16> {
+        self.rolled_affixes
+            .iter()
+            .find_map(|roll| roll.weight_tenths_pound)
+            .or(self.intrinsic_weight_tenths_pound)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct CapturedActor {
     pub(crate) kind_id: String,
@@ -119,19 +150,25 @@ pub(crate) struct CapturedActor {
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct RolledAffixState {
+    pub(crate) device_pval: Option<u16>,
     pub(crate) affix_id: String,
     pub(crate) properties: AffixPropertyBundleDefinition,
     pub(crate) enchantment_delta: ItemEnchantmentsDto,
     pub(crate) melee_damage_dice: Option<MeleeDamageDiceDto>,
+    pub(crate) weight_tenths_pound: Option<u16>,
+    pub(crate) elemental_destruction_immunities: BTreeSet<ItemDestructionElement>,
     pub(crate) weapon_traits: BTreeSet<WeaponTraitDto>,
     pub(crate) curse_effects: BTreeSet<ItemCurseEffectDto>,
 }
 
 impl RolledAffixState {
     pub(crate) fn has_instance_state(&self) -> bool {
-        self.properties != AffixPropertyBundleDefinition::default()
+        self.device_pval.is_some()
+            || self.properties != AffixPropertyBundleDefinition::default()
             || !self.enchantment_delta.is_empty()
             || self.melee_damage_dice.is_some()
+            || self.weight_tenths_pound.is_some()
+            || !self.elemental_destruction_immunities.is_empty()
             || !self.weapon_traits.is_empty()
             || !self.curse_effects.is_empty()
     }

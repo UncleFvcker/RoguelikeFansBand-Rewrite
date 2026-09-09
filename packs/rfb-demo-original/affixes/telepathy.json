@@ -1,0 +1,21 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-telepathy-description",
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "generationMaxLevel": 80,
+  "id": "rfb-legacy.affix.telepathy",
+  "nameKey": "affix-legacy-telepathy-name",
+  "rfbEgo": {
+    "flags": [],
+    "rarity": 2,
+    "sourceIndex": 125,
+    "types": [
+      "crown"
+    ]
+  },
+  "tags": [
+    "crown",
+    "legacy-import"
+  ]
+}

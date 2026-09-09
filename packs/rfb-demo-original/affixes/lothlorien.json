@@ -10,6 +10,12 @@
   "id": "rfb-legacy.affix.lothlorien",
   "nameKey": "affix-legacy-lothlorien-name",
   "rfbEgo": {
+    "flags": [
+      "DEX",
+      "IGNORE_ACID",
+      "IGNORE_FIRE",
+      "STEALTH"
+    ],
     "rarity": 4,
     "sourceIndex": 164,
     "types": [

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-orcish-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "id": "rfb-legacy.affix.orcish",
+  "nameKey": "affix-legacy-orcish-name",
+  "resistances": {
+    "dark": "resistant",
+    "light": "vulnerable"
+  },
+  "rfbEgo": {
+    "flags": [
+      "DEC_INT",
+      "DEC_STEALTH",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_DARK",
+      "STR",
+      "VULN_LITE",
+      "XTRA_E_RES"
+    ],
+    "rarity": 3,
+    "sourceIndex": 61,
+    "types": [
+      "shield"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "shield"
+  ]
+}

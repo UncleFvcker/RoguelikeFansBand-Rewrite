@@ -65,17 +65,16 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 2,
-      "turn": 2,
       "lastCommandSeq": 2,
-      "stateHash": "9c18b26d872bb41f911d1e47b04c4fdeb3d974ed57cb854a19b16a5ca3c97969",
-      "worldTick": 20,
       "playerPosition": {
         "x": 45,
         "y": 16
       },
-      "playerEnergyNeed": 0,
-      "playerStatuses": []
+      "playerStatuses": [],
+      "revision": 2,
+      "stateHash": "af1b304d3f23d93c45c26a603742100695df5ddd55b6769b958916920c28203f",
+      "turn": 2,
+      "worldTick": 20
     },
     "events": [
       {
@@ -93,6 +92,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "9c18b26d872bb41f911d1e47b04c4fdeb3d974ed57cb854a19b16a5ca3c97969"
+    "saveRoundTripStateHash": "af1b304d3f23d93c45c26a603742100695df5ddd55b6769b958916920c28203f"
   }
 }

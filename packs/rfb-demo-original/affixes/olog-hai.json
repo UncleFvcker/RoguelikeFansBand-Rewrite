@@ -1,61 +1,76 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-olog-hai-description",
+  "deviceGeneration": {
+    "activationOptional": false,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effect": {
+          "durationBonus": 25,
+          "durationDice": 1,
+          "durationSides": 25,
+          "type": "apply-berserk-strength"
+        },
+        "id": "rfb.device-activation.ego-72-berserk",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-berserk-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [],
+        "rfbValue": 2125,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid"
+  ],
   "formatVersion": 1,
+  "generationLevel": 30,
   "id": "rfb-legacy.affix.olog-hai",
   "nameKey": "affix-legacy-olog-hai-name",
-  "descriptionKey": "affix-legacy-olog-hai-description",
-  "generationLevel": 30,
-  "modifiers": {
-    "strength": 4,
-    "intelligence": -4,
-    "defense": 10
-  },
-  "equipmentBonuses": { "meleeDamage": 7 },
+  "passives": [
+    "regeneration"
+  ],
   "resistances": {
     "acid": "resistant",
     "poison": "resistant"
   },
-  "passives": ["regeneration"],
-  "elementalDestructionImmunities": ["acid"],
-  "deviceGeneration": {
-    "recovery": { "intervalTicks": 50, "energyPerMille": 1000 },
-    "activations": [
-      {
-        "id": "demo.item-activation.olog-hai-berserk",
-        "nameKey": "item-activation-demo-olog-hai-berserk-name",
-        "weight": 1,
-        "minDepth": 1,
-        "maxDepth": 100,
-        "deviceCheckDifficulty": 10,
-        "charges": { "minimum": 1, "maximum": 1, "cost": 1 },
-        "target": { "modes": ["self"], "range": 0, "requiresLineOfEffect": false },
-        "effect": {
-          "type": "apply-berserk-strength",
-          "durationDice": 1,
-          "durationSides": 25,
-          "durationBonus": 25
-        }
-      }
+  "rfbEgo": {
+    "flags": [
+      "DEC_INT",
+      "IGNORE_ACID",
+      "REGEN",
+      "RES_ACID",
+      "RES_POIS",
+      "SHOW_MODS",
+      "STR",
+      "XTRA_H_RES"
+    ],
+    "rarity": 8,
+    "sourceIndex": 72,
+    "types": [
+      "body-armor"
     ]
   },
-  "rollGroups": [
-    {
-      "rolls": 1,
-      "candidates": [
-        { "weight": 1, "properties": { "resistances": { "poison": "resistant" } } },
-        { "weight": 1, "properties": { "resistances": { "light": "resistant" } } },
-        { "weight": 1, "properties": { "resistances": { "dark": "resistant" } } },
-        { "weight": 1, "properties": { "resistances": { "shards": "resistant" } } },
-        { "weight": 1, "properties": { "resistances": { "blindness": "resistant" } } },
-        { "weight": 1, "properties": { "resistances": { "confusion": "resistant" } } },
-        { "weight": 1, "properties": { "resistances": { "sound": "resistant" } } },
-        { "weight": 1, "properties": { "resistances": { "nether": "resistant" } } },
-        { "weight": 1, "properties": { "resistances": { "nexus": "resistant" } } },
-        { "weight": 1, "properties": { "resistances": { "chaos": "resistant" } } },
-        { "weight": 1, "properties": { "resistances": { "disenchant": "resistant" } } },
-        { "weight": 1, "properties": { "resistances": { "fear": "resistant" } } }
-      ]
-    }
-  ],
-  "tags": ["body-armor", "legacy-import", "olog-hai"]
+  "tags": [
+    "body-armor",
+    "legacy-import"
+  ]
 }

@@ -14,6 +14,16 @@
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-filthy-rag-name",
+  "rfbBaseKind": {
+    "sourceIndex": 246,
+    "sval": 1,
+    "tval": 36
+  },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": -1
+  },
   "tags": [
     "armor",
     "equipment",

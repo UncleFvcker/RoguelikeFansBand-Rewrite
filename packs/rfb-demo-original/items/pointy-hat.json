@@ -16,6 +16,17 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-pointy-hat-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 225,
+    "sval": 10,
+    "tval": 32
+  },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

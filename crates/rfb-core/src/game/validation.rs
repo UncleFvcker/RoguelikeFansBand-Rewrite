@@ -114,15 +114,30 @@ pub(super) fn rolled_affixes_are_valid(item: &ItemInstance) -> bool {
             item.affix_ids.binary_search(&rolled.affix_id).is_ok()
                 && rolled.has_instance_state()
                 && rolled
-                    .melee_damage_dice
-                    .is_none_or(|dice| dice.dice > 0 && dice.sides > 0)
-                && (-15..=15).contains(&rolled.enchantment_delta.to_hit)
-                && (-15..=15).contains(&rolled.enchantment_delta.to_damage)
-                && (-15..=15).contains(&rolled.enchantment_delta.to_armor)
+                    .device_pval
+                    .is_none_or(|pval| (1..=5).contains(&pval))
+                && rolled.melee_damage_dice.is_none_or(|dice| {
+                    (dice.dice > 0 && dice.sides > 0)
+                        || (rolled.affix_id == "rfb-legacy.affix.blasted"
+                            && dice.dice == 0
+                            && dice.sides == 0)
+                })
+                && (-255..=255).contains(&rolled.enchantment_delta.to_hit)
+                && (-255..=255).contains(&rolled.enchantment_delta.to_damage)
+                && (-255..=255).contains(&rolled.enchantment_delta.to_armor)
+                && rolled
+                    .weight_tenths_pound
+                    .is_none_or(|weight| weight <= 10_000)
         })
+        && item
+            .rolled_affixes
+            .iter()
+            .filter(|rolled| rolled.weight_tenths_pound.is_some())
+            .count()
+            <= 1
 }
 
-fn item_creation_state_is_valid(
+pub(super) fn item_creation_state_is_valid(
     item: &ItemInstance,
     definition: &rfb_content::ItemDefinition,
 ) -> bool {
@@ -137,11 +152,38 @@ fn item_creation_state_is_valid(
         }
         Some(ItemOriginKindDto::Acquire) => item.discount_percent == 0,
         Some(ItemOriginKindDto::Rubble) => item.discount_percent == 0,
+        Some(ItemOriginKindDto::EndlessQuiver) => {
+            item.discount_percent == 0 && definition.ammunition_profile.is_some()
+        }
     };
     let damage_override_is_valid = item.damage_dice_override.is_none_or(|dice| {
         (1..=9).contains(&dice) && definition.tags.iter().any(|tag| tag == "ammunition")
     });
-    let enchantments_are_valid = [-15..=15, -15..=15, -15..=15]
+    let armor = definition
+        .rfb_base_kind
+        .is_some_and(|base| matches!(base.tval, 30..=38));
+    let limit = if definition
+        .rfb_base_kind
+        .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=38 | 40 | 45))
+    {
+        255
+    } else {
+        15
+    };
+    let weight_is_valid = item.rolled_affixes.iter().all(|rolled| {
+        rolled.weight_tenths_pound.is_none_or(|weight| {
+            (weight == 0
+                && definition
+                    .rfb_base_kind
+                    .is_some_and(|base| base.tval == 46 && base.sval <= 1)
+                && rolled.affix_id == "rfb-legacy.affix.phase-quiver")
+                || armor
+                    && (weight == definition.weight_tenths_pound * 2 / 3
+                        || weight == definition.weight_tenths_pound / 2
+                        || (weight == 8 && rolled.affix_id == "rfb-legacy.affix.the-tomte"))
+        })
+    });
+    let enchantments_are_valid = [-limit..=limit, -limit..=limit, -limit..=limit]
         .into_iter()
         .zip([
             item.enchantments.to_hit,
@@ -149,7 +191,65 @@ fn item_creation_state_is_valid(
             item.enchantments.to_armor,
         ])
         .all(|(range, value)| range.contains(&value));
-    player_made_state_is_valid && damage_override_is_valid && enchantments_are_valid
+    player_made_state_is_valid
+        && item.artifact_name.as_ref().is_none_or(|name| {
+            !name.trim().is_empty()
+                && name.len() < 1024
+                && !name.chars().any(char::is_control)
+                && item.quantity == 1
+                && definition
+                    .rfb_base_kind
+                    .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=40 | 45 | 46))
+                && definition.rfb_value.is_some()
+                && definition.artifact_generation.is_none()
+                && !definition.tags.iter().any(|tag| tag == "artifact")
+                && item
+                    .affix_ids
+                    .iter()
+                    .all(|id| id == "rfb-legacy.affix.blasted")
+        })
+        && item.intrinsic_melee_damage_dice.is_none_or(|dice| {
+            definition.melee_profile.is_some()
+                && (1..=255).contains(&dice.dice)
+                && (1..=255).contains(&dice.sides)
+        })
+        && item
+            .intrinsic_weight_tenths_pound
+            .is_none_or(|weight| weight <= 10_000)
+        && item.rolled_affixes.iter().all(|rolled| {
+            rolled.device_pval.is_none()
+                || (definition.tags.iter().any(|tag| tag == "device")
+                    && matches!(
+                        rolled.affix_id.as_str(),
+                        "rfb-legacy.affix.capacity-device"
+                            | "rfb-legacy.affix.regeneration-device"
+                            | "rfb-legacy.affix.simplicity-device"
+                            | "rfb-legacy.affix.power-device"
+                            | "rfb-legacy.affix.quickness-device"
+                    ))
+        })
+        && item
+            .intrinsic_properties
+            .ammunition_capacity
+            .is_none_or(|capacity| capacity > 0 && definition.ammunition_capacity > 0)
+        && item.rolled_affixes.iter().all(|rolled| {
+            rolled
+                .properties
+                .ammunition_capacity
+                .is_none_or(|capacity| capacity > 0 && definition.ammunition_capacity > 0)
+        })
+        && std::iter::once(&item.intrinsic_properties)
+            .chain(item.rolled_affixes.iter().map(|rolled| &rolled.properties))
+            .all(|properties| {
+                properties.bag_capacity.is_none_or(|capacity| {
+                    super::ego::base_bag_capacity(definition).is_some_and(|base| {
+                        capacity == base || capacity == base + 2 || capacity == base * 2
+                    })
+                })
+            })
+        && damage_override_is_valid
+        && enchantments_are_valid
+        && weight_is_valid
 }
 
 pub(super) fn floor_regions_are_valid(
@@ -809,12 +909,15 @@ impl Game {
             let supports_quality = (definition.max_stack == 1
                 && definition.equipment_slot.is_some()
                 && item.quantity == 1)
-                || definition.tags.iter().any(|tag| tag == "ammunition");
+                || definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "ammunition" | "device"));
             let affixes_preserve_ordinary_quality = !item.affix_ids.is_empty()
                 && item.affix_ids.iter().all(|affix_id| {
-                    self.content
-                        .affix(affix_id)
-                        .is_some_and(|affix| affix.preserves_ordinary_quality)
+                    self.content.affix(affix_id).is_some_and(|affix| {
+                        affix.preserves_ordinary_quality || affix.rfb_ego.is_some()
+                    })
                 });
             let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
                 && item
@@ -895,7 +998,7 @@ impl Game {
                 }
             }
         }
-        if self.inventory_used_slots() > self.inventory_slot_capacity() {
+        if !self.inventory_fits(&self.items) {
             return Err(CoreError::InvalidSave("inventory exceeds slot capacity"));
         }
         for (shop_id, state) in &self.shop_states {
@@ -905,7 +1008,10 @@ impl Game {
                     .item(&item.kind_id)
                     .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
                 let supports_quality = (definition.max_stack == 1 && item.quantity == 1)
-                    || definition.tags.iter().any(|tag| tag == "ammunition");
+                    || definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "ammunition" | "device"));
                 let location_is_valid = matches!(
                     &item.location,
                     ItemLocation::Shop { shop_id: location_shop_id }
@@ -936,7 +1042,10 @@ impl Game {
                     .item(&item.kind_id)
                     .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
                 let supports_quality = (definition.max_stack == 1 && item.quantity == 1)
-                    || definition.tags.iter().any(|tag| tag == "ammunition");
+                    || definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "ammunition" | "device"));
                 let location_is_valid = matches!(
                     &item.location,
                     ItemLocation::Home { facility_id: location_facility_id }
@@ -1052,12 +1161,15 @@ impl Game {
                 let supports_quality = (definition.max_stack == 1
                     && definition.equipment_slot.is_some()
                     && item.quantity == 1)
-                    || definition.tags.iter().any(|tag| tag == "ammunition");
+                    || definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "ammunition" | "device"));
                 let affixes_preserve_ordinary_quality = !item.affix_ids.is_empty()
                     && item.affix_ids.iter().all(|affix_id| {
-                        self.content
-                            .affix(affix_id)
-                            .is_some_and(|affix| affix.preserves_ordinary_quality)
+                        self.content.affix(affix_id).is_some_and(|affix| {
+                            affix.preserves_ordinary_quality || affix.rfb_ego.is_some()
+                        })
                     });
                 let affixes_are_valid = item.affix_ids.windows(2).all(|pair| pair[0] < pair[1])
                     && item

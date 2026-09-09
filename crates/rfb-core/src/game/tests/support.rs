@@ -396,6 +396,11 @@ pub(super) fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
         initial_item_runtime_state(&game.content, &mut game.rng, kind_id, &[], 1);
     game.items.push(ItemInstance {
         previously_worn: false,
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
         id: id.to_owned(),
         kind_id: kind_id.to_owned(),
         quantity: 1,
@@ -585,7 +590,7 @@ fn task_service_artifact() -> rfb_content::CompiledArtifact {
                     item_kind_id: "demo.item.broad-sword".to_owned(),
                     quantity: 1,
                     weight: 1,
-                    affix_ids: vec!["rfb-legacy.affix.combat".to_owned()],
+                    affix_ids: vec!["rfb-legacy.affix.slaying".to_owned()],
                 }],
             }],
         }),

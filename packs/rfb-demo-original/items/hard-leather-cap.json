@@ -16,6 +16,18 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-hard-leather-cap-name",
+  "rfbBaseKind": {
+    "sourceIndex": 212,
+    "sval": 2,
+    "tval": 32
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

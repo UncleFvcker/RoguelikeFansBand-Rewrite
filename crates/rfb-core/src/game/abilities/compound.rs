@@ -1271,6 +1271,7 @@ impl Game {
             let owner_id = self.player.id.clone();
             let resolution = self.resolve_category_summon(
                 CategorySummonSpec {
+                    is_spell: true,
                     source_id: &ability.id,
                     owner_id: &owner_id,
                     category: "knight",

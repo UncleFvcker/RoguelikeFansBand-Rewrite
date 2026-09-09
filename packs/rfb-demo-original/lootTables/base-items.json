@@ -4,6 +4,24 @@
   "id": "demo.loot-table.base-items",
   "rolls": 1,
   "entries": [
+    {"itemKindId":"demo.item.dragon-fang","weight":6,"quantity":1,"minDepth":40},
+    {"itemKindId":"demo.item.dragon-wings","weight":20,"quantity":1,"minDepth":60},
+    {"itemKindId":"demo.item.dragon-boots","weight":20,"quantity":1,"minDepth":60},
+    {"itemKindId":"demo.item.dragon-helm","weight":20,"quantity":1,"minDepth":60},
+    {"itemKindId":"demo.item.dragon-gloves","weight":20,"quantity":1,"minDepth":60},
+    {"itemKindId":"demo.item.dragon-shield","weight":20,"quantity":1,"minDepth":60},
+    {
+      "itemKindId": "demo.item.amulet",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 10
+    },
+    {
+      "itemKindId": "demo.item.mattock",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 50
+    },
     {
       "itemKindId": "demo.item.accuracy-scroll",
       "weight": 100,
@@ -2172,21 +2190,20 @@
       "weight": 33,
       "quantity": 1,
       "minDepth": 40
-    }
+    },
+    {"itemKindId":"demo.item.law-dragon-scale-mail","minDepth":60,"quantity":1,"weight":12},
+    {"itemKindId":"demo.item.gold-dragon-scale-mail","minDepth":50,"quantity":1,"weight":20},
+    {"itemKindId":"demo.item.chaos-dragon-scale-mail","minDepth":65,"quantity":1,"weight":10},
+    {"itemKindId":"demo.item.mithril-shod-boots","minDepth":50,"quantity":1,"weight":50},
+    {"itemKindId":"demo.item.iron-crown","minDepth":30,"quantity":1,"weight":100},
+    {"itemKindId":"demo.item.quiver","minDepth":20,"quantity":1,"weight":100},
+    {"itemKindId":"demo.item.feanorian-lamp","maxDepth":40,"minDepth":15,"quantity":1,"weight":100},
+    {"itemKindId":"demo.item.wizardstaff","minDepth":25,"quantity":1,"weight":25}
   ],
   "qualityPolicy": {
     "kind": "rfb-depth",
     "goodCapPercent": 75,
     "greatCapPercent": 20
   },
-  "rfbEgoPolicy": "weapon-digger",
-  "affixWeights": [
-    {
-      "weight": 9
-    },
-    {
-      "affixId": "rfb-legacy.affix.protection",
-      "weight": 1
-    }
-  ]
+  "rfbEgoPolicy": "weapon-digger"
 }

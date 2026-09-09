@@ -30,7 +30,7 @@ export class HomePanel {
   readonly #localization: Localization;
   readonly #dispatch: (command: GameCommand) => Promise<void>;
   readonly #formatEvent: (event: GameEventDto) => string;
-  readonly #visibleItemName: (displayNameKey: string, kindId: string) => string;
+  readonly #visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
   readonly #beforeOpen: () => void;
   readonly #dom: HomeDom;
   #mode: HomeMode = "withdraw";
@@ -46,7 +46,7 @@ export class HomePanel {
     localization: Localization;
     dispatch: (command: GameCommand) => Promise<void>;
     formatEvent: (event: GameEventDto) => string;
-    visibleItemName: (displayNameKey: string, kindId: string) => string;
+    visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
     beforeOpen: () => void;
   }) {
     this.#state = options.state;
@@ -278,7 +278,7 @@ export class HomePanel {
     return this.#items().find((item) => item.id === this.#selectedItemId);
   }
   #itemName(item: HomeItemDto): string {
-    const ball = this.#visibleItemName(item.displayNameKey, item.kindId);
+    const ball = this.#visibleItemName(item.displayNameKey, item.kindId, item.artifactName);
     return item.capturedActor
       ? this.#localization.format("capture-ball-name-contained", {
           ball,

@@ -25,6 +25,14 @@
     "sval": 1,
     "tval": 18
   },
+  "rfbValue": {
+    "flags": [
+      "SHOW_MODS",
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "ammunition",
     "rfb-compatibility"

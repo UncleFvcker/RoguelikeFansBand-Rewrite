@@ -31,18 +31,18 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 2,
-      "turn": 2,
-      "lastCommandSeq": 2,
-      "stateHash": "fe28fa18ca3acf610b6b32e3f6b0c35f6132097006cb135cba3018c0d249ff5c",
-      "playerSpeed": 120,
-      "playerEnergyNeed": 0,
       "equipment": {
         "fixture.item.treads.1": {
           "kindId": "demo.item.swift-treads",
           "slotId": "feet"
         }
-      }
+      },
+      "lastCommandSeq": 2,
+      "playerEnergyNeed": 0,
+      "playerSpeed": 120,
+      "revision": 2,
+      "stateHash": "f27e98a4d454fcacc2257ecbf9dbc6117b7789b1777f1af40ad35a697a3059df",
+      "turn": 2
     },
     "events": [
       {
@@ -59,6 +59,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "fe28fa18ca3acf610b6b32e3f6b0c35f6132097006cb135cba3018c0d249ff5c"
+    "saveRoundTripStateHash": "f27e98a4d454fcacc2257ecbf9dbc6117b7789b1777f1af40ad35a697a3059df"
   }
 }

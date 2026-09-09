@@ -707,9 +707,15 @@ impl Game {
             spawn.affix_ids.clone(),
             |_| definition.depth,
             definition.depth,
+            2,
         );
         let mut item = ItemInstance {
             previously_worn: false,
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: spawn.instance_id.clone(),
             kind_id: spawn.kind_id.clone(),
             quantity: spawn.quantity,
@@ -2515,6 +2521,11 @@ impl Game {
             );
             items.push(ItemInstance {
                 previously_worn: false,
+                artifact_name: None,
+                intrinsic_melee_damage_dice: None,
+                intrinsic_weight_tenths_pound: None,
+                intrinsic_weapon_traits: Default::default(),
+                intrinsic_curse_effects: Default::default(),
                 id: self.allocate_item_instance_id()?,
                 kind_id: entry.item_kind_id.clone(),
                 quantity: 1,
@@ -2557,6 +2568,11 @@ impl Game {
                     let fuel = initial_item_fuel(&self.content, &kind_id);
                     items.push(ItemInstance {
                         previously_worn: false,
+                        artifact_name: None,
+                        intrinsic_melee_damage_dice: None,
+                        intrinsic_weight_tenths_pound: None,
+                        intrinsic_weapon_traits: Default::default(),
+                        intrinsic_curse_effects: Default::default(),
                         id: objective
                             .item_instance_id
                             .clone()

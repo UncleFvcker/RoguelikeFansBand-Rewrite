@@ -35,7 +35,8 @@
     ],
     "itemTableId": "demo.loot-table.base-items",
     "kind": "items",
-    "minimumQuality": "exceptional"
+    "minimumQuality": "exceptional",
+    "greatOnly": true
   },
   "defense": 12,
   "descriptionKey": "actor-demo-the-midnight-dragon-description",

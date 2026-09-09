@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-quickness-device-description",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "id": "rfb-legacy.affix.quickness-device",
+  "nameKey": "affix-legacy-quickness-device-name",
+  "rfbEgo": {
+    "flags": [
+      "SPEED"
+    ],
+    "rarity": 16,
+    "sourceIndex": 256,
+    "types": [
+      "device"
+    ]
+  },
+  "tags": [
+    "device",
+    "legacy-import",
+    "quickness"
+  ]
+}

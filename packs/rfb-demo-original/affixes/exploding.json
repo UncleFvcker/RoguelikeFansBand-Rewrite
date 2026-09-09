@@ -8,6 +8,7 @@
   "id": "rfb-legacy.affix.exploding",
   "nameKey": "affix-legacy-exploding-name",
   "rfbEgo": {
+    "flags": [],
     "rarity": 5,
     "sourceIndex": 185,
     "types": [

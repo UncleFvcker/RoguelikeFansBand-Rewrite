@@ -17,6 +17,16 @@ import {
   selectedRechargingItems,
 } from "./inventory-panel.ts";
 
+test("inventory rows and search use the projected instance artifact name", (t) => {
+  const { panel, dom } = createInventoryFixture(t);
+  const known = item("dagger", { artifactName: "(永恒蘑菇)", equipmentSlot: "weapon" });
+  panel.render([known, item("unknown")], []);
+  assert.match(dom.inventoryList.children[0].children[0].children[2].textContent, /永恒蘑菇/);
+  dom.inventorySearch.value = "永恒蘑菇";
+  dom.inventorySearch.dispatchEvent(new Event("input"));
+  assert.deepEqual(dom.inventoryList.children.map((row) => row.dataset.itemId), ["dagger"]);
+});
+
 test("inventory filters use public capabilities and distinguish lights from fuel", () => {
   const items = [
     item("sword", { equipmentSlot: "weapon" }),
@@ -181,6 +191,21 @@ test("compact rows keep multi-selection and show live details without losing lis
   panel.render([items[1]], []);
   assert.equal(dom.inventoryDetailDialog.open, false);
   assert.deepEqual([...state.selectedInventoryIds], ["potion"]);
+});
+
+test("bag details show the known final capacity and source ego without redundant identification labels", (t) => {
+  const { panel, dom } = createInventoryFixture(t);
+  const bag = item("bag", { equipmentSlot: "container" });
+  panel.render([bag], []);
+  dom.inventoryList.children[0].children[1].dispatchEvent(new Event("click"));
+  assert.equal(dom.inventoryDetailBody.children.some((child) => child.className === "inventory-bag-capacity"), false);
+  panel.render([], [{ ...bag, slotId: "container", identification: "identified", bagCapacity: 8,
+    knownProperties: [{ affixId: "rfb-legacy.affix.holding-quiver", nameKey: "affix-legacy-holding-quiver-name" }],
+  }]);
+  const details = dom.inventoryDetailBody.children;
+  assert.match(details.find((child) => child.className === "inventory-bag-capacity").textContent, /"capacity":8/);
+  assert.match(details.find((child) => child.className === "item-property").textContent, /affix-legacy-holding-quiver-name/);
+  assert.equal(details.some((child) => child.className?.startsWith("item-identification")), false);
 });
 
 test("equipped details reuse refuel and unequip commands and retain activation availability", (t) => {
@@ -351,6 +376,32 @@ test("using items starts map targeting only for map targets and preserves rechar
   assert.deepEqual(commands[1], { type: "use-item-for-recharge", itemId: "wand", sourceItemId: "source", targetItemId: "target" });
 });
 
+test("crafting confirms risky whole stacks and cancelling dispatches nothing", (t) => {
+  const { panel, dom, state, commands, document } = createInventoryFixture(t);
+  const source = item("craft", { usable: true, requiresCraftingTarget: true });
+  let accepted = false;
+  const prompts = [];
+  document.defaultView = { confirm: (message) => { prompts.push(message); return accepted; } };
+  const choose = (quantity) => {
+    panel.render([source, item("arrows", { quantity })], []);
+    state.selectedInventoryIds.add("craft");
+    dom.inventoryUse.dispatchEvent(new Event("click"));
+    const form = document.body.children[0].children[0];
+    form.children[1].children[1].value = "arrows";
+    form.dispatchEvent(new Event("submit", { cancelable: true }));
+  };
+  choose(31);
+  assert.equal(commands.length, 0);
+  assert.match(prompts[0], /"chance":3/);
+  accepted = true;
+  choose(59);
+  assert.match(prompts[1], /"chance":97/);
+  assert.deepEqual(commands[0], { type: "use-item", itemId: "craft", target: { type: "crafting-item", itemId: "arrows", quantity: 59 } });
+  choose(30);
+  assert.equal(prompts.length, 2);
+  assert.equal(commands[1].target.quantity, 30);
+});
+
 function createInventoryFixture(t) {
   // The controller's DOM boundary only; this does not simulate browser layout.
   class Element extends EventTarget {
@@ -409,7 +460,7 @@ function createInventoryFixture(t) {
   const panel = new InventoryPanel({
     dom, state,
     localization: { format: (key, args) => `${key} ${JSON.stringify(args)}` },
-    formatter: { visibleItemName: (key) => key, equipmentSlotName: (slot) => slot },
+    formatter: { visibleItemName: (key, _kind, name) => name ? `${key} ${name}` : key, equipmentSlotName: (slot) => slot, itemPropertyName: (key) => key },
     dispatch: async (command) => { commands.push(command); },
     startTargeting: (...args) => targets.push(args), updateCampaignAction: () => {}, announce: () => {},
   });
@@ -462,23 +513,16 @@ test("inventory quantity parsing preserves whole-stack boundaries", () => {
   assert.equal(parseDropQuantity("4", 3), undefined);
 });
 
-test("equipment identification distinguishes quality appraisal from ego knowledge", () => {
+test("equipment identification only labels unresolved knowledge", () => {
   assert.equal(
-    itemIdentificationMessageKey("unexamined", 0),
+    itemIdentificationMessageKey("unexamined"),
     "item-identification-unexamined",
   );
   assert.equal(
-    itemIdentificationMessageKey("appraised", 0),
+    itemIdentificationMessageKey("appraised"),
     "item-identification-appraised",
   );
-  assert.equal(
-    itemIdentificationMessageKey("identified", 0),
-    "item-identification-identified-ordinary",
-  );
-  assert.equal(
-    itemIdentificationMessageKey("identified", 1),
-    "item-identification-identified-ego",
-  );
+  assert.equal(itemIdentificationMessageKey("identified"), undefined);
 });
 
 test("inventory recharge pairing remains order-independent", () => {

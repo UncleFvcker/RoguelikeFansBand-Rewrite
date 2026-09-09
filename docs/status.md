@@ -1,25 +1,25 @@
 # 状态快照
 
-核对日期：2026-09-09。源码快照：`ad8c1a3a5`（冬贝利开放与专项验收）。本页记录这一提交的代码/配置事实和既有验收证据；并行分支中的后续工作不自动算入。当前 HEAD 的数值以链接的源文件为准。
+核对日期：2026-09-10。本次集成包含种族主线 `decec518a` 与法术道具 `934a83392`；本页记录已合入的代码/配置事实和注明范围的验收证据。当前数值以链接的源文件为准。
 
 ## 版本与源内容
 
 | 项目 | 快照值 | 依据 |
 | --- | --- | --- |
 | 应用版本 | 0.1.0 | [Cargo.toml](../Cargo.toml)、[Tauri 配置](../web/src-tauri/tauri.conf.json) |
-| 协议 | 1.234 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | 109 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload / 容器 | 5 / 5 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
-| 内容包 | 1.390.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
-| 契约政策 | contract-v307，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
+| 协议 | 1.239 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | 116 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload / 容器 | 11 / 11 / 1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[rfb-save](../crates/rfb-save/src/lib.rs) |
+| 内容包 | 1.400.0 | [pack](../packs/rfb-demo-original/pack.json)、[lock](../packs/rfb-demo-original/content.lock.json) |
+| 契约政策 | contract-v317，26 条 active scenario | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json)与[场景目录](../tests/fixtures/active/scenarios/) |
 
-正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,838 个 ability 文件、356 个 item、1,402 个 actor、65 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 3 个 town、30 个 shop、24 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
+正式源目录含 6 个 Class、13 个 Build、57 个 Race、32 本能力书、1,840 个 ability 文件、369 个 item、1,402 个 actor、168 个 affix、152 个 mutation。世界定义含 25 个 dungeon 条目；城镇源目录有 3 个 town、30 个 shop、24 个 townFacility。这些是定义/源文件数量，不是完整规则或已验收内容数量。
 
 权威内容统计工具是 `rfb-contentc inspect-source`。冬贝利开放批次已运行内容编译和锁验证；静态统计不替代行为验收。
 
 ## 玩家入口
 
-新游戏白名单在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。专项验收后开放 6 个构筑、44 个种族：
+新游戏白名单在 [session-shell.ts](../web/src/session-shell.ts)，表单在 [web/index.html](../web/index.html)。当前开放 6 个构筑、46 个种族：
 
 | 构筑 | 稳定 Build ID | 范围 |
 | --- | --- | --- |
@@ -37,6 +37,16 @@ Death、Arcane、Sorcery、Armageddon、Nature、Life、Daemon、Crusade 各有�
 冬贝利（`rfb-legacy.race.tonberry`）已进入正式新游戏白名单。六职业正式出生、军刀熟练度与“独立”美德、成长被动和攻次／混乱抗性边界已有核心测试；完整核心链为装备军刀、升至 10 级、命中、换回原武器、保存恢复并继续行动。普通武器配置在较高等级可能降至零攻次，界面明确提示该下限。尚缺的决斗者／重槌兵／灵能者关联、死神镰刀武器反噬、神器 247 专属掉落、种族首领和变形怪选择关联，见 `602a33a75` 的原版审计，不计入本批完成范围。
 
 世界中存在 Outpost、Anambar、Thalos 的城镇记录及多种地牢条目。条目存在不证明所有原版设施、守卫、任务链和完整通关已经验证；实际地点进入条件、替代关系和获取路径以运行时与本批测试为准。
+
+Ent、Spectre 的新游戏入口已开放。种族主线还接入原始经验值与种族等级阈值、永久种族变更、生命力耗尽后的转种族/死亡和相关界面投影；实现与专项测试见 `084f341f0`、`4359de538`、`decec518a`。已有桌面验收只证明各提交记录的范围，本次集成不重复宣称桌面或人工试玩通过。
+
+## 物品与共享生成
+
+法术道具分支已合入护甲、非 Craft Ego、共享加权工艺、真实装备估值、负向装备/诅咒消费者、龙系底材生成、背包与箭袋容量，以及随机神器实例身份和消费者。168 个 affix 定义不等于全部均可自然获取：保留原版零稀有度及专用入口约束。
+
+随机神器可在实例上保存名称、骰数、重量、特性、诅咒和激活，供鉴定、装备、估值、保护和保存恢复使用；**完整随机神器生成器、名字抽样和自然调度尚未接入**，首饰价值重试仍有后续工作。八领域的入口范围保持上表状态。来源及当批证据见 `934a83392` 和[随机神器身份契约](../design/contract-v316-random-artifact-identity.md)。
+
+集成保留物品感知与实例神器鉴定边界、托姆特实例头饰重量、冬贝利逐武器伤害/攻次和准确来源显示。种族永久状态与新增物品字段共同进入当前保存和状态哈希，版本统一收口；内容 hash 本身不参与状态哈希。
 
 ## 已有验收证据
 

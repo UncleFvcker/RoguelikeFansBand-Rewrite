@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-rage-description",
+  "deviceGeneration": {
+    "activationOptional": false,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effect": {
+          "durationBonus": 25,
+          "durationDice": 1,
+          "durationSides": 25,
+          "type": "apply-berserk-strength"
+        },
+        "id": "rfb.device-activation.ego-120-berserk",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-berserk-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [],
+        "rfbValue": 2125,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "id": "rfb-legacy.affix.rage",
+  "nameKey": "affix-legacy-rage-name",
+  "rfbEgo": {
+    "flags": [
+      "DEC_INT",
+      "DEC_WIS",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FEAR",
+      "SHOW_MODS",
+      "STR"
+    ],
+    "rarity": 32,
+    "sourceIndex": 120,
+    "types": [
+      "helmet"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.fear"
+  ],
+  "tags": [
+    "helmet",
+    "legacy-import"
+  ]
+}

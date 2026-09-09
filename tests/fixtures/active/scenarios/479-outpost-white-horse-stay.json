@@ -25,15 +25,15 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "77768261fc69df672bd2ac4e49b09ad2cc1bdc340df1af8c8812b16c5c435ed3",
-      "worldTick": 50000,
       "playerGold": 0,
-      "playerNutrition": 9999,
       "playerHp": 56,
-      "playerStatuses": []
+      "playerNutrition": 9999,
+      "playerStatuses": [],
+      "revision": 1,
+      "stateHash": "5929d153661bd5a8953b1ed2d8001320a243bc957067d170fb37c86ad23ed37b",
+      "turn": 1,
+      "worldTick": 50000
     },
     "events": [
       {

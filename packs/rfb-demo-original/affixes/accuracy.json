@@ -7,6 +7,9 @@
   "id": "rfb-legacy.affix.accuracy",
   "nameKey": "affix-legacy-accuracy-name",
   "rfbEgo": {
+    "flags": [
+      "AWARE"
+    ],
     "rarity": 1,
     "sourceIndex": 160,
     "types": [

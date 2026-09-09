@@ -22,6 +22,7 @@
           "energyPerMille": 1000,
           "intervalTicks": 50
         },
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "direction"
@@ -41,6 +42,12 @@
   "id": "rfb-legacy.affix.disruption",
   "nameKey": "affix-legacy-disruption-name",
   "rfbEgo": {
+    "flags": [
+      "BRAND_ACID",
+      "IGNORE_ACID",
+      "STR",
+      "TUNNEL"
+    ],
     "rarity": 4,
     "sourceIndex": 42,
     "types": [

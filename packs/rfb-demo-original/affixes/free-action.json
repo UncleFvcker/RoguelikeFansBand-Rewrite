@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-free-action-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 40,
+  "id": "rfb-legacy.affix.free-action",
+  "nameKey": "affix-legacy-free-action-name",
+  "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "FREE_ACT"
+    ],
+    "rarity": 2,
+    "sourceIndex": 55,
+    "types": [
+      "gloves",
+      "boots"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "boots",
+    "gloves",
+    "legacy-import"
+  ]
+}

@@ -19,6 +19,7 @@
           "energyPerMille": 1000,
           "intervalTicks": 1500
         },
+        "rfbValue": 7075,
         "target": {
           "modes": [
             "self"
@@ -59,6 +60,7 @@
         "rfbBiases": [
           "demon"
         ],
+        "rfbValue": 7075,
         "target": {
           "modes": [
             "self"
@@ -94,6 +96,7 @@
           "mage",
           "demon"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "item"
@@ -129,6 +132,7 @@
           "mage",
           "demon"
         ],
+        "rfbValue": 5700,
         "target": {
           "modes": [
             "item"
@@ -175,6 +179,7 @@
           "chaos",
           "demon"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -211,6 +216,7 @@
           "chaos",
           "demon"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "direction",
@@ -253,6 +259,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1710,
         "target": {
           "modes": [
             "direction",
@@ -295,6 +302,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 3425,
         "target": {
           "modes": [
             "direction",
@@ -337,6 +345,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 7500,
         "target": {
           "modes": [
             "direction",
@@ -378,6 +387,7 @@
         "rfbBiases": [
           "demon"
         ],
+        "rfbValue": 11600,
         "target": {
           "modes": [
             "direction",
@@ -396,6 +406,12 @@
   "id": "rfb-legacy.affix.daemon",
   "nameKey": "affix-legacy-daemon-name",
   "rfbEgo": {
+    "flags": [
+      "BLOWS",
+      "DEC_WIS",
+      "DEX",
+      "STR"
+    ],
     "rarity": 6,
     "sourceIndex": 11,
     "types": [

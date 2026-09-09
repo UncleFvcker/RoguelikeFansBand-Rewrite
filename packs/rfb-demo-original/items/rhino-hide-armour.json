@@ -20,6 +20,16 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-rhino-hide-armour-name",
+  "rfbBaseKind": {
+    "sourceIndex": 253,
+    "sval": 8,
+    "tval": 36
+  },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

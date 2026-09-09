@@ -1,15 +1,29 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.amulet",
-  "nameKey": "item-demo-amulet-name",
-  "descriptionKey": "item-demo-amulet-description",
-  "glyph": "\"",
-  "generationLevel": 10,
-  "mogaminatorRare": false,
-  "weightTenthsPound": 2,
-  "maxStack": 1,
   "baseValue": 500,
+  "descriptionKey": "item-demo-amulet-description",
   "equipmentSlot": "amulet",
-  "tags": ["equipment", "jewelry", "rfb-compatibility"]
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "glyph": "\"",
+  "id": "demo.item.amulet",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-amulet-name",
+  "rfbBaseKind": {
+    "sourceIndex": 311,
+    "sval": 0,
+    "tval": 40
+  },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "jewelry",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 2
 }

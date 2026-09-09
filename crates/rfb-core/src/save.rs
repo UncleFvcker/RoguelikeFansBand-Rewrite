@@ -335,12 +335,21 @@ pub(crate) fn item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
-        item_device_generation(content, &item.kind_id, &item.affix_ids),
+        item_device_generation(
+            content,
+            &item.kind_id,
+            &item.affix_ids,
+            item.activation
+                .as_ref()
+                .map(|activation| activation.profile_id.as_str()),
+            item.artifact_name.is_some(),
+        ),
         item.activation.as_ref(),
         item.charges,
         fuel,
         item.device_recovery_progress,
         item.enchantments,
+        saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
     )?;
     validate_item_creation_state(
         definition,
@@ -353,6 +362,11 @@ pub(crate) fn item_from_dto(
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
+        artifact_name: item.artifact_name,
+        intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+        intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+        intrinsic_weapon_traits: intrinsic_set_from_save(item.intrinsic_weapon_traits)?,
+        intrinsic_curse_effects: intrinsic_set_from_save(item.intrinsic_curse_effects)?,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -391,12 +405,21 @@ pub(crate) fn inventory_item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
-        item_device_generation(content, &item.kind_id, &item.affix_ids),
+        item_device_generation(
+            content,
+            &item.kind_id,
+            &item.affix_ids,
+            item.activation
+                .as_ref()
+                .map(|activation| activation.profile_id.as_str()),
+            item.artifact_name.is_some(),
+        ),
         item.activation.as_ref(),
         item.charges,
         fuel,
         item.device_recovery_progress,
         item.enchantments,
+        saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
     )?;
     validate_item_creation_state(
         definition,
@@ -409,6 +432,11 @@ pub(crate) fn inventory_item_from_dto(
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
+        artifact_name: item.artifact_name,
+        intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+        intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+        intrinsic_weapon_traits: intrinsic_set_from_save(item.intrinsic_weapon_traits)?,
+        intrinsic_curse_effects: intrinsic_set_from_save(item.intrinsic_curse_effects)?,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -452,12 +480,21 @@ pub(crate) fn equipment_item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
-        item_device_generation(content, &item.kind_id, &item.affix_ids),
+        item_device_generation(
+            content,
+            &item.kind_id,
+            &item.affix_ids,
+            item.activation
+                .as_ref()
+                .map(|activation| activation.profile_id.as_str()),
+            item.artifact_name.is_some(),
+        ),
         item.activation.as_ref(),
         item.charges,
         fuel,
         item.device_recovery_progress,
         item.enchantments,
+        saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
     )?;
     validate_item_creation_state(
         definition,
@@ -470,6 +507,11 @@ pub(crate) fn equipment_item_from_dto(
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
+        artifact_name: item.artifact_name,
+        intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+        intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+        intrinsic_weapon_traits: intrinsic_set_from_save(item.intrinsic_weapon_traits)?,
+        intrinsic_curse_effects: intrinsic_set_from_save(item.intrinsic_curse_effects)?,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -510,12 +552,21 @@ pub(crate) fn carried_item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
-        item_device_generation(content, &item.kind_id, &item.affix_ids),
+        item_device_generation(
+            content,
+            &item.kind_id,
+            &item.affix_ids,
+            item.activation
+                .as_ref()
+                .map(|activation| activation.profile_id.as_str()),
+            item.artifact_name.is_some(),
+        ),
         item.activation.as_ref(),
         item.charges,
         fuel,
         item.device_recovery_progress,
         item.enchantments,
+        saved_device_ego(content, &item.affix_ids, &item.rolled_affixes),
     )?;
     validate_item_creation_state(
         definition,
@@ -528,6 +579,11 @@ pub(crate) fn carried_item_from_dto(
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
         previously_worn: item.previously_worn,
+        artifact_name: item.artifact_name,
+        intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+        intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+        intrinsic_weapon_traits: intrinsic_set_from_save(item.intrinsic_weapon_traits)?,
+        intrinsic_curse_effects: intrinsic_set_from_save(item.intrinsic_curse_effects)?,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -598,6 +654,27 @@ fn captured_actor_to_save(value: &CapturedActor) -> CapturedActorSaveDto {
     }
 }
 
+fn saved_device_ego(
+    content: &ContentCatalog,
+    affix_ids: &[String],
+    rolled: &[RolledAffixSaveDto],
+) -> Option<(u32, u16)> {
+    affix_ids.iter().find_map(|id| {
+        let index = content.affix(id)?.rfb_ego.as_ref()?.source_index;
+        (250..=256).contains(&index).then(|| {
+            (
+                index,
+                rolled
+                    .iter()
+                    .find(|rolled| rolled.affix_id == *id)
+                    .and_then(|rolled| rolled.device_pval)
+                    .unwrap_or(0),
+            )
+        })
+    })
+}
+
+#[allow(clippy::too_many_arguments)]
 fn validate_item_runtime_state(
     definition: &rfb_content::ItemDefinition,
     device_generation: Option<&ItemDeviceGenerationDefinition>,
@@ -606,7 +683,18 @@ fn validate_item_runtime_state(
     fuel: Option<ItemFuelDto>,
     device_recovery_progress: u16,
     enchantments: ItemEnchantmentsDto,
+    device_ego: Option<(u32, u16)>,
 ) -> Result<(), CoreError> {
+    if device_ego.is_some_and(|(index, pval)| {
+        !definition.tags.iter().any(|tag| tag == "device")
+            || if matches!(index, 250 | 255) {
+                pval != 0
+            } else {
+                !(1..=5).contains(&pval)
+            }
+    }) {
+        return Err(CoreError::InvalidSave("device ego pval is invalid"));
+    }
     let configured = definition
         .use_action
         .as_ref()
@@ -637,20 +725,35 @@ fn validate_item_runtime_state(
                         range: profile.target.range,
                         requires_line_of_effect: profile.target.requires_line_of_effect,
                     };
+                    let capacity_pval = device_ego
+                        .filter(|(index, _)| *index == 251)
+                        .map_or(0, |(_, pval)| pval);
+                    let difficulty = device_ego.filter(|(index, _)| *index == 253).map_or(
+                        profile.device_check_difficulty,
+                        |(_, pval)| {
+                            crate::game::device_difficulty(profile.device_check_difficulty, pval)
+                        },
+                    );
                     activation.name_key == profile.name_key
                         && activation.cost == profile.charges.cost
-                        && activation.device_check_difficulty == profile.device_check_difficulty
+                        && activation.device_check_difficulty == difficulty
+                        && (profile.rfb_value.is_none()
+                            || i32::from(activation.power) == profile.device_check_difficulty)
                         && activation.target_spec == target_spec
                         && profile.min_depth <= activation.power
                         && activation.power <= profile.max_depth
-                        && (profile.charges.minimum..=profile.charges.maximum)
+                        && (crate::game::device_capacity(profile.charges.minimum, capacity_pval)
+                            ..=crate::game::device_capacity(profile.charges.maximum, capacity_pval))
                             .contains(&charges.maximum)
                         && charges.current <= charges.maximum
                 }),
-            (None, None) => generation
-                .activations
-                .iter()
-                .all(|profile| !profile.rfb_biases.is_empty()),
+            (None, None) => {
+                generation.activation_optional
+                    || generation
+                        .activations
+                        .iter()
+                        .all(|profile| !profile.rfb_biases.is_empty())
+            }
             _ => false,
         }
     } else {
@@ -663,7 +766,17 @@ fn validate_item_runtime_state(
         }
     };
     let valid_recovery_progress = match (
-        device_generation.and_then(|generation| generation.recovery),
+        device_generation.and_then(|generation| {
+            activation
+                .and_then(|activation| {
+                    generation
+                        .activations
+                        .iter()
+                        .find(|profile| profile.id == activation.profile_id)
+                })
+                .and_then(|profile| profile.recovery)
+                .or(generation.recovery)
+        }),
         charges,
     ) {
         (Some(_), Some(charges)) => {
@@ -672,9 +785,17 @@ fn validate_item_runtime_state(
         }
         _ => device_recovery_progress == 0,
     };
-    if !(-15..=15).contains(&enchantments.to_hit)
-        || !(-15..=15).contains(&enchantments.to_damage)
-        || !(-15..=15).contains(&enchantments.to_armor)
+    let limit = if definition
+        .rfb_base_kind
+        .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=38 | 40 | 45))
+    {
+        255
+    } else {
+        15
+    };
+    if !(-limit..=limit).contains(&enchantments.to_hit)
+        || !(-limit..=limit).contains(&enchantments.to_damage)
+        || !(-limit..=limit).contains(&enchantments.to_armor)
     {
         return Err(CoreError::InvalidSave("item enchantment state is invalid"));
     }
@@ -713,6 +834,7 @@ fn validate_item_creation_state(
         }
         Some(ItemOriginKindDto::Acquire) => discount_percent == 0,
         Some(ItemOriginKindDto::Rubble) => discount_percent == 0,
+        Some(ItemOriginKindDto::EndlessQuiver) => discount_percent == 0,
     };
     let damage_override_is_valid =
         damage_dice_override.is_none_or(|dice| (1..=9).contains(&dice) && ammunition);
@@ -810,6 +932,7 @@ pub(crate) fn player_to_save(
                 })
                 .collect(),
             riding_proficiency: progress.riding_proficiency,
+            dual_wielding_proficiency: progress.dual_wielding_proficiency,
             mining_proficiency: progress.mining_proficiency,
             materials: progress
                 .materials
@@ -1017,6 +1140,12 @@ fn rolled_affixes_to_save(rolled_affixes: &[RolledAffixState]) -> Vec<RolledAffi
             let mut status_immunities = properties.status_immunities.clone();
             status_immunities.sort();
             RolledAffixSaveDto {
+                rfb_pval: rfb_pval_to_save(properties.rfb_pval.as_ref()),
+                rfb_flags: properties.rfb_flags.iter().cloned().collect(),
+                rfb_heavy_curse: properties.rfb_heavy_curse,
+                device_pval: rolled.device_pval,
+                ammunition_capacity: rolled.properties.ammunition_capacity,
+                bag_capacity: rolled.properties.bag_capacity,
                 affix_id: rolled.affix_id.clone(),
                 modifiers: stat_modifiers_to_dto(&properties.modifiers),
                 equipment_bonuses: equipment_bonuses_to_dto(&properties.equipment_bonuses),
@@ -1051,6 +1180,13 @@ fn rolled_affixes_to_save(rolled_affixes: &[RolledAffixState]) -> Vec<RolledAffi
                     .collect(),
                 enchantment_delta: rolled.enchantment_delta,
                 melee_damage_dice: rolled.melee_damage_dice,
+                weight_tenths_pound: rolled.weight_tenths_pound,
+                elemental_destruction_immunities: rolled
+                    .elemental_destruction_immunities
+                    .iter()
+                    .copied()
+                    .map(item_destruction_element_to_dto)
+                    .collect(),
                 weapon_traits: rolled.weapon_traits.iter().copied().collect(),
                 curse_effects: rolled.curse_effects.iter().copied().collect(),
             }
@@ -1064,6 +1200,11 @@ fn intrinsic_properties_to_save(
     let mut status_immunities = properties.status_immunities.clone();
     status_immunities.sort();
     ItemIntrinsicPropertiesSaveDto {
+        rfb_pval: rfb_pval_to_save(properties.rfb_pval.as_ref()),
+        rfb_flags: properties.rfb_flags.iter().cloned().collect(),
+        rfb_heavy_curse: properties.rfb_heavy_curse,
+        ammunition_capacity: properties.ammunition_capacity,
+        bag_capacity: properties.bag_capacity,
         modifiers: stat_modifiers_to_dto(&properties.modifiers),
         equipment_bonuses: equipment_bonuses_to_dto(&properties.equipment_bonuses),
         resistances: properties
@@ -1096,6 +1237,60 @@ fn intrinsic_properties_to_save(
             .map(equipment_passive_dto)
             .collect(),
     }
+}
+
+fn rfb_flags_from_save(flags: Vec<String>) -> Result<BTreeSet<String>, CoreError> {
+    if flags.windows(2).any(|pair| pair[0] >= pair[1])
+        || flags
+            .iter()
+            .any(|flag| !rfb_content::valid_rfb_runtime_flag(flag))
+    {
+        return Err(CoreError::InvalidSave("invalid original item flags"));
+    }
+    Ok(flags.into_iter().collect())
+}
+
+fn rfb_pval_to_save(
+    value: Option<&rfb_content::RfbPvalDefinition>,
+) -> Option<rfb_protocol::RfbPvalSaveDto> {
+    value.map(|value| {
+        let mut flags: Vec<_> = value
+            .flags
+            .iter()
+            .map(|flag| flag.source_flag().to_owned())
+            .collect();
+        flags.sort();
+        rfb_protocol::RfbPvalSaveDto {
+            value: value.value,
+            flags,
+        }
+    })
+}
+
+fn rfb_pval_from_save(
+    value: Option<rfb_protocol::RfbPvalSaveDto>,
+) -> Result<Option<rfb_content::RfbPvalDefinition>, CoreError> {
+    value
+        .map(|value| {
+            if value.flags.windows(2).any(|pair| pair[0] >= pair[1]) {
+                return Err(CoreError::InvalidSave("RFB pval flags are invalid"));
+            }
+            let flags = value
+                .flags
+                .iter()
+                .map(|token| {
+                    rfb_content::RfbPvalFlagDefinition::ALL
+                        .into_iter()
+                        .find(|flag| flag.source_flag() == token)
+                        .ok_or(CoreError::InvalidSave("RFB pval flag is unknown"))
+                })
+                .collect::<Result<_, _>>()?;
+            Ok(rfb_content::RfbPvalDefinition {
+                value: value.value,
+                flags,
+            })
+        })
+        .transpose()
 }
 
 fn intrinsic_properties_from_save(
@@ -1139,6 +1334,11 @@ fn intrinsic_properties_from_save(
         resistances.insert(damage_type, level);
     }
     let properties = AffixPropertyBundleDefinition {
+        rfb_pval: rfb_pval_from_save(saved.rfb_pval)?,
+        rfb_flags: rfb_flags_from_save(saved.rfb_flags)?,
+        rfb_heavy_curse: saved.rfb_heavy_curse,
+        ammunition_capacity: saved.ammunition_capacity,
+        bag_capacity: saved.bag_capacity,
         modifiers: stat_modifiers_from_dto(saved.modifiers),
         equipment_bonuses: equipment_bonuses_from_dto(saved.equipment_bonuses),
         resistances,
@@ -1159,6 +1359,15 @@ fn intrinsic_properties_from_save(
     Ok(properties)
 }
 
+fn intrinsic_set_from_save<T: Ord>(values: Vec<T>) -> Result<BTreeSet<T>, CoreError> {
+    if values.windows(2).any(|pair| pair[0] >= pair[1]) {
+        return Err(CoreError::InvalidSave(
+            "intrinsic item traits are not canonical",
+        ));
+    }
+    Ok(values.into_iter().collect())
+}
+
 fn rolled_affixes_from_save(
     rolled_affixes: Vec<RolledAffixSaveDto>,
     affix_ids: &[String],
@@ -1175,6 +1384,9 @@ fn rolled_affixes_from_save(
         .into_iter()
         .map(|rolled| {
             if !valid_rule_id(&rolled.affix_id)
+                || rolled
+                    .device_pval
+                    .is_some_and(|pval| !(1..=5).contains(&pval))
                 || affix_ids.binary_search(&rolled.affix_id).is_err()
                 || rolled
                     .resistances
@@ -1195,6 +1407,10 @@ fn rolled_affixes_from_save(
                 || rolled.brands.windows(2).any(|pair| pair[0] >= pair[1])
                 || rolled.passives.windows(2).any(|pair| pair[0] >= pair[1])
                 || rolled
+                    .elemental_destruction_immunities
+                    .windows(2)
+                    .any(|pair| pair[0] >= pair[1])
+                || rolled
                     .weapon_traits
                     .windows(2)
                     .any(|pair| pair[0] >= pair[1])
@@ -1202,12 +1418,18 @@ fn rolled_affixes_from_save(
                     .curse_effects
                     .windows(2)
                     .any(|pair| pair[0] >= pair[1])
+                || rolled.melee_damage_dice.is_some_and(|dice| {
+                    (dice.dice == 0 || dice.sides == 0)
+                        && !(rolled.affix_id == "rfb-legacy.affix.blasted"
+                            && dice.dice == 0
+                            && dice.sides == 0)
+                })
+                || !(-255..=255).contains(&rolled.enchantment_delta.to_hit)
+                || !(-255..=255).contains(&rolled.enchantment_delta.to_damage)
+                || !(-255..=255).contains(&rolled.enchantment_delta.to_armor)
                 || rolled
-                    .melee_damage_dice
-                    .is_some_and(|dice| dice.dice == 0 || dice.sides == 0)
-                || !(-15..=15).contains(&rolled.enchantment_delta.to_hit)
-                || !(-15..=15).contains(&rolled.enchantment_delta.to_damage)
-                || !(-15..=15).contains(&rolled.enchantment_delta.to_armor)
+                    .weight_tenths_pound
+                    .is_some_and(|weight| weight > 10_000)
             {
                 return Err(CoreError::InvalidSave(
                     "rolled affix instance state is invalid",
@@ -1228,6 +1450,11 @@ fn rolled_affixes_from_save(
                 resistances.insert(damage_type, level);
             }
             let properties = AffixPropertyBundleDefinition {
+                rfb_pval: rfb_pval_from_save(rolled.rfb_pval)?,
+                rfb_flags: rfb_flags_from_save(rolled.rfb_flags)?,
+                rfb_heavy_curse: rolled.rfb_heavy_curse,
+                ammunition_capacity: rolled.ammunition_capacity,
+                bag_capacity: rolled.bag_capacity,
                 modifiers: stat_modifiers_from_dto(rolled.modifiers),
                 equipment_bonuses: equipment_bonuses_from_dto(rolled.equipment_bonuses),
                 resistances,
@@ -1241,10 +1468,17 @@ fn rolled_affixes_from_save(
                 passives: rolled.passives.into_iter().map(equipment_passive).collect(),
             };
             let state = RolledAffixState {
+                device_pval: rolled.device_pval,
                 affix_id: rolled.affix_id,
                 properties,
                 enchantment_delta: rolled.enchantment_delta,
                 melee_damage_dice: rolled.melee_damage_dice,
+                weight_tenths_pound: rolled.weight_tenths_pound,
+                elemental_destruction_immunities: rolled
+                    .elemental_destruction_immunities
+                    .into_iter()
+                    .map(item_destruction_element_from_dto)
+                    .collect(),
                 weapon_traits: rolled.weapon_traits.into_iter().collect(),
                 curse_effects: rolled.curse_effects.into_iter().collect(),
             };
@@ -1298,6 +1532,10 @@ fn equipment_bonuses_to_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
         life_percent: bonuses.life_percent,
         launcher_multiplier_delta_percent: bonuses.launcher_multiplier_delta_percent,
         base_shot_delta_percent: bonuses.base_shot_delta_percent,
+        weapon_dice_bonus: bonuses.weapon_dice_bonus,
+        melee_attacks_delta_percent: bonuses.melee_attacks_delta_percent,
+        spell_capacity_bonus: bonuses.spell_capacity_bonus,
+        magic_resistance_percent: bonuses.magic_resistance_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -1321,6 +1559,10 @@ fn equipment_bonuses_from_dto(bonuses: EquipmentBonusesDto) -> EquipmentBonuses 
         life_percent: bonuses.life_percent,
         launcher_multiplier_delta_percent: bonuses.launcher_multiplier_delta_percent,
         base_shot_delta_percent: bonuses.base_shot_delta_percent,
+        weapon_dice_bonus: bonuses.weapon_dice_bonus,
+        melee_attacks_delta_percent: bonuses.melee_attacks_delta_percent,
+        spell_capacity_bonus: bonuses.spell_capacity_bonus,
+        magic_resistance_percent: bonuses.magic_resistance_percent,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -1363,6 +1605,9 @@ fn affix_property_bundle_out_of_range(properties: &AffixPropertyBundleDefinition
         || !(-100..=100).contains(&bonuses.life_percent)
         || !(-1_000..=1_000).contains(&bonuses.launcher_multiplier_delta_percent)
         || !(-1_000..=1_000).contains(&bonuses.base_shot_delta_percent)
+        || !(-800..=800).contains(&bonuses.melee_attacks_delta_percent)
+        || !(-100..=100).contains(&bonuses.spell_capacity_bonus)
+        || !(0..=100).contains(&bonuses.magic_resistance_percent)
         || [
             modifiers.strength,
             modifiers.intelligence,
@@ -1377,6 +1622,7 @@ fn affix_property_bundle_out_of_range(properties: &AffixPropertyBundleDefinition
         .into_iter()
         .any(|value| !(-100..=100).contains(&value))
         || !(-8..=8).contains(&bonuses.melee_attacks)
+        || !(-100..=100).contains(&bonuses.weapon_dice_bonus)
         || !(-64..=64).contains(&bonuses.infravision)
         || !(-8..=8).contains(&bonuses.light_radius)
 }
@@ -1559,6 +1805,23 @@ const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
         EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
         EquipmentPassive::Warning => EquipmentPassiveDto::Warning,
         EquipmentPassive::SlowDigestion => EquipmentPassiveDto::SlowDigestion,
+        EquipmentPassive::ReflectsBolts => EquipmentPassiveDto::ReflectsBolts,
+        EquipmentPassive::FireAura => EquipmentPassiveDto::FireAura,
+        EquipmentPassive::ColdAura => EquipmentPassiveDto::ColdAura,
+        EquipmentPassive::ElectricityAura => EquipmentPassiveDto::ElectricityAura,
+        EquipmentPassive::RevengeAura => EquipmentPassiveDto::RevengeAura,
+        EquipmentPassive::ManaRegeneration => EquipmentPassiveDto::ManaRegeneration,
+        EquipmentPassive::AntiMagic => EquipmentPassiveDto::AntiMagic,
+        EquipmentPassive::AntiTeleport => EquipmentPassiveDto::AntiTeleport,
+        EquipmentPassive::AntiSummoning => EquipmentPassiveDto::AntiSummoning,
+        EquipmentPassive::NightVision => EquipmentPassiveDto::NightVision,
+        EquipmentPassive::DualWielding => EquipmentPassiveDto::DualWielding,
+        EquipmentPassive::NoEnchant => EquipmentPassiveDto::NoEnchant,
+        EquipmentPassive::ShardsAura => EquipmentPassiveDto::ShardsAura,
+        EquipmentPassive::ReducedManaCost => EquipmentPassiveDto::ReducedManaCost,
+        EquipmentPassive::EasySpell => EquipmentPassiveDto::EasySpell,
+        EquipmentPassive::AutoIdentify => EquipmentPassiveDto::AutoIdentify,
+        EquipmentPassive::Blessed => EquipmentPassiveDto::Blessed,
         EquipmentPassive::EspAnimal => EquipmentPassiveDto::EspAnimal,
         EquipmentPassive::EspUndead => EquipmentPassiveDto::EspUndead,
         EquipmentPassive::EspDemon => EquipmentPassiveDto::EspDemon,
@@ -1590,6 +1853,23 @@ const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
         EquipmentPassiveDto::Levitation => EquipmentPassive::Levitation,
         EquipmentPassiveDto::Warning => EquipmentPassive::Warning,
         EquipmentPassiveDto::SlowDigestion => EquipmentPassive::SlowDigestion,
+        EquipmentPassiveDto::ReflectsBolts => EquipmentPassive::ReflectsBolts,
+        EquipmentPassiveDto::FireAura => EquipmentPassive::FireAura,
+        EquipmentPassiveDto::ColdAura => EquipmentPassive::ColdAura,
+        EquipmentPassiveDto::ElectricityAura => EquipmentPassive::ElectricityAura,
+        EquipmentPassiveDto::RevengeAura => EquipmentPassive::RevengeAura,
+        EquipmentPassiveDto::ManaRegeneration => EquipmentPassive::ManaRegeneration,
+        EquipmentPassiveDto::AntiMagic => EquipmentPassive::AntiMagic,
+        EquipmentPassiveDto::AntiTeleport => EquipmentPassive::AntiTeleport,
+        EquipmentPassiveDto::AntiSummoning => EquipmentPassive::AntiSummoning,
+        EquipmentPassiveDto::NightVision => EquipmentPassive::NightVision,
+        EquipmentPassiveDto::DualWielding => EquipmentPassive::DualWielding,
+        EquipmentPassiveDto::NoEnchant => EquipmentPassive::NoEnchant,
+        EquipmentPassiveDto::ShardsAura => EquipmentPassive::ShardsAura,
+        EquipmentPassiveDto::ReducedManaCost => EquipmentPassive::ReducedManaCost,
+        EquipmentPassiveDto::EasySpell => EquipmentPassive::EasySpell,
+        EquipmentPassiveDto::AutoIdentify => EquipmentPassive::AutoIdentify,
+        EquipmentPassiveDto::Blessed => EquipmentPassive::Blessed,
         EquipmentPassiveDto::EspAnimal => EquipmentPassive::EspAnimal,
         EquipmentPassiveDto::EspUndead => EquipmentPassive::EspUndead,
         EquipmentPassiveDto::EspDemon => EquipmentPassive::EspDemon,
@@ -1656,6 +1936,11 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
+                artifact_name: item.artifact_name.clone(),
+                intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+                intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+                intrinsic_weapon_traits: item.intrinsic_weapon_traits.iter().copied().collect(),
+                intrinsic_curse_effects: item.intrinsic_curse_effects.iter().copied().collect(),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item
@@ -1697,6 +1982,11 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
+                artifact_name: item.artifact_name.clone(),
+                intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+                intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+                intrinsic_weapon_traits: item.intrinsic_weapon_traits.iter().copied().collect(),
+                intrinsic_curse_effects: item.intrinsic_curse_effects.iter().copied().collect(),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item
@@ -1739,6 +2029,11 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
+                artifact_name: item.artifact_name.clone(),
+                intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+                intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+                intrinsic_weapon_traits: item.intrinsic_weapon_traits.iter().copied().collect(),
+                intrinsic_curse_effects: item.intrinsic_curse_effects.iter().copied().collect(),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item
@@ -1785,6 +2080,11 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
+                artifact_name: item.artifact_name.clone(),
+                intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+                intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+                intrinsic_weapon_traits: item.intrinsic_weapon_traits.iter().copied().collect(),
+                intrinsic_curse_effects: item.intrinsic_curse_effects.iter().copied().collect(),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item

@@ -175,6 +175,11 @@ fn append_starting_item(
         });
     items.push(ItemInstance {
         previously_worn: false,
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
         id,
         kind_id: starting_item.item_kind_id.clone(),
         quantity,
@@ -421,9 +426,15 @@ impl Game {
                     spawn.affix_ids.clone(),
                     |_| 1,
                     1,
+                    2,
                 );
                 let mut item = ItemInstance {
                     previously_worn: false,
+                    artifact_name: None,
+                    intrinsic_melee_damage_dice: None,
+                    intrinsic_weight_tenths_pound: None,
+                    intrinsic_weapon_traits: Default::default(),
+                    intrinsic_curse_effects: Default::default(),
                     id: spawn.instance_id.clone(),
                     kind_id: spawn.kind_id.clone(),
                     quantity: spawn.quantity,

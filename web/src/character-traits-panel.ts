@@ -55,7 +55,7 @@ export function renderCharacterTraitsDetails(
   const focus = (document.activeElement as HTMLElement | null)?.dataset.traitFocus;
   const sourceName = (id: string): string => {
     const item = items.find((item) => item.id === id);
-    if (item) return `${f(item.displayNameKey)} · ${"slotId" in item ? item.slotId : f("trait-inventory-source")}`;
+    if (item) return `${f(item.displayNameKey)}${item.artifactName ? ` ${item.artifactName}` : ""} · ${"slotId" in item ? item.slotId : f("trait-inventory-source")}`;
     const mutation = player.mutations?.find((mutation) => mutation.id === id);
     if (mutation) return mutation.name;
     if (id === player.kindId) return f("trait-origin-base");
@@ -173,12 +173,13 @@ export function renderCharacterTraitsDetails(
   for (const item of items) {
     if (!("slotId" in item)) continue;
     const slotType = bodySlots.find((slot) => slot.id === item.slotId)?.slotType;
-    if (slotType !== "weapon" && slotType !== "launcher") continue;
-    const selected = item.id === (slotType === "weapon" ? data.activeWeaponId : data.activeLauncherId);
-    const bonus = slotType === "weapon" ? item.equipmentBonuses?.meleeAttacks : item.equipmentBonuses?.baseShotDeltaPercent;
-    const lines = bonus ? [f(slotType === "weapon" ? "trait-known-melee-bonus" : "trait-known-shot-bonus", { value: bonus })] : [];
+    const melee = slotType === "weapon" || data.activeWeaponIds?.includes(item.id);
+    if (!melee && slotType !== "launcher") continue;
+    const selected = melee ? (data.activeWeaponIds?.includes(item.id) ?? item.id === data.activeWeaponId) : item.id === data.activeLauncherId;
+    const bonus = melee ? item.equipmentBonuses?.meleeAttacks : item.equipmentBonuses?.baseShotDeltaPercent;
+    const lines = bonus ? [f(melee ? "trait-known-melee-bonus" : "trait-known-shot-bonus", { value: bonus })] : [];
     weapons.append(row(`weapon-${item.id}`, sourceName(item.id), f(selected ? "trait-selected-attack" : "trait-unselected-attack"), lines,
-      f(slotType === "weapon" ? "trait-weapon-selection-rule" : "trait-launcher-selection-rule")));
+      f(melee ? "trait-weapon-selection-rule" : "trait-launcher-selection-rule")));
   }
   if (!weapons.querySelector("details")) weapons.append(text("p", f("trait-no-weapons"), "attribute-source-guide"));
   const rates = section("trait-attack-rates");

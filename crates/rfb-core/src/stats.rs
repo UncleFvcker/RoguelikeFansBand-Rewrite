@@ -260,6 +260,7 @@ pub struct CharacterProgress {
     /// canonical base item kind ID.
     pub weapon_proficiencies: BTreeMap<String, u16>,
     pub riding_proficiency: u16,
+    pub dual_wielding_proficiency: u16,
     pub mining_proficiency: u16,
     pub materials: BTreeMap<String, u32>,
     pub active_mutation_ids: BTreeSet<String>,
@@ -316,6 +317,7 @@ impl CharacterProgress {
             hp_progression,
             skills: BTreeMap::new(),
             weapon_proficiencies: BTreeMap::new(),
+            dual_wielding_proficiency: 0,
             riding_proficiency: 0,
             mining_proficiency: 0,
             materials: BTreeMap::new(),

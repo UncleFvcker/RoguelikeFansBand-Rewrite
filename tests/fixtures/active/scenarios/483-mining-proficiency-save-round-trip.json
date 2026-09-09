@@ -24,15 +24,8 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 0,
-      "turn": 0,
       "lastCommandSeq": 0,
-      "stateHash": "57f2d4179519325e4aaef3518f518cb439a0c952918ab7db8124e7238c18c9d4",
       "playerAttributes": {
-        "miningProficiency": {
-          "current": 6000,
-          "rank": "skilled"
-        },
         "materials": {
           "rfb.material.iron-ore": {
             "quantity": 3
@@ -40,9 +33,16 @@
           "rfb.material.rare-catalyst": {
             "quantity": 1
           }
+        },
+        "miningProficiency": {
+          "current": 6000,
+          "rank": "skilled"
         }
-      }
+      },
+      "revision": 0,
+      "stateHash": "b6e652de7b7fb1ad035a12edd99120612efdd1317d2e240c70388dcf0b03cfbe",
+      "turn": 0
     },
-    "saveRoundTripStateHash": "57f2d4179519325e4aaef3518f518cb439a0c952918ab7db8124e7238c18c9d4"
+    "saveRoundTripStateHash": "b6e652de7b7fb1ad035a12edd99120612efdd1317d2e240c70388dcf0b03cfbe"
   }
 }

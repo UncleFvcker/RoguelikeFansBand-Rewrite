@@ -14,6 +14,12 @@
   "resistsMonsterDestruction": true,
   "resistsProjectionDestruction": true,
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE"
+    ],
     "rarity": 4,
     "sourceIndex": 184,
     "types": [

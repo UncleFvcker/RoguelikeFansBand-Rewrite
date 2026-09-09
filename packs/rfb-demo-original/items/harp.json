@@ -20,6 +20,14 @@
     "sval": 70,
     "tval": 19
   },
+  "rfbValue": {
+    "flags": [
+      "CHR",
+      "NO_ENCHANT"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "equipment",
     "launcher",

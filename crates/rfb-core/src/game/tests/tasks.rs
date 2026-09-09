@@ -59,7 +59,132 @@ fn direct_warrens_death_drops(
 }
 
 #[test]
-fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
+fn natural_ammunition_damage_dice_survive_generation_and_save() {
+    let mut game = Game::new(67);
+    let original = game.content.clone();
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&path).unwrap();
+    let table = artifact
+        .content
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
+    table
+        .entries
+        .retain(|entry| entry.item_kind_id == "demo.item.sheaf-arrow");
+    game.content = Arc::new(rfb_content::ContentCatalog::from_artifact(artifact));
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "demo.floor.orc-cave-depth-32".into(),
+        depth: 80,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ammo-dice".into(),
+            themed: false,
+        },
+    };
+    game.rng = RfbRng::seeded(41);
+    let drops = game
+        .generate_loot_instances(&context, ItemLocation::Inventory)
+        .unwrap();
+    game.content = original;
+    let expected = drops[0].clone();
+    assert_eq!(expected.kind_id, "demo.item.sheaf-arrow");
+    assert_eq!(expected.damage_dice_override, Some(5));
+    game.items.extend(drops);
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(
+        restored.items.iter().find(|item| item.id == expected.id),
+        Some(&expected)
+    );
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+}
+
+#[test]
+fn monster_object_level_and_theme_reach_real_jewelry_generation() {
+    let root =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
+    let table = artifact
+        .content
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
+    table
+        .entries
+        .retain(|entry| entry.item_kind_id == "demo.item.ring");
+    table.entries[0].min_depth = 0;
+    table.quality_policy = Some(rfb_content::LootQualityPolicyDefinition::RfbDepth {
+        good_cap_percent: 0,
+        great_cap_percent: 0,
+    });
+    let actor = artifact
+        .content
+        .actors
+        .iter_mut()
+        .find(|actor| actor.death_drop.is_some())
+        .unwrap();
+    actor.level = 80;
+    let actor_kind = actor.id.clone();
+    actor.death_drop = Some(rfb_content::MonsterDropDefinition {
+        great_only: false,
+        kind: rfb_content::MonsterDropKindDefinition::Items,
+        item_table_id: Some(table.id.clone()),
+        theme_table_id: Some(table.id.clone()),
+        theme_chance_percent: 100,
+        base_rolls: 1,
+        chance_rolls: vec![],
+        count_dice: vec![],
+        minimum_quality: rfb_content::ItemQuality::Ordinary,
+    });
+    let mut actual = Game::new_with_build(81, "demo.build.warrior").unwrap();
+    actual.content = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content).unwrap(),
+    ));
+    actual.current_floor_id = "demo.floor.warrens-depth-1".into();
+    let actor = actual.generated_actor(
+        "test.object-level".into(),
+        &actor_kind,
+        actual.player.position,
+    );
+    actual.rng = RfbRng::seeded(81);
+    let mut expected = actual.clone();
+    expected.rng.bounded(100); // The real monster theme gate precedes make_object.
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: actual.current_floor_id.clone(),
+        depth: 80, // _mon_drop_lvl(1, 80), independently from the floor depth.
+        source: LootSource::MonsterDeath {
+            actor_id: actor.id.clone(),
+            themed: true,
+        },
+    };
+    let expected_items = expected
+        .generate_loot_instances_internal(
+            &context,
+            ItemLocation::Ground(actor.position),
+            false,
+            Some(1),
+            ItemGenerationMode::Ordinary,
+        )
+        .unwrap();
+    let (items, gold) = actual.generate_death_loot(&actor).unwrap();
+    assert_eq!(items, expected_items);
+    assert_eq!(actual.rng, expected.rng);
+    assert!(gold.is_empty());
+    assert_eq!(items.len(), 1);
+    assert_eq!(items[0].kind_id, "demo.item.ring");
+    assert!(
+        !items[0].affix_ids.is_empty(),
+        "theme promotes power zero jewelry to power one"
+    );
+}
+
+#[test]
+fn base_item_natural_egos_cover_all_equipment_types() {
     let base =
         Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).expect("Orc Cave loot test should create");
     let context = LootContext {
@@ -68,39 +193,19 @@ fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
         depth: 30,
         source: LootSource::MonsterDeath {
             actor_id: "test.orc-cave.loot-source".to_owned(),
+            themed: false,
         },
     };
-    let mut saw_rfb_weapon_or_digger_ego = false;
-    let mut saw_rfb_launcher_ego = false;
-    let mut saw_rfb_ammunition_ego = false;
-    let mut saw_rfb_harp_ego = false;
-    let mut saw_rolled_rfb_ego = false;
-    let mut saw_protection = false;
-    let mut saw_fine_incompatible_fallback = false;
-    // Named seeds cover each natural-ego pool and the incompatible-quality fallback.
-    for (seed, kind_id, affix_id) in [
-        (1, "demo.item.bolt", "rfb-legacy.affix.slaying-180"),
-        (9, "demo.item.hard-leather-armour", ""),
-        (44, "demo.item.sling", "rfb-legacy.affix.the-hunter"),
-        (114, "demo.item.scimitar", "rfb-legacy.affix.slaying"),
-        (248, "demo.item.filthy-rag", "rfb-legacy.affix.protection"),
-        (305, "demo.item.pick", "rfb-legacy.affix.digging"),
-        (1124, "demo.item.harp", "rfb-legacy.affix.erebor"),
-        (9477, "demo.item.sling", "rfb-legacy.affix.buckland"),
-    ] {
+    let mut seen = BTreeSet::new();
+    // Fixed representatives exercise the real shared pool without a large seed sweep.
+    for seed in [3, 7, 63, 94, 297, 427, 618, 704, 1219, 1596] {
         let mut game = base.clone();
         game.rng = RfbRng::seeded(seed);
         let drops = game
             .generate_loot_instances(&context, ItemLocation::Ground(game.player.position))
             .expect("Orc Cave loot should generate");
         assert_eq!(drops.len(), 1, "seed {seed}");
-        assert_eq!(drops[0].kind_id, kind_id, "seed {seed}");
-        assert_eq!(
-            drops[0].affix_ids.first().map(String::as_str).unwrap_or(""),
-            affix_id,
-            "seed {seed}"
-        );
-        for item in drops {
+        for item in &drops {
             let definition = game
                 .content
                 .item(&item.kind_id)
@@ -111,25 +216,40 @@ fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
                 .and_then(|affix_id| game.content.affix(affix_id))
                 .and_then(|affix| affix.rfb_ego.as_ref());
             if let Some(rfb_ego) = rfb_ego {
-                assert_eq!(item.quality, ItemQualityDto::Exceptional);
+                assert!(rfb_ego.rarity > 0);
+                if matches!(rfb_ego.source_index, 200..=227) {
+                    assert_ne!(item.quality, ItemQualityDto::Ordinary);
+                } else {
+                    assert_eq!(item.quality, ItemQualityDto::Exceptional);
+                }
                 assert_eq!(item.affix_ids.len(), 1);
                 assert!(item.rolled_affixes.len() <= 1);
                 if let Some(rolled) = item.rolled_affixes.first() {
-                    saw_rolled_rfb_ego = true;
+                    seen.insert("rolled");
                     assert_eq!(rolled.affix_id, item.affix_ids[0]);
+                }
+                if (250..=256).contains(&rfb_ego.source_index) {
+                    seen.insert("device");
+                    assert!(definition.tags.iter().any(|tag| tag == "device"));
+                    assert!(item.activation.is_some());
+                    continue;
                 }
                 let base_kind = definition
                     .rfb_base_kind
                     .expect("RFB ego target should retain source base identity");
                 match rfb_ego.source_index {
+                    50..=152 => {
+                        seen.insert("armor");
+                        assert!(matches!(base_kind.tval, 30..=38));
+                    }
                     1..=27 | 40..=42 => {
-                        saw_rfb_weapon_or_digger_ego = true;
+                        seen.insert("weapon-or-digger");
                         assert!(matches!(base_kind.tval, 20..=23));
                         assert_ne!(rfb_ego.source_index, 6, "Arcane requires a Wizardstaff");
                         assert_ne!(rfb_ego.source_index, 42, "Disruption requires a Mattock");
                     }
                     160..=167 => {
-                        saw_rfb_launcher_ego = true;
+                        seen.insert("launcher");
                         assert_eq!(base_kind.tval, 19);
                         assert_ne!(base_kind.sval, 70, "Harp must not enter the BOW pool");
                         match rfb_ego.source_index {
@@ -140,38 +260,52 @@ fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
                         }
                     }
                     180..=185 => {
-                        saw_rfb_ammunition_ego = true;
+                        seen.insert("ammunition");
                         assert!(matches!(base_kind.tval, 16..=18));
                     }
                     195 | 196 => {
-                        saw_rfb_harp_ego = true;
+                        seen.insert("harp");
                         assert_eq!((base_kind.tval, base_kind.sval), (19, 70));
+                    }
+                    200..=209 | 220..=227 => {
+                        seen.insert("jewelry");
+                        assert!(matches!(base_kind.tval, 40 | 45));
+                    }
+                    235..=243 => {
+                        seen.insert("light");
+                        assert_eq!(base_kind.tval, 39);
+                    }
+                    265..=268 => {
+                        seen.insert("quiver");
+                        assert_eq!(base_kind.tval, 46);
+                        assert!(item.intrinsic_properties.ammunition_capacity.is_some());
                     }
                     index => panic!("unexpected natural RFB ego source index {index}"),
                 }
-            } else if item.affix_ids == ["rfb-legacy.affix.protection"] {
-                saw_protection = true;
-                assert!(matches!(
-                    definition.equipment_slot.as_deref(),
-                    Some("body" | "shield" | "cloak" | "head" | "gloves" | "boots")
-                ));
-                let defense = item.rolled_affixes[0].properties.modifiers.defense;
-                assert!((1..=10).contains(&defense));
             } else if item.quality == ItemQualityDto::Fine
                 && definition.equipment_slot.as_deref() != Some("weapon")
             {
-                saw_fine_incompatible_fallback = true;
+                seen.insert("fine-without-ego");
                 assert!(item.affix_ids.is_empty());
             }
         }
+        let generated = drops[0].clone();
+        game.items.extend(drops);
+        game.reveal_current_visibility();
+        let restored =
+            Game::from_save(game.to_save()).expect("natural equipment must load without rerolling");
+        assert_eq!(
+            restored.items.iter().find(|item| item.id == generated.id),
+            Some(&generated),
+            "seed {seed}"
+        );
+        assert_eq!(restored.rng, game.rng, "seed {seed}");
+        assert_eq!(restored.state_hash(), game.state_hash(), "seed {seed}");
+        if seen.len() == 11 {
+            break;
+        }
     }
-    assert!(saw_rfb_weapon_or_digger_ego);
-    assert!(saw_rfb_launcher_ego);
-    assert!(saw_rfb_ammunition_ego);
-    assert!(saw_rfb_harp_ego);
-    assert!(saw_rolled_rfb_ego);
-    assert!(saw_protection);
-    assert!(saw_fine_incompatible_fallback);
+    assert_eq!(seen.len(), 11, "{seen:?}");
 }
 
 #[test]
@@ -199,6 +333,7 @@ fn shared_base_and_warrior_loot_use_depth_instead_of_dungeon_identity() {
                 depth,
                 source: LootSource::MonsterDeath {
                     actor_id: "test.shared-loot.actor".to_owned(),
+                    themed: false,
                 },
             },
             ItemLocation::Ground(game.player.position),
@@ -345,6 +480,7 @@ fn warrens_monster_drops_follow_original_probability_and_remains_profiles() {
                 depth: 0,
                 source: LootSource::MonsterDeath {
                     actor_id: "test.small-kobold.surface".to_owned(),
+                    themed: false,
                 },
             },
             ItemLocation::Ground(surface.player.position),
@@ -924,7 +1060,7 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
         .find(|item| item.id == "demo.task.test-prerequisite.reward.1")
         .expect("fixed reward instance should enter inventory");
     assert_eq!(item.quality, ItemQualityDto::Fine);
-    assert_eq!(item.affix_ids, ["rfb-legacy.affix.combat"]);
+    assert_eq!(item.affix_ids, ["rfb-legacy.affix.slaying"]);
     assert_eq!(item.rolled_affixes.len(), 1);
 }
 
@@ -1257,7 +1393,7 @@ fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
         game.task_states[task_id].status,
         TaskStatusKindDto::Completed
     );
-    assert_eq!(game.rng_draw_counter(), before_draws + 2);
+    assert_eq!(game.rng_draw_counter(), before_draws + 10);
     let reward = game
         .items
         .iter()
@@ -1269,7 +1405,7 @@ fn old_man_willow_unlocks_after_crows_nest_and_rewards_an_elemental_ring() {
     assert_eq!(reward.affix_ids, ["rfb-legacy.affix.elemental-jewelry"]);
     assert_eq!(reward.rolled_affixes.len(), 1);
     let resistances = &reward.rolled_affixes[0].properties.resistances;
-    assert!((1..=2).contains(&resistances.len()));
+    assert!((1..=4).contains(&resistances.len()));
     assert!(resistances.keys().all(|damage_type| matches!(
         damage_type,
         ActorDamageType::Acid
@@ -2187,7 +2323,7 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
         .iter()
         .filter(|item| !item_ids_before_guardian.contains(&item.id))
         .find(|item| {
-            item.kind_id == "demo.item.ring" && item.affix_ids == ["rfb-legacy.affix.combat"]
+            item.kind_id == "demo.item.ring" && item.affix_ids == ["rfb-legacy.affix.combat-ring"]
         })
         .expect("Othrod should drop the fixed Combat ring");
     assert_eq!(
@@ -2195,11 +2331,11 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
         ItemLocation::Ground(guardian_position)
     );
     assert_eq!(combat_ring.quality, ItemQualityDto::Fine);
-    assert_eq!(combat_ring.affix_ids, ["rfb-legacy.affix.combat"]);
+    assert_eq!(combat_ring.affix_ids, ["rfb-legacy.affix.combat-ring"]);
     assert_eq!(combat_ring.rolled_affixes.len(), 1);
     assert_eq!(
         combat_ring.rolled_affixes[0].affix_id,
-        "rfb-legacy.affix.combat"
+        "rfb-legacy.affix.combat-ring"
     );
 
     let conquered_hash = game.state_hash();
@@ -2704,6 +2840,10 @@ fn p88d_icky_cave_entrance_recall_conquest_and_reward_round_trip() {
         .iter()
         .position(|entity| entity.id == "demo.guardian.icky-cave.1")
         .expect("Icky Cave depth 20 should spawn The Icky Queen");
+    let guardian = game.entities[guardian_index].clone();
+    // Reward acceptance does not include other monsters picking the drop up.
+    game.entities = vec![guardian];
+    let guardian_index = 0;
     assert_eq!(
         game.entities[guardian_index].kind_id,
         "demo.actor.the-icky-queen"

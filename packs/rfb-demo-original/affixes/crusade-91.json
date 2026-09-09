@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-crusade-91-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.crusade-91",
+  "nameKey": "affix-legacy-crusade-91-name",
+  "passives": [
+    "hold-life"
+  ],
+  "rfbEgo": {
+    "flags": [
+      "CHR",
+      "HOLD_LIFE",
+      "STR"
+    ],
+    "rarity": 2,
+    "sourceIndex": 91,
+    "types": [
+      "dragon-armor"
+    ]
+  },
+  "tags": [
+    "dragon-armor",
+    "legacy-import"
+  ]
+}

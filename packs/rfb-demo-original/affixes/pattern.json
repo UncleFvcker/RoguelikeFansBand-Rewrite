@@ -9,6 +9,16 @@
     "see-invisible"
   ],
   "rfbEgo": {
+    "flags": [
+      "CON",
+      "FREE_ACT",
+      "SEE_INVIS",
+      "SLAY_DEMON",
+      "SLAY_EVIL",
+      "SLAY_UNDEAD",
+      "STR",
+      "XTRA_H_RES"
+    ],
     "rarity": 6,
     "sourceIndex": 22,
     "types": [

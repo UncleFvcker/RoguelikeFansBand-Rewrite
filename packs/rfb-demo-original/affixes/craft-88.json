@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-craft-88-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.craft-88",
+  "nameKey": "affix-legacy-craft-88-name",
+  "rfbEgo": {
+    "flags": [
+      "MAGIC_MASTERY",
+      "WIS"
+    ],
+    "rarity": 1,
+    "sourceIndex": 88,
+    "types": [
+      "dragon-armor"
+    ]
+  },
+  "tags": [
+    "dragon-armor",
+    "legacy-import"
+  ]
+}

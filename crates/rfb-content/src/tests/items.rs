@@ -2,6 +2,113 @@ use super::*;
 use std::collections::BTreeSet;
 
 #[test]
+fn crafting_uses_the_complete_rfb_policy_without_explicit_candidates() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let action = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.crafting-scroll")
+        .unwrap()
+        .use_action
+        .as_ref()
+        .unwrap();
+    assert!(matches!(
+        action.effect,
+        ItemUseEffectDefinition::CraftItem {
+            rfb_ego_policy: LootRfbEgoPolicyDefinition::WeaponDigger,
+        }
+    ));
+    let egos = artifact
+        .content
+        .affixes
+        .iter()
+        .filter_map(|affix| affix.rfb_ego.as_ref())
+        .filter(|ego| {
+            ego.types.iter().any(|kind| {
+                matches!(
+                    kind,
+                    RfbEgoTypeDefinition::Weapon
+                        | RfbEgoTypeDefinition::Digger
+                        | RfbEgoTypeDefinition::Ammo
+                        | RfbEgoTypeDefinition::Bow
+                        | RfbEgoTypeDefinition::Harp
+                        | RfbEgoTypeDefinition::BodyArmor
+                        | RfbEgoTypeDefinition::DragonArmor
+                        | RfbEgoTypeDefinition::Shield
+                        | RfbEgoTypeDefinition::Crown
+                        | RfbEgoTypeDefinition::Helmet
+                        | RfbEgoTypeDefinition::Cloak
+                        | RfbEgoTypeDefinition::Gloves
+                        | RfbEgoTypeDefinition::Boots
+                        | RfbEgoTypeDefinition::Robe
+                )
+            })
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(egos.len(), 122);
+    assert_eq!(egos.iter().filter(|ego| ego.rarity > 0).count(), 121);
+    assert!(
+        serde_json::from_value::<ItemUseEffectDefinition>(serde_json::json!({
+            "type": "craft-item", "weaponAffixIds": ["demo.affix.vampiric"],
+            "armorAffixIds": ["demo.affix.regeneration"]
+        }))
+        .is_err()
+    );
+}
+
+#[test]
+fn mattock_identity_and_allocation_match_authoritative_source() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.mattock")
+        .unwrap();
+    assert_eq!(
+        item.rfb_base_kind,
+        Some(RfbBaseKindDefinition {
+            source_index: 156,
+            tval: 20,
+            sval: 7
+        })
+    );
+    assert_eq!(
+        (
+            item.generation_level,
+            item.base_value,
+            item.weight_tenths_pound
+        ),
+        (50, 700, 250)
+    );
+    assert_eq!(item.equipment_slot.as_deref(), Some("tool"));
+    assert_eq!(item.tunneling_pval, 3);
+    let melee = item.melee_profile.as_ref().unwrap();
+    assert_eq!((melee.damage_dice, melee.damage_sides), (1, 9));
+    let table = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
+    let entries = table
+        .entries
+        .iter()
+        .filter(|entry| entry.item_kind_id == item.id)
+        .collect::<Vec<_>>();
+    assert_eq!(entries.len(), 1);
+    assert_eq!(
+        (
+            entries[0].weight,
+            entries[0].min_depth,
+            entries[0].max_depth
+        ),
+        (100, 50, u16::MAX)
+    );
+}
+
+#[test]
 fn fixed_artifact_combat_and_activation_data_match_source() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 
@@ -40,10 +147,13 @@ fn fixed_artifact_combat_and_activation_data_match_source() {
             .find(|affix| affix.id == "rfb-legacy.affix.olog-hai")
             .expect("Olog-hai affix should exist");
         assert!(affix_is_compatible_with_item(affix, item, 36));
-        assert_eq!(affix.modifiers.strength, 4);
-        assert_eq!(affix.modifiers.intelligence, -4);
-        assert_eq!(affix.modifiers.defense, 10);
-        assert_eq!(affix.equipment_bonuses.melee_damage, 7);
+        assert_eq!(affix.rfb_ego.as_ref().unwrap().source_index, 72);
+        // The armor materializer rolls pval, enchantments and high resistance
+        // into the instance; the definition contains only fixed source flags.
+        assert_eq!(affix.modifiers.strength, 0);
+        assert_eq!(affix.modifiers.intelligence, 0);
+        assert_eq!(affix.modifiers.defense, 0);
+        assert_eq!(affix.equipment_bonuses.melee_damage, 0);
         assert_eq!(
             affix.resistances.get(&ActorDamageType::Acid),
             Some(&ActorResistanceLevel::Resistant)
@@ -59,55 +169,22 @@ fn fixed_artifact_combat_and_activation_data_match_source() {
                 .contains(&ItemDestructionElement::Acid)
         );
 
-        let roll_group = affix.roll_groups.as_slice();
-        let [roll_group] = roll_group else {
-            panic!("Olog-hai should roll one high resistance group");
-        };
-        assert_eq!(roll_group.rolls, 1);
-        assert_eq!(roll_group.candidates.len(), 12);
-        assert!(
-            roll_group
-                .candidates
-                .iter()
-                .all(|candidate| candidate.weight == 1)
-        );
-        let rolled_resistances = roll_group
-            .candidates
-            .iter()
-            .flat_map(|candidate| candidate.properties.resistances.keys().copied())
-            .collect::<BTreeSet<_>>();
-        assert_eq!(
-            rolled_resistances,
-            BTreeSet::from([
-                ActorDamageType::Poison,
-                ActorDamageType::Light,
-                ActorDamageType::Dark,
-                ActorDamageType::Shards,
-                ActorDamageType::Blindness,
-                ActorDamageType::Confusion,
-                ActorDamageType::Sound,
-                ActorDamageType::Nether,
-                ActorDamageType::Nexus,
-                ActorDamageType::Chaos,
-                ActorDamageType::Disenchant,
-                ActorDamageType::Fear,
-            ])
-        );
+        assert!(affix.roll_groups.is_empty());
 
         let generation = affix
             .device_generation
             .as_ref()
             .expect("Olog-hai should provide a device activation");
-        assert_eq!(
-            generation.recovery,
-            Some(ItemDeviceRecoveryDefinition {
-                interval_ticks: 50,
-                energy_per_mille: 1_000,
-            })
-        );
         let [activation] = generation.activations.as_slice() else {
             panic!("Olog-hai should provide exactly one activation");
         };
+        assert_eq!(
+            activation.recovery,
+            Some(ItemDeviceRecoveryDefinition {
+                interval_ticks: 500,
+                energy_per_mille: 1_000,
+            })
+        );
         assert_eq!(activation.device_check_difficulty, 10);
         assert_eq!(
             activation.charges,
@@ -366,7 +443,14 @@ fn fixed_artifact_combat_and_activation_data_match_source() {
         assert_eq!(generation.rarity_one_in, 20);
         assert_eq!((item.generation_level, item.weight_tenths_pound), (30, 25));
         assert_eq!(item.base_value, 13_000);
-        assert_eq!((item.modifiers.attack, item.modifiers.defense), (2, 9));
+        assert_eq!((item.modifiers.attack, item.modifiers.defense), (0, 9));
+        assert_eq!(
+            (
+                item.equipment_bonuses.melee_skill,
+                item.equipment_bonuses.melee_damage
+            ),
+            (2, 2)
+        );
         assert_eq!(item.brands, BTreeSet::from([WeaponBrand::Cold]));
         assert_eq!(
             item.resistances.get(&ActorDamageType::Cold),
@@ -780,6 +864,7 @@ fn item_shape_validation_uses_current_rfb_content() {
 fn rfb_ego_affix_metadata_requires_identity_unique_source_and_distinct_types() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let metadata = RfbEgoGenerationDefinition {
+        flags: Default::default(),
         source_index: u32::MAX,
         rarity: 0,
         types: vec![RfbEgoTypeDefinition::Weapon, RfbEgoTypeDefinition::Digger],
@@ -840,7 +925,7 @@ fn equipment_and_ego_identities_match_source() {
             .filter_map(|item| item.rfb_base_kind)
             .filter(|kind| matches!(kind.tval, 20..=23))
             .collect::<Vec<_>>();
-        assert_eq!(base_kinds.len(), 62);
+        assert_eq!(base_kinds.len(), 69);
         assert_eq!(
             base_kinds
                 .iter()
@@ -1171,7 +1256,7 @@ fn fixed_artifact_generation_matches_rfb_records_and_rejects_invalid_content() {
 }
 
 #[test]
-fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
+fn natural_affix_compatibility_separates_source_policy_and_explicit_pools() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let slaying = artifact
         .content
@@ -1225,16 +1310,7 @@ fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
     }
     assert_eq!(protection.generation_level, 0);
     assert_eq!(protection.generation_max_level, 30);
-    assert_eq!(protection.roll_groups.len(), 1);
-    assert_eq!(protection.roll_groups[0].rolls, 1);
-    assert_eq!(
-        protection.roll_groups[0]
-            .candidates
-            .iter()
-            .map(|candidate| (candidate.weight, candidate.properties.modifiers.defense))
-            .collect::<Vec<_>>(),
-        (1..=10).map(|defense| (1, defense)).collect::<Vec<_>>()
-    );
+    assert!(protection.roll_groups.is_empty());
 
     let mut bounded = slaying.clone();
     bounded.generation_level = 20;
@@ -1243,25 +1319,43 @@ fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
     assert!(affix_is_compatible_with_item(&bounded, halberd, 20));
     assert!(!affix_is_compatible_with_item(&bounded, halberd, 31));
 
-    let mut missing_fallback = artifact.content.clone();
+    // Explicit pools still require a no-affix outcome for incompatible bases.
+    let mut explicit = artifact.content.clone();
+    let table = explicit
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrior")
+        .unwrap();
+    table.rfb_ego_policy = None;
+    table.affix_weights = vec![
+        LootAffixWeightDefinition {
+            affix_id: None,
+            weight: 9,
+        },
+        LootAffixWeightDefinition {
+            affix_id: Some(protection.id.clone()),
+            weight: 1,
+        },
+    ];
+    let mut missing_fallback = explicit.clone();
     missing_fallback
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.base-items")
-        .expect("Orc Cave loot should exist")
+        .find(|table| table.id == "demo.loot-table.warrior")
+        .expect("explicit warrior loot should exist")
         .affix_weights
         .retain(|entry| entry.affix_id.is_some());
     assert!(matches!(
         validate_and_normalize(&mut missing_fallback),
-        Err(ContentError::InvalidLootTable(id)) if id == "demo.loot-table.base-items"
+        Err(ContentError::InvalidLootTable(id)) if id == "demo.loot-table.warrior"
     ));
 
-    let mut outside_depth = artifact.content.clone();
+    let mut outside_depth = explicit;
     let table = outside_depth
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.base-items")
-        .expect("base item pool should exist");
+        .find(|table| table.id == "demo.loot-table.warrior")
+        .expect("explicit warrior loot should exist");
     table.entries.retain(|entry| entry.min_depth <= 10);
     table
         .entries
@@ -2075,5 +2169,34 @@ fn rfb_base_kind_identity_rejects_duplicate_source_indices_and_kind_values() {
     assert!(matches!(
         validate_and_normalize(&mut duplicate_kind),
         Err(ContentError::InvalidItemSourceIdentity(_))
+    ));
+}
+
+#[test]
+fn bag_identity_uses_pval_and_rejects_invalid_capacity_metadata() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    for pval in [0, -1, 8191] {
+        let mut content = artifact.content.clone();
+        let bag = content
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.leather-pouch")
+            .unwrap();
+        bag.rfb_value.as_mut().unwrap().pval = pval;
+        assert!(matches!(
+            validate_and_normalize(&mut content),
+            Err(ContentError::InvalidItemSourceIdentity(_) | ContentError::InvalidEquipmentSlot(_))
+        ));
+    }
+    let mut content = artifact.content;
+    let bag = content
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.fabric-bag")
+        .unwrap();
+    bag.rfb_value = None;
+    assert!(matches!(
+        validate_and_normalize(&mut content),
+        Err(ContentError::InvalidEquipmentSlot(_))
     ));
 }

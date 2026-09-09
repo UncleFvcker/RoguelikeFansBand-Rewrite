@@ -20,6 +20,18 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-hard-studded-leather-name",
+  "rfbBaseKind": {
+    "sourceIndex": 252,
+    "sval": 7,
+    "tval": 36
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

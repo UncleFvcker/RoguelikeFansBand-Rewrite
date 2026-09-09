@@ -3,7 +3,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use rfb_content::ActorDamageType;
+use rfb_content::{ActorDamageType, EquipmentPassive};
 use rfb_protocol::Position;
 
 use super::{Game, HUMAN_WIS_MUTATION_ID, squared_distance};
@@ -99,6 +99,9 @@ impl Game {
         }
         has_line_of_sight(self, self.player.position, position)
             && (self.floor_has_environment_light()
+                || self
+                    .player_equipment_passives()
+                    .contains(&EquipmentPassive::NightVision)
                 || position == self.player.position
                 || self.position_is_lit(position))
     }

@@ -1328,6 +1328,7 @@ fn fixed_and_category_summons_share_the_nazgul_lifetime_quota() {
     let mut changed = BTreeSet::new();
     let resolution = category.resolve_category_summon(
         CategorySummonSpec {
+            is_spell: true,
             source_id: "test.summon.nazgul",
             owner_id: "test.owner",
             category: "high-undead",

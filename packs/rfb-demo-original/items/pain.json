@@ -1,32 +1,48 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.pain",
-  "nameKey": "item-demo-pain-name",
-  "descriptionKey": "item-demo-pain-description",
-  "elementalDestructionVulnerabilities": ["acid", "fire"],
-  "glyph": "/",
-  "generationLevel": 60,
-  "weightTenthsPound": 190,
-  "maxStack": 1,
-  "ridingWeaponKind": "compatible",
-  "baseValue": 50000,
-  "equipmentSlot": "weapon",
-  "weaponProficiencyBaseItemId": "demo.item.glaive",
   "artifactGeneration": {
-    "sourceIndex": 94,
     "baseItemKindId": "demo.item.glaive",
+    "instant": false,
     "rarityOneIn": 25,
-    "instant": false
+    "sourceIndex": 94
   },
+  "baseValue": 50000,
+  "descriptionKey": "item-demo-pain-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "glyph": "/",
+  "id": "demo.item.pain",
+  "maxStack": 1,
   "meleeProfile": {
     "attacks": 1,
-    "toHit": 0,
-    "toDamage": 30,
     "damageDice": 9,
-    "damageSides": 7
+    "damageSides": 7,
+    "toDamage": 30,
+    "toHit": 0
   },
+  "nameKey": "item-demo-pain-name",
   "resistsMonsterDestruction": true,
   "resistsProjectionDestruction": true,
-  "tags": ["artifact", "equipment", "old-castle-reward", "weapon"]
+  "rfbValue": {
+    "flags": [
+      "RIDING",
+      "SHOW_MODS"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "ridingWeaponKind": "compatible",
+  "tags": [
+    "artifact",
+    "equipment",
+    "old-castle-reward",
+    "weapon"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.glaive",
+  "weightTenthsPound": 190
 }

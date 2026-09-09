@@ -20,6 +20,18 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-hard-leather-armour-name",
+  "rfbBaseKind": {
+    "sourceIndex": 251,
+    "sval": 6,
+    "tval": 36
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

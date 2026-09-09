@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "formatVersion": 1,
+  "id": "demo.item.dragon-wings",
+  "nameKey": "item-demo-dragon-wings-name",
+  "descriptionKey": "item-demo-dragon-wings-description",
+  "glyph": "(",
+  "generationLevel": 60,
+  "weightTenthsPound": 5,
+  "baseValue": 10000,
+  "maxStack": 1,
+  "equipmentSlot": "cloak",
+  "mogaminatorRare": true,
+  "rfbBaseKind": {
+    "sourceIndex": 200,
+    "tval": 35,
+    "sval": 7
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION"
+    ],
+    "pval": 0,
+    "toArmor": 10
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "modifiers": {
+    "defense": 14
+  },
+  "passives": [
+    "levitation"
+  ]
+}

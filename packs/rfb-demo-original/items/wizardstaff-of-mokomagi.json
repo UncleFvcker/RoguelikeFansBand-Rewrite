@@ -1,22 +1,61 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.wizardstaff-of-mokomagi",
-  "nameKey": "item-demo-wizardstaff-of-mokomagi-name",
-  "descriptionKey": "item-demo-wizardstaff-of-mokomagi-description",
-  "glyph": "\\",
-  "generationLevel": 42,
-  "weightTenthsPound": 40,
-  "maxStack": 1,
+  "artifactGeneration": {
+    "baseItemKindId": "demo.item.wizardstaff",
+    "instant": false,
+    "rarityOneIn": 20,
+    "sourceIndex": 340
+  },
   "baseValue": 30000,
+  "descriptionKey": "item-demo-wizardstaff-of-mokomagi-description",
   "equipmentSlot": "weapon",
-  "weaponProficiencyBaseItemId": "demo.item.wizardstaff",
-  "artifactGeneration": { "sourceIndex": 340, "baseItemKindId": "demo.item.wizardstaff", "rarityOneIn": 20, "instant": false },
-  "modifiers": { "intelligence": 3 },
-  "meleeProfile": { "attacks": 1, "toHit": 12, "toDamage": 10, "damageDice": 2, "damageSides": 2 },
-  "resistances": { "confusion": "resistant", "blindness": "resistant" },
-  "passives": ["sustain-intelligence"],
+  "formatVersion": 1,
+  "generationLevel": 42,
+  "glyph": "\\",
+  "id": "demo.item.wizardstaff-of-mokomagi",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 2,
+    "damageSides": 2,
+    "toDamage": 10,
+    "toHit": 12
+  },
+  "modifiers": {
+    "intelligence": 3
+  },
+  "nameKey": "item-demo-wizardstaff-of-mokomagi-name",
+  "passives": [
+    "sustain-intelligence"
+  ],
+  "resistances": {
+    "blindness": "resistant",
+    "confusion": "resistant"
+  },
   "resistsMonsterDestruction": true,
   "resistsProjectionDestruction": true,
-  "tags": ["artifact", "easy-spell", "equipment", "mana-efficient", "quest-item", "weapon"]
+  "rfbValue": {
+    "flags": [
+      "DEC_MANA",
+      "EASY_SPELL",
+      "HIDE_TYPE",
+      "INT",
+      "QUESTITEM",
+      "RES_BLIND",
+      "RES_CONF",
+      "SUST_INT"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "tags": [
+    "artifact",
+    "easy-spell",
+    "equipment",
+    "mana-efficient",
+    "quest-item",
+    "weapon"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.wizardstaff",
+  "weightTenthsPound": 40
 }

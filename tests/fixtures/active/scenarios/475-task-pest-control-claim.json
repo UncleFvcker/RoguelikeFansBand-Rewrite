@@ -51,26 +51,26 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
-      "lastCommandSeq": 1,
-      "stateHash": "28f2fce53faa41c5addc60d30223c6c24037fbe3ac90aad6fc3aefe848220b4c",
-      "tasks": {
-        "demo.task.pest-control": {
-          "taskId": "demo.task.pest-control",
-          "status": "completed",
-          "current": 8,
-          "required": 8,
-          "stage": 1,
-          "stages": 1
-        }
-      },
       "inventory": {
         "demo.task.pest-control.reward.1": {
           "kindId": "demo.item.fur-cloak",
           "quantity": 1
         }
-      }
+      },
+      "lastCommandSeq": 1,
+      "revision": 1,
+      "stateHash": "48b9d4a1c3f32172d6b8a8feac943b704610601f9e7b08ff7037092a0a727012",
+      "tasks": {
+        "demo.task.pest-control": {
+          "current": 8,
+          "required": 8,
+          "stage": 1,
+          "stages": 1,
+          "status": "completed",
+          "taskId": "demo.task.pest-control"
+        }
+      },
+      "turn": 1
     },
     "events": [
       {

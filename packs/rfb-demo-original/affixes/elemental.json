@@ -12,6 +12,12 @@
   "id": "rfb-legacy.affix.elemental",
   "nameKey": "affix-legacy-elemental-name",
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE"
+    ],
     "rarity": 3,
     "sourceIndex": 181,
     "types": [

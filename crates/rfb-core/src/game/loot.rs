@@ -17,6 +17,7 @@ use super::mutations::LuckBias;
 use super::{Game, initial_item_curse, item_quality_dto};
 use crate::{
     CoreError,
+    rng::RfbRng,
     save::initial_item_fuel,
     state::{Actor, GoldPile, ItemInstance, ItemLocation, RolledAffixState},
 };
@@ -25,6 +26,7 @@ use crate::{
 pub(super) struct LootContext {
     pub(super) table_id: String,
     pub(super) floor_id: String,
+    /// Source object_level, which may differ from the floor's dungeon depth.
     pub(super) depth: u16,
     pub(super) source: LootSource,
 }
@@ -33,17 +35,29 @@ pub(super) struct LootContext {
 pub(super) enum ItemGenerationMode {
     Ordinary,
     Good,
+    /// AM_GREAT without AM_GOOD, present on six original monster definitions.
+    GreatOnly,
     Great,
     TailoredGreat,
-    Artifact,
+    Artifact {
+        no_fixed_artifact: bool,
+    },
 }
 
 impl ItemGenerationMode {
+    const fn minimum_power(self) -> i16 {
+        match self {
+            Self::Ordinary | Self::GreatOnly => 0,
+            Self::Good => 1,
+            Self::Great | Self::TailoredGreat => 2,
+            Self::Artifact { .. } => 3,
+        }
+    }
     const fn minimum_quality(self) -> rfb_content::ItemQuality {
         match self {
-            Self::Ordinary => rfb_content::ItemQuality::Ordinary,
+            Self::Ordinary | Self::GreatOnly => rfb_content::ItemQuality::Ordinary,
             Self::Good => rfb_content::ItemQuality::Fine,
-            Self::Great | Self::TailoredGreat | Self::Artifact => {
+            Self::Great | Self::TailoredGreat | Self::Artifact { .. } => {
                 rfb_content::ItemQuality::Exceptional
             }
         }
@@ -70,6 +84,7 @@ pub(super) struct GeneratedItemDraft {
     pub(super) rolled_affixes: Vec<RolledAffixState>,
     pub(super) intrinsic_properties: AffixPropertyBundleDefinition,
     pub(super) enchantments: ItemEnchantmentsDto,
+    pub(super) damage_dice_override: Option<u16>,
     pub(super) curse: Option<ItemCurseSeverityDto>,
     pub(super) activation: Option<ItemActivationDto>,
     pub(super) charges: Option<ItemChargesDto>,
@@ -80,13 +95,18 @@ impl GeneratedItemDraft {
     pub(super) fn into_item_instance(self, id: String, location: ItemLocation) -> ItemInstance {
         ItemInstance {
             previously_worn: false,
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id,
             kind_id: self.kind_id,
             quantity: self.quantity,
             inscription: None,
             origin_actor_kind_id: None,
             origin_kind: self.origin_kind,
-            damage_dice_override: None,
+            damage_dice_override: self.damage_dice_override,
             discount_percent: 0,
             quality: self.quality,
             affix_ids: self.affix_ids,
@@ -108,7 +128,7 @@ impl GeneratedItemDraft {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum LootSource {
     MonsterCarried { actor_id: String },
-    MonsterDeath { actor_id: String },
+    MonsterDeath { actor_id: String, themed: bool },
     FloorRoom { room_id: String, spawn_id: String },
     Vault { vault_id: String, spawn_id: String },
     ItemUse { item_id: String },
@@ -251,13 +271,18 @@ impl Game {
                     &LootContext {
                         table_id: table_id.clone(),
                         floor_id: floor_id.clone(),
-                        depth,
+                        depth: u16::try_from(object_level).expect("bounded monster object level"),
                         source: LootSource::MonsterDeath {
                             actor_id: actor.id.clone(),
+                            themed: use_theme,
                         },
                     },
                     ItemLocation::Ground(actor.position),
-                    drop.minimum_quality,
+                    if drop.great_only {
+                        ItemGenerationMode::GreatOnly
+                    } else {
+                        drop.minimum_quality.into()
+                    },
                 )?);
             }
         } else if let Some(table_id) = table_id {
@@ -267,6 +292,7 @@ impl Game {
                 depth,
                 source: LootSource::MonsterDeath {
                     actor_id: actor.id.clone(),
+                    themed: false,
                 },
             };
             if let Some(gold_chance) = actor_definition.gold_drop_chance_percent {
@@ -314,6 +340,7 @@ impl Game {
                 depth,
                 source: LootSource::MonsterDeath {
                     actor_id: actor.id.clone(),
+                    themed: false,
                 },
             });
             let first_realm_book_kind_id = first_realm_book_rank.and_then(|rank| {
@@ -355,7 +382,9 @@ impl Game {
                 );
             } else if let Some(context) = context {
                 let mode = if artifact_reward {
-                    ItemGenerationMode::Artifact
+                    ItemGenerationMode::Artifact {
+                        no_fixed_artifact: false,
+                    }
                 } else {
                     ItemGenerationMode::Ordinary
                 };
@@ -403,12 +432,12 @@ impl Game {
         &mut self,
         context: &LootContext,
         location: ItemLocation,
-        minimum_quality: rfb_content::ItemQuality,
+        mode: ItemGenerationMode,
     ) -> Result<Vec<ItemInstance>, CoreError> {
         self.next_item_instance_serial
             .checked_add(1)
             .ok_or(CoreError::ItemIdExhausted)?;
-        let Some(draft) = self.generate_one_loot_draft(context, minimum_quality.into()) else {
+        let Some(draft) = self.generate_one_loot_draft(context, mode) else {
             return Ok(Vec::new());
         };
         Ok(vec![self.commit_generated_item_draft(draft, location)?])
@@ -467,9 +496,8 @@ impl Game {
     ) -> Vec<GeneratedItemDraft> {
         let context_is_valid = !context.floor_id.is_empty()
             && match &context.source {
-                LootSource::MonsterCarried { actor_id } | LootSource::MonsterDeath { actor_id } => {
-                    !actor_id.is_empty()
-                }
+                LootSource::MonsterCarried { actor_id }
+                | LootSource::MonsterDeath { actor_id, .. } => !actor_id.is_empty(),
                 LootSource::FloorRoom { room_id, spawn_id } => {
                     context.depth > 0 && !room_id.is_empty() && !spawn_id.is_empty()
                 }
@@ -495,6 +523,7 @@ impl Game {
                 .build
                 .as_ref()
                 .is_some_and(|build| build.race_id == "rfb-legacy.race.tomte");
+        let rfb_generation = table.rfb_ego_policy.is_some();
         let eligible_entries = table
             .entries
             .iter()
@@ -546,8 +575,11 @@ impl Game {
         }
         let mut generated = Vec::with_capacity(usize::from(roll_count));
         for _ in 0..roll_count {
-            if mode == ItemGenerationMode::Artifact
-                && let Some(kind_id) = self.roll_instant_fixed_artifact_kind_id(context)
+            if (rfb_generation || matches!(mode, ItemGenerationMode::Artifact { .. }))
+                && let Some(kind_id) = self.roll_instant_fixed_artifact_kind_id(
+                    context,
+                    if mode.minimum_power() == 0 { 1_000 } else { 10 },
+                )
             {
                 generated.push(self.fixed_item_draft(context, kind_id));
                 continue;
@@ -564,32 +596,69 @@ impl Game {
                 .and_then(|definition| definition.equipment_slot.as_deref())
                 .is_some_and(|slot| matches!(slot, "ring" | "amulet"));
             let generation_depth = self.luck_adjusted_item_generation_depth(context.depth, staff);
-            if mode == ItemGenerationMode::Artifact {
-                let artifact_kind_id = (0..4).find_map(|_| {
-                    self.roll_fixed_artifact_kind_id(context, Some(&entry.item_kind_id), false)
-                });
-                if let Some(kind_id) = artifact_kind_id {
-                    generated.push(self.fixed_item_draft(context, kind_id));
-                    continue;
+            let device = self
+                .content
+                .item(&entry.item_kind_id)
+                .is_some_and(|item| item.tags.iter().any(|tag| tag == "device"));
+            let rolled_power = match table.quality_policy {
+                Some(policy) => {
+                    self.roll_rfb_depth_loot_power(policy, generation_depth, jewelry, device, mode)
                 }
-            }
-            let harp_intrinsic_properties =
-                self.content.item(&entry.item_kind_id).and_then(|item| {
-                    materialize_rfb_harp_intrinsic_with_rng(&mut self.rng, item, generation_depth)
-                });
-            let rolled_quality = match table.quality_policy {
-                Some(policy) => self.roll_rfb_depth_loot_quality(
-                    policy,
-                    generation_depth,
-                    jewelry,
-                    minimum_quality,
-                ),
-                None => self.roll_loot_quality(
+                None => (match self.roll_loot_quality(
                     &table.quality_weights,
                     &quality_weights,
                     minimum_quality,
-                ),
+                ) {
+                    ItemQualityDto::Ordinary => 0,
+                    ItemQualityDto::Fine => 1,
+                    ItemQualityDto::Exceptional => 2,
+                })
+                .max(mode.minimum_power()),
             };
+            let artifact_rolls = if matches!(
+                mode,
+                ItemGenerationMode::Artifact {
+                    no_fixed_artifact: true
+                }
+            ) {
+                0
+            } else if matches!(mode, ItemGenerationMode::Artifact { .. })
+                || (rfb_generation
+                    && matches!(
+                        mode,
+                        ItemGenerationMode::Great
+                            | ItemGenerationMode::TailoredGreat
+                            | ItemGenerationMode::GreatOnly
+                    ))
+            {
+                4
+            } else if rfb_generation && rolled_power >= 2 {
+                1
+            } else {
+                0
+            };
+            let artifact_kind_id = (0..artifact_rolls).find_map(|_| {
+                self.roll_fixed_artifact_kind_id(context, Some(&entry.item_kind_id), false)
+                    .or_else(|| {
+                        (self.player_luck_bias() == LuckBias::Good && self.rng.bounded(77) == 0)
+                            .then(|| {
+                                self.roll_fixed_artifact_kind_id(
+                                    context,
+                                    Some(&entry.item_kind_id),
+                                    false,
+                                )
+                            })
+                            .flatten()
+                    })
+            });
+            if let Some(kind_id) = artifact_kind_id {
+                generated.push(self.fixed_item_draft(context, kind_id));
+                continue;
+            }
+            let mut base_intrinsic_properties =
+                self.content.item(&entry.item_kind_id).and_then(|item| {
+                    materialize_rfb_harp_intrinsic_with_rng(&mut self.rng, item, generation_depth)
+                });
             let preselected_generic_affix_id = (table.rfb_ego_policy
                 != Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger))
             .then(|| {
@@ -619,61 +688,157 @@ impl Game {
                 (item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1)
                     || (table.rfb_ego_policy
                         == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
-                        && item.rfb_base_kind.is_some()
-                        && item.ammunition_profile.is_some())
+                        && ((item.rfb_base_kind.is_some() && item.ammunition_profile.is_some())
+                            || item.tags.iter().any(|tag| tag == "device")))
             });
-            let quality = if supports_quality {
-                rolled_quality
-            } else {
-                ItemQualityDto::Ordinary
-            };
-            let rfb_materialization = (table.rfb_ego_policy
+            let mut power = if supports_quality { rolled_power } else { 0 };
+            if rfb_generation
+                && jewelry
+                && power == 0
+                && matches!(
+                    context.source,
+                    LootSource::MonsterDeath { themed: true, .. }
+                )
+            {
+                power = 1;
+            }
+            let rfb_light = table.rfb_ego_policy
                 == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
-                && quality_allows_natural_affix(table.quality_policy, quality))
-            .then(|| {
+                && self
+                    .content
+                    .item(&entry.item_kind_id)
+                    .and_then(|item| item.rfb_base_kind)
+                    .is_some_and(|base| base.tval == 39);
+            let mut fuel = initial_item_fuel(&self.content, &entry.item_kind_id);
+            if rfb_light && let Some(fuel) = &mut fuel {
+                if fuel.current > 0 {
+                    fuel.current = 1 + self.rng.bounded(u64::from(fuel.current)) as u16;
+                }
+                if power == 1 && self.rng.bounded(3) == 0 {
+                    power = 2;
+                }
+            }
+            if rfb_generation
+                && let Some(properties) = super::ego::roll_container_capacity(
+                    &mut self.rng,
+                    self.content.item(&entry.item_kind_id).unwrap(),
+                    power,
+                )
+            {
+                base_intrinsic_properties = Some(properties);
+            }
+            if rfb_generation
+                && let Some(properties) = super::ego::dragon::materialize(
+                    &mut self.rng,
+                    self.content.item(&entry.item_kind_id).unwrap(),
+                    &mut power,
+                    matches!(
+                        mode,
+                        ItemGenerationMode::Artifact {
+                            no_fixed_artifact: true
+                        }
+                    ),
+                )
+            {
+                merge_affix_properties(
+                    base_intrinsic_properties.get_or_insert_with(Default::default),
+                    &properties,
+                );
+            }
+            let rfb_armor = table.rfb_ego_policy
+                == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
+                && self
+                    .content
+                    .item(&entry.item_kind_id)
+                    .and_then(|item| item.rfb_base_kind)
+                    .is_some_and(|base| matches!(base.tval, 30..=38));
+            let armor_enchantment = if rfb_armor && power != 0 {
+                super::ego::roll_rfb_armor_enchantment(&mut self.rng, generation_depth, power)
+            } else {
+                0
+            };
+            let base_kind = self
+                .content
+                .item(&entry.item_kind_id)
+                .and_then(|item| item.rfb_base_kind);
+            let rfb_weapon =
+                rfb_generation && base_kind.is_some_and(|base| matches!(base.tval, 16..=23));
+            let mut allow_weapon_ego = !base_kind
+                .is_some_and(|base| matches!((base.tval, base.sval), (23, 32 | 34) | (22, 50)));
+            let weapon_enchantment = if rfb_weapon && allow_weapon_ego && power != 0 {
+                let enchantment = super::ego::roll_rfb_weapon_enchantment(
+                    &mut self.rng,
+                    self.content.item(&entry.item_kind_id).unwrap(),
+                    generation_depth,
+                    power,
+                );
+                allow_weapon_ego = enchantment.is_some();
+                enchantment.unwrap_or_default()
+            } else {
+                ItemEnchantmentsDto::default()
+            };
+            let rfb_device = table.rfb_ego_policy
+                == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
+                && self
+                    .content
+                    .item(&entry.item_kind_id)
+                    .is_some_and(|item| item.tags.iter().any(|tag| tag == "device"));
+            let rfb_jewelry = jewelry
+                && table.rfb_ego_policy
+                    == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger);
+            let rfb_materialization = if rfb_jewelry && power != 0 {
                 self.content.item(&entry.item_kind_id).and_then(|item| {
-                    roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    super::ego::roll_jewelry(
+                        &self.content,
                         &mut self.rng,
                         item,
-                        self.content.affix_definitions(),
                         generation_depth,
-                        harp_intrinsic_properties.as_ref(),
+                        power,
                     )
                 })
-            })
-            .flatten();
-            let materialization = rfb_materialization.unwrap_or_else(|| {
-                let rolled_affix_id = preselected_generic_affix_id.unwrap_or_else(|| {
-                    let eligible_affixes = table
+            } else if rfb_device {
+                self.content.item(&entry.item_kind_id).and_then(|item| {
+                    super::ego::materialize_device(
+                        &self.content,
+                        &mut self.rng,
+                        item,
+                        generation_depth,
+                        power.abs() >= 2,
+                        None,
+                    )
+                })
+            } else {
+                (table.rfb_ego_policy
+                    == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
+                    && (!rfb_weapon || allow_weapon_ego)
+                    && !(power < 0
+                        && base_kind.is_some_and(|base| matches!(base.tval, 16..=18 | 46)))
+                    && power_allows_natural_affix(table.quality_policy, power))
+                .then(|| {
+                    self.content.item(&entry.item_kind_id).and_then(|item| {
+                        roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                            weapon_enchantment,
+                            &mut self.rng,
+                            item,
+                            self.content.affix_definitions(),
+                            generation_depth,
+                            base_intrinsic_properties.as_ref(),
+                        )
+                    })
+                })
+                .flatten()
+            };
+            let mut materialization = rfb_materialization.unwrap_or_else(|| {
+                let rolled_affix_id = preselected_generic_affix_id.flatten().flatten();
+                let affix_is_required = !table.affix_weights.is_empty()
+                    && table
                         .affix_weights
                         .iter()
-                        .filter(|affix_weight| {
-                            affix_weight.affix_id.as_ref().is_none_or(|affix_id| {
-                                self.content.affix(affix_id).is_some_and(|affix| {
-                                    self.content.item(&entry.item_kind_id).is_some_and(|item| {
-                                        affix_is_compatible_with_item(affix, item, generation_depth)
-                                    })
-                                })
-                            })
-                        })
-                        .collect::<Vec<_>>();
-                    let affix_weights = eligible_affixes
-                        .iter()
-                        .map(|entry| entry.weight)
-                        .collect::<Vec<_>>();
-                    (!eligible_affixes.is_empty()).then(|| {
-                        let affix_index = self.roll_weighted_index(&affix_weights);
-                        eligible_affixes[affix_index].affix_id.clone()
-                    })
-                });
-                let affix_is_required = table
-                    .affix_weights
-                    .iter()
-                    .all(|entry| entry.affix_id.is_some());
+                        .all(|entry| entry.affix_id.is_some());
                 let affix_ids = if affix_is_required
-                    || quality_allows_natural_affix(table.quality_policy, quality)
+                    || power_allows_natural_affix(table.quality_policy, power)
                 {
-                    rolled_affix_id.flatten().iter().cloned().collect()
+                    rolled_affix_id.iter().cloned().collect()
                 } else {
                     Vec::new()
                 };
@@ -684,19 +849,63 @@ impl Game {
                     affix_ids,
                     |_| generation_depth,
                     generation_depth,
+                    power,
                 )
             });
+            if !materialization.clear_armor_enchantment {
+                materialization.enchantment_delta.to_armor += armor_enchantment;
+            }
+            let launcher_ego = base_kind.is_some_and(|base| base.tval == 19 && base.sval != 70)
+                && !materialization.affix_ids.is_empty();
+            if !launcher_ego {
+                if !materialization.clear_hit_enchantment {
+                    materialization.enchantment_delta.to_hit += weapon_enchantment.to_hit;
+                }
+                if !materialization.clear_damage_enchantment {
+                    materialization.enchantment_delta.to_damage += weapon_enchantment.to_damage;
+                }
+            }
+            if materialization.extinguish_fuel
+                && let Some(fuel) = &mut fuel
+            {
+                fuel.current = 0;
+            }
             let EgoMaterialization {
+                curse_on_finalize,
+                kind_id_override,
                 affix_ids,
                 rolled_affixes,
                 intrinsic_properties: ego_intrinsic_properties,
                 enchantment_delta,
+                ammunition_damage_dice,
                 curse,
                 activation,
                 charges,
                 ..
             } = materialization;
-            let mut intrinsic_properties = harp_intrinsic_properties.unwrap_or_default();
+            let mut intrinsic_properties = base_intrinsic_properties.unwrap_or_default();
+            if rolled_affixes.is_empty()
+                && let Some(item) = self.content.item(&entry.item_kind_id).filter(|item| {
+                    item.rfb_base_kind
+                        .is_some_and(|base| base.tval == 35 && base.sval == 2)
+                })
+            {
+                let pval = 1 + self.rng.bounded(4) as i32;
+                super::ego::remember_rfb_pval(
+                    &mut intrinsic_properties,
+                    [
+                        rfb_content::RfbPvalFlagDefinition::Stealth,
+                        rfb_content::RfbPvalFlagDefinition::Search,
+                    ],
+                    pval,
+                );
+                intrinsic_properties.equipment_bonuses.stealth_skill +=
+                    pval - item.equipment_bonuses.stealth_skill;
+                intrinsic_properties.equipment_bonuses.search_skill +=
+                    5 * pval - item.equipment_bonuses.search_skill;
+                intrinsic_properties.equipment_bonuses.perception_skill +=
+                    5 * pval - item.equipment_bonuses.perception_skill;
+            }
             if let Some(properties) = ego_intrinsic_properties {
                 merge_affix_properties(&mut intrinsic_properties, &properties);
             }
@@ -709,23 +918,41 @@ impl Game {
                     )
                 },
             );
-            generated.push(GeneratedItemDraft {
-                kind_id: entry.item_kind_id.clone(),
+            let mut draft = GeneratedItemDraft {
+                kind_id: kind_id_override.unwrap_or_else(|| entry.item_kind_id.clone()),
                 quantity: entry.quantity,
                 origin_kind: match &context.source {
                     LootSource::Rubble { .. } => Some(ItemOriginKindDto::Rubble),
                     _ => None,
                 },
-                quality,
+                quality: power_quality(power),
                 affix_ids,
                 rolled_affixes,
                 intrinsic_properties,
                 enchantments: enchantment_delta,
+                damage_dice_override: ammunition_damage_dice,
                 curse,
                 activation,
                 charges,
-                fuel: initial_item_fuel(&self.content, &entry.item_kind_id),
-            });
+                fuel,
+            };
+            if rfb_generation {
+                let final_curse = curse_on_finalize
+                    || (power == -2
+                        && !rfb_jewelry
+                        && !rfb_device
+                        && base_kind.is_none_or(|base| base.tval != 46)
+                        && !draft.affix_ids.is_empty());
+                if final_curse || (power == -1 && (rfb_weapon || rfb_armor)) {
+                    super::ego::curses::finalize_draft(
+                        &self.content,
+                        &mut self.rng,
+                        &mut draft,
+                        final_curse,
+                    );
+                }
+            }
+            generated.push(draft);
         }
         generated
     }
@@ -733,8 +960,9 @@ impl Game {
     pub(super) fn roll_instant_fixed_artifact_kind_id(
         &mut self,
         context: &LootContext,
+        one_in: u64,
     ) -> Option<String> {
-        if self.rng.bounded(10) != 0 {
+        if self.rng.bounded(one_in) != 0 {
             return None;
         }
         self.roll_fixed_artifact_kind_id(context, None, true)
@@ -846,8 +1074,10 @@ impl Game {
             affix_ids,
             |_| context.depth,
             context.depth,
+            2,
         );
         GeneratedItemDraft {
+            damage_dice_override: None,
             quantity: 1,
             origin_kind: match &context.source {
                 LootSource::Rubble { .. } => Some(ItemOriginKindDto::Rubble),
@@ -941,40 +1171,46 @@ impl Game {
         item_quality_dto(quality.max(minimum))
     }
 
-    pub(super) fn roll_rfb_depth_loot_quality(
+    pub(super) fn roll_rfb_depth_loot_power(
         &mut self,
         policy: rfb_content::LootQualityPolicyDefinition,
         depth: u16,
         jewelry: bool,
-        minimum: rfb_content::ItemQuality,
-    ) -> ItemQualityDto {
+        device: bool,
+        mode: ItemGenerationMode,
+    ) -> i16 {
         let (good_percent, great_percent) =
             rfb_depth_quality_percentages(policy, depth, jewelry, self.player_luck_bias());
-        let roll = self.rng.bounded(10_000);
-        let quality = match minimum {
-            rfb_content::ItemQuality::Exceptional => rfb_content::ItemQuality::Exceptional,
-            rfb_content::ItemQuality::Fine => {
-                if roll < great_percent * 100 {
-                    rfb_content::ItemQuality::Exceptional
-                } else {
-                    rfb_content::ItemQuality::Fine
-                }
+        let chance = i32::from(self.virtue_current(rfb_protocol::VirtueKindDto::Chance));
+        let good = good_percent + chance / 50;
+        let great = great_percent + chance / 100;
+        let no_egos = self.content.world(&self.world_id).unwrap().no_egos && !jewelry;
+        if mode.minimum_power() >= 1 || rfb_magik(&mut self.rng, good) {
+            if no_egos {
+                1
+            } else if mode.minimum_power() >= 2
+                || mode == ItemGenerationMode::GreatOnly
+                || rfb_magik(&mut self.rng, great)
+            {
+                mode.minimum_power().max(2)
+            } else {
+                1
             }
-            rfb_content::ItemQuality::Ordinary => {
-                let exceptional_threshold = good_percent * great_percent;
-                if roll < exceptional_threshold {
-                    rfb_content::ItemQuality::Exceptional
-                } else if roll < good_percent * 100 {
-                    rfb_content::ItemQuality::Fine
-                } else {
-                    rfb_content::ItemQuality::Ordinary
-                }
+        } else if rfb_magik(&mut self.rng, (good + 2) / 3) {
+            if !no_egos && rfb_magik(&mut self.rng, great) {
+                -2
+            } else if !jewelry && !device && super::ego::randint1(&mut self.rng, depth) > 10 {
+                0
+            } else {
+                -1
             }
-        };
-        item_quality_dto(quality)
+        } else {
+            0
+        }
     }
 
     pub(super) fn luck_adjusted_item_generation_depth(&mut self, depth: u16, staff: bool) -> u16 {
+        let depth = depth.min(127);
         if self.player_luck_bias() != LuckBias::Bad {
             return depth;
         }
@@ -992,35 +1228,48 @@ pub(super) fn rfb_depth_quality_percentages(
     depth: u16,
     jewelry: bool,
     luck: LuckBias,
-) -> (u64, u64) {
+) -> (i32, i32) {
     let rfb_content::LootQualityPolicyDefinition::RfbDepth {
         good_cap_percent,
         great_cap_percent,
     } = policy;
-    let mut good_cap = u64::from(good_cap_percent);
-    let mut great_cap = u64::from(great_cap_percent);
+    let mut good_cap = i32::from(good_cap_percent);
+    let mut great_cap = i32::from(great_cap_percent);
     if luck == LuckBias::Bad {
-        good_cap = good_cap.saturating_sub(5);
-        great_cap = great_cap.saturating_sub(great_cap / 4);
+        good_cap -= 5;
+        great_cap -= great_cap / 4;
     }
-    let mut good = (u64::from(depth) + 10).min(good_cap);
+    let mut good = (i32::from(depth) + 10).min(good_cap);
     let mut great = (good * 2 / 3).min(great_cap);
     if jewelry {
-        good = good.saturating_add(30).min(good_cap);
+        good = (good + 30).min(good_cap);
     }
     if luck == LuckBias::Good {
-        good = good.saturating_add(5).min(100);
-        great = great.saturating_add(2).min(100);
+        good += 5;
+        great += 2;
     }
     (good, great)
 }
 
-pub(super) fn quality_allows_natural_affix(
+fn rfb_magik(rng: &mut RfbRng, percent: i32) -> bool {
+    // Preserve master z-rand.h literally, including its P <= 0 short circuit.
+    percent <= 0 || rng.bounded(100) < percent as u64
+}
+
+pub(super) fn power_allows_natural_affix(
     policy: Option<rfb_content::LootQualityPolicyDefinition>,
-    quality: ItemQualityDto,
+    power: i16,
 ) -> bool {
     match policy {
-        Some(_) => quality == ItemQualityDto::Exceptional,
-        None => quality != ItemQualityDto::Ordinary,
+        Some(_) => power.abs() >= 2,
+        None => power != 0,
+    }
+}
+
+pub(super) const fn power_quality(power: i16) -> ItemQualityDto {
+    match power {
+        1 => ItemQualityDto::Fine,
+        2.. => ItemQualityDto::Exceptional,
+        _ => ItemQualityDto::Ordinary,
     }
 }

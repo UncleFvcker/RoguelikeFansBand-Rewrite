@@ -22,7 +22,6 @@ pub(crate) fn valid_item_effect(
     actor_tag_values: &BTreeSet<String>,
     item_tag_values: &BTreeSet<String>,
     resource_ids: &BTreeSet<String>,
-    affix_ids: &BTreeSet<String>,
     loot_table_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
@@ -89,7 +88,11 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::IdentifyInventory
         | ItemUseEffectDefinition::SelfKnowledge
         | ItemUseEffectDefinition::TriggerTsuyoshiCrash
-        | ItemUseEffectDefinition::MundanifyItem => true,
+        | ItemUseEffectDefinition::MundanifyItem
+        | ItemUseEffectDefinition::RefillQuiver
+        | ItemUseEffectDefinition::StarBall
+        | ItemUseEffectDefinition::Escape => true,
+        ItemUseEffectDefinition::Starburst { damage } => (1..=10_000).contains(damage),
         ItemUseEffectDefinition::HealDice { dice, sides } => {
             (1..=100).contains(dice) && (1..=10_000).contains(sides)
         }
@@ -104,6 +107,11 @@ pub(crate) fn valid_item_effect(
             duration_bonus,
         }
         | ItemUseEffectDefinition::ApplySpeed {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        }
+        | ItemUseEffectDefinition::ApplyHeroicSpeed {
             duration_dice,
             duration_sides,
             duration_bonus,
@@ -315,17 +323,8 @@ pub(crate) fn valid_item_effect(
                 && maximum_count <= &8
         }
         ItemUseEffectDefinition::CraftItem {
-            weapon_affix_ids,
-            armor_affix_ids,
-        } => {
-            let valid_candidates = |candidates: &[String]| {
-                !candidates.is_empty()
-                    && candidates.len() <= 32
-                    && candidates.windows(2).all(|pair| pair[0] < pair[1])
-                    && candidates.iter().all(|id| affix_ids.contains(id))
-            };
-            valid_candidates(weapon_affix_ids) && valid_candidates(armor_affix_ids)
-        }
+            rfb_ego_policy: crate::LootRfbEgoPolicyDefinition::WeaponDigger,
+        } => true,
         ItemUseEffectDefinition::ShowRumour { message_key } => {
             validate_message_key(message_key).is_ok()
         }
@@ -431,7 +430,6 @@ pub(crate) fn valid_item_effect(
                         actor_tag_values,
                         item_tag_values,
                         resource_ids,
-                        affix_ids,
                         loot_table_ids,
                     )
                 })
@@ -633,6 +631,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::Bless { .. }
                     | ItemUseEffectDefinition::ApplySlowness { .. }
                     | ItemUseEffectDefinition::ApplySpeed { .. }
+                    | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
                     | ItemUseEffectDefinition::ApplyHeroism { .. }
                     | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                     | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
@@ -655,6 +654,10 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::IdentifyInventory
                     | ItemUseEffectDefinition::SelfKnowledge
                     | ItemUseEffectDefinition::Acquirement { .. }
+                    | ItemUseEffectDefinition::RefillQuiver
+                    | ItemUseEffectDefinition::StarBall
+                    | ItemUseEffectDefinition::Escape
+                    | ItemUseEffectDefinition::Starburst { .. }
                     | ItemUseEffectDefinition::ShowRumour { .. }
                     | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                     | ItemUseEffectDefinition::ApplyBasicResistance { .. }
@@ -783,7 +786,11 @@ pub(super) fn validate_items(
                 || item.artifact_generation.is_some()
                 || item.tags.iter().any(|tag| tag == "artifact")
                 || !base_kind_source_indices.insert(base_kind.source_index)
-                || !base_kind_values.insert((base_kind.tval, base_kind.sval)))
+                // The three SV_BAG kinds share tval/sval and differ by their base pval.
+                || !base_kind_values.insert((base_kind.tval, base_kind.sval,
+                    if base_kind.tval == 46 && base_kind.sval == 1 {
+                        item.rfb_value.as_ref().map_or(0, |value| value.pval)
+                    } else { 0 })))
         {
             return Err(ContentError::InvalidItemSourceIdentity(item.id.clone()));
         }
@@ -797,6 +804,14 @@ pub(super) fn validate_items(
             return Err(ContentError::InvalidItemStack(item.id.clone()));
         }
         if item.base_value > 999_999_999 {
+            return Err(ContentError::InvalidItemValue(item.id.clone()));
+        }
+        if item.rfb_value.as_ref().is_some_and(|value| {
+            value
+                .flags
+                .iter()
+                .any(|flag| !crate::valid_rfb_source_flag(flag))
+        }) {
             return Err(ContentError::InvalidItemValue(item.id.clone()));
         }
         if item.break_chance_percent > 100 {
@@ -879,17 +894,21 @@ pub(super) fn validate_items(
                 return Err(ContentError::InvalidArtifactGeneration(item.id.clone()));
             }
         }
-        if item.inventory_slot_bonus > 100
-            || (item.inventory_slot_bonus > 0
-                && (item.equipment_slot.as_deref() != Some("container") || item.max_stack != 1))
+        if item
+            .rfb_base_kind
+            .is_some_and(|base| base.tval == 46 && base.sval == 1)
+            && (item.equipment_slot.as_deref() != Some("container")
+                || item.max_stack != 1
+                || item
+                    .rfb_value
+                    .as_ref()
+                    .is_none_or(|value| !(0..=8190).contains(&value.pval)))
         {
             return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
         }
         if item.ammunition_capacity > 500
             || (item.ammunition_capacity > 0
-                && (item.equipment_slot.as_deref() != Some("quiver")
-                    || item.max_stack != 1
-                    || item.inventory_slot_bonus > 0))
+                && (item.equipment_slot.as_deref() != Some("quiver") || item.max_stack != 1))
         {
             return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
         }
@@ -1005,7 +1024,6 @@ pub(super) fn validate_items(
                 actor_tag_values,
                 item_tag_values,
                 resource_ids,
-                affix_ids,
                 loot_table_ids,
             ) && (item_effect_is_self_targeted(&action.effect)
                 || matches!(
@@ -1037,6 +1055,7 @@ pub(super) fn validate_items(
                         | ItemUseEffectDefinition::IncreaseNutrition { .. }
                         | ItemUseEffectDefinition::ApplySlowness { .. }
                         | ItemUseEffectDefinition::ApplySpeed { .. }
+                        | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
                         | ItemUseEffectDefinition::ApplyHeroism { .. }
                         | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                         | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
@@ -1140,7 +1159,6 @@ pub(super) fn validate_items(
                     actor_tag_values,
                     item_tag_values,
                     resource_ids,
-                    affix_ids,
                     loot_table_ids,
                 )
             {
@@ -1168,6 +1186,12 @@ pub(super) fn validate_items(
                     activation_ids.insert(activation.id.clone())
                         && validate_id(&activation.id).is_ok()
                         && validate_message_key(&activation.name_key).is_ok()
+                        && activation.rfb_value.is_none_or(|value| {
+                            value >= 0
+                                && (i32::from(activation.min_depth)
+                                    ..=i32::from(activation.max_depth))
+                                    .contains(&activation.device_check_difficulty)
+                        })
                         && (1..=1_000_000).contains(&activation.weight)
                         && (1..=100).contains(&activation.min_depth)
                         && activation.min_depth <= activation.max_depth
@@ -1183,7 +1207,6 @@ pub(super) fn validate_items(
                             actor_tag_values,
                             item_tag_values,
                             resource_ids,
-                            affix_ids,
                             loot_table_ids,
                         )
                         && !matches!(
@@ -1191,6 +1214,7 @@ pub(super) fn validate_items(
                             ItemUseEffectDefinition::IncreaseSpellLearningCapacity
                                 | ItemUseEffectDefinition::ApplySlowness { .. }
                                 | ItemUseEffectDefinition::ApplySpeed { .. }
+                                | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
                                 | ItemUseEffectDefinition::ApplyHeroism { .. }
                                 | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }

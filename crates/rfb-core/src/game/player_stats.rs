@@ -110,6 +110,7 @@ pub(super) fn temporary_sustain_passive(status_kind_id: &str) -> Option<Equipmen
     }
 }
 
+#[derive(Clone)]
 pub(in crate::game) struct ActorDerivedStats {
     pub(in crate::game) max_hp: DerivedStat,
     pub(in crate::game) attack: DerivedStat,
@@ -173,6 +174,7 @@ fn apply_player_life_force(stat: DerivedStat, life_force: i32) -> DerivedStat {
 pub(in crate::game) struct ResolvedAttackProfile {
     pub(in crate::game) attacks: u16,
     pub(in crate::game) extra_attack_chance_percent: u8,
+    pub(in crate::game) attack_sources: Vec<rfb_protocol::CharacterStatSourceDto>,
     pub(in crate::game) melee_skill: DerivedStat,
     pub(in crate::game) to_hit: i32,
     pub(in crate::game) to_damage: i32,
@@ -663,7 +665,8 @@ impl Game {
     }
 
     pub(super) fn player_reflects_bolts(&self) -> bool {
-        self.character_definitions().is_some_and(|(_, race, _, _)| {
+        self.player_equipment_passives().contains(&EquipmentPassive::ReflectsBolts)
+        || self.character_definitions().is_some_and(|(_, race, _, _)| {
             race.reflects_bolts_minimum_level
                 .is_some_and(|minimum_level| self.progress.level >= minimum_level)
         }) || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
@@ -821,7 +824,13 @@ impl Game {
         }
         modifiers.defense = modifiers
             .defense
-            .saturating_add(i32::from(item.enchantments.to_armor));
+            .saturating_add(i32::from(item.enchantments.to_armor))
+            .saturating_sub(self.equipped_curse_penalty(
+                item,
+                ItemCurseEffectDto::LowArmor,
+                10,
+                30,
+            ));
         modifiers
     }
 
@@ -861,6 +870,80 @@ impl Game {
         passives
     }
 
+    pub(super) fn item_resists_enchantment(&self, item: &ItemInstance) -> bool {
+        self.item_passives(item)
+            .contains(&EquipmentPassive::NoEnchant)
+            || self.content.item(&item.kind_id).is_some_and(|definition| {
+                definition.resists_enchantment
+                    || definition.tags.iter().any(|tag| tag == "no-enchant")
+            })
+    }
+
+    fn armor_ego_index(&self, item: &ItemInstance) -> Option<u32> {
+        self.content
+            .item(&item.kind_id)?
+            .rfb_base_kind
+            .filter(|base| matches!(base.tval, 30..=38 | 40 | 45))?;
+        Some(
+            item.affix_ids
+                .iter()
+                .filter_map(|id| {
+                    self.content
+                        .affix(id)?
+                        .rfb_ego
+                        .as_ref()
+                        .map(|ego| ego.source_index)
+                })
+                .next()
+                .unwrap_or(0),
+        )
+    }
+
+    fn armor_combat_enchantments(&self, item: &ItemInstance, ranged: bool) -> (i32, i32) {
+        let Some(index) = self.armor_ego_index(item) else {
+            return (0, 0);
+        };
+        // master:equip.c keeps sniper and magi bonuses out of melee, and the
+        // listed melee egos out of archery.
+        if matches!(index, 126 | 208 | 224)
+            || (!ranged && matches!(index, 141 | 207))
+            || (ranged
+                && matches!(
+                    index,
+                    60 | 61 | 95 | 102 | 115 | 120 | 127 | 135..=137 | 142 | 206
+                ))
+        {
+            return (0, 0);
+        }
+        (
+            i32::from(item.enchantments.to_hit),
+            i32::from(item.enchantments.to_damage),
+        )
+    }
+
+    pub(super) fn armor_spell_damage_bonus(&self) -> u16 {
+        self.items.iter().filter(|item| matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool")) && matches!(self.armor_ego_index(item), Some(126 | 208 | 224)))
+            .map(|item| i32::from(item.enchantments.to_damage)).sum::<i32>().clamp(0, i32::from(u16::MAX)) as u16
+    }
+
+    pub(super) fn player_has_anti_magic(&self) -> bool {
+        self.player_has_status_kind(crate::effect::STATUS_ANTI_MAGIC)
+            || self
+                .player_equipment_passives()
+                .contains(&EquipmentPassive::AntiMagic)
+    }
+
+    pub(super) fn player_has_anti_teleport(&self) -> bool {
+        self.player_equipment_passives()
+            .contains(&EquipmentPassive::AntiTeleport)
+    }
+
+    pub(super) fn equipment_blocks_summoning(&mut self) -> bool {
+        self.player_equipment_passives()
+            .contains(&EquipmentPassive::AntiSummoning)
+            && self.rng.bounded(3) != 0
+    }
+
     pub(super) fn player_equipment_passives(&self) -> BTreeSet<EquipmentPassive> {
         let mut passives = self
             .items
@@ -888,6 +971,15 @@ impl Game {
             ]);
         }
         passives
+    }
+
+    pub(super) fn player_equipment_bonuses(&self) -> EquipmentBonuses {
+        self.items.iter().filter(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+        }).fold(EquipmentBonuses::default(), |mut total, item| {
+            merge_equipment_bonuses(&mut total, &self.item_equipment_bonuses(item));
+            total
+        })
     }
 
     pub(super) fn player_sustains_attribute(&self, attribute: AttributeKind) -> bool {
@@ -1083,6 +1175,11 @@ impl Game {
                 .max(0),
         )
         .expect("non-negative regeneration rate must fit u64")
+            / if self.player_has_equipped_curse_effect(ItemCurseEffectDto::SlowRegeneration) {
+                5
+            } else {
+                1
+            }
     }
 
     pub(super) fn player_slow_digestion(&self) -> bool {
@@ -1179,9 +1276,7 @@ impl Game {
             .and_then(|definition| definition.melee_profile.as_ref())
             .map(|profile| {
                 let damage = item
-                    .rolled_affixes
-                    .iter()
-                    .find_map(|rolled| rolled.melee_damage_dice)
+                    .melee_damage_dice()
                     .map_or((profile.damage_dice, profile.damage_sides), |damage| {
                         (damage.dice, damage.sides)
                     });
@@ -1204,9 +1299,11 @@ impl Game {
     }
 
     pub(super) fn item_has_weapon_trait(item: &ItemInstance, trait_: WeaponTraitDto) -> bool {
-        item.rolled_affixes
-            .iter()
-            .any(|rolled| rolled.weapon_traits.contains(&trait_))
+        item.intrinsic_weapon_traits.contains(&trait_)
+            || item
+                .rolled_affixes
+                .iter()
+                .any(|rolled| rolled.weapon_traits.contains(&trait_))
     }
 
     pub(super) fn item_projectile_profile(
@@ -1264,9 +1361,12 @@ impl Game {
         self.items
             .iter()
             .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
-            .filter_map(|item| self.content.item(&item.kind_id))
-            .find(|item| item.equipment_slot.as_deref() == Some("head"))
-            .map_or(0, |item| item.weight_tenths_pound.saturating_sub(10))
+            .find(|item| {
+                self.content
+                    .item(&item.kind_id)
+                    .is_some_and(|kind| kind.equipment_slot.as_deref() == Some("head"))
+            })
+            .map_or(0, |item| self.item_instance_weight(item).saturating_sub(10))
     }
 
     pub(super) fn item_weight_tenths_pound(&self, kind_id: &str) -> u16 {
@@ -1275,7 +1375,26 @@ impl Game {
             .map_or(0, |definition| definition.weight_tenths_pound)
     }
 
+    pub(super) fn item_instance_weight(&self, item: &ItemInstance) -> u16 {
+        item.weight_override()
+            .unwrap_or_else(|| self.item_weight_tenths_pound(&item.kind_id))
+    }
+
     pub(super) fn carried_weight_tenths_pound(&self) -> u32 {
+        let phase_quiver = self.items.iter().any(|item| {
+            matches!(item.location, ItemLocation::Equipped { .. })
+                && self.content.item(&item.kind_id).is_some_and(|definition| {
+                    definition
+                        .rfb_base_kind
+                        .is_some_and(|base| base.tval == 46 && base.sval == 0)
+                })
+                && super::ego::item_has_ego(&self.content, item, 268)
+        });
+        let weightless_ammunition = if phase_quiver {
+            super::inventory::quivered_ammunition_item_ids(&self.content, &self.items)
+        } else {
+            BTreeSet::new()
+        };
         self.items
             .iter()
             .filter(|item| {
@@ -1284,10 +1403,10 @@ impl Game {
                     ItemLocation::Inventory | ItemLocation::Equipped { .. }
                 )
             })
+            .filter(|item| !weightless_ammunition.contains(item.id.as_str()))
             .fold(0_u32, |total, item| {
                 total.saturating_add(
-                    u32::from(self.item_weight_tenths_pound(&item.kind_id))
-                        .saturating_mul(item.quantity),
+                    u32::from(self.item_instance_weight(item)).saturating_mul(item.quantity),
                 )
             })
     }
@@ -1310,7 +1429,7 @@ impl Game {
             .as_ref()
             .map(|profile| ThrowProfileDto {
                 range: throw_range(
-                    definition.weight_tenths_pound,
+                    self.item_instance_weight(item),
                     self.player_has_mighty_throw(),
                 ),
                 to_hit: profile
@@ -1366,9 +1485,12 @@ impl Game {
                 .as_ref()
                 .and_then(|profile| {
                     let bonuses = self.item_equipment_bonuses(item);
+                    let extra_might = self.items.iter().filter(|other| {
+                        other.id != item.id && matches!(&other.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+                    }).map(|other| self.item_equipment_bonuses(other).launcher_multiplier_delta_percent).sum::<i32>();
                     let multiplier = launcher_multiplier(
                         profile.damage_multiplier_percent,
-                        bonuses.launcher_multiplier_delta_percent,
+                        bonuses.launcher_multiplier_delta_percent + extra_might * i32::from(profile.shot_energy) / 10_000,
                     );
                     let ammunition = self
                         .items
@@ -1438,7 +1560,7 @@ impl Game {
                     let hold = crate::stats::strength_hold_pounds(
                         self.effective_player_attributes().strength,
                     );
-                    let launcher_weight_pounds = launcher_definition.weight_tenths_pound / 10;
+                    let launcher_weight_pounds = self.item_instance_weight(item) / 10;
                     let heavy_shoot = hold < launcher_weight_pounds;
                     let heavy_to_hit = if heavy_shoot {
                         2_i32.saturating_mul(
@@ -1518,17 +1640,22 @@ impl Game {
                                 ),
                             )
                         });
+                    let (armor_to_hit, armor_to_damage) = self.items.iter().filter(|item| matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool")))
+                        .map(|item| self.armor_combat_enchantments(item, true)).fold((0, 0), |(hit, damage), (h, d)| (hit + h, damage + d));
                     let launcher_to_damage = profile
                         .to_damage
-                        .saturating_add(i32::from(item.enchantments.to_damage));
+                        .saturating_add(i32::from(item.enchantments.to_damage))
+                        .saturating_add(armor_to_damage);
                     Some(ResolvedProjectileProfile {
                         range: launcher_range(multiplier),
                         to_hit: profile
                             .to_hit
                             .saturating_add(i32::from(item.enchantments.to_hit))
+                            .saturating_sub(self.equipped_curse_penalty(item, ItemCurseEffectDto::LowMelee, 5, 15))
                             .saturating_add(heavy_to_hit)
                             .saturating_add(mounted_to_hit)
                             .saturating_add(sniping_to_hit)
+                            .saturating_add(armor_to_hit)
                             .saturating_add(ammunition_to_hit),
                         to_damage: ammunition_to_damage.saturating_mul(i32::from(multiplier)) / 100
                             + launcher_to_damage,
@@ -1546,7 +1673,7 @@ impl Game {
                         ammunition_endurance,
                         ammo_item_id: ammunition.map(|item| item.id.clone()),
                         ammo_kind_id: ammo_definition.id.clone(),
-                        ammunition_weight_tenths_pound: ammo_definition.weight_tenths_pound,
+                        ammunition_weight_tenths_pound: ammunition.map_or(ammo_definition.weight_tenths_pound, |item| self.item_instance_weight(item)),
                         ammunition_type: profile.ammunition_type,
                         ammo_break_chance_percent,
                         base_shot,
@@ -1570,6 +1697,92 @@ impl Game {
     }
 
     pub(super) fn player_melee_profile(&self, stats: &ActorDerivedStats) -> ResolvedAttackProfile {
+        self.player_melee_profile_for_item(
+            stats,
+            self.equipped_melee_weapons()
+                .first()
+                .map(|item| item.id.as_str()),
+        )
+    }
+
+    pub(super) fn equipped_melee_weapons(&self) -> Vec<&ItemInstance> {
+        self.body_slots.iter().filter(|slot| matches!(slot.slot_type.as_str(), "weapon" | "shield"))
+            .filter_map(|slot| self.items.iter().find(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &slot.id)
+                    && self.content.item(&item.kind_id).is_some_and(|definition| definition.melee_profile.is_some())
+            })).collect()
+    }
+
+    pub(super) fn player_melee_profiles(
+        &self,
+        stats: &ActorDerivedStats,
+    ) -> Vec<ResolvedAttackProfile> {
+        let weapons = self.equipped_melee_weapons();
+        if weapons.is_empty() {
+            return vec![self.player_melee_profile_for_item(stats, None)];
+        }
+        weapons
+            .into_iter()
+            .map(|item| self.player_melee_profile_for_item(stats, Some(&item.id)))
+            .collect()
+    }
+
+    fn ring_affects_weapon(&self, ring_slot: &str, weapon_id: Option<&str>) -> bool {
+        let Some(weapon) = self
+            .items
+            .iter()
+            .find(|item| Some(item.id.as_str()) == weapon_id)
+        else {
+            return false;
+        };
+        let ItemLocation::Equipped { slot_id } = &weapon.location else {
+            return false;
+        };
+        let hands: Vec<_> = self
+            .body_slots
+            .iter()
+            .filter(|slot| matches!(slot.slot_type.as_str(), "weapon" | "shield"))
+            .collect();
+        let Some(hand) = hands.iter().position(|slot| &slot.id == slot_id) else {
+            return false;
+        };
+        let ring_hand = self
+            .body_slots
+            .iter()
+            .filter(|slot| slot.slot_type == "ring")
+            .position(|slot| slot.id == ring_slot);
+        if ring_hand == Some(hand) {
+            return true;
+        }
+        let other_empty = hands.iter().enumerate().any(|(index, slot)| index != hand && !self.items.iter().any(|item| matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &slot.id)));
+        let definition = self.content.item(&weapon.kind_id).unwrap();
+        other_empty
+            && self.riding_mount_level().is_none()
+            && (self.item_instance_weight(weapon) > 99
+                || definition
+                    .rfb_base_kind
+                    .is_some_and(|kind| kind.tval == 22 || (kind.tval == 21 && kind.sval == 51)))
+    }
+
+    fn player_melee_profile_for_item(
+        &self,
+        stats: &ActorDerivedStats,
+        selected_item_id: Option<&str>,
+    ) -> ResolvedAttackProfile {
+        let mut adjusted_stats = stats.clone();
+        for other in self
+            .equipped_melee_weapons()
+            .into_iter()
+            .filter(|item| Some(item.id.as_str()) != selected_item_id)
+        {
+            adjusted_stats.melee_skill =
+                derived_stat_without_source(&adjusted_stats.melee_skill, &other.id, true);
+            adjusted_stats.melee_damage_bonus =
+                derived_stat_without_source(&adjusted_stats.melee_damage_bonus, &other.id, false);
+            adjusted_stats.melee_attacks =
+                derived_stat_without_source(&adjusted_stats.melee_attacks, &other.id, true);
+        }
+        let stats = &adjusted_stats;
         let definition = self
             .content
             .actor(&self.player.kind_id)
@@ -1578,7 +1791,9 @@ impl Game {
             let ItemLocation::Equipped { slot_id } = &item.location else {
                 return None;
             };
-            if self.body_slot_type(slot_id) != Some("weapon") {
+            if Some(item.id.as_str()) != selected_item_id
+                || !matches!(self.body_slot_type(slot_id), Some("weapon" | "shield"))
+            {
                 return None;
             }
             self.content
@@ -1605,11 +1820,15 @@ impl Game {
                             item.kind_id.clone(),
                             profile,
                             item_definition.riding_weapon_kind,
-                            item_definition.weight_tenths_pound,
-                            item.enchantments.to_hit,
-                            item.rolled_affixes
-                                .iter()
-                                .find_map(|rolled| rolled.melee_damage_dice),
+                            self.item_instance_weight(item),
+                            i32::from(item.enchantments.to_hit)
+                                - self.equipped_curse_penalty(
+                                    item,
+                                    ItemCurseEffectDto::LowMelee,
+                                    5,
+                                    15,
+                                ),
+                            item.melee_damage_dice(),
                             good_priest_weapon_penalty(
                                 priest_class,
                                 good_realm,
@@ -1676,7 +1895,7 @@ impl Game {
                     profile.damage_type,
                     profile
                         .to_hit
-                        .saturating_add(i32::from(enchantment_to_hit))
+                        .saturating_add(enchantment_to_hit)
                         .saturating_add(mounted_to_hit),
                     mounted_to_hit,
                     Some(weight),
@@ -1711,6 +1930,69 @@ impl Game {
             );
         }
         let mut to_damage = stats.melee_damage_bonus.value;
+        let weapons = self.equipped_melee_weapons();
+        let hand = weapons
+            .iter()
+            .position(|item| Some(item.id.as_str()) == source_item_id.as_deref())
+            .unwrap_or(0) as i32;
+        let count = weapons.len().max(1) as i32;
+        let mut mastery = 0;
+        for item in &self.items {
+            let ItemLocation::Equipped { slot_id } = &item.location else {
+                continue;
+            };
+            if self.body_slot_type(slot_id) == Some("tool") {
+                continue;
+            }
+            let (hit, damage) = self.armor_combat_enchantments(item, false);
+            let share = |value: i32| {
+                if self.body_slot_type(slot_id) == Some("ring") {
+                    if self.ring_affects_weapon(slot_id, source_item_id.as_deref()) {
+                        value
+                    } else {
+                        0
+                    }
+                } else if count == 2 && self.body_slot_type(slot_id) == Some("gloves") {
+                    if hand == 0 {
+                        (value + 1) / 2
+                    } else {
+                        value / 2
+                    }
+                } else {
+                    value / count
+                        + if hand < (value % count).abs() {
+                            value.signum()
+                        } else {
+                            0
+                        }
+                }
+            };
+            let hit_share = share(hit);
+            mastery += share(self.item_equipment_bonuses(item).weapon_dice_bonus);
+            if hit_share != hit {
+                melee_skill = melee_skill.with_modifier(
+                    StatLayer::Equipment,
+                    &item.id,
+                    hit_share - hit,
+                    StatBounds::NON_NEGATIVE,
+                );
+            }
+            to_hit += hit_share;
+            to_damage += share(damage) - damage;
+        }
+        let dice = (i32::from(dice) + mastery).clamp(0, i32::from(u16::MAX)) as u16;
+        if let Some(item_id) = source_item_id.as_deref() {
+            let percent = self.dual_wielding_accuracy_per_mille(item_id);
+            if percent != 1000 {
+                let penalty = melee_skill.value * percent / 1000 - melee_skill.value;
+                melee_skill = melee_skill.with_modifier(
+                    StatLayer::Equipment,
+                    "rfb.dual-wielding",
+                    penalty,
+                    StatBounds::NON_NEGATIVE,
+                );
+            }
+        }
         if priest_weapon_penalty {
             melee_skill = melee_skill.with_modifier(
                 StatLayer::Class,
@@ -1721,23 +2003,60 @@ impl Game {
             to_hit = to_hit.saturating_sub(2);
             to_damage = to_damage.saturating_sub(2);
         }
-        let mut blows = stats.melee_attacks.value.saturating_mul(100);
+        let mut attack_sources = stats
+            .melee_attacks
+            .contributions
+            .iter()
+            .map(|entry| rfb_protocol::CharacterStatSourceDto {
+                source_id: entry.source_id.clone(),
+                amount: entry.amount.saturating_mul(100),
+            })
+            .collect::<Vec<_>>();
+        let extra_sources = self.items.iter().filter(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+                && (Some(item.id.as_str()) == selected_item_id || self.content.item(&item.kind_id).is_none_or(|definition| definition.melee_profile.is_none()))
+        }).map(|item| {
+            let ItemLocation::Equipped { slot_id } = &item.location else { unreachable!(); };
+            let amount = self.item_equipment_bonuses(item).melee_attacks_delta_percent;
+            let amount = if self.body_slot_type(slot_id) == Some("ring") {
+                if self.ring_affects_weapon(slot_id, source_item_id.as_deref()) { amount } else { 0 }
+            } else if Some(item.id.as_str()) == selected_item_id || (self.body_slot_type(slot_id) == Some("gloves") && amount < 0) {
+                amount
+            } else { amount / count };
+            rfb_protocol::CharacterStatSourceDto { source_id: item.id.clone(), amount }
+        }).filter(|source| source.amount != 0).collect::<Vec<_>>();
+        let extra_blows = extra_sources
+            .iter()
+            .map(|source| source.amount)
+            .sum::<i32>()
+            .max(0);
+        if extra_blows > 0 {
+            attack_sources.extend(extra_sources);
+        }
+        let mut blows = stats
+            .melee_attacks
+            .value
+            .saturating_mul(100)
+            .saturating_add(extra_blows);
         if source_item_id.is_some()
             && self
                 .character_definitions()
                 .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.tonberry")
         {
             // RFB master a0d92b6378: _tonberry_calc_bonuses, NUM_BLOWS.
-            // This pipeline wields one active weapon, so weapon_ct is one.
-            to_damage = to_damage.saturating_add(2 * i32::from(self.progress.level));
-            blows = blows
-                .saturating_sub(4 * i32::from(self.progress.level))
-                .max(0);
+            to_damage = to_damage.saturating_add(2 * i32::from(self.progress.level) / count);
+            let penalty = (4 * i32::from(self.progress.level)).min(blows);
+            blows -= penalty;
+            attack_sources.push(rfb_protocol::CharacterStatSourceDto {
+                source_id: "rfb-legacy.race.tonberry".to_owned(),
+                amount: -penalty,
+            });
         }
         ResolvedAttackProfile {
             attacks: u16::try_from(blows / 100).expect("derived melee attack count must fit u16"),
             extra_attack_chance_percent: u8::try_from(blows % 100)
                 .expect("fractional melee blows must fit u8"),
+            attack_sources,
             melee_skill,
             to_hit,
             to_damage,
@@ -1754,15 +2073,14 @@ impl Game {
     pub(super) fn player_mutation_innate_attack_profiles(
         &self,
         stats: &ActorDerivedStats,
-        equipped_weapon_id: Option<&str>,
     ) -> Vec<ResolvedAttackProfile> {
-        let innate_skill = equipped_weapon_id.map_or_else(
-            || stats.melee_skill.clone(),
-            |item_id| derived_stat_without_source(&stats.melee_skill, item_id, true),
-        );
-        let innate_damage_bonus = equipped_weapon_id.map_or(stats.melee_damage_bonus.value, |id| {
-            derived_stat_without_source(&stats.melee_damage_bonus, id, false).value
-        });
+        let mut innate_skill = stats.melee_skill.clone();
+        let mut innate_damage = stats.melee_damage_bonus.clone();
+        for item in self.equipped_melee_weapons() {
+            innate_skill = derived_stat_without_source(&innate_skill, &item.id, true);
+            innate_damage = derived_stat_without_source(&innate_damage, &item.id, false);
+        }
+        let innate_damage_bonus = innate_damage.value;
         let mut mutations = self
             .content
             .mutations()
@@ -1807,6 +2125,7 @@ impl Game {
                 ResolvedAttackProfile {
                     attacks: 1,
                     extra_attack_chance_percent: 0,
+                    attack_sources: Vec::new(),
                     melee_skill,
                     to_hit: critical_to_hit,
                     to_damage: innate_damage_bonus.saturating_add(attack.to_damage),
@@ -1824,6 +2143,16 @@ impl Game {
             profiles.extend(
                 self.draconian_metamorphosis_attack_profiles(&innate_skill, innate_damage_bonus),
             );
+            if let Some(profile) = profiles.first_mut() {
+                let blows = u32::from(profile.attacks) * 100
+                    + u32::from(profile.extra_attack_chance_percent)
+                    + self
+                        .player_equipment_bonuses()
+                        .melee_attacks_delta_percent
+                        .max(0) as u32;
+                profile.attacks = (blows / 100) as u16;
+                profile.extra_attack_chance_percent = (blows % 100) as u8;
+            }
         }
         profiles
     }
@@ -1924,6 +2253,7 @@ impl Game {
                 attacks: blows / 100,
                 extra_attack_chance_percent: u8::try_from(blows % 100)
                     .expect("fractional Draconian blows must fit u8"),
+                attack_sources: Vec::new(),
                 melee_skill: skill.clone(),
                 to_hit: critical_to_hit,
                 to_damage: innate_damage_bonus,
@@ -2005,7 +2335,16 @@ impl Game {
             {
                 continue;
             }
+            if matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("ring") && !self.ring_affects_weapon(slot_id, profile.source_item_id.as_deref()))
+            {
+                continue;
+            }
             if let Some(item_definition) = self.content.item(&item.kind_id) {
+                if item_definition.melee_profile.is_some()
+                    && profile.source_item_id.as_deref() != Some(&item.id)
+                {
+                    continue;
+                }
                 apply(&item_definition.slays, &item_definition.brands);
             }
             for affix_id in &item.affix_ids {
@@ -2482,7 +2821,7 @@ impl Game {
                 if matches!(slot_type, Some("weapon" | "tool"))
                     && let Some(definition) = self.content.item(&item.kind_id)
                 {
-                    let bonus = i32::from(definition.weight_tenths_pound / 10)
+                    let bonus = i32::from(self.item_instance_weight(item) / 10)
                         .saturating_add(i32::from(definition.tunneling_pval).saturating_mul(20));
                     if bonus > digging_equipment.1 {
                         digging_equipment = (item.id.clone(), bonus);
@@ -2514,6 +2853,14 @@ impl Game {
                 );
                 add_equipment_stat(&mut pipeline, StatKind::Speed, &item.id, modifiers.speed);
                 let bonuses = self.item_equipment_bonuses(item);
+                let (armor_to_hit, armor_to_damage) = self.armor_combat_enchantments(item, false);
+                add_equipment_stat(&mut pipeline, StatKind::MeleeSkill, &item.id, armor_to_hit);
+                add_equipment_stat(
+                    &mut pipeline,
+                    StatKind::MeleeDamageBonus,
+                    &item.id,
+                    armor_to_damage,
+                );
                 add_equipment_stat(
                     &mut pipeline,
                     StatKind::MeleeAttacks,
@@ -2582,7 +2929,7 @@ impl Game {
                 );
                 let melee_profile = match &item.location {
                     ItemLocation::Equipped { slot_id }
-                        if self.body_slot_type(slot_id) == Some("weapon") =>
+                        if matches!(self.body_slot_type(slot_id), Some("weapon" | "shield")) =>
                     {
                         self.content
                             .item(&item.kind_id)
@@ -2812,6 +3159,18 @@ impl Game {
         } else {
             stealth_skill
         };
+        let stealth_skill = if include_equipment
+            && self.player_has_equipped_curse_effect(ItemCurseEffectDto::Catlike)
+        {
+            stealth_skill.with_modifier(
+                StatLayer::Equipment,
+                "equipment.curse.catlike",
+                -4,
+                StatBounds::NON_NEGATIVE,
+            )
+        } else {
+            stealth_skill
+        };
         ActorDerivedStats {
             max_hp: if include_equipment {
                 apply_player_life_force(max_hp, self.progress.life_force)
@@ -2845,7 +3204,26 @@ impl Game {
             door_skill: pipeline.resolve(StatKind::DoorSkill, StatBounds::NON_NEGATIVE),
             bash_power: pipeline.resolve(StatKind::BashPower, StatBounds::NON_NEGATIVE),
             search_skill: pipeline.resolve(StatKind::SearchSkill, StatBounds::NON_NEGATIVE),
-            device_skill: pipeline.resolve(StatKind::DeviceSkill, StatBounds::NON_NEGATIVE),
+            device_skill: {
+                let skill = pipeline.resolve(StatKind::DeviceSkill, StatBounds::NON_NEGATIVE);
+                let penalty = if include_equipment {
+                    self.items
+                        .iter()
+                        .map(|item| {
+                            self.equipped_curse_penalty(item, ItemCurseEffectDto::LowDevice, 5, 10)
+                        })
+                        .max()
+                        .unwrap_or(0)
+                } else {
+                    0
+                };
+                skill.with_modifier(
+                    StatLayer::Equipment,
+                    "equipment.curse.low-device",
+                    -penalty,
+                    StatBounds::NON_NEGATIVE,
+                )
+            },
             saving_throw_skill,
             stealth_skill,
             perception_skill: pipeline.resolve(StatKind::PerceptionSkill, StatBounds::NON_NEGATIVE),

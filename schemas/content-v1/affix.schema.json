@@ -1440,6 +1440,10 @@
         {
           "additionalProperties": false,
           "properties": {
+            "lineOfSight": {
+              "default": false,
+              "type": "boolean"
+            },
             "radius": {
               "format": "uint8",
               "maximum": 255,
@@ -1854,6 +1858,15 @@
         {
           "additionalProperties": false,
           "properties": {
+            "damage": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
             "type": {
               "const": "wrath-of-god",
               "type": "string"
@@ -3699,6 +3712,26 @@
     "AffixPropertyBundleDefinition": {
       "additionalProperties": false,
       "properties": {
+        "ammunitionCapacity": {
+          "description": "Generated quiver capacity, in ammunition units.",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "bagCapacity": {
+          "description": "Final bag capacity, in non-ammunition stack slots (not an additive bonus).",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "brands": {
           "default": [],
           "items": {
@@ -3865,6 +3898,29 @@
             }
           },
           "type": "object"
+        },
+        "rfbFlags": {
+          "description": "Original object flags whose distinction is lost by gameplay projection\n(notably OF curses versus the separate OFC random curse effects).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "rfbHeavyCurse": {
+          "description": "Original OFC_HEAVY_CURSE bit, independent of a concurrent permanent curse.",
+          "type": "boolean"
+        },
+        "rfbPval": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RfbPvalDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Preserves the shared original pval and flags before gameplay projection."
         },
         "slays": {
           "additionalProperties": false,
@@ -4071,8 +4127,16 @@
           "format": "int32",
           "type": "integer"
         },
+        "magicResistancePercent": {
+          "format": "int32",
+          "type": "integer"
+        },
         "meleeAttacks": {
           "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "meleeAttacksDeltaPercent": {
           "format": "int32",
           "type": "integer"
         },
@@ -4114,6 +4178,10 @@
           "format": "int32",
           "type": "integer"
         },
+        "spellCapacityBonus": {
+          "format": "int32",
+          "type": "integer"
+        },
         "stealthSkill": {
           "default": 0,
           "format": "int32",
@@ -4121,6 +4189,11 @@
         },
         "throwingSkill": {
           "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "weaponDiceBonus": {
+          "description": "RFB weapon mastery adds dice to equipped melee weapons.",
           "format": "int32",
           "type": "integer"
         }
@@ -4136,6 +4209,23 @@
         "levitation",
         "warning",
         "slow-digestion",
+        "reflects-bolts",
+        "fire-aura",
+        "cold-aura",
+        "electricity-aura",
+        "revenge-aura",
+        "mana-regeneration",
+        "anti-magic",
+        "anti-teleport",
+        "anti-summoning",
+        "night-vision",
+        "dual-wielding",
+        "no-enchant",
+        "shards-aura",
+        "reduced-mana-cost",
+        "easy-spell",
+        "auto-identify",
+        "blessed",
         "esp-animal",
         "esp-undead",
         "esp-demon",
@@ -4243,6 +4333,14 @@
           "type": "array",
           "uniqueItems": true
         },
+        "rfbValue": {
+          "description": "RFB effect_value at this profile's fixed power, before timeout scaling.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "target": {
           "$ref": "#/$defs/AbilityTargetDefinition"
         },
@@ -4293,6 +4391,10 @@
     "ItemDeviceGenerationDefinition": {
       "additionalProperties": false,
       "properties": {
+        "activationOptional": {
+          "default": false,
+          "type": "boolean"
+        },
         "activations": {
           "items": {
             "$ref": "#/$defs/ItemDeviceActivationDefinition"
@@ -4621,6 +4723,38 @@
             },
             "type": {
               "const": "apply-speed",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationDice",
+            "durationSides",
+            "durationBonus"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationBonus": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "apply-heroic-speed",
               "type": "string"
             }
           },
@@ -6181,27 +6315,76 @@
         {
           "additionalProperties": false,
           "properties": {
-            "armorAffixIds": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
+            "type": {
+              "const": "refill-quiver",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "star-ball",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "escape",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "damage": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
             },
             "type": {
-              "const": "craft-item",
+              "const": "starburst",
               "type": "string"
-            },
-            "weaponAffixIds": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
             }
           },
           "required": [
             "type",
-            "weaponAffixIds",
-            "armorAffixIds"
+            "damage"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "rfbEgoPolicy": {
+              "$ref": "#/$defs/LootRfbEgoPolicyDefinition"
+            },
+            "type": {
+              "const": "craft-item",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "rfbEgoPolicy"
           ],
           "type": "object"
         },
@@ -6795,8 +6978,15 @@
         }
       ]
     },
+    "LootRfbEgoPolicyDefinition": {
+      "enum": [
+        "weapon-digger"
+      ],
+      "type": "string"
+    },
     "RfbActivationBiasDefinition": {
       "enum": [
+        "warrior",
         "mage",
         "chaos",
         "acid",
@@ -6815,6 +7005,14 @@
       "additionalProperties": false,
       "description": "Identity and allocation inputs copied from one authoritative `e_info`\nrecord. Affixes without this metadata never enter the RFB ego pool.",
       "properties": {
+        "flags": {
+          "description": "Original object flags, including flag presence when pval is zero.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
         "rarity": {
           "format": "uint16",
           "maximum": 65535,
@@ -6863,6 +7061,67 @@
         "quiver",
         "device",
         "special"
+      ],
+      "type": "string"
+    },
+    "RfbPvalDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "flags": {
+          "items": {
+            "$ref": "#/$defs/RfbPvalFlagDefinition"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "value": {
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "value",
+        "flags"
+      ],
+      "type": "object"
+    },
+    "RfbPvalFlagDefinition": {
+      "enum": [
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma",
+        "less-strength",
+        "less-intelligence",
+        "less-wisdom",
+        "less-dexterity",
+        "less-constitution",
+        "less-charisma",
+        "stealth",
+        "less-stealth",
+        "speed",
+        "less-speed",
+        "life",
+        "less-life",
+        "infra",
+        "digging",
+        "spell-power",
+        "less-spell-power",
+        "device-power",
+        "magic-resistance",
+        "might",
+        "search",
+        "mastery",
+        "less-mastery",
+        "capacity",
+        "less-capacity",
+        "blows",
+        "shots",
+        "weapon-mastery"
       ],
       "type": "string"
     },

@@ -86,6 +86,22 @@ fn tomte_sensing_classifies_floor_items_without_identifying_their_properties() {
             Some(ItemFeelingDto::Terrible),
         ),
         (
+            "random-artifact",
+            "demo.item.dagger",
+            false,
+            false,
+            0,
+            Some(ItemFeelingDto::Special),
+        ),
+        (
+            "bad-random-artifact",
+            "demo.item.dagger",
+            false,
+            true,
+            0,
+            Some(ItemFeelingDto::Terrible),
+        ),
+        (
             "cursed",
             "demo.item.dagger",
             false,
@@ -111,6 +127,9 @@ fn tomte_sensing_classifies_floor_items_without_identifying_their_properties() {
         item.location = ItemLocation::Ground(game.player.position);
         item.enchantments.to_hit = bonus;
         item.intrinsic_properties.modifiers.intelligence = 4;
+        if id.ends_with("random-artifact") {
+            item.artifact_name = Some("(永恒蘑菇)".to_owned());
+        }
         if ego {
             item.quality = ItemQualityDto::Fine;
             item.affix_ids.push("demo.affix.frost-hunter".to_owned());
@@ -146,6 +165,7 @@ fn tomte_sensing_classifies_floor_items_without_identifying_their_properties() {
         );
         assert_eq!(game.visible_item_curse(item), None, "{id}");
         assert_eq!(game.visible_item_quality(item), None, "{id}");
+        assert_eq!(game.visible_artifact_name(item), None, "{id}");
     }
     assert_eq!(game.item_feeling(game.items.last().unwrap()), None);
     assert_eq!(
@@ -379,7 +399,7 @@ fn tomte_sensing_identifies_nameless_jewelry_but_ignores_glove_attack_bonuses() 
 }
 
 #[test]
-fn fabric_bag_adds_four_shared_inventory_slots() {
+fn fabric_bag_projects_four_non_ammunition_slots() {
     let mut game = Game::new(42);
     game.items.clear();
     give_inventory_item(
@@ -489,6 +509,7 @@ fn original_diggers_use_weight_and_tunneling_pval_without_stacking_with_weapons(
         ("demo.item.pick", 55),
         ("demo.item.gnomish-shovel", 66),
         ("demo.item.orcish-pick", 75),
+        ("demo.item.mattock", 85),
     ] {
         let mut game = Game::new(42);
         game.items.clear();
@@ -661,8 +682,23 @@ fn inventory_item_missing_its_kind_is_an_invariant_error() {
 fn elemental_brand_is_suppressed_only_by_matching_immunity() {
     let mut game = Game::new(0);
     clear_monsters(&mut game);
+    let weapon_slot = game
+        .body_slots
+        .iter()
+        .find(|slot| slot.slot_type == "weapon")
+        .unwrap()
+        .id
+        .clone();
+    game.items.retain(
+        |item| !matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &weapon_slot),
+    );
     game.items.push(ItemInstance {
         previously_worn: false,
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
         id: "test.item.ember-edge".to_owned(),
         kind_id: "demo.item.ember-edge".to_owned(),
         quantity: 1,
@@ -684,7 +720,7 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         device_recovery_progress: 0,
         captured_actor: None,
         location: ItemLocation::Equipped {
-            slot_id: "weapon".to_owned(),
+            slot_id: weapon_slot,
         },
     });
     let profile = game.player_melee_profile(&game.player_derived_stats());
@@ -725,6 +761,11 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
     let item_id = "test.item.known-offense".to_owned();
     game.items.push(ItemInstance {
         previously_worn: false,
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
         id: item_id.clone(),
         kind_id: "demo.item.ember-edge".to_owned(),
         quantity: 1,

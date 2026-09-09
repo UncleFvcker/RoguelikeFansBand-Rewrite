@@ -23,6 +23,20 @@
   "resistances": {
     "light": "resistant"
   },
+  "rfbBaseKind": {
+    "sourceIndex": 242,
+    "sval": 10,
+    "tval": 34
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "REFLECT",
+      "RES_LITE"
+    ],
+    "pval": 0,
+    "toArmor": 10
+  },
   "tags": [
     "armor",
     "equipment",

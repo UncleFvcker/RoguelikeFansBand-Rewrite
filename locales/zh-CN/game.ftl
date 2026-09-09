@@ -632,3 +632,4 @@ player-life-force-exhausted = 你的生命力枯竭了！
 player-life-force-death = 你因生命力枯竭而死。
 monster-unlife-drained-restored = { $source }吸取了{ $amount }点生命力；你转化后的生命力恢复至{ $lifeForceFinal }。
 monster-unlife-drained-ranged = { $source }吸取了{ $amount }点生命力。
+message-item-use-crafting-failed = 对{ $target }的工艺附魔失败了。

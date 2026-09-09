@@ -64,6 +64,23 @@ pub enum EquipmentPassive {
     Levitation,
     Warning,
     SlowDigestion,
+    ReflectsBolts,
+    FireAura,
+    ColdAura,
+    ElectricityAura,
+    RevengeAura,
+    ManaRegeneration,
+    AntiMagic,
+    AntiTeleport,
+    AntiSummoning,
+    NightVision,
+    DualWielding,
+    NoEnchant,
+    ShardsAura,
+    ReducedManaCost,
+    EasySpell,
+    AutoIdentify,
+    Blessed,
     EspAnimal,
     EspUndead,
     EspDemon,
@@ -141,6 +158,143 @@ pub struct RfbEgoGenerationDefinition {
     pub source_index: u32,
     pub rarity: u16,
     pub types: Vec<RfbEgoTypeDefinition>,
+    /// Original object flags, including flag presence when pval is zero.
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub flags: BTreeSet<String>,
+}
+
+/// Source information lost when flags/pval and base AC/+AC are projected into
+/// gameplay bonuses. Runtime enchantments and generated properties remain separate.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RfbItemValueDefinition {
+    pub flags: BTreeSet<String>,
+    pub pval: i16,
+    pub to_armor: i16,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "kebab-case")]
+pub enum RfbPvalFlagDefinition {
+    Strength,
+    Intelligence,
+    Wisdom,
+    Dexterity,
+    Constitution,
+    Charisma,
+    LessStrength,
+    LessIntelligence,
+    LessWisdom,
+    LessDexterity,
+    LessConstitution,
+    LessCharisma,
+    Stealth,
+    LessStealth,
+    Speed,
+    LessSpeed,
+    Life,
+    LessLife,
+    Infra,
+    Digging,
+    SpellPower,
+    LessSpellPower,
+    DevicePower,
+    MagicResistance,
+    Might,
+    Search,
+    Mastery,
+    LessMastery,
+    Capacity,
+    LessCapacity,
+    Blows,
+    Shots,
+    WeaponMastery,
+}
+
+impl RfbPvalFlagDefinition {
+    pub const ALL: [Self; 33] = [
+        Self::Strength,
+        Self::Intelligence,
+        Self::Wisdom,
+        Self::Dexterity,
+        Self::Constitution,
+        Self::Charisma,
+        Self::LessStrength,
+        Self::LessIntelligence,
+        Self::LessWisdom,
+        Self::LessDexterity,
+        Self::LessConstitution,
+        Self::LessCharisma,
+        Self::Stealth,
+        Self::LessStealth,
+        Self::Speed,
+        Self::LessSpeed,
+        Self::Life,
+        Self::LessLife,
+        Self::Infra,
+        Self::Digging,
+        Self::SpellPower,
+        Self::LessSpellPower,
+        Self::DevicePower,
+        Self::MagicResistance,
+        Self::Might,
+        Self::Search,
+        Self::Mastery,
+        Self::LessMastery,
+        Self::Capacity,
+        Self::LessCapacity,
+        Self::Blows,
+        Self::Shots,
+        Self::WeaponMastery,
+    ];
+    #[must_use]
+    pub const fn source_flag(self) -> &'static str {
+        match self {
+            Self::Strength => "STR",
+            Self::Intelligence => "INT",
+            Self::Wisdom => "WIS",
+            Self::Dexterity => "DEX",
+            Self::Constitution => "CON",
+            Self::Charisma => "CHR",
+            Self::LessStrength => "DEC_STR",
+            Self::LessIntelligence => "DEC_INT",
+            Self::LessWisdom => "DEC_WIS",
+            Self::LessDexterity => "DEC_DEX",
+            Self::LessConstitution => "DEC_CON",
+            Self::LessCharisma => "DEC_CHR",
+            Self::Stealth => "STEALTH",
+            Self::LessStealth => "DEC_STEALTH",
+            Self::Speed => "SPEED",
+            Self::LessSpeed => "DEC_SPEED",
+            Self::Life => "LIFE",
+            Self::LessLife => "DEC_LIFE",
+            Self::Infra => "INFRA",
+            Self::Digging => "TUNNEL",
+            Self::SpellPower => "SPELL_POWER",
+            Self::LessSpellPower => "DEC_SPELL_POWER",
+            Self::DevicePower => "DEVICE_POWER",
+            Self::MagicResistance => "MAGIC_RESISTANCE",
+            Self::Might => "XTRA_MIGHT",
+            Self::Search => "SEARCH",
+            Self::Mastery => "MAGIC_MASTERY",
+            Self::LessMastery => "DEC_MAGIC_MASTERY",
+            Self::Capacity => "SPELL_CAP",
+            Self::LessCapacity => "DEC_SPELL_CAP",
+            Self::Blows => "BLOWS",
+            Self::Shots => "XTRA_SHOTS",
+            Self::WeaponMastery => "WEAPONMASTERY",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct RfbPvalDefinition {
+    pub value: i16,
+    pub flags: BTreeSet<RfbPvalFlagDefinition>,
 }
 
 /// Stable identity copied from one authoritative `k_info` base-kind record.
@@ -170,6 +324,22 @@ fn is_automatic_affix_name_placement(value: &AffixNamePlacementDefinition) -> bo
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AffixPropertyBundleDefinition {
+    /// Original OFC_HEAVY_CURSE bit, independent of a concurrent permanent curse.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub rfb_heavy_curse: bool,
+    /// Original object flags whose distinction is lost by gameplay projection
+    /// (notably OF curses versus the separate OFC random curse effects).
+    #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
+    pub rfb_flags: BTreeSet<String>,
+    /// Preserves the shared original pval and flags before gameplay projection.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rfb_pval: Option<RfbPvalDefinition>,
+    /// Generated quiver capacity, in ammunition units.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ammunition_capacity: Option<u16>,
+    /// Final bag capacity, in non-ammunition stack slots (not an additive bonus).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bag_capacity: Option<u16>,
     #[serde(default)]
     pub modifiers: StatModifiers,
     #[serde(default)]
@@ -184,6 +354,61 @@ pub struct AffixPropertyBundleDefinition {
     pub brands: BTreeSet<WeaponBrand>,
     #[serde(default)]
     pub passives: BTreeSet<EquipmentPassive>,
+}
+
+/// Original flags retained in generated properties beyond their gameplay projection.
+pub fn valid_rfb_runtime_flag(flag: &str) -> bool {
+    if matches!(
+        flag,
+        "AGGRAVATE" | "DRAIN_EXP" | "TY_CURSE" | "LITE" | "DARKNESS" | "NO_TELE"
+    ) {
+        return true;
+    }
+    match flag.split_once('_') {
+        Some(("SLAY" | "KILL", target)) => matches!(
+            target,
+            "ANIMAL"
+                | "EVIL"
+                | "GOOD"
+                | "LIVING"
+                | "HUMAN"
+                | "UNDEAD"
+                | "DEMON"
+                | "ORC"
+                | "TROLL"
+                | "GIANT"
+                | "DRAGON"
+        ),
+        Some(("RES" | "VULN" | "IM", element)) => matches!(
+            element,
+            "ACID"
+                | "ELEC"
+                | "FIRE"
+                | "COLD"
+                | "POIS"
+                | "LITE"
+                | "DARK"
+                | "BLIND"
+                | "FEAR"
+                | "CONF"
+                | "NETHER"
+                | "NEXUS"
+                | "SOUND"
+                | "SHARDS"
+                | "CHAOS"
+                | "DISEN"
+                | "TIME"
+        ),
+        _ => false,
+    }
+}
+
+/// Source data also includes allocation directives in addition to OF tokens.
+pub fn valid_rfb_source_flag(flag: &str) -> bool {
+    !flag.is_empty()
+        && flag
+            .bytes()
+            .all(|byte| byte.is_ascii_uppercase() || byte.is_ascii_digit() || byte == b'_')
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -473,6 +698,11 @@ pub enum ItemUseEffectDefinition {
         duration_sides: u32,
         duration_bonus: u32,
     },
+    ApplyHeroicSpeed {
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+    },
     ApplyHeroism {
         duration_dice: u16,
         duration_sides: u32,
@@ -691,9 +921,14 @@ pub enum ItemUseEffectDefinition {
         maximum_count: u8,
     },
     MundanifyItem,
+    RefillQuiver,
+    StarBall,
+    Escape,
+    Starburst {
+        damage: u16,
+    },
     CraftItem {
-        weapon_affix_ids: Vec<String>,
-        armor_affix_ids: Vec<String>,
+        rfb_ego_policy: super::LootRfbEgoPolicyDefinition,
     },
     ShowRumour {
         message_key: String,
@@ -865,6 +1100,7 @@ pub struct ItemDeviceChargeRangeDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum RfbActivationBiasDefinition {
+    Warrior,
     Mage,
     Chaos,
     Acid,
@@ -888,6 +1124,9 @@ pub struct ItemDeviceActivationDefinition {
     pub min_depth: u16,
     pub max_depth: u16,
     pub device_check_difficulty: i32,
+    /// RFB effect_value at this profile's fixed power, before timeout scaling.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rfb_value: Option<i32>,
     #[serde(default, skip_serializing_if = "BTreeSet::is_empty")]
     pub rfb_biases: BTreeSet<RfbActivationBiasDefinition>,
     pub charges: ItemDeviceChargeRangeDefinition,
@@ -906,6 +1145,8 @@ pub struct ItemDeviceActivationDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemDeviceGenerationDefinition {
+    #[serde(default)]
+    pub activation_optional: bool,
     pub activations: Vec<ItemDeviceActivationDefinition>,
     #[serde(default)]
     pub recovery: Option<ItemDeviceRecoveryDefinition>,
@@ -980,6 +1221,8 @@ pub struct ItemDefinition {
     /// item definitions intentionally leave this unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rfb_base_kind: Option<RfbBaseKindDefinition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub rfb_value: Option<RfbItemValueDefinition>,
     pub weight_tenths_pound: u16,
     /// Original object pval used by the tunneling flag.
     #[serde(default)]
@@ -1007,9 +1250,6 @@ pub struct ItemDefinition {
     /// without an RFB `a_info` record intentionally leave this unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_generation: Option<ArtifactGenerationDefinition>,
-    /// Extra shared-pack stack slots granted while this container is equipped.
-    #[serde(default)]
-    pub inventory_slot_bonus: u16,
     /// Ammunition units carried outside the shared pack while this quiver is equipped.
     #[serde(default)]
     pub ammunition_capacity: u16,
@@ -1097,7 +1337,9 @@ pub fn affix_is_compatible_with_item(
         return false;
     }
 
-    let compatible_tags: &[&str] = if item.tags.iter().any(|tag| tag == "ammunition") {
+    let compatible_tags: &[&str] = if item.tags.iter().any(|tag| tag == "device") {
+        &["device"]
+    } else if item.tags.iter().any(|tag| tag == "ammunition") {
         &["ammo"]
     } else {
         match item.equipment_slot.as_deref() {
@@ -1112,6 +1354,13 @@ pub fn affix_is_compatible_with_item(
             Some("boots") => &["boots"],
             Some("light") => &["lite"],
             Some("quiver") => &["quiver"],
+            Some("container")
+                if item
+                    .rfb_base_kind
+                    .is_some_and(|base| base.tval == 46 && base.sval == 1) =>
+            {
+                &["quiver"]
+            }
             Some("ring") => &["ring"],
             Some("amulet") => &["amulet"],
             _ => return false,

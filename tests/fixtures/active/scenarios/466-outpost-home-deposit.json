@@ -26,24 +26,20 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
-      "lastCommandSeq": 1,
-      "stateHash": "839262a2f31e0a2807f49465871ba865c8b72ca70a4185bd655fb348193884fc",
       "homes": {
         "demo.town-facility.outpost-home": {
-          "visited": true,
           "playerAtEntrance": true,
           "storedItems": [
             {
+              "displayNameKey": "item-demo-ration-of-food-name",
               "id": "generated.item.203",
               "kindId": "demo.item.ration-of-food",
-              "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 1,
               "maximumQuantity": 1,
+              "quantity": 1,
               "weightTenthsPound": 10
             }
-          ]
+          ],
+          "visited": true
         }
       },
       "inventory": {
@@ -51,7 +47,11 @@
           "kindId": "demo.item.ration-of-food",
           "quantity": 6
         }
-      }
+      },
+      "lastCommandSeq": 1,
+      "revision": 1,
+      "stateHash": "f5b40b75f7d9a6232ec08e1ac77364a4c654ebbc58ca1ef18ae514a2576e197a",
+      "turn": 1
     },
     "events": [
       {

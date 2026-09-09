@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-holding-quiver-description",
+  "formatVersion": 1,
+  "generationLevel": 1,
+  "id": "rfb-legacy.affix.holding-quiver",
+  "nameKey": "affix-legacy-holding-quiver-name",
+  "rfbEgo": {
+    "flags": [],
+    "rarity": 1,
+    "sourceIndex": 265,
+    "types": [
+      "quiver"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "quiver"
+  ]
+}

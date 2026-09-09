@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-elvenkind-149-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.elvenkind-149",
+  "nameKey": "affix-legacy-elvenkind-149-name",
+  "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SPEED",
+      "STEALTH"
+    ],
+    "rarity": 8,
+    "sourceIndex": 149,
+    "types": [
+      "boots"
+    ]
+  },
+  "tags": [
+    "boots",
+    "legacy-import"
+  ]
+}

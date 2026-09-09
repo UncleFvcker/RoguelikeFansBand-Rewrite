@@ -1,0 +1,28 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-genji-description",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "id": "rfb-legacy.affix.genji",
+  "nameKey": "affix-legacy-genji-name",
+  "passives": [
+    "dual-wielding"
+  ],
+  "rfbEgo": {
+    "flags": [
+      "DEX",
+      "DUAL_WIELDING",
+      "HIDE_TYPE",
+      "SHOW_MODS"
+    ],
+    "rarity": 16,
+    "sourceIndex": 140,
+    "types": [
+      "gloves"
+    ]
+  },
+  "tags": [
+    "gloves",
+    "legacy-import"
+  ]
+}

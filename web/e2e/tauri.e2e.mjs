@@ -8,6 +8,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { runRendererProfile } from "./render-profile.e2e.mjs";
+import { runEgoScenario } from "./ego.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -52,6 +53,7 @@ const tonberryOnly = process.argv.includes("--tonberry");
 const entOnly = process.argv.includes("--ent");
 const spectreOnly = process.argv.includes("--spectre");
 const lifeForceOnly = process.argv.includes("--life-force");
+const egoOnly = process.argv.includes("--ego");
 const logs = [];
 let child;
 let client;
@@ -96,6 +98,8 @@ async function main() {
       await runLifeForceScenario(client);
     } else if (tomteOnly || tonberryOnly || entOnly || spectreOnly) {
       await runRaceScenario(client, spectreOnly ? "spectre" : entOnly ? "ent" : tonberryOnly ? "tonberry" : "tomte");
+    } else if (egoOnly) {
+      await runEgoScenario(client, artifactDirectory);
     } else {
       await runScenario(client);
     }

@@ -186,7 +186,7 @@ pub(super) fn apply_ability_level_scaling(
             | AbilityEffectDefinition::ConeDamage { radius, .. }
             | AbilityEffectDefinition::BreathDamage { radius, .. }
             | AbilityEffectDefinition::Detect { radius, .. }
-            | AbilityEffectDefinition::BlinkSelf { radius },
+            | AbilityEffectDefinition::BlinkSelf { radius, .. },
             AbilityLevelScalingField::Radius,
         ) => {
             *radius = u8::try_from(scaled_ability_level_value(

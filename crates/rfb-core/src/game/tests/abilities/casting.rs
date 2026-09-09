@@ -1,17 +1,29 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::*;
+use crate::effect::STATUS_ANTI_MAGIC;
 
 #[test]
 fn spell_blocking_statuses_reject_without_spending_resources() {
-    for (status_kind, expected_reason) in [
-        (STATUS_ANTI_MAGIC, "anti-magic"),
-        (STATUS_BERSERK, "berserk"),
+    for (status_kind, expected_reason, equipment) in [
+        (STATUS_ANTI_MAGIC, "anti-magic", false),
+        (STATUS_BERSERK, "berserk", false),
+        (STATUS_ANTI_MAGIC, "anti-magic", true),
     ] {
         let mut game = prepare_death_caster(7, 40, "demo.ability.death-berserk");
-        game.player
-            .statuses
-            .push(monster_combat::melee_status(status_kind, 5, "test.spell-blocker").status);
+        if equipment {
+            game.items
+                .iter_mut()
+                .find(|item| matches!(&item.location, ItemLocation::Equipped { .. }))
+                .unwrap()
+                .intrinsic_properties
+                .passives
+                .insert(rfb_content::EquipmentPassive::AntiMagic);
+        } else {
+            game.player
+                .statuses
+                .push(monster_combat::melee_status(status_kind, 5, "test.spell-blocker").status);
+        }
         let mana_before = game.resources["demo.resource.mana"].current;
         let draws_before = game.rng_draw_counter();
         let mut events = Vec::new();

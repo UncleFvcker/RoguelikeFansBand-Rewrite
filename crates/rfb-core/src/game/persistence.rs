@@ -527,6 +527,7 @@ fn restore_character_progress(
         skills,
         weapon_proficiencies,
         riding_proficiency: saved.riding_proficiency,
+        dual_wielding_proficiency: saved.dual_wielding_proficiency,
         mining_proficiency: saved.mining_proficiency,
         materials,
         active_mutation_ids,

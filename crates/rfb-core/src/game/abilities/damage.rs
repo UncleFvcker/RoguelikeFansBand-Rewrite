@@ -687,7 +687,7 @@ impl Game {
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub(super) fn resolve_player_area_damage_with_base_policy(
+    pub(in crate::game) fn resolve_player_area_damage_with_base_policy(
         &mut self,
         source_id: &str,
         path: Vec<Position>,
@@ -1867,17 +1867,21 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<(), CoreError> {
-        let AbilityEffectDefinition::WrathOfGod = ability.effect else {
+        let AbilityEffectDefinition::WrathOfGod {
+            damage: fixed_damage,
+        } = ability.effect
+        else {
             unreachable!("Wrath of the God executor requires its dedicated effect");
         };
         let (trace, _) = self.trace_projectile_path_with_actor_policy(path, stop_at_actor);
         let target = trace.landing;
-        let raw_damage = self
-            .progress
-            .level
-            .saturating_mul(3)
-            .saturating_add(25)
-            .saturating_add(self.casting_spell_damage_bonus());
+        let raw_damage = fixed_damage.unwrap_or_else(|| {
+            self.progress
+                .level
+                .saturating_mul(3)
+                .saturating_add(25)
+                .saturating_add(self.casting_spell_damage_bonus())
+        });
         let damage = i32::try_from(spell_power_value(
             u64::from(raw_damage),
             ability.spell_power_bonus,

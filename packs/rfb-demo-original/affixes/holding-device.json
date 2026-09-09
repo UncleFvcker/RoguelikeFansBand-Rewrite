@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-holding-device-description",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.holding-device",
+  "nameKey": "affix-legacy-holding-device-name",
+  "passives": [
+    "hold-life"
+  ],
+  "rfbEgo": {
+    "flags": [
+      "HOLD_LIFE"
+    ],
+    "rarity": 3,
+    "sourceIndex": 255,
+    "types": [
+      "device"
+    ]
+  },
+  "tags": [
+    "device",
+    "legacy-import"
+  ]
+}

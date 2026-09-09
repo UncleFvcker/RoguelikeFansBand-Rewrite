@@ -167,7 +167,10 @@ impl Game {
             }
             self.process_equipped_light_fuel(events);
             if local_floor_active {
-                self.process_equipped_curse_effects(events, changed);
+                self.process_equipped_curse_effects(events, changed, removed_entities)?;
+                if self.player_is_dead() {
+                    return Ok(());
+                }
             }
             self.process_periodic_mutations(
                 local_floor_active,
@@ -472,9 +475,15 @@ impl Game {
 
     fn process_equipment_regeneration(&mut self, events: &mut Vec<DomainEvent>) {
         if self.wilderness_blocks_regeneration()
-            || !self
-                .world_tick
-                .is_multiple_of(EQUIPMENT_REGENERATION_INTERVAL_TICKS)
+            || !self.world_tick.is_multiple_of(
+                EQUIPMENT_REGENERATION_INTERVAL_TICKS
+                    * if self.player_has_equipped_curse_effect(ItemCurseEffectDto::SlowRegeneration)
+                    {
+                        5
+                    } else {
+                        1
+                    },
+            )
             || !self
                 .player_equipment_passives()
                 .contains(&EquipmentPassive::Regeneration)
@@ -505,20 +514,27 @@ impl Game {
             ) {
                 continue;
             }
-            let Some(recovery) = item_device_generation(content, &item.kind_id, &item.affix_ids)
-                .and_then(|generation| {
-                    item.activation
-                        .as_ref()
-                        .and_then(|activation| {
-                            generation
-                                .activations
-                                .iter()
-                                .find(|profile| profile.id == activation.profile_id)
-                        })
-                        .and_then(|profile| profile.recovery)
-                        .or(generation.recovery)
-                })
-            else {
+            let Some(recovery) = item_device_generation(
+                content,
+                &item.kind_id,
+                &item.affix_ids,
+                item.activation
+                    .as_ref()
+                    .map(|activation| activation.profile_id.as_str()),
+                item.artifact_name.is_some(),
+            )
+            .and_then(|generation| {
+                item.activation
+                    .as_ref()
+                    .and_then(|activation| {
+                        generation
+                            .activations
+                            .iter()
+                            .find(|profile| profile.id == activation.profile_id)
+                    })
+                    .and_then(|profile| profile.recovery)
+                    .or(generation.recovery)
+            }) else {
                 continue;
             };
             if !world_tick.is_multiple_of(u32::from(recovery.interval_ticks)) {
@@ -531,8 +547,18 @@ impl Game {
                 item.device_recovery_progress = 0;
                 continue;
             }
+            let regeneration = if super::ego::item_has_ego(content, item, 252) {
+                1 + super::ego::device_pval(item)
+            } else {
+                1
+            };
+            let charges = item
+                .charges
+                .as_mut()
+                .expect("recovering device retains charges");
             let scaled = u64::from(charges.maximum)
                 .saturating_mul(u64::from(recovery.energy_per_mille))
+                .saturating_mul(u64::from(regeneration))
                 .saturating_add(u64::from(item.device_recovery_progress));
             let gain =
                 u32::try_from(scaled / 1_000).expect("validated device recovery gain must fit u32");
@@ -649,6 +675,17 @@ impl Game {
             });
         let player_damage_percent = self.player_incoming_damage_percent();
         let ignores_suffocation = self.player_is_nonliving();
+        // The current status model recovers one wound tick per turn. Apply
+        // dungeon.c's (recovery + game_turn % 3) / 3 without slowing its damage.
+        if self.player_has_equipped_curse_effect(ItemCurseEffectDto::OpenWounds)
+            && self.world_tick % 3 != 2
+        {
+            for status in &mut self.player.statuses {
+                if status.kind_id == STATUS_BLEEDING {
+                    status.remaining_ticks = status.remaining_ticks.saturating_add(1);
+                }
+            }
+        }
         let transcendence = self.player_has_status_kind(STATUS_TRANSCENDENCE);
         let mut mana = self.resources.get_mut("demo.resource.mana");
         let player_tick = process_actor_status_tick_with(

@@ -1333,6 +1333,10 @@
           },
           "type": "array"
         },
+        "greatOnly": {
+          "description": "RFB DROP_GREAT without DROP_GOOD still rolls the outer good-quality gate.",
+          "type": "boolean"
+        },
         "itemTableId": {
           "default": null,
           "type": [

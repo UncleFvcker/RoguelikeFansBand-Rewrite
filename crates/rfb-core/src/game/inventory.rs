@@ -115,6 +115,7 @@ pub(super) enum EquippedItemCurseTarget {
 pub(super) struct CurseEquippedItemRequest {
     target: EquippedItemCurseTarget,
     heavy_chance_percent: u8,
+    blast: bool,
 }
 
 impl CurseEquippedItemRequest {
@@ -122,11 +123,17 @@ impl CurseEquippedItemRequest {
         Self {
             target,
             heavy_chance_percent: 0,
+            blast: false,
         }
     }
 
     pub(super) const fn with_heavy_chance(mut self, chance_percent: u8) -> Self {
         self.heavy_chance_percent = chance_percent;
+        self
+    }
+
+    pub(super) const fn blasting(mut self) -> Self {
+        self.blast = true;
         self
     }
 }
@@ -443,17 +450,74 @@ fn inventory_resistance_power(damage_type: DamageType) -> u64 {
     }
 }
 
-fn equipped_ammunition_capacity(content: &ContentCatalog, items: &[ItemInstance]) -> u32 {
+pub(super) fn item_bag_capacity(content: &ContentCatalog, item: &ItemInstance) -> Option<u16> {
+    let base = super::ego::base_bag_capacity(content.item(&item.kind_id)?)?;
+    Some(
+        item.intrinsic_properties
+            .bag_capacity
+            .or_else(|| {
+                item.rolled_affixes
+                    .iter()
+                    .find_map(|rolled| rolled.properties.bag_capacity)
+            })
+            .unwrap_or(base),
+    )
+}
+
+fn equipped_bag_capacity(content: &ContentCatalog, items: &[ItemInstance]) -> u16 {
     items
         .iter()
         .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
-        .filter_map(|item| content.item(&item.kind_id))
-        .fold(0_u32, |capacity, definition| {
-            capacity.saturating_add(u32::from(definition.ammunition_capacity))
+        .filter_map(|item| item_bag_capacity(content, item))
+        .fold(0, u16::saturating_add)
+}
+
+fn non_ammunition_slots(content: &ContentCatalog, items: &[ItemInstance]) -> u16 {
+    items
+        .iter()
+        .filter(|item| item.location == ItemLocation::Inventory)
+        .filter(|item| {
+            content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.ammunition_profile.is_none())
+        })
+        .fold(0_u16, |count, _| count.saturating_add(1))
+}
+
+/// The unified inventory assigns only non-ammunition stacks to bag space.
+/// Quivered ammunition is counted separately by quantity; remaining stacks use the pack.
+fn inventory_used_pack_slots(content: &ContentCatalog, items: &[ItemInstance]) -> u16 {
+    inventory_used_slots(content, items).saturating_sub(
+        non_ammunition_slots(content, items).min(equipped_bag_capacity(content, items)),
+    )
+}
+
+pub(super) fn equipped_ammunition_capacity(
+    content: &ContentCatalog,
+    items: &[ItemInstance],
+) -> u32 {
+    items
+        .iter()
+        .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+        .fold(0_u32, |capacity, item| {
+            capacity.saturating_add(u32::from(
+                item.intrinsic_properties
+                    .ammunition_capacity
+                    .or_else(|| {
+                        item.rolled_affixes
+                            .iter()
+                            .find_map(|rolled| rolled.properties.ammunition_capacity)
+                    })
+                    .unwrap_or_else(|| {
+                        content
+                            .item(&item.kind_id)
+                            .map_or(0, |definition| definition.ammunition_capacity)
+                    }),
+            ))
         })
 }
 
-fn quivered_ammunition_item_ids<'a>(
+pub(super) fn quivered_ammunition_item_ids<'a>(
     content: &ContentCatalog,
     items: &'a [ItemInstance],
 ) -> BTreeSet<&'a str> {
@@ -506,7 +570,7 @@ fn compatible_inventory_space(
         .filter(|carried| {
             carried.location == ItemLocation::Inventory
                 && carried.quantity < definition.max_stack
-                && item_instances_stack_compatible(carried, incoming)
+                && item_instances_stack_compatible(content, carried, incoming)
                 && (!match_knowledge
                     || item_properties_match(
                         item_property_knowledge.get(&carried.id),
@@ -518,7 +582,7 @@ fn compatible_inventory_space(
         })
 }
 
-pub(super) fn additional_inventory_slots(
+fn additional_pack_slots(
     content: &ContentCatalog,
     items: &[ItemInstance],
     item_property_knowledge: &BTreeMap<String, ItemPropertyKnowledgeState>,
@@ -537,7 +601,7 @@ pub(super) fn additional_inventory_slots(
         .filter(|(_, carried)| {
             carried.location == ItemLocation::Inventory
                 && carried.quantity < definition.max_stack
-                && item_instances_stack_compatible(carried, incoming)
+                && item_instances_stack_compatible(content, carried, incoming)
                 && (!match_knowledge
                     || item_properties_match(
                         item_property_knowledge.get(&carried.id),
@@ -564,7 +628,8 @@ pub(super) fn additional_inventory_slots(
         remaining -= stack.quantity;
         projected.push(stack);
     }
-    inventory_used_slots(content, &projected).saturating_sub(inventory_used_slots(content, items))
+    inventory_used_pack_slots(content, &projected)
+        .saturating_sub(inventory_used_pack_slots(content, items))
 }
 
 pub(super) fn inventory_quantity_capacity(
@@ -578,7 +643,7 @@ pub(super) fn inventory_quantity_capacity(
     let Some(definition) = content.item(&incoming.kind_id) else {
         return 0;
     };
-    let current_used = inventory_used_slots(content, items);
+    let current_used = inventory_used_pack_slots(content, items);
     if current_used > slot_capacity {
         return 0;
     }
@@ -605,14 +670,21 @@ pub(super) fn inventory_quantity_capacity(
     } else {
         0
     };
-    let free_slots = slot_capacity.saturating_sub(current_used);
+    let free_bag_slots = if definition.ammunition_profile.is_none() {
+        equipped_bag_capacity(content, items).saturating_sub(non_ammunition_slots(content, items))
+    } else {
+        0
+    };
+    let free_slots = slot_capacity
+        .saturating_sub(current_used)
+        .saturating_add(free_bag_slots);
     let mut low = 0_u32;
     let mut high = stack_space
         .saturating_add(u32::from(free_slots).saturating_mul(definition.max_stack))
         .saturating_add(free_quiver_capacity);
     while low < high {
         let middle = low.saturating_add(high).saturating_add(1) / 2;
-        let required = additional_inventory_slots(
+        let required = additional_pack_slots(
             content,
             items,
             item_property_knowledge,
@@ -764,7 +836,7 @@ fn plan_pick_up(
     let original_quantity = pickup_item.quantity;
 
     let used_slots = inventory_used_slots(content, items);
-    let required_slots = additional_inventory_slots(
+    let required_slots = additional_pack_slots(
         content,
         items,
         item_property_knowledge,
@@ -772,13 +844,21 @@ fn plan_pick_up(
         original_quantity,
         true,
     );
-    if used_slots.saturating_add(required_slots) > inventory_slot_capacity {
+    if inventory_used_pack_slots(content, items).saturating_add(required_slots)
+        > inventory_slot_capacity
+    {
         return Ok(PickUpPlan::InventoryFull {
             kind_id,
             quantity: original_quantity,
             used_slots,
             required_slots,
-            capacity: inventory_slot_capacity,
+            capacity: inventory_slot_capacity.saturating_add(
+                if definition.ammunition_profile.is_none() {
+                    equipped_bag_capacity(content, items)
+                } else {
+                    equipped_bag_capacity(content, items).min(non_ammunition_slots(content, items))
+                },
+            ),
         });
     }
 
@@ -790,7 +870,7 @@ fn plan_pick_up(
             carried.location == ItemLocation::Inventory
                 && carried.kind_id == kind_id
                 && carried.quantity < definition.max_stack
-                && item_instances_stack_compatible(carried, pickup_item)
+                && item_instances_stack_compatible(content, carried, pickup_item)
                 && item_properties_match(item_property_knowledge.get(&carried.id), pickup_knowledge)
         })
         .map(|(index, _)| index)
@@ -816,8 +896,19 @@ fn plan_pick_up(
     }))
 }
 
-pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemInstance) -> bool {
-    left.kind_id == right.kind_id
+pub(super) fn item_instances_stack_compatible(
+    content: &ContentCatalog,
+    left: &ItemInstance,
+    right: &ItemInstance,
+) -> bool {
+    !left.is_artifact(content)
+        && !right.is_artifact(content)
+        && left.kind_id == right.kind_id
+        && left.intrinsic_melee_damage_dice == right.intrinsic_melee_damage_dice
+        && left.intrinsic_weight_tenths_pound == right.intrinsic_weight_tenths_pound
+        && left.intrinsic_weapon_traits == right.intrinsic_weapon_traits
+        && left.intrinsic_curse_effects == right.intrinsic_curse_effects
+        && left.permanent_destruction_immunities == right.permanent_destruction_immunities
         && left.previously_worn == right.previously_worn
         && left.inscription == right.inscription
         && left.origin_actor_kind_id == right.origin_actor_kind_id
@@ -838,6 +929,89 @@ pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemI
 }
 
 impl Game {
+    pub(super) fn refill_quiver(
+        &mut self,
+        source_kind_id: &str,
+        profile_id: Option<&str>,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<(), CoreError> {
+        use rfb_content::AmmunitionTypeDefinition as Ammo;
+        use rfb_protocol::{
+            AbilityEffectResolutionDto, AbilityEffectsResolutionDto, ItemOriginKindDto,
+        };
+        let quivered = quivered_ammunition_item_ids(&self.content, &self.items);
+        let count: u32 = self
+            .items
+            .iter()
+            .filter(|item| quivered.contains(item.id.as_str()))
+            .map(|item| item.quantity)
+            .sum();
+        let quantity = equipped_ammunition_capacity(&self.content, &self.items)
+            .saturating_sub(count)
+            .min(50);
+        let ammo = self
+            .items
+            .iter()
+            .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+            .filter_map(|item| {
+                self.content
+                    .item(&item.kind_id)?
+                    .projectile_profile
+                    .as_ref()
+            })
+            .map(|profile| profile.ammunition_type)
+            .next()
+            .unwrap_or(Ammo::Arrow);
+        let kind_id = match ammo {
+            Ammo::Shot => "demo.item.rounded-pebble",
+            Ammo::Arrow => "demo.item.arrow",
+            Ammo::Bolt => "demo.item.bolt",
+        };
+        let mut destination_item_ids = Vec::new();
+        if quantity > 0 {
+            let id = self.allocate_item_instance_id()?;
+            let item = super::loot::GeneratedItemDraft {
+                damage_dice_override: None,
+                kind_id: kind_id.to_owned(),
+                quantity,
+                origin_kind: Some(ItemOriginKindDto::EndlessQuiver),
+                quality: ItemQualityDto::Ordinary,
+                affix_ids: Vec::new(),
+                rolled_affixes: Vec::new(),
+                intrinsic_properties: Default::default(),
+                enchantments: Default::default(),
+                curse: None,
+                activation: None,
+                charges: None,
+                fuel: None,
+            }
+            .into_item_instance(id, ItemLocation::Inventory);
+            destination_item_ids = self.carry_shop_purchase_item(item);
+            self.mark_item_aware(kind_id);
+            for id in &destination_item_ids {
+                self.identify_item_instance(id, ItemIdentificationRequest::new(true));
+            }
+        }
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: profile_id.unwrap_or(source_kind_id).to_owned(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::CreateAmmunition {
+                    effect_index: 0,
+                    source_item_id: None,
+                    source_position: None,
+                    item_kind_id: kind_id.to_owned(),
+                    quantity,
+                    destination_item_ids,
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
     fn equipped_quiver_protects_ammunition(&self) -> bool {
         self.items
             .iter()
@@ -911,11 +1085,7 @@ impl Game {
                 .enumerate()
                 .filter(|(_, item)| item.location == ItemLocation::Inventory && item.quantity > 0)
                 .filter(|(_, item)| !protected_ammunition.contains(item.id.as_str()))
-                .filter(|(_, item)| {
-                    self.content.item(&item.kind_id).is_some_and(|definition| {
-                        !definition.tags.iter().any(|tag| tag == "artifact")
-                    })
-                })
+                .filter(|(_, item)| !item.is_artifact(&self.content))
                 .filter(|(_, item)| self.element_destroys_item(item, profile.element, true))
                 .map(|(index, _)| index)
                 .collect::<Vec<_>>();
@@ -964,7 +1134,7 @@ impl Game {
             .content
             .item(&item.kind_id)
             .ok_or(DestroyItemFailure::Indestructible)?;
-        if definition.tags.iter().any(|tag| tag == "artifact") {
+        if item.is_artifact(&self.content) {
             return Err(DestroyItemFailure::Artifact);
         }
         if definition.tags.iter().any(|tag| tag == "indestructible") {
@@ -1054,22 +1224,19 @@ impl Game {
     }
 
     pub(super) fn inventory_slot_capacity(&self) -> u16 {
-        let base = self
-            .content
+        self.inventory_pack_capacity()
+            .saturating_add(equipped_bag_capacity(&self.content, &self.items))
+    }
+
+    fn inventory_pack_capacity(&self) -> u16 {
+        self.content
             .actor(&self.player.kind_id)
             .expect("player actor definition must remain available")
-            .inventory_slot_capacity;
-        self.items
-            .iter()
-            .filter_map(|item| {
-                if !matches!(item.location, ItemLocation::Equipped { .. }) {
-                    return None;
-                }
-                self.content
-                    .item(&item.kind_id)
-                    .map(|definition| definition.inventory_slot_bonus)
-            })
-            .fold(base, u16::saturating_add)
+            .inventory_slot_capacity
+    }
+
+    pub(super) fn inventory_fits(&self, items: &[ItemInstance]) -> bool {
+        inventory_used_pack_slots(&self.content, items) <= self.inventory_pack_capacity()
     }
 
     pub(super) fn inventory_quantity_capacity_for(
@@ -1082,7 +1249,7 @@ impl Game {
             &self.items,
             &self.item_property_knowledge,
             incoming,
-            self.inventory_slot_capacity(),
+            self.inventory_pack_capacity(),
             match_knowledge,
         )
     }
@@ -1099,7 +1266,7 @@ impl Game {
             .filter(|(_, carried)| {
                 carried.location == ItemLocation::Inventory
                     && carried.quantity < definition.max_stack
-                    && item_instances_stack_compatible(carried, &item)
+                    && item_instances_stack_compatible(&self.content, carried, &item)
             })
             .map(|(index, _)| index)
             .collect::<Vec<_>>();
@@ -1243,10 +1410,9 @@ impl Game {
             .content
             .item(&item_kind_id)
             .expect("planned enchantment kind must remain available");
-        let artifact = definition.tags.iter().any(|tag| tag == "artifact");
+        let artifact = item.is_artifact(&self.content);
         let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
-        let resists_enchantment =
-            definition.resists_enchantment || definition.tags.iter().any(|tag| tag == "no-enchant");
+        let resists_enchantment = self.item_resists_enchantment(item);
         let before = item.enchantments;
 
         if resists_enchantment {
@@ -1390,11 +1556,9 @@ impl Game {
         let item_index = candidates[candidate_index].2;
         let item_id = self.items[item_index].id.clone();
         let item_kind_id = self.items[item_index].kind_id.clone();
-        let blessed = Self::item_has_weapon_trait(&self.items[item_index], WeaponTraitDto::Blessed);
-        let artifact = self
-            .content
-            .item(&item_kind_id)
-            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        let blessed = !request.blast
+            && Self::item_has_weapon_trait(&self.items[item_index], WeaponTraitDto::Blessed);
+        let artifact = self.items[item_index].is_artifact(&self.content);
         let can_resist = artifact || blessed;
         let resisted = can_resist
             && if self.debug_item_curses_land {
@@ -1407,6 +1571,10 @@ impl Game {
             };
         let before = self.items[item_index].curse;
         if !resisted {
+            if request.blast {
+                self.blast_item(item_index);
+                self.add_virtue(rfb_protocol::VirtueKindDto::Enchantment, -5);
+            }
             let severity = if request.heavy_chance_percent > 0
                 && self.rng.bounded(100) < u64::from(request.heavy_chance_percent)
             {
@@ -1426,6 +1594,75 @@ impl Game {
         }
     }
 
+    fn blast_item(&mut self, index: usize) {
+        let definition = self.content.item(&self.items[index].kind_id).unwrap();
+        // blast_object clears object flags but deliberately retains the shared pval.
+        let pval = self.items[index]
+            .rolled_affixes
+            .iter()
+            .rev()
+            .find_map(|rolled| rolled.properties.rfb_pval.as_ref())
+            .or(self.items[index].intrinsic_properties.rfb_pval.as_ref())
+            .map(|pval| pval.value)
+            .or_else(|| definition.rfb_value.as_ref().map(|value| value.pval));
+        let armor = definition.tags.iter().any(|tag| tag == "armor");
+        let weapon = definition.melee_profile.is_some();
+        let base_id = definition
+            .artifact_generation
+            .as_ref()
+            .map(|generation| generation.base_item_kind_id.clone());
+        let item = &mut self.items[index];
+        if let Some(base_id) = base_id {
+            item.kind_id = base_id;
+        }
+        let base = self.content.item(&item.kind_id).unwrap();
+        let mut blasted = crate::state::RolledAffixState {
+            affix_id: "rfb-legacy.affix.blasted".to_owned(),
+            curse_effects: item
+                .rolled_affixes
+                .iter()
+                .flat_map(|rolled| rolled.curse_effects.iter().copied())
+                .collect(),
+            ..Default::default()
+        };
+        // Blasting clears the instance's AC and dice, but base-kind flags survive.
+        blasted.properties.modifiers.defense = -base.modifiers.defense;
+        blasted.properties.rfb_pval = pval.map(|value| rfb_content::RfbPvalDefinition {
+            value,
+            flags: Default::default(),
+        });
+        if weapon {
+            blasted.melee_damage_dice =
+                Some(rfb_protocol::MeleeDamageDiceDto { dice: 0, sides: 0 });
+        }
+        item.affix_ids = vec![blasted.affix_id.clone()];
+        item.rolled_affixes = vec![blasted];
+        item.intrinsic_properties = Default::default();
+        // blast_object leaves art_name, weight and curse_flags intact.
+        item.intrinsic_melee_damage_dice = None;
+        item.intrinsic_weapon_traits.clear();
+        item.permanent_destruction_immunities.clear();
+        item.enchantments.to_hit = item.enchantments.to_hit.min(0);
+        item.enchantments.to_damage = item.enchantments.to_damage.min(0);
+        item.enchantments.to_armor = item.enchantments.to_armor.min(0);
+        if armor {
+            item.enchantments.to_armor -= (self.rng.bounded(5) + self.rng.bounded(5) + 2) as i16;
+        }
+        if weapon {
+            item.enchantments.to_hit -= (self.rng.bounded(5) + self.rng.bounded(5) + 2) as i16;
+            item.enchantments.to_damage -= (self.rng.bounded(5) + self.rng.bounded(5) + 2) as i16;
+        }
+        item.enchantments.to_hit = item.enchantments.to_hit.max(-66);
+        item.enchantments.to_damage = item.enchantments.to_damage.max(-66);
+        item.enchantments.to_armor = item.enchantments.to_armor.max(-66);
+        item.quality = ItemQualityDto::Exceptional;
+        let knowledge = self
+            .item_property_knowledge
+            .entry(item.id.clone())
+            .or_default();
+        knowledge.known_affix_ids = item.affix_ids.iter().cloned().collect();
+    }
+
     pub(super) fn remove_equipped_curses(
         &mut self,
         request: RemoveEquippedCursesRequest,
@@ -1436,6 +1673,7 @@ impl Game {
             if !matches!(item.location, ItemLocation::Equipped { .. }) {
                 continue;
             }
+            let was_cursed = item.curse.is_some();
             match item.curse {
                 Some(ItemCurseSeverityDto::Normal) => {
                     item.curse = None;
@@ -1449,6 +1687,15 @@ impl Game {
                     retained_permanent_item_ids.push(item.id.clone());
                 }
                 Some(ItemCurseSeverityDto::Heavy) | None => {}
+            }
+            if was_cursed && item.curse.is_none() {
+                item.intrinsic_properties.rfb_heavy_curse = false;
+                item.intrinsic_curse_effects.clear();
+                for roll in &mut item.rolled_affixes {
+                    roll.curse_effects.clear();
+                    roll.properties.rfb_heavy_curse = false;
+                }
+                item.rolled_affixes.retain(|roll| roll.has_instance_state());
             }
         }
         removed_item_ids.sort();
@@ -1541,7 +1788,16 @@ impl Game {
 
     fn item_has_recharge_capacity(&self, item: &ItemInstance) -> bool {
         item.activation.is_some()
-            && item_device_generation(&self.content, &item.kind_id, &item.affix_ids).is_some()
+            && item_device_generation(
+                &self.content,
+                &item.kind_id,
+                &item.affix_ids,
+                item.activation
+                    .as_ref()
+                    .map(|activation| activation.profile_id.as_str()),
+                item.artifact_name.is_some(),
+            )
+            .is_some()
             && item
                 .charges
                 .is_some_and(|charges| charges.current < charges.maximum)
@@ -1596,10 +1852,7 @@ impl Game {
                 .bounded(u64::from(request.source_destruction_one_in))
         });
         let destroy = destruction_roll == Some(0);
-        let artifact = self
-            .content
-            .item(&source_kind_id)
-            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        let artifact = self.items[source_index].is_artifact(&self.content);
         let source_destroyed =
             destroy && !artifact && !self.player_has_status_kind(STATUS_INVENTORY_PROTECTION);
         if source_destroyed {
@@ -1742,18 +1995,6 @@ impl Game {
         {
             return None;
         }
-        let current_capacity = self.inventory_slot_capacity();
-        let equipped_bonus = self
-            .content
-            .item(&self.items[plan.inventory_index].kind_id)?
-            .inventory_slot_bonus;
-        let replaced_bonus = plan
-            .replaced_index
-            .and_then(|index| self.content.item(&self.items[index].kind_id))
-            .map_or(0, |definition| definition.inventory_slot_bonus);
-        let projected_capacity = current_capacity
-            .saturating_sub(replaced_bonus)
-            .saturating_add(equipped_bonus);
         let mut projected_items = self.items.clone();
         if let Some(index) = plan.replaced_index {
             projected_items[index].location = ItemLocation::Inventory;
@@ -1761,8 +2002,7 @@ impl Game {
         projected_items[plan.inventory_index].location = ItemLocation::Equipped {
             slot_id: plan.slot_id.clone(),
         };
-        let projected_used = inventory_used_slots(&self.content, &projected_items);
-        if projected_used > projected_capacity {
+        if !self.inventory_fits(&projected_items) {
             return None;
         }
         let replaced_kind_id = plan.replaced_index.map(|index| {
@@ -1819,11 +2059,9 @@ impl Game {
         if plan.curse.is_some() {
             return None;
         }
-        let removed_bonus = self.content.item(&plan.kind_id)?.inventory_slot_bonus;
-        let projected_capacity = self.inventory_slot_capacity().saturating_sub(removed_bonus);
         let mut projected_items = self.items.clone();
         projected_items[plan.item_index].location = ItemLocation::Inventory;
-        if inventory_used_slots(&self.content, &projected_items) > projected_capacity {
+        if !self.inventory_fits(&projected_items) {
             return None;
         }
         self.items[plan.item_index].location = ItemLocation::Inventory;
@@ -1852,7 +2090,7 @@ impl Game {
             &self.items,
             &self.item_property_knowledge,
             self.player.position,
-            self.inventory_slot_capacity(),
+            self.inventory_pack_capacity(),
             item_id,
         )?;
         match plan {

@@ -13,6 +13,13 @@
     "dark": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "CHR",
+      "RES_DARK",
+      "SUST_CHR",
+      "SUST_WIS",
+      "WIS"
+    ],
     "rarity": 1,
     "sourceIndex": 195,
     "types": [

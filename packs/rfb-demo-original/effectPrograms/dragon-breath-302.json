@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/effect-program.schema.json",
+  "formatVersion": 1,
+  "id": "rfb.effect.dragon-breath-302",
+  "input": "actor",
+  "steps": [
+    {
+      "effect": {
+        "damageBonus": 130,
+        "damageDice": 0,
+        "damageSides": 0,
+        "damageType": "sound",
+        "radius": 2,
+        "type": "cone-damage"
+      },
+      "type": "ability-effect"
+    }
+  ]
+}

@@ -1,16 +1,36 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.feanorian-lamp",
-  "nameKey": "item-demo-feanorian-lamp-name",
-  "descriptionKey": "item-demo-feanorian-lamp-description",
-  "glyph": "~",
-  "generationLevel": 15,
-  "weightTenthsPound": 60,
-  "maxStack": 1,
   "baseValue": 450,
+  "descriptionKey": "item-demo-feanorian-lamp-description",
+  "elementalDestructionImmunities": [
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "lightRadius": 2
+  },
   "equipmentSlot": "light",
-  "equipmentBonuses": { "lightRadius": 1 },
-  "elementalDestructionImmunities": ["fire"],
-  "tags": ["equipment", "legacy-import", "light-source"]
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "glyph": "~",
+  "id": "demo.item.feanorian-lamp",
+  "maxStack": 1,
+  "nameKey": "item-demo-feanorian-lamp-name",
+  "rfbBaseKind": {
+    "sourceIndex": 603,
+    "sval": 2,
+    "tval": 39
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_FIRE"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
+  "tags": [
+    "equipment",
+    "legacy-import",
+    "light-source"
+  ],
+  "weightTenthsPound": 60
 }

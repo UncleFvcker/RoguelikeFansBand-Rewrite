@@ -1,4 +1,4 @@
-use crate::game::loot::{quality_allows_natural_affix, rfb_depth_quality_percentages};
+use crate::game::loot::{power_allows_natural_affix, rfb_depth_quality_percentages};
 use crate::game::mutations::LuckBias;
 use std::sync::Arc;
 
@@ -911,7 +911,7 @@ fn m4f_c_luck_bias_adjusts_quality_depth_and_attribute_thresholds() {
 }
 
 #[test]
-fn rfb_depth_quality_uses_original_thresholds_and_one_draw() {
+fn rfb_depth_quality_short_circuits_good_and_great_rolls() {
     let policy = rfb_content::LootQualityPolicyDefinition::RfbDepth {
         good_cap_percent: 75,
         great_cap_percent: 20,
@@ -939,53 +939,94 @@ fn rfb_depth_quality_uses_original_thresholds_and_one_draw() {
         rfb_depth_quality_percentages(policy, 15, false, LuckBias::Bad),
         (25, 15)
     );
-    assert!(quality_allows_natural_affix(
-        Some(policy),
-        ItemQualityDto::Exceptional
-    ));
-    assert!(!quality_allows_natural_affix(
-        Some(policy),
-        ItemQualityDto::Fine
-    ));
-    assert!(quality_allows_natural_affix(None, ItemQualityDto::Fine));
+    assert!(power_allows_natural_affix(Some(policy), 2));
+    assert!(!power_allows_natural_affix(Some(policy), 1));
+    assert!(power_allows_natural_affix(None, 1));
 
     let mut game = m6_game("rfb.mutation.good-luck", "demo.build.warrior");
     game.progress.active_mutation_ids.clear();
-    for (roll, minimum, expected) in [
+    for (rolls, minimum, expected) in [
         (
-            399,
+            vec![24, 15],
             rfb_content::ItemQuality::Ordinary,
             ItemQualityDto::Exceptional,
         ),
         (
-            400,
+            vec![24, 16],
             rfb_content::ItemQuality::Ordinary,
             ItemQualityDto::Fine,
         ),
         (
-            2_500,
+            vec![25, 9],
             rfb_content::ItemQuality::Ordinary,
             ItemQualityDto::Ordinary,
         ),
         (
-            1_599,
+            vec![15],
             rfb_content::ItemQuality::Fine,
             ItemQualityDto::Exceptional,
         ),
-        (1_600, rfb_content::ItemQuality::Fine, ItemQualityDto::Fine),
         (
-            9_999,
+            vec![16],
+            rfb_content::ItemQuality::Fine,
+            ItemQualityDto::Fine,
+        ),
+        (
+            vec![],
             rfb_content::ItemQuality::Exceptional,
             ItemQualityDto::Exceptional,
         ),
     ] {
-        game.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(10_000) == roll));
-        let draws_before = game.rng_draw_counter();
+        let seed = seed_matching(|rng| rolls.iter().all(|roll| rng.bounded(100) == *roll));
+        game.rng = RfbRng::seeded(seed);
         assert_eq!(
-            game.roll_rfb_depth_loot_quality(policy, 15, false, minimum),
+            crate::game::loot::power_quality(game.roll_rfb_depth_loot_power(
+                policy,
+                15,
+                false,
+                false,
+                minimum.into()
+            )),
             expected
         );
-        assert_eq!(game.rng_draw_counter(), draws_before + 1);
+        assert_eq!(game.rng_draw_counter(), rolls.len() as u64);
+    }
+    let before = game.rng.clone();
+    assert_eq!(
+        game.roll_rfb_depth_loot_power(
+            policy,
+            15,
+            false,
+            false,
+            crate::game::loot::ItemGenerationMode::Artifact {
+                no_fixed_artifact: false
+            }
+        ),
+        3
+    );
+    assert_eq!(
+        game.rng, before,
+        "GOOD | GREAT | SPECIAL short-circuits both quality rolls"
+    );
+    for (roll, expected, draws) in [(24, 2, 1), (25, 0, 2)] {
+        game.rng = RfbRng::seeded(seed_matching(|rng| {
+            rng.bounded(100) == roll && (roll == 24 || rng.bounded(100) >= 9)
+        }));
+        assert_eq!(
+            game.roll_rfb_depth_loot_power(
+                policy,
+                15,
+                false,
+                false,
+                crate::game::loot::ItemGenerationMode::GreatOnly
+            ),
+            expected
+        );
+        assert_eq!(
+            game.rng_draw_counter(),
+            draws,
+            "AM_GREAT alone retains the outer good roll and the conditional curse check"
+        );
     }
 }
 

@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-sorcerer-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 70,
+  "id": "rfb-legacy.affix.the-sorcerer",
+  "nameKey": "affix-legacy-the-sorcerer-name",
+  "passives": [
+    "easy-spell",
+    "reduced-mana-cost",
+    "reflects-bolts",
+    "sustain-intelligence"
+  ],
+  "rfbEgo": {
+    "flags": [
+      "DEC_CON",
+      "DEC_MANA",
+      "EASY_SPELL",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "REFLECT",
+      "SPELL_CAP",
+      "SUST_INT"
+    ],
+    "rarity": 10,
+    "sourceIndex": 82,
+    "types": [
+      "robe"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "robe"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-slaying-135-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.slaying-135",
+  "nameKey": "affix-legacy-slaying-135-name",
+  "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "SHOW_MODS"
+    ],
+    "rarity": 2,
+    "sourceIndex": 135,
+    "types": [
+      "gloves"
+    ]
+  },
+  "tags": [
+    "gloves",
+    "legacy-import"
+  ]
+}

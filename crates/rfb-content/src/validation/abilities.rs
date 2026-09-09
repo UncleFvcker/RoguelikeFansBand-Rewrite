@@ -30,7 +30,7 @@ fn effect_can_affect_ground_items(effect: &AbilityEffectDefinition) -> bool {
         | AbilityEffectDefinition::InsanityCircle { .. }
         | AbilityEffectDefinition::ExplodePets
         | AbilityEffectDefinition::Hellfire { .. }
-        | AbilityEffectDefinition::WrathOfGod => true,
+        | AbilityEffectDefinition::WrathOfGod { .. } => true,
         AbilityEffectDefinition::Sequence { effects } => {
             effects.iter().any(effect_can_affect_ground_items)
         }
@@ -429,7 +429,7 @@ pub(super) fn validate_abilities(
                 | AbilityEffectDefinition::AggravateMonsters
                 | AbilityEffectDefinition::SwapPosition => true,
                 AbilityEffectDefinition::Teleport => true,
-                AbilityEffectDefinition::BlinkSelf { radius } => {
+                AbilityEffectDefinition::BlinkSelf { radius, .. } => {
                     (1..=255).contains(radius)
                         && (*radius <= 10 || has_level_scaling(AbilityLevelScalingField::Radius))
                 }
@@ -680,9 +680,11 @@ pub(super) fn validate_abilities(
                 AbilityEffectDefinition::DemonSummoning
                 | AbilityEffectDefinition::AngelSummoning
                 | AbilityEffectDefinition::BanishEvil
-                | AbilityEffectDefinition::WrathOfGod
                 | AbilityEffectDefinition::DivineIntervention
                 | AbilityEffectDefinition::Crusade => true,
+                AbilityEffectDefinition::WrathOfGod { damage } => {
+                    damage.is_none_or(|damage| (1..=10_000).contains(&damage))
+                }
                 AbilityEffectDefinition::InsanityCircle {
                     damage_bonus,
                     control_power,
@@ -1221,7 +1223,7 @@ pub(super) fn validate_abilities(
             | AbilityEffectDefinition::DeathRay { .. }
             | AbilityEffectDefinition::SniperShot { .. }
             | AbilityEffectDefinition::RandomChoice { .. } => projectile_target_rule,
-            AbilityEffectDefinition::WrathOfGod => projectile_target_rule,
+            AbilityEffectDefinition::WrathOfGod { .. } => projectile_target_rule,
             AbilityEffectDefinition::TeleportLevel => self_target_rule || projectile_target_rule,
             AbilityEffectDefinition::DimensionDoor { .. } => {
                 ability.target.modes.as_slice() == [AbilityTargetModeDefinition::Position]

@@ -2,7 +2,10 @@
 
 use rfb_protocol::{MeleeDamageDiceDto, WeaponTraitDto};
 
-use super::{support::clear_monsters, *};
+use super::{
+    support::{clear_monsters, give_inventory_item},
+    *,
+};
 use crate::effect::advance_status_ticks;
 use crate::game::player_stats::good_priest_weapon_penalty;
 
@@ -120,8 +123,7 @@ fn tomte_scales_weapon_and_innate_damage_after_criticals_without_changing_rng() 
     };
     let stats = base.player_derived_stats();
     let weapon = base.player_melee_profile(&stats);
-    let innate =
-        base.player_mutation_innate_attack_profiles(&stats, weapon.source_item_id.as_deref());
+    let innate = base.player_mutation_innate_attack_profiles(&stats);
     let maximum = |profile: &super::super::player_stats::ResolvedAttackProfile| {
         i32::from(profile.damage_dice) * i32::from(profile.damage_sides) + profile.to_damage
     };
@@ -177,10 +179,7 @@ fn tomte_melee_preview_uses_the_damage_rule_and_hides_unidentified_equipment() {
     assert_eq!(data.melee_damage[0].base_damage, Some([expected, expected]));
     assert_eq!(data.melee_damage[0].damage_percent, 82);
     assert_eq!(data.melee_damage[1].attack_name.as_deref(), Some("长角"));
-    let innate = game.player_mutation_innate_attack_profiles(
-        &game.player_derived_stats(),
-        weapon.source_item_id.as_deref(),
-    );
+    let innate = game.player_mutation_innate_attack_profiles(&game.player_derived_stats());
     assert_eq!(
         data.melee_damage[1].base_damage,
         Some([
@@ -299,6 +298,82 @@ fn tonberry_game(build: &str) -> Game {
 }
 
 #[test]
+fn tonberry_dual_wielding_combines_equipment_blows_and_reports_each_source() {
+    let mut game = tonberry_game("demo.build.warrior");
+    game.progress.level = 10;
+    let offhand_slot = game
+        .body_slots
+        .iter()
+        .find(|slot| slot.slot_type == "shield")
+        .unwrap()
+        .id
+        .clone();
+    give_inventory_item(&mut game, "test.offhand", "demo.item.dagger");
+    assert!(
+        game.equip_inventory_item("test.offhand", Some(&offhand_slot))
+            .is_some()
+    );
+    let weapon = weapon_index(&game);
+    let weapon_id = game.items[weapon].id.clone();
+    game.items[weapon]
+        .intrinsic_properties
+        .equipment_bonuses
+        .melee_attacks_delta_percent = 75;
+    let equipped = game
+        .items
+        .iter()
+        .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+        .map(|item| item.id.clone())
+        .collect::<Vec<_>>();
+    for id in equipped {
+        game.identify_item_instance(&id, ItemIdentificationRequest::new(true));
+    }
+    let stats = game.player_derived_stats();
+    let mut human = game.clone();
+    human.player.statuses.clear();
+    let profiles = game.player_melee_profiles(&stats);
+    assert_eq!(profiles.len(), 2);
+    let human_profiles = human.player_melee_profiles(&stats);
+    let rate = |profile: &crate::game::player_stats::ResolvedAttackProfile| {
+        i32::from(profile.attacks) * 100 + i32::from(profile.extra_attack_chance_percent)
+    };
+    for (actual, control) in profiles.iter().zip(&human_profiles) {
+        assert_eq!(actual.to_damage, control.to_damage + 10);
+        assert_eq!(rate(actual), (rate(control) - 40).max(0));
+    }
+    let details = game.snapshot().player.trait_details;
+    assert_eq!(details.melee_damage.len(), 2);
+    let attacks = details
+        .stats
+        .iter()
+        .find(|stat| stat.id == "melee-attacks-hundredths")
+        .unwrap();
+    assert_eq!(attacks.value, Some(profiles.iter().map(rate).sum()));
+    assert_eq!(
+        attacks.value,
+        Some(attacks.sources.iter().map(|source| source.amount).sum())
+    );
+    assert_eq!(
+        attacks
+            .sources
+            .iter()
+            .find(|source| source.source_id == weapon_id)
+            .unwrap()
+            .amount,
+        75
+    );
+    assert_eq!(
+        attacks
+            .sources
+            .iter()
+            .find(|source| source.source_id == "rfb-legacy.race.tonberry")
+            .unwrap()
+            .amount,
+        -80
+    );
+}
+
+#[test]
 fn tonberry_weapon_profiles_preserve_fractional_blows_and_known_damage() {
     let mut game = tonberry_game("demo.build.warrior");
     let weapon = weapon_index(&game);
@@ -329,13 +404,11 @@ fn tonberry_weapon_profiles_preserve_fractional_blows_and_known_damage() {
             profile.to_damage,
             stats.melee_damage_bonus.value + 2 * i32::from(level)
         );
-        let innate =
-            game.player_mutation_innate_attack_profiles(&stats, profile.source_item_id.as_deref());
+        let innate = game.player_mutation_innate_attack_profiles(&stats);
         let mut human = game.clone();
         human.player.statuses.clear();
         // Pass identical derived stats to isolate the weapon-only rule from racial attributes.
-        let control_innate =
-            human.player_mutation_innate_attack_profiles(&stats, profile.source_item_id.as_deref());
+        let control_innate = human.player_mutation_innate_attack_profiles(&stats);
         assert_eq!(innate[0].to_damage, control_innate[0].to_damage);
         assert_eq!(innate[0].attacks, control_innate[0].attacks);
         let rng = game.rng.clone();

@@ -19,21 +19,21 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
-      "lastCommandSeq": 1,
-      "stateHash": "9c98dec3469b0548f536b45995894859d2427cf4e1778cbffd35281a272b95c2",
-      "playerPosition": {
-        "x": 44,
-        "y": 16
-      },
       "groundItemCount": 3,
       "inventory": {
         "generated.item.8": {
           "kindId": "demo.item.arrow",
           "quantity": 21
         }
-      }
+      },
+      "lastCommandSeq": 1,
+      "playerPosition": {
+        "x": 44,
+        "y": 16
+      },
+      "revision": 1,
+      "stateHash": "663afa7d58563ab670a91bb318b11c606794e69f1bc68b7aac1e56d2dfae931d",
+      "turn": 1
     },
     "events": [
       {

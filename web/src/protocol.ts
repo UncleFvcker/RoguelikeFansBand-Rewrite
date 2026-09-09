@@ -35,7 +35,7 @@ export type GameCommandEnvelope = { commandSeq: number, expectedRevision: number
 
 export type StatModifiersDto = { attack: number, defense: number, maxHp: number, strength: number, intelligence: number, wisdom: number, dexterity: number, constitution: number, charisma: number, speed: number, spellPowerBonus: number, devicePowerBonus: number, };
 
-export type EquipmentBonusesDto = { lifePercent?: number,
+export type EquipmentBonusesDto = { weaponDiceBonus?: number, lifePercent?: number,
 /**
  * Additive launcher damage multiplier in percentage points. `25` means +x0.25.
  */
@@ -43,9 +43,9 @@ launcherMultiplierDeltaPercent?: number,
 /**
  * Additive RFB `base_shot` value in hundredths of a shot. `15` means +0.15 shots.
  */
-baseShotDeltaPercent?: number, meleeAttacks: number, meleeSkill: number, meleeDamage: number, rangedSkill: number, throwingSkill: number, deviceSkill: number, savingThrowSkill: number, savingThrowSkillOverride?: number | null, stealthSkill: number, searchSkill: number, perceptionSkill: number, disarmingSkill: number, diggingSkill: number, infravision: number, lightRadius: number, };
+baseShotDeltaPercent?: number, meleeAttacksDeltaPercent?: number, spellCapacityBonus?: number, magicResistancePercent?: number, meleeAttacks: number, meleeSkill: number, meleeDamage: number, rangedSkill: number, throwingSkill: number, deviceSkill: number, savingThrowSkill: number, savingThrowSkillOverride?: number | null, stealthSkill: number, searchSkill: number, perceptionSkill: number, disarmingSkill: number, diggingSkill: number, infravision: number, lightRadius: number, };
 
-export type EquipmentPassiveDto = "regeneration" | "see-invisible" | "vampiric" | "hold-life" | "levitation" | "warning" | "slow-digestion" | "esp-animal" | "esp-undead" | "esp-demon" | "esp-orc" | "esp-troll" | "esp-giant" | "esp-dragon" | "esp-human" | "esp-good" | "esp-evil" | "esp-living" | "esp-nonliving" | "telepathy" | "sustain-strength" | "sustain-intelligence" | "sustain-wisdom" | "sustain-dexterity" | "sustain-constitution" | "sustain-charisma";
+export type EquipmentPassiveDto = "regeneration" | "see-invisible" | "vampiric" | "hold-life" | "levitation" | "warning" | "slow-digestion" | "reflects-bolts" | "fire-aura" | "cold-aura" | "electricity-aura" | "revenge-aura" | "mana-regeneration" | "anti-magic" | "anti-teleport" | "anti-summoning" | "night-vision" | "dual-wielding" | "no-enchant" | "shards-aura" | "reduced-mana-cost" | "easy-spell" | "auto-identify" | "blessed" | "esp-animal" | "esp-undead" | "esp-demon" | "esp-orc" | "esp-troll" | "esp-giant" | "esp-dragon" | "esp-human" | "esp-good" | "esp-evil" | "esp-living" | "esp-nonliving" | "telepathy" | "sustain-strength" | "sustain-intelligence" | "sustain-wisdom" | "sustain-dexterity" | "sustain-constitution" | "sustain-charisma";
 
 export type AttributeKindDto = "strength" | "intelligence" | "wisdom" | "dexterity" | "constitution" | "charisma";
 
@@ -92,7 +92,7 @@ statusImmunities: Array<string> | null, reflectsBolts: boolean | null, passesWal
 /**
  * Present only in the effective Tomte form; derived by Core from current headgear.
  */
-tomteHeavyHeadgear?: boolean, activeWeaponId: string | null, activeLauncherId: string | null, auras: Array<CharacterAuraDto>, negatives: Array<CharacterNegativeDto>, };
+tomteHeavyHeadgear?: boolean, activeWeaponId: string | null, activeWeaponIds?: Array<string>, activeLauncherId: string | null, auras: Array<CharacterAuraDto>, negatives: Array<CharacterNegativeDto>, };
 
 export type CharacterAuraDto = { damageType: DamageTypeDto, sourceIds: Array<string>, evilOnly: boolean, };
 
@@ -104,7 +104,7 @@ export type CharacterCurseEffectDto = { effect: ItemCurseEffectDto,
  */
 active: boolean | null, asStealthPenalty: boolean, };
 
-export type ItemCurseEffectDto = "ty-curse" | "aggravate" | "drain-experience" | "add-heavy-curse" | "call-demon" | "call-dragon" | "teleport" | "by-curse" | "danger" | "crappy-mutation";
+export type ItemCurseEffectDto = "ty-curse" | "aggravate" | "drain-experience" | "add-heavy-curse" | "call-demon" | "call-dragon" | "teleport" | "by-curse" | "danger" | "crappy-mutation" | "slow-regeneration" | "add-light-curse" | "call-animal" | "cowardice" | "low-melee" | "low-armor" | "low-magic" | "fast-digest" | "drain-hp" | "drain-mana" | "catlike" | "drain-pack" | "allergy" | "open-wounds" | "normality" | "low-device";
 
 export type AttributeSourceDto = { kind: AttributeSourceKindDto, sourceId: string | null, nameKey: string | null,
 /**
@@ -206,7 +206,7 @@ export type AbilityTownTargetDto = { townId: string, townNameKey: string, };
 
 export type AbilityDto = { id: string, nameKey: string, descriptionKey: string, uiGroupNameKey?: string | null, bookNameKey?: string | null, bookRank?: number | null, minimumLevel: number, source: AbilitySourceDto, governingAttribute?: AttributeKindDto | null, resourceId?: string | null, baseResourceCost: number, resourceCost: number, minimumConcentration: number, hitPointCost: number, failurePercent: number, proficiency: number, proficiencyCap: number, proficiencyRank: AbilityProficiencyRankDto, castCount: number, failCount: number, cooldownRemaining: number, cooldownTurns: number, cooldownGroupId?: string | null, areaRadius?: number | null, beamDamage?: boolean, coneRadius?: number | null, teleport?: boolean, summon?: AbilitySummonSpecDto | null, detect?: AbilityDetectSpecDto | null, terrainTransform?: AbilityTerrainTransformSpecDto | null, effects: Array<AbilityEffectSpecDto>, targetSpec: TargetSpecDto, townTargets?: Array<AbilityTownTargetDto>, learned: boolean, bookItemId?: string | null, canStudy: boolean, canForget: boolean, canCast: boolean, };
 
-export type TargetSelection = { "type": "direction", direction: Direction, } | { "type": "position", position: Position, } | { "type": "entity", entityId: string, } | { "type": "item", itemId: string, } | { "type": "town", townId: string, } | { "type": "self" };
+export type TargetSelection = { "type": "direction", direction: Direction, } | { "type": "position", position: Position, } | { "type": "entity", entityId: string, } | { "type": "item", itemId: string, } | { "type": "crafting-item", itemId: string, quantity: number, } | { "type": "town", townId: string, } | { "type": "self" };
 
 export type ProjectileProfileDto = { range: number, toHit: number, toDamage: number, damage: DamageDiceDto, ammoKindId: string, targetSpec: TargetSpecDto, sourceItemId: string, };
 
@@ -366,7 +366,7 @@ export type EntityDto = { id: string, kindId: string,
  */
 glyph: string, position: Position, hp: number, maxHp: number, speed: number, energyNeed: number, minorSlow: number, alerted: boolean, castingCooldownRemaining: number, observedPlayerResistances?: Array<ResistanceDto>, attack: number, defense: number, meleeSkill: number, armorClass: number, meleeDamage: DamageDiceDto, meleeProfile: AttackProfileDto, meleeRoutine: MeleeRoutineDto, statuses: Array<StatusDto>, faction: EntityFactionDto, controllerId?: string | null, summon?: SummonDto | null, };
 
-export type ItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, feeling?: ItemFeelingDto | null, absorbable?: boolean, position: Position, quantity: number, inscription?: string | null, fuel?: ItemFuelDto | null, enchantments?: ItemEnchantmentsDto, curse?: ItemCurseSeverityDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, };
+export type ItemDto = { artifactName?: string | null, id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, feeling?: ItemFeelingDto | null, absorbable?: boolean, position: Position, quantity: number, inscription?: string | null, fuel?: ItemFuelDto | null, enchantments?: ItemEnchantmentsDto, curse?: ItemCurseSeverityDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, };
 
 export type ItemFuelKindDto = "torch" | "lantern" | "oil";
 
@@ -406,11 +406,11 @@ export type ItemPropertyDto = { affixId: string, nameKey: string, modifiers: Sta
 
 export type CapturedActorDto = { kindId: string, nameKey: string, speed: number, hp: number, maxHp: number, experience: bigint, };
 
-export type InventoryItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, absorbable?: boolean, mountUsable: boolean, captureBall: boolean, capturedActor?: CapturedActorDto | null, charges?: ItemChargesDto | null, fuel?: ItemFuelDto | null, activation?: ItemActivationDto | null, useTargetSpec?: TargetSpecDto | null, requiresTargetGlyph?: boolean, requiresRechargeTargets?: boolean, canReceiveRecharge: boolean, canSupplyRecharge: boolean, quantity: number, inscription?: string | null, enchantments?: ItemEnchantmentsDto, curse?: ItemCurseSeverityDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, equipmentBonuses?: EquipmentBonusesDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, slays?: Array<SlayDto>, brands?: Array<WeaponBrandDto>, passives?: Array<EquipmentPassiveDto>, identification: ItemIdentificationDto, feeling?: ItemFeelingDto | null, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type InventoryItemDto = { artifactName?: string | null, bagCapacity?: number | null, id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, usable: boolean, absorbable?: boolean, mountUsable: boolean, captureBall: boolean, capturedActor?: CapturedActorDto | null, charges?: ItemChargesDto | null, fuel?: ItemFuelDto | null, activation?: ItemActivationDto | null, useTargetSpec?: TargetSpecDto | null, requiresTargetGlyph?: boolean, requiresRechargeTargets?: boolean, requiresCraftingTarget?: boolean, canReceiveRecharge: boolean, canSupplyRecharge: boolean, quantity: number, inscription?: string | null, enchantments?: ItemEnchantmentsDto, curse?: ItemCurseSeverityDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, weightTenthsPound: number, equipmentSlot: string | null, modifiers: StatModifiersDto, equipmentBonuses?: EquipmentBonusesDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, slays?: Array<SlayDto>, brands?: Array<WeaponBrandDto>, passives?: Array<EquipmentPassiveDto>, identification: ItemIdentificationDto, feeling?: ItemFeelingDto | null, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type BodySlotDto = { id: string, slotType: string, };
 
-export type EquipmentItemDto = { id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, captureBall: boolean, capturedActor?: CapturedActorDto | null, useTargetSpec?: TargetSpecDto | null, usable: boolean, charges?: ItemChargesDto | null, activation?: ItemActivationDto | null, quantity: number, inscription?: string | null, fuel?: ItemFuelDto | null, enchantments?: ItemEnchantmentsDto, curse?: ItemCurseSeverityDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, equipmentBonuses?: EquipmentBonusesDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, slays?: Array<SlayDto>, brands?: Array<WeaponBrandDto>, passives?: Array<EquipmentPassiveDto>, identification: ItemIdentificationDto, feeling?: ItemFeelingDto | null, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
+export type EquipmentItemDto = { artifactName?: string | null, bagCapacity?: number | null, id: string, kindId: string, displayNameKey: string, knowledge: ItemKnowledgeDto, captureBall: boolean, capturedActor?: CapturedActorDto | null, useTargetSpec?: TargetSpecDto | null, usable: boolean, charges?: ItemChargesDto | null, activation?: ItemActivationDto | null, quantity: number, inscription?: string | null, fuel?: ItemFuelDto | null, enchantments?: ItemEnchantmentsDto, curse?: ItemCurseSeverityDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, weightTenthsPound: number, slotId: string, modifiers: StatModifiersDto, equipmentBonuses?: EquipmentBonusesDto, resistances?: Array<ResistanceDto>, statusImmunities?: Array<string>, slays?: Array<SlayDto>, brands?: Array<WeaponBrandDto>, passives?: Array<EquipmentPassiveDto>, identification: ItemIdentificationDto, feeling?: ItemFeelingDto | null, quality?: ItemQualityDto | null, knownProperties?: Array<ItemPropertyDto>, meleeProfile?: AttackProfileDto | null, projectileProfile?: ProjectileProfileDto | null, throwProfile?: ThrowProfileDto | null, };
 
 export type GameEventDto = { kind: string, messageKey: string, args: { [key in string]: string }, outcome?: GameEventOutcomeDto | null, trace?: ProjectileTraceDto | null, };
 
@@ -424,7 +424,7 @@ export type ShopCategoryDto = "shroomery" | "general-store" | "armoury" | "weapo
 
 export type ShopOwnerDto = { id: string, nameKey: string, raceId: string, greedPercent: number, purchasePriceCap: number, priceFactorPercent: number, };
 
-export type ShopStockItemDto = { id: string, kindId: string, displayNameKey: string, quantity: number, inscription?: string | null, capturedActor?: CapturedActorDto | null, maximumQuantity: number, unitPrice: number, weightTenthsPound: number, fuel?: ItemFuelDto | null, charges?: ItemChargesDto | null, activation?: ItemActivationDto | null, enchantments?: ItemEnchantmentsDto, curse?: ItemCurseSeverityDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, quality: ItemQualityDto, };
+export type ShopStockItemDto = { artifactName?: string | null, id: string, kindId: string, displayNameKey: string, quantity: number, inscription?: string | null, capturedActor?: CapturedActorDto | null, maximumQuantity: number, unitPrice: number, weightTenthsPound: number, fuel?: ItemFuelDto | null, charges?: ItemChargesDto | null, activation?: ItemActivationDto | null, enchantments?: ItemEnchantmentsDto, curse?: ItemCurseSeverityDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, quality: ItemQualityDto, };
 
 export type ShopSellQuoteDto = { itemId: string, kindId: string, unitPrice: number, maximumQuantity: number, unavailableReason?: string | null, };
 
@@ -432,7 +432,7 @@ export type InnTravelDestinationDto = { townId: string, townNameKey: string, cos
 
 export type ShopDto = { id: string, nameKey: string, descriptionKey: string, category: ShopCategoryDto, entrancePosition: Position, entranceTerrainId: string, innStayCost?: number | null, innTravelDestinations: Array<InnTravelDestinationDto>, visited: boolean, playerAtEntrance: boolean, owner: ShopOwnerDto, stock: Array<ShopStockItemDto>, sellQuotes: Array<ShopSellQuoteDto>, };
 
-export type HomeItemDto = { id: string, kindId: string, displayNameKey: string, quantity: number, inscription?: string | null, capturedActor?: CapturedActorDto | null, maximumQuantity: number, weightTenthsPound: number, fuel?: ItemFuelDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, };
+export type HomeItemDto = { artifactName?: string | null, id: string, kindId: string, displayNameKey: string, quantity: number, inscription?: string | null, capturedActor?: CapturedActorDto | null, maximumQuantity: number, weightTenthsPound: number, fuel?: ItemFuelDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, };
 
 export type HomeDto = { id: string, nameKey: string, descriptionKey: string, entrancePosition: Position, entranceTerrainId: string, visited: boolean, playerAtEntrance: boolean, storedItems: Array<HomeItemDto>, depositItems: Array<HomeItemDto>, };
 

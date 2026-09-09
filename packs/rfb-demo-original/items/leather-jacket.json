@@ -20,6 +20,18 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-leather-jacket-name",
+  "rfbBaseKind": {
+    "sourceIndex": 257,
+    "sval": 12,
+    "tval": 36
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

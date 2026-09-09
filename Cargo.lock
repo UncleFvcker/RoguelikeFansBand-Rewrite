@@ -2700,6 +2700,7 @@ dependencies = [
  "rfb-content",
  "rfb-localization",
  "rfb-protocol",
+ "rfb-save",
  "rmp-serde",
  "serde",
  "serde_json",

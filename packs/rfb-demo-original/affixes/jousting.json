@@ -19,6 +19,7 @@
           "energyPerMille": 1000,
           "intervalTicks": 1000
         },
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "direction",
@@ -36,6 +37,7 @@
   "id": "rfb-legacy.affix.jousting",
   "nameKey": "affix-legacy-jousting-name",
   "rfbEgo": {
+    "flags": [],
     "rarity": 1,
     "sourceIndex": 24,
     "types": [

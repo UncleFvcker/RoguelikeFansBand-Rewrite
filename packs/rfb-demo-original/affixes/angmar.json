@@ -1,0 +1,57 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-angmar-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 90,
+  "id": "rfb-legacy.affix.angmar",
+  "nameKey": "affix-legacy-angmar-name",
+  "passives": [
+    "hold-life",
+    "see-invisible"
+  ],
+  "resistances": {
+    "cold": "resistant",
+    "dark": "resistant",
+    "fire": "vulnerable",
+    "light": "vulnerable",
+    "nether": "resistant",
+    "poison": "resistant"
+  },
+  "rfbEgo": {
+    "flags": [
+      "DEC_CON",
+      "HIDE_TYPE",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_COLD",
+      "RES_DARK",
+      "RES_NETHER",
+      "RES_POIS",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "STEALTH",
+      "TELEPATHY",
+      "TY_CURSE",
+      "VULN_FIRE",
+      "VULN_LITE"
+    ],
+    "rarity": 32,
+    "sourceIndex": 129,
+    "types": [
+      "crown"
+    ]
+  },
+  "tags": [
+    "crown",
+    "legacy-import"
+  ]
+}

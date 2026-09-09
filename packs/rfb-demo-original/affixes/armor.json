@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-armor-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.armor",
+  "nameKey": "affix-legacy-armor-name",
+  "rfbEgo": {
+    "flags": [
+      "DEX"
+    ],
+    "rarity": 1,
+    "sourceIndex": 89,
+    "types": [
+      "dragon-armor"
+    ]
+  },
+  "tags": [
+    "dragon-armor",
+    "legacy-import"
+  ]
+}

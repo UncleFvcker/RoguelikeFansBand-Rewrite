@@ -1,0 +1,89 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-twilight-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.the-twilight",
+  "nameKey": "affix-legacy-the-twilight-name",
+  "passives": [
+    "hold-life",
+    "levitation",
+    "reflects-bolts",
+    "see-invisible",
+    "sustain-charisma",
+    "sustain-constitution",
+    "sustain-dexterity",
+    "sustain-intelligence",
+    "sustain-strength",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "chaos": "resistant",
+    "cold": "resistant",
+    "confusion": "resistant",
+    "dark": "resistant",
+    "disenchant": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "light": "resistant",
+    "nether": "resistant",
+    "nexus": "resistant",
+    "poison": "resistant",
+    "shards": "resistant",
+    "sound": "resistant"
+  },
+  "rfbEgo": {
+    "flags": [
+      "FREE_ACT",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "REFLECT",
+      "RES_ACID",
+      "RES_BLIND",
+      "RES_CHAOS",
+      "RES_COLD",
+      "RES_CONF",
+      "RES_DARK",
+      "RES_DISEN",
+      "RES_ELEC",
+      "RES_FEAR",
+      "RES_FIRE",
+      "RES_LITE",
+      "RES_NETHER",
+      "RES_NEXUS",
+      "RES_POIS",
+      "RES_SHARDS",
+      "RES_SOUND",
+      "SEE_INVIS",
+      "SUST_CHR",
+      "SUST_CON",
+      "SUST_DEX",
+      "SUST_INT",
+      "SUST_STR",
+      "SUST_WIS"
+    ],
+    "rarity": 10,
+    "sourceIndex": 81,
+    "types": [
+      "robe"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "legacy-import",
+    "robe"
+  ]
+}

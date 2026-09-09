@@ -22,6 +22,19 @@
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-brass-lantern-name",
+  "rfbBaseKind": {
+    "sourceIndex": 601,
+    "sval": 1,
+    "tval": 39
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_FIRE",
+      "TOWN"
+    ],
+    "pval": 7500,
+    "toArmor": 0
+  },
   "tags": [
     "equipment",
     "light-source",

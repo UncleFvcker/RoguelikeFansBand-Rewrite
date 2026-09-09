@@ -468,7 +468,8 @@ impl Game {
                 }),
             TargetSelection::SelfTarget
             | TargetSelection::Item { .. }
-            | TargetSelection::Town { .. } => None,
+            | TargetSelection::Town { .. }
+            | TargetSelection::CraftingItem { .. } => None,
         }
     }
 }
@@ -1495,7 +1496,7 @@ impl Game {
             .item(&item.kind_id)
             .expect("throwable item definition must remain available");
         let mighty_throw = self.player_has_mighty_throw();
-        let range = throw_range(definition.weight_tenths_pound, mighty_throw);
+        let range = throw_range(self.item_instance_weight(item), mighty_throw);
         let profile = definition
             .throw_profile
             .as_ref()
@@ -1747,6 +1748,7 @@ impl Game {
             index,
             train_weapon,
             None,
+            false,
             events,
             changed,
             removed_entities,
@@ -1765,17 +1767,38 @@ impl Game {
             index,
             false,
             Some(mode),
+            false,
             events,
             changed,
             removed_entities,
         )
     }
 
+    pub(super) fn resolve_player_revenge_blow(
+        &mut self,
+        index: usize,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+        removed_entities: &mut Vec<String>,
+    ) -> Result<PlayerMeleeOutcome, CoreError> {
+        self.resolve_player_melee_with_draconian_strike(
+            index,
+            false,
+            None,
+            true,
+            events,
+            changed,
+            removed_entities,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
     fn resolve_player_melee_with_draconian_strike(
         &mut self,
         index: usize,
         train_weapon: bool,
         strike_mode: Option<DraconianStrikeModeDefinition>,
+        revenge: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
@@ -1789,13 +1812,19 @@ impl Game {
         self.entities[index].alerted = true;
         let attacker = self.player_derived_stats();
         let target = self.actor_derived_stats(&self.entities[index], &definition, false);
-        let weapon_profile = self.player_melee_profile(&attacker);
-        let equipped_weapon_id = weapon_profile.source_item_id.clone();
-        if train_weapon
-            && let Some(item_id) = equipped_weapon_id.as_deref()
-            && let Some(item_kind_id) = self.train_weapon_proficiency(item_id, definition.level)
-        {
-            events.push(DomainEvent::WeaponProficiencyImproved { item_kind_id });
+        if train_weapon {
+            let ids: Vec<_> = self
+                .equipped_melee_weapons()
+                .iter()
+                .map(|item| item.id.clone())
+                .collect();
+            for item_id in ids {
+                if let Some(item_kind_id) =
+                    self.train_weapon_proficiency(&item_id, definition.level)
+                {
+                    events.push(DomainEvent::WeaponProficiencyImproved { item_kind_id });
+                }
+            }
         }
         if let Some(event) = self.train_riding_from_melee(definition.level) {
             events.push(event);
@@ -1803,11 +1832,19 @@ impl Game {
         let mut profiles = if self.player_has_draconian_metamorphosis() {
             Vec::new()
         } else {
-            vec![weapon_profile]
+            self.player_melee_profiles(&attacker)
         };
-        profiles.extend(
-            self.player_mutation_innate_attack_profiles(&attacker, equipped_weapon_id.as_deref()),
-        );
+        profiles.extend(self.player_mutation_innate_attack_profiles(&attacker));
+        if train_weapon && self.equipped_melee_weapons().len() >= 2 {
+            self.train_dual_wielding(definition.level);
+        }
+        if revenge {
+            profiles.truncate(1);
+            for profile in &mut profiles {
+                profile.attacks = 1;
+                profile.extra_attack_chance_percent = 0;
+            }
+        }
         let profiles = profiles
             .into_iter()
             .map(|profile| {
@@ -1839,6 +1876,12 @@ impl Game {
             });
             let vampiric_weapon =
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
+                    || (profile.source_item_id.is_some() && self.items.iter().any(|item| {
+                        matches!(&item.location, ItemLocation::Equipped { slot_id }
+                            if matches!(self.body_slot_type(slot_id), Some("body" | "shield" | "head" | "cloak" | "gloves" | "boots")))
+                            && self.content.item(&item.kind_id).is_some_and(|definition| definition.melee_profile.is_none())
+                            && self.item_passives(item).contains(&EquipmentPassive::Vampiric)
+                    }))
                     || profile.source_item_id.as_ref().is_some_and(|item_id| {
                         self.items
                             .iter()
@@ -2013,6 +2056,7 @@ impl Game {
                 }
                 let mut revenge_stop = false;
                 if !application.fatal
+                    && !revenge
                     && let Some(stop) = self.resolve_monster_revenge_aura(
                         index,
                         retaliation_blow_index,

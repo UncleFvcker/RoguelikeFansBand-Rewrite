@@ -1,0 +1,389 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-protection-ring-description",
+  "deviceGeneration": {
+    "activationOptional": true,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "durationBonus": 20,
+          "durationDice": 1,
+          "durationSides": 20,
+          "type": "apply-stone-skin"
+        },
+        "id": "rfb.device-activation.ego-205-stone-skin",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-stone-skin-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "rfbValue": 5000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "acid": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-acid",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-205-resist-acid",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-resist-acid-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "acid"
+        ],
+        "rfbValue": 1500,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "electricity": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-electricity",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-205-resist-elec",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-resist-elec-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "electricity"
+        ],
+        "rfbValue": 1500,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "fire": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-fire",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-205-resist-fire",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-resist-fire-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "fire",
+          "demon"
+        ],
+        "rfbValue": 1500,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "cold": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-cold",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-205-resist-cold",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-resist-cold-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "cold"
+        ],
+        "rfbValue": 1500,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "poison": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-poison",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-205-resist-pois",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-resist-pois-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "poison"
+        ],
+        "rfbValue": 3000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "durationBonus": 20,
+            "durationDice": 1,
+            "durationSides": 20,
+            "type": "resist-elements"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-205-resistance",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-resistance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "ranger"
+        ],
+        "rfbValue": 5500,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationTicks": 100,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.protection-from-evil",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-205-prot-evil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-prot-evil-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "rfbValue": 3000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 90,
+        "effect": {
+          "effect": {
+            "durationBonus": 8,
+            "durationDice": 1,
+            "durationSides": 8,
+            "type": "invulnerability"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-205-invulnerability",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-invulnerability-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 7770
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "rfbValue": 14000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 15
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "id": "rfb-legacy.affix.protection-ring",
+  "nameKey": "affix-legacy-protection-ring-name",
+  "rfbEgo": {
+    "flags": [],
+    "rarity": 2,
+    "sourceIndex": 205,
+    "types": [
+      "ring"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "ring"
+  ]
+}

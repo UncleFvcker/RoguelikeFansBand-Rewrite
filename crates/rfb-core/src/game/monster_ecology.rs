@@ -1417,7 +1417,7 @@ impl Game {
     }
 
     pub(super) fn original_allocation_level(&mut self, base_level: u16) -> u16 {
-        let mut level = base_level;
+        let mut level = self.curse_danger_level(base_level, false);
         if level == 0 {
             return level;
         }
@@ -1612,7 +1612,7 @@ impl Game {
         None
     }
 
-    fn original_scatter_position(
+    pub(super) fn original_scatter_position(
         &mut self,
         terrain: &[String],
         width: u16,

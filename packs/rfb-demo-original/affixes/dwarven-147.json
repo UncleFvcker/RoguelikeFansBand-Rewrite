@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-dwarven-147-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "generationMaxLevel": 80,
+  "id": "rfb-legacy.affix.dwarven-147",
+  "nameKey": "affix-legacy-dwarven-147-name",
+  "rfbEgo": {
+    "flags": [
+      "CON",
+      "DEC_STEALTH",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE"
+    ],
+    "rarity": 3,
+    "sourceIndex": 147,
+    "types": [
+      "boots"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "boots",
+    "legacy-import"
+  ]
+}

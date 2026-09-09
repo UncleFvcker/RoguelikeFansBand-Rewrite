@@ -60,7 +60,7 @@ type InventoryDom = Pick<
 >;
 
 interface InventoryFormatter {
-  visibleItemName(displayNameKey: string, kindId: string): string;
+  visibleItemName(displayNameKey: string, kindId: string, artifactName?: string | null): string;
   itemPropertyName(nameKey: string): string;
   itemQualityName(quality: NonNullable<InventoryItemDto["quality"]>): string;
   equipmentSlotName(slot: string): string;
@@ -226,7 +226,7 @@ export class InventoryPanel {
       [this.#dom.inventoryEquip, Boolean(item?.equipmentSlot)],
       [this.#dom.inventoryUse, Boolean((item?.usable && !item.requiresRechargeTargets) || selectedRechargingItems(selected))],
       [this.#dom.inventoryAbsorb, absorbableItemCandidates(this.#state,
-        (key, kindId) => this.#formatter.visibleItemName(key, kindId)).length > 0],
+        (key, kindId, artifactName) => this.#formatter.visibleItemName(key, kindId, artifactName)).length > 0],
       [this.#dom.inventoryUseOnMount, Boolean(item?.mountUsable && this.#state.status?.player.ridingActorId)],
       [this.#dom.inventoryAppraise, item?.identification === "unexamined"],
       [this.#dom.inventoryDrop, selected.length > 0],
@@ -278,7 +278,7 @@ export class InventoryPanel {
     const candidates = itemTargetCandidates(
       this.#state,
       excludedItemId,
-      (displayNameKey, kindId) => this.#formatter.visibleItemName(displayNameKey, kindId),
+      (displayNameKey, kindId, artifactName) => this.#formatter.visibleItemName(displayNameKey, kindId, artifactName),
     );
     this.#selectItemTargetFrom(candidates, onSelect);
   }
@@ -294,7 +294,7 @@ export class InventoryPanel {
     this.#selectItemTargetFrom(
       absorbableItemCandidates(
         this.#state,
-        (displayNameKey, kindId) => this.#formatter.visibleItemName(displayNameKey, kindId),
+        (displayNameKey, kindId, artifactName) => this.#formatter.visibleItemName(displayNameKey, kindId, artifactName),
       ),
       (itemId) => this.#dispatch({ type: "absorb-device", itemId }),
     );
@@ -536,9 +536,8 @@ export class InventoryPanel {
       current: item.fuel.current, maximum: item.fuel.maximum,
     });
     if (item.curse) return this.#itemCurseSeverityName(item.curse);
-    return item.equipmentSlot ? this.#localization.format(itemIdentificationMessageKey(
-      item.identification, item.knownProperties?.length ?? 0,
-    ), { count: item.knownProperties?.length ?? 0 }) : "";
+    const identificationKey = itemIdentificationMessageKey(item.identification);
+    return item.equipmentSlot && identificationKey ? this.#localization.format(identificationKey) : "";
   }
 
   #chooseSlotItem(slotId: string): void {
@@ -740,16 +739,19 @@ export class InventoryPanel {
         feeling: this.#localization.format(`item-feeling-${item.feeling}`),
       }));
     }
-    if ("slotId" in item || item.equipmentSlot !== null) {
+    const identificationKey = itemIdentificationMessageKey(item.identification);
+    if (("slotId" in item || item.equipmentSlot !== null) && identificationKey) {
       const identification = container.ownerDocument.createElement("span");
       identification.className = `item-identification item-identification-${item.identification}`;
-      identification.textContent = this.#localization.format(
-        itemIdentificationMessageKey(item.identification, item.knownProperties?.length ?? 0),
-        { count: item.knownProperties?.length ?? 0 },
-      );
+      identification.textContent = this.#localization.format(identificationKey);
       container.append(identification);
     }
     this.#appendItemModifiers(container, item.modifiers);
+    if (item.bagCapacity !== undefined && item.bagCapacity !== null) {
+      this.#appendDetail(container, "inventory-bag-capacity", this.#localization.format("inventory-bag-capacity", {
+        capacity: item.bagCapacity,
+      }));
+    }
     this.#appendItemEnchantments(container, item.enchantments);
     this.#appendItemCurse(container, item.curse);
     this.#appendEquipmentBonuses(container, item.equipmentBonuses);
@@ -762,7 +764,7 @@ export class InventoryPanel {
   }
 
   #itemName(item: InventoryItemDto | EquipmentItemDto): string {
-    const ball = this.#formatter.visibleItemName(item.displayNameKey, item.kindId);
+    const ball = this.#formatter.visibleItemName(item.displayNameKey, item.kindId, item.artifactName);
     return item.capturedActor
       ? this.#localization.format("capture-ball-name-contained", {
           ball,
@@ -827,6 +829,23 @@ export class InventoryPanel {
     if (selected.length !== 1 || !selected[0]?.usable) return;
     const item = selected[0];
     if (item.requiresRechargeTargets) return;
+    if (item.requiresCraftingTarget) {
+      this.selectItemTarget(item.id, async (targetItemId) => {
+        const target = [...this.#state.inventory, ...this.#state.equipment, ...(this.#state.status?.items ?? [])]
+          .find((candidate) => candidate.id === targetItemId);
+        if (!target || this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+        if (target.quantity > 30 && target.quantity <= 59 &&
+          !this.#dom.inventoryList.ownerDocument.defaultView?.confirm(
+            this.#localization.format("inventory-crafting-confirm", {
+              quantity: target.quantity,
+              chance: Math.trunc((target.quantity * 20 - 597) / 6),
+            }),
+          )) return;
+        await this.#dispatch({ type: "use-item", itemId: item.id,
+          target: { type: "crafting-item", itemId: targetItemId, quantity: target.quantity } });
+      });
+      return;
+    }
     if (item.requiresTargetGlyph) {
       this.#selectGlyphTarget((glyph) =>
         this.#dispatch({ type: "use-item-by-glyph", itemId: item.id, glyph }),
@@ -921,7 +940,7 @@ export class InventoryPanel {
       )
       .map((item) => ({
         id: item.id,
-        label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId),
+        label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
       }));
     this.#selectItemTargetFrom(candidates, (targetItemId) =>
       this.#dispatch({
@@ -1115,7 +1134,10 @@ export class InventoryPanel {
   ): void {
     if (!bonuses) return;
     this.#appendSignedEntries(container, [
-      ["item-bonus-melee-attacks", bonuses.meleeAttacks],
+      ["item-bonus-melee-attacks", bonuses.meleeAttacks + (bonuses.meleeAttacksDeltaPercent ?? 0) / 100],
+      ["item-bonus-weapon-dice", bonuses.weaponDiceBonus ?? 0],
+      ["item-bonus-spell-capacity", (bonuses.spellCapacityBonus ?? 0) * 5],
+      ["item-bonus-magic-resistance", bonuses.magicResistancePercent ?? 0],
       ["item-bonus-melee-skill", bonuses.meleeSkill],
       ["item-bonus-ranged-skill", bonuses.rangedSkill],
       ["item-bonus-throwing-skill", bonuses.throwingSkill],
@@ -1275,7 +1297,7 @@ export class InventoryPanel {
 export type InventoryFilter = "all" | "equippable" | "usable" | "devices" | "light";
 
 export function itemFitsBodySlot(item: InventoryItemDto, slot: BodySlotDto): boolean {
-  return item.equipmentSlot === slot.slotType || (item.equipmentSlot === "tool" && slot.slotType === "weapon");
+  return item.equipmentSlot === slot.slotType || (item.equipmentSlot === "tool" && slot.slotType === "weapon") || (item.equipmentSlot === "weapon" && slot.slotType === "shield");
 }
 
 export function filterInventoryItems(
@@ -1331,7 +1353,7 @@ export function selectedRechargingItems(
 export function itemTargetCandidates(
   state: Pick<AppState, "inventory" | "equipment" | "status">,
   excludedItemId: string | undefined,
-  visibleItemName: (displayNameKey: string, kindId: string) => string,
+  visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string,
 ): Array<{ id: string; label: string }> {
   const playerPosition = state.status?.player.position;
   const groundItems = playerPosition
@@ -1344,13 +1366,13 @@ export function itemTargetCandidates(
     .filter((item) => item.id !== excludedItemId)
     .map((item) => ({
       id: item.id,
-      label: visibleItemName(item.displayNameKey, item.kindId),
+      label: visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
     }));
 }
 
 export function absorbableItemCandidates(
   state: Pick<AppState, "inventory" | "status">,
-  visibleItemName: (displayNameKey: string, kindId: string) => string,
+  visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string,
 ): Array<{ id: string; label: string }> {
   const playerPosition = state.status?.player.position;
   const groundItems = playerPosition
@@ -1363,7 +1385,7 @@ export function absorbableItemCandidates(
     : [];
   return [...state.inventory.filter((item) => item.absorbable), ...groundItems].map((item) => ({
     id: item.id,
-    label: visibleItemName(item.displayNameKey, item.kindId),
+    label: visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
   }));
 }
 
@@ -1380,13 +1402,10 @@ export function formatTenthsPound(value: number): string {
 
 export function itemIdentificationMessageKey(
   identification: InventoryItemDto["identification"],
-  knownPropertyCount: number,
-): MessageKey {
+): MessageKey | undefined {
   if (identification === "unexamined") return "item-identification-unexamined";
   if (identification === "appraised") return "item-identification-appraised";
-  return knownPropertyCount > 0
-    ? "item-identification-identified-ego"
-    : "item-identification-identified-ordinary";
+  return undefined;
 }
 
 export function formatTenthsPoundArgument(value: string | undefined): string {

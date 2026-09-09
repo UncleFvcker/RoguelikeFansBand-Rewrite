@@ -2,7 +2,7 @@
 
 # RFB CoreTransport 协议 v1
 
-状态：协议 1.218、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
+状态：协议 1.238、自动生成的 TypeScript/JSON Schema 与 `TauriNativeTransport` 已实现
 
 ## 1. 适用边界
 
@@ -826,3 +826,9 @@ save header/payload schema 同步升至 v5，二进制容器格式仍为 v1。
 主工作树整合时，monster 与 items 分支曾各自占用协议 1.228：前者用于城镇任务服务投影，后者
 用于物品实例属性。联合结构因此发布为协议 1.230，避免协议 1.228/1.229 在不同历史上代表不同
 DTO 集合；State Hash Schema 保持 v108，save header/payload schema 保持 v5。
+
+协议 1.238 为五类可见物品 DTO 增加可选 artifactName，只有已鉴定实例及已知商店库存投影
+该名称，UI 原样显示并用于搜索/目标选择。四类物品 save DTO 同时新增实例神器名、固有骰数、
+重量、武器特性与诅咒效果，进入 State Hash Schema v115；save header/payload v10、容器 v1。
+这一批只交付随机神器内部表示及消费者，尚未开放自然生成。详见
+[E8.5a](../../../../design/contract-v316-random-artifact-identity.md)。

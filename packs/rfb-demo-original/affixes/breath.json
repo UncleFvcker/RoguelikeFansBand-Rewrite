@@ -1,0 +1,167 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-breath-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "damage": 500,
+          "damageTypes": [
+            "acid",
+            "electricity",
+            "fire",
+            "cold",
+            "poison"
+          ],
+          "radius": 2,
+          "type": "random-element-cone-damage"
+        },
+        "id": "rfb.device-activation.ego-breath-297",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-one-multihued-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 350
+        },
+        "rfbValue": 10000,
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "damage": 460,
+          "damageTypes": [
+            "sound",
+            "shards"
+          ],
+          "radius": 2,
+          "type": "random-element-cone-damage"
+        },
+        "id": "rfb.device-activation.ego-breath-299",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-one-law-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbValue": 12650,
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "damageBonus": 260,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "sound",
+            "radius": 2,
+            "type": "cone-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-breath-302",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-sound-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 200
+        },
+        "rfbValue": 7150,
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "damage": 440,
+          "damageTypes": [
+            "chaos",
+            "disenchant"
+          ],
+          "radius": 2,
+          "type": "random-element-cone-damage"
+        },
+        "id": "rfb.device-activation.ego-breath-303",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-one-chaos-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbValue": 9900,
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.breath",
+  "nameKey": "affix-legacy-breath-name",
+  "rfbEgo": {
+    "flags": [
+      "CON"
+    ],
+    "rarity": 1,
+    "sourceIndex": 86,
+    "types": [
+      "dragon-armor"
+    ]
+  },
+  "tags": [
+    "dragon-armor",
+    "legacy-import"
+  ]
+}

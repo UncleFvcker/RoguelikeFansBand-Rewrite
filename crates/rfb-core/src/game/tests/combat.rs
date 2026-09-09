@@ -490,6 +490,44 @@ fn ultimate_resistance_reuses_fire_electricity_and_cold_contact_auras() {
 }
 
 #[test]
+fn all_four_equipped_elemental_auras_damage_contact_attackers() {
+    let harmless = MeleeBlowEffectDefinition::Damage {
+        chance_percent: None,
+        damage_dice: 0,
+        damage_sides: 0,
+        damage_type: rfb_content::ActorDamageType::Physical,
+        armor_mitigated: true,
+        vampiric: false,
+    };
+    let mut game = monster_effect_game(0, harmless);
+    let item = game
+        .items
+        .iter_mut()
+        .find(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+        .unwrap();
+    item.intrinsic_properties.passives.extend([
+        rfb_content::EquipmentPassive::FireAura,
+        rfb_content::EquipmentPassive::ColdAura,
+        rfb_content::EquipmentPassive::ElectricityAura,
+        rfb_content::EquipmentPassive::ShardsAura,
+    ]);
+    game.entities[0].hp = 100;
+    game.entities[0].max_hp = 100;
+    let mut events = Vec::new();
+    game.resolve_monster_melee(0, &mut events, &mut BTreeSet::new(), &mut Vec::new())
+        .unwrap();
+    let damage: Vec<_> = events
+        .iter()
+        .filter_map(|event| match event {
+            DomainEvent::MutationAuraHit { damage, .. } => Some(damage.applied),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(damage.len(), 4);
+    assert_eq!(game.entities[0].hp, 100 - damage.iter().sum::<i32>());
+}
+
+#[test]
 fn effectless_beg_always_succeeds_without_damage_contact_or_rng() {
     let mut game = game_with_actor_definition(0, "demo.actor.small-kobold", |actor| {
         actor.attack = 1;

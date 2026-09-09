@@ -1408,6 +1408,10 @@ export function createPresentationFormatter(
           source: visibleItemName(event.args.nameKey, event.args.source),
           target: visibleItemNameForKind(event.args.target),
         });
+      case "item-use-crafting-failed":
+        return localization.format("message-item-use-crafting-failed", {
+          target: visibleItemNameForKind(event.args.target),
+        });
       case "item-use-crafting":
         return localization.format("message-item-use-crafting", {
           source: visibleItemName(event.args.nameKey, event.args.source),
@@ -1823,11 +1827,12 @@ export function createPresentationFormatter(
   function visibleItemName(
     displayNameKey: string | undefined,
     fallbackKindId: string | undefined,
+    artifactName?: string | null,
   ): string {
-    if (displayNameKey && localization.hasMessage(localization.locale, displayNameKey)) {
-      return localization.format(displayNameKey);
-    }
-    return contentName(fallbackKindId);
+    const base = displayNameKey && localization.hasMessage(localization.locale, displayNameKey)
+      ? localization.format(displayNameKey)
+      : contentName(fallbackKindId);
+    return artifactName ? `${base} ${artifactName}` : base;
   }
 
   function visibleItemNameForKind(kindId: string | undefined): string {
@@ -1843,7 +1848,7 @@ export function createPresentationFormatter(
 
   function itemPropertyName(nameKey: string | undefined): string {
     if (nameKey && localization.hasMessage(localization.locale, nameKey)) {
-      return localization.format(nameKey);
+      return localization.format(nameKey).replace(/^&\s*/, "").replaceAll("~", "");
     }
     return localization.format("item-unknown-name");
   }
@@ -1876,6 +1881,7 @@ export function createPresentationFormatter(
     light: "equipment-slot-light",
     container: "equipment-slot-container",
     tool: "equipment-slot-tool",
+    quiver: "equipment-slot-quiver",
   };
 
   function equipmentSlotName(slotType: string | undefined): string {

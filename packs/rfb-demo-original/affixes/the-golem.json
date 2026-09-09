@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-golem-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "id": "rfb-legacy.affix.the-golem",
+  "nameKey": "affix-legacy-the-golem-name",
+  "passives": [
+    "see-invisible"
+  ],
+  "resistances": {
+    "poison": "resistant"
+  },
+  "rfbEgo": {
+    "flags": [
+      "CON",
+      "DEC_DEX",
+      "DEC_SPEED",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LIFE",
+      "RES_POIS",
+      "SEE_INVIS",
+      "STR",
+      "XTRA_H_RES"
+    ],
+    "rarity": 12,
+    "sourceIndex": 152,
+    "types": [
+      "boots"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "boots",
+    "legacy-import"
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-valinor-light-description",
+  "deviceGeneration": {
+    "activationOptional": true,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 1,
+        "effect": {
+          "effect": {
+            "damageDice": 2,
+            "damageSides": 15,
+            "radius": 3,
+            "type": "light-area"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-242-lite-area",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-lite-area-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 100
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "rfbValue": 300,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "category": "all",
+                "persistent": true,
+                "radius": 30,
+                "subject": "terrain",
+                "throughWalls": true,
+                "type": "detect"
+              },
+              {
+                "damageDice": 3,
+                "damageSides": 15,
+                "radius": 3,
+                "type": "light-area"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-242-lite-map-area",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-lite-map-area-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [],
+        "rfbValue": 1300,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "category": "all",
+            "persistent": true,
+            "radius": 18,
+            "subject": "terrain",
+            "throughWalls": true,
+            "type": "detect"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-242-enlightenment",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-enlightenment-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "rfbValue": 1000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "grantsVirtues": false,
+            "telepathyDurationDice": 1,
+            "telepathyDurationSides": 30,
+            "telepathyDurationTicks": 25,
+            "type": "clairvoyance"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-242-clairvoyance",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-clairvoyance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "rfbValue": 10000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "id": "rfb-legacy.affix.valinor-light",
+  "nameKey": "affix-legacy-valinor-light-name",
+  "resistances": {
+    "light": "resistant"
+  },
+  "rfbEgo": {
+    "flags": [
+      "RES_LITE",
+      "SPEED",
+      "XTRA_H_RES"
+    ],
+    "rarity": 16,
+    "sourceIndex": 242,
+    "types": [
+      "lite"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "lite"
+  ]
+}

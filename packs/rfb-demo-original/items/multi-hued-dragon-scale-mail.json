@@ -1,41 +1,89 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.multi-hued-dragon-scale-mail",
-  "nameKey": "item-demo-multi-hued-dragon-scale-mail-name",
-  "descriptionKey": "item-demo-multi-hued-dragon-scale-mail-description",
-  "glyph": "[",
-  "generationLevel": 75,
-  "weightTenthsPound": 200,
-  "maxStack": 1,
   "baseValue": 150000,
-  "equipmentSlot": "body",
-  "modifiers": { "defense": 50 },
-  "equipmentBonuses": { "meleeSkill": -2 },
-  "resistances": {
-    "acid": "resistant",
-    "electricity": "resistant",
-    "fire": "resistant",
-    "cold": "resistant",
-    "poison": "resistant"
-  },
-  "elementalDestructionImmunities": ["acid", "electricity", "fire", "cold"],
+  "descriptionKey": "item-demo-multi-hued-dragon-scale-mail-description",
   "deviceGeneration": {
-    "recovery": { "intervalTicks": 700, "energyPerMille": 1000 },
     "activations": [
       {
-        "id": "demo.item-activation.multi-hued-dragon-breath",
-        "nameKey": "item-activation-demo-multi-hued-dragon-breath-name",
-        "weight": 1,
-        "minDepth": 1,
-        "maxDepth": 100,
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
         "deviceCheckDifficulty": 40,
-        "charges": { "minimum": 1, "maximum": 1, "cost": 1 },
-        "target": { "modes": ["direction"], "range": 18, "requiresLineOfEffect": true },
-        "effectProgramId": "demo.effect.multi-hued-dragon-breath"
+        "effectProgramId": "demo.effect.multi-hued-dragon-breath",
+        "id": "demo.item-activation.multi-hued-dragon-breath",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "item-activation-demo-multi-hued-dragon-breath-name",
+        "rfbValue": 10000,
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
       }
-    ]
+    ],
+    "recovery": {
+      "energyPerMille": 1000,
+      "intervalTicks": 700
+    }
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 75,
+  "glyph": "[",
+  "id": "demo.item.multi-hued-dragon-scale-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 50
   },
   "mogaminatorRare": true,
-  "tags": ["activatable", "armor", "equipment", "rfb-compatibility"]
+  "nameKey": "item-demo-multi-hued-dragon-scale-mail-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant",
+    "poison": "resistant"
+  },
+  "rfbBaseKind": {
+    "sourceIndex": 297,
+    "sval": 6,
+    "tval": 38
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "RES_POIS"
+    ],
+    "pval": 0,
+    "toArmor": 10
+  },
+  "tags": [
+    "activatable",
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 200
 }

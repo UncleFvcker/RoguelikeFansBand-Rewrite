@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-giant-description",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "id": "rfb-legacy.affix.the-giant",
+  "nameKey": "affix-legacy-the-giant-name",
+  "passives": [
+    "sustain-strength"
+  ],
+  "rfbEgo": {
+    "flags": [
+      "CON",
+      "DEC_INT",
+      "HIDE_TYPE",
+      "SHOW_MODS",
+      "STR",
+      "SUST_STR"
+    ],
+    "rarity": 6,
+    "sourceIndex": 137,
+    "types": [
+      "gloves"
+    ]
+  },
+  "tags": [
+    "gloves",
+    "legacy-import"
+  ]
+}

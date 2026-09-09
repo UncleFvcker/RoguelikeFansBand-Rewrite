@@ -1,0 +1,141 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-speed-ring-description",
+  "deviceGeneration": {
+    "activationOptional": true,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.haste",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-209-speed",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-speed-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "rfbValue": 3000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "durationBonus": 17,
+          "durationDice": 1,
+          "durationSides": 17,
+          "type": "apply-heroic-speed"
+        },
+        "id": "rfb.device-activation.ego-209-speed-hero",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-speed-hero-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "rfbValue": 5425,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 42
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 99,
+        "effect": {
+          "effect": {
+            "durationDice": 0,
+            "durationSides": 0,
+            "durationTicks": 16,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.light-speed",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-209-light-speed",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-light-speed-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 9990
+        },
+        "rfbBiases": [],
+        "rfbValue": 13000,
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 2
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.speed-ring",
+  "nameKey": "affix-legacy-speed-ring-name",
+  "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "HIDE_TYPE",
+      "SPEED"
+    ],
+    "rarity": 5,
+    "sourceIndex": 209,
+    "types": [
+      "ring"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "ring"
+  ]
+}

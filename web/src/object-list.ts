@@ -41,7 +41,7 @@ export interface ObjectListProjection {
   readonly glyphFor: (contentId: string) => string | undefined;
   readonly localize: (nameKey: string) => string;
   readonly contentName: (contentId: string) => string;
-  readonly visibleItemName: (displayNameKey: string, kindId: string) => string;
+  readonly visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
 }
 
 interface ObjectListDom {
@@ -58,7 +58,7 @@ export class ObjectListPanel {
   readonly #state: AppState;
   readonly #localization: Localization;
   readonly #contentName: (contentId: string) => string;
-  readonly #visibleItemName: (displayNameKey: string, kindId: string) => string;
+  readonly #visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
   readonly #onTravel: (position: Position) => void;
   readonly #dom: ObjectListDom;
   #entries: ObjectListEntry[] = [];
@@ -72,7 +72,7 @@ export class ObjectListPanel {
     state: AppState;
     localization: Localization;
     contentName: (contentId: string) => string;
-    visibleItemName: (displayNameKey: string, kindId: string) => string;
+    visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
     onTravel: (position: Position) => void;
   }) {
     this.#document = options.document;
@@ -377,7 +377,7 @@ export function buildObjectListEntries(options: ObjectListProjection): ObjectLis
     if (action && !action.display) return [];
     const annotations = [item.feeling && options.localize(`item-feeling-${item.feeling}`), item.inscription]
       .filter(Boolean);
-    const name = options.visibleItemName(item.displayNameKey, item.kindId);
+    const name = options.visibleItemName(item.displayNameKey, item.kindId, item.artifactName);
     return [{
       id: `item:${item.id}`,
       category: action?.disposition === "pick-up" ? "needed" : "items",

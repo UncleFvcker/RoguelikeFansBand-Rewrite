@@ -1,48 +1,89 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.soulsword",
-  "nameKey": "item-demo-soulsword-name",
-  "descriptionKey": "item-demo-soulsword-description",
-  "elementalDestructionVulnerabilities": ["acid", "fire"],
-  "glyph": "|",
-  "generationLevel": 40,
-  "weightTenthsPound": 130,
-  "maxStack": 1,
-  "baseValue": 111111,
-  "equipmentSlot": "weapon",
-  "weaponProficiencyBaseItemId": "demo.item.scimitar",
   "artifactGeneration": {
-    "sourceIndex": 89,
+    "affixIds": [
+      "rfb-legacy.affix.artifact-extra-res-or-power"
+    ],
     "baseItemKindId": "demo.item.scimitar",
-    "rarityOneIn": 20,
     "instant": false,
-    "affixIds": ["rfb-legacy.affix.artifact-extra-res-or-power"]
+    "rarityOneIn": 20,
+    "sourceIndex": 89
   },
-  "modifiers": { "intelligence": 3, "wisdom": 3 },
-  "equipmentBonuses": { "lifePercent": 9 },
+  "baseValue": 111111,
+  "descriptionKey": "item-demo-soulsword-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentBonuses": {
+    "lifePercent": 9
+  },
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "glyph": "|",
+  "id": "demo.item.soulsword",
+  "maxStack": 1,
   "meleeProfile": {
     "attacks": 1,
-    "toHit": 9,
-    "toDamage": 11,
     "damageDice": 3,
-    "damageSides": 6
+    "damageSides": 6,
+    "toDamage": 11,
+    "toHit": 9
   },
-  "slays": {
-    "animal": "slay",
-    "evil": "slay",
-    "undead": "slay",
-    "dragon": "slay",
-    "demon": "slay"
+  "modifiers": {
+    "intelligence": 3,
+    "wisdom": 3
   },
+  "nameKey": "item-demo-soulsword-name",
+  "passives": [
+    "see-invisible",
+    "hold-life"
+  ],
   "resistances": {
     "chaos": "resistant",
     "disenchant": "resistant",
-    "nexus": "resistant",
-    "nether": "resistant"
+    "nether": "resistant",
+    "nexus": "resistant"
   },
-  "passives": ["see-invisible", "hold-life"],
   "resistsMonsterDestruction": true,
   "resistsProjectionDestruction": true,
-  "tags": ["artifact", "blessed-weapon", "equipment", "weapon"]
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "HOLD_LIFE",
+      "INT",
+      "LIFE",
+      "RES_CHAOS",
+      "RES_DISEN",
+      "RES_NETHER",
+      "RES_NEXUS",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_ANIMAL",
+      "SLAY_DEMON",
+      "SLAY_DRAGON",
+      "SLAY_EVIL",
+      "SLAY_UNDEAD",
+      "WIS",
+      "XTRA_RES_OR_POWER"
+    ],
+    "pval": 3,
+    "toArmor": 0
+  },
+  "slays": {
+    "animal": "slay",
+    "demon": "slay",
+    "dragon": "slay",
+    "evil": "slay",
+    "undead": "slay"
+  },
+  "tags": [
+    "artifact",
+    "blessed-weapon",
+    "equipment",
+    "weapon"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.scimitar",
+  "weightTenthsPound": 130
 }

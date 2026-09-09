@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::{
-    effect::{STATUS_ANTI_MAGIC, STATUS_BERSERK, STATUS_CONFUSION, STATUS_FEAR},
+    effect::{STATUS_BERSERK, STATUS_CONFUSION, STATUS_FEAR},
     resistance::DamageType,
     save::{item_destruction_element_to_dto, position_from_content},
     state::{ItemInstance, ItemLocation},
@@ -378,7 +378,7 @@ impl Game {
                     if !matches!(source, AbilitySourceDto::Mutation | AbilitySourceDto::Race)
                         || uses_casting_profile_offense
                     {
-                        Self::apply_casting_profile_damage_bonus(
+                        self.apply_casting_profile_damage_bonus(
                             profile,
                             &mut effective_ability,
                             self.progress.level,
@@ -664,7 +664,7 @@ impl Game {
                         AbilitySourceDto::Learned => {
                             learned
                                 && !self.player_has_status_kind(STATUS_CONFUSION)
-                                && !self.player_has_status_kind(STATUS_ANTI_MAGIC)
+                                && !self.player_has_anti_magic()
                                 && !self.player_has_status_kind(STATUS_BERSERK)
                                 && level_available
                                 && resource_available
@@ -901,6 +901,7 @@ impl Game {
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
+                    artifact_name: self.visible_artifact_name(item),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     absorbable: self.item_can_be_absorbed(item),
                     position: *position,
@@ -932,9 +933,11 @@ impl Game {
                     return None;
                 }
                 Some(InventoryItemDto {
+                    bag_capacity: self.visible_item_bag_capacity(item),
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
+                    artifact_name: self.visible_artifact_name(item),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     usable: self.content.item(&item.kind_id).is_some_and(|definition| {
                         definition.use_action.as_ref().is_some_and(|action| {
@@ -977,6 +980,9 @@ impl Game {
                                     _ => None,
                                 })
                         }),
+                    requires_crafting_target: self.inventory_item_use_effect(&item.id).is_some_and(
+                        |(effect, _)| matches!(effect, ItemUseEffectDefinition::CraftItem { .. }),
+                    ),
                     requires_target_glyph: self.inventory_item_use_effect(&item.id).is_some_and(
                         |(effect, _)| matches!(effect, ItemUseEffectDefinition::Genocide { .. }),
                     ),
@@ -997,7 +1003,7 @@ impl Game {
                         .copied()
                         .map(item_destruction_element_to_dto)
                         .collect(),
-                    weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
+                    weight_tenths_pound: self.item_instance_weight(item),
                     equipment_slot: self
                         .content
                         .item(&item.kind_id)
@@ -1032,9 +1038,11 @@ impl Game {
                     return None;
                 };
                 Some(EquipmentItemDto {
+                    bag_capacity: self.visible_item_bag_capacity(item),
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
+                    artifact_name: self.visible_artifact_name(item),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     capture_ball: self
                         .content
@@ -1067,7 +1075,7 @@ impl Game {
                         .copied()
                         .map(item_destruction_element_to_dto)
                         .collect(),
-                    weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
+                    weight_tenths_pound: self.item_instance_weight(item),
                     slot_id: slot_id.clone(),
                     modifiers: self.visible_item_modifiers(item),
                     equipment_bonuses: self.visible_item_equipment_bonuses(item),

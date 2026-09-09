@@ -21,6 +21,18 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-set-of-gauntlets-name",
+  "rfbBaseKind": {
+    "sourceIndex": 229,
+    "sval": 3,
+    "tval": 31
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

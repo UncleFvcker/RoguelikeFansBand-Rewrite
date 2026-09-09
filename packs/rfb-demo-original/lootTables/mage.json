@@ -63,8 +63,5 @@
     "goodCapPercent": 75,
     "greatCapPercent": 20
   },
-  "affixWeights": [
-    { "weight": 9 },
-    { "affixId": "rfb-legacy.affix.protection", "weight": 1 }
-  ]
+  "rfbEgoPolicy": "weapon-digger"
 }

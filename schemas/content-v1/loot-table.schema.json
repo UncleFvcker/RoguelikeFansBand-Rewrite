@@ -153,6 +153,7 @@
       "type": "string"
     },
     "affixWeights": {
+      "default": [],
       "items": {
         "$ref": "#/$defs/LootAffixWeightDefinition"
       },
@@ -233,8 +234,7 @@
     "formatVersion",
     "id",
     "rolls",
-    "entries",
-    "affixWeights"
+    "entries"
   ],
   "title": "LootTableDefinition",
   "type": "object"

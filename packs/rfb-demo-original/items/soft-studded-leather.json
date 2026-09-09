@@ -17,6 +17,18 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-soft-studded-leather-name",
+  "rfbBaseKind": {
+    "sourceIndex": 250,
+    "sval": 5,
+    "tval": 36
+  },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

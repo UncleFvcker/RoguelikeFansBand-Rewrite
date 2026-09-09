@@ -13,6 +13,10 @@
     { "itemKindId": "demo.item.leather-gloves", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 100 },
     { "itemKindId": "demo.item.sealed-amulet", "weight": 1, "quantity": 1, "minDepth": 0, "maxDepth": 100 }
   ],
-  "qualityWeights": [{ "quality": "ordinary", "weight": 1 }],
-  "affixWeights": [{ "weight": 1 }]
+  "qualityPolicy": {
+    "kind": "rfb-depth",
+    "goodCapPercent": 75,
+    "greatCapPercent": 20
+  },
+  "rfbEgoPolicy": "weapon-digger"
 }

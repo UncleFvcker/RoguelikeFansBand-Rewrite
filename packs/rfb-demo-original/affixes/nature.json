@@ -28,6 +28,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "direction",
@@ -63,6 +64,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 500,
         "target": {
           "modes": [
             "self"
@@ -99,6 +101,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 5500,
         "target": {
           "modes": [
             "self"
@@ -144,6 +147,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 1200,
         "target": {
           "modes": [
             "self"
@@ -189,6 +193,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 1200,
         "target": {
           "modes": [
             "self"
@@ -234,6 +239,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 1200,
         "target": {
           "modes": [
             "self"
@@ -269,6 +275,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 500,
         "target": {
           "modes": [
             "direction",
@@ -312,6 +319,7 @@
           "priestly",
           "ranger"
         ],
+        "rfbValue": 500,
         "target": {
           "modes": [
             "self"
@@ -350,6 +358,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "direction",
@@ -372,7 +381,7 @@
           "effect": {
             "durationTicks": 3,
             "intensity": 1,
-            "power": 25,
+            "power": 75,
             "stacking": "replace",
             "statusKindId": "rfb.status.slow",
             "type": "visible-apply-status"
@@ -390,6 +399,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 1125,
         "target": {
           "modes": [
             "self"
@@ -409,6 +419,12 @@
     "regeneration"
   ],
   "rfbEgo": {
+    "flags": [
+      "ESP_ANIMAL",
+      "INT",
+      "REGEN",
+      "SLAY_ANIMAL"
+    ],
     "rarity": 2,
     "sourceIndex": 14,
     "types": [

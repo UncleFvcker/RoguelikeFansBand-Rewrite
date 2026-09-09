@@ -23,7 +23,8 @@
     ],
     "itemTableId": "demo.loot-table.base-items",
     "kind": "items",
-    "minimumQuality": "exceptional"
+    "minimumQuality": "exceptional",
+    "greatOnly": true
   },
   "defense": 13,
   "descriptionKey": "actor-demo-the-nightmare-dragon-description",

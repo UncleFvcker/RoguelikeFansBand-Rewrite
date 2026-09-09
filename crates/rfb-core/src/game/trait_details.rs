@@ -233,7 +233,11 @@ impl Game {
             if !slays.is_empty() || !brands.is_empty() {
                 attacks.push(CharacterAttackTraitDto {
                     source_id: item.id.clone(),
-                    scope: TraitAttackScopeDto::ArmedMelee,
+                    scope: if self.item_melee_profile(item).is_some() {
+                        TraitAttackScopeDto::OwnWeapon
+                    } else {
+                        TraitAttackScopeDto::ArmedMelee
+                    },
                     slays,
                     brands,
                     vampiric: false,
@@ -338,6 +342,18 @@ impl Game {
         let mut passive_values: Vec<_> = [
             EquipmentPassive::Regeneration,
             EquipmentPassive::Warning,
+            EquipmentPassive::RevengeAura,
+            EquipmentPassive::ManaRegeneration,
+            EquipmentPassive::AntiMagic,
+            EquipmentPassive::AntiTeleport,
+            EquipmentPassive::AntiSummoning,
+            EquipmentPassive::NightVision,
+            EquipmentPassive::DualWielding,
+            EquipmentPassive::NoEnchant,
+            EquipmentPassive::ReducedManaCost,
+            EquipmentPassive::EasySpell,
+            EquipmentPassive::AutoIdentify,
+            EquipmentPassive::Blessed,
             EquipmentPassive::EspAnimal,
             EquipmentPassive::EspUndead,
             EquipmentPassive::EspDemon,
@@ -538,10 +554,9 @@ impl Game {
         let active_weapon_id = (!self.player_has_draconian_metamorphosis())
             .then(|| melee.source_item_id.clone())
             .flatten();
-        let mut melee_profiles =
-            self.player_mutation_innate_attack_profiles(stats, melee.source_item_id.as_deref());
+        let mut melee_profiles = self.player_mutation_innate_attack_profiles(stats);
         if !self.player_has_draconian_metamorphosis() {
-            melee_profiles.insert(0, melee.clone());
+            melee_profiles.splice(0..0, self.player_melee_profiles(stats));
         }
         let melee_damage = melee_profiles
             .into_iter()
@@ -581,29 +596,29 @@ impl Game {
             })
             .collect();
         if !self.player_has_draconian_metamorphosis() {
-            let blows =
-                i32::from(melee.attacks) * 100 + i32::from(melee.extra_attack_chance_percent);
+            let profiles = self.player_melee_profiles(stats);
+            let blows = profiles
+                .iter()
+                .map(|profile| {
+                    i32::from(profile.attacks) * 100
+                        + i32::from(profile.extra_attack_chance_percent)
+                })
+                .sum();
             numeric.push(CharacterStatDto {
                 id: "melee-attacks-hundredths".to_owned(),
                 value: complete.then_some(blows),
                 sources: if complete {
-                    let mut sources: Vec<_> = stats
-                        .melee_attacks
-                        .contributions
-                        .iter()
-                        .map(|entry| CharacterStatSourceDto {
-                            source_id: entry.source_id.clone(),
-                            amount: entry.amount.saturating_mul(100),
-                        })
-                        .collect();
-                    let penalty = blows - stats.melee_attacks.value.saturating_mul(100);
-                    if penalty != 0 {
-                        sources.push(CharacterStatSourceDto {
-                            source_id: "rfb-legacy.race.tonberry".to_owned(),
-                            amount: penalty,
-                        });
+                    let mut sources = BTreeMap::<String, i32>::new();
+                    for source in profiles
+                        .into_iter()
+                        .flat_map(|profile| profile.attack_sources)
+                    {
+                        *sources.entry(source.source_id).or_default() += source.amount;
                     }
                     sources
+                        .into_iter()
+                        .map(|(source_id, amount)| CharacterStatSourceDto { source_id, amount })
+                        .collect()
                 } else {
                     Vec::new()
                 },
@@ -623,7 +638,12 @@ impl Game {
             }
         }
         let mut auras = Vec::new();
-        for damage_type in [DamageType::Fire, DamageType::Electricity, DamageType::Cold] {
+        for damage_type in [
+            DamageType::Fire,
+            DamageType::Electricity,
+            DamageType::Cold,
+            DamageType::Shards,
+        ] {
             let mut source_ids: Vec<_> = self
                 .player_elemental_contact_aura_sources(damage_type)
                 .into_iter()
@@ -655,12 +675,15 @@ impl Game {
             let curse = self.visible_item_curse(item);
             let knowledge = self.item_property_knowledge.get(&item.id);
             let mut effects = Vec::new();
-            for effect in [ItemCurseEffectDto::Aggravate, ItemCurseEffectDto::Teleport] {
-                let known = item.rolled_affixes.iter().any(|rolled| {
-                    rolled.curse_effects.contains(&effect)
-                        && knowledge
-                            .is_some_and(|known| known.known_affix_ids.contains(&rolled.affix_id))
-                });
+            for effect in ego::curses::CURSE_EFFECTS.into_iter().flatten() {
+                let known = (self.item_identification(item) == ItemIdentificationDto::Identified
+                    && self.item_has_intrinsic_curse_effect(item, effect))
+                    || item.rolled_affixes.iter().any(|rolled| {
+                        rolled.curse_effects.contains(&effect)
+                            && knowledge.is_some_and(|known| {
+                                known.known_affix_ids.contains(&rolled.affix_id)
+                            })
+                    });
                 if known {
                     let active = (self.item_identification(item)
                         != ItemIdentificationDto::Unexamined)
@@ -702,6 +725,14 @@ impl Game {
                 .filter(|(_, race, _, _)| race.id == "rfb-legacy.race.tomte")
                 .map(|_| self.player_tomte_headgear_excess_weight() > 0),
             active_weapon_id,
+            active_weapon_ids: if self.player_has_draconian_metamorphosis() {
+                Vec::new()
+            } else {
+                self.equipped_melee_weapons()
+                    .iter()
+                    .map(|item| item.id.clone())
+                    .collect()
+            },
             active_launcher_id: projectile.map(|profile| profile.source_item_id),
             auras,
             negatives,

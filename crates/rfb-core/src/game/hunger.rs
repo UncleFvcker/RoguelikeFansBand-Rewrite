@@ -113,10 +113,13 @@ impl Game {
             let mut digestion = u16::try_from(energy_gain(speed))
                 .expect("scheduler energy gain must fit nutrition")
                 .clamp(1, 100);
+            if self.player_has_equipped_curse_effect(ItemCurseEffectDto::FastDigest) {
+                digestion += 30;
+            }
             if self.player_slow_digestion() {
                 digestion = (digestion / 2).max(1);
             }
-            self.nutrition = self.nutrition.saturating_sub(digestion);
+            self.nutrition = self.nutrition.saturating_sub(digestion.clamp(1, 100));
         }
         let after_state = self.nutrition_state();
         if after_state != before_state {

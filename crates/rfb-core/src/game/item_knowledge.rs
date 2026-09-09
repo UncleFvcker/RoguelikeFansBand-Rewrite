@@ -46,14 +46,6 @@ impl Game {
                     .is_some_and(|definition| !definition.tags.iter().any(|tag| tag == "artifact")))
     }
 
-    pub(super) fn visible_item_enchantments(&self, item: &ItemInstance) -> ItemEnchantmentsDto {
-        if self.item_identification(item) == ItemIdentificationDto::Unexamined {
-            ItemEnchantmentsDto::default()
-        } else {
-            item.enchantments
-        }
-    }
-
     pub(super) fn player_has_tomte_item_sensing(&self) -> bool {
         self.character_definitions()
             .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.tomte")
@@ -87,7 +79,7 @@ impl Game {
         // RFB dungeon.c::value_check_aux1(remote = TRUE).
         let broken = definition.base_value == 0;
         let cursed = item.curse.is_some();
-        let feeling = if definition.tags.iter().any(|tag| tag == "artifact") {
+        let feeling = if item.is_artifact(&self.content) {
             if cursed || broken {
                 ItemFeelingDto::Terrible
             } else {
@@ -183,6 +175,18 @@ impl Game {
         }
     }
 
+    pub(super) fn visible_artifact_name(&self, item: &ItemInstance) -> Option<String> {
+        (self.item_identification(item) == ItemIdentificationDto::Identified)
+            .then(|| item.artifact_name.clone())
+            .flatten()
+    }
+
+    pub(super) fn visible_item_bag_capacity(&self, item: &ItemInstance) -> Option<u16> {
+        (self.item_identification(item) == ItemIdentificationDto::Identified)
+            .then(|| super::inventory::item_bag_capacity(&self.content, item))
+            .flatten()
+    }
+
     pub(super) fn visible_item_modifiers(&self, item: &ItemInstance) -> StatModifiersDto {
         if !self.item_base_properties_known(item) {
             return StatModifiersDto::default();
@@ -221,7 +225,7 @@ impl Game {
                 }
             },
         );
-        if self.item_identification(item) != ItemIdentificationDto::Unexamined {
+        if known.is_some_and(|knowledge| knowledge.identified) {
             add_stat_modifiers_dto(&mut modifiers, &item.intrinsic_properties.modifiers);
         }
         for rolled in &item.rolled_affixes {
@@ -253,7 +257,7 @@ impl Game {
                 merge_equipment_bonuses(&mut bonuses, &affix.equipment_bonuses);
             }
         }
-        if self.item_identification(item) != ItemIdentificationDto::Unexamined {
+        if known.is_some_and(|knowledge| knowledge.identified) {
             merge_equipment_bonuses(&mut bonuses, &item.intrinsic_properties.equipment_bonuses);
         }
         for rolled in &item.rolled_affixes {
@@ -280,7 +284,7 @@ impl Game {
                 passives.extend(&affix.passives);
             }
         }
-        if self.item_identification(item) != ItemIdentificationDto::Unexamined {
+        if known.is_some_and(|knowledge| knowledge.identified) {
             passives.extend(&item.intrinsic_properties.passives);
         }
         for rolled in &item.rolled_affixes {
@@ -351,13 +355,38 @@ impl Game {
             .flatten()
     }
 
+    pub(super) fn visible_item_enchantments(&self, item: &ItemInstance) -> ItemEnchantmentsDto {
+        if self.item_identification(item) == ItemIdentificationDto::Identified {
+            item.enchantments
+        } else {
+            Default::default()
+        }
+    }
+
+    fn visible_item_combat_state(&self, item: &ItemInstance) -> ItemInstance {
+        let mut visible = item.clone();
+        if self.item_identification(item) != ItemIdentificationDto::Identified {
+            visible.enchantments = Default::default();
+            visible.intrinsic_properties = Default::default();
+            visible.intrinsic_melee_damage_dice = None;
+            visible.intrinsic_weapon_traits.clear();
+            let known = self.item_property_knowledge.get(&item.id);
+            visible
+                .affix_ids
+                .retain(|id| known.is_some_and(|knowledge| knowledge.known_affix_ids.contains(id)));
+            visible
+                .rolled_affixes
+                .retain(|roll| visible.affix_ids.contains(&roll.affix_id));
+        }
+        visible
+    }
+
     pub(super) fn visible_item_melee_profile(
         &self,
         item: &ItemInstance,
     ) -> Option<AttackProfileDto> {
-        (self.item_base_properties_known(item)
-            && self.item_identification(item) != ItemIdentificationDto::Unexamined)
-            .then(|| self.item_melee_profile(item))
+        (self.item_base_properties_known(item))
+            .then(|| self.item_melee_profile(&self.visible_item_combat_state(item)))
             .flatten()
     }
 
@@ -397,13 +426,16 @@ impl Game {
                     ResistanceLevel::from(*level),
                 );
             }
-            if self.item_identification(item) != ItemIdentificationDto::Unexamined {
-                for (damage_type, level) in &item.intrinsic_properties.resistances {
-                    record(
-                        DamageType::from(*damage_type),
-                        ResistanceLevel::from(*level),
-                    );
-                }
+            for (damage_type, level) in item
+                .intrinsic_properties
+                .resistances
+                .iter()
+                .filter(|_| self.item_identification(item) == ItemIdentificationDto::Identified)
+            {
+                record(
+                    DamageType::from(*damage_type),
+                    ResistanceLevel::from(*level),
+                );
             }
         }
         let known = self.item_property_knowledge.get(&item.id);
@@ -438,7 +470,7 @@ impl Game {
             && let Some(definition) = self.content.item(&item.kind_id)
         {
             immunities.extend(definition.status_immunities.iter().cloned());
-            if self.item_identification(item) != ItemIdentificationDto::Unexamined {
+            if self.item_identification(item) == ItemIdentificationDto::Identified {
                 immunities.extend(item.intrinsic_properties.status_immunities.iter().cloned());
             }
         }
@@ -478,7 +510,7 @@ impl Game {
             && let Some(definition) = self.content.item(&item.kind_id)
         {
             record(&definition.slays, &definition.brands);
-            if self.item_identification(item) != ItemIdentificationDto::Unexamined {
+            if self.item_identification(item) == ItemIdentificationDto::Identified {
                 record(
                     &item.intrinsic_properties.slays,
                     &item.intrinsic_properties.brands,
@@ -524,9 +556,8 @@ impl Game {
         &self,
         item: &ItemInstance,
     ) -> Option<ProjectileProfileDto> {
-        (self.item_base_properties_known(item)
-            && self.item_identification(item) != ItemIdentificationDto::Unexamined)
-            .then(|| self.item_projectile_profile(item))
+        (self.item_base_properties_known(item))
+            .then(|| self.item_projectile_profile(&self.visible_item_combat_state(item)))
             .flatten()
     }
 
@@ -534,9 +565,8 @@ impl Game {
         &self,
         item: &ItemInstance,
     ) -> Option<ThrowProfileDto> {
-        (self.item_base_properties_known(item)
-            && self.item_identification(item) != ItemIdentificationDto::Unexamined)
-            .then(|| self.item_throw_profile(item))
+        (self.item_base_properties_known(item))
+            .then(|| self.item_throw_profile(&self.visible_item_combat_state(item)))
             .flatten()
     }
 }

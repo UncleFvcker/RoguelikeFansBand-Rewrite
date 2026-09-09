@@ -1,36 +1,103 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::*;
+#[cfg(test)]
+#[path = "item_curses/tests.rs"]
+mod consumer_tests;
+mod periodic;
+mod ty_curse;
 
 const EQUIPMENT_CURSE_INTERVAL_TICKS: u32 = 10;
+#[cfg(test)]
 const RANDOM_TELEPORT_ONE_IN: u64 = 200;
 
-fn rfb_ego_intrinsic_curse_effect(source_index: Option<u32>, effect: ItemCurseEffectDto) -> bool {
-    matches!(
-        (source_index, effect),
-        (Some(11 | 21 | 27), ItemCurseEffectDto::Aggravate)
-            | (Some(15), ItemCurseEffectDto::Teleport)
-    )
-}
-
 impl Game {
+    fn item_has_rfb_flag(&self, item: &ItemInstance, flag: &str) -> bool {
+        item.intrinsic_properties.rfb_flags.contains(flag)
+            || item
+                .rolled_affixes
+                .iter()
+                .any(|roll| roll.properties.rfb_flags.contains(flag))
+            || self
+                .content
+                .item(&item.kind_id)
+                .and_then(|kind| kind.rfb_value.as_ref())
+                .is_some_and(|value| value.flags.contains(flag))
+            || item.affix_ids.iter().any(|id| {
+                self.content
+                    .affix(id)
+                    .and_then(|affix| affix.rfb_ego.as_ref())
+                    .is_some_and(|ego| ego.flags.contains(flag))
+            })
+    }
+
+    pub(super) fn item_has_intrinsic_curse_effect(
+        &self,
+        item: &ItemInstance,
+        effect: ItemCurseEffectDto,
+    ) -> bool {
+        let flag = match effect {
+            ItemCurseEffectDto::Aggravate => "AGGRAVATE",
+            ItemCurseEffectDto::Teleport => "TELEPORT",
+            ItemCurseEffectDto::TyCurse => "TY_CURSE",
+            ItemCurseEffectDto::DrainExperience => "DRAIN_EXP",
+            _ => return false,
+        };
+        self.item_has_rfb_flag(item, flag)
+    }
+
+    pub(super) fn item_has_heavy_curse(&self, item: &ItemInstance) -> bool {
+        match item.curse {
+            Some(ItemCurseSeverityDto::Heavy) => true,
+            Some(ItemCurseSeverityDto::Permanent) => {
+                item.intrinsic_properties.rfb_heavy_curse
+                    || item
+                        .rolled_affixes
+                        .iter()
+                        .any(|roll| roll.properties.rfb_heavy_curse)
+                    || self.item_has_rfb_flag(item, "HEAVY_CURSE")
+            }
+            _ => false,
+        }
+    }
+
+    pub(super) fn player_has_equipped_curse_effect(&self, effect: ItemCurseEffectDto) -> bool {
+        self.items
+            .iter()
+            .any(|item| self.item_has_active_equipped_curse_effect(item, effect))
+    }
+
+    pub(super) fn equipped_curse_penalty(
+        &self,
+        item: &ItemInstance,
+        effect: ItemCurseEffectDto,
+        normal: i32,
+        heavy: i32,
+    ) -> i32 {
+        if self.item_has_active_equipped_curse_effect(item, effect) {
+            if self.item_has_heavy_curse(item) {
+                heavy
+            } else {
+                normal
+            }
+        } else {
+            0
+        }
+    }
+
     pub(super) fn item_has_active_equipped_curse_effect(
         &self,
         item: &ItemInstance,
         effect: ItemCurseEffectDto,
     ) -> bool {
         matches!(item.location, ItemLocation::Equipped { .. })
-            && item.rolled_affixes.iter().any(|rolled| {
-                rolled.curse_effects.contains(&effect)
-                    && (item.curse.is_some()
-                        || rfb_ego_intrinsic_curse_effect(
-                            self.content
-                                .affix(&rolled.affix_id)
-                                .and_then(|affix| affix.rfb_ego.as_ref())
-                                .map(|ego| ego.source_index),
-                            effect,
-                        ))
-            })
+            && (self.item_has_intrinsic_curse_effect(item, effect)
+                || (item.curse.is_some()
+                    && (item.intrinsic_curse_effects.contains(&effect)
+                        || item
+                            .rolled_affixes
+                            .iter()
+                            .any(|rolled| rolled.curse_effects.contains(&effect)))))
     }
 
     pub(super) fn player_has_equipped_aggravation(&self) -> bool {
@@ -71,38 +138,57 @@ impl Game {
         &mut self,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
-    ) {
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         if !self
             .world_tick
             .is_multiple_of(EQUIPMENT_CURSE_INTERVAL_TICKS)
         {
-            return;
+            return Ok(());
         }
-        let cursed_teleport = self.items.iter().any(|item| {
-            item.curse.is_some()
-                && self.item_has_active_equipped_curse_effect(item, ItemCurseEffectDto::Teleport)
+        let intrinsic_teleport = self.items.iter().any(|item| {
+            matches!(item.location, ItemLocation::Equipped { .. })
+                && item.curse.is_none()
+                && self.item_has_intrinsic_curse_effect(item, ItemCurseEffectDto::Teleport)
         });
-        let intrinsic_teleport = !cursed_teleport
-            && self.items.iter().any(|item| {
-                item.inscription
-                    .as_deref()
-                    .is_none_or(|inscription| !inscription.contains('.'))
-                    && self
-                        .item_has_active_equipped_curse_effect(item, ItemCurseEffectDto::Teleport)
-            });
-        if (!cursed_teleport && !intrinsic_teleport)
-            || self.rng.bounded(RANDOM_TELEPORT_ONE_IN) != 0
+        if intrinsic_teleport && ego::one_in(&mut self.rng, 200) {
+            let mut chosen = None;
+            let mut count = 0;
+            for (index, item) in self.items.iter().enumerate() {
+                if matches!(item.location, ItemLocation::Equipped { .. })
+                    && self.item_has_intrinsic_curse_effect(item, ItemCurseEffectDto::Teleport)
+                    && item
+                        .inscription
+                        .as_deref()
+                        .is_none_or(|text| !text.contains('.'))
+                {
+                    count += 1;
+                    if ego::one_in(&mut self.rng, count) {
+                        chosen = Some(index);
+                    }
+                }
+            }
+            if chosen.is_some() {
+                self.curse_teleport(50, events, changed);
+            }
+        }
+        if let Some(source) = self
+            .items
+            .iter()
+            .find(|item| {
+                self.item_has_active_equipped_curse_effect(item, ItemCurseEffectDto::TyCurse)
+            })
+            .map(|item| item.kind_id.clone())
+            && self.rng.bounded(200) == 0
         {
-            return;
+            self.resolve_equipped_ty_curse(&source, events, changed, removed_entities)?;
+            changed.insert(self.player.position);
+            if self.player_is_dead() {
+                return Ok(());
+            }
         }
-
-        let candidates = self.random_teleport_candidates(if cursed_teleport { 40 } else { 50 });
-        if candidates.is_empty() {
-            return;
-        }
-        let index = usize::try_from(self.rng.bounded(candidates.len() as u64))
-            .expect("bounded equipment teleport candidate index must fit usize");
-        events.extend(self.relocate_player(candidates[index], changed));
+        self.process_other_equipped_curses(events, changed);
+        Ok(())
     }
 }
 
@@ -254,26 +340,20 @@ mod tests {
 
     #[test]
     fn intrinsic_ego_drawbacks_survive_without_a_curse_severity() {
-        assert!(rfb_ego_intrinsic_curse_effect(
-            Some(11),
-            ItemCurseEffectDto::Aggravate
-        ));
-        assert!(rfb_ego_intrinsic_curse_effect(
-            Some(21),
-            ItemCurseEffectDto::Aggravate
-        ));
-        assert!(rfb_ego_intrinsic_curse_effect(
-            Some(27),
-            ItemCurseEffectDto::Aggravate
-        ));
-        assert!(rfb_ego_intrinsic_curse_effect(
-            Some(15),
-            ItemCurseEffectDto::Teleport
-        ));
-        assert!(!rfb_ego_intrinsic_curse_effect(
-            Some(12),
-            ItemCurseEffectDto::Aggravate
-        ));
+        let mut game = Game::new_with_build(2, "demo.build.warrior").unwrap();
+        let index = equipped_weapon_index(&game);
+        for (flag, effect) in [
+            ("AGGRAVATE", ItemCurseEffectDto::Aggravate),
+            ("TELEPORT", ItemCurseEffectDto::Teleport),
+            ("TY_CURSE", ItemCurseEffectDto::TyCurse),
+            ("DRAIN_EXP", ItemCurseEffectDto::DrainExperience),
+        ] {
+            game.items[index].intrinsic_properties.rfb_flags = BTreeSet::from([flag.to_owned()]);
+            game.items[index].curse = None;
+            assert!(game.item_has_active_equipped_curse_effect(&game.items[index], effect));
+            game.items[index].intrinsic_properties.rfb_flags.clear();
+            assert!(!game.item_has_active_equipped_curse_effect(&game.items[index], effect));
+        }
     }
 
     #[test]
@@ -330,12 +410,14 @@ mod tests {
         game.rng = RfbRng::seeded(seed);
         game.world_tick = 9;
         let draws_before = game.rng_draw_counter();
-        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new());
+        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
         assert_eq!(game.player.position, Position { x: 3, y: 3 });
         assert_eq!(game.rng_draw_counter(), draws_before);
 
         game.world_tick = 10;
-        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new());
+        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
         assert_ne!(game.player.position, Position { x: 3, y: 3 });
 
         game.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
@@ -343,7 +425,8 @@ mod tests {
         game.rng = RfbRng::seeded(seed);
         game.world_tick = 20;
         let draws_before = game.rng_draw_counter();
-        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new());
+        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
         assert_eq!(game.player.position, Position { x: 3, y: 3 });
         assert_eq!(game.rng_draw_counter(), draws_before);
     }

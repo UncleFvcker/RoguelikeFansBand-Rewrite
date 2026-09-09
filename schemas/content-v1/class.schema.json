@@ -919,6 +919,13 @@
     "descriptionKey": {
       "type": "string"
     },
+    "dualWieldingMaximum": {
+      "default": 0,
+      "format": "uint16",
+      "maximum": 65535,
+      "minimum": 0,
+      "type": "integer"
+    },
     "experiencePercent": {
       "default": 100,
       "format": "uint16",

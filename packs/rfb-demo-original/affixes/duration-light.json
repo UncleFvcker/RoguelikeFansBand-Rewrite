@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-duration-light-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 30,
+  "id": "rfb-legacy.affix.duration-light",
+  "nameKey": "affix-legacy-duration-light-name",
+  "rfbEgo": {
+    "flags": [
+      "AWARE"
+    ],
+    "rarity": 1,
+    "sourceIndex": 237,
+    "types": [
+      "lite"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "lite"
+  ]
+}

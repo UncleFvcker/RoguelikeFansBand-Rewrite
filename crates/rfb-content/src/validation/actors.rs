@@ -204,6 +204,9 @@ pub(super) fn validate_actors(
             return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
         }
         if let Some(drop) = &actor.death_drop {
+            if drop.great_only && drop.minimum_quality != crate::ItemQuality::Exceptional {
+                return Err(ContentError::InvalidActorLootTable(actor.id.clone()));
+            }
             let allows_items = matches!(
                 drop.kind,
                 MonsterDropKindDefinition::Items | MonsterDropKindDefinition::ItemsAndGold

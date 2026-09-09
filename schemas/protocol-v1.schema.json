@@ -7409,6 +7409,12 @@
             "null"
           ]
         },
+        "activeWeaponIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "attacks": {
           "type": "array",
           "items": {
@@ -7926,10 +7932,18 @@
           "format": "int32",
           "default": 0
         },
+        "magicResistancePercent": {
+          "type": "integer",
+          "format": "int32"
+        },
         "meleeAttacks": {
           "type": "integer",
           "format": "int32",
           "default": 0
+        },
+        "meleeAttacksDeltaPercent": {
+          "type": "integer",
+          "format": "int32"
         },
         "meleeDamage": {
           "type": "integer",
@@ -7968,6 +7982,10 @@
           "format": "int32",
           "default": 0
         },
+        "spellCapacityBonus": {
+          "type": "integer",
+          "format": "int32"
+        },
         "stealthSkill": {
           "type": "integer",
           "format": "int32",
@@ -7977,6 +7995,10 @@
           "type": "integer",
           "format": "int32",
           "default": 0
+        },
+        "weaponDiceBonus": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -7992,6 +8014,21 @@
               "type": "null"
             }
           ]
+        },
+        "artifactName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bagCapacity": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
         },
         "brands": {
           "type": "array",
@@ -8223,6 +8260,23 @@
         "levitation",
         "warning",
         "slow-digestion",
+        "reflects-bolts",
+        "fire-aura",
+        "cold-aura",
+        "electricity-aura",
+        "revenge-aura",
+        "mana-regeneration",
+        "anti-magic",
+        "anti-teleport",
+        "anti-summoning",
+        "night-vision",
+        "dual-wielding",
+        "no-enchant",
+        "shards-aura",
+        "reduced-mana-cost",
+        "easy-spell",
+        "auto-identify",
+        "blessed",
         "esp-animal",
         "esp-undead",
         "esp-demon",
@@ -10479,6 +10533,12 @@
     "HomeItemDto": {
       "type": "object",
       "properties": {
+        "artifactName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "capturedActor": {
           "anyOf": [
             {
@@ -10582,6 +10642,21 @@
               "type": "null"
             }
           ]
+        },
+        "artifactName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bagCapacity": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
         },
         "brands": {
           "type": "array",
@@ -10762,6 +10837,9 @@
           "format": "uint32",
           "minimum": 0
         },
+        "requiresCraftingTarget": {
+          "type": "boolean"
+        },
         "requiresRechargeTargets": {
           "type": "boolean"
         },
@@ -10892,7 +10970,23 @@
         "teleport",
         "by-curse",
         "danger",
-        "crappy-mutation"
+        "crappy-mutation",
+        "slow-regeneration",
+        "add-light-curse",
+        "call-animal",
+        "cowardice",
+        "low-melee",
+        "low-armor",
+        "low-magic",
+        "fast-digest",
+        "drain-hp",
+        "drain-mana",
+        "catlike",
+        "drain-pack",
+        "allergy",
+        "open-wounds",
+        "normality",
+        "low-device"
       ]
     },
     "ItemCurseRemovalResolutionDto": {
@@ -10985,6 +11079,12 @@
       "properties": {
         "absorbable": {
           "type": "boolean"
+        },
+        "artifactName": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "curse": {
           "anyOf": [
@@ -13176,6 +13276,12 @@
             }
           ]
         },
+        "artifactName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "capturedActor": {
           "anyOf": [
             {
@@ -13697,6 +13803,28 @@
           "required": [
             "type",
             "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "crafting-item"
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "quantity"
           ]
         },
         {
