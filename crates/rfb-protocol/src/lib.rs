@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.236";
+pub const PROTOCOL_VERSION: &str = "1.237";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 6;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 7;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 8;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -259,6 +259,9 @@ pub enum GameCommand {
     EatAtInn {
         facility_id: String,
     },
+    AskReputationAtInn {
+        facility_id: String,
+    },
     IdentifyAllAtFacility {
         facility_id: String,
     },
@@ -267,6 +270,8 @@ pub enum GameCommand {
         service: FacilityServiceKindDto,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         item_id: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        enchantment_steps: Option<u8>,
     },
     UseBountyOffice {
         facility_id: String,
@@ -3475,6 +3480,7 @@ pub struct PlayerDto {
     pub max_hp: i32,
     #[serde(default)]
     pub gold: u32,
+    pub fame: u16,
     #[serde(default = "default_player_nutrition")]
     pub nutrition: u16,
     pub fasting: bool,
@@ -4195,6 +4201,8 @@ pub struct ShopDto {
     pub inn_stay_cost: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inn_food_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inn_reputation_cost: Option<u32>,
     #[serde(default)]
     pub inn_travel_destinations: Vec<InnTravelDestinationDto>,
     pub visited: bool,
@@ -4449,7 +4457,16 @@ pub enum FacilityServiceKindDto {
 #[serde(rename_all = "camelCase")]
 pub struct FacilityServiceTargetDto {
     pub item_id: String,
+    pub choices: Vec<FacilityEnchantmentChoiceDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct FacilityEnchantmentChoiceDto {
+    pub steps: u8,
     pub cost: u32,
+    pub result: ItemEnchantmentsDto,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4785,6 +4802,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(FacilityMembershipDto);
     push_declaration!(FacilityServiceKindDto);
     push_declaration!(FacilityServiceTargetDto);
+    push_declaration!(FacilityEnchantmentChoiceDto);
     push_declaration!(FacilityServiceDto);
     push_declaration!(BountyOfficeActionDto);
     push_declaration!(BountyDailyTargetDto);
@@ -4839,6 +4857,7 @@ pub struct PlayerSaveDto {
     pub hp: i32,
     #[serde(default, skip_serializing_if = "is_zero_u32")]
     pub gold: u32,
+    pub fame: u16,
     #[serde(default = "default_player_nutrition")]
     pub nutrition: u16,
     pub fasting: bool,
@@ -5765,6 +5784,7 @@ mod tests {
                 facility_id: "demo.town-facility.anambar-mammon-temple".to_owned(),
                 service: FacilityServiceKindDto::Heal,
                 item_id: None,
+                enchantment_steps: None,
             },
             GameCommand::UseBountyOffice {
                 facility_id: "demo.town-facility.outpost-bounty-office".to_owned(),
@@ -5942,6 +5962,7 @@ mod tests {
                 hp: 8,
                 max_hp: 14,
                 gold: 0,
+                fame: 0,
                 nutrition: PLAYER_NUTRITION_BIRTH,
                 fasting: false,
                 nutrition_state: NutritionStateDto::Normal,
@@ -6211,6 +6232,7 @@ mod tests {
             position: Position { x: 0, y: 0 },
             hp: 10,
             gold: 0,
+            fame: 0,
             nutrition: PLAYER_NUTRITION_BIRTH,
             fasting: false,
             base_max_hp: 10,

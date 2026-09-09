@@ -22,6 +22,7 @@
     "activations": [
       {
         "id": "demo.item-activation.olog-hai-berserk",
+        "equipmentValue": 2252,
         "nameKey": "item-activation-demo-olog-hai-berserk-name",
         "weight": 1,
         "minDepth": 1,

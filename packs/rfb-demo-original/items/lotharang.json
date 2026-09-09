@@ -32,6 +32,7 @@
     "activations": [
       {
         "id": "demo.item-activation.lotharang-heal",
+        "equipmentValue": 580,
         "nameKey": "item-activation-demo-lotharang-heal-name",
         "weight": 1,
         "minDepth": 1,

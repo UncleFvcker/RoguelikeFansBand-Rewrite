@@ -405,6 +405,15 @@
         "effectProgramId": {
           "type": "string"
         },
+        "equipmentValue": {
+          "default": null,
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "id": {
           "type": "string"
         },
@@ -969,6 +978,13 @@
         "string",
         "null"
       ]
+    },
+    "armorEnchantment": {
+      "default": 0,
+      "format": "int16",
+      "maximum": 32767,
+      "minimum": -32768,
+      "type": "integer"
     },
     "artifactGeneration": {
       "anyOf": [

@@ -198,6 +198,7 @@ mod tests {
                 vault_cells: vec![false],
             },
             player: PlayerSaveDto {
+                fame: 0,
                 id: "demo.player".to_owned(),
                 name: "Hero".to_owned(),
                 kind_id: "demo.actor.explorer".to_owned(),

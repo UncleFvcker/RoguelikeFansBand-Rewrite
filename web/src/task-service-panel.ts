@@ -196,11 +196,13 @@ export class TaskServicePanel {
           const select = this.#dom.list.querySelector<HTMLSelectElement>(
             `select[data-facility-service="${facilityService}"]`,
           );
+          const option = select?.selectedOptions[0];
           void this.#dispatch({
             type: "use-facility-service",
             facilityId: service.id,
             service: facilityService,
-            itemId: select?.value || undefined,
+            itemId: option?.dataset.itemId,
+            enchantmentSteps: option ? Number(option.dataset.steps) : undefined,
           });
         }
       } else if (action === "rename") {
@@ -512,14 +514,23 @@ export class TaskServicePanel {
         for (const target of facilityService.targets ?? []) {
           const item = carriedItems.get(target.itemId);
           if (!item) continue;
-          const option = document.createElement("option");
-          option.value = target.itemId;
-          option.textContent = this.#localization.format("facility-service-target-price", {
-            target: this.#visibleItemName(item.displayNameKey, item.kindId),
-            cost: target.cost,
-          });
-          select.append(option);
+          for (const choice of target.choices) {
+            const option = document.createElement("option");
+            option.value = `${target.itemId}:${choice.steps}`;
+            option.dataset.itemId = target.itemId;
+            option.dataset.steps = String(choice.steps);
+            option.textContent = this.#localization.format("facility-enchantment-choice", {
+              target: this.#visibleItemName(item.displayNameKey, item.kindId),
+              steps: choice.steps,
+              hit: choice.result.toHit,
+              damage: choice.result.toDamage,
+              armor: choice.result.toArmor,
+              cost: choice.cost,
+            });
+            select.append(option);
+          }
         }
+        select.disabled = this.#state.busy;
         row.append(select);
       }
       const button = document.createElement("button");

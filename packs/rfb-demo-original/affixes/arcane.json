@@ -21,6 +21,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-clairvoyance",
+        "equipmentValue": 9800,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -56,6 +57,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-teleport-away",
+        "equipmentValue": 1590,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -92,6 +94,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-dimension-door",
+        "equipmentValue": 9800,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -128,6 +131,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-recall",
+        "equipmentValue": 980,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -162,6 +166,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-recharge-from-device",
+        "equipmentValue": 2250,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -197,6 +202,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-recharge-from-player",
+        "equipmentValue": 4275,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -233,6 +239,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-identify-full",
+        "equipmentValue": 4400,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -266,6 +273,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-probing",
+        "equipmentValue": 1060,
         "maxDepth": 92,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -303,6 +311,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-rune-explosive",
+        "equipmentValue": 490,
         "maxDepth": 92,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -337,6 +346,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-banish-all",
+        "equipmentValue": 10290,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -371,6 +381,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-telekinesis",
+        "equipmentValue": 1372,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -408,6 +419,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-alchemy",
+        "equipmentValue": 1960,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -441,6 +453,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-self-knowledge",
+        "equipmentValue": 1875,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -480,6 +493,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-speed",
+        "equipmentValue": 2760,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -519,6 +533,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-telepathy",
+        "equipmentValue": 3220,
         "maxDepth": 92,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -555,6 +570,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-invulnerability",
+        "equipmentValue": 10500,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -600,6 +616,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-summon-monsters",
+        "equipmentValue": 750,
         "maxDepth": 92,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -645,6 +662,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-summon-phantasmal",
+        "equipmentValue": 920,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -690,6 +708,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-summon-elemental",
+        "equipmentValue": 920,
         "maxDepth": 92,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -735,6 +754,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-summon-dragon",
+        "equipmentValue": 1125,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -770,6 +790,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-charm-monster",
+        "equipmentValue": 735,
         "maxDepth": 92,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -803,6 +824,7 @@
           "type": "restore-resource-full"
         },
         "id": "rfb.device-activation.ego-6-biased-restore-mana",
+        "equipmentValue": 7500,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -835,6 +857,7 @@
           "type": "restore-resource"
         },
         "id": "rfb.device-activation.ego-6-biased-clarity",
+        "equipmentValue": 2065,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -868,6 +891,7 @@
           "type": "restore-resource"
         },
         "id": "rfb.device-activation.ego-6-biased-great-clarity",
+        "equipmentValue": 4750,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -907,6 +931,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-bolt-water",
+        "equipmentValue": 3238,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -947,6 +972,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-bolt-mana",
+        "equipmentValue": 4782,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -987,6 +1013,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-bolt-ice",
+        "equipmentValue": 3449,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -1029,6 +1056,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-ball-water",
+        "equipmentValue": 7524,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -1070,6 +1098,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-ball-mana",
+        "equipmentValue": 10428,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -1111,6 +1140,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-breathe-water",
+        "equipmentValue": 4250,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -1152,6 +1182,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-mana-storm",
+        "equipmentValue": 14175,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",
@@ -1190,6 +1221,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-6-biased-stasis-monsters",
+        "equipmentValue": 3780,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-arcane-name",

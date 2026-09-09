@@ -926,10 +926,10 @@ fn enchantment_artifact_and_ammunition_pile_gates_follow_original_order() {
     let artifact_seed = (0..1_000).find(|seed| {
         let mut ordinary = skill_check_game(*seed, "demo.build.warrior");
         ordinary.rng = RfbRng::seeded(*seed);
-        let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 1, false, false);
+        let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 1, false, false, false);
         let mut artifact = skill_check_game(*seed, "demo.build.warrior");
         artifact.rng = RfbRng::seeded(*seed);
-        let artifact = artifact.resolve_item_enchantment_component(0, 1, 1, false, true);
+        let artifact = artifact.resolve_item_enchantment_component(0, 1, 1, false, true, false);
         ordinary.successes == 1 && artifact.successes == 0
     });
     assert_eq!(artifact_seed, Some(0));
@@ -937,10 +937,11 @@ fn enchantment_artifact_and_ammunition_pile_gates_follow_original_order() {
     let ammunition_seed = (0..1_000).find(|seed| {
         let mut ordinary = skill_check_game(*seed, "demo.build.warrior");
         ordinary.rng = RfbRng::seeded(*seed);
-        let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 20, false, false);
+        let ordinary = ordinary.resolve_item_enchantment_component(0, 1, 20, false, false, false);
         let mut ammunition = skill_check_game(*seed, "demo.build.warrior");
         ammunition.rng = RfbRng::seeded(*seed);
-        let ammunition = ammunition.resolve_item_enchantment_component(0, 1, 20, true, false);
+        let ammunition =
+            ammunition.resolve_item_enchantment_component(0, 1, 20, true, false, false);
         ordinary.successes == 0 && ammunition.successes == 1
     });
     assert_eq!(ammunition_seed, Some(0));

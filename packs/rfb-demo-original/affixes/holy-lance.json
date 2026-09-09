@@ -22,6 +22,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-enlightenment",
+        "equipmentValue": 1060,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -60,6 +61,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-detect-evil",
+        "equipmentValue": 550,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -97,6 +99,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-rune-protection",
+        "equipmentValue": 3750,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -130,6 +133,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-banish-evil",
+        "equipmentValue": 4900,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -169,6 +173,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-prot-evil",
+        "equipmentValue": 2640,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -217,6 +222,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-holy-grail",
+        "equipmentValue": 3750,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -256,6 +262,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-heroism",
+        "equipmentValue": 2082,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -302,6 +309,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-summon-angel",
+        "equipmentValue": 3750,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -337,6 +345,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-restore-stats",
+        "equipmentValue": 3750,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -372,6 +381,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-restore-exp",
+        "equipmentValue": 750,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -407,6 +417,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-restoring",
+        "equipmentValue": 4500,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -446,6 +457,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-heal",
+        "equipmentValue": 731,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -505,6 +517,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-curing",
+        "equipmentValue": 880,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -564,6 +577,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-heal-curing",
+        "equipmentValue": 8407,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -632,6 +646,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-heal-curing-hero",
+        "equipmentValue": 3937,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -671,6 +686,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-cure-fear",
+        "equipmentValue": 735,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -714,6 +730,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-cure-fear-pois",
+        "equipmentValue": 1225,
         "maxDepth": 92,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -748,6 +765,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-remove-curse",
+        "equipmentValue": 880,
         "maxDepth": 92,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -782,6 +800,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-remove-all-curse",
+        "equipmentValue": 3750,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -814,6 +833,7 @@
           "type": "restore-resource"
         },
         "id": "rfb.device-activation.ego-26-biased-clarity",
+        "equipmentValue": 2065,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -847,6 +867,7 @@
           "type": "restore-resource"
         },
         "id": "rfb.device-activation.ego-26-biased-great-clarity",
+        "equipmentValue": 4750,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -891,6 +912,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-dispel-evil",
+        "equipmentValue": 1320,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -943,6 +965,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-dispel-evil-hero",
+        "equipmentValue": 3444,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -986,6 +1009,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-dispel-undead",
+        "equipmentValue": 2323,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",
@@ -1049,6 +1073,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-26-biased-holiness",
+        "equipmentValue": 6720,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-holy-lance-name",

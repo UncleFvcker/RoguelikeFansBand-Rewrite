@@ -1116,3 +1116,7 @@ teleport-level-dungeon-option = { $name } (recall depth: { $depth })
 teleport-level-depth = Choose destination depth
 teleport-level-depth-option = Depth { $depth }
 action-teleport-level = Confirm dungeon level teleport ({ $cost } gold)
+
+action-inn-reputation = Ask about your reputation ({ $cost } gold)
+
+facility-enchantment-choice = { $target } · { $steps } steps → hit { $hit } / damage { $damage } / armor { $armor } ({ $cost } gold)

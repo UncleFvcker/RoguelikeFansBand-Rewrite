@@ -13,7 +13,7 @@
       "x": 114,
       "y": 30
     },
-    "playerGold": 20
+    "playerGold": 28
   },
   "commands": [
     {
@@ -28,7 +28,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "739d671d262455f224bcb4df07feb58170d1fb8e989d5d65241cbfce044f7f22",
+      "stateHash": "289623829c02d6e883e326ed350febf2dc6bef348f89b697ef9f566420b23039",
       "worldTick": 50000,
       "playerGold": 0,
       "playerNutrition": 9999,
@@ -41,7 +41,7 @@
         "messageKey": "inn-stay-completed",
         "args": {
           "balance": "0",
-          "cost": "20",
+          "cost": "28",
           "elapsedTicks": "50000",
           "facility": "demo.shop.outpost-white-horse",
           "worldTick": "50000"

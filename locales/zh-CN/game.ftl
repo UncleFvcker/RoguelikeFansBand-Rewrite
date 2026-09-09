@@ -629,3 +629,13 @@ bounty-mission-requested = 已接受悬赏任务：前往{ $floor }消灭 { $tot
 bounty-mission-abandoned = 已放弃当前悬赏任务。
 bounty-mission-rewarded = 已领取悬赏任务奖励{ $item }。
 bounty-mission-completed = 已消灭全部悬赏目标{ $actor }；返回赏金设施领取奖励。
+
+inn-reputation-unknown = 你到底是谁？
+inn-reputation-unheard = 我甚至从未听说过你！
+inn-reputation-noticed = 嗯……你做了一些值得注意的小事，但几乎没有什么值得吹嘘的！
+inn-reputation-talked = 是的，我听说过你。镇上的人都在谈论你！
+inn-reputation-honored = 啊，好心的先生。再次见到您是我的荣幸！
+inn-reputation-hero = 你是一个真正的英雄！
+inn-reputation-legend = 你就是传说！
+inn-reputation-ballads = 吟游诗人们都在歌颂你：英雄的民谣传遍四方！
+inn-reputation-unavailable = 暂时无法询问声望：{ $reason }。

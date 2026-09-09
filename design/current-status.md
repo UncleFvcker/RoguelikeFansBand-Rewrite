@@ -17,10 +17,10 @@
 
 | 项目 | 值 | 来源 |
 | --- | --- | --- |
-| 协议 | 1.236 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | v110 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload | v6 / v7；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.384.11 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 协议 | 1.237 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | v111 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload | v6 / v8；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
+| 内容包 | 1.384.12 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
 | 行为基线 | contract-v306，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
 | 内容定义数量 | 地形 209、角色 1402、物品 357、能力 1838、词缀 65、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |

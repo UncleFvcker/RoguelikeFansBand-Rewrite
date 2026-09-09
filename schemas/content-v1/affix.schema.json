@@ -4208,6 +4208,15 @@
             "null"
           ]
         },
+        "equipmentValue": {
+          "description": "RFB `effect_value`, including the activation timeout adjustment in\n`object3.c::_activation_p`. Required for equipment valuation.",
+          "format": "uint32",
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "id": {
           "type": "string"
         },

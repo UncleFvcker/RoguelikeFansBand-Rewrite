@@ -12,6 +12,7 @@
         "deviceCheckDifficulty": 15,
         "effectProgramId": "demo.effect.random-teleport-long",
         "id": "rfb.device-activation.ego-15-teleport",
+        "equipmentValue": 1695,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-trump-name",

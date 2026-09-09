@@ -30,7 +30,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "f8e6940d5cc70c3e9c8e05988696cbd9c67412a96d576d9da67a1953f2f2bc8e",
+      "stateHash": "959bca006c5d13efb580e85350cfaee71e44e939e71aeabe567cdbb4e4144cb3",
       "playerPosition": {
         "x": 85,
         "y": 31
@@ -70,6 +70,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "f8e6940d5cc70c3e9c8e05988696cbd9c67412a96d576d9da67a1953f2f2bc8e"
+    "saveRoundTripStateHash": "959bca006c5d13efb580e85350cfaee71e44e939e71aeabe567cdbb4e4144cb3"
   }
 }

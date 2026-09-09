@@ -151,12 +151,12 @@ fn player_position_precondition_does_not_simulate_movement() {
 }
 
 #[test]
-fn player_position_precondition_rejects_unwalkable_cells() {
+fn player_position_precondition_rejects_out_of_bounds_cells() {
     let fixture = minimal_default_fixture(
         json!({
             "world": "demo.world.middle-earth",
             "debugClearEntities": true,
-            "playerPosition": { "x": 22, "y": 6 }
+            "playerPosition": { "x": -1, "y": 0 }
         }),
         json!([]),
     );
@@ -164,8 +164,8 @@ fn player_position_precondition_rejects_unwalkable_cells() {
     assert!(matches!(
         observe(&fixture),
         Err(ContractError::InvalidPlayerPositionPrecondition(Position {
-            x: 22,
-            y: 6
+            x: -1,
+            y: 0
         }))
     ));
 }
@@ -216,7 +216,7 @@ fn buy_first_from_shop_resolves_projected_stock_without_movement() {
         json!({
             "world": "demo.world.middle-earth",
             "debugClearEntities": true,
-            "playerPosition": { "x": 32, "y": 13 },
+            "playerPosition": { "x": 83, "y": 30 },
             "playerGold": 1000000
         }),
         json!([{
@@ -232,7 +232,7 @@ fn buy_first_from_shop_resolves_projected_stock_without_movement() {
 
     assert_eq!(
         observed.final_state.player_position,
-        Position { x: 32, y: 13 }
+        Position { x: 83, y: 30 }
     );
     assert_eq!(observed.events.len(), 1);
     assert_eq!(observed.events[0].kind, "shop.purchase");

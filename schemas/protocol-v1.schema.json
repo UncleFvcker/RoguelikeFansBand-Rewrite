@@ -8220,6 +8220,30 @@
         "sustain-charisma"
       ]
     },
+    "FacilityEnchantmentChoiceDto": {
+      "type": "object",
+      "properties": {
+        "cost": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "result": {
+          "$ref": "#/$defs/ItemEnchantmentsDto"
+        },
+        "steps": {
+          "type": "integer",
+          "format": "uint8",
+          "maximum": 255,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "steps",
+        "cost",
+        "result"
+      ]
+    },
     "FacilityMembershipDto": {
       "type": "string",
       "enum": [
@@ -8268,10 +8292,11 @@
     "FacilityServiceTargetDto": {
       "type": "object",
       "properties": {
-        "cost": {
-          "type": "integer",
-          "format": "uint32",
-          "minimum": 0
+        "choices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/FacilityEnchantmentChoiceDto"
+          }
         },
         "itemId": {
           "type": "string"
@@ -8279,7 +8304,7 @@
       },
       "required": [
         "itemId",
-        "cost"
+        "choices"
       ]
     },
     "GameCommand": {
@@ -9133,6 +9158,22 @@
             },
             "type": {
               "type": "string",
+              "const": "ask-reputation-at-inn"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
               "const": "identify-all-at-facility"
             }
           },
@@ -9144,6 +9185,15 @@
         {
           "type": "object",
           "properties": {
+            "enchantmentSteps": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
             "facilityId": {
               "type": "string"
             },
@@ -12276,6 +12326,12 @@
             "wisdom": 0
           }
         },
+        "fame": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
         "fasting": {
           "type": "boolean"
         },
@@ -12513,6 +12569,7 @@
         "position",
         "hp",
         "maxHp",
+        "fame",
         "fasting",
         "virtues"
       ]
@@ -13111,6 +13168,14 @@
           "type": "string"
         },
         "innFoodCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "innReputationCost": {
           "type": [
             "integer",
             "null"

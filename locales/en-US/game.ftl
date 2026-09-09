@@ -644,3 +644,13 @@ bounty-mission-requested = Bounty accepted: kill { $total } { $actor } on { $flo
 bounty-mission-abandoned = You abandon the current bounty mission.
 bounty-mission-rewarded = You receive { $item } for completing the bounty mission.
 bounty-mission-completed = Every bounty target, { $actor }, is dead. Return to a bounty office for your reward.
+
+inn-reputation-unknown = Who are you?
+inn-reputation-unheard = I have never even heard of you!
+inn-reputation-noticed = Your small deeds have attracted some notice.
+inn-reputation-talked = People in town are talking about you!
+inn-reputation-honored = It is an honor to see you again!
+inn-reputation-hero = You are a true hero!
+inn-reputation-legend = You are a legend!
+inn-reputation-ballads = Bards sing your heroic deeds throughout the land!
+inn-reputation-unavailable = Cannot ask about your reputation: { $reason }.

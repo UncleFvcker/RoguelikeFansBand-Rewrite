@@ -600,15 +600,39 @@ fn round_percent(value: u32, percent: u16) -> u32 {
 }
 
 pub(super) fn buy_unit_price(base_value: u32, factor: u16) -> u32 {
-    round_percent(base_value, factor.max(100))
+    let price = if base_value > 1_000_000 {
+        (base_value / 100).saturating_mul(u32::from(factor.max(100)))
+    } else {
+        round_percent(base_value, factor.max(100))
+    };
+    if price > 1000 {
+        round_three_significant(price)
+    } else {
+        price
+    }
+}
+
+fn round_three_significant(value: u32) -> u32 {
+    let mut scale = 1_u64;
+    while u64::from(value) / scale >= 1000 {
+        scale *= 10;
+    }
+    u32::try_from(((u64::from(value) + scale / 2) / scale) * scale).unwrap_or(u32::MAX)
 }
 
 pub(super) fn sell_unit_price(base_value: u32, factor: u16, cap: u32) -> u32 {
-    ((u64::from(base_value) * 100) / u64::from(factor.max(105)))
-        .try_into()
-        .unwrap_or(u32::MAX)
-        .max(1)
-        .min(cap)
+    let price = if base_value > 1_000_000 {
+        (base_value / u32::from(factor.max(105))).saturating_mul(100)
+    } else {
+        ((u64::from(base_value) * 100) / u64::from(factor.max(105))) as u32
+    };
+    (if price > 1000 {
+        round_three_significant(price)
+    } else {
+        price
+    })
+    .max(1)
+    .min(cap)
 }
 
 fn discounted_item_base_value(item: &ItemInstance, base_value: u32) -> u32 {
@@ -621,29 +645,47 @@ fn player_purchase_unit_price(
     base_value: u32,
     factor: u16,
 ) -> u32 {
-    let price = buy_unit_price(base_value, factor);
-    if shop.category == ShopCategory::BlackMarket && !game.player_has_black_market_standard_prices()
-    {
-        price.saturating_mul(2)
-    } else {
-        price
+    let mut price = buy_unit_price(base_value, factor);
+    if shop.category == ShopCategory::BlackMarket {
+        if !game.player_has_black_market_standard_prices() {
+            price = price.saturating_mul(2);
+        }
+        price = (u64::from(price)
+            * (625 + i64::from(game.virtue_current(rfb_protocol::VirtueKindDto::Justice))) as u64
+            / 625)
+            .try_into()
+            .unwrap_or(u32::MAX);
     }
+    price
 }
 
 fn player_sale_unit_price(game: &Game, shop: &ShopDefinition, base_value: u32, factor: u16) -> u32 {
-    if shop.category == ShopCategory::BlackMarket && !game.player_has_black_market_standard_prices()
-    {
-        ((u64::from(base_value) * 100) / u64::from(factor.max(105)) / 2)
+    let mut price = sell_unit_price(base_value, factor, u32::MAX);
+    if shop.category == ShopCategory::BlackMarket {
+        if !game.player_has_black_market_standard_prices() {
+            price /= 2;
+        }
+        price = (u64::from(price)
+            * (625 - i64::from(game.virtue_current(rfb_protocol::VirtueKindDto::Justice))) as u64
+            / 625)
             .try_into()
-            .unwrap_or(u32::MAX)
-            .max(1)
-            .min(shop.owner.purchase_price_cap)
-    } else {
-        sell_unit_price(base_value, factor, shop.owner.purchase_price_cap)
+            .unwrap_or(u32::MAX);
     }
+    price.max(1).min(shop.owner.purchase_price_cap)
 }
 
 fn shop_price_factor(game: &Game, shop: &ShopDefinition) -> u16 {
+    let mut factor = price_factor_aux(game, shop.owner.greed_percent);
+    if game
+        .character_definitions()
+        .is_some_and(|(_, race, _, _)| race.id == shop.owner.race_id)
+    {
+        factor = factor.saturating_mul(90) / 100;
+    }
+    factor
+}
+
+fn price_factor_aux(game: &Game, greed: u16) -> u16 {
     let charisma_index = usize::from(
         game.effective_player_attributes()
             .index(AttributeKind::Charisma),
@@ -652,11 +694,10 @@ fn shop_price_factor(game: &Game, shop: &ShopDefinition) -> u16 {
     let charisma_adjust = CHARISMA_PRICE_ADJUST_PERCENT[charisma_index];
     let player_race = game.character_definitions().map(|(_, race, _, _)| race);
     let race_adjust = player_race.map_or(110, |race| race.shop_adjust_percent);
+    let race_adjust = if race_adjust == 0 { 110 } else { race_adjust };
     let mut factor = round_percent(u32::from(race_adjust), charisma_adjust);
-    factor = round_percent(factor, shop.owner.greed_percent);
-    if player_race.is_some_and(|race| race.id == shop.owner.race_id) {
-        factor = factor.saturating_mul(90) / 100;
-    }
+    factor = round_percent(factor, 135 - game.fame.min(200) / 4);
+    factor = round_percent(factor, greed);
     u16::try_from(factor).unwrap_or(u16::MAX)
 }
 
@@ -1205,11 +1246,17 @@ impl Game {
         facility: &TownFacilityDefinition,
         price: TownFacilityPrice,
     ) -> u32 {
-        if self.town_facility_membership(facility) == FacilityMembershipDto::Owner {
-            price.owner_cost
-        } else {
-            price.other_cost
-        }
+        self.town_service_price(
+            if self.town_facility_membership(facility) == FacilityMembershipDto::Owner {
+                price.owner_cost
+            } else {
+                price.other_cost
+            },
+        )
+    }
+
+    pub(super) fn town_service_price(&self, base: u32) -> u32 {
+        buy_unit_price(base, price_factor_aux(self, 100))
     }
 
     fn town_facility_service_cost(
@@ -1223,18 +1270,7 @@ impl Game {
         } else {
             definition.other_cost
         };
-        if declared == 0
-            && matches!(
-                definition.kind,
-                TownFacilityServiceKind::EnchantWeapon
-                    | TownFacilityServiceKind::EnchantArmor
-                    | TownFacilityServiceKind::EnchantBow
-            )
-        {
-            if owner { 750 } else { 1_500 }
-        } else {
-            declared
-        }
+        self.town_service_price(declared)
     }
 
     fn town_facility_enchantment_limit(&self, membership: FacilityMembershipDto) -> i16 {
@@ -1266,25 +1302,115 @@ impl Game {
         if definition.resists_enchantment || definition.tags.iter().any(|tag| tag == "no-enchant") {
             return false;
         }
+        let total = self.item_total_enchantments(item);
         match service {
             FacilityServiceKindDto::EnchantWeapon => {
                 definition.melee_profile.is_some()
-                    && (item.enchantments.to_hit < limit || item.enchantments.to_damage < limit)
+                    && (total.to_hit < limit || total.to_damage < limit)
             }
             FacilityServiceKindDto::EnchantArmor => {
-                definition.tags.iter().any(|tag| tag == "armor")
-                    && item.enchantments.to_armor < limit
+                definition.tags.iter().any(|tag| tag == "armor") && total.to_armor < limit
             }
             FacilityServiceKindDto::EnchantAmmunition => {
                 definition.ammunition_profile.is_some()
-                    && (item.enchantments.to_hit < limit || item.enchantments.to_damage < limit)
+                    && (total.to_hit < limit || total.to_damage < limit)
             }
             FacilityServiceKindDto::EnchantBow => {
                 definition.projectile_profile.is_some()
-                    && (item.enchantments.to_hit < limit || item.enchantments.to_damage < limit)
+                    && (total.to_hit < limit || total.to_damage < limit)
             }
             _ => false,
         }
+    }
+
+    fn facility_enchantment_choices(
+        &self,
+        item: &ItemInstance,
+        service: FacilityServiceKindDto,
+        declared_cost: u32,
+        membership: FacilityMembershipDto,
+        limit: i16,
+    ) -> Vec<rfb_protocol::FacilityEnchantmentChoiceDto> {
+        let cost = if declared_cost == 0 {
+            self.town_service_price(1500)
+        } else {
+            declared_cost
+        };
+        let artifact = self
+            .content
+            .item(&item.kind_id)
+            .unwrap()
+            .tags
+            .iter()
+            .any(|tag| tag == "artifact");
+        let mut copy = item.clone();
+        let mut old_value = if service == FacilityServiceKindDto::EnchantAmmunition {
+            0
+        } else {
+            self.item_enchantment_value(&copy)
+        };
+        let mut sum = 0_i64;
+        let mut choices = Vec::new();
+        for steps in 1..=25 {
+            let before = self.item_total_enchantments(&copy);
+            let mut changed = false;
+            let mut v = 0_i16;
+            let mut increment = |value: &mut i16, total: i16| {
+                if total < limit {
+                    *value += 1;
+                    v = v.max(total + 1);
+                    changed = true;
+                }
+            };
+            if service == FacilityServiceKindDto::EnchantArmor {
+                increment(&mut copy.enchantments.to_armor, before.to_armor);
+            } else {
+                increment(&mut copy.enchantments.to_hit, before.to_hit);
+                increment(&mut copy.enchantments.to_damage, before.to_damage);
+            }
+            if !changed {
+                break;
+            }
+            let total_cost = if service == FacilityServiceKindDto::EnchantAmmunition {
+                u64::from(steps) * u64::from(cost) * u64::from(item.quantity)
+            } else {
+                let mut multiplier = 5_i64;
+                if v > 10 {
+                    if service == FacilityServiceKindDto::EnchantArmor {
+                        for _ in 10..v {
+                            multiplier = multiplier * 5 / 3;
+                        }
+                    } else {
+                        multiplier += i64::from(v - 10);
+                    }
+                }
+                if artifact {
+                    multiplier *= 3;
+                }
+                let value = self.item_enchantment_value(&copy);
+                sum += (value - old_value) * multiplier;
+                old_value = value;
+                let mut unit = self
+                    .town_service_price(u32::try_from(sum.max(0)).unwrap_or(u32::MAX))
+                    .max(u32::from(steps).saturating_mul(cost));
+                if membership == FacilityMembershipDto::Owner {
+                    unit = unit.div_ceil(2);
+                }
+                u64::from(unit) * u64::from(item.quantity)
+            };
+            let Ok(mut cost) = u32::try_from(total_cost) else {
+                break;
+            };
+            if service != FacilityServiceKindDto::EnchantAmmunition && cost >= 10000 {
+                cost = round_three_significant(cost);
+            }
+            choices.push(rfb_protocol::FacilityEnchantmentChoiceDto {
+                steps,
+                cost,
+                result: self.item_total_enchantments(&copy),
+            });
+        }
+        choices
     }
 
     pub(super) fn town_facility_service_dtos(
@@ -1306,12 +1432,10 @@ impl Game {
                         .filter(|item| self.town_facility_enchantment_target(item, kind, limit))
                         .map(|item| FacilityServiceTargetDto {
                             item_id: item.id.clone(),
-                            cost: if kind == FacilityServiceKindDto::EnchantAmmunition {
-                                cost.saturating_mul(item.quantity)
-                            } else {
-                                cost
-                            },
+                            choices: self
+                                .facility_enchantment_choices(item, kind, cost, membership, limit),
                         })
+                        .filter(|target| !target.choices.is_empty())
                         .collect::<Vec<_>>()
                 } else {
                     Vec::new()
@@ -1362,7 +1486,7 @@ impl Game {
         let Some(cost) = facility.identify_item_cost else {
             return Err("service-unavailable");
         };
-        self.identify_item_at_facility(facility_id, item_id, cost, false)
+        self.identify_item_at_facility(facility_id, item_id, self.town_service_price(cost), false)
     }
 
     pub(super) fn research_item_at_facility(
@@ -1376,7 +1500,7 @@ impl Game {
         let Some(cost) = facility.research_item_cost else {
             return Err("service-unavailable");
         };
-        self.identify_item_at_facility(facility_id, item_id, cost, true)
+        self.identify_item_at_facility(facility_id, item_id, self.town_service_price(cost), true)
     }
 
     fn identify_item_at_facility(
@@ -1474,6 +1598,7 @@ impl Game {
         facility_id: &str,
         service: FacilityServiceKindDto,
         item_id: Option<&str>,
+        enchantment_steps: Option<u8>,
         events: &mut Vec<DomainEvent>,
     ) -> Result<FacilityServiceOutcome, &'static str> {
         let Some(facility) = self.content.town_facility(facility_id).cloned() else {
@@ -1496,9 +1621,14 @@ impl Game {
                 .iter()
                 .find(|target| target.item_id == item_id)
                 .ok_or("item-unavailable")?;
-            (target.cost, Some(item_id))
+            let choice = target
+                .choices
+                .iter()
+                .find(|choice| Some(choice.steps) == enchantment_steps)
+                .ok_or("enchantment-steps-unavailable")?;
+            (choice.cost, Some(item_id))
         } else {
-            if item_id.is_some() {
+            if item_id.is_some() || enchantment_steps.is_some() {
                 return Err("unexpected-item");
             }
             (projected.cost, None)
@@ -1582,13 +1712,26 @@ impl Game {
             | FacilityServiceKindDto::EnchantAmmunition
             | FacilityServiceKindDto::EnchantBow => {
                 let item_id = item_id.expect("enchantment target was validated");
-                let request = match service {
-                    FacilityServiceKindDto::EnchantWeapon
-                    | FacilityServiceKindDto::EnchantAmmunition
-                    | FacilityServiceKindDto::EnchantBow => ItemEnchantmentRequest::new(1, 1, 0),
-                    FacilityServiceKindDto::EnchantArmor => ItemEnchantmentRequest::new(0, 0, 1),
-                    _ => unreachable!(),
-                };
+                let item = self
+                    .items
+                    .iter()
+                    .find(|item| item.id == item_id)
+                    .expect("validated enchantment target must exist");
+                let total = self.item_total_enchantments(item);
+                let limit =
+                    self.town_facility_enchantment_limit(self.town_facility_membership(&facility));
+                let steps = i16::from(enchantment_steps.expect("enchantment steps were validated"));
+                let attempts = |before: i16| steps.min(limit.saturating_sub(before).max(0)) as u16;
+                let request = if service == FacilityServiceKindDto::EnchantArmor {
+                    ItemEnchantmentRequest::new(0, 0, attempts(total.to_armor))
+                } else {
+                    ItemEnchantmentRequest::new(
+                        attempts(total.to_hit),
+                        attempts(total.to_damage),
+                        0,
+                    )
+                }
+                .forced();
                 let enchanted = self.enchant_item_instance(item_id, request);
                 if enchanted.to_hit.successes == 0
                     && enchanted.to_damage.successes == 0
@@ -1658,6 +1801,7 @@ impl Game {
         let Some(cost) = facility.legal_name_change_cost else {
             return Err("service-unavailable");
         };
+        let cost = self.town_service_price(cost);
         if !self.town_facility_accessible(facility_id) {
             return Err("facility-unreachable");
         }
@@ -1688,7 +1832,7 @@ impl Game {
         events: &mut Vec<DomainEvent>,
     ) -> Result<(), &'static str> {
         let inn = self.content.shop(facility_id).ok_or("unknown-inn")?;
-        let cost = inn.inn_food_cost.ok_or("service-unavailable")?;
+        let cost = self.town_service_price(inn.inn_food_cost.ok_or("service-unavailable")?);
         if !shop_accessible(self, inn) {
             return Err("inn-unreachable");
         }
@@ -1702,6 +1846,40 @@ impl Game {
             cost,
             gold_balance: self.gold,
             food_key,
+        });
+        Ok(())
+    }
+
+    pub(super) fn ask_reputation_at_inn(
+        &mut self,
+        facility_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<(), &'static str> {
+        let inn = self.content.shop(facility_id).ok_or("unknown-inn")?;
+        let cost = self.town_service_price(inn.inn_reputation_cost.ok_or("service-unavailable")?);
+        if !shop_accessible(self, inn) {
+            return Err("inn-unreachable");
+        }
+        if self.gold < cost {
+            return Err("insufficient-gold");
+        }
+        let message_key = match self.fame {
+            0 => "inn-reputation-unknown",
+            1..20 => "inn-reputation-unheard",
+            20..40 => "inn-reputation-noticed",
+            40..60 => "inn-reputation-talked",
+            60..80 => "inn-reputation-honored",
+            80..100 => "inn-reputation-hero",
+            100..150 => "inn-reputation-legend",
+            _ => "inn-reputation-ballads",
+        };
+        self.gold -= cost;
+        events.push(DomainEvent::InnReputationReported {
+            facility_id: facility_id.to_owned(),
+            fame: self.fame,
+            cost,
+            gold_balance: self.gold,
+            message_key,
         });
         Ok(())
     }
@@ -1881,7 +2059,7 @@ impl Game {
         facility_id: &str,
     ) -> Result<InnStayOutcome, &'static str> {
         let cost = if let Some(inn) = self.content.shop(facility_id) {
-            let cost = inn.inn_stay_cost.ok_or("unknown-inn")?;
+            let cost = self.town_service_price(inn.inn_stay_cost.ok_or("unknown-inn")?);
             if !shop_accessible(self, inn) {
                 return Err("inn-unreachable");
             }
@@ -1982,7 +2160,7 @@ impl Game {
         {
             return Some("town-unvisited");
         }
-        (self.gold < INN_TRAVEL_COST).then_some("insufficient-gold")
+        (self.gold < self.town_service_price(INN_TRAVEL_COST)).then_some("insufficient-gold")
     }
 
     pub(super) fn travel_from_inn(
@@ -1994,13 +2172,14 @@ impl Game {
             self.inn_travel_unavailable_reason(facility_id, destination_town_id)
                 .is_none()
         );
+        let cost = self.town_service_price(INN_TRAVEL_COST);
         self.relocate_to_town(destination_town_id)?;
-        self.gold -= INN_TRAVEL_COST;
+        self.gold -= cost;
 
         Ok(InnTravelOutcome {
             facility_id: facility_id.to_owned(),
             destination_town_id: destination_town_id.to_owned(),
-            cost: INN_TRAVEL_COST,
+            cost,
             gold_balance: self.gold,
         })
     }
@@ -2650,7 +2829,7 @@ impl Game {
                         .map(|destination| InnTravelDestinationDto {
                             town_id: destination.id.clone(),
                             town_name_key: destination.name_key.clone(),
-                            cost: INN_TRAVEL_COST,
+                            cost: self.town_service_price(INN_TRAVEL_COST),
                         })
                         .collect()
                 } else {
@@ -2749,8 +2928,11 @@ impl Game {
                     category: category_dto(shop.category),
                     entrance_position,
                     entrance_terrain_id: shop.entrance_terrain_id.clone(),
-                    inn_stay_cost: shop.inn_stay_cost,
-                    inn_food_cost: shop.inn_food_cost,
+                    inn_stay_cost: shop.inn_stay_cost.map(|cost| self.town_service_price(cost)),
+                    inn_food_cost: shop.inn_food_cost.map(|cost| self.town_service_price(cost)),
+                    inn_reputation_cost: shop
+                        .inn_reputation_cost
+                        .map(|cost| self.town_service_price(cost)),
                     inn_travel_destinations,
                     visited: self
                         .shop_states

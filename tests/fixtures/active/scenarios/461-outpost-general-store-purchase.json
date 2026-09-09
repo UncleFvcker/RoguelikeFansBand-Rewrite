@@ -29,12 +29,12 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "cc24b3f455bce708ad58eaef18d625ffe1fc122a3bf01663613ebf68007379c0",
+      "stateHash": "4e70cfb23ab479a6b9bec90e91ab9ca02ac5776c0d482bcdc89401ad8fb30eb4",
       "playerPosition": {
         "x": 83,
         "y": 30
       },
-      "playerGold": 999997,
+      "playerGold": 999996,
       "inventoryStackCount": 8,
       "inventory": {
         "generated.item.1": {
@@ -54,13 +54,13 @@
         "kind": "shop.purchase",
         "messageKey": "shop-purchase-success",
         "args": {
-          "balance": "999997",
+          "balance": "999996",
           "item": "generated.item.1",
           "quantity": "1",
           "shop": "demo.shop.outpost-general-store",
           "target": "demo.item.ration-of-food",
-          "totalPrice": "3",
-          "unitPrice": "3"
+          "totalPrice": "4",
+          "unitPrice": "4"
         }
       }
     ]

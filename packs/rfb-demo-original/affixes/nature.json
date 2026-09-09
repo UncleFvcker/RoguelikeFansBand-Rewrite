@@ -18,6 +18,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-14-biased-stone-to-mud",
+        "equipmentValue": 1150,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-nature-name",
@@ -53,6 +54,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-14-biased-satisfy-hunger",
+        "equipmentValue": 490,
         "maxDepth": 17,
         "minDepth": 1,
         "nameKey": "affix-legacy-nature-name",
@@ -89,6 +91,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-14-biased-resistance",
+        "equipmentValue": 4840,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-nature-name",
@@ -134,6 +137,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-14-biased-summon-hounds",
+        "equipmentValue": 900,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-nature-name",
@@ -179,6 +183,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-14-biased-summon-ants",
+        "equipmentValue": 1056,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-nature-name",
@@ -224,6 +229,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-14-biased-summon-hydras",
+        "equipmentValue": 900,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-nature-name",
@@ -259,6 +265,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-14-biased-charm-animal",
+        "equipmentValue": 440,
         "maxDepth": 92,
         "minDepth": 1,
         "nameKey": "affix-legacy-nature-name",
@@ -300,6 +307,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-14-biased-cure-pois",
+        "equipmentValue": 530,
         "maxDepth": 32,
         "minDepth": 1,
         "nameKey": "affix-legacy-nature-name",
@@ -340,6 +348,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-14-biased-arrow",
+        "equipmentValue": 2940,
         "maxDepth": 92,
         "minDepth": 1,
         "nameKey": "affix-legacy-nature-name",
@@ -380,6 +389,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-14-biased-slow-monsters",
+        "equipmentValue": 1102,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-nature-name",

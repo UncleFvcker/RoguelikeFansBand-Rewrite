@@ -883,6 +883,10 @@ pub enum RfbActivationBiasDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemDeviceActivationDefinition {
     pub id: String,
+    /// RFB `effect_value`, including the activation timeout adjustment in
+    /// `object3.c::_activation_p`. Required for equipment valuation.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub equipment_value: Option<u32>,
     pub name_key: String,
     pub weight: u32,
     pub min_depth: u16,
@@ -1019,6 +1023,9 @@ pub struct ItemDefinition {
     pub initial_curse: Option<ItemCurseSeverityDefinition>,
     #[serde(default)]
     pub modifiers: StatModifiers,
+    /// Intrinsic `to_a` already included in `modifiers.defense`, separate from base AC.
+    #[serde(default)]
+    pub armor_enchantment: i16,
     #[serde(default)]
     pub equipment_bonuses: EquipmentBonuses,
     #[serde(default)]

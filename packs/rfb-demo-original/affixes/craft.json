@@ -26,6 +26,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-resist-acid",
+        "equipmentValue": 1470,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -68,6 +69,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-resist-elec",
+        "equipmentValue": 1470,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -110,6 +112,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-resist-fire",
+        "equipmentValue": 1470,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -153,6 +156,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-resist-cold",
+        "equipmentValue": 1470,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -195,6 +199,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-resist-pois",
+        "equipmentValue": 2760,
         "maxDepth": 92,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -234,6 +239,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-cure-pois",
+        "equipmentValue": 530,
         "maxDepth": 32,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -274,6 +280,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-bolt-acid",
+        "equipmentValue": 1242,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -314,6 +321,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-bolt-elec",
+        "equipmentValue": 632,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -354,6 +362,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-bolt-fire",
+        "equipmentValue": 1150,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -395,6 +404,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-bolt-cold",
+        "equipmentValue": 776,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -435,6 +445,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-bolt-pois",
+        "equipmentValue": 648,
         "maxDepth": 32,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -475,6 +486,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-bolt-ice",
+        "equipmentValue": 3449,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -516,6 +528,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-bolt-plasma",
+        "equipmentValue": 3841,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -556,6 +569,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-beam-acid",
+        "equipmentValue": 1046,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -596,6 +610,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-beam-elec",
+        "equipmentValue": 828,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -636,6 +651,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-beam-fire",
+        "equipmentValue": 897,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -677,6 +693,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-beam-cold",
+        "equipmentValue": 862,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -718,6 +735,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-ball-acid",
+        "equipmentValue": 1929,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -759,6 +777,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-ball-elec",
+        "equipmentValue": 1462,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -800,6 +819,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-ball-fire",
+        "equipmentValue": 1812,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -842,6 +862,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-ball-cold",
+        "equipmentValue": 1526,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -883,6 +904,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-ball-pois",
+        "equipmentValue": 358,
         "maxDepth": 32,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -924,6 +946,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-breathe-acid",
+        "equipmentValue": 8624,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -965,6 +988,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-breathe-elec",
+        "equipmentValue": 6517,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -1006,6 +1030,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-breathe-fire",
+        "equipmentValue": 5488,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -1047,6 +1072,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-breathe-cold",
+        "equipmentValue": 5145,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",
@@ -1088,6 +1114,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-9-biased-breathe-pois",
+        "equipmentValue": 4116,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-craft-name",

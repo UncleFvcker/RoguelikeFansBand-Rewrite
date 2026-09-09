@@ -697,6 +697,9 @@ pub(super) fn reward_item(
 }
 
 impl Game {
+    pub(super) fn fame_on_failure(&mut self) {
+        self.fame -= (self.fame / 2).min(30);
+    }
     pub(super) fn accept_task(
         &mut self,
         facility_id: &str,
@@ -966,6 +969,7 @@ impl Game {
                         {
                             failed_floor_ids.push(from_floor_id.to_owned());
                         }
+                        self.fame -= (self.fame / 2).min(30);
                         TaskStatusKindDto::Failed
                     };
                     state.active_floor_id = None;
@@ -1005,6 +1009,7 @@ impl Game {
                         {
                             failed_floor_ids.push(from_floor_id.to_owned());
                         }
+                        self.fame -= (self.fame / 2).min(30);
                         TaskStatusKindDto::Failed
                     };
                     state.active_floor_id = None;
@@ -1124,6 +1129,12 @@ impl Game {
             (plan, completion_exit)
         };
         if let Some(plan) = plan {
+            if plan.state.current >= plan.state.required
+                && self.task_states[&plan.task_id].current
+                    < self.task_states[&plan.task_id].required
+            {
+                self.fame = self.fame.saturating_add(self.rng.bounded(2) as u16 + 1);
+            }
             self.task_states.insert(plan.task_id, plan.state);
         }
         if let Some((terrain_id, floor_terrain_id, origin)) = completion_exit {

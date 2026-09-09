@@ -723,6 +723,17 @@ pub(crate) enum DomainEvent {
         facility_id: String,
         reason: String,
     },
+    InnReputationReported {
+        facility_id: String,
+        fame: u16,
+        cost: u32,
+        gold_balance: u32,
+        message_key: &'static str,
+    },
+    InnReputationUnavailable {
+        facility_id: String,
+        reason: String,
+    },
     MonsterResearchCompleted {
         facility_id: String,
         actor_kind_id: String,
@@ -3320,6 +3331,33 @@ impl DomainEvent {
             } => dto(
                 "inn.food-unavailable",
                 "inn-food-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::InnReputationReported {
+                facility_id,
+                fame,
+                cost,
+                gold_balance,
+                message_key,
+            } => dto(
+                "inn.reputation",
+                message_key,
+                [
+                    ("facility", facility_id.clone()),
+                    ("fame", fame.to_string()),
+                    ("cost", cost.to_string()),
+                    ("balance", gold_balance.to_string()),
+                ],
+            ),
+            Self::InnReputationUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "inn.reputation-unavailable",
+                "inn-reputation-unavailable",
                 [
                     ("facility", facility_id.clone()),
                     ("reason", reason.clone()),

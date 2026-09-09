@@ -12,6 +12,7 @@
         "deviceCheckDifficulty": 50,
         "effectProgramId": "demo.effect.destruction-scroll",
         "id": "rfb.device-activation.ego-11-destruction",
+        "equipmentValue": 6509,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-daemon-name",
@@ -49,6 +50,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-11-biased-destruction",
+        "equipmentValue": 5943,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-daemon-name",
@@ -83,6 +85,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-11-biased-recharge-from-device",
+        "equipmentValue": 2250,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-daemon-name",
@@ -118,6 +121,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-11-biased-recharge-from-player",
+        "equipmentValue": 4275,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-daemon-name",
@@ -164,6 +168,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-11-biased-summon-demon",
+        "equipmentValue": 1125,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-daemon-name",
@@ -200,6 +205,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-11-biased-charm-demon",
+        "equipmentValue": 562,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-daemon-name",
@@ -242,6 +248,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-11-biased-ball-fire",
+        "equipmentValue": 1812,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-daemon-name",
@@ -284,6 +291,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-11-biased-ball-nether",
+        "equipmentValue": 3630,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-daemon-name",
@@ -326,6 +334,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-11-biased-breathe-nether",
+        "equipmentValue": 7500,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-daemon-name",
@@ -368,6 +377,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-11-biased-rocket",
+        "equipmentValue": 10208,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-daemon-name",

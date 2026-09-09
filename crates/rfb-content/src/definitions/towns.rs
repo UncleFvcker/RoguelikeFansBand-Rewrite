@@ -154,6 +154,8 @@ pub struct ShopDefinition {
     pub inn_stay_cost: Option<u32>,
     #[serde(default)]
     pub inn_food_cost: Option<u32>,
+    #[serde(default)]
+    pub inn_reputation_cost: Option<u32>,
     pub owner: ShopOwnerDefinition,
     pub stock: Vec<ShopStockDefinition>,
     pub maintenance: ShopMaintenanceDefinition,

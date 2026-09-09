@@ -352,7 +352,7 @@ fn check_life_first_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -495,7 +495,7 @@ fn check_daemon_first_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -648,7 +648,7 @@ fn check_crusade_first_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     for (id, level, mana, failure, experience) in [
@@ -801,7 +801,7 @@ fn check_crusade_second_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     for (id, level, mana, failure, experience) in [
@@ -946,7 +946,7 @@ fn check_crusade_third_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     for (id, level, mana, failure, experience) in [
@@ -1090,7 +1090,7 @@ fn check_crusade_fourth_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     for (id, level, mana, failure, experience) in [
@@ -1235,7 +1235,7 @@ fn check_daemon_second_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -1432,7 +1432,7 @@ fn check_daemon_third_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -1683,7 +1683,7 @@ fn check_daemon_fourth_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -1867,7 +1867,7 @@ fn check_life_second_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -2000,6 +2000,7 @@ fn check_life_third_book(content: &CompiledContentV1) {
             .map(|shop| shop.category)
             .collect::<Vec<_>>(),
         vec![
+            ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
@@ -2242,6 +2243,7 @@ fn check_life_fourth_book(content: &CompiledContentV1) {
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
         ]
     );
 
@@ -2432,7 +2434,7 @@ fn check_nature_first_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -2543,7 +2545,7 @@ fn check_nature_second_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -2665,6 +2667,7 @@ fn check_nature_third_book(content: &CompiledContentV1) {
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
         ]
     );
 
@@ -2766,6 +2769,7 @@ fn check_nature_fourth_book(content: &CompiledContentV1) {
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
         ]
     );
 
@@ -2847,7 +2851,7 @@ fn check_armageddon_first_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -2989,7 +2993,7 @@ fn check_armageddon_second_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -3104,6 +3108,7 @@ fn check_armageddon_third_book(content: &CompiledContentV1) {
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
+            ShopCategory::BlackMarket,
         ]
     );
 
@@ -3201,6 +3206,7 @@ fn check_armageddon_fourth_book(content: &CompiledContentV1) {
             .map(|shop| shop.category)
             .collect::<Vec<_>>(),
         vec![
+            ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
             ShopCategory::BlackMarket,
@@ -3348,7 +3354,7 @@ fn check_sorcery_third_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -3750,7 +3756,7 @@ fn check_arcane_fourth_book(content: &CompiledContentV1) {
             .iter()
             .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
             .count(),
-        3
+        4
     );
 
     let expected = [
@@ -3889,7 +3895,7 @@ fn check_sorcery_fourth_book(content: &CompiledContentV1) {
         .iter()
         .filter(|shop| shop.stock.iter().any(|entry| entry.item_kind_id == item.id))
         .collect::<Vec<_>>();
-    assert_eq!(stocked.len(), 3);
+    assert_eq!(stocked.len(), 4);
     assert!(
         stocked
             .iter()

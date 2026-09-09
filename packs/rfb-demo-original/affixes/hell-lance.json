@@ -24,6 +24,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-destruction",
+        "equipmentValue": 5943,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -58,6 +59,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-recharge-from-device",
+        "equipmentValue": 2250,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -93,6 +95,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-recharge-from-player",
+        "equipmentValue": 4275,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -136,6 +139,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-resist-fire",
+        "equipmentValue": 1470,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -176,6 +180,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-bless",
+        "equipmentValue": 1568,
         "maxDepth": 32,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -216,6 +221,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-heroism",
+        "equipmentValue": 2082,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -262,6 +268,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-summon-demon",
+        "equipmentValue": 1125,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -298,6 +305,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-charm-demon",
+        "equipmentValue": 562,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -339,6 +347,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-bolt-fire",
+        "equipmentValue": 1150,
         "maxDepth": 47,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -380,6 +389,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-bolt-nether",
+        "equipmentValue": 1310,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -421,6 +431,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-beam-fire",
+        "equipmentValue": 897,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -463,6 +474,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-ball-fire",
+        "equipmentValue": 1812,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -505,6 +517,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-ball-nether",
+        "equipmentValue": 3630,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -547,6 +560,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-breathe-nether",
+        "equipmentValue": 7500,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -589,6 +603,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-rocket",
+        "equipmentValue": 10208,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",
@@ -624,6 +639,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-25-biased-aggravate",
+        "equipmentValue": 98,
         "maxDepth": 32,
         "minDepth": 1,
         "nameKey": "affix-legacy-hell-lance-name",

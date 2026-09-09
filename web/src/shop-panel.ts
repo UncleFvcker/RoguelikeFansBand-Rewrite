@@ -46,6 +46,7 @@ interface ShopDom {
   readonly confirm: HTMLButtonElement;
   readonly stay: HTMLButtonElement;
   readonly food: HTMLButtonElement;
+  readonly reputation: HTMLButtonElement;
   readonly innTravel: HTMLElement;
   readonly innDestination: HTMLSelectElement;
   readonly innTravelConfirm: HTMLButtonElement;
@@ -121,6 +122,7 @@ export class ShopPanel {
     this.#dom.confirm.addEventListener("click", this.#confirmTransaction);
     this.#dom.stay.addEventListener("click", this.#stayAtInn);
     this.#dom.food.addEventListener("click", this.#eatAtInn);
+    this.#dom.reputation.addEventListener("click", this.#askReputation);
     this.#dom.innDestination.addEventListener("change", this.#renderTransaction);
     this.#dom.innTravelConfirm.addEventListener("click", this.#travelFromInn);
   }
@@ -140,6 +142,7 @@ export class ShopPanel {
     this.#dom.confirm.removeEventListener("click", this.#confirmTransaction);
     this.#dom.stay.removeEventListener("click", this.#stayAtInn);
     this.#dom.food.removeEventListener("click", this.#eatAtInn);
+    this.#dom.reputation.removeEventListener("click", this.#askReputation);
     this.#dom.innDestination.removeEventListener("change", this.#renderTransaction);
     this.#dom.innTravelConfirm.removeEventListener("click", this.#travelFromInn);
   }
@@ -276,6 +279,11 @@ export class ShopPanel {
     });
   };
 
+  readonly #askReputation = (): void => {
+    if (this.#state.busy || this.#shop?.innReputationCost == null) return;
+    void this.#dispatch({ type: "ask-reputation-at-inn", facilityId: this.#shop.id });
+  };
+
   readonly #eatAtInn = (): void => {
     if (this.#state.busy || this.#shop?.innFoodCost == null) return;
     void this.#dispatch({ type: "eat-at-inn", facilityId: this.#shop.id });
@@ -377,6 +385,8 @@ export class ShopPanel {
       this.#contentName,
     );
     const isInn = shop.innStayCost !== undefined;
+    this.#dom.reputation.hidden = shop.innReputationCost == null;
+    this.#dom.reputation.textContent = this.#localization.format("action-inn-reputation", { cost: shop.innReputationCost ?? 0 });
     this.#dom.food.hidden = shop.innFoodCost == null;
     this.#dom.food.textContent = this.#localization.format("action-inn-food", { cost: shop.innFoodCost ?? 0 });
     this.#dom.stay.hidden = !isInn;
@@ -501,6 +511,7 @@ export class ShopPanel {
     this.#dom.confirm.disabled = this.#state.busy || !valid;
     this.#dom.stay.disabled = this.#state.busy;
     this.#dom.food.disabled = this.#state.busy;
+    this.#dom.reputation.disabled = this.#state.busy;
     this.#dom.confirm.textContent = this.#localization.format(
       this.#mode === "buy" ? "action-shop-buy" : "action-shop-sell",
     );
@@ -760,6 +771,7 @@ function createShopDom(document: Document): ShopDom {
     confirm: element("shop-confirm"),
     stay: element("shop-stay"),
     food: element("shop-food"),
+    reputation: element("shop-reputation"),
     innTravel: element("shop-inn-travel"),
     innDestination: element("shop-inn-destination"),
     innTravelConfirm: element("shop-inn-travel-confirm"),

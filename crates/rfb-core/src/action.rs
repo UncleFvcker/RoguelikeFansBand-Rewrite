@@ -138,6 +138,9 @@ pub(crate) enum GameAction {
     EatAtInn {
         facility_id: String,
     },
+    AskReputationAtInn {
+        facility_id: String,
+    },
     IdentifyAllAtFacility {
         facility_id: String,
     },
@@ -145,6 +148,7 @@ pub(crate) enum GameAction {
         facility_id: String,
         service: FacilityServiceKindDto,
         item_id: Option<String>,
+        enchantment_steps: Option<u8>,
     },
     UseBountyOffice {
         facility_id: String,
@@ -250,6 +254,7 @@ impl GameAction {
             | Self::ResearchMonsterAtFacility { .. }
             | Self::TeleportToDungeonLevelAtFacility { .. }
             | Self::EatAtInn { .. }
+            | Self::AskReputationAtInn { .. }
             | Self::IdentifyAllAtFacility { .. }
             | Self::UseFacilityService { .. }
             | Self::UseBountyOffice { .. }
@@ -426,10 +431,12 @@ impl From<GameCommand> for GameAction {
                 facility_id,
                 service,
                 item_id,
+                enchantment_steps,
             } => Self::UseFacilityService {
                 facility_id,
                 service,
                 item_id,
+                enchantment_steps,
             },
             GameCommand::UseBountyOffice {
                 facility_id,
@@ -445,6 +452,9 @@ impl From<GameCommand> for GameAction {
             }
             GameCommand::StayAtInn { facility_id } => Self::StayAtInn { facility_id },
             GameCommand::EatAtInn { facility_id } => Self::EatAtInn { facility_id },
+            GameCommand::AskReputationAtInn { facility_id } => {
+                Self::AskReputationAtInn { facility_id }
+            }
             GameCommand::ResearchMonsterAtFacility {
                 facility_id,
                 actor_kind_id,

@@ -141,15 +141,9 @@ fn item_creation_state_is_valid(
     let damage_override_is_valid = item.damage_dice_override.is_none_or(|dice| {
         (1..=9).contains(&dice) && definition.tags.iter().any(|tag| tag == "ammunition")
     });
-    let enchantments_are_valid = [-15..=15, -15..=15, -15..=15]
-        .into_iter()
-        .zip([
-            item.enchantments.to_hit,
-            item.enchantments.to_damage,
-            item.enchantments.to_armor,
-        ])
-        .all(|(range, value)| range.contains(&value));
-    player_made_state_is_valid && damage_override_is_valid && enchantments_are_valid
+    player_made_state_is_valid
+        && damage_override_is_valid
+        && crate::save::item_enchantments_are_valid(definition, &item.enchantments)
 }
 
 pub(super) fn floor_regions_are_valid(

@@ -2304,6 +2304,7 @@ mod tests {
         difficulty: i32,
     ) -> ItemDeviceActivationDefinition {
         ItemDeviceActivationDefinition {
+            equipment_value: Some(0),
             id: id.to_owned(),
             name_key: format!("{id}-name"),
             weight,

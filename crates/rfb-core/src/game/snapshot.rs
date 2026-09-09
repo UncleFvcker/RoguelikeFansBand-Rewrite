@@ -110,6 +110,7 @@ impl Game {
             hp: self.player.hp,
             max_hp: stats.max_hp.value,
             gold: self.gold,
+            fame: self.fame,
             nutrition: self.nutrition,
             fasting: self.fasting,
             nutrition_state: self.nutrition_state(),
@@ -1596,8 +1597,12 @@ impl Game {
                     entrance_position,
                     entrance_terrain_id: facility.entrance_terrain_id.clone(),
                     player_at_entrance,
-                    identify_item_cost: facility.identify_item_cost,
-                    research_item_cost: facility.research_item_cost,
+                    identify_item_cost: facility
+                        .identify_item_cost
+                        .map(|cost| self.town_service_price(cost)),
+                    research_item_cost: facility
+                        .research_item_cost
+                        .map(|cost| self.town_service_price(cost)),
                     research_monster_cost: facility
                         .research_monster_cost
                         .map(|price| self.town_facility_price(facility, price)),
@@ -1625,7 +1630,9 @@ impl Game {
                         .inn_stay_cost
                         .map(|price| self.town_facility_price(facility, price)),
                     overview_message_key: facility.overview_message_key.clone(),
-                    legal_name_change_cost: facility.legal_name_change_cost,
+                    legal_name_change_cost: facility
+                        .legal_name_change_cost
+                        .map(|cost| self.town_service_price(cost)),
                     membership: self.town_facility_membership(facility),
                     service_actions: self.town_facility_service_dtos(facility),
                     bounty_office: player_at_entrance

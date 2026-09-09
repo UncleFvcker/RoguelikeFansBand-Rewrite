@@ -11,6 +11,7 @@
   "baseValue": 13000,
   "equipmentSlot": "gloves",
   "artifactGeneration": { "sourceIndex": 185, "baseItemKindId": "demo.item.set-of-gauntlets", "rarityOneIn": 20, "instant": false },
+  "armorEnchantment": 7,
   "modifiers": { "attack": 2, "defense": 9 },
   "brands": ["cold"],
   "resistances": { "cold": "resistant" },
@@ -19,6 +20,7 @@
     "recovery": { "intervalTicks": 120, "energyPerMille": 1000 },
     "activations": [{
       "id": "demo.item-activation.paurnimmen-cold-beam",
+      "equipmentValue": 1428,
       "nameKey": "item-activation-demo-cold-beam-name",
       "weight": 1,
       "minDepth": 1,

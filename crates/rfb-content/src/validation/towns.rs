@@ -241,6 +241,9 @@ pub(super) fn validate_towns_and_shops(
                 .inn_food_cost
                 .is_some_and(|cost| cost == 0 || cost > 999_999_999)
             || (shop.inn_food_cost.is_some() && shop.inn_stay_cost.is_none())
+            || shop
+                .inn_reputation_cost
+                .is_some_and(|cost| cost == 0 || cost > 999_999_999 || shop.inn_stay_cost.is_none())
             || !refs.races.iter().any(|race| race.id == shop.owner.race_id)
             || shop.maintenance.interval_world_ticks == 0
             || shop.maintenance.interval_world_ticks > 1_000_000

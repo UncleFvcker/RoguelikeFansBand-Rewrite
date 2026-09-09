@@ -70,6 +70,8 @@ pub(crate) struct SourceItemDefinition {
     #[serde(default)]
     modifiers: StatModifiers,
     #[serde(default)]
+    armor_enchantment: i16,
+    #[serde(default)]
     equipment_bonuses: EquipmentBonuses,
     #[serde(default)]
     melee_profile: Option<AttackProfileDefinition>,
@@ -148,6 +150,8 @@ pub(crate) struct SourceItemUseActionDefinition {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 struct SourceItemDeviceActivationDefinition {
     id: String,
+    #[serde(default)]
+    equipment_value: Option<u32>,
     name_key: String,
     weight: u32,
     min_depth: u16,
@@ -202,6 +206,7 @@ impl SourceItemDeviceActivationDefinition {
         }
         Ok(ItemDeviceActivationDefinition {
             id: self.id,
+            equipment_value: self.equipment_value,
             name_key: self.name_key,
             weight: self.weight,
             min_depth: self.min_depth,
@@ -287,6 +292,7 @@ impl SourceItemDefinition {
             capture_ball: self.capture_ball,
             initial_curse: self.initial_curse,
             modifiers: self.modifiers,
+            armor_enchantment: self.armor_enchantment,
             equipment_bonuses: self.equipment_bonuses,
             melee_profile: self.melee_profile,
             projectile_profile: self.projectile_profile,

@@ -15,8 +15,8 @@
       "revision": 0,
       "turn": 0,
       "lastCommandSeq": 0,
-      "stateHash": "b43a8357876ee0b7e1bf0c64ad2924f7fa0d49a8a85d9b96e133d62174f64b9b"
+      "stateHash": "c553aea564ed298fa59e44d50725c538f26706b3aeeeef59431ef16002579070"
     },
-    "saveRoundTripStateHash": "b43a8357876ee0b7e1bf0c64ad2924f7fa0d49a8a85d9b96e133d62174f64b9b"
+    "saveRoundTripStateHash": "c553aea564ed298fa59e44d50725c538f26706b3aeeeef59431ef16002579070"
   }
 }

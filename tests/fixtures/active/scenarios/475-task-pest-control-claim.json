@@ -54,7 +54,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "dae098c6a69985115f1af84ba57f271a48ff3d13ebbbdfd5522b9feb3028a814",
+      "stateHash": "c5fa61ac0b91cc904e4e907365b014d63acac20e4d6187e384e2ba78509446ee",
       "tasks": {
         "demo.task.pest-control": {
           "taskId": "demo.task.pest-control",

@@ -1112,3 +1112,7 @@ teleport-level-dungeon-option = { $name }（召回层：{ $depth }）
 teleport-level-depth = 选择目标层
 teleport-level-depth-option = 第 { $depth } 层
 action-teleport-level = 确认传送至指定地牢层（{ $cost } 金币）
+
+action-inn-reputation = 询问你的声望（{ $cost } 金币）
+
+facility-enchantment-choice = { $target } · { $steps } 档 → 命中 { $hit } / 伤害 { $damage } / 护甲 { $armor }（{ $cost } 金币）

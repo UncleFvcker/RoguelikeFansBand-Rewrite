@@ -10,6 +10,7 @@
   "maxStack": 1,
   "baseValue": 150000,
   "equipmentSlot": "body",
+  "armorEnchantment": 10,
   "modifiers": { "defense": 50 },
   "equipmentBonuses": { "meleeSkill": -2 },
   "resistances": {
@@ -25,6 +26,7 @@
     "activations": [
       {
         "id": "demo.item-activation.multi-hued-dragon-breath",
+        "equipmentValue": 10200,
         "nameKey": "item-activation-demo-multi-hued-dragon-breath-name",
         "weight": 1,
         "minDepth": 1,

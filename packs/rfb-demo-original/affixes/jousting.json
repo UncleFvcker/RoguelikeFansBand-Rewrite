@@ -12,6 +12,7 @@
         "deviceCheckDifficulty": 10,
         "effectProgramId": "rfb.effect.ego-riding-charge",
         "id": "rfb.device-activation.ego-24-charge",
+        "equipmentValue": 4900,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-jousting-name",

@@ -914,6 +914,8 @@ pub(super) fn validate_items(
             || item.modifiers.attack > 1_000_000
             || item.modifiers.defense < -1_000_000
             || item.modifiers.defense > 1_000_000
+            || !(-100..=100).contains(&item.armor_enchantment)
+            || (item.armor_enchantment != 0 && !item.tags.iter().any(|tag| tag == "armor"))
             || !(-100..=100).contains(&item.modifiers.speed)
             || attribute_modifiers_out_of_range(&item.modifiers)
             || equipment_bonuses_out_of_range(&item.equipment_bonuses)
@@ -1173,6 +1175,7 @@ pub(super) fn validate_items(
             let valid_activations = (1..=256).contains(&generation.activations.len())
                 && generation.activations.iter().all(|activation| {
                     activation_ids.insert(activation.id.clone())
+                        && (item.equipment_slot.is_none() || activation.equipment_value.is_some())
                         && validate_id(&activation.id).is_ok()
                         && validate_message_key(&activation.name_key).is_ok()
                         && (1..=1_000_000).contains(&activation.weight)

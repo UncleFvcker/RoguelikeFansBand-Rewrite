@@ -35,6 +35,44 @@ use rfb_protocol::{
 
 pub(crate) const GENERATED_ITEM_ID_PREFIX: &str = "generated.item.";
 
+pub(crate) fn item_enchantments_are_valid(
+    definition: &rfb_content::ItemDefinition,
+    enchantments: &ItemEnchantmentsDto,
+) -> bool {
+    let intrinsic = definition
+        .melee_profile
+        .as_ref()
+        .map(|p| (p.to_hit, p.to_damage))
+        .or_else(|| {
+            definition
+                .projectile_profile
+                .as_ref()
+                .map(|p| (p.to_hit, p.to_damage))
+        })
+        .or_else(|| {
+            definition
+                .ammunition_profile
+                .as_ref()
+                .map(|p| (p.to_hit, p.to_damage))
+        })
+        .unwrap_or((0, 0));
+    // Forced building enchantment can reach 5 + level/5. Offsets on a
+    // broken weapon also include the amount needed to clear its intrinsic penalty.
+    let maximum = i32::from(5 + crate::stats::MAX_LEVEL / 5);
+    [
+        intrinsic.0,
+        intrinsic.1,
+        i32::from(definition.armor_enchantment),
+    ]
+    .into_iter()
+    .zip([
+        enchantments.to_hit,
+        enchantments.to_damage,
+        enchantments.to_armor,
+    ])
+    .all(|(intrinsic, value)| value >= -15 && i32::from(value) <= maximum - intrinsic.min(0))
+}
+
 pub(crate) fn actor_max_hp_is_valid(
     definition: &rfb_content::ActorDefinition,
     max_hp: i32,
@@ -683,10 +721,7 @@ fn validate_item_runtime_state(
         }
         _ => device_recovery_progress == 0,
     };
-    if !(-15..=15).contains(&enchantments.to_hit)
-        || !(-15..=15).contains(&enchantments.to_damage)
-        || !(-15..=15).contains(&enchantments.to_armor)
-    {
+    if !item_enchantments_are_valid(definition, &enchantments) {
         return Err(CoreError::InvalidSave("item enchantment state is invalid"));
     }
     let valid_fuel = match (item_fuel_from_definition(definition), fuel) {
@@ -748,6 +783,7 @@ pub(crate) fn player_to_save(
         position: player.position,
         hp: player.hp,
         gold: 0,
+        fame: 0,
         nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
         fasting: false,
         base_max_hp: player.max_hp,

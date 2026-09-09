@@ -714,6 +714,17 @@ impl Game {
             .actor(&removed.kind_id)
             .expect("removed actor definition must remain available");
         let removed_experience_value = removed_definition.experience_value;
+        if credit_player
+            && removed_definition.tags.iter().any(|tag| tag == "unique")
+            && !self.actor_is_dead_unique_resurrection(&removed)
+        {
+            // The original evaluates one_in_(3) even for level 80+ uniques.
+            if self.rng.bounded(3) == 0 || removed_definition.level >= 80 {
+                self.fame =
+                    self.fame
+                        .saturating_add(if removed_definition.level >= 90 { 2 } else { 1 });
+            }
+        }
         if removed_definition
             .finite_lifetime_instance_limit()
             .is_some()
@@ -771,6 +782,7 @@ impl Game {
             let first_defeat = !state.guardian_defeated;
             if first_defeat {
                 state.guardian_defeated = true;
+                self.fame = self.fame.saturating_add(self.rng.bounded(3) as u16 + 1);
                 events.push(DomainEvent::DungeonGuardianDefeated {
                     dungeon_id: dungeon_id.clone(),
                     floor_id,

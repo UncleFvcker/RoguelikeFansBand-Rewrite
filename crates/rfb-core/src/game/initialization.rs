@@ -551,6 +551,7 @@ impl Game {
             entities,
             items,
             gold,
+            fame: 0,
             nutrition: rfb_protocol::PLAYER_NUTRITION_BIRTH,
             fasting: false,
             gold_piles: Vec::new(),

@@ -16,7 +16,7 @@ import {
   taskActionLabelKey,
 } from "./task-service-panel.ts";
 
-test("level teleport selection and closing are free; only confirmation dispatches the selected projection", (t) => {
+test("paid facility selection and closing are free; only confirmation dispatches the selected projection", (t) => {
   class Element extends EventTarget {
     children = [];
     dataset = {};
@@ -29,7 +29,11 @@ test("level teleport selection and closing are free; only confirmation dispatche
     append(...children) { this.children.push(...children); }
     replaceChildren(...children) { this.children = children; this.selected = undefined; }
     setAttribute() {}
-    querySelector() { return undefined; }
+    get selectedOptions() { return this.children.filter((child) => child.value === this.value); }
+    querySelector(selector) {
+      return this.children.flatMap((row) => row.children).find((element) =>
+        element.tag === "select" && selector === `select[data-facility-service="${element.dataset.facilityService}"]`);
+    }
     closest(selector) { return selector === "[data-facility-action]" && this.dataset.facilityAction ? this : undefined; }
     showModal() { this.open = true; }
     close() { this.open = false; this.dispatchEvent(new Event("close")); }
@@ -48,7 +52,8 @@ test("level teleport selection and closing are free; only confirmation dispatche
   const commands = [];
   const state = { busy: false, inventory: [], equipment: [] };
   const panel = new TaskServicePanel({
-    document, state, localization: { format: (key) => key },
+    document, state, localization: { format: (key, args) => key + (args ? JSON.stringify(args) : "") },
+    visibleItemName: (key) => key,
     dispatch: async (command) => { commands.push(command); }, beforeOpen: () => {},
   });
   panel.install();
@@ -80,6 +85,30 @@ test("level teleport selection and closing are free; only confirmation dispatche
   snapshot.taskServices[0].teleportDungeons = [];
   panel.render(snapshot);
   assert.equal(list.children[0].children[2].disabled, true);
+  commands.length = 0;
+  state.inventory = [{ id: "sword", displayNameKey: "sword-name", kindId: "sword-kind" }];
+  snapshot.taskServices = [{ id: "guild", playerAtEntrance: true, membership: "owner", tasks: [],
+    serviceActions: [{ kind: "enchant-weapon", cost: 0, targets: [{ itemId: "sword", choices: [
+      { steps: 1, cost: 1050, result: { toHit: 1, toDamage: 1, toArmor: 0 } },
+      { steps: 3, cost: 3150, result: { toHit: 3, toDamage: 3, toArmor: 0 } },
+    ] }] }],
+  }];
+  panel.render(snapshot);
+  const [tiers, enchant] = list.children[0].children;
+  assert.match(tiers.children[1].textContent, /"cost":3150/);
+  tiers.value = "sword:3";
+  tiers.dispatchEvent(new Event("change"));
+  elements.get("task-service-dialog").close();
+  assert.deepEqual(commands, []);
+  const enchantClick = new Event("click");
+  Object.defineProperty(enchantClick, "target", { value: enchant });
+  state.busy = true;
+  list.dispatchEvent(enchantClick);
+  assert.deepEqual(commands, []);
+  state.busy = false;
+  list.dispatchEvent(enchantClick);
+  assert.deepEqual(commands, [{ type: "use-facility-service", facilityId: "guild",
+    service: "enchant-weapon", itemId: "sword", enchantmentSteps: 3 }]);
 });
 
 test("monster research combines name, symbol and uniqueness filters without changing knowledge", () => {

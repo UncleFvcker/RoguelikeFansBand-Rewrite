@@ -68,7 +68,7 @@
       "revision": 2,
       "turn": 2,
       "lastCommandSeq": 2,
-      "stateHash": "f8305b4fd97ae4283984edf9aa3b17d3d541e4058c9272c43c6fec5baf468d51",
+      "stateHash": "8648590ab963ba6a76881638e256cc6c785f5366967c242f8322086466675d04",
       "worldTick": 20,
       "playerPosition": {
         "x": 96,
@@ -93,6 +93,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "f8305b4fd97ae4283984edf9aa3b17d3d541e4058c9272c43c6fec5baf468d51"
+    "saveRoundTripStateHash": "8648590ab963ba6a76881638e256cc6c785f5366967c242f8322086466675d04"
   }
 }

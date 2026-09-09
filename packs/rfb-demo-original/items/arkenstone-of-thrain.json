@@ -24,6 +24,7 @@
     "activations": [
       {
         "id": "demo.item-activation.arkenstone-clairvoyance",
+        "equipmentValue": 9200,
         "nameKey": "item-activation-demo-arkenstone-clairvoyance-name",
         "weight": 1,
         "minDepth": 1,

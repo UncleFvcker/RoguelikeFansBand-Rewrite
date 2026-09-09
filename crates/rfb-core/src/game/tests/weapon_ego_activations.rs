@@ -31,6 +31,7 @@ fn riding_charge_game(seed: u64) -> Game {
     affix.rfb_ego = None;
     affix.device_generation = Some(rfb_content::ItemDeviceGenerationDefinition {
         activations: vec![rfb_content::ItemDeviceActivationDefinition {
+            equipment_value: Some(0),
             id: ACTIVATION_ID.to_owned(),
             name_key: "test-device-activation-riding-charge-name".to_owned(),
             weight: 1,

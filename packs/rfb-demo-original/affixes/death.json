@@ -15,6 +15,7 @@
           "type": "genocide"
         },
         "id": "rfb.device-activation.ego-12-biased-genocide",
+        "equipmentValue": 7875,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -47,6 +48,7 @@
           "type": "mass-genocide"
         },
         "id": "rfb.device-activation.ego-12-biased-mass-genocide",
+        "equipmentValue": 15300,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -83,6 +85,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-genocide-one",
+        "equipmentValue": 9660,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -126,6 +129,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-wraithform",
+        "equipmentValue": 9375,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -171,6 +175,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-summon-undead",
+        "equipmentValue": 1125,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -206,6 +211,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-charm-undead",
+        "equipmentValue": 562,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -246,6 +252,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-bolt-dark",
+        "equipmentValue": 1050,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -286,6 +293,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-bolt-nether",
+        "equipmentValue": 1310,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -328,6 +336,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-ball-dark",
+        "equipmentValue": 16219,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -369,6 +378,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-ball-nether",
+        "equipmentValue": 3630,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -411,6 +421,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-breathe-dark",
+        "equipmentValue": 5700,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -452,6 +463,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-breathe-nether",
+        "equipmentValue": 7500,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -498,6 +510,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-dispel-good",
+        "equipmentValue": 1840,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -541,6 +554,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-dispel-life",
+        "equipmentValue": 1531,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -579,6 +593,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-drain-life",
+        "equipmentValue": 2401,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -620,6 +635,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-darkness-storm",
+        "equipmentValue": 12656,
         "maxDepth": 100,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -657,6 +673,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-animate-dead",
+        "equipmentValue": 735,
         "maxDepth": 77,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",
@@ -695,6 +712,7 @@
           "type": "ability-effect"
         },
         "id": "rfb.device-activation.ego-12-biased-scare-monsters",
+        "equipmentValue": 588,
         "maxDepth": 62,
         "minDepth": 1,
         "nameKey": "affix-legacy-death-name",

@@ -1152,6 +1152,12 @@ impl Game {
                 .expect("active task state must remain available");
             *state =
                 task_state_after_departure(state, departure.resolution, departure.initial_required);
+            if matches!(
+                departure.resolution,
+                Some(TaskResolution::Failed | TaskResolution::Abandoned)
+            ) {
+                self.fame_on_failure();
+            }
         }
         if let Some(arrival) = &plan.one_shot_arrival {
             let state = self

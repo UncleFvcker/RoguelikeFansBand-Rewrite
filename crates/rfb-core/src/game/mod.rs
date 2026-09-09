@@ -125,6 +125,7 @@ mod item_combat;
 mod item_curses;
 mod item_knowledge;
 mod item_use;
+mod item_value;
 mod lighting;
 mod loot;
 mod mining;
@@ -228,7 +229,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 110;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 111;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -812,6 +813,7 @@ pub struct Game {
     entities: Vec<Actor>,
     items: Vec<ItemInstance>,
     gold: u32,
+    fame: u16,
     nutrition: u16,
     fasting: bool,
     gold_piles: Vec<GoldPile>,
@@ -1100,6 +1102,7 @@ impl Game {
                     | GameAction::ResearchMonsterAtFacility { .. }
                     | GameAction::TeleportToDungeonLevelAtFacility { .. }
                     | GameAction::EatAtInn { .. }
+                    | GameAction::AskReputationAtInn { .. }
                     | GameAction::IdentifyAllAtFacility { .. }
                     | GameAction::UseFacilityService { .. }
                     | GameAction::UseBountyOffice { .. }
@@ -1328,10 +1331,12 @@ impl Game {
                 facility_id,
                 service,
                 item_id,
+                enchantment_steps,
             } => match self.use_town_facility_service(
                 &facility_id,
                 service,
                 item_id.as_deref(),
+                enchantment_steps,
                 &mut events,
             ) {
                 Ok(outcome) => events.push(DomainEvent::FacilityServiceCompleted { outcome }),
@@ -1365,6 +1370,14 @@ impl Game {
             GameAction::EatAtInn { facility_id } => {
                 if let Err(reason) = self.eat_at_inn(&facility_id, &mut events) {
                     events.push(DomainEvent::InnFoodUnavailable {
+                        facility_id,
+                        reason: reason.to_owned(),
+                    });
+                }
+            }
+            GameAction::AskReputationAtInn { facility_id } => {
+                if let Err(reason) = self.ask_reputation_at_inn(&facility_id, &mut events) {
+                    events.push(DomainEvent::InnReputationUnavailable {
                         facility_id,
                         reason: reason.to_owned(),
                     });
@@ -4151,6 +4164,7 @@ impl Game {
             .get_mut(task_id)
             .expect("paused task state must remain available");
         *state = abandoned_task_state(state, initial_required);
+        self.fame_on_failure();
         Some(changed.into_iter().collect())
     }
 

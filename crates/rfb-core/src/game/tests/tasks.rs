@@ -263,6 +263,7 @@ fn morivant_snakes_failed_and_abandoned_floors_stay_closed_after_save() {
         let mut game = morivant_snakes_game();
         let entry = game.player.position;
         dispatch_next(&mut game, GameCommand::TraverseStairs);
+        game.fame = if abandon { 20 } else { 90 };
         clear_monsters(&mut game);
         let action = if abandon {
             GameCommand::AbandonTask
@@ -276,6 +277,7 @@ fn morivant_snakes_failed_and_abandoned_floors_stay_closed_after_save() {
             TaskStatusKindDto::Failed
         };
         assert_eq!(game.task_states[SNAKES_TASK].status, expected);
+        assert_eq!(game.fame, if abandon { 10 } else { 60 });
         assert_eq!(game.wilderness_position, Some(Position { x: 47, y: 50 }));
         assert_eq!(game.player.position, entry);
         assert!(game.generated_artifact_ids.contains(JONES_WHIP));
@@ -1842,13 +1844,19 @@ fn thieves_hideout_departure_closes_the_entry_and_keeps_reward_and_failure_disti
         if cleared {
             game.entities.clear();
             dispatch_next(&mut game, GameCommand::Wait);
+            assert!((1..=2).contains(&game.fame));
             assert_eq!(
                 game.task_states["demo.task.thieves-hideout"].status,
                 TaskStatusKindDto::RewardAvailable
             );
         }
         game.player.position = Position { x: 1, y: 4 };
+        let fame = game.fame;
         let returned = dispatch_next(&mut game, GameCommand::TraverseStairs);
+        assert_eq!(
+            game.fame, fame,
+            "completion must not pay fame again on departure"
+        );
         assert_eq!(
             game.current_floor_id,
             wilderness::WILDERNESS_FLOOR_ID,
@@ -2078,7 +2086,7 @@ fn pest_control_floor_places_the_remaining_wargs_and_hides_downstairs() {
 }
 
 #[test]
-fn final_pest_control_kill_reveals_a_magic_stair_without_rng() {
+fn final_pest_control_kill_reveals_a_magic_stair_and_draws_only_fame() {
     let mut game =
         Game::new_with_build(53, "demo.build.warrior").expect("Warrens journey should create");
     game.task_states.insert(
@@ -2115,7 +2123,8 @@ fn final_pest_control_kill_reveals_a_magic_stair_without_rng() {
         })
         .max_by_key(|position| chebyshev_distance(game.player.position, *position))
         .expect("Pest Control floor should retain a remote empty floor tile");
-    let before_draws = game.rng_draw_counter();
+    let mut expected_rng = game.rng.clone();
+    let expected_fame = expected_rng.bounded(2) as u16 + 1;
     game.command_actor_deaths.push(ActorDeathRecord {
         actor_id: "task-target.warg".to_owned(),
         actor_kind_id: "demo.actor.warg".to_owned(),
@@ -2141,7 +2150,8 @@ fn final_pest_control_kill_reveals_a_magic_stair_without_rng() {
             .iter()
             .any(|event| matches!(event, DomainEvent::TaskExitRevealed { .. }))
     );
-    assert_eq!(game.rng_draw_counter(), before_draws);
+    assert_eq!(game.rng, expected_rng);
+    assert_eq!(game.fame, expected_fame);
 }
 
 #[test]
@@ -2491,6 +2501,10 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
     }];
 
     let conquered = dispatch_next(&mut game, GameCommand::Wait);
+    assert!(
+        (1..=4).contains(&game.fame),
+        "guardian fame plus the unique kill chance"
+    );
     assert!(
         conquered
             .events

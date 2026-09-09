@@ -1096,6 +1096,7 @@ impl Game {
             slots
         };
         let gold = payload.player.gold;
+        let fame = payload.player.fame;
         let nutrition = payload.player.nutrition;
         let fasting = payload.player.fasting;
         let player_name =
@@ -1424,6 +1425,7 @@ impl Game {
             riding_actor_id,
             riding_bond,
             gold,
+            fame,
             nutrition,
             fasting,
             build,
@@ -1676,6 +1678,7 @@ impl Game {
             &self.virtues,
         );
         player.gold = self.gold;
+        player.fame = self.fame;
         player.nutrition = self.nutrition;
         player.fasting = self.fasting;
         player.resources = self
