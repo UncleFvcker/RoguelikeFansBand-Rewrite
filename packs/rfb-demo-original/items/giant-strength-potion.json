@@ -9,6 +9,7 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.giant-strength-potion",
+  "potionNutrition": 250,
   "maxStack": 20,
   "nameKey": "item-demo-giant-strength-potion-name",
   "tags": [

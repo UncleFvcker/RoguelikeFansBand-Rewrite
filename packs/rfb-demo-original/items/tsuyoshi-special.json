@@ -9,6 +9,7 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.tsuyoshi-special",
+  "potionNutrition": 0,
   "maxStack": 20,
   "nameKey": "item-demo-tsuyoshi-special-name",
   "tags": [

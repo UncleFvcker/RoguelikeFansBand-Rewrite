@@ -347,7 +347,7 @@ impl Game {
         let mut rng = RfbRng::seeded(seed);
         let virtues = virtues::initial_virtues(&content, build.as_ref(), &mut rng);
         let gold = gold::starting_gold(build.as_ref(), &mut rng);
-        let starting_ration_quantity = hunger::starting_ration_quantity(build.as_ref(), &mut rng);
+        let starting_food_supply = hunger::starting_food_supply(build.as_ref(), &mut rng);
         let starting_torches = lighting::starting_torch_supply(build.as_ref(), &mut rng);
         let mut progress = CharacterProgress::new(seed, player_definition.max_hp);
         if let Some(identity) = build.as_ref() {
@@ -443,21 +443,29 @@ impl Game {
         let body_slots = resolve_body_slots(&content, build.as_ref())?;
         let mut next_item_instance_serial =
             derive_next_item_instance_serial(&player, &entities, &items)?;
-        if let Some(quantity) = starting_ration_quantity {
-            append_starting_item(
-                &content,
-                &StartingItemDefinition {
-                    item_kind_id: hunger::RATION_ITEM_KIND_ID.to_owned(),
-                    quantity,
-                    maximum_quantity: None,
-                    equipped: false,
-                    fully_charged: false,
-                },
-                &body_slots,
-                &mut items,
-                &mut next_item_instance_serial,
-                &mut rng,
-            )?;
+        if let Some((kind_id, mut quantity)) = starting_food_supply {
+            let max_stack = content
+                .item(kind_id)
+                .ok_or_else(|| CoreError::UnknownItem(kind_id.to_owned()))?
+                .max_stack;
+            while quantity > 0 {
+                let stack_quantity = quantity.min(max_stack);
+                append_starting_item(
+                    &content,
+                    &StartingItemDefinition {
+                        item_kind_id: kind_id.to_owned(),
+                        quantity: stack_quantity,
+                        maximum_quantity: None,
+                        equipped: false,
+                        fully_charged: false,
+                    },
+                    &body_slots,
+                    &mut items,
+                    &mut next_item_instance_serial,
+                    &mut rng,
+                )?;
+                quantity -= stack_quantity;
+            }
         }
         if let Some(supply) = starting_torches {
             for _ in 0..supply.quantity {

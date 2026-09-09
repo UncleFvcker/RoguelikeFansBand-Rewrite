@@ -16,6 +16,7 @@
   "generationLevel": 20,
   "glyph": "!",
   "id": "demo.item.prismatic-elixir",
+  "potionNutrition": 100,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-prismatic-elixir-name",

@@ -9,6 +9,7 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.antidote-potion",
+  "potionNutrition": 0,
   "maxStack": 20,
   "nameKey": "item-demo-antidote-potion-name",
   "tags": [

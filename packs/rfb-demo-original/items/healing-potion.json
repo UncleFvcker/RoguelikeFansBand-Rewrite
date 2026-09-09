@@ -10,6 +10,7 @@
   "generationLevel": 31,
   "glyph": "!",
   "id": "demo.item.healing-potion",
+  "potionNutrition": 200,
   "maxStack": 20,
   "mogaminatorRare": false,
   "mountUse": {

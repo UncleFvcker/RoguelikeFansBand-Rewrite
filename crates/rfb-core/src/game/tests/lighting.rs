@@ -4,7 +4,7 @@ use super::support::*;
 use super::*;
 use crate::game::lighting::{DUNGEON_AMBIENT_LIGHT, SURFACE_AMBIENT_LIGHT};
 use crate::game::{
-    gold::starting_gold, hunger::starting_ration_quantity, lighting::starting_torch_supply,
+    gold::starting_gold, hunger::starting_food_supply, lighting::starting_torch_supply,
 };
 use rfb_protocol::{ItemFuelDto, ItemFuelKindDto};
 
@@ -79,7 +79,7 @@ fn warrior_birth_rolls_three_to_seven_matching_torches_after_food() {
         let mut expected_rng = RfbRng::seeded(seed);
         let _ = crate::game::virtues::initial_virtues(&content, Some(&build), &mut expected_rng);
         let _ = starting_gold(Some(&build), &mut expected_rng);
-        let _ = starting_ration_quantity(Some(&build), &mut expected_rng);
+        let _ = starting_food_supply(Some(&build), &mut expected_rng);
         let expected = starting_torch_supply(Some(&build), &mut expected_rng)
             .expect("Warrior should receive birth torches");
         let shop_draws_before = expected_rng.draw_counter;

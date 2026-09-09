@@ -10,6 +10,7 @@
   "generationLevel": 5,
   "glyph": "!",
   "id": "demo.item.clumsiness-potion",
+  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-clumsiness-potion-name",

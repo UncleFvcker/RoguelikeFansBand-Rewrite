@@ -9,6 +9,7 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.sleep-potion",
+  "potionNutrition": 100,
   "maxStack": 20,
   "nameKey": "item-demo-sleep-potion-name",
   "tags": [

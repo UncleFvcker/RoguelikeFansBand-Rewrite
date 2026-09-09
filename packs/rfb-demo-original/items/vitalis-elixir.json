@@ -10,6 +10,7 @@
   "generationLevel": 100,
   "glyph": "!",
   "id": "demo.item.vitalis-elixir",
+  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "mountUse": {

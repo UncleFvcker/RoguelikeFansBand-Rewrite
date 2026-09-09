@@ -10,6 +10,7 @@
   "generationLevel": 0,
   "glyph": "!",
   "id": "demo.item.light-healing-potion",
+  "potionNutrition": 50,
   "maxStack": 20,
   "mogaminatorRare": false,
   "mountUse": {

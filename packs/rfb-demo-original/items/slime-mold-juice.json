@@ -9,6 +9,7 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.slime-mold-juice",
+  "potionNutrition": 400,
   "maxStack": 20,
   "nameKey": "item-demo-slime-mold-juice-name",
   "tags": [

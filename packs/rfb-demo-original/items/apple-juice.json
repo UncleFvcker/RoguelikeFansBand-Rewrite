@@ -9,6 +9,7 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.apple-juice",
+  "potionNutrition": 250,
   "maxStack": 20,
   "nameKey": "item-demo-apple-juice-name",
   "tags": [

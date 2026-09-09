@@ -9,6 +9,7 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.self-knowledge-potion",
+  "potionNutrition": 0,
   "maxStack": 20,
   "nameKey": "item-demo-self-knowledge-potion-name",
   "tags": [

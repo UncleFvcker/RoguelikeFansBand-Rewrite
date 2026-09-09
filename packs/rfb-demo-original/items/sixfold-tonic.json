@@ -10,6 +10,7 @@
   "generationLevel": 60,
   "glyph": "!",
   "id": "demo.item.sixfold-tonic",
+  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-sixfold-tonic-name",

@@ -3,10 +3,278 @@
 use super::support::*;
 use super::*;
 use crate::game::{
-    gold::starting_gold, hunger::starting_ration_quantity, lighting::starting_torch_supply,
+    gold::starting_gold, hunger::starting_food_supply, lighting::starting_torch_supply,
 };
 
 const RATION_KIND_ID: &str = "demo.item.ration-of-food";
+
+fn ent_birth_catalog() -> Arc<ContentCatalog> {
+    static CATALOG: std::sync::OnceLock<Arc<ContentCatalog>> = std::sync::OnceLock::new();
+    CATALOG
+        .get_or_init(|| {
+            let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("../../packs/rfb-demo-original");
+            let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
+            // Exercise actual birth without opening the unfinished race in the shipped catalog.
+            artifact
+                .content
+                .races
+                .iter_mut()
+                .find(|race| race.id == "rfb-legacy.race.ent")
+                .unwrap()
+                .tags
+                .push("rfb-compatibility".to_owned());
+            Arc::new(ContentCatalog::from_artifact(
+                rfb_content::encode_content(artifact.content).unwrap(),
+            ))
+        })
+        .clone()
+}
+
+fn ent_birth(seed: u64, build: &str) -> Game {
+    Game::from_content_internal(
+        seed,
+        ent_birth_catalog(),
+        DEFAULT_WORLD_ID,
+        Some(build),
+        Some("rfb-legacy.race.ent"),
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .unwrap()
+}
+
+fn consume_for_nutrition(game: &mut Game, kind: &str) -> Vec<DomainEvent> {
+    give_inventory_item(game, "test.ent.consumable", kind);
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        "test.ent.consumable",
+        None,
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .unwrap();
+    assert!(
+        game.items
+            .iter()
+            .all(|item| item.id != "test.ent.consumable")
+    );
+    events
+}
+
+#[test]
+fn ent_birth_water_and_lighting_merge_with_all_six_class_kits_and_round_trip() {
+    let mut quantities = BTreeSet::new();
+    for build_id in [
+        "demo.build.warrior",
+        "demo.build.archer",
+        "demo.build.high-mage-death",
+        "demo.build.paladin-death",
+        "demo.build.cavalry",
+        "demo.build.sniper",
+    ] {
+        for seed in 0..16 {
+            let game = ent_birth(seed, build_id);
+            let carried: Vec<_> = game
+                .items
+                .iter()
+                .filter(|item| !matches!(item.location, ItemLocation::Ground(_)))
+                .collect();
+            assert!(carried.iter().all(|item| item.kind_id != RATION_KIND_ID));
+            let water: Vec<_> = carried
+                .iter()
+                .filter(|item| item.kind_id == crate::game::hunger::WATER_ITEM_KIND_ID)
+                .collect();
+            let total: u32 = water.iter().map(|item| item.quantity).sum();
+            quantities.insert(total);
+            assert!((15..=23).contains(&total));
+            assert!(
+                water
+                    .iter()
+                    .all(|item| item.location == ItemLocation::Inventory
+                        && (1..=20).contains(&item.quantity))
+            );
+            let torches: Vec<_> = carried
+                .iter()
+                .filter(|item| item.kind_id == crate::game::lighting::WOODEN_TORCH_ITEM_KIND_ID)
+                .collect();
+            assert!((3..=7).contains(&torches.len()));
+            assert!(torches.iter().all(|item| item.quantity == 1
+                && item.location == ItemLocation::Inventory
+                && item.fuel == torches[0].fuel));
+            let fuel = torches[0].fuel.unwrap().current;
+            assert!((1500..=3500).contains(&fuel) && fuel % 500 == 0);
+            let (build, _, class, personality) =
+                build_definitions(&game.content, game.build.as_ref().unwrap()).unwrap();
+            let kit = class
+                .starting_items
+                .iter()
+                .chain(&personality.starting_items)
+                .chain(&build.starting_items);
+            assert_eq!(
+                carried.len(),
+                water.len() + torches.len() + kit.clone().count()
+            );
+            for expected in kit {
+                let items: Vec<_> = carried
+                    .iter()
+                    .filter(|item| item.kind_id == expected.item_kind_id)
+                    .collect();
+                assert_eq!(items.len(), 1, "{build_id}: {}", expected.item_kind_id);
+                assert!(
+                    (expected.quantity..=expected.maximum_quantity.unwrap_or(expected.quantity))
+                        .contains(&items[0].quantity)
+                );
+                assert_eq!(
+                    matches!(items[0].location, ItemLocation::Equipped { .. }),
+                    expected.equipped
+                );
+            }
+            let restored =
+                Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+            assert_eq!(restored.state_hash(), game.state_hash());
+            assert_eq!(restored.snapshot(), game.snapshot());
+        }
+    }
+    assert_eq!(quantities, (15..=23).collect());
+}
+
+#[test]
+fn ent_food_divisor_uses_current_form_and_keeps_waybread_healing_and_antidote() {
+    for temporary in [false, true] {
+        let mut game = ent_birth(435, "demo.build.warrior");
+        clear_monsters(&mut game);
+        if temporary {
+            game.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
+            let mut form =
+                monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100_000, "test.ent").status;
+            form.granted_race_id = Some("rfb-legacy.race.ent".to_owned());
+            game.player.statuses.push(form);
+        }
+        game.nutrition = 1000;
+        consume_for_nutrition(&mut game, RATION_KIND_ID);
+        assert_eq!(game.nutrition, 1250);
+        game.player.hp = 1;
+        game.player
+            .statuses
+            .push(monster_combat::melee_status(STATUS_POISON, 100, "test.ent").status);
+        consume_for_nutrition(&mut game, "demo.item.piece-of-elvish-waybread");
+        assert_eq!(game.nutrition, 1625);
+        assert!(game.player.hp > 1);
+        assert!(!game.player_has_status_kind(STATUS_POISON));
+        game.player.statuses.clear();
+        game.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
+        consume_for_nutrition(&mut game, RATION_KIND_ID);
+        assert_eq!(game.nutrition, 6625);
+    }
+}
+
+#[test]
+fn ent_potions_apply_original_signed_nutrition_after_effects_with_native_form_guard() {
+    for (kind, native_gain, other_gain) in [
+        ("water-potion", 4200, 200),
+        ("apple-juice", 4750, 250),
+        ("swiftstep-tonic", 2000, 0),
+        ("light-healing-potion", 2550, 50),
+        ("invulnerability-potion", -500, -2500),
+    ] {
+        for form in 0..4 {
+            let mut game = ent_birth(436, "demo.build.warrior");
+            clear_monsters(&mut game);
+            if form == 1 || form == 3 {
+                game.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
+            }
+            if form == 1 || form == 2 {
+                let mut status =
+                    monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100_000, "test.ent")
+                        .status;
+                status.granted_race_id = Some(
+                    if form == 1 {
+                        "rfb-legacy.race.ent"
+                    } else {
+                        "demo.race.rfb-human"
+                    }
+                    .to_owned(),
+                );
+                game.player.statuses.push(status);
+            }
+            game.nutrition = 5000;
+            consume_for_nutrition(&mut game, &format!("demo.item.{kind}"));
+            assert_eq!(
+                i32::from(game.nutrition),
+                5000 + if form == 0 { native_gain } else { other_gain },
+                "{kind}, form {form}"
+            );
+        }
+    }
+    let mut game = ent_birth(436, "demo.build.warrior");
+    for before in [14000, 14999, 15000] {
+        game.nutrition = before;
+        consume_for_nutrition(&mut game, crate::game::hunger::WATER_ITEM_KIND_ID);
+        assert_eq!(game.nutrition, 14999);
+    }
+    game.nutrition = 9000;
+    game.player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_POISON, 100, "test.ent").status);
+    consume_for_nutrition(&mut game, "demo.item.salt-water");
+    assert_eq!(game.nutrition, 2099);
+    assert!(!game.player_has_status_kind(STATUS_POISON));
+    assert!(game.player_has_status_kind(STATUS_PARALYSIS));
+    let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn ent_can_buy_water_from_projected_store_stock_and_drink_it() {
+    let mut game = ent_birth(437, "demo.build.warrior");
+    clear_monsters(&mut game);
+    game.items
+        .retain(|item| item.kind_id != crate::game::hunger::WATER_ITEM_KIND_ID);
+    game.player.position = Position { x: 32, y: 13 };
+    game.gold = 1000;
+    game.mark_shop_visited_at_player().unwrap();
+    let snapshot = game.snapshot();
+    let shop = snapshot
+        .shops
+        .iter()
+        .find(|shop| shop.id == "demo.shop.outpost-general-store")
+        .unwrap();
+    let water = shop
+        .stock
+        .iter()
+        .find(|item| item.kind_id == crate::game::hunger::WATER_ITEM_KIND_ID)
+        .unwrap();
+    let price = water.unit_price;
+    let command = GameCommand::BuyFromShop {
+        shop_id: shop.id.clone(),
+        item_id: water.id.clone(),
+        quantity: 1,
+    };
+    dispatch_next(&mut game, command);
+    assert_eq!(game.gold, 1000 - price);
+    let item_id = game
+        .items
+        .iter()
+        .find(|item| {
+            item.kind_id == crate::game::hunger::WATER_ITEM_KIND_ID
+                && item.location == ItemLocation::Inventory
+        })
+        .unwrap()
+        .id
+        .clone();
+    game.nutrition = 1000;
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: item_id.clone(),
+            target: None,
+        },
+    );
+    assert_eq!(game.nutrition, 5200);
+    assert!(game.items.iter().all(|item| item.id != item_id));
+}
 
 #[test]
 fn warrior_birth_rolls_five_to_nine_rations_after_gold() {
@@ -21,7 +289,7 @@ fn warrior_birth_rolls_five_to_nine_rations_after_gold() {
         };
         let _ = crate::game::virtues::initial_virtues(&content, Some(&build), &mut expected_rng);
         let expected_gold = starting_gold(Some(&build), &mut expected_rng);
-        let expected_quantity = starting_ration_quantity(Some(&build), &mut expected_rng)
+        let expected_quantity = starting_food_supply(Some(&build), &mut expected_rng)
             .expect("Warrior should receive birth rations");
         let _ = starting_torch_supply(Some(&build), &mut expected_rng)
             .expect("Warrior should receive birth torches after rations");
@@ -37,7 +305,10 @@ fn warrior_birth_rolls_five_to_nine_rations_after_gold() {
 
         assert_eq!(game.gold, expected_gold);
         assert_eq!(ration.id, "generated.item.1");
-        assert_eq!(ration.quantity, expected_quantity);
+        assert_eq!(
+            (ration.kind_id.as_str(), ration.quantity),
+            expected_quantity
+        );
         assert!((5..=9).contains(&ration.quantity));
         assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_BIRTH);
         assert!(game.rng_draw_counter() > shop_draws_before);

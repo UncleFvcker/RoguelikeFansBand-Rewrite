@@ -10,6 +10,7 @@
   "generationLevel": 20,
   "glyph": "!",
   "id": "demo.item.cure-critical-wounds-potion",
+  "potionNutrition": 100,
   "maxStack": 20,
   "mogaminatorRare": false,
   "mountUse": {

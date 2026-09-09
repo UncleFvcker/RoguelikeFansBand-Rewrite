@@ -638,8 +638,13 @@ fn restorative_item_sequence_recovers_resource_then_removes_status() {
         .collect::<Vec<_>>();
     assert_eq!(
         effect_events,
-        vec!["item.use-resource-restored", "item.use-status-removed"]
+        vec![
+            "item.use-resource-restored",
+            "item.use-status-removed",
+            "item.use-food"
+        ]
     );
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_BIRTH + 100);
 }
 
 #[test]

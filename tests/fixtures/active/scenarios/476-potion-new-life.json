@@ -35,7 +35,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "3e67af1836d059f39b9dffb06779a1e86cdbea65d924db1d0ea3035b8e032aa1",
+      "stateHash": "ecf91021c3ffa7d077574c370a21abb7359f448eae4d16538102eef709d8ad71",
       "playerHp": 33,
       "playerMaxHp": 56,
       "inventoryStackCount": 9,
@@ -95,8 +95,27 @@
           "nameKey": "item-demo-new-life-potion-name",
           "source": "demo.item.new-life-potion"
         }
+      },
+      {
+        "kind": "item.use-food",
+        "messageKey": "item-use-food",
+        "args": {
+          "amount": "100",
+          "nameKey": "item-demo-new-life-potion-name",
+          "nutrition": "10099",
+          "target": "demo.item.new-life-potion"
+        }
+      },
+      {
+        "kind": "hunger.state-changed",
+        "messageKey": "hunger-state-changed",
+        "args": {
+          "from": "normal",
+          "nutrition": "10099",
+          "to": "full"
+        }
       }
     ],
-    "saveRoundTripStateHash": "3e67af1836d059f39b9dffb06779a1e86cdbea65d924db1d0ea3035b8e032aa1"
+    "saveRoundTripStateHash": "ecf91021c3ffa7d077574c370a21abb7359f448eae4d16538102eef709d8ad71"
   }
 }

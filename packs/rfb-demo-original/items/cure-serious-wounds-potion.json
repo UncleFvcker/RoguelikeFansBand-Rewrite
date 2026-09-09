@@ -10,6 +10,7 @@
   "generationLevel": 10,
   "glyph": "!",
   "id": "demo.item.cure-serious-wounds-potion",
+  "potionNutrition": 100,
   "maxStack": 20,
   "mogaminatorRare": false,
   "mountUse": {

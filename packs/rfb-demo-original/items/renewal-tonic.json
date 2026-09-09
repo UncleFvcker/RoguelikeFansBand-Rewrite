@@ -10,6 +10,7 @@
   "generationLevel": 20,
   "glyph": "!",
   "id": "demo.item.renewal-tonic",
+  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-renewal-tonic-name",

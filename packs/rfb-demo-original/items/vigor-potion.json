@@ -10,6 +10,7 @@
   "generationLevel": 1,
   "glyph": "!",
   "id": "demo.item.vigor-potion",
+  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-vigor-potion-name",

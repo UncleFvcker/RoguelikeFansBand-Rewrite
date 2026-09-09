@@ -10,6 +10,7 @@
   "generationLevel": 30,
   "glyph": "!",
   "id": "demo.item.dexterity-potion",
+  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-dexterity-potion-name",

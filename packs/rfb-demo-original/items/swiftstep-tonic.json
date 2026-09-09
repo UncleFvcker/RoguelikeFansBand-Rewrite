@@ -10,6 +10,7 @@
   "generationLevel": 1,
   "glyph": "!",
   "id": "demo.item.swiftstep-tonic",
+  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "mountUse": {

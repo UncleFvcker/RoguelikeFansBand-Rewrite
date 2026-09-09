@@ -1172,6 +1172,13 @@
       "type": "array",
       "uniqueItems": true
     },
+    "potionNutrition": {
+      "default": 0,
+      "format": "int16",
+      "maximum": 32767,
+      "minimum": -32768,
+      "type": "integer"
+    },
     "projectileProfile": {
       "anyOf": [
         {

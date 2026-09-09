@@ -455,7 +455,7 @@ test("food events report eating hunger changes fainting and starvation", () => {
         nutrition: "14999",
       },
     }),
-    "You eat Ration of Food, restoring 5000 food (14999 / 15000).",
+    "You gain 5000 food from Ration of Food (14999 / 15000).",
   );
   assert.equal(
     formatter.formatEvent({

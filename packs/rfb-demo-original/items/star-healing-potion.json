@@ -10,6 +10,7 @@
   "generationLevel": 80,
   "glyph": "!",
   "id": "demo.item.star-healing-potion",
+  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "mountUse": {

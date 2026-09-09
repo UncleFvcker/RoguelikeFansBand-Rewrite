@@ -10,6 +10,7 @@
   "generationLevel": 50,
   "glyph": "!",
   "id": "demo.item.granite-tonic",
+  "potionNutrition": 250,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-granite-tonic-name",

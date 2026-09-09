@@ -9,6 +9,7 @@
   "formatVersion": 1,
   "glyph": "!",
   "id": "demo.item.water-potion",
+  "potionNutrition": 200,
   "maxStack": 20,
   "nameKey": "item-demo-water-potion-name",
   "tags": [

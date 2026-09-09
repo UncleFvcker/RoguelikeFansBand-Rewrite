@@ -10,6 +10,7 @@
   "generationLevel": 75,
   "glyph": "!",
   "id": "demo.item.blood-potion",
+  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-blood-potion-name",

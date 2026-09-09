@@ -310,6 +310,57 @@ impl Game {
             .map_or(1, |(_, race, _, _)| race.food_nutrition_divisor)
     }
 
+    fn apply_potion_nutrition(
+        &mut self,
+        definition: &rfb_content::ItemDefinition,
+        events: &mut Vec<DomainEvent>,
+    ) {
+        let transformed = self
+            .player
+            .statuses
+            .iter()
+            .any(|status| status.granted_race_id.is_some());
+        let native_ent = !transformed
+            && self
+                .build
+                .as_ref()
+                .is_some_and(|build| build.race_id == "rfb-legacy.race.ent");
+        let pval = i32::from(definition.potion_nutrition);
+        let amount = if native_ent {
+            pval + (pval * 10).max(0) + 2000
+        } else if transformed {
+            pval
+        } else if self.player_is_skeleton() {
+            0
+        } else {
+            pval / i32::from(self.player_food_nutrition_divisor())
+        };
+        if amount == 0 && !native_ent {
+            return;
+        }
+        let before_state = self.nutrition_state();
+        let before = self.nutrition;
+        let maximum = rfb_protocol::PLAYER_NUTRITION_MAXIMUM - u16::from(native_ent);
+        self.nutrition = (i32::from(before) + amount).clamp(0, i32::from(maximum)) as u16;
+        if self.nutrition > before {
+            self.fasting = false;
+            events.push(DomainEvent::ItemNutritionIncreased {
+                source_kind_id: definition.id.clone(),
+                display_name_key: self.item_display_name_key(&definition.id),
+                amount: self.nutrition - before,
+                nutrition: self.nutrition,
+            });
+        }
+        let after_state = self.nutrition_state();
+        if after_state != before_state {
+            events.push(DomainEvent::NutritionStateChanged {
+                from: before_state,
+                to: after_state,
+                nutrition: self.nutrition,
+            });
+        }
+    }
+
     fn resolve_starvation_paralysis_antidote(
         &mut self,
         source_kind_id: &str,
@@ -2650,6 +2701,9 @@ impl Game {
         )?;
         if snotling_mushroom_boost {
             self.apply_snotling_mushroom_boost(&definition.id, events);
+        }
+        if definition.tags.iter().any(|tag| tag == "potion") {
+            self.apply_potion_nutrition(&definition, events);
         }
         if skeleton_food_falls_through {
             self.drop_inventory_quantity(item_id, 1)?

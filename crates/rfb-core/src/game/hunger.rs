@@ -3,6 +3,7 @@
 use super::*;
 
 pub(super) const RATION_ITEM_KIND_ID: &str = "demo.item.ration-of-food";
+pub(super) const WATER_ITEM_KIND_ID: &str = "demo.item.water-potion";
 const GOLEM_RACE_ID: &str = "rfb-legacy.race.golem";
 const SKELETON_RACE_ID: &str = "rfb-legacy.race.skeleton";
 const ZOMBIE_RACE_ID: &str = "rfb-legacy.race.zombie";
@@ -18,10 +19,13 @@ pub(super) const NUTRITION_STARVING: u16 = 100;
 const REGENERATION_WEAK_FACTOR: u64 = 98;
 const REGENERATION_FAINT_FACTOR: u64 = 33;
 
-pub(super) fn starting_ration_quantity(
+pub(super) fn starting_food_supply(
     build: Option<&CharacterBuildIdentity>,
     rng: &mut RfbRng,
-) -> Option<u32> {
+) -> Option<(&'static str, u32)> {
+    if build.is_some_and(|identity| identity.race_id == "rfb-legacy.race.ent") {
+        return Some((WATER_ITEM_KIND_ID, (rng.bounded(9) + 15) as u32));
+    }
     build
         .is_some_and(|identity| {
             !matches!(
@@ -29,7 +33,7 @@ pub(super) fn starting_ration_quantity(
                 GOLEM_RACE_ID | SKELETON_RACE_ID | ZOMBIE_RACE_ID
             )
         })
-        .then(|| u32::try_from(rng.bounded(5) + 5).expect("birth ration quantity must fit u32"))
+        .then(|| (RATION_ITEM_KIND_ID, (rng.bounded(5) + 5) as u32))
 }
 
 impl Game {

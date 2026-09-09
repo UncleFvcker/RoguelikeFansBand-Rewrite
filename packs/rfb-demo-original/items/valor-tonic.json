@@ -10,6 +10,7 @@
   "generationLevel": 1,
   "glyph": "!",
   "id": "demo.item.valor-tonic",
+  "potionNutrition": 0,
   "maxStack": 20,
   "mogaminatorRare": false,
   "nameKey": "item-demo-valor-tonic-name",

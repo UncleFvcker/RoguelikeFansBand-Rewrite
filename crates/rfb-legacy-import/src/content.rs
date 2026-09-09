@@ -3729,6 +3729,9 @@ fn item_json_with_terrain(
         "resistsEnchantment": resists_enchantment,
         "tags": tags.clone(),
     });
+    if entry.tval == 75 {
+        value["potionNutrition"] = serde_json::json!(entry.pval);
+    }
     if entry.index != 0 {
         value["rfbBaseKind"] = serde_json::json!({
             "sourceIndex": entry.index,
@@ -7722,6 +7725,9 @@ fn race_json(
             .collect::<Vec<_>>(),
         "tags": legacy_race_tags(entry),
     });
+    if entry.id == "ent" {
+        value["foodNutritionDivisor"] = serde_json::json!(20);
+    }
     let modifiers = character_modifiers(entry);
     if !modifiers.is_empty() {
         value["modifiers"] = serde_json::Value::Object(modifiers);
@@ -25084,6 +25090,29 @@ static void _sprite_calc_bonuses(void)
             ["forest-adapted", "legacy-import", "polymorph-candidate"]
         );
         assert_eq!(legacy_race_kin_glyph("ent"), '#');
+        assert_eq!(
+            race_json(&entry, &[], &mut ContentImportReport::default())["foodNutritionDivisor"],
+            20
+        );
+    }
+
+    #[test]
+    fn potion_nutrition_preserves_original_signed_pval_separately_from_active_effects() {
+        for (sval, pval) in [(0, 200), (1, 250), (5, 0), (62, -2500)] {
+            let value = item_json(
+                &LegacyItemEntry {
+                    tval: 75,
+                    sval,
+                    pval,
+                    ..Default::default()
+                },
+                "test",
+                &LauncherAmmoIndex::default(),
+                None,
+                &mut ContentImportReport::default(),
+            );
+            assert_eq!(value["potionNutrition"], pval);
+        }
     }
 
     #[test]

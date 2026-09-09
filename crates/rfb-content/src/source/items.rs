@@ -44,6 +44,8 @@ pub(crate) struct SourceItemDefinition {
     weight_tenths_pound: u16,
     #[serde(default)]
     tunneling_pval: i16,
+    #[serde(default)]
+    potion_nutrition: i16,
     max_stack: u32,
     #[serde(default)]
     base_value: u32,
@@ -275,6 +277,7 @@ impl SourceItemDefinition {
             rfb_base_kind: self.rfb_base_kind,
             weight_tenths_pound: self.weight_tenths_pound,
             tunneling_pval: self.tunneling_pval,
+            potion_nutrition: self.potion_nutrition,
             max_stack: self.max_stack,
             base_value: self.base_value,
             equipment_slot: self.equipment_slot,
