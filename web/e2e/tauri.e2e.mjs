@@ -49,6 +49,7 @@ const desktopLogPath = path.join(artifactDirectory, "e2e-rfb-desktop.log");
 const renderProfileOnly = process.argv.includes("--render-profile");
 const tomteOnly = process.argv.includes("--tomte");
 const tonberryOnly = process.argv.includes("--tonberry");
+const entOnly = process.argv.includes("--ent");
 const logs = [];
 let child;
 let client;
@@ -89,8 +90,8 @@ async function main() {
     client = await WebDriverClient.create(port, child);
     if (renderProfileOnly) {
       await runRendererProfile(client, artifactDirectory);
-    } else if (tomteOnly || tonberryOnly) {
-      await runRaceScenario(client, tonberryOnly ? "tonberry" : "tomte");
+    } else if (tomteOnly || tonberryOnly || entOnly) {
+      await runRaceScenario(client, entOnly ? "ent" : tonberryOnly ? "tonberry" : "tomte");
     } else {
       await runScenario(client);
     }
@@ -103,7 +104,7 @@ async function main() {
       );
     }
     process.stdout.write(
-      renderProfileOnly ? "Renderer profile passed.\n" : tomteOnly || tonberryOnly ? "Race desktop acceptance passed.\n" : "Tauri desktop E2E passed.\n",
+      renderProfileOnly ? "Renderer profile passed.\n" : tomteOnly || tonberryOnly || entOnly ? "Race desktop acceptance passed.\n" : "Tauri desktop E2E passed.\n",
     );
   } catch (error) {
     await mkdir(artifactDirectory, { recursive: true });
@@ -317,9 +318,10 @@ async function runScenario(driver) {
 
 async function runRaceScenario(driver, raceId) {
   const isTomte = raceId === "tomte";
-  const raceName = isTomte ? "托姆特" : "冬贝利";
+  const isEnt = raceId === "ent";
+  const raceName = isEnt ? "树人" : isTomte ? "托姆特" : "冬贝利";
   const slot = isTomte ? "head" : "right-hand";
-  const trait = isTomte ? "tomte-headgear" : "tonberry-rules";
+  const trait = isEnt ? "ent-rules" : isTomte ? "tomte-headgear" : "tonberry-rules";
   const builds = ["warrior", "high-mage-death", "archer"];
   const expected = await loadExpectedIdentity();
   const report = { identity: expected, checks: [] };
@@ -352,8 +354,18 @@ async function runRaceScenario(driver, raceId) {
     assert.equal(description.name, raceName);
     assert.equal(description.visible, true);
     assert.equal(description.descriptionId, `session-${raceId}-description`);
-    assert.ok(isTomte ? description.text.includes("1.0 磅") && description.text.includes("40")
+    assert.ok(isEnt ? description.text.includes("4200") && description.text.includes("14999") && description.text.includes("召唤树人")
+      : isTomte ? description.text.includes("1.0 磅") && description.text.includes("40")
       : description.text.includes("偏爱菜刀和宽刃刀") && description.text.includes("0.04") && description.text.includes("军刀"));
+    if (isEnt) {
+      const layout = await driver.execute(`
+        const note = document.querySelector("#session-ent-description");
+        note.scrollIntoView({ block: "start" });
+        return { bullets: note.querySelectorAll("li").length, fits: note.scrollWidth <= note.clientWidth };
+      `);
+      assert.deepEqual(layout, { bullets: 8, fits: true });
+      await writeFile(path.join(artifactDirectory, `${raceId}-${build}-creation.png`), await driver.screenshot(), "base64");
+    }
     await click(driver, "#session-start-game");
     await driver.waitFor(`return document.documentElement.dataset.appMode === "playing" && document.querySelector("#connection-status")?.classList.contains("ready")`, "race creation", 60_000);
     assert.equal((await state()).race, raceName);
@@ -361,10 +373,10 @@ async function runRaceScenario(driver, raceId) {
     assert.equal(await driver.execute(`return document.querySelector("#map-host").dataset.protocolVersion;`), expected.protocolVersion);
     await click(driver, "#player-ui-character-open");
     await click(driver, "#character-tab-details");
-    await click(driver, isTomte ? "#character-detail-tab-defenses" : "#character-detail-tab-offense");
-    await driver.waitFor(`return document.querySelector('[data-trait="' + arguments[0] + '"]')?.textContent.includes(arguments[1])`, "racial trait projection", 10_000, [trait, isTomte ? "头饰未超重" : "0.04"]);
+    await click(driver, isTomte || isEnt ? "#character-detail-tab-defenses" : "#character-detail-tab-offense");
+    await driver.waitFor(`return document.querySelector('[data-trait="' + arguments[0] + '"]')?.textContent.includes(arguments[1])`, "racial trait projection", 10_000, [trait, isEnt ? "14999" : isTomte ? "头饰未超重" : "0.04"]);
     if (!isTomte) {
-      assert.equal(await driver.execute(`return document.querySelectorAll('[data-trait="tonberry-rules"] .race-effects-list > li').length;`), 6);
+      assert.equal(await driver.execute(`return document.querySelectorAll('[data-trait="' + arguments[0] + '"] .race-effects-list > li').length;`, [trait]), isEnt ? 8 : 6);
     }
     await driver.execute(`const row = document.querySelector('[data-trait="' + arguments[0] + '"]'); row.open = true; row.scrollIntoView({ block: "center" }); return true;`, [trait]);
     await writeFile(path.join(artifactDirectory, `${raceId}-${build}.png`), await driver.screenshot(), "base64");
@@ -383,6 +395,31 @@ async function runRaceScenario(driver, raceId) {
       await driver.execute(`if (document.querySelector("#player-page-dialog").open) document.querySelector("#player-page-close").click(); return true;`);
     }
     await click(driver, "#player-ui-inventory-open");
+    if (isEnt) {
+      const beforeWater = await driver.execute(`
+        const rows = [...document.querySelectorAll("#inventory-list .inventory-item")];
+        const water = rows.filter(row => row.dataset.itemKindId === "demo.item.water-potion");
+        const quantity = water.reduce((sum, row) => sum + Number(row.querySelector(".inventory-quantity").textContent.match(/\\d+/)[0]), 0);
+        const nutritionPercent = Number(document.querySelector("#nutrition-value").textContent.match(/\\d+/)[0]);
+        water[0].querySelector('input[type="checkbox"]').click();
+        return { quantity, nutritionPercent, hasRations: rows.some(row => row.dataset.itemKindId === "demo.item.ration-of-food"), hasTorches: rows.some(row => row.textContent.includes("火把")) };
+      `);
+      assert.ok(beforeWater.quantity >= 15 && beforeWater.quantity <= 23);
+      assert.equal(beforeWater.hasRations, false);
+      assert.equal(beforeWater.hasTorches, true);
+      const beforeDrink = await state();
+      await click(driver, "#inventory-use");
+      await afterTurn(beforeDrink.turn);
+      const afterWater = await driver.execute(`return {
+        quantity: [...document.querySelectorAll("#inventory-list .inventory-item")].filter(row => row.dataset.itemKindId === "demo.item.water-potion").reduce((sum, row) => sum + Number(row.querySelector(".inventory-quantity").textContent.match(/\\d+/)[0]), 0),
+        nutritionPercent: Number(document.querySelector("#nutrition-value").textContent.match(/\\d+/)[0]),
+      };`);
+      assert.equal(afterWater.quantity, beforeWater.quantity - 1);
+      assert.equal(beforeWater.nutritionPercent, 99);
+      assert.equal(afterWater.nutritionPercent, 141);
+      await driver.execute(`for (const input of document.querySelectorAll('#inventory-list input[type="checkbox"]:checked')) input.click(); return true;`);
+      report.checks.push({ build, water: { before: beforeWater, after: afterWater } });
+    }
     const equipmentName = await driver.execute(`const row = document.querySelector('#equipment-list [data-slot-id="' + arguments[0] + '"]'); const name = row.querySelector(".equipment-slot-name").textContent; row.querySelector("button").click(); return name;`, [slot]);
     assert.ok(isTomte ? equipmentName.includes("针织帽") : equipmentName.length > 0);
     await driver.waitFor(`return document.querySelector("#inventory-detail-dialog")?.open`, "equipment detail");
@@ -419,7 +456,7 @@ async function runRaceScenario(driver, raceId) {
     assert.deepEqual(await state(), saved);
     await dispatchKey(driver, "Numpad5", "5"); await afterTurn(saved.turn);
     assert.deepEqual((await state()).errors, []);
-    report.checks.push({ build, race: saved.race, saveHash: saved.hash, checks: ["create", "Chinese description", "racial traits", ...(isTomte ? ["probe"] : []), "unequip/equip", "save/restore", "continue"] });
+    report.checks.push({ build, race: saved.race, saveHash: saved.hash, checks: ["create", "Chinese description", "racial traits", ...(isTomte ? ["probe"] : isEnt ? ["birth water/torches/no rations", "drink water"] : []), "unequip/equip", "save/restore", "continue"] });
     process.stdout.write(`${raceId}: ${build} passed.\n`);
     if (build !== builds.at(-1)) {
       await driver.execute(`setTimeout(() => location.reload(), 100); return true;`);

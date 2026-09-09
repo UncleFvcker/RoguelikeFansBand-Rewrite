@@ -392,6 +392,156 @@ fn ent_created_trees_block_sight_allow_tree_movement_and_persist_through_save() 
 }
 
 #[test]
+fn formal_ent_six_class_journey_drinks_levels_equips_plants_walks_and_restores() {
+    for build in [
+        "warrior",
+        "high-mage-death",
+        "archer",
+        "paladin-death",
+        "cavalry",
+        "sniper",
+    ] {
+        let mut game = crate::game::tests::hunger::ent_birth(83, &format!("demo.build.{build}"));
+        clear_monsters(&mut game);
+        game.items
+            .retain(|item| !matches!(item.location, ItemLocation::Ground(_)));
+        game.gold_piles.clear();
+        game.player.position = Position { x: 48, y: 16 };
+        for y in 14..=18 {
+            for x in 46..=51 {
+                replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+            }
+        }
+        let water = game
+            .items
+            .iter()
+            .find(|item| item.kind_id == "demo.item.water-potion")
+            .unwrap();
+        let (water_id, quantity) = (water.id.clone(), water.quantity);
+        game.nutrition = 1000;
+        dispatch_next(
+            &mut game,
+            GameCommand::UseItem {
+                item_id: water_id.clone(),
+                target: None,
+            },
+        );
+        assert_eq!(game.nutrition, 5200, "{build}");
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == water_id)
+                .unwrap()
+                .quantity,
+            quantity - 1
+        );
+
+        let mut events = Vec::new();
+        game.apply_unscaled_player_experience(
+            crate::stats::experience_required_for_level(46),
+            &mut events,
+        );
+        assert_eq!(game.progress.level, 46);
+        for level in [10, 26, 41, 45, 46] {
+            assert!(events.iter().any(|event| matches!(event, DomainEvent::PlayerLevelGained { level: gained, .. } if *gained == level)));
+        }
+        assert!(
+            game.snapshot()
+                .player
+                .trait_details
+                .sources
+                .iter()
+                .any(|source| source.source_id == "rfb-legacy.race.ent")
+        );
+        let weapon_id = game
+            .items
+            .iter()
+            .find(|item| {
+                matches!(&item.location,
+            ItemLocation::Equipped { slot_id } if slot_id == "right-hand")
+            })
+            .unwrap()
+            .id
+            .clone();
+        let digging = |game: &Game| {
+            game.player_derived_stats()
+                .dig_skill
+                .contributions
+                .iter()
+                .filter(|source| source.source_id == "rfb-legacy.race.ent")
+                .map(|source| source.amount)
+                .sum::<i32>()
+        };
+        assert_eq!(digging(&game), 0);
+        dispatch_next(
+            &mut game,
+            GameCommand::Unequip {
+                slot_id: "right-hand".to_owned(),
+            },
+        );
+        assert_eq!(digging(&game), 460);
+        dispatch_next(
+            &mut game,
+            GameCommand::Equip {
+                item_id: weapon_id,
+                slot_id: Some("right-hand".to_owned()),
+            },
+        );
+        assert_eq!(digging(&game), 0);
+        dispatch_next(
+            &mut game,
+            GameCommand::Unequip {
+                slot_id: "right-hand".to_owned(),
+            },
+        );
+        assert_eq!(digging(&game), 460);
+
+        // This journey fixes cast success; the adjacent tests cover failure, cost and target RNG.
+        game.debug_set_ability_casts_succeed(true);
+        game.player.hp = game.effective_player_max_hp();
+        dispatch_next(
+            &mut game,
+            GameCommand::CastAbility {
+                ability_id: ENT_TREE_POWER.to_owned(),
+                target: TargetSelection::SelfTarget,
+            },
+        );
+        for direction in [
+            Direction::East,
+            Direction::West,
+            Direction::North,
+            Direction::South,
+        ] {
+            assert_eq!(
+                game.terrain_at(game.position_in_direction(direction)),
+                ENT_TREE_TERRAIN
+            );
+        }
+        dispatch_next(
+            &mut game,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        );
+        assert_eq!(game.player.position, Position { x: 49, y: 16 });
+        let mut restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.snapshot(), game.snapshot());
+        assert_eq!(restored.state_hash(), game.state_hash());
+        for state in [&mut game, &mut restored] {
+            dispatch_next(
+                state,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            );
+        }
+        assert_eq!(restored.player.position, Position { x: 50, y: 16 });
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(restored.snapshot(), game.snapshot());
+    }
+}
+
+#[test]
 fn formal_ogre_sustains_intelligence_and_places_capped_explosive_runes() {
     let mut game = ogre_game(423);
     clear_monsters(&mut game);

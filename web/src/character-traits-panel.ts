@@ -152,6 +152,10 @@ export function renderCharacterTraitsDetails(
   grid.append(res, abilities, sustains, senses, immunities, numeric);
   defenses.replaceChildren(text("p", f("trait-guide"), "attribute-source-guide"),
     ...(data.equipmentComplete ? [] : [text("p", f("trait-incomplete"), "attribute-source-guide")]), grid);
+  if (data.sources.some((source) => source.kind === "race" && source.sourceId === "rfb-legacy.race.ent")) {
+    defenses.insertBefore(row("ent-rules", f("race-legacy-ent-name"), f("trait-race-effects"),
+      ["basics", "growth", "digging", "fire", "diet", "forest", "power", "birth"].map((rule) => f(`trait-ent-rule-${rule}`)), undefined, true), grid);
+  }
   const offense = section("trait-attack-sources");
   data.attacks.forEach((entry, index) => {
     const lines = entry.slays.map((slay) => f(slay.level === "kill" ? "item-kill-label" : "item-slay-label", { target: f(`slay-target-${slay.target}-name`) }));

@@ -68,6 +68,7 @@ export const PLAYTEST_RACE_IDS = [
   "rfb-legacy.race.ogre",
   "rfb-legacy.race.tomte",
   "rfb-legacy.race.tonberry",
+  "rfb-legacy.race.ent",
 ] as const;
 export type PlaytestRaceId = (typeof PLAYTEST_RACE_IDS)[number];
 export type SessionView = "title" | "new-game" | "load" | "settings";
@@ -108,6 +109,7 @@ interface SessionShellDom {
   readonly raceSelect: HTMLSelectElement;
   readonly tomteDescription: HTMLElement;
   readonly tonberryDescription: HTMLElement;
+  readonly entDescription: HTMLElement;
   readonly characterNameInput: HTMLInputElement;
   readonly seedInput: HTMLInputElement;
   readonly randomizeSeedButton: HTMLButtonElement;
@@ -237,7 +239,8 @@ export class SessionShell {
   readonly #changeRace = (): void => {
     this.#dom.tomteDescription.hidden = this.#dom.raceSelect.value !== "rfb-legacy.race.tomte";
     this.#dom.tonberryDescription.hidden = this.#dom.raceSelect.value !== "rfb-legacy.race.tonberry";
-    const description = [this.#dom.tomteDescription, this.#dom.tonberryDescription].find((node) => !node.hidden);
+    this.#dom.entDescription.hidden = this.#dom.raceSelect.value !== "rfb-legacy.race.ent";
+    const description = [this.#dom.tomteDescription, this.#dom.tonberryDescription, this.#dom.entDescription].find((node) => !node.hidden);
     if (description) this.#dom.raceSelect.setAttribute("aria-describedby", description.id);
     else this.#dom.raceSelect.removeAttribute("aria-describedby");
   };
@@ -638,6 +641,7 @@ export function createSessionShellDom(document: DocumentLookup): SessionShellDom
     raceSelect: element<HTMLSelectElement>(document, "session-race"),
     tomteDescription: element<HTMLElement>(document, "session-tomte-description"),
     tonberryDescription: element<HTMLElement>(document, "session-tonberry-description"),
+    entDescription: element<HTMLElement>(document, "session-ent-description"),
     characterNameInput: element<HTMLInputElement>(document, "session-character-name"),
     seedInput: element<HTMLInputElement>(document, "session-seed"),
     randomizeSeedButton: element<HTMLButtonElement>(document, "session-randomize-seed"),

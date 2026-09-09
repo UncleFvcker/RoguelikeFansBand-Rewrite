@@ -8,36 +8,11 @@ use crate::game::{
 
 const RATION_KIND_ID: &str = "demo.item.ration-of-food";
 
-fn ent_birth_catalog() -> Arc<ContentCatalog> {
-    static CATALOG: std::sync::OnceLock<Arc<ContentCatalog>> = std::sync::OnceLock::new();
-    CATALOG
-        .get_or_init(|| {
-            let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("../../packs/rfb-demo-original");
-            let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
-            // Exercise actual birth without opening the unfinished race in the shipped catalog.
-            artifact
-                .content
-                .races
-                .iter_mut()
-                .find(|race| race.id == "rfb-legacy.race.ent")
-                .unwrap()
-                .tags
-                .push("rfb-compatibility".to_owned());
-            Arc::new(ContentCatalog::from_artifact(
-                rfb_content::encode_content(artifact.content).unwrap(),
-            ))
-        })
-        .clone()
-}
-
 pub(super) fn ent_birth(seed: u64, build: &str) -> Game {
-    Game::from_content_internal(
+    Game::new_with_build_race_and_name(
         seed,
-        ent_birth_catalog(),
-        DEFAULT_WORLD_ID,
-        Some(build),
-        Some("rfb-legacy.race.ent"),
+        build,
+        "rfb-legacy.race.ent",
         Game::DEFAULT_PLAYER_NAME,
     )
     .unwrap()

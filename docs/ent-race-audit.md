@@ -28,7 +28,34 @@
 
 第四步验证：新增七项核心测试，覆盖能力等级/费用/感知/失败支付/临时形态、原版方向抽样及 RNG、12 个现有地面定义、占用与两种边界规则、视线/通行/保存后继续行动、同族卷轴、双向敌对与宠物/法术友军风险/让位。相关怪物 AI、怪物移动、地形能力、召唤能力、美德五个完整模块共 54 项通过；出生、饮食及被动也经首轮相关回归验证。新增导入器测试、31 项前端事件格式测试、TypeScript 类型检查、格式检查、相关 Rust 全目标 Clippy 及内容锁验证通过。`movement / progression / combat / inventory / equipment / status-effects` 共 12 份现行契约通过，无需刷新；没有修改协议或状态哈希结构，未运行完整桌面 E2E。
 
-## 已具备的内容与基础
+## 第五步已完成：正式入口与专项验收
+
+树人已加入正式 `rfb-compatibility` 标签、导入器映射、前端白名单及创建选项；正式入口由 44 增至 45，仍为六职业。内容包为 `1.394.0`，内容锁 `afc8e611bdd81361c16817abf9e66e10759d88e2ea58ac08242a10f91b695eb5`。原版 `master` 仍为本文开头所列对象，中文名称及完整说明保留原文；英文临时变形占位说明已替换。
+
+创建页与角色详情共用八条本地化特性文字：基础、成长、挖掘、火抗、饮食、穿林、主动能力、出生。角色详情将种族说明放在抗性与能力页的通栏折叠项中，避免八条说明挤入抗性网格的窄列；创建页保留 `aria-describedby`。
+
+### 核心自动验证
+
+- 移除第三步临时修改内容标签的测试目录，出生测试直接调用正式 `Game::new_with_build_race_and_name`。六职业各 16 个种子，共 96 次真实出生，覆盖 15～23 瓶水、超过 20 瓶时分堆、无口粮、照明、完整职业装备及保存恢复。
+- 新增一个连续流程测试，依次运行战士、死亡高阶法师、弓箭手、死亡圣骑士、骑兵、狙击手：使用出生水 → 通过经验授予路径升至 46 级 → 卸下/装备/再卸下出生武器 → 施放“召唤树人” → 进入新树格 → 保存/恢复 → 双方继续移动并比较完整投影及状态哈希。挖掘贡献在 0 与 460 间切换，喝水消耗一瓶并从 1000 补至 5200。
+- 连续流程设置安全场地、授予经验并固定施法成功，不冒充正常游玩升级或失败率验收；相邻测试覆盖实际失败/资源支付/落点 RNG、10 与 45 级分界，成长模块覆盖 26/41/46 级与降级/变形。
+- `game::tests::hunger::` 30 项、`game::tests::abilities::terrain::` 13 项、`game::tests::progression::` 53 项，共 96 项通过；导入器 `content::tests::ent_` 两项通过。
+- 前端 `session-shell / character-traits-panel / event-format` 共 43 项通过，TypeScript 与 E2E 脚本语法检查通过。相关 Rust 全目标 Clippy、格式检查、内容锁验证通过。
+- `movement / progression / combat / inventory / equipment / status-effects / potions / town` 共 19 份契约通过，无刷新。正式标签仅影响创建资格，不改变已有变形候选池、共用初始化 RNG、协议或状态哈希结构。
+
+### 桌面验收
+
+专项命令：在 `web` 执行 `npm run e2e:build`，然后 `node e2e/tauri.e2e.mjs --ent`。构建经 `tauri build --debug --no-bundle --features webdriver` 内嵌 Vite 产物，是独立 Tauri 应用；专项仅选择树人三职业，不执行整套桌面 E2E。结果与截图位于 `test-results/ent-acceptance.json`、`ent-*-creation.png`、`ent-*.png`。
+
+2026-09-09 三职业全部通过，均使用种子 83、新存档：创建名称“树人”、中文原文、八条分点说明与无横向溢出、角色详情投影、出生水/火把/无口粮、饮水、卸装/重装、导出 `.rfbsave`、加载恢复精确状态哈希、继续行动及无前端错误。饮水后的水量分别为战士 19→18、死亡高阶法师 16→15、弓箭手 15→14，饱食度显示均从 99%→141%。三职业详情截图及创建页截图已检查。首次脚本因饮水后水瓶仍勾选而进入多选，修正测试选择步骤后完整重跑通过；未修改背包的正常多选行为。
+
+桌面抽查停留在出生等级，不声称在桌面正常游玩升至 10/45/46 级；升级、植树、穿林及其保存后的连续行为由上述核心专项覆盖。普通试玩产物另经 `npm run build:standalone:debug` 成功生成：`target/debug/rfb-tauri.exe`（无 WebDriver 特性、内嵌前端，无需 Vite 开发服务器）。桌面抽查使用相同源码和内容的 `target/e2e/debug/rfb-tauri.exe`，与普通试玩产物区分记录。未运行完整桌面 E2E、全量契约或整工作区测试。
+
+### 仍未接入的关联
+
+正式开放不扩展此前明确缺失的 `ALLOC_TYP_FOOD` 地牢专用食物分配、`BACT_FOOD` 餐饮服务、液态洛格鲁斯、变形怪形态菜单/维持、律师/法律领域、`wild_talent` 职业入口及毒酸液地形。现有商店购水已由核心真实交易路径验证。
+
+## 首次审计：已具备的内容与基础
 
 | 项目 | 核对结果 | 当前依据 |
 | --- | --- | --- |
@@ -42,7 +69,7 @@
 | 身体与变形基础 | 已有 15 个项目标准装备槽及 `polymorph-candidate`；通用变形可引用此定义，但不代表树人特殊规则完成 | `ent.json`；[progression.rs](../crates/rfb-core/src/game/progression.rs)的 `character_definitions`；[monster_combat.rs](../crates/rfb-core/src/game/monster_combat.rs) |
 | 补给物与地形 | 水、商店库存、树木地形及相邻地形生成器已存在 | [water-potion.json](../packs/rfb-demo-original/items/water-potion.json)、[杂货店](../packs/rfb-demo-original/shops/outpost-general-store.json)、[surface-tree.json](../packs/rfb-demo-original/terrain/surface-tree.json)、[森林生成程序](../packs/rfb-demo-original/abilityPrograms/nature-forest-creation.json) |
 
-当前未开放：定义没有 `rfb-compatibility`，核心创建检查会拒绝正式树人开局；前端白名单也没有树人。英文说明仍是临时变形占位文字。不能只增加菜单选项。
+首次审计时尚未开放：定义没有 `rfb-compatibility`，核心创建检查会拒绝正式树人开局；前端白名单也没有树人，英文说明是临时变形占位文字。上述缺口现已在第五步关闭。
 
 ## 第二步：成长与被动缺口
 
@@ -103,7 +130,7 @@
 | `devices.c:7381`，改变性别效果中的“现在是个树人” | 紧接“开玩笑”的文字；没有种族赋值或变形调用 | 排除伪缺口，不实现永久变树人 |
 | `shop.c:119/121` 的两名树人店主，`py_birth.c:1026` 分类菜单，`defines.h`/`races.c`/`externs.h` 的身份注册 | 分别为店主数据、菜单分类和原版注册 | 不视作玩家被动。入口沿用当前菜单体系；不借本批扩充店主轮换 |
 
-## 第五步入口与验收边界
+## 首次计划：第五步入口与验收边界
 
 前述核心规则完成后，再补正式标签、核心创建和前端白名单，采用原版中文说明并分点展示种族特性；英文占位说明同时修正。六职业出生与饮水、成长、换装、植树、穿林、保存恢复和继续行动作核心验收，standalone Tauri 桌面分别抽查战士、死亡高阶法师和弓箭手。
 
