@@ -18,7 +18,8 @@
     "demo.town-facility.morivant-sorcery-tower",
     "demo.town-facility.morivant-thieves-guild",
     "demo.town-facility.morivant-beastmaster",
-    "demo.town-facility.morivant-museum"
+    "demo.town-facility.morivant-museum",
+    "demo.town-facility.morivant-casino"
   ],
   "shopIds": [
     "demo.shop.morivant-shroomery",

@@ -558,6 +558,7 @@ impl Game {
             item_knowledge: BTreeMap::new(),
             item_property_knowledge: BTreeMap::new(),
             task_states,
+            casino: None,
             bounty_state: bounty::BountyState::default(),
             command_actor_deaths: Vec::new(),
             dungeon_states,

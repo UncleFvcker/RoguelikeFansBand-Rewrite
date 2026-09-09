@@ -639,3 +639,7 @@ inn-reputation-hero = 你是一个真正的英雄！
 inn-reputation-legend = 你就是传说！
 inn-reputation-ballads = 吟游诗人们都在歌颂你：英雄的民谣传遍四方！
 inn-reputation-unavailable = 暂时无法询问声望：{ $reason }。
+
+casino-round-completed = 赌局结算：赌注 { $wager }，返还 { $payout }，剩余 { $balance } 金币。
+casino-session-ended = 赌局结束，持有 { $balance } 金币。
+casino-unavailable = 暂时无法进行赌局：{ $reason }。

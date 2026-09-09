@@ -5,6 +5,8 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum CoreError {
+    #[error("finish the current casino session first")]
+    CasinoInProgress,
     #[error("revision mismatch: core is at {expected}, command expected {received}")]
     RevisionMismatch { expected: u32, received: u32 },
     #[error("command sequence mismatch: expected {expected}, received {received}")]

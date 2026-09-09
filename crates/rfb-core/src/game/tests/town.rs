@@ -67,6 +67,214 @@ fn morivant_facility_game(seed: u64, build_id: &str, facility_id: &str) -> Game 
 }
 
 #[test]
+fn casino_poker_pays_once_resumes_the_deck_and_settles_chance_on_exit() {
+    use rfb_protocol::{
+        CasinoActionDto as Action, CasinoGameDto, CasinoRoundSaveDto, VirtueKindDto,
+    };
+    let id = "demo.town-facility.morivant-casino";
+    let mut game = morivant_facility_game(61, "demo.build.warrior", id);
+    game.virtues[0] = rfb_protocol::VirtueDto {
+        kind: VirtueKindDto::Chance,
+        value: 0,
+    };
+    game.gold = 10_000;
+    let before = game.state_hash();
+    let mut events = Vec::new();
+    assert!(
+        game.casino_action(
+            id,
+            Action::Start {
+                game: CasinoGameDto::Poker,
+                wager: 0,
+                roulette_choice: None
+            },
+            &mut events
+        )
+        .is_err()
+    );
+    assert_eq!(game.state_hash(), before);
+    let tick = game.world_tick;
+    let chance = game.virtue_current(VirtueKindDto::Chance);
+    game.casino_action(
+        id,
+        Action::Start {
+            game: CasinoGameDto::Poker,
+            wager: 100,
+            roulette_choice: None,
+        },
+        &mut events,
+    )
+    .unwrap();
+    assert_eq!(game.gold, 9900);
+    assert_eq!(game.virtue_current(VirtueKindDto::Chance), chance);
+    let rng = game.rng.clone();
+    let deck = match &game.casino.as_ref().unwrap().round {
+        CasinoRoundSaveDto::Poker { deck } => deck.clone(),
+        _ => panic!("expected poker"),
+    };
+    let mut restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    let mut invalid = game.to_save();
+    if let CasinoRoundSaveDto::Poker { deck } = &mut invalid.casino.as_mut().unwrap().round {
+        deck[1] = deck[0];
+    }
+    assert!(Game::from_save(invalid).is_err());
+    for target in [&mut game, &mut restored] {
+        let before = target.state_hash();
+        assert!(
+            target
+                .casino_action(id, Action::Leave, &mut events)
+                .is_err()
+        );
+        assert!(
+            target
+                .casino_action(id, Action::Draw { replace_mask: 32 }, &mut events)
+                .is_err()
+        );
+        assert_eq!(target.state_hash(), before);
+        target
+            .casino_action(id, Action::Draw { replace_mask: 31 }, &mut events)
+            .unwrap();
+        assert_eq!(target.rng, rng);
+        let CasinoRoundSaveDto::Finished { values, odds } = &target.casino.as_ref().unwrap().round
+        else {
+            panic!("expected settlement")
+        };
+        assert_eq!(*values, deck[5..10]);
+        assert_eq!(target.gold, 9900 + u32::from(*odds) * 100);
+        let before = target.state_hash();
+        assert!(
+            target
+                .casino_action(id, Action::Draw { replace_mask: 31 }, &mut events)
+                .is_err()
+        );
+        assert_eq!(target.state_hash(), before);
+        target
+            .casino_action(id, Action::Leave, &mut events)
+            .unwrap();
+        assert!(target.casino.is_none());
+        assert_eq!(
+            target.virtue_current(VirtueKindDto::Chance),
+            if target.gold >= 10_000 { 3 } else { -3 }
+        );
+        assert_eq!(target.world_tick, tick);
+    }
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn casino_games_repeat_deterministically_and_craps_resumes_its_point() {
+    use rfb_protocol::{CasinoActionDto as Action, CasinoGameDto::*, CasinoRoundSaveDto};
+    let id = "demo.town-facility.morivant-casino";
+    let mut template = morivant_facility_game(62, "demo.build.warrior", id);
+    template.gold = 10_000;
+    for kind in [InBetween, Roulette, DiceSlots, Craps] {
+        let mut game = Game::from_save(template.to_save()).unwrap();
+        let mut replay = Game::from_save(template.to_save()).unwrap();
+        for target in [&mut game, &mut replay] {
+            let choice = (kind == Roulette).then_some(7);
+            dispatch_next(
+                target,
+                GameCommand::Casino {
+                    facility_id: id.to_owned(),
+                    action: Action::Start {
+                        game: kind,
+                        wager: 100,
+                        roulette_choice: choice,
+                    },
+                },
+            );
+            let before = target.state_hash();
+            assert!(matches!(
+                target.dispatch(crate::game::tests::support::command(
+                    target.last_command_seq + 1,
+                    target.revision,
+                    GameCommand::Wait
+                )),
+                Err(CoreError::CasinoInProgress)
+            ));
+            assert_eq!(target.state_hash(), before);
+            // Finish at most twenty rounds, including an actual saved point in Craps.
+            let mut saved_point = false;
+            for _ in 0..20 {
+                if matches!(
+                    target.casino.as_ref().unwrap().round,
+                    CasinoRoundSaveDto::Craps { .. }
+                ) {
+                    let restored = Game::from_save(target.to_save()).unwrap();
+                    assert_eq!(restored.state_hash(), target.state_hash());
+                    *target = restored;
+                    saved_point = true;
+                }
+                while matches!(
+                    target.casino.as_ref().unwrap().round,
+                    CasinoRoundSaveDto::Craps { .. }
+                ) {
+                    dispatch_next(
+                        target,
+                        GameCommand::Casino {
+                            facility_id: id.to_owned(),
+                            action: Action::Roll,
+                        },
+                    );
+                }
+                let CasinoRoundSaveDto::Finished { odds, .. } =
+                    target.casino.as_ref().unwrap().round
+                else {
+                    panic!("round must settle")
+                };
+                assert!(match kind {
+                    InBetween => [0, 4].contains(&odds),
+                    Roulette => [0, 9].contains(&odds),
+                    DiceSlots => [0, 2, 5, 10, 20, 50, 200, 1000].contains(&odds),
+                    Craps => [0, 2].contains(&odds),
+                    Poker => unreachable!(),
+                });
+                if kind != Craps || saved_point {
+                    break;
+                }
+                dispatch_next(
+                    target,
+                    GameCommand::Casino {
+                        facility_id: id.to_owned(),
+                        action: Action::Again {
+                            roulette_choice: choice,
+                        },
+                    },
+                );
+            }
+            assert!(kind != Craps || saved_point);
+            let gold = target.gold;
+            let restored = Game::from_save(target.to_save()).unwrap();
+            assert_eq!(restored.gold, gold);
+            let before = target.state_hash();
+            assert!(
+                target
+                    .casino_action(
+                        id,
+                        Action::Again {
+                            roulette_choice: Some(10)
+                        },
+                        &mut Vec::new()
+                    )
+                    .is_err()
+            );
+            assert_eq!(target.state_hash(), before);
+            dispatch_next(
+                target,
+                GameCommand::Casino {
+                    facility_id: id.to_owned(),
+                    action: Action::Leave,
+                },
+            );
+            assert_eq!(target.gold, gold);
+            assert_eq!(target.world_tick, template.world_tick);
+        }
+        assert_eq!(game.state_hash(), replay.state_hash());
+    }
+}
+
+#[test]
 fn reputation_is_paid_uses_original_bands_and_survives_save() {
     let mut game = white_horse_inn_game(51);
     assert_eq!(game.fame, 0);
@@ -706,7 +914,7 @@ fn morivant_nine_shops_trade_and_save() {
             .all(|shop| !shop.visited && shop.stock.is_empty())
     );
     assert_eq!(snapshot.homes.len(), 2);
-    assert_eq!(snapshot.task_services.len(), 11);
+    assert_eq!(snapshot.task_services.len(), 12);
     game.gold = 1_000_000;
     for shop_id in town
         .shop_ids

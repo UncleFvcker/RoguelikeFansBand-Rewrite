@@ -8518,3 +8518,9 @@ town-facility-demo-morivant-beastmaster-owner-name = 德拉克索
 town-facility-demo-morivant-beastmaster-description = 德拉克索 (龙人): Research monster kinds.
 terrain-demo-beastmaster-entrance-name = 驯兽师入口
 terrain-demo-beastmaster-entrance-description = This door leads to 驯兽师.
+
+terrain-demo-casino-entrance-name = Casino entrance
+terrain-demo-casino-entrance-description = Enter the casino here.
+town-facility-demo-morivant-casino-name = Casino
+town-facility-demo-morivant-casino-description = Choose a game and wager before playing.
+town-facility-demo-morivant-casino-owner-name = Sandar

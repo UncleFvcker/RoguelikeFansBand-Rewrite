@@ -632,6 +632,7 @@ fn item_property_knowledge_from_save(
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 struct StateHashPayloadV98<'a> {
+    casino: &'a Option<rfb_protocol::CasinoStateSaveDto>,
     schema_version: u16,
     revision: u32,
     turn: u32,
@@ -1426,6 +1427,7 @@ impl Game {
             riding_bond,
             gold,
             fame,
+            casino: payload.casino,
             nutrition,
             fasting,
             build,
@@ -1496,12 +1498,16 @@ impl Game {
         game.reveal_current_visibility();
         game.clear_stale_mogaminator_query();
         game.validate_loaded_state()?;
+        if !game.casino_state_is_valid() {
+            return Err(CoreError::InvalidSave("casino state is invalid"));
+        }
         Ok(game)
     }
 
     #[must_use]
     pub fn to_save(&self) -> SavePayloadV1 {
         SavePayloadV1 {
+            casino: self.casino.clone(),
             schema_version: SAVE_PAYLOAD_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,
@@ -1582,6 +1588,7 @@ impl Game {
     #[must_use]
     pub fn state_hash(&self) -> String {
         let payload = StateHashPayloadV98 {
+            casino: &self.casino,
             schema_version: STATE_HASH_SCHEMA_VERSION,
             revision: self.revision,
             turn: self.turn,

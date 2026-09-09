@@ -26,7 +26,8 @@ test("paid facility selection and closing are free; only confirmation dispatches
     get ownerDocument() { return document; }
     get value() { return this.selected ?? (this.tag === "select" ? this.children[0]?.value : "") ?? ""; }
     set value(value) { this.selected = value; }
-    append(...children) { this.children.push(...children); }
+    append(...children) { this.children.push(...children); for (const child of children) if (typeof child === "object") child.parentElement = this; }
+    checkValidity() { return Number.isInteger(Number(this.value)) && Number(this.value) >= Number(this.min) && Number(this.value) <= Number(this.max); }
     replaceChildren(...children) { this.children = children; this.selected = undefined; }
     setAttribute() {}
     get selectedOptions() { return this.children.filter((child) => child.value === this.value); }
@@ -109,6 +110,39 @@ test("paid facility selection and closing are free; only confirmation dispatches
   list.dispatchEvent(enchantClick);
   assert.deepEqual(commands, [{ type: "use-facility-service", facilityId: "guild",
     service: "enchant-weapon", itemId: "sword", enchantmentSteps: 3 }]);
+  commands.length = 0;
+  const casino = { maximumWager: 200 };
+  snapshot.taskServices = [{ id: "casino", playerAtEntrance: true, tasks: [], casino }];
+  panel.render(snapshot);
+  const row = list.children[0];
+  const game = row.children[0].children[0];
+  const wager = row.children[1].children[0];
+  const wheel = row.children[2].children[0];
+  const start = row.children[3];
+  game.value = "roulette"; game.dispatchEvent(new Event("change"));
+  assert.equal(wheel.parentElement.hidden, false);
+  wheel.value = "7"; wager.value = "201";
+  start.dispatchEvent(new Event("click"));
+  assert.deepEqual(commands, []);
+  wager.value = "100"; start.dispatchEvent(new Event("click"));
+  assert.deepEqual(commands.pop(), { type: "casino", facilityId: "casino", action: { type: "start", game: "roulette", wager: 100, rouletteChoice: 7 } });
+  casino.session = { game: "poker", wager: 100, startingGold: 1000, round: { type: "poker", cards: [0, 14, 28, 42, 52] } };
+  panel.render(snapshot);
+  const cancel = new Event("cancel", { cancelable: true });
+  elements.get("task-service-dialog").dispatchEvent(cancel);
+  assert.equal(cancel.defaultPrevented, true);
+  assert.equal(elements.get("task-service-close").disabled, true);
+  const hand = list.children[0];
+  hand.children[2].children[0].checked = true;
+  hand.children[6].children[0].checked = true;
+  state.busy = true; hand.children[7].dispatchEvent(new Event("click"));
+  assert.deepEqual(commands, []);
+  state.busy = false; hand.children[7].dispatchEvent(new Event("click"));
+  assert.deepEqual(commands.pop(), { type: "casino", facilityId: "casino", action: { type: "draw", replaceMask: 17 } });
+  casino.session.round = { type: "finished", values: [0, 14, 28, 42, 52], odds: 0, payout: 0, resultKey: "casino-loss" };
+  panel.render(snapshot);
+  elements.get("task-service-dialog").dispatchEvent(new Event("close"));
+  assert.deepEqual(commands.pop(), { type: "casino", facilityId: "casino", action: { type: "leave" } });
 });
 
 test("monster research combines name, symbol and uniqueness filters without changing knowledge", () => {

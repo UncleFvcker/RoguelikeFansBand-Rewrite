@@ -107,6 +107,7 @@ mod abilities;
 mod ability_projection;
 mod ability_scaling;
 mod bounty;
+mod casino;
 pub(crate) use bounty::BountyOfficeOutcome;
 mod capabilities;
 mod capture_ball;
@@ -229,7 +230,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 111;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 112;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -814,6 +815,7 @@ pub struct Game {
     items: Vec<ItemInstance>,
     gold: u32,
     fame: u16,
+    casino: Option<rfb_protocol::CasinoStateSaveDto>,
     nutrition: u16,
     fasting: bool,
     gold_piles: Vec<GoldPile>,
@@ -914,6 +916,14 @@ impl Game {
             )
         {
             return Err(CoreError::AbilityDirectionUnavailable);
+        }
+        if self.casino.is_some()
+            && !matches!(
+                action,
+                GameAction::Casino { .. } | GameAction::SetInterfaceLocale { .. }
+            )
+        {
+            return Err(CoreError::CasinoInProgress);
         }
         if race_mutation_choice_pending && !matches!(action, GameAction::ChooseRaceMutation { .. })
         {
@@ -1104,6 +1114,7 @@ impl Game {
                     | GameAction::EatAtInn { .. }
                     | GameAction::AskReputationAtInn { .. }
                     | GameAction::IdentifyAllAtFacility { .. }
+                    | GameAction::Casino { .. }
                     | GameAction::UseFacilityService { .. }
                     | GameAction::UseBountyOffice { .. }
                     | GameAction::IncreaseAttribute { .. }
@@ -1325,6 +1336,17 @@ impl Game {
                         facility_id,
                         reason: reason.to_owned(),
                     }),
+                }
+            }
+            GameAction::Casino {
+                facility_id,
+                action,
+            } => {
+                if let Err(reason) = self.casino_action(&facility_id, action, &mut events) {
+                    events.push(DomainEvent::CasinoUnavailable {
+                        facility_id,
+                        reason: reason.to_owned(),
+                    });
                 }
             }
             GameAction::UseFacilityService {

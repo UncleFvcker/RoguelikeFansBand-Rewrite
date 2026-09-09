@@ -4,6 +4,8 @@ import type { AppState } from "./app-state";
 import type { Localization } from "./localization";
 import type {
   GameCommand,
+  CasinoActionDto,
+  CasinoGameDto,
   GameEventDto,
   GameSnapshot,
   GameUpdate,
@@ -87,6 +89,7 @@ export class TaskServicePanel {
     this.#installed = true;
     this.#dom.close.addEventListener("click", this.#close);
     this.#dom.dialog.addEventListener("close", this.#closed);
+    this.#dom.dialog.addEventListener("cancel", this.#cancel);
     this.#dom.list.addEventListener("click", this.#performAction);
   }
 
@@ -95,6 +98,7 @@ export class TaskServicePanel {
     this.#installed = false;
     this.#dom.close.removeEventListener("click", this.#close);
     this.#dom.dialog.removeEventListener("close", this.#closed);
+    this.#dom.dialog.removeEventListener("cancel", this.#cancel);
     this.#dom.list.removeEventListener("click", this.#performAction);
   }
 
@@ -141,11 +145,21 @@ export class TaskServicePanel {
     if (this.#dom.dialog.open) this.#dom.dialog.close();
   }
 
+  readonly #cancel = (event: Event): void => {
+    const session = this.#service?.casino?.session;
+    if (session && (session.round.type !== "finished" || this.#state.busy)) event.preventDefault();
+  };
+
   readonly #close = (): void => {
+    const session = this.#service?.casino?.session;
+    if (session && (session.round.type !== "finished" || this.#state.busy)) return;
     if (this.#dom.dialog.open) this.#dom.dialog.close();
   };
 
   readonly #closed = (): void => {
+    if (this.#service?.casino?.session?.round.type === "finished") {
+      void this.#dispatch({ type: "casino", facilityId: this.#service.id, action: { type: "leave" } });
+    }
     if (this.#service?.playerAtEntrance) this.#dismissedServiceId = this.#service.id;
   };
 
@@ -268,6 +282,7 @@ export class TaskServicePanel {
     const tasks = this.#service?.tasks ?? [];
     this.#dom.list.replaceChildren();
     this.#renderFacilityActions();
+    this.#renderCasino();
     if (tasks.length === 0 && this.#dom.list.childElementCount === 0) {
       const empty = this.#dom.list.ownerDocument.createElement("li");
       empty.className = "task-service-empty";
@@ -276,6 +291,93 @@ export class TaskServicePanel {
       return;
     }
     for (const task of tasks) this.#dom.list.append(this.#taskRow(task));
+  }
+
+  #renderCasino(): void {
+    const service = this.#service;
+    const casino = service?.casino;
+    const session = casino?.session;
+    this.#dom.close.disabled = this.#state.busy || !!(session && session.round.type !== "finished");
+    if (!casino || !service) return;
+    const document = this.#dom.list.ownerDocument;
+    const row = document.createElement("li");
+    row.className = "task-service-row";
+    const send = (action: CasinoActionDto): void => {
+      if (!this.#state.busy) void this.#dispatch({ type: "casino", facilityId: service.id, action });
+    };
+    const text = (value: string): void => {
+      const p = document.createElement("p"); p.textContent = value; row.append(p);
+    };
+    const button = (key: string, act: () => void): HTMLButtonElement => {
+      const b = document.createElement("button"); b.type = "button";
+      b.textContent = this.#localization.format(key); b.disabled = this.#state.busy;
+      b.addEventListener("click", act); row.append(b); return b;
+    };
+    const label = (key: string, control: HTMLElement): void => {
+      const l = document.createElement("label"); l.textContent = this.#localization.format(key);
+      l.append(control); row.append(l);
+    };
+    const wheel = document.createElement("select");
+    for (let n = 0; n < 10; n++) {
+      const option = document.createElement("option"); option.value = String(n); option.textContent = String(n); wheel.append(option);
+    }
+    wheel.disabled = this.#state.busy;
+    const cards = (values: readonly number[], replace: boolean): (() => number) => {
+      const checks: HTMLInputElement[] = [];
+      values.forEach((card) => {
+        const l = document.createElement("label");
+        l.textContent = card === 52 ? "JOKER" : `${["♣", "♦", "♥", "♠"][Math.floor(card / 13)]}${["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"][card % 13]}`;
+        if (replace) {
+          const check = document.createElement("input"); check.type = "checkbox"; check.disabled = this.#state.busy;
+          l.append(check, this.#localization.format("casino-replace")); checks.push(check);
+        }
+        row.append(l);
+      });
+      return () => checks.reduce((mask, check, i) => mask | (check.checked ? 1 << i : 0), 0);
+    };
+    if (!session) {
+      const game = document.createElement("select");
+      for (const kind of ["in-between", "craps", "roulette", "dice-slots", "poker"] satisfies CasinoGameDto[]) {
+        const option = document.createElement("option"); option.value = kind; option.textContent = this.#localization.format(`casino-${kind}`); game.append(option);
+      }
+      game.disabled = this.#state.busy; label("casino-game", game);
+      const wager = document.createElement("input"); wager.type = "number"; wager.min = "1";
+      wager.max = String(casino.maximumWager); wager.step = "1"; wager.value = "1"; wager.disabled = this.#state.busy;
+      const wagerLabel = document.createElement("label"); wagerLabel.textContent = this.#localization.format("casino-wager", { maximum: casino.maximumWager });
+      wagerLabel.append(wager); row.append(wagerLabel);
+      label("casino-choice", wheel);
+      const updateWheel = (): void => { wheel.parentElement!.hidden = game.value !== "roulette"; };
+      game.addEventListener("change", updateWheel); updateWheel();
+      const start = button("casino-start", () => {
+        if (wager.checkValidity()) send({ type: "start", game: game.value as CasinoGameDto, wager: Number(wager.value),
+          rouletteChoice: game.value === "roulette" ? Number(wheel.value) : undefined });
+      });
+      start.disabled ||= casino.maximumWager < 1;
+    } else {
+      text(this.#localization.format(`casino-${session.game}`));
+      text(this.#localization.format("casino-session", { wager: session.wager, gold: session.startingGold }));
+      const round = session.round;
+      if (round.type === "poker") {
+        const mask = cards(round.cards, true); button("casino-draw", () => send({ type: "draw", replaceMask: mask() }));
+      } else if (round.type === "craps") {
+        text(this.#localization.format("casino-point", { point: round.point })); text(round.dice.join(" · "));
+        button("casino-roll", () => send({ type: "roll" }));
+      } else {
+        if (session.game === "poker") cards(round.values, false);
+        else if (session.game === "dice-slots") text(round.values.map((v) => ["🍋", "🍊", "⚔", "🛡", "🟣", "🍒"][v - 1]).join(" · "));
+        else text(round.values.join(" · "));
+        text(this.#localization.format(round.resultKey));
+        text(this.#localization.format("casino-return", { payout: round.payout, odds: round.odds }));
+        if (session.game === "roulette") label("casino-choice", wheel);
+        const again = button("casino-again", () => send({ type: "again", rouletteChoice: session.game === "roulette" ? Number(wheel.value) : undefined }));
+        again.disabled ||= casino.maximumWager < session.wager;
+        button("casino-leave", () => send({ type: "leave" }));
+      }
+    }
+    const rules = document.createElement("details"); const title = document.createElement("summary");
+    title.textContent = this.#localization.format("casino-rules"); const body = document.createElement("p");
+    body.textContent = this.#localization.format("casino-rules-text"); rules.append(title, body); row.append(rules);
+    this.#dom.list.append(row);
   }
 
   #renderMonsterResearch(): void {
@@ -754,6 +856,7 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "facility.renamed" ||
       event?.kind === "inn.stay" ||
       event?.kind === "inn.stay-unavailable" ||
+      event?.kind.startsWith("facility.casino-") ||
       event?.kind.startsWith("bounty.")
     ) {
       return event;

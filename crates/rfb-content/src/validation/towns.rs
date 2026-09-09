@@ -159,7 +159,8 @@ pub(super) fn validate_towns_and_shops(
                         && refs.items.iter().any(|item| item.id == *item_id)
                 })
         });
-        let has_service = facility.identify_item_cost.is_some()
+        let has_service = facility.casino
+            || facility.identify_item_cost.is_some()
             || facility.teleport_level_cost.is_some()
             || facility.research_monster_cost.is_some()
             || facility.research_item_cost.is_some()
@@ -205,6 +206,7 @@ pub(super) fn validate_towns_and_shops(
                     || !has_service))
             || (facility.reject_artifact_deposits
                 && facility.category != TownFacilityCategory::Home)
+            || (facility.casino && facility.category != TownFacilityCategory::Service)
             || invalid_service_cost
             || !valid_bounty_office
             || !valid_memberships

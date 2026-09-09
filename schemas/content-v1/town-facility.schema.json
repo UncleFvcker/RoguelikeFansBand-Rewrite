@@ -130,6 +130,10 @@
       ],
       "default": null
     },
+    "casino": {
+      "default": false,
+      "type": "boolean"
+    },
     "category": {
       "$ref": "#/$defs/TownFacilityCategory"
     },

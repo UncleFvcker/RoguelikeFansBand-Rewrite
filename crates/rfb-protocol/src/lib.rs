@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.237";
+pub const PROTOCOL_VERSION: &str = "1.238";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 6;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 8;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 9;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -103,6 +103,10 @@ pub struct PendingAbilityDirectionDto {
     rename_all_fields = "camelCase"
 )]
 pub enum GameCommand {
+    Casino {
+        facility_id: String,
+        action: CasinoActionDto,
+    },
     AcceptTask {
         facility_id: String,
         task_id: String,
@@ -4259,6 +4263,8 @@ pub struct HomeDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TaskServiceDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub casino: Option<CasinoDto>,
     pub id: String,
     pub name_key: String,
     pub description_key: String,
@@ -4304,6 +4310,108 @@ pub struct TeleportDungeonDto {
     pub name_key: String,
     pub recall_depth: u16,
     pub depths: Vec<u16>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "kebab-case")]
+pub enum CasinoGameDto {
+    InBetween,
+    Craps,
+    Roulette,
+    DiceSlots,
+    Poker,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum CasinoActionDto {
+    Start {
+        game: CasinoGameDto,
+        wager: u32,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        roulette_choice: Option<u8>,
+    },
+    Again {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        roulette_choice: Option<u8>,
+    },
+    Roll,
+    Draw {
+        replace_mask: u8,
+    },
+    Leave,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CasinoDto {
+    pub maximum_wager: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub session: Option<CasinoSessionDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct CasinoSessionDto {
+    pub game: CasinoGameDto,
+    pub wager: u32,
+    pub starting_gold: u32,
+    pub round: CasinoRoundDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase"
+)]
+pub enum CasinoRoundDto {
+    Poker {
+        cards: Vec<u8>,
+    },
+    Craps {
+        point: u8,
+        dice: [u8; 2],
+    },
+    Finished {
+        values: Vec<u8>,
+        odds: u16,
+        payout: u32,
+        result_key: String,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct CasinoStateSaveDto {
+    pub facility_id: String,
+    pub game: CasinoGameDto,
+    pub wager: u32,
+    pub starting_gold: u32,
+    pub round: CasinoRoundSaveDto,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(
+    tag = "type",
+    rename_all = "kebab-case",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
+pub enum CasinoRoundSaveDto {
+    Poker { deck: Vec<u8> },
+    Craps { point: u8, dice: [u8; 2] },
+    Finished { values: Vec<u8>, odds: u16 },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4812,6 +4920,11 @@ pub fn generated_typescript() -> String {
     push_declaration!(BountyMissionStatusDto);
     push_declaration!(BountyMissionDto);
     push_declaration!(BountyOfficeDto);
+    push_declaration!(CasinoGameDto);
+    push_declaration!(CasinoActionDto);
+    push_declaration!(CasinoDto);
+    push_declaration!(CasinoSessionDto);
+    push_declaration!(CasinoRoundDto);
     push_declaration!(TaskServiceDto);
     push_declaration!(ResearchMonsterDto);
     push_declaration!(TeleportDungeonDto);
@@ -5508,6 +5621,8 @@ fn is_zero_u8(value: &u8) -> bool {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SavePayloadV1 {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub casino: Option<CasinoStateSaveDto>,
     pub schema_version: u16,
     pub revision: u32,
     pub turn: u32,

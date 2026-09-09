@@ -105,6 +105,20 @@ pub(crate) enum BoltReflectionOutcome {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
+    CasinoRoundCompleted {
+        facility_id: String,
+        wager: u32,
+        payout: u32,
+        gold_balance: u32,
+    },
+    CasinoSessionEnded {
+        facility_id: String,
+        gold_balance: u32,
+    },
+    CasinoUnavailable {
+        facility_id: String,
+        reason: String,
+    },
     #[allow(dead_code)]
     MutationGained {
         mutation_id: String,
@@ -3350,6 +3364,43 @@ impl DomainEvent {
                     ("fame", fame.to_string()),
                     ("cost", cost.to_string()),
                     ("balance", gold_balance.to_string()),
+                ],
+            ),
+            Self::CasinoRoundCompleted {
+                facility_id,
+                wager,
+                payout,
+                gold_balance,
+            } => dto(
+                "facility.casino-round",
+                "casino-round-completed",
+                [
+                    ("facility", facility_id.clone()),
+                    ("wager", wager.to_string()),
+                    ("payout", payout.to_string()),
+                    ("balance", gold_balance.to_string()),
+                ],
+            ),
+            Self::CasinoSessionEnded {
+                facility_id,
+                gold_balance,
+            } => dto(
+                "facility.casino-ended",
+                "casino-session-ended",
+                [
+                    ("facility", facility_id.clone()),
+                    ("balance", gold_balance.to_string()),
+                ],
+            ),
+            Self::CasinoUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "facility.casino-unavailable",
+                "casino-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
                 ],
             ),
             Self::InnReputationUnavailable {

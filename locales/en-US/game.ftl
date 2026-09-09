@@ -654,3 +654,7 @@ inn-reputation-hero = You are a true hero!
 inn-reputation-legend = You are a legend!
 inn-reputation-ballads = Bards sing your heroic deeds throughout the land!
 inn-reputation-unavailable = Cannot ask about your reputation: { $reason }.
+
+casino-round-completed = Wager { $wager }, return { $payout }, balance { $balance } gold.
+casino-session-ended = Session ended with { $balance } gold.
+casino-unavailable = Cannot play: { $reason }.

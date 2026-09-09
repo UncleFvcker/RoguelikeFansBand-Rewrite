@@ -35,6 +35,8 @@ pub struct TownFacilityDefinition {
     pub town_id: String,
     pub category: TownFacilityCategory,
     #[serde(default)]
+    pub casino: bool,
+    #[serde(default)]
     pub storage_id: Option<String>,
     #[serde(default)]
     pub reject_artifact_deposits: bool,

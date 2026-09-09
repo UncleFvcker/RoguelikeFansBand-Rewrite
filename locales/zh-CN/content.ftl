@@ -8522,3 +8522,9 @@ town-facility-demo-morivant-beastmaster-owner-name = 德拉克索
 town-facility-demo-morivant-beastmaster-description = 德拉克索（龙人）：研究怪物种类。
 terrain-demo-beastmaster-entrance-name = 驯兽师入口
 terrain-demo-beastmaster-entrance-description = 这扇门通往驯兽师。
+
+terrain-demo-casino-entrance-name = 赌场入口
+terrain-demo-casino-entrance-description = 在这里进入赌场。
+town-facility-demo-morivant-casino-name = 赌场
+town-facility-demo-morivant-casino-description = 选择赌局，下注后按规则结算。
+town-facility-demo-morivant-casino-owner-name = 桑达尔

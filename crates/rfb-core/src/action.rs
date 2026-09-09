@@ -9,6 +9,10 @@ use crate::{scheduler::STANDARD_ACTION_COST, stats::AttributeKind};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum GameAction {
+    Casino {
+        facility_id: String,
+        action: rfb_protocol::CasinoActionDto,
+    },
     AbsorbDevice {
         item_id: String,
     },
@@ -256,6 +260,7 @@ impl GameAction {
             | Self::EatAtInn { .. }
             | Self::AskReputationAtInn { .. }
             | Self::IdentifyAllAtFacility { .. }
+            | Self::Casino { .. }
             | Self::UseFacilityService { .. }
             | Self::UseBountyOffice { .. }
             | Self::RenameAtFacility { .. }
@@ -427,6 +432,13 @@ impl From<GameCommand> for GameAction {
             GameCommand::IdentifyAllAtFacility { facility_id } => {
                 Self::IdentifyAllAtFacility { facility_id }
             }
+            GameCommand::Casino {
+                facility_id,
+                action,
+            } => Self::Casino {
+                facility_id,
+                action,
+            },
             GameCommand::UseFacilityService {
                 facility_id,
                 service,

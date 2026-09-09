@@ -7112,6 +7112,266 @@
         "experience"
       ]
     },
+    "CasinoActionDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "game": {
+              "$ref": "#/$defs/CasinoGameDto"
+            },
+            "rouletteChoice": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "start"
+            },
+            "wager": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "game",
+            "wager"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "rouletteChoice": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "again"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "roll"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "replaceMask": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "draw"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "replaceMask"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
+              "const": "leave"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    "CasinoDto": {
+      "type": "object",
+      "properties": {
+        "maximumWager": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "session": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CasinoSessionDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "maximumWager"
+      ]
+    },
+    "CasinoGameDto": {
+      "type": "string",
+      "enum": [
+        "in-between",
+        "craps",
+        "roulette",
+        "dice-slots",
+        "poker"
+      ]
+    },
+    "CasinoRoundDto": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "cards": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0
+              }
+            },
+            "type": {
+              "type": "string",
+              "const": "poker"
+            }
+          },
+          "required": [
+            "type",
+            "cards"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "dice": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0
+              },
+              "maxItems": 2,
+              "minItems": 2
+            },
+            "point": {
+              "type": "integer",
+              "format": "uint8",
+              "maximum": 255,
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "craps"
+            }
+          },
+          "required": [
+            "type",
+            "point",
+            "dice"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "odds": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "payout": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "resultKey": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "finished"
+            },
+            "values": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0
+              }
+            }
+          },
+          "required": [
+            "type",
+            "values",
+            "odds",
+            "payout",
+            "resultKey"
+          ]
+        }
+      ]
+    },
+    "CasinoSessionDto": {
+      "type": "object",
+      "properties": {
+        "game": {
+          "$ref": "#/$defs/CasinoGameDto"
+        },
+        "round": {
+          "$ref": "#/$defs/CasinoRoundDto"
+        },
+        "startingGold": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "wager": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "game",
+        "wager",
+        "startingGold",
+        "round"
+      ]
+    },
     "CellDto": {
       "type": "object",
       "properties": {
@@ -8309,6 +8569,26 @@
     },
     "GameCommand": {
       "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "action": {
+              "$ref": "#/$defs/CasinoActionDto"
+            },
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "casino"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "action"
+          ]
+        },
         {
           "type": "object",
           "properties": {
@@ -13907,6 +14187,16 @@
           "anyOf": [
             {
               "$ref": "#/$defs/BountyOfficeDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "casino": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CasinoDto"
             },
             {
               "type": "null"
