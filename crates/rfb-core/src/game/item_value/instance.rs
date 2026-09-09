@@ -45,7 +45,10 @@ pub(in crate::game) fn value_object(
                 .find_map(|roll| roll.weight_tenths_pound)
                 .unwrap_or(definition.weight_tenths_pound),
         ),
-        capacity: i32::from(definition.ammunition_capacity),
+        capacity: i32::from(
+            crate::game::ego::base_bag_capacity(definition)
+                .unwrap_or(definition.ammunition_capacity),
+        ),
         fixed_artifact: definition
             .artifact_generation
             .as_ref()
@@ -182,7 +185,7 @@ impl ValueObject {
         self.mult += properties
             .equipment_bonuses
             .launcher_multiplier_delta_percent;
-        if let Some(capacity) = properties.ammunition_capacity {
+        if let Some(capacity) = properties.bag_capacity.or(properties.ammunition_capacity) {
             self.capacity = i32::from(capacity);
         }
         for (element, tier) in &properties.resistances {

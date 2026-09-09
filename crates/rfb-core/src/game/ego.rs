@@ -10,8 +10,9 @@ pub(super) use jewelry::roll as roll_jewelry;
 mod contracts;
 pub(super) mod dragon;
 mod noncraft;
+pub(super) use noncraft::base_bag_capacity;
 pub(super) use noncraft::item_has_ego;
-pub(super) use noncraft::roll_quiver_capacity;
+pub(super) use noncraft::roll_container_capacity;
 pub(crate) use noncraft::{device_capacity, device_difficulty};
 pub(super) use noncraft::{device_pval, materialize_device};
 
@@ -202,7 +203,11 @@ pub(super) fn materialize_ego_with_rng(
         && let Some(item) = content.item(kind_id)
         && let Some(affix) = content.affix(affix_id)
         && !affix.preserves_ordinary_quality
-        && let Some(result) = noncraft::materialize_quiver(item, affix, item.ammunition_capacity)
+        && let Some(result) = noncraft::materialize_quiver(
+            item,
+            affix,
+            base_bag_capacity(item).unwrap_or(item.ammunition_capacity),
+        )
     {
         return result;
     }
@@ -330,6 +335,9 @@ pub(super) fn merge_affix_properties(
     }
     if addition.ammunition_capacity.is_some() {
         total.ammunition_capacity = addition.ammunition_capacity;
+    }
+    if addition.bag_capacity.is_some() {
+        total.bag_capacity = addition.bag_capacity;
     }
     merge_stat_modifiers(&mut total.modifiers, &addition.modifiers);
     merge_equipment_bonuses(&mut total.equipment_bonuses, &addition.equipment_bonuses);
@@ -1379,7 +1387,7 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
         RfbEgoTypeDefinition::Harp
     } else if base_kind.tval == TV_BOW {
         RfbEgoTypeDefinition::Bow
-    } else if base_kind.tval == 46 && base_kind.sval == 0 {
+    } else if base_kind.tval == 46 && base_kind.sval <= 1 {
         RfbEgoTypeDefinition::Quiver
     } else if base_kind.tval == 39 {
         RfbEgoTypeDefinition::Lite
@@ -1437,8 +1445,10 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
                 item,
                 affix,
                 intrinsic_properties
-                    .and_then(|properties| properties.ammunition_capacity)
-                    .unwrap_or(item.ammunition_capacity),
+                    .and_then(|properties| {
+                        properties.bag_capacity.or(properties.ammunition_capacity)
+                    })
+                    .unwrap_or_else(|| base_bag_capacity(item).unwrap_or(item.ammunition_capacity)),
             ),
             RfbEgoTypeDefinition::Lite => {
                 noncraft::materialize_light(rng, item, affix, generation_level)
@@ -1487,7 +1497,7 @@ fn rfb_ego_can_apply_to_base(
         .unwrap_or_default();
     match source_index {
         200..=201 | 205..=211 | 220..=227 => jewelry::can_apply(source_index, tval),
-        265..=268 => tval == 46 && sval == 0,
+        265..=268 => tval == 46 && sval <= 1,
         235..=243 => noncraft::light_can_apply(source_index, tval, sval),
         50..=152 => armor::can_apply(source_index, tval, sval),
         2 => matches!(tval, TV_POLEARM | TV_SWORD),
@@ -3537,7 +3547,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(STATE_HASH_SCHEMA_VERSION, 113);
+        assert_eq!(STATE_HASH_SCHEMA_VERSION, 114);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,

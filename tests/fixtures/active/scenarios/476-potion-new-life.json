@@ -84,7 +84,7 @@
       "playerHp": 33,
       "playerMaxHp": 56,
       "revision": 1,
-      "stateHash": "e4c8419e810840486c8d4f920c798eeb245ef1a8345cb1bb9d5b901b29f98f40",
+      "stateHash": "a37ca81b9fd08eef1d5ca4b6ed7f6b628cb3efff3355f5d55c9b50aeca8a5c15",
       "turn": 1
     },
     "events": [
@@ -97,6 +97,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "e4c8419e810840486c8d4f920c798eeb245ef1a8345cb1bb9d5b901b29f98f40"
+    "saveRoundTripStateHash": "a37ca81b9fd08eef1d5ca4b6ed7f6b628cb3efff3355f5d55c9b50aeca8a5c15"
   }
 }

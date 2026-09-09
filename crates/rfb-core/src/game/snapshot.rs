@@ -934,6 +934,7 @@ impl Game {
                     return None;
                 }
                 Some(InventoryItemDto {
+                    bag_capacity: self.visible_item_bag_capacity(item),
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
@@ -1036,6 +1037,7 @@ impl Game {
                     return None;
                 };
                 Some(EquipmentItemDto {
+                    bag_capacity: self.visible_item_bag_capacity(item),
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),

@@ -741,6 +741,11 @@ export class InventoryPanel {
       container.append(identification);
     }
     this.#appendItemModifiers(container, item.modifiers);
+    if (item.bagCapacity !== undefined && item.bagCapacity !== null) {
+      this.#appendDetail(container, "inventory-bag-capacity", this.#localization.format("inventory-bag-capacity", {
+        capacity: item.bagCapacity,
+      }));
+    }
     this.#appendItemEnchantments(container, item.enchantments);
     this.#appendItemCurse(container, item.curse);
     this.#appendEquipmentBonuses(container, item.equipmentBonuses);

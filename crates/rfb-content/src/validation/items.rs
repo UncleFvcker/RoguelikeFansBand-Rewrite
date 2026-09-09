@@ -786,7 +786,11 @@ pub(super) fn validate_items(
                 || item.artifact_generation.is_some()
                 || item.tags.iter().any(|tag| tag == "artifact")
                 || !base_kind_source_indices.insert(base_kind.source_index)
-                || !base_kind_values.insert((base_kind.tval, base_kind.sval)))
+                // The three SV_BAG kinds share tval/sval and differ by their base pval.
+                || !base_kind_values.insert((base_kind.tval, base_kind.sval,
+                    if base_kind.tval == 46 && base_kind.sval == 1 {
+                        item.rfb_value.as_ref().map_or(0, |value| value.pval)
+                    } else { 0 })))
         {
             return Err(ContentError::InvalidItemSourceIdentity(item.id.clone()));
         }
@@ -890,17 +894,21 @@ pub(super) fn validate_items(
                 return Err(ContentError::InvalidArtifactGeneration(item.id.clone()));
             }
         }
-        if item.inventory_slot_bonus > 100
-            || (item.inventory_slot_bonus > 0
-                && (item.equipment_slot.as_deref() != Some("container") || item.max_stack != 1))
+        if item
+            .rfb_base_kind
+            .is_some_and(|base| base.tval == 46 && base.sval == 1)
+            && (item.equipment_slot.as_deref() != Some("container")
+                || item.max_stack != 1
+                || item
+                    .rfb_value
+                    .as_ref()
+                    .is_none_or(|value| !(0..=8190).contains(&value.pval)))
         {
             return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
         }
         if item.ammunition_capacity > 500
             || (item.ammunition_capacity > 0
-                && (item.equipment_slot.as_deref() != Some("quiver")
-                    || item.max_stack != 1
-                    || item.inventory_slot_bonus > 0))
+                && (item.equipment_slot.as_deref() != Some("quiver") || item.max_stack != 1))
         {
             return Err(ContentError::InvalidEquipmentSlot(item.id.clone()));
         }

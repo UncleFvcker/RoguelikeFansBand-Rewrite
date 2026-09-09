@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.236";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 8;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 8;
+pub const PROTOCOL_VERSION: &str = "1.237";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 9;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 9;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -2432,6 +2432,8 @@ pub struct RfbPvalSaveDto {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemIntrinsicPropertiesSaveDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bag_capacity: Option<u16>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub rfb_heavy_curse: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -2466,6 +2468,8 @@ impl ItemIntrinsicPropertiesSaveDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RolledAffixSaveDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bag_capacity: Option<u16>,
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     pub rfb_heavy_curse: bool,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -2513,6 +2517,8 @@ impl<'de> Deserialize<'de> for RolledAffixSaveDto {
         #[derive(Deserialize)]
         #[serde(rename_all = "camelCase", deny_unknown_fields)]
         struct Wire {
+            #[serde(default)]
+            bag_capacity: Option<u16>,
             affix_id: String,
             #[serde(default)]
             rfb_flags: Vec<String>,
@@ -2554,6 +2560,7 @@ impl<'de> Deserialize<'de> for RolledAffixSaveDto {
 
         let wire = Wire::deserialize(deserializer)?;
         Ok(Self {
+            bag_capacity: wire.bag_capacity,
             affix_id: wire.affix_id,
             rfb_flags: wire.rfb_flags,
             rfb_heavy_curse: wire.rfb_heavy_curse,
@@ -3996,6 +4003,8 @@ pub struct CapturedActorDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct InventoryItemDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bag_capacity: Option<u16>,
     pub id: String,
     pub kind_id: String,
     #[serde(default)]
@@ -4086,6 +4095,8 @@ pub struct BodySlotDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentItemDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bag_capacity: Option<u16>,
     pub id: String,
     pub kind_id: String,
     #[serde(default)]
@@ -6060,6 +6071,7 @@ mod tests {
             }],
             defeated_unique_actor_kind_ids: Vec::new(),
             inventory: vec![InventoryItemDto {
+                bag_capacity: None,
                 id: "demo.item.inventory.1".to_owned(),
                 kind_id: "demo.item.charm".to_owned(),
                 display_name_key: "item-demo-charm-name".to_owned(),
@@ -6105,6 +6117,7 @@ mod tests {
                 throw_profile: None,
             }],
             equipment: vec![EquipmentItemDto {
+                bag_capacity: None,
                 id: "demo.item.equipment.1".to_owned(),
                 kind_id: "demo.item.charm".to_owned(),
                 display_name_key: "item-demo-charm-name".to_owned(),

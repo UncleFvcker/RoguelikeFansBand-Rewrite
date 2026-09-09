@@ -3,7 +3,7 @@ use super::support::*;
 use super::*;
 
 #[test]
-fn fabric_bag_adds_four_shared_inventory_slots() {
+fn fabric_bag_projects_four_non_ammunition_slots() {
     let mut game = Game::new(42);
     game.items.clear();
     give_inventory_item(

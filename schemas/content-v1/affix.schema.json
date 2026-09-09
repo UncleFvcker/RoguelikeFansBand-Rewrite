@@ -3722,6 +3722,16 @@
             "null"
           ]
         },
+        "bagCapacity": {
+          "description": "Final bag capacity, in non-ammunition stack slots (not an additive bonus).",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "brands": {
           "default": [],
           "items": {

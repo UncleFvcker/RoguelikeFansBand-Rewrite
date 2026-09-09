@@ -409,7 +409,7 @@ impl Game {
         }
         self.body_slots = next_slots;
         unequipped.sort_by(|left, right| self.items[*left].id.cmp(&self.items[*right].id));
-        while self.inventory_used_slots() > self.inventory_slot_capacity() {
+        while !self.inventory_fits(&self.items) {
             let item_index = unequipped.pop().or_else(|| {
                 self.items
                     .iter()

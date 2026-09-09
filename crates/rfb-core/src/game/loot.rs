@@ -695,20 +695,14 @@ impl Game {
                     power = 2;
                 }
             }
-            let rfb_quiver = table.rfb_ego_policy
-                == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
-                && self
-                    .content
-                    .item(&entry.item_kind_id)
-                    .and_then(|item| item.rfb_base_kind)
-                    .is_some_and(|base| base.tval == 46 && base.sval == 0);
-            if rfb_quiver {
-                let capacity = super::ego::roll_quiver_capacity(&mut self.rng)
-                    .saturating_add(if power == 1 { 20 } else { 0 });
-                base_intrinsic_properties = Some(AffixPropertyBundleDefinition {
-                    ammunition_capacity: Some(capacity),
-                    ..Default::default()
-                });
+            if rfb_generation
+                && let Some(properties) = super::ego::roll_container_capacity(
+                    &mut self.rng,
+                    self.content.item(&entry.item_kind_id).unwrap(),
+                    power,
+                )
+            {
+                base_intrinsic_properties = Some(properties);
             }
             if rfb_generation
                 && let Some(properties) = super::ego::dragon::materialize(
@@ -924,7 +918,7 @@ impl Game {
                     || (power == -2
                         && !rfb_jewelry
                         && !rfb_device
-                        && !rfb_quiver
+                        && base_kind.is_none_or(|base| base.tval != 46)
                         && !draft.affix_ids.is_empty());
                 if final_curse || (power == -1 && (rfb_weapon || rfb_armor)) {
                     super::ego::curses::finalize_draft(

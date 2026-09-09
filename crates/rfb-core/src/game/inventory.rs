@@ -458,6 +458,48 @@ fn inventory_resistance_save(
     rng.bounded(power) < resistance
 }
 
+pub(super) fn item_bag_capacity(content: &ContentCatalog, item: &ItemInstance) -> Option<u16> {
+    let base = super::ego::base_bag_capacity(content.item(&item.kind_id)?)?;
+    Some(
+        item.intrinsic_properties
+            .bag_capacity
+            .or_else(|| {
+                item.rolled_affixes
+                    .iter()
+                    .find_map(|rolled| rolled.properties.bag_capacity)
+            })
+            .unwrap_or(base),
+    )
+}
+
+fn equipped_bag_capacity(content: &ContentCatalog, items: &[ItemInstance]) -> u16 {
+    items
+        .iter()
+        .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+        .filter_map(|item| item_bag_capacity(content, item))
+        .fold(0, u16::saturating_add)
+}
+
+fn non_ammunition_slots(content: &ContentCatalog, items: &[ItemInstance]) -> u16 {
+    items
+        .iter()
+        .filter(|item| item.location == ItemLocation::Inventory)
+        .filter(|item| {
+            content
+                .item(&item.kind_id)
+                .is_some_and(|definition| definition.ammunition_profile.is_none())
+        })
+        .fold(0_u16, |count, _| count.saturating_add(1))
+}
+
+/// The unified inventory assigns only non-ammunition stacks to bag space.
+/// Quivered ammunition is counted separately by quantity; remaining stacks use the pack.
+fn inventory_used_pack_slots(content: &ContentCatalog, items: &[ItemInstance]) -> u16 {
+    inventory_used_slots(content, items).saturating_sub(
+        non_ammunition_slots(content, items).min(equipped_bag_capacity(content, items)),
+    )
+}
+
 pub(super) fn equipped_ammunition_capacity(
     content: &ContentCatalog,
     items: &[ItemInstance],
@@ -548,7 +590,7 @@ fn compatible_inventory_space(
         })
 }
 
-pub(super) fn additional_inventory_slots(
+fn additional_pack_slots(
     content: &ContentCatalog,
     items: &[ItemInstance],
     item_property_knowledge: &BTreeMap<String, ItemPropertyKnowledgeState>,
@@ -594,7 +636,8 @@ pub(super) fn additional_inventory_slots(
         remaining -= stack.quantity;
         projected.push(stack);
     }
-    inventory_used_slots(content, &projected).saturating_sub(inventory_used_slots(content, items))
+    inventory_used_pack_slots(content, &projected)
+        .saturating_sub(inventory_used_pack_slots(content, items))
 }
 
 pub(super) fn inventory_quantity_capacity(
@@ -608,7 +651,7 @@ pub(super) fn inventory_quantity_capacity(
     let Some(definition) = content.item(&incoming.kind_id) else {
         return 0;
     };
-    let current_used = inventory_used_slots(content, items);
+    let current_used = inventory_used_pack_slots(content, items);
     if current_used > slot_capacity {
         return 0;
     }
@@ -635,14 +678,21 @@ pub(super) fn inventory_quantity_capacity(
     } else {
         0
     };
-    let free_slots = slot_capacity.saturating_sub(current_used);
+    let free_bag_slots = if definition.ammunition_profile.is_none() {
+        equipped_bag_capacity(content, items).saturating_sub(non_ammunition_slots(content, items))
+    } else {
+        0
+    };
+    let free_slots = slot_capacity
+        .saturating_sub(current_used)
+        .saturating_add(free_bag_slots);
     let mut low = 0_u32;
     let mut high = stack_space
         .saturating_add(u32::from(free_slots).saturating_mul(definition.max_stack))
         .saturating_add(free_quiver_capacity);
     while low < high {
         let middle = low.saturating_add(high).saturating_add(1) / 2;
-        let required = additional_inventory_slots(
+        let required = additional_pack_slots(
             content,
             items,
             item_property_knowledge,
@@ -794,7 +844,7 @@ fn plan_pick_up(
     let original_quantity = pickup_item.quantity;
 
     let used_slots = inventory_used_slots(content, items);
-    let required_slots = additional_inventory_slots(
+    let required_slots = additional_pack_slots(
         content,
         items,
         item_property_knowledge,
@@ -802,13 +852,21 @@ fn plan_pick_up(
         original_quantity,
         true,
     );
-    if used_slots.saturating_add(required_slots) > inventory_slot_capacity {
+    if inventory_used_pack_slots(content, items).saturating_add(required_slots)
+        > inventory_slot_capacity
+    {
         return Ok(PickUpPlan::InventoryFull {
             kind_id,
             quantity: original_quantity,
             used_slots,
             required_slots,
-            capacity: inventory_slot_capacity,
+            capacity: inventory_slot_capacity.saturating_add(
+                if definition.ammunition_profile.is_none() {
+                    equipped_bag_capacity(content, items)
+                } else {
+                    equipped_bag_capacity(content, items).min(non_ammunition_slots(content, items))
+                },
+            ),
         });
     }
 
@@ -1156,22 +1214,19 @@ impl Game {
     }
 
     pub(super) fn inventory_slot_capacity(&self) -> u16 {
-        let base = self
-            .content
+        self.inventory_pack_capacity()
+            .saturating_add(equipped_bag_capacity(&self.content, &self.items))
+    }
+
+    fn inventory_pack_capacity(&self) -> u16 {
+        self.content
             .actor(&self.player.kind_id)
             .expect("player actor definition must remain available")
-            .inventory_slot_capacity;
-        self.items
-            .iter()
-            .filter_map(|item| {
-                if !matches!(item.location, ItemLocation::Equipped { .. }) {
-                    return None;
-                }
-                self.content
-                    .item(&item.kind_id)
-                    .map(|definition| definition.inventory_slot_bonus)
-            })
-            .fold(base, u16::saturating_add)
+            .inventory_slot_capacity
+    }
+
+    pub(super) fn inventory_fits(&self, items: &[ItemInstance]) -> bool {
+        inventory_used_pack_slots(&self.content, items) <= self.inventory_pack_capacity()
     }
 
     pub(super) fn inventory_quantity_capacity_for(
@@ -1184,7 +1239,7 @@ impl Game {
             &self.items,
             &self.item_property_knowledge,
             incoming,
-            self.inventory_slot_capacity(),
+            self.inventory_pack_capacity(),
             match_knowledge,
         )
     }
@@ -1930,18 +1985,6 @@ impl Game {
         {
             return None;
         }
-        let current_capacity = self.inventory_slot_capacity();
-        let equipped_bonus = self
-            .content
-            .item(&self.items[plan.inventory_index].kind_id)?
-            .inventory_slot_bonus;
-        let replaced_bonus = plan
-            .replaced_index
-            .and_then(|index| self.content.item(&self.items[index].kind_id))
-            .map_or(0, |definition| definition.inventory_slot_bonus);
-        let projected_capacity = current_capacity
-            .saturating_sub(replaced_bonus)
-            .saturating_add(equipped_bonus);
         let mut projected_items = self.items.clone();
         if let Some(index) = plan.replaced_index {
             projected_items[index].location = ItemLocation::Inventory;
@@ -1949,8 +1992,7 @@ impl Game {
         projected_items[plan.inventory_index].location = ItemLocation::Equipped {
             slot_id: plan.slot_id.clone(),
         };
-        let projected_used = inventory_used_slots(&self.content, &projected_items);
-        if projected_used > projected_capacity {
+        if !self.inventory_fits(&projected_items) {
             return None;
         }
         let replaced_kind_id = plan.replaced_index.map(|index| {
@@ -2005,11 +2047,9 @@ impl Game {
         if plan.curse.is_some() {
             return None;
         }
-        let removed_bonus = self.content.item(&plan.kind_id)?.inventory_slot_bonus;
-        let projected_capacity = self.inventory_slot_capacity().saturating_sub(removed_bonus);
         let mut projected_items = self.items.clone();
         projected_items[plan.item_index].location = ItemLocation::Inventory;
-        if inventory_used_slots(&self.content, &projected_items) > projected_capacity {
+        if !self.inventory_fits(&projected_items) {
             return None;
         }
         self.items[plan.item_index].location = ItemLocation::Inventory;
@@ -2038,7 +2078,7 @@ impl Game {
             &self.items,
             &self.item_property_knowledge,
             self.player.position,
-            self.inventory_slot_capacity(),
+            self.inventory_pack_capacity(),
             item_id,
         )?;
         match plan {

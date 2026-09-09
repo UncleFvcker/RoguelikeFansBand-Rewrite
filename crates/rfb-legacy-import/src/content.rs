@@ -3885,10 +3885,6 @@ fn item_json_with_terrain(
     if shape.slot.is_some() && defense != 0 {
         modifiers.insert("defense".to_owned(), serde_json::json!(defense));
     }
-    if entry.tval == 46 && entry.sval == 1 {
-        value["inventorySlotBonus"] =
-            serde_json::json!(entry.pval.saturating_add(1).saturating_mul(4));
-    }
     if fold.speed != 0 {
         modifiers.insert("speed".to_owned(), serde_json::json!(fold.speed));
     }

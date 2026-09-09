@@ -183,6 +183,21 @@ test("compact rows keep multi-selection and show live details without losing lis
   assert.deepEqual([...state.selectedInventoryIds], ["potion"]);
 });
 
+test("bag details show the known final capacity and source ego without redundant identification labels", (t) => {
+  const { panel, dom } = createInventoryFixture(t);
+  const bag = item("bag", { equipmentSlot: "container" });
+  panel.render([bag], []);
+  dom.inventoryList.children[0].children[1].dispatchEvent(new Event("click"));
+  assert.equal(dom.inventoryDetailBody.children.some((child) => child.className === "inventory-bag-capacity"), false);
+  panel.render([], [{ ...bag, slotId: "container", identification: "identified", bagCapacity: 8,
+    knownProperties: [{ affixId: "rfb-legacy.affix.holding-quiver", nameKey: "affix-legacy-holding-quiver-name" }],
+  }]);
+  const details = dom.inventoryDetailBody.children;
+  assert.match(details.find((child) => child.className === "inventory-bag-capacity").textContent, /"capacity":8/);
+  assert.match(details.find((child) => child.className === "item-property").textContent, /affix-legacy-holding-quiver-name/);
+  assert.equal(details.some((child) => child.className?.startsWith("item-identification")), false);
+});
+
 test("equipped details reuse refuel and unequip commands and retain activation availability", (t) => {
   const { panel, dom, commands } = createInventoryFixture(t);
   const source = item("oil", { fuel: { kind: "oil", current: 20, maximum: 20 } });
@@ -421,7 +436,7 @@ function createInventoryFixture(t) {
   const panel = new InventoryPanel({
     dom, state,
     localization: { format: (key, args) => `${key} ${JSON.stringify(args)}` },
-    formatter: { visibleItemName: (key) => key, equipmentSlotName: (slot) => slot },
+    formatter: { visibleItemName: (key) => key, equipmentSlotName: (slot) => slot, itemPropertyName: (key) => key },
     dispatch: async (command) => { commands.push(command); },
     startTargeting: (...args) => targets.push(args), updateCampaignAction: () => {}, announce: () => {},
   });

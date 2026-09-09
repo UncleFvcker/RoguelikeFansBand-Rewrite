@@ -484,3 +484,10 @@ Schema 升至 v113，容器仍为 v1。属性包的 `rfbHeavyCurse` 独立保存
 不能从 severity 推断；`curseEffects` 覆盖 get_curse 可生成的 26 种 CF。解除诅咒清除 CF、
 独立 HEAVY 位及空 rolled 记录，保留 OF 标记与负 pval。保存/恢复不重新抽样，正式 RFB Ego
 可保持 Ordinary 显示品质；不提供旧开发存档迁移。详见 [E8.2](contract-v313-negative-equipment.md)。
+
+E8.4（contract-v315）将 Protocol 升至 1.237、save header/payload schema 升至 v9、State Hash
+Schema 升至 v114，容器仍为 v1。属性包新增 `bagCapacity`，表示非弹药物品格的最终容量，
+不是叠加值；保存生成后的结果，恢复不抽 RNG。它只允许在 SV_BAG 上出现，数值必须属于
+该底材的普通、Good 或 Holding 容量。Phase 复用既有重量覆盖字段。统一库存按实际
+非弹药格和箭袋数量重新校验，拒绝弹药侵占背包格的非法存档；不增加旧开发存档迁移。
+详见 [E8.4](contract-v315-bag-containers.md)。

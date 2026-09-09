@@ -8001,6 +8001,15 @@
             }
           ]
         },
+        "bagCapacity": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
         "brands": {
           "type": "array",
           "items": {
@@ -10597,6 +10606,15 @@
               "type": "null"
             }
           ]
+        },
+        "bagCapacity": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
         },
         "brands": {
           "type": "array",

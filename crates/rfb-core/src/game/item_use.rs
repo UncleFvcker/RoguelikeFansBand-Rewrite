@@ -1823,15 +1823,20 @@ impl Game {
                 && (matches!(item.location, ItemLocation::Inventory | ItemLocation::Equipped { .. })
                     || matches!(item.location, ItemLocation::Ground(position) if position == self.player.position))
         })?;
-        let split_fits = item.quantity == 1
-            || !matches!(item.location, ItemLocation::Inventory)
-            || self.inventory_used_slots() + 1
-                - u16::from(self.items.iter().any(|source| {
-                    source.id == source_item_id
-                        && source.quantity == 1
-                        && source.location == ItemLocation::Inventory
-                }))
-                <= self.inventory_slot_capacity();
+        let split_fits =
+            item.quantity == 1 || !matches!(item.location, ItemLocation::Inventory) || {
+                let mut projected = self.items.clone();
+                projected.retain(|source| !(source.id == source_item_id && source.quantity == 1));
+                projected
+                    .iter_mut()
+                    .find(|target| target.id == target_item_id)?
+                    .quantity -= 1;
+                let mut split = item.clone();
+                split.id = format!("projected-mutation-{}", projected.len());
+                split.quantity = 1;
+                projected.push(split);
+                self.inventory_fits(&projected)
+            };
         split_fits.then_some(item).filter(|_| {
             self.next_item_instance_serial.checked_add(1).is_some() || item.quantity == 1
         })

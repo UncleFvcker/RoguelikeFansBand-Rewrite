@@ -384,6 +384,7 @@ inventory-filter-empty = 没有符合筛选条件的物品。
 action-inventory-details = 详情
 inventory-details-for = 查看详情：{ $name }
 inventory-item-weight = { $weight } 磅
+inventory-bag-capacity = 背包容量：{ $capacity } 格（不含弹药）
 equipment-slot-summary = { $slot }：{ $name }
 inventory-quantity = ×{ $quantity }
 inventory-charges = 充能：{ $current }/{ $maximum }

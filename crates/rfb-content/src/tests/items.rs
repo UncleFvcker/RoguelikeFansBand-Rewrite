@@ -2171,3 +2171,32 @@ fn rfb_base_kind_identity_rejects_duplicate_source_indices_and_kind_values() {
         Err(ContentError::InvalidItemSourceIdentity(_))
     ));
 }
+
+#[test]
+fn bag_identity_uses_pval_and_rejects_invalid_capacity_metadata() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    for pval in [0, -1, 8191] {
+        let mut content = artifact.content.clone();
+        let bag = content
+            .items
+            .iter_mut()
+            .find(|item| item.id == "demo.item.leather-pouch")
+            .unwrap();
+        bag.rfb_value.as_mut().unwrap().pval = pval;
+        assert!(matches!(
+            validate_and_normalize(&mut content),
+            Err(ContentError::InvalidItemSourceIdentity(_) | ContentError::InvalidEquipmentSlot(_))
+        ));
+    }
+    let mut content = artifact.content;
+    let bag = content
+        .items
+        .iter_mut()
+        .find(|item| item.id == "demo.item.fabric-bag")
+        .unwrap();
+    bag.rfb_value = None;
+    assert!(matches!(
+        validate_and_normalize(&mut content),
+        Err(ContentError::InvalidEquipmentSlot(_))
+    ));
+}

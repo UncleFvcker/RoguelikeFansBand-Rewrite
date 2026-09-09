@@ -3,6 +3,12 @@
 use super::*;
 
 impl Game {
+    pub(super) fn visible_item_bag_capacity(&self, item: &ItemInstance) -> Option<u16> {
+        (self.item_identification(item) == ItemIdentificationDto::Identified)
+            .then(|| super::inventory::item_bag_capacity(&self.content, item))
+            .flatten()
+    }
+
     pub(super) fn visible_item_modifiers(&self, item: &ItemInstance) -> StatModifiersDto {
         if self.item_knowledge_dto(&item.kind_id) != ItemKnowledgeDto::Aware {
             return StatModifiersDto::default();

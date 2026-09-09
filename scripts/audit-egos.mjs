@@ -80,17 +80,18 @@ let index = 0;
 for (const line of execFileSync("git", ["-C", sourceRoot, "show", `${source.sourceCommit}:lib/edit/k_info.txt`], { encoding: "utf8", maxBuffer: 16 * 1024 * 1024 }).split(/\r?\n/)) {
   const name = line.match(/^N:([^:]+):(.*)$/);
   if (name) { index = name[1] === "*" ? index + 1 : Number(name[1]); kinds.set(index, { name: name[2] }); }
-  const type = line.match(/^I:(\d+):(\d+):/);
-  if (type) Object.assign(kinds.get(index), { tval: Number(type[1]), sval: Number(type[2]) });
+  const type = line.match(/^I:(\d+):(\d+):(-?\d+)/);
+  if (type) Object.assign(kinds.get(index), { tval: Number(type[1]), sval: Number(type[2]), pval: Number(type[3]) });
 }
 const equipmentBases = [...new Set(pool.entries.map(entry => entry.itemKindId))].map(id => items.find(item => item.id === id)).filter(item => item.equipmentSlot || item.ammunitionProfile).map(item => {
   if (!item.rfbBaseKind) {
-    assert.ok(item.equipmentSlot === "container" || item.captureBall, `unmapped equipment base ${item.id}`);
-    return { itemId: item.id, status: "separate-container-or-capture-system", equipmentSlot: item.equipmentSlot };
+    assert.ok(item.captureBall, `unmapped equipment base ${item.id}`);
+    return { itemId: item.id, status: "separate-capture-system", equipmentSlot: item.equipmentSlot };
   }
   const kind = kinds.get(item.rfbBaseKind.sourceIndex);
   assert.ok(kind, `unknown base ${item.id}`);
   assert.deepEqual([item.rfbBaseKind.tval, item.rfbBaseKind.sval], [kind.tval, kind.sval], item.id);
+  if (kind.tval === 46 && kind.sval === 1) assert.equal(item.rfbValue.pval, kind.pval, item.id);
   return { itemId: item.id, status: "source-type-verified", ...item.rfbBaseKind };
 });
 const report = {
@@ -100,11 +101,11 @@ const report = {
   runtimeParityComplete: false,
   negativeEquipmentContract: "contract-v313-negative-equipment: ordinary/Ego generation, 1216 independent C cases and 26 curse consumers; negative random artifacts remain pending",
   dragonBaseContract: "contract-v314-dragon-base-equipment: six source bases, 2048 independent C cases, power suppression, Craft and save; random-artifact integration remains E8.5",
+  bagContract: "contract-v315-bag-containers: three source bases, 972 independent C cases, final capacity, non-ammunition slot allocation, all four ego consumers and save",
   naturalTablesUsingSharedPolicy: naturalTables.map(table => table.id).sort(),
   unresolvedSharedGenerationContracts: [
     { scope: "non-ammunition random artifacts", contract: "_check_rand_art / _art_create_random", source: "src/ego.c:303" },
     { scope: "rings and amulets", contract: "value limits and up to 1000 candidate retries (real scoring implemented in E8.1)", source: "src/ego.c:411" },
-    { scope: "bags", contract: "SV_BAG capacity and quiver-ego behavior in the container system", source: "src/ego.c:3691" },
     { scope: "unavailable classes and races", contract: "Mauler, Bard and Monster Ring special generation modifiers", source: "src/ego.c; src/object2.c" },
   ],
   retainedNonSourceAffixes: affixes.filter(affix => !affix.rfbEgo).map(affix => affix.id).sort(),

@@ -173,7 +173,9 @@ pub(super) fn item_creation_state_is_valid(
     let weight_is_valid = item.rolled_affixes.iter().all(|rolled| {
         rolled.weight_tenths_pound.is_none_or(|weight| {
             (weight == 0
-                && definition.ammunition_capacity > 0
+                && definition
+                    .rfb_base_kind
+                    .is_some_and(|base| base.tval == 46 && base.sval <= 1)
                 && rolled.affix_id == "rfb-legacy.affix.phase-quiver")
                 || armor
                     && (weight == definition.weight_tenths_pound * 2 / 3
@@ -212,6 +214,15 @@ pub(super) fn item_creation_state_is_valid(
                 .ammunition_capacity
                 .is_none_or(|capacity| capacity > 0 && definition.ammunition_capacity > 0)
         })
+        && std::iter::once(&item.intrinsic_properties)
+            .chain(item.rolled_affixes.iter().map(|rolled| &rolled.properties))
+            .all(|properties| {
+                properties.bag_capacity.is_none_or(|capacity| {
+                    super::ego::base_bag_capacity(definition).is_some_and(|base| {
+                        capacity == base || capacity == base + 2 || capacity == base * 2
+                    })
+                })
+            })
         && damage_override_is_valid
         && enchantments_are_valid
         && weight_is_valid
@@ -958,7 +969,7 @@ impl Game {
                 }
             }
         }
-        if self.inventory_used_slots() > self.inventory_slot_capacity() {
+        if !self.inventory_fits(&self.items) {
             return Err(CoreError::InvalidSave("inventory exceeds slot capacity"));
         }
         for (shop_id, state) in &self.shop_states {

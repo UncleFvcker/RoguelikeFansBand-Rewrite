@@ -7,7 +7,6 @@
   "generationLevel": 50,
   "glyph": "~",
   "id": "demo.item.dwarven-backpack",
-  "inventorySlotBonus": 12,
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-dwarven-backpack-name",
@@ -16,5 +15,15 @@
     "equipment",
     "rfb-compatibility"
   ],
-  "weightTenthsPound": 10
+  "weightTenthsPound": 10,
+  "rfbBaseKind": {
+    "sourceIndex": 724,
+    "tval": 46,
+    "sval": 1
+  },
+  "rfbValue": {
+    "flags": [],
+    "pval": 2,
+    "toArmor": 0
+  }
 }

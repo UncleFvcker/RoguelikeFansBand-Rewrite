@@ -337,6 +337,9 @@ pub struct AffixPropertyBundleDefinition {
     /// Generated quiver capacity, in ammunition units.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub ammunition_capacity: Option<u16>,
+    /// Final bag capacity, in non-ammunition stack slots (not an additive bonus).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub bag_capacity: Option<u16>,
     #[serde(default)]
     pub modifiers: StatModifiers,
     #[serde(default)]
@@ -1244,9 +1247,6 @@ pub struct ItemDefinition {
     /// without an RFB `a_info` record intentionally leave this unset.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub artifact_generation: Option<ArtifactGenerationDefinition>,
-    /// Extra shared-pack stack slots granted while this container is equipped.
-    #[serde(default)]
-    pub inventory_slot_bonus: u16,
     /// Ammunition units carried outside the shared pack while this quiver is equipped.
     #[serde(default)]
     pub ammunition_capacity: u16,
@@ -1351,6 +1351,13 @@ pub fn affix_is_compatible_with_item(
             Some("boots") => &["boots"],
             Some("light") => &["lite"],
             Some("quiver") => &["quiver"],
+            Some("container")
+                if item
+                    .rfb_base_kind
+                    .is_some_and(|base| base.tval == 46 && base.sval == 1) =>
+            {
+                &["quiver"]
+            }
             Some("ring") => &["ring"],
             Some("amulet") => &["amulet"],
             _ => return false,

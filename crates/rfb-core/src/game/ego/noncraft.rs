@@ -2,6 +2,9 @@
 
 use super::*;
 
+#[cfg(test)]
+mod bags;
+
 pub(in crate::game) fn device_pval(item: &ItemInstance) -> u16 {
     item.rolled_affixes
         .iter()
@@ -106,6 +109,38 @@ pub(in crate::game) fn roll_quiver_capacity(rng: &mut RfbRng) -> u16 {
     capacity
 }
 
+pub(in crate::game) fn base_bag_capacity(item: &ItemDefinition) -> Option<u16> {
+    let base = item.rfb_base_kind?;
+    (base.tval == 46 && base.sval == 1)
+        .then(|| (item.rfb_value.as_ref().unwrap().pval as u16 + 1) * 4)
+}
+
+pub(in crate::game) fn roll_container_capacity(
+    rng: &mut RfbRng,
+    item: &ItemDefinition,
+    power: i16,
+) -> Option<AffixPropertyBundleDefinition> {
+    let base = item.rfb_base_kind?;
+    if base.tval != 46 || base.sval > 1 {
+        return None;
+    }
+    Some(if let Some(capacity) = base_bag_capacity(item) {
+        AffixPropertyBundleDefinition {
+            bag_capacity: Some(capacity + if power == 1 { 2 } else { 0 }),
+            ..Default::default()
+        }
+    } else {
+        AffixPropertyBundleDefinition {
+            ammunition_capacity: Some(roll_quiver_capacity(rng).saturating_add(if power == 1 {
+                20
+            } else {
+                0
+            })),
+            ..Default::default()
+        }
+    })
+}
+
 pub(super) fn materialize_quiver(
     item: &ItemDefinition,
     affix: &AffixDefinition,
@@ -113,7 +148,7 @@ pub(super) fn materialize_quiver(
 ) -> Option<EgoMaterialization> {
     let base = item.rfb_base_kind?;
     let index = affix.rfb_ego.as_ref()?.source_index;
-    if base.tval != 46 || base.sval != 0 || !(265..=268).contains(&index) {
+    if base.tval != 46 || base.sval > 1 || !(265..=268).contains(&index) {
         return None;
     }
     let mut state = RolledAffixState {
@@ -128,7 +163,7 @@ pub(super) fn materialize_quiver(
     } else {
         capacity
     })
-    .saturating_add(50);
+    .saturating_add(if base.sval == 1 { 0 } else { 50 });
     let (activation, charges) = affix
         .device_generation
         .as_ref()
@@ -143,7 +178,8 @@ pub(super) fn materialize_quiver(
             .into_iter()
             .collect(),
         Some(AffixPropertyBundleDefinition {
-            ammunition_capacity: Some(capacity),
+            ammunition_capacity: (base.sval == 0).then_some(capacity),
+            bag_capacity: (base.sval == 1).then_some(capacity),
             ..Default::default()
         }),
         None,

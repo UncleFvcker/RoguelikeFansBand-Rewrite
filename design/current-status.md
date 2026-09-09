@@ -17,11 +17,11 @@
 
 | 项目 | 值 | 来源 |
 | --- | --- | --- |
-| 协议 | 1.236 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | v113 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload | v8 / v8；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.394.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
-| 行为基线 | contract-v314，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
+| 协议 | 1.237 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | v114 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload | v9 / v9；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
+| 内容包 | 1.395.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 行为基线 | contract-v315，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
 | 内容定义数量 | 地形 201、角色 1402、物品 369、能力 1838、词缀 168、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
 
@@ -36,6 +36,10 @@ E8.2 已接入普通/Ego 负向生成、价值驱动诅咒及 26 种 CF 消费�
 
 E8.3 已补入六种龙系底材及随机基础抗性/品牌、power 抑制与特殊模式例外；龙鳞甲排除。
 2,048 组独立 C 对照、自然装备/伤害/Craft/存档闭环通过，详见 [E8.3](contract-v314-dragon-base-equipment.md)。
+
+E8.4 已将三种背包接入 SV_BAG 生成，使用最终容量及仅容纳非弹药的物品格；四种 Ego
+按真实消费者处理，Phase 背包不减内容重量。972 组独立 C 对照及拾取、换包、存档和容量
+显示通过，详见 [E8.4](contract-v315-bag-containers.md)。下一项为 E8.5 随机神器。
 
 ## 职业与玩家入口
 

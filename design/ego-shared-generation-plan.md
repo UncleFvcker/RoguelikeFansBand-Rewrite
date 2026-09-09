@@ -1,6 +1,6 @@
 # E8 六项共享生成契约实施计划
 
-日期：2026-09-09。状态：E8.1–E8.3 已实现，验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)；E8.4 起待实施。负向随机神器仍随 E8.5 验收。
+日期：2026-09-09。状态：E8.1–E8.4 已实现，验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)、[contract-v315](contract-v315-bag-containers.md)；E8.5 起待实施。负向随机神器仍随 E8.5 验收。
 
 工作树：`D:/codex/RoguelikeFansBand-Rewrite-realms-items`，分支：`codex/realms-items`。
 代码基线：`1c9e62a2e`。缺口来自 [E8 集成审计](ego-integration-audit.md)。
@@ -103,8 +103,9 @@ power 只用于生成过程，不额外保存；显示质量和诅咒已知状�
 
 来源：`ego.c:3691` 的 `obj_create_quiver`，`quiver.c` 的 `bag_capacity/bag_carry/bag_weight`，
 `object3.c:865` 的估值，以及各 Ego 的真实消费者。
-当前三种物品为 `fabric-bag/leather-pouch/dwarven-backpack`，使用静态 `inventorySlotBonus = 4/8/12`，
-尚未经过 `TV_QUIVER/SV_BAG` 生成。先核对三种底材的 source identity、pval 和权威中文名。
+三种物品为 `fabric-bag/leather-pouch/dwarven-backpack`。原先使用静态
+`inventorySlotBonus = 4/8/12`；E8.4 已核对 source identity、pval 和权威中文名，
+改用 `TV_QUIVER/SV_BAG` 生成及实例最终容量，详见 [验收记录](contract-v315-bag-containers.md)。
 
 - 基础容量 `(pval + 1) * 4`；`power == 1` 加 2；`power > 1` 使用原版 Quiver Ego 选择，
   Holding 容量翻倍，Phase 容器自身重量为 0。背包不使用箭袋的基础随机容量和 `+20/+50`。

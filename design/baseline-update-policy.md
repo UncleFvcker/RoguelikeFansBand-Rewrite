@@ -6,11 +6,15 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v314`，机器可读政策固定在：
+当前逻辑基线是 `contract-v315`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
 ```
+
+`contract-v315` 接入 SV_BAG 最终容量、四种 Quiver Ego 及非弹药格分配。新增权威容量和
+共享投影，Protocol 1.237、hash v114、save header/payload v9、包 1.395.0；刷新并验证 26 条
+active exact fixture，保留场景输入、零 waiver。详见 [E8.4](contract-v315-bag-containers.md)。
 
 `contract-v314` 接入六种龙系底材的自然分配、基础属性抽样和 power 抑制，修正动态抗盲与
 抗恐惧的真实估值读取。公共掉落/RNG 行为改变，统一刷新并验证 26 条 active exact fixture，

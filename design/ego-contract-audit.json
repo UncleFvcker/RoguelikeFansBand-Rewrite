@@ -7,6 +7,7 @@
   "runtimeParityComplete": false,
   "negativeEquipmentContract": "contract-v313-negative-equipment: ordinary/Ego generation, 1216 independent C cases and 26 curse consumers; negative random artifacts remain pending",
   "dragonBaseContract": "contract-v314-dragon-base-equipment: six source bases, 2048 independent C cases, power suppression, Craft and save; random-artifact integration remains E8.5",
+  "bagContract": "contract-v315-bag-containers: three source bases, 972 independent C cases, final capacity, non-ammunition slot allocation, all four ego consumers and save",
   "naturalTablesUsingSharedPolicy": [
     "demo.loot-table.archer",
     "demo.loot-table.base-items",
@@ -32,11 +33,6 @@
       "scope": "rings and amulets",
       "contract": "value limits and up to 1000 candidate retries (real scoring implemented in E8.1)",
       "source": "src/ego.c:411"
-    },
-    {
-      "scope": "bags",
-      "contract": "SV_BAG capacity and quiver-ego behavior in the container system",
-      "source": "src/ego.c:3691"
     },
     {
       "scope": "unavailable classes and races",
@@ -239,7 +235,7 @@
     },
     {
       "itemId": "demo.item.capture-ball",
-      "status": "separate-container-or-capture-system",
+      "status": "separate-capture-system",
       "equipmentSlot": "shield"
     },
     {
@@ -300,8 +296,10 @@
     },
     {
       "itemId": "demo.item.dwarven-backpack",
-      "status": "separate-container-or-capture-system",
-      "equipmentSlot": "container"
+      "status": "source-type-verified",
+      "sourceIndex": 724,
+      "tval": 46,
+      "sval": 1
     },
     {
       "itemId": "demo.item.elven-cloak",
@@ -326,8 +324,10 @@
     },
     {
       "itemId": "demo.item.fabric-bag",
-      "status": "separate-container-or-capture-system",
-      "equipmentSlot": "container"
+      "status": "source-type-verified",
+      "sourceIndex": 722,
+      "tval": 46,
+      "sval": 1
     },
     {
       "itemId": "demo.item.falchion",
@@ -541,8 +541,10 @@
     },
     {
       "itemId": "demo.item.leather-pouch",
-      "status": "separate-container-or-capture-system",
-      "equipmentSlot": "container"
+      "status": "source-type-verified",
+      "sourceIndex": 723,
+      "tval": 46,
+      "sval": 1
     },
     {
       "itemId": "demo.item.leather-scale-mail",

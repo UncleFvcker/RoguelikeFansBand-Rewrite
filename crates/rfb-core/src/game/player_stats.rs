@@ -1299,6 +1299,11 @@ impl Game {
     pub(super) fn carried_weight_tenths_pound(&self) -> u32 {
         let phase_quiver = self.items.iter().any(|item| {
             matches!(item.location, ItemLocation::Equipped { .. })
+                && self.content.item(&item.kind_id).is_some_and(|definition| {
+                    definition
+                        .rfb_base_kind
+                        .is_some_and(|base| base.tval == 46 && base.sval == 0)
+                })
                 && super::ego::item_has_ego(&self.content, item, 268)
         });
         let weightless_ammunition = if phase_quiver {

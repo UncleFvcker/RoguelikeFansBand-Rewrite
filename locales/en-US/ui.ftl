@@ -388,6 +388,7 @@ inventory-filter-empty = No items match the current filters.
 action-inventory-details = Details
 inventory-details-for = Details: { $name }
 inventory-item-weight = { $weight } lb
+inventory-bag-capacity = Bag capacity: { $capacity } slots (non-ammunition)
 equipment-slot-summary = { $slot }: { $name }
 inventory-quantity = ×{ $quantity }
 inventory-charges = Charges: { $current }/{ $maximum }
