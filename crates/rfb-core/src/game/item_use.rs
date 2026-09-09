@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::ability_scaling::device_power_value;
+use super::loot::{ItemGenerationMode, LootContext, LootSource};
+use super::projectile_geometry::{has_line_of_effect, rfb_distance};
+use super::visibility::{VISIBILITY_RADIUS, has_line_of_sight};
 use super::{abilities::AbilityTargetPlan, *};
 
 const WAYBREAD_INTOLERANCE_MUTATION_ID: &str = "rfb.mutation.waybread-into";

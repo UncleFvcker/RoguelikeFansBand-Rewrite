@@ -2,6 +2,9 @@
 
 use super::ground_item_effects::ground_item_damage_type_for_ability_effect;
 use super::monster_ecology::{BANOR_KIND_ID, BANOR_RUPART_COMBINED_KIND_ID, RUPART_KIND_ID};
+use super::projectile_geometry::{
+    projectile_path_between, projectile_path_through_target, rfb_area_damage, rfb_distance,
+};
 use super::*;
 
 const BANOR_RUPART_TRANSFORM_TAG: &str = "monster-banor-rupart-transform";

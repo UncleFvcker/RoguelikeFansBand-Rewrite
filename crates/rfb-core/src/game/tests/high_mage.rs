@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: MPL-2.0
+use crate::effect::STATUS_DEVICE_MASTERY;
+use rfb_protocol::{AbilityControlOutcomeDto, AbilityProbeAlignmentDto, EntityFactionDto};
 
 use super::support::{
     choose_human_talent_if_pending, clear_monsters, descend_one_floor, dispatch_next,
     give_inventory_item, replace_terrain,
 };
 use super::*;
+use crate::game::ability_scaling::{device_power_value, spell_power_value};
+use crate::game::projectile_geometry::rfb_area_damage;
 use rfb_protocol::{DamageTypeDto, ItemCurseSeverityDto, ItemDestructionElementDto};
 
 const HIGH_MAGE_BUILD_ID: &str = "demo.build.high-mage-death";

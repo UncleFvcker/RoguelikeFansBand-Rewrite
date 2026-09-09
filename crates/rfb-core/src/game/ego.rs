@@ -18,10 +18,8 @@ use crate::{
     state::{ItemInstance, RolledAffixState},
 };
 
-use super::{
-    initial_item_runtime_state, merge_equipment_bonuses, roll_weighted_index_with_rng,
-    target_spec_dto,
-};
+use super::ability_projection::target_spec_dto;
+use super::{initial_item_runtime_state, merge_equipment_bonuses, roll_weighted_index_with_rng};
 
 /// Complete generated affix state shared by content-driven consumers.
 #[derive(Debug, Clone, PartialEq, Eq)]

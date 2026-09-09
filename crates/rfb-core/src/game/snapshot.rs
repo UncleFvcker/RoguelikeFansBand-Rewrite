@@ -26,11 +26,12 @@ use rfb_protocol::{
     TerrainInteractionKindDto, VisibilityState, WildernessLocationDto, WildernessLocationKindDto,
 };
 
+use super::ability_projection::{ability_target_spec_dto, player_ability_effect_spec_dto};
+use super::lighting::{LightSource, light_from_sources};
 use super::tasks::{projected_task_state, task_description_key};
 use super::{
-    AbilityProgress, Game, LightSource, TERRAIN_INTERACTION_DIRECTIONS, ability_detect_subject_dto,
-    ability_target_spec_dto, actor_melee_routine_dto, combine_percentages, derived_speed,
-    item_target_spec, light_from_sources, player_ability_effect_spec_dto, task_definition,
+    AbilityProgress, Game, TERRAIN_INTERACTION_DIRECTIONS, ability_detect_subject_dto,
+    actor_melee_routine_dto, combine_percentages, derived_speed, item_target_spec, task_definition,
     task_floors, task_objectives,
 };
 

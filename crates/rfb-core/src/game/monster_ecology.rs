@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::movement::actor_can_cross_terrain;
+use super::projectile_geometry::rfb_distance;
 use super::*;
 use rfb_content::{
     ActorAllocationDefinition, ActorDamageType, ActorDefinition, ActorHabitat, ActorMovementMode,

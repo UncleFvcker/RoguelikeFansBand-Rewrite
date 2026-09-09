@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::ability_scaling::device_power_value;
 use super::item_use::ItemUsePlan;
+use super::projectile_geometry::rfb_area_damage;
 use super::*;
 
 impl Game {

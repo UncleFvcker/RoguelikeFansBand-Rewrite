@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::visibility::has_line_of_sight;
 use super::*;
 
 impl Game {

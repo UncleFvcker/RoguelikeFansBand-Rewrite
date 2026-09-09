@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::projectile_geometry::{rfb_area_damage, rfb_distance};
 use super::{player_stats::ResolvedProjectileProfile, *};
 
 fn projectile_raw_damage(

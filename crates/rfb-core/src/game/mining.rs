@@ -5,9 +5,9 @@ use rfb_protocol::{MaterialDto, MiningProficiencyDto, Position};
 
 use crate::{state::ItemLocation, stats::CharacterProgress};
 
+use super::loot::{GeneratedItemDraft, ItemGenerationMode, LootContext, LootSource};
 use super::{
-    DomainEvent, Game, GeneratedItemDraft, ItemGenerationMode, LootContext, LootSource,
-    terrain::TerrainChangeSource, weapon_proficiency::proficiency_rank,
+    DomainEvent, Game, terrain::TerrainChangeSource, weapon_proficiency::proficiency_rank,
 };
 
 pub(super) const MINING_PROFICIENCY_MAXIMUM: u16 = 8_000;

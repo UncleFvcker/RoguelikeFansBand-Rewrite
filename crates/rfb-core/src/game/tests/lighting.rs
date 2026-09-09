@@ -2,6 +2,7 @@
 
 use super::support::*;
 use super::*;
+use crate::game::lighting::{DUNGEON_AMBIENT_LIGHT, SURFACE_AMBIENT_LIGHT};
 use crate::game::{
     gold::starting_gold, hunger::starting_ration_quantity, lighting::starting_torch_supply,
 };

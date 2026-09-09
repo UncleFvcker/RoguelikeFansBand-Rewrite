@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 use super::support::*;
 use super::*;
+use crate::game::initialization::dungeon_substitution_uses_alternate;
+use crate::game::lighting::{DUNGEON_AMBIENT_LIGHT, SURFACE_AMBIENT_LIGHT};
 
 fn enter_world_map_command() -> GameCommand {
     GameCommand::EnterWorldMap {

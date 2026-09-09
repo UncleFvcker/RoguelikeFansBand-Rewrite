@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
+use super::loot::{LootContext, LootSource};
+use super::projectile_geometry::rfb_distance;
 
 use rfb_content::{
     ActorDamageType, ActorResistanceLevel, ChaosPatronDefinition, ChaosPatronRewardKind,

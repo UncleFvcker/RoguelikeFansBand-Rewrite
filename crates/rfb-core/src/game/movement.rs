@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::gold::gold_visual_id;
+use super::projectile_geometry::{has_line_of_effect, rfb_distance};
 use super::*;
 
 pub(super) fn actor_can_cross_terrain(

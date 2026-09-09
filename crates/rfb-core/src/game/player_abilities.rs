@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::ability_scaling::{
+    apply_ability_level_scaling, apply_ability_spell_power, prorated_level_value, spell_power_value,
+};
 use super::*;
 
 const SPELL_EXP_BEGINNER: u16 = 900;
@@ -47,6 +50,17 @@ impl AbilityProgress {
 }
 
 impl Game {
+    pub(super) fn casting_spell_damage_bonus(&self) -> u16 {
+        let level = self.progress.level;
+        self.casting_profile().map_or(0, |profile| {
+            profile.spell_damage_bonus_base.saturating_add(
+                profile
+                    .spell_damage_bonus_per_level
+                    .saturating_mul(level / u16::from(profile.spell_damage_bonus_level_divisor)),
+            )
+        })
+    }
+
     pub(super) fn player_ability_parameters(
         ability: &AbilityDefinition,
     ) -> &PlayerAbilityDefinition {
@@ -746,6 +760,139 @@ impl Game {
                     .expect("player level-derived Draconian breath radius must fit u8"),
             }
         };
+    }
+
+    pub(super) fn study_player_ability(
+        &mut self,
+        book_item_id: &str,
+        ability_id: &str,
+    ) -> Result<(), &'static str> {
+        let Some(profile) = self.casting_profile().cloned() else {
+            return Err("no-casting-profile");
+        };
+        if profile.study_mode != CastingStudyMode::Chosen {
+            return Err("study-mode-mismatch");
+        }
+        if let Some(reason) = self.ability_study_unavailable_reason() {
+            return Err(reason);
+        }
+        let Some(ability) = self.content.ability(ability_id) else {
+            return Err("unknown-ability");
+        };
+        let ability = self.effective_casting_ability(&profile, ability);
+        if self.learned_abilities.contains(ability_id) {
+            return Err("already-learned");
+        }
+        if self.progress.level < Self::player_ability_parameters(&ability).minimum_level {
+            return Err("level-too-low");
+        }
+        if !self.profile_supports_ability(&profile, ability_id) {
+            return Err("ability-not-supported");
+        }
+        if self.learned_abilities.len() >= usize::from(self.ability_learning_capacity(&profile)) {
+            return Err("learning-capacity-full");
+        }
+        let Some(book_id) = self.study_book_id(book_item_id) else {
+            return Err("book-unavailable");
+        };
+        if !self.active_casting_book_ids().contains(&book_id)
+            || !self
+                .content
+                .ability_book(book_id)
+                .is_some_and(|book| book.ability_ids.iter().any(|id| id == ability_id))
+        {
+            return Err("book-mismatch");
+        }
+        self.learned_abilities.insert(ability_id.to_owned());
+        Ok(())
+    }
+
+    pub(super) fn study_random_player_ability(
+        &mut self,
+        book_item_id: &str,
+    ) -> Result<String, &'static str> {
+        let Some(profile) = self.casting_profile().cloned() else {
+            return Err("no-casting-profile");
+        };
+        if profile.study_mode != CastingStudyMode::DivineRandom {
+            return Err("study-mode-mismatch");
+        }
+        if let Some(reason) = self.ability_study_unavailable_reason() {
+            return Err(reason);
+        }
+        if self.learned_abilities.len() >= usize::from(self.ability_learning_capacity(&profile)) {
+            return Err("learning-capacity-full");
+        }
+        let Some(book_id) = self.study_book_id(book_item_id).map(str::to_owned) else {
+            return Err("book-unavailable");
+        };
+        if !self.active_casting_book_ids().contains(&book_id.as_str()) {
+            return Err("book-mismatch");
+        }
+        let candidates = self
+            .content
+            .ability_book(&book_id)
+            .ok_or("book-mismatch")?
+            .ability_ids
+            .iter()
+            .filter_map(|ability_id| {
+                let ability = self.content.ability(ability_id)?;
+                let ability = self.effective_casting_ability(&profile, ability);
+                (!self.learned_abilities.contains(ability_id)
+                    && self.progress.level
+                        >= Self::player_ability_parameters(&ability).minimum_level)
+                    .then(|| ability_id.clone())
+            })
+            .collect::<Vec<_>>();
+        let mut gift = None;
+        for (index, ability_id) in candidates.into_iter().enumerate() {
+            if self.rng.bounded((index + 1) as u64) == 0 {
+                gift = Some(ability_id);
+            }
+        }
+        let ability_id = gift.ok_or("no-learnable-abilities")?;
+        self.learned_abilities.insert(ability_id.clone());
+        Ok(ability_id)
+    }
+
+    pub(super) fn ability_study_unavailable_reason(&self) -> Option<&'static str> {
+        if self.player_has_status_kind(STATUS_BLINDNESS) {
+            Some("blind")
+        } else if !self.position_is_lit(self.player.position) {
+            Some("no-light")
+        } else if self.player_has_status_kind(STATUS_CONFUSION) {
+            Some("confused")
+        } else {
+            None
+        }
+    }
+
+    fn study_book_id(&self, book_item_id: &str) -> Option<&str> {
+        self.items
+            .iter()
+            .find(|item| {
+                item.id == book_item_id
+                    && (item.location == ItemLocation::Inventory
+                        || item.location == ItemLocation::Ground(self.player.position))
+            })
+            .and_then(|item| self.content.item(&item.kind_id))
+            .and_then(|item| item.ability_book_id.as_deref())
+    }
+
+    pub(super) fn forget_player_ability(&mut self, ability_id: &str) -> Result<(), &'static str> {
+        let Some(profile) = self.casting_profile().cloned() else {
+            return Err("no-casting-profile");
+        };
+        if self.content.ability(ability_id).is_none() {
+            return Err("unknown-ability");
+        }
+        if !self.profile_supports_ability(&profile, ability_id) {
+            return Err("ability-not-supported");
+        }
+        if !self.learned_abilities.remove(ability_id) {
+            return Err("not-learned");
+        }
+        Ok(())
     }
 
     pub(super) fn ability_learning_capacity(&self, profile: &CastingProfileDefinition) -> u16 {

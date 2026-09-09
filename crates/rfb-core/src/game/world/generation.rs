@@ -9,6 +9,7 @@ use rfb_content::{
 use rfb_protocol::Position;
 
 use super::super::bounty::bounty_target_instance_id;
+use super::super::loot::{LootContext, LootSource};
 use super::super::monster_ecology::OriginalGroupRole;
 use super::super::movement::actor_can_cross_terrain;
 use super::super::*;

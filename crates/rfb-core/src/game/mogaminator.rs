@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::projectile_geometry::{has_line_of_effect, rfb_distance};
 use super::*;
 use crate::mogaminator::{
     CompiledMogaminator, CompiledMogaminatorRule, MogaminatorAction, MogaminatorDiagnostic,

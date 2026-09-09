@@ -1,11 +1,25 @@
 // SPDX-License-Identifier: MPL-2.0
 
-use rfb_protocol::ItemFuelKindDto;
+use std::collections::{BTreeSet, VecDeque};
 
-use super::*;
+use rfb_protocol::{CellLightDto, ItemFuelKindDto, Position};
+
+use super::Game;
+use super::projectile_geometry::rfb_distance;
+use crate::{
+    effect::STATUS_SLEEP, event::DomainEvent, rng::RfbRng, state::ItemLocation,
+    stats::CharacterBuildIdentity,
+};
 
 pub(super) const WOODEN_TORCH_ITEM_KIND_ID: &str = "demo.item.wooden-torch";
 const LIGHT_FUEL_INTERVAL_TICKS: u32 = 10;
+pub(super) const SURFACE_AMBIENT_LIGHT: u8 = 48;
+pub(super) const DUNGEON_AMBIENT_LIGHT: u8 = 0;
+const ROOM_GLOW_LIGHT: u8 = 48;
+const ITEM_LIGHT_RADIUS: i32 = 4;
+const PLAYER_LIGHT_COLOR: u32 = 0xffd7a3;
+const ACTOR_LIGHT_COLOR: u32 = 0xff8a4c;
+const ITEM_LIGHT_COLOR: u32 = 0x8ad9ff;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(super) struct StartingTorchSupply {
@@ -33,7 +47,190 @@ pub(super) fn starting_torch_supply(
     })
 }
 
+fn source_intensity(source: Position, target: Position, radius: i32, maximum: u8) -> u8 {
+    let distance = rfb_distance(source, target);
+    let radius = u32::try_from(radius).expect("validated light radius must be non-negative");
+    if distance > radius {
+        return 0;
+    }
+
+    // RFB treats the source and all eight adjacent grids as the same inner
+    // light band. Every included outer band remains lit at reduced strength.
+    let remaining = radius.saturating_sub(distance.saturating_sub(1));
+    u8::try_from(u32::from(maximum).saturating_mul(remaining) / radius.max(1))
+        .expect("scaled light intensity must fit u8")
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(super) struct LightSource {
+    position: Position,
+    radius: i32,
+    maximum: u8,
+    color: u32,
+    darkness: bool,
+}
+
+impl LightSource {
+    fn contains(self, position: Position) -> bool {
+        rfb_distance(self.position, position)
+            <= u32::try_from(self.radius).expect("validated light radius must be non-negative")
+    }
+}
+
+pub(super) fn light_from_sources(
+    sources: &[LightSource],
+    position: Position,
+    ambient_light: u8,
+) -> CellLightDto {
+    let mut strongest = (0_u8, PLAYER_LIGHT_COLOR);
+    for source in sources.iter().filter(|source| !source.darkness) {
+        let boost = source_intensity(source.position, position, source.radius, source.maximum);
+        if boost > strongest.0 {
+            strongest = (boost, source.color);
+        }
+    }
+    CellLightDto {
+        color: strongest.1,
+        intensity: ambient_light.saturating_add(strongest.0),
+    }
+}
+
 impl Game {
+    pub(super) fn floor_has_environment_light(&self) -> bool {
+        self.is_wilderness_floor()
+            || self.current_town().is_some()
+            || self
+                .content
+                .world(&self.world_id)
+                .is_some_and(|world| self.current_floor_id == world.initial_floor_id)
+    }
+
+    pub(super) fn ambient_light(&self, position: Position, sources: &[LightSource]) -> u8 {
+        if self.floor_has_environment_light() && self.wilderness_is_daytime() {
+            SURFACE_AMBIENT_LIGHT
+        } else if self.index(position).is_some_and(|index| self.glow[index])
+            && !sources
+                .iter()
+                .any(|source| source.darkness && source.contains(position))
+        {
+            ROOM_GLOW_LIGHT
+        } else {
+            DUNGEON_AMBIENT_LIGHT
+        }
+    }
+
+    pub(super) fn position_is_lit(&self, position: Position) -> bool {
+        let sources = self.collect_light_sources();
+        sources
+            .iter()
+            .any(|source| !source.darkness && source.contains(position))
+            || self.ambient_light(position, &sources) > 0
+    }
+
+    pub(super) fn connected_glow_positions(&self, origin: Position) -> Vec<Position> {
+        let Some(origin_index) = self.index(origin) else {
+            return Vec::new();
+        };
+        if !self.glow[origin_index] {
+            return Vec::new();
+        }
+
+        let mut visited = BTreeSet::from([origin]);
+        let mut queue = VecDeque::from([origin]);
+        let mut positions = Vec::new();
+        while let Some(position) = queue.pop_front() {
+            positions.push(position);
+            for dy in -1..=1 {
+                for dx in -1..=1 {
+                    if dx == 0 && dy == 0 {
+                        continue;
+                    }
+                    let neighbor = Position {
+                        x: position.x + dx,
+                        y: position.y + dy,
+                    };
+                    let Some(index) = self.index(neighbor) else {
+                        continue;
+                    };
+                    if self.glow[index] && visited.insert(neighbor) {
+                        queue.push_back(neighbor);
+                    }
+                }
+            }
+        }
+        positions
+    }
+
+    pub(super) fn darken_room(&mut self, origin: Position) -> Vec<Position> {
+        let darkened = self.connected_glow_positions(origin);
+        for position in &darkened {
+            let index = self
+                .index(*position)
+                .expect("connected glow position must remain in bounds");
+            self.glow[index] = false;
+        }
+        darkened
+    }
+
+    pub(super) fn collect_light_sources(&self) -> Vec<LightSource> {
+        // The source order mirrors the original per-cell scan (player, then
+        // entities, then ground items) so strict-greater comparisons keep
+        // resolving ties identically.
+        let mut sources = Vec::new();
+        if let Some(radius) = self.player_light_radius() {
+            sources.push(LightSource {
+                position: self.player.position,
+                radius,
+                maximum: 72,
+                color: PLAYER_LIGHT_COLOR,
+                darkness: false,
+            });
+        }
+        for entity in &self.entities {
+            let Some(definition) = self.actor_runtime_definition(entity) else {
+                continue;
+            };
+            let Some(light) = definition.light else {
+                continue;
+            };
+            if !light.intrinsic
+                && entity
+                    .statuses
+                    .iter()
+                    .any(|status| status.kind_id == STATUS_SLEEP)
+            {
+                continue;
+            }
+            sources.push(LightSource {
+                position: entity.position,
+                radius: i32::from(light.radius),
+                maximum: 64,
+                color: ACTOR_LIGHT_COLOR,
+                darkness: light.darkness,
+            });
+        }
+        for item in &self.items {
+            let ItemLocation::Ground(item_position) = &item.location else {
+                continue;
+            };
+            let Some(definition) = self.content.item(&item.kind_id) else {
+                continue;
+            };
+            if definition.fuel.is_some() || !definition.tags.iter().any(|tag| tag == "light-source")
+            {
+                continue;
+            }
+            sources.push(LightSource {
+                position: *item_position,
+                radius: ITEM_LIGHT_RADIUS,
+                maximum: 52,
+                color: ITEM_LIGHT_COLOR,
+                darkness: false,
+            });
+        }
+        sources
+    }
+
     pub(super) fn extinguish_area(&mut self, origin: Position, radius: u8) -> Vec<Position> {
         let darkened = self
             .area_damage_cells(origin, radius)

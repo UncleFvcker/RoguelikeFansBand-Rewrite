@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::projectile_geometry::rfb_distance;
 use rfb_content::{MutationDefinition, MutationRatingDefinition};
 
 use super::damage::FatalityPolicy;
 use super::hunger::NUTRITION_WEAK;
+use super::visibility::has_line_of_sight;
 use super::*;
 
 const GOOD_LUCK_MUTATION_ID: &str = "rfb.mutation.good-luck";

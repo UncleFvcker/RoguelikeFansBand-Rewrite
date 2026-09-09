@@ -4,6 +4,7 @@ use crate::game::monster_ecology::{
     actor_allocation_matches_legacy_dungeon, actor_allocation_matches_task,
     actor_matches_surface_habitat,
 };
+use crate::game::projectile_geometry::rfb_distance;
 use crate::rng::RfbRng;
 use rfb_content::{
     ActorDamageType, ActorHabitat, ActorMovementMode, ActorResistanceLevel, WildernessTerrain,

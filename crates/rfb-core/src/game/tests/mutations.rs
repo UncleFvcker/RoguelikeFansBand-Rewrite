@@ -1,3 +1,5 @@
+use crate::game::loot::{quality_allows_natural_affix, rfb_depth_quality_percentages};
+use crate::game::mutations::LuckBias;
 use std::sync::Arc;
 
 use rfb_content::{AbilityStatusStackingDefinition, MutationPeriodicEffectDefinition};

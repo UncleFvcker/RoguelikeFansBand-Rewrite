@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::ability_scaling::prorated_level_value;
 use super::*;
 
 const DRACONIAN_BLOW_RANGES: [(u16, u16); 38] = [

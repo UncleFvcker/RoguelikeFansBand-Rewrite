@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
+use super::projectile_geometry::rfb_area_damage;
 use std::collections::BTreeSet;
 
 use rfb_content::MeleeBlowEffectDefinition;
@@ -19,8 +20,7 @@ use crate::{
 use super::{
     ActorDeathRecord, CurseEquippedItemRequest, EquippedItemCurseTarget, FatalityPolicy, Game,
     INITIAL_MONSTER_ENERGY_NEED, commit_damage_application, initial_item_curse,
-    initial_item_runtime_state, plan_damage_application, rfb_area_damage,
-    spawn_actor_from_definition,
+    initial_item_runtime_state, plan_damage_application, spawn_actor_from_definition,
 };
 use crate::save::initial_item_fuel;
 

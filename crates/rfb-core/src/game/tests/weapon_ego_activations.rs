@@ -2,6 +2,7 @@
 
 use super::support::{clear_monsters, give_inventory_item, replace_terrain};
 use super::*;
+use crate::game::ability_projection::target_spec_dto;
 
 const AFFIX_ID: &str = "test.affix.riding-charge";
 const ACTIVATION_ID: &str = "test.device-activation.riding-charge";

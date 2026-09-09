@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: MPL-2.0
 use crate::effect::StatusInstance;
+use crate::game::loot::{ItemGenerationMode, LootContext, LootSource};
 use crate::resistance::ResistanceLevel;
+use rfb_content::{
+    AbilityLevelScalingCurveDefinition, AbilityLevelScalingDefinition, AbilityLevelScalingField,
+    AbilitySpellPowerDefinition,
+};
 use rfb_protocol::{
+    AbilityEffectSpecDto, AbilitySummonCandidateSpecDto, AbilityTerrainBeamOperationDto,
     CellVisualDto, DamageTypeDto, Direction, GameCommand, GameCommandEnvelope, GameEventOutcomeDto,
-    GameSnapshot, ResistanceLevelDto, ShopCategoryDto, ShopDto, StatusSaveDto,
+    GameSnapshot, ResistanceLevelDto, ShopCategoryDto, ShopDto, SniperShotModeDto, StatusSaveDto,
     TerrainInteractionKindDto, VisibilityState,
 };
 
