@@ -2,7 +2,7 @@
 
 审计日期：2026-09-09。重写基准：`084f341f0`。原版唯一规则依据为 `D:/codex/Frogcomposband/master` 的 `master` Git 对象 `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`；以下原版路径、行号均指该对象，不指工作区文件。
 
-**第一、二步已完成：来源审计、种族被动、合法穿墙与墙内伤害已落地，幽灵创建仍未开放。** 后续顺序见[实施计划](spectre-race-plan.md)。以下说明当前实现及尚待完成的出生、补给、主动能力和关联消费者。
+**前三步已完成：来源审计、种族被动、合法穿墙、墙内伤害、出生与补给已落地，幽灵创建仍未开放。** 后续顺序见[实施计划](spectre-race-plan.md)。以下说明当前实现及尚待完成的主动能力和关联消费者。
 
 第二步复用现有 Race、状态、伤害和移动管线；新增 [wall_passage.rs](../crates/rfb-core/src/game/tests/wall_passage.rs) 的 12 个专项测试全部通过，涵盖当前/本体种族、150 能量、密度/挤压、0 HP、状态到期、SP 抵扣与恢复、骑乘/下马/坠马、保存及离层缓存。相关既有核心回归 188 个、导入/地形校验各 1 个、前端事件格式 32 个测试通过；前端类型、Rust 格式、相关 crate 的 Clippy 和内容锁验证通过。`movement / status-effects / equipment / combat / progression / inventory` 六类共 12 个契约通过，未刷新基线。未运行完整 E2E 或生成本阶段桌面试玩包。
 
@@ -12,15 +12,15 @@
 
 | 项目 | 原版值 | 重写现状与实施位置 |
 | --- | --- | --- |
-| 身份 | 幽灵；索引 27 | [Race](../packs/rfb-demo-original/races/spectre.json)为 `rfb-legacy.race.spectre`；已补非生物、不死和缓慢消化，保留导入/变形候选，正式入口关闭 |
+| 身份 | 幽灵；索引 27 | [Race](../packs/rfb-demo-original/races/spectre.json)为 `rfb-legacy.race.spectre`；非生物、不死、缓慢消化、夜间和吸能已接入，保留导入/变形候选，正式入口关闭 |
 | 中文说明 | `spectre_get_race` 的完整 `me.desc` | [中文内容](../locales/zh-CN/content.ftl)已保存原文；保持逐字一致，英文占位在第五步更换 |
 | 属性 | 力 −5、智 +4、感 +2、敏 +2、体 −2、魅 −3 | 已有，无需重写 |
 | 基础数值 | 生命 90、基础 HP 13、经验 250、红外 5、商价 135 | 已有；第二步补齐红外 5 |
 | 技能 | 拆除 10、装置 10、豁免 12、潜行 5、搜索 5、感知 14、近战 −15、远程 −5 | [技能集](../packs/rfb-demo-original/skillSets/race-spectre.json)已有对应值 |
 | 防护 | 寒冰/毒素/虚空抗性；保持生命 +1；识破隐形 +1 | 已接入当前形态统计管线；毒抗不等于所有毒效果免疫 |
 | 其他被动 | 浮空、缓慢消化、穿墙 | 已接入现有字段/标签及通行管线；覆盖形态切换和实际营养消耗 |
-| 标志 | 非生物、不死、夜间出生、装置吸能 | 前两项已补；后两项留第三步，导入报告仍明确记录未映射 |
-| 出生 | 一根 `TV_STAFF / EFFECT_NOTHING` 法杖；`py_birth_light()` | 需补起始物品及通用口粮排除；继续发六职业装备 |
+| 标志 | 非生物、不死、夜间出生、装置吸能 | 已接入现有标签，导入报告同步识别已映射 |
+| 出生 | 一根 `TV_STAFF / EFFECT_NOTHING` 法杖；`py_birth_light()` | 已补满能量起始法杖及通用口粮排除，保留火把与六职业完整装备 |
 | 主动能力 | 恐吓怪物；4 级、智力、消耗 6、基础失败率 50 | [已有能力](../packs/rfb-demo-original/abilities/race-scare-monster.json)及导入映射可复用；Race 尚未挂接 |
 | 同族召唤 | `G` | `kin-glyph-71` 已有，验证当前形态消费者 |
 
@@ -103,9 +103,13 @@
 
 ## 5. 出生、饮食及现有共用消费者
 
-出生法杖由 `src/py_birth.c:97` 调 `device_init_fixed`；`src/devices.c:3010` 起明确设置满能量。名称沿用原版 `src/bldg.c:2527,2550` 的“空手法杖”，现有中文内容已一致；激活名称为 `devices.c` 的“无”，不能将物品另译成“无用法杖”。第三步复用 `fullyCharged` 起始物品。夜间出生已有 [initialization.rs](../crates/rfb-core/src/game/initialization.rs)标签入口；当前口粮排除已有魔像/僵尸/骷髅，需覆盖幽灵。照明沿用 `py_birth_light` 的现有对应流程，不追加原版没有的补给。
+第三步验证：[spectre_supplies.rs](../crates/rfb-core/src/game/tests/spectre_supplies.rs) 六个专项、饥饿/照明/穿墙 55 个既有核心测试及一个导入测试通过；`inventory / potions / town / progression` 四类 15 个契约通过，无需刷新。内容锁、Rust 格式、核心与导入 crate 的 Clippy 检查通过。未改前端或公共协议，正式创建和桌面验收仍留第五步。
 
-原版 `src/cmd6.c` 的装置吸能消耗能量、增加 5000 营养，保留物品；重写 [inventory.rs](../crates/rfb-core/src/game/inventory.rs)已支持当前 Race 的 `device-eater`、背包/脚下、部分能量和空装置检查，可复用并实测。普通食物营养除以 20；药水 `src/cmd6.c:620` 在没有临时变形且本体幽灵时才除以 20，有变形则走通用分支。重写 [item_use.rs](../crates/rfb-core/src/game/item_use.rs)已有相应变形分支，需验证本体与临时幽灵两组，保留药水主效果及其顺序。
+出生法杖由 `src/py_birth.c:97` 调 `device_init_fixed`；`src/devices.c:3010` 起明确设置满能量。名称沿用原版 `src/bldg.c:2527,2550` 的“空手法杖”，现有中文内容已一致；激活名称为 `devices.c` 的“无”，不能将物品另译成“无用法杖”。第三步已复用 `fullyCharged` 起始物品、[initialization.rs](../crates/rfb-core/src/game/initialization.rs)的夜间标签入口和照明流程，并将幽灵加入普通口粮排除。六职业真实初始化均验证一根满能量法杖、3–7 根火把及原有职业装备；测试内容副本临时放行种族创建，正式包不开放。
+
+原版 `src/cmd6.c` 的装置吸能消耗能量、增加 5000 营养，保留物品；重写 [inventory.rs](../crates/rfb-core/src/game/inventory.rs)已复用于幽灵的当前 `device-eater` 资格。实际命令覆盖出生法杖、背包/脚下、部分能量、耗尽后耗时但不增加营养，以及魔法商店购买首个投影装置后吸能；保存加载后继续操作的事件和状态一致。
+
+普通食物按当前种族营养除以 20；药水 `src/cmd6.c:620` 在没有临时变形且本体幽灵时才除以 20，有变形则走通用分支。已复用 [item_use.rs](../crates/rfb-core/src/game/item_use.rs)的营养除数和形态分支，实际使用测试覆盖本体幽灵、人类变幽灵、幽灵变人类及本体幽灵仍有临时幽灵形态；验证普通口粮、行粮治疗/解毒、蘑菇治疗/恢复，以及药水正负营养、取整和主效果。临时形态不重新发出生装备或切换出生时钟。
 
 原版旅馆买食物（`src/bldg.c:2517` 起）也有非凡人饮食文案，最终直接设饱食为 `PY_FOOD_MAX - 1`；文案中的法杖不是可带走的物品奖励。重写 [town.rs](../crates/rfb-core/src/game/town.rs)已有住宿/旅行，但没有这项独立餐饮服务，继续记录缺失，不在出生或商店购买中模拟它。
 
@@ -139,7 +143,7 @@
 
 ## 7. 后续验收清单与范围
 
-第二步已完成下表通行、移动消费者、结算、来源及形态、恢复和连续性的专项覆盖。出生/营养和能力/关联仍待第三、四步：
+第二步已完成下表通行、移动消费者、结算、来源及形态、恢复和连续性的专项覆盖；第三步已完成出生/营养及保存继续行动的专项覆盖。能力/关联仍待第四步：
 
 | 组别 | 必须覆盖 |
 | --- | --- |

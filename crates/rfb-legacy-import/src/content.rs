@@ -7451,11 +7451,9 @@ fn character_skill_set_json(entry: &LegacyCharacterEntry, id: &str) -> serde_jso
 fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentImportReport) {
     for flag in &entry.flags {
         if (flag == "RACE_IS_DEMON" && legacy_race_tags(entry).contains(&"demon"))
-            || (entry.id == "spectre"
-                && matches!(flag.as_str(), "RACE_IS_NONLIVING" | "RACE_IS_UNDEAD"))
             || (entry.id == "golem"
                 && matches!(flag.as_str(), "RACE_IS_NONLIVING" | "RACE_EATS_DEVICES"))
-            || (matches!(entry.id.as_str(), "skeleton" | "zombie")
+            || (matches!(entry.id.as_str(), "skeleton" | "zombie" | "spectre")
                 && matches!(
                     flag.as_str(),
                     "RACE_IS_NONLIVING"
@@ -7476,7 +7474,7 @@ fn character_gap_accounting(entry: &LegacyCharacterEntry, report: &mut ContentIm
     for hook in &entry.hooks {
         if (entry.id == "einheri" && matches!(hook.as_str(), "gain_level" | "get_flags"))
             || (entry.id == "beastman" && matches!(hook.as_str(), "birth" | "gain_level"))
-            || (entry.id == "tomte" && hook == "birth")
+            || (matches!(entry.id.as_str(), "tomte" | "spectre") && hook == "birth")
         {
             continue;
         }
@@ -7521,7 +7519,9 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
     if entry.id == "spectre" {
         return vec![
+            "device-eater",
             "legacy-import",
+            "night-start",
             "nonliving",
             "polymorph-candidate",
             "slow-digestion",
@@ -7745,8 +7745,14 @@ fn race_json(
             .collect::<Vec<_>>(),
         "tags": legacy_race_tags(entry),
     });
-    if entry.id == "ent" {
+    if matches!(entry.id.as_str(), "ent" | "spectre") {
         value["foodNutritionDivisor"] = serde_json::json!(20);
+    }
+    if entry.id == "spectre" {
+        // races_k.c: _spectre_birth; common initialization supplies py_birth_light.
+        value["startingItems"] = serde_json::json!([{
+            "itemKindId": "demo.item.staff-of-nothing", "quantity": 1, "fullyCharged": true,
+        }]);
     }
     let modifiers = character_modifiers(entry);
     if !modifiers.is_empty() {
@@ -24995,7 +25001,7 @@ static power_info _wood_elf_get_powers[] =
     }
 
     #[test]
-    fn spectre_passives_are_mapped_without_opening_birth_or_claiming_pending_supplies() {
+    fn spectre_passives_and_supplies_are_mapped_without_opening_creation() {
         const SOURCE: &str = r#"
 static void _spectre_calc_bonuses(void)
 {
@@ -25015,6 +25021,7 @@ static void _spectre_calc_bonuses(void)
 me.name = "幽灵";
 me.infra = 5;
 me.flags = RACE_IS_NONLIVING | RACE_IS_UNDEAD | RACE_NIGHT_START | RACE_EATS_DEVICES;
+me.birth = _spectre_birth;
 "#,
         );
         let defenses = parse_calc_bonuses_defenses(SOURCE, "_spectre_calc_bonuses");
@@ -25027,6 +25034,13 @@ me.flags = RACE_IS_NONLIVING | RACE_IS_UNDEAD | RACE_NIGHT_START | RACE_EATS_DEV
         assert_eq!(race["levitation"], true);
         assert_eq!(race["seeInvisible"], true);
         assert_eq!(race["holdLifeMinimumLevel"], 1);
+        assert_eq!(race["foodNutritionDivisor"], 20);
+        assert_eq!(
+            race["startingItems"],
+            serde_json::json!([{
+                "itemKindId": "demo.item.staff-of-nothing", "quantity": 1, "fullyCharged": true,
+            }])
+        );
         assert_eq!(
             race["resistances"],
             serde_json::json!({"cold": "resistant", "poison": "resistant", "nether": "resistant"})
@@ -25034,7 +25048,9 @@ me.flags = RACE_IS_NONLIVING | RACE_IS_UNDEAD | RACE_NIGHT_START | RACE_EATS_DEV
         assert_eq!(
             legacy_race_tags(&spectre),
             [
+                "device-eater",
                 "legacy-import",
+                "night-start",
                 "nonliving",
                 "polymorph-candidate",
                 "slow-digestion",
@@ -25044,8 +25060,9 @@ me.flags = RACE_IS_NONLIVING | RACE_IS_UNDEAD | RACE_NIGHT_START | RACE_EATS_DEV
         character_gap_accounting(&spectre, &mut report);
         assert!(!report.unmapped_race_flags.contains_key("RACE_IS_NONLIVING"));
         assert!(!report.unmapped_race_flags.contains_key("RACE_IS_UNDEAD"));
-        assert!(report.unmapped_race_flags.contains_key("RACE_NIGHT_START"));
-        assert!(report.unmapped_race_flags.contains_key("RACE_EATS_DEVICES"));
+        assert!(!report.unmapped_race_flags.contains_key("RACE_NIGHT_START"));
+        assert!(!report.unmapped_race_flags.contains_key("RACE_EATS_DEVICES"));
+        assert!(!report.race_hook_gaps.contains_key("birth"));
     }
 
     #[test]

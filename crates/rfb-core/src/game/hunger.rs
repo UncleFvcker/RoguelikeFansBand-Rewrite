@@ -30,7 +30,7 @@ pub(super) fn starting_food_supply(
         .is_some_and(|identity| {
             !matches!(
                 identity.race_id.as_str(),
-                GOLEM_RACE_ID | SKELETON_RACE_ID | ZOMBIE_RACE_ID
+                GOLEM_RACE_ID | SKELETON_RACE_ID | ZOMBIE_RACE_ID | "rfb-legacy.race.spectre"
             )
         })
         .then(|| (RATION_ITEM_KIND_ID, (rng.bounded(5) + 5) as u32))

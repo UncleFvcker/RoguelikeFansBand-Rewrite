@@ -65,6 +65,7 @@
   ],
   "descriptionKey": "race-legacy-spectre-description",
   "experiencePercent": 250,
+  "foodNutritionDivisor": 20,
   "formatVersion": 1,
   "id": "rfb-legacy.race.spectre",
   "kinCategory": "kin-glyph-71",
@@ -90,8 +91,17 @@
   },
   "shopAdjustPercent": 135,
   "skillSetId": "rfb-legacy.skill-set.race-spectre",
+  "startingItems": [
+    {
+      "itemKindId": "demo.item.staff-of-nothing",
+      "quantity": 1,
+      "fullyCharged": true
+    }
+  ],
   "tags": [
+    "device-eater",
     "legacy-import",
+    "night-start",
     "nonliving",
     "polymorph-candidate",
     "slow-digestion",
