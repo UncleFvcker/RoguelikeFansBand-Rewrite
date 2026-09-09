@@ -249,7 +249,8 @@ pub struct CharacterProgress {
     pub attribute_potentials: AttributeSet,
     pub experience: u64,
     pub maximum_experience: u64,
-    pub life_force: u16,
+    // Negative only while an exhaustion transition is resolving; saves require 0..=1000.
+    pub life_force: i32,
     pub level: u16,
     pub max_level: u16,
     pub pending_attribute_increases: u16,
@@ -757,7 +758,7 @@ impl CharacterProgress {
             && self.experience <= MAX_EXPERIENCE
             && self.maximum_experience >= self.experience
             && self.maximum_experience <= MAX_EXPERIENCE
-            && self.life_force <= 1_000
+            && (0..=1_000).contains(&self.life_force)
             && self.hp_progression.len() == usize::from(MAX_LEVEL)
             && self.hp_progression.iter().all(|hp| *hp > 0)
             && Self::hp_progression_rating_is_accepted(&self.hp_progression)

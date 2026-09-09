@@ -615,7 +615,11 @@ fn permanent_race_change_caps_effective_weapon_skill_without_erasing_practice() 
     game.progress
         .weapon_proficiencies
         .insert("demo.item.sabre".to_owned(), 8_000);
-    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut Vec::new()));
+    assert!(game.change_player_race(
+        "rfb-legacy.race.vampire",
+        game.effective_player_max_hp(),
+        &mut Vec::new()
+    ));
     assert_eq!(game.progress.weapon_proficiencies["demo.item.sabre"], 8_000);
     let sabre = game
         .player_weapon_proficiencies()
@@ -624,7 +628,11 @@ fn permanent_race_change_caps_effective_weapon_skill_without_erasing_practice() 
         .unwrap();
     assert_eq!((sabre.current, sabre.maximum), (4_000, 4_000));
     let mut restored = Game::from_save(game.to_save()).unwrap();
-    assert!(restored.change_player_race("rfb-legacy.race.tonberry", &mut Vec::new()));
+    assert!(restored.change_player_race(
+        "rfb-legacy.race.tonberry",
+        restored.effective_player_max_hp(),
+        &mut Vec::new()
+    ));
     let sabre = restored
         .player_weapon_proficiencies()
         .into_iter()

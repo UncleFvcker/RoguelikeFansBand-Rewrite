@@ -2271,6 +2271,17 @@ impl Game {
                 DamagePacket::new(raw, damage_type),
                 self.effective_player_resistances().level(damage_type),
             );
+            let damage = if damage_type == DamageType::Nether {
+                let damage = self.resist_player_damage(damage);
+                let damage =
+                    self.split_monster_nether_damage(source_index, true, damage, events, changed);
+                if self.player_is_dead() {
+                    return true;
+                }
+                scale_damage_outcome(damage, self.player_incoming_damage_percent())
+            } else {
+                damage
+            };
             if aura.damage_type != rfb_content::ActorDamageType::Poison {
                 if damage.applied <= 0 {
                     continue;
@@ -2332,9 +2343,13 @@ impl Game {
                     self.resolve_monster_unlife_against_player(
                         source_index,
                         amount,
+                        true,
                         events,
                         changed,
                     );
+                    if self.player_is_dead() {
+                        return true;
+                    }
                 }
                 MeleeBlowEffectDefinition::Stun {
                     duration_dice,

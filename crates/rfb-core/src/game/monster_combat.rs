@@ -163,22 +163,28 @@ impl Game {
         &mut self,
         source_index: usize,
         amount: u16,
+        touch: bool,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
-        if amount == 0 || self.player_is_nonliving() || self.player_saves_unlife(source_index) {
+        if self.player_is_nonliving() || self.player_saves_unlife(source_index) {
             return;
         }
-        let life_force = self.drain_player_life_force(amount);
+        let source_kind_id = self.entities[source_index].kind_id.clone();
+        let life_force = self.drain_player_life_force(amount, &source_kind_id, events);
         let source = &mut self.entities[source_index];
         let power_before = source.power_per_mille;
-        source.power_per_mille = source.power_per_mille.saturating_add(amount);
-        changed.insert(source.position);
+        if touch {
+            source.power_per_mille = source.power_per_mille.saturating_add(amount);
+            changed.insert(source.position);
+        }
         events.push(DomainEvent::MonsterUnlifeDrained {
             source_kind_id: source.kind_id.clone(),
             amount,
             life_force_before: life_force.before,
             life_force_after: life_force.after,
+            life_force_final: u16::try_from(self.progress.life_force)
+                .expect("life force drain must settle"),
             power_before,
             power_after: source.power_per_mille,
         });
@@ -595,10 +601,33 @@ impl Game {
         let prepared_damage = self.scale_monster_damage(source_entity_id, prepared_damage);
         let resistance = self.effective_player_resistances().level(damage_type);
         self.record_monster_player_resistance(source_entity_id, damage_type, resistance);
-        let damage = self.reduce_player_damage(resolve_damage(
+        let damage = self.resist_player_damage(resolve_damage(
             DamagePacket::after_armor(raw_damage, prepared_damage, damage_type),
             resistance,
         ));
+        let damage = if damage_type == DamageType::Nether && damage.applied > 0 {
+            let source_index = self
+                .entities
+                .iter()
+                .position(|actor| actor.id == source_entity_id)
+                .expect("Nether spell source must still exist during resolution");
+            self.split_monster_nether_damage(
+                source_index,
+                false,
+                damage,
+                events,
+                &mut BTreeSet::new(),
+            )
+        } else {
+            damage
+        };
+        if self.player_is_dead() {
+            return AbilityEffectResolutionDto::Damage {
+                effect_index,
+                resolution: damage.into(),
+            };
+        }
+        let damage = scale_damage_outcome(damage, self.player_incoming_damage_percent());
         let damage = self.apply_evasion_to_monster_ability_damage(ability_id, damage);
         let application = self.apply_final_player_damage(damage, FatalityPolicy::BelowZero);
         let damage = application.damage;
@@ -614,6 +643,37 @@ impl Game {
             effect_index,
             resolution: damage.into(),
         }
+    }
+
+    pub(super) fn split_monster_nether_damage(
+        &mut self,
+        source_index: usize,
+        touch: bool,
+        mut damage: DamageOutcome,
+        events: &mut Vec<DomainEvent>,
+        changed: &mut BTreeSet<Position>,
+    ) -> DamageOutcome {
+        if damage.damage_type != DamageType::Nether {
+            return damage;
+        }
+        let unlife = damage.applied.saturating_mul(15) / 100;
+        if unlife > 0 {
+            self.resolve_monster_unlife_against_player(
+                source_index,
+                u16::try_from(unlife).unwrap_or(u16::MAX),
+                touch,
+                events,
+                changed,
+            );
+            // GF_NETHER diverts this part even if UNLIFE is resisted.
+            damage.applied -= unlife;
+            damage.resistance_delta += unlife;
+        }
+        if self.player_is_dead() {
+            damage.resistance_delta += damage.applied;
+            damage.applied = 0;
+        }
+        damage
     }
 
     pub(super) fn apply_evasion_to_monster_ability_damage(
@@ -1489,13 +1549,14 @@ impl Game {
             .expect("monster actor definition must remain available")
             .clone();
         let attacker = self.actor_derived_stats(&self.entities[index], &definition, false);
-        let target = self.player_derived_stats();
-        let armor_class = target.armor_class.value;
         let mut blink_after_melee = false;
         for (blow_index, blow) in resolved_melee_blows(&definition).into_iter().enumerate() {
             if only_blow_index.is_some_and(|selected| selected != blow_index) {
                 continue;
             }
+            // A preceding blow may permanently change the player's body and armor.
+            let target = self.player_derived_stats();
+            let armor_class = target.armor_class.value;
             let player_hp_before = self.player.hp;
             let ability = attacker.melee_skill.with_modifier(
                 StatLayer::Base,
@@ -1576,11 +1637,20 @@ impl Game {
                             let damage_type = DamageType::from(*damage_type);
                             inventory_damage_type = Some(damage_type);
                             let resistance = self.effective_player_resistances().level(damage_type);
-                            Some(self.reduce_player_damage(if *armor_mitigated {
+                            let damage = self.resist_player_damage(if *armor_mitigated {
                                 resolve_armored_damage(raw, damage_type, armor_class, resistance)
                             } else {
                                 resolve_damage(DamagePacket::new(raw, damage_type), resistance)
-                            }))
+                            });
+                            let damage = self
+                                .split_monster_nether_damage(index, true, damage, events, changed);
+                            if self.player_is_dead() {
+                                return Ok(false);
+                            }
+                            Some(scale_damage_outcome(
+                                damage,
+                                self.player_incoming_damage_percent(),
+                            ))
                         }
                     }
                     MeleeBlowEffectDefinition::Shatter {
@@ -1794,7 +1864,12 @@ impl Game {
                             .max(0),
                         )
                         .unwrap_or(u16::MAX);
-                        self.resolve_monster_unlife_against_player(index, amount, events, changed);
+                        self.resolve_monster_unlife_against_player(
+                            index, amount, true, events, changed,
+                        );
+                        if self.player_is_dead() {
+                            return Ok(false);
+                        }
                         None
                     }
                     MeleeBlowEffectDefinition::Bleeding {

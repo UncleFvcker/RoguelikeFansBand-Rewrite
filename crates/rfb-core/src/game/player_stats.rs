@@ -151,13 +151,13 @@ fn apply_monster_power(
     )
 }
 
-fn apply_player_life_force(stat: DerivedStat, life_force: u16) -> DerivedStat {
+fn apply_player_life_force(stat: DerivedStat, life_force: i32) -> DerivedStat {
     if life_force >= 1_000 {
         return stat;
     }
     let lost = i32::try_from(
         i64::from(stat.value.max(0))
-            .saturating_mul(i64::from(1_000_u16.saturating_sub(life_force)))
+            .saturating_mul(i64::from(1_000_i32.saturating_sub(life_force)))
             .saturating_div(2_000),
     )
     .unwrap_or(i32::MAX);
@@ -721,7 +721,7 @@ impl Game {
         )
     }
 
-    pub(super) fn reduce_player_damage(&self, mut damage: DamageOutcome) -> DamageOutcome {
+    pub(super) fn resist_player_damage(&self, mut damage: DamageOutcome) -> DamageOutcome {
         let percent = self.adjust_player_resistance_percent(damage.damage_type, damage.resistance);
         if percent != damage.resistance.reduction_percent() {
             // Re-evaluate resistance on the post-armor amount before incoming-damage modifiers.
@@ -731,7 +731,14 @@ impl Game {
                 percent,
             );
         }
-        scale_damage_outcome(damage, self.player_incoming_damage_percent())
+        damage
+    }
+
+    pub(super) fn reduce_player_damage(&self, damage: DamageOutcome) -> DamageOutcome {
+        scale_damage_outcome(
+            self.resist_player_damage(damage),
+            self.player_incoming_damage_percent(),
+        )
     }
 
     /// Status kinds the player cannot receive: the union of the race's

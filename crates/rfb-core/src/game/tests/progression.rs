@@ -4218,7 +4218,7 @@ fn permanent_race_change_rejections_are_atomic_and_consume_no_rng() {
         let before = game.to_save();
         let rng = game.rng.clone();
         let mut events = Vec::new();
-        assert!(!game.change_player_race(target, &mut events));
+        assert!(!game.change_player_race(target, game.effective_player_max_hp(), &mut events));
         assert_eq!(game.to_save(), before);
         assert_eq!(game.rng, rng);
         assert!(events.is_empty());
@@ -4242,7 +4242,11 @@ fn permanent_race_change_rerates_only_hp_and_preserves_identity_progress_and_ite
     let expected_hp =
         CharacterProgress::roll_hp_progression(game.progress.hp_progression[0], &mut expected_rng);
     let mut events = Vec::new();
-    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut events));
+    assert!(game.change_player_race(
+        "rfb-legacy.race.vampire",
+        game.effective_player_max_hp(),
+        &mut events
+    ));
     assert_eq!(game.progress.hp_progression, expected_hp);
     assert_eq!(game.rng, expected_rng);
     assert_eq!(game.progress.life_force, 725);
@@ -4290,7 +4294,11 @@ fn permanent_race_change_preserves_temporary_body_until_expiry() {
     game.refresh_player_ability_state();
     let slots = game.body_slots.clone();
     let statuses = game.player.statuses.clone();
-    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut Vec::new()));
+    assert!(game.change_player_race(
+        "rfb-legacy.race.vampire",
+        game.effective_player_max_hp(),
+        &mut Vec::new()
+    ));
     assert_eq!(game.body_slots, slots);
     assert_eq!(game.player.statuses, statuses);
     game.player
@@ -4336,7 +4344,11 @@ fn permanent_race_change_revokes_draconian_talent_and_restores_worn_gear() {
     );
     assert!(game.gain_mutation("rfb.mutation.teleport", &mut Vec::new()));
     let mut events = Vec::new();
-    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut events));
+    assert!(game.change_player_race(
+        "rfb-legacy.race.vampire",
+        game.effective_player_max_hp(),
+        &mut events
+    ));
     assert!(
         !game
             .progress
@@ -4376,7 +4388,11 @@ fn permanent_race_change_rechecks_experience_below_the_historical_maximum() {
     let experience = game.progress.experience;
     let maximum_experience = game.progress.maximum_experience;
     let mut events = Vec::new();
-    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut events));
+    assert!(game.change_player_race(
+        "rfb-legacy.race.vampire",
+        game.effective_player_max_hp(),
+        &mut events
+    ));
     assert!(game.progress.level < maximum_level);
     assert_eq!(game.progress.max_level, maximum_level);
     assert_eq!(
@@ -4388,7 +4404,11 @@ fn permanent_race_change_rechecks_experience_below_the_historical_maximum() {
             .iter()
             .any(|event| matches!(event, DomainEvent::PlayerLevelLost { .. }))
     );
-    assert!(game.change_player_race("rfb-legacy.race.yeek", &mut Vec::new()));
+    assert!(game.change_player_race(
+        "rfb-legacy.race.yeek",
+        game.effective_player_max_hp(),
+        &mut Vec::new()
+    ));
     assert_eq!(game.progress.level, maximum_level);
     assert!(Game::from_save(game.to_save()).is_ok());
 }
@@ -4486,7 +4506,11 @@ fn permanent_race_change_reconciles_feet_and_honors_automatic_rewear_inscription
             .unwrap()
             .inscription = inscription.map(str::to_owned);
         assert!(game.equip_inventory_item("test.boots", None).is_some());
-        assert!(game.change_player_race("rfb-legacy.race.vampire", &mut Vec::new()));
+        assert!(game.change_player_race(
+            "rfb-legacy.race.vampire",
+            game.effective_player_max_hp(),
+            &mut Vec::new()
+        ));
         let boots = game
             .items
             .iter()
@@ -4496,8 +4520,16 @@ fn permanent_race_change_reconciles_feet_and_honors_automatic_rewear_inscription
         assert_eq!(boots.previously_worn, inscription.is_none());
         let mut restored =
             Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
-        assert!(game.change_player_race("demo.race.rfb-human", &mut Vec::new()));
-        assert!(restored.change_player_race("demo.race.rfb-human", &mut Vec::new()));
+        assert!(game.change_player_race(
+            "demo.race.rfb-human",
+            game.effective_player_max_hp(),
+            &mut Vec::new()
+        ));
+        assert!(restored.change_player_race(
+            "demo.race.rfb-human",
+            restored.effective_player_max_hp(),
+            &mut Vec::new()
+        ));
         assert_eq!(game.state_hash(), restored.state_hash());
         let boots = game
             .items
@@ -4548,7 +4580,11 @@ fn permanent_race_change_releases_quiver_and_container_capacity_without_losing_i
         .iter()
         .map(|item| (item.id.clone(), (item.kind_id.clone(), item.quantity)))
         .collect::<BTreeMap<_, _>>();
-    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut Vec::new()));
+    assert!(game.change_player_race(
+        "rfb-legacy.race.vampire",
+        game.effective_player_max_hp(),
+        &mut Vec::new()
+    ));
     assert_eq!(
         game.items
             .iter()
@@ -4648,14 +4684,22 @@ fn permanent_race_change_revokes_old_human_rewards_and_reopens_choices_below_max
     let old_talents = game.progress.locked_mutation_ids.clone();
     let historical_level = game.progress.max_level;
     assert!(!old_talents.is_empty());
-    assert!(game.change_player_race("rfb-legacy.race.vampire", &mut Vec::new()));
+    assert!(game.change_player_race(
+        "rfb-legacy.race.vampire",
+        game.effective_player_max_hp(),
+        &mut Vec::new()
+    ));
     assert!(
         old_talents
             .iter()
             .all(|id| !game.progress.active_mutation_ids.contains(id)
                 && !game.progress.locked_mutation_ids.contains(id))
     );
-    assert!(game.change_player_race("demo.race.rfb-human", &mut Vec::new()));
+    assert!(game.change_player_race(
+        "demo.race.rfb-human",
+        game.effective_player_max_hp(),
+        &mut Vec::new()
+    ));
     assert_eq!(game.progress.max_level, historical_level);
     assert!(game.pending_race_mutation_choice().is_some());
     assert!(Game::from_save(game.to_save()).is_ok());

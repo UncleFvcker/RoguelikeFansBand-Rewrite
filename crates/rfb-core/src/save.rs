@@ -784,7 +784,8 @@ pub(crate) fn player_to_save(
             },
             experience: progress.experience,
             maximum_experience: progress.maximum_experience,
-            life_force: progress.life_force,
+            life_force: u16::try_from(progress.life_force)
+                .expect("settled life force must be nonnegative"),
             level: progress.level,
             max_level: progress.max_level,
             pending_attribute_increases: progress.pending_attribute_increases,

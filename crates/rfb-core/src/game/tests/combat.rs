@@ -2071,3 +2071,555 @@ fn rfb_style_armor_reduction_uses_the_legacy_linear_cap() {
     assert_eq!(apply_melee_armor_reduction(100, 180), 40);
     assert_eq!(apply_melee_armor_reduction(100, 999), 40);
 }
+
+const UNLIFE_TARGETS: [&str; 5] = [
+    "rfb-legacy.race.vampire",
+    "rfb-legacy.race.skeleton",
+    "rfb-legacy.race.zombie",
+    "rfb-legacy.race.spectre",
+    "rfb-legacy.race.einheri",
+];
+
+fn unlife_command_game(effects: Vec<MeleeBlowEffectDefinition>) -> Game {
+    unlife_command_game_with_blows(vec![rfb_content::MeleeBlowDefinition {
+        method_id: "rfb.blow.touch".to_owned(),
+        to_hit: 0,
+        self_destructs: false,
+        effects,
+    }])
+}
+
+fn unlife_command_game_with_blows(blows: Vec<rfb_content::MeleeBlowDefinition>) -> Game {
+    let mut game = game_with_actor_definition(83, "demo.actor.small-kobold", |actor| {
+        actor.attack = 1_000_000;
+        actor.melee_routine = Some(rfb_content::MeleeRoutineDefinition { blows });
+    });
+    game = Game::from_content_with_build(
+        83,
+        game.content.clone(),
+        DEFAULT_WORLD_ID,
+        "demo.build.high-mage-death",
+    )
+    .unwrap();
+    clear_monsters(&mut game);
+    game.items.clear();
+    game.item_property_knowledge.clear();
+    let east = game.position_in_direction(Direction::East);
+    let player_position = game.player.position;
+    replace_terrain(&mut game, player_position, "demo.terrain.floor");
+    replace_terrain(&mut game, east, "demo.terrain.floor");
+    let player_index = game.index(game.player.position).unwrap();
+    game.daylight_suppressed[player_index] = true;
+    let mut actor = game.generated_actor("test.unlife".to_owned(), "demo.actor.small-kobold", east);
+    actor.energy_need = 0;
+    actor.nice = false;
+    game.entities.push(actor);
+    game.progress.life_force = 1;
+    game.player.hp = game.effective_player_max_hp();
+    game
+}
+
+fn unlife_effect(amount: u16) -> MeleeBlowEffectDefinition {
+    MeleeBlowEffectDefinition::Unlife {
+        chance_percent: None,
+        amount_dice: amount,
+        amount_sides: 1,
+    }
+}
+
+#[test]
+fn unlife_endpoint_real_wait_commands_reach_all_five_targets_and_continue_after_save() {
+    let base = unlife_command_game(vec![unlife_effect(2)]);
+    for (seed, expected) in [
+        (4, UNLIFE_TARGETS[0]),
+        (1, UNLIFE_TARGETS[1]),
+        (0, UNLIFE_TARGETS[2]),
+        (2, UNLIFE_TARGETS[3]),
+        (7, UNLIFE_TARGETS[4]),
+    ] {
+        let mut game = base.clone();
+        game.rng = RfbRng::seeded(seed);
+        game.progress.life_force = if seed == 4 { 2 } else { 1 };
+        game.player.hp = game.effective_player_max_hp();
+        let update = dispatch_next(&mut game, GameCommand::Wait);
+        let race = game.build.as_ref().unwrap().race_id.clone();
+        assert_eq!(race, expected, "seed {seed}");
+        assert_eq!(game.progress.life_force, 1_000);
+        let exhausted = update
+            .events
+            .iter()
+            .position(|event| event.kind == "player.life-force-exhausted")
+            .unwrap();
+        let changed = update
+            .events
+            .iter()
+            .position(|event| event.kind == "player.race-changed")
+            .unwrap();
+        let drained = update
+            .events
+            .iter()
+            .position(|event| event.kind == "combat.monster-unlife-drained")
+            .unwrap();
+        assert!(exhausted < changed && changed < drained);
+        let event = &update.events[drained];
+        assert_eq!(event.args["lifeForceAfter"], "0");
+        assert_eq!(event.args["lifeForceFinal"], "1000");
+        assert_eq!(event.args["amount"], "2");
+        assert_eq!(game.entities[0].power_per_mille, 1_002);
+        let mut restored =
+            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+        assert_eq!(
+            dispatch_next(&mut restored, GameCommand::Wait),
+            dispatch_next(&mut game, GameCommand::Wait)
+        );
+    }
+}
+
+#[test]
+fn unlife_endpoint_preserves_signed_overdraw_and_first_hp_refresh_rng_order() {
+    let base = unlife_command_game(vec![unlife_effect(2)]);
+    for amount in [1, 26] {
+        for seed in 0..5 {
+            let mut game = base.clone();
+            game.player.hp = game.effective_player_max_hp() / 2 + 1;
+            game.rng = RfbRng::seeded(seed);
+            let before_hp = game.player.hp;
+            let before_max_hp = game.effective_player_max_hp();
+            let mut expected_rng = game.rng.clone();
+            let target = UNLIFE_TARGETS[expected_rng.bounded(5) as usize];
+            let growth = CharacterProgress::roll_hp_progression(
+                game.progress.hp_progression[0],
+                &mut expected_rng,
+            );
+            let mut predicted = game.clone();
+            predicted.build.as_mut().unwrap().race_id = target.to_owned();
+            predicted.progress.life_force = 1 - i32::from(amount);
+            predicted.progress.hp_progression = growth.clone();
+            let intermediate_max_hp = predicted.effective_player_max_hp();
+            predicted.progress.life_force = 1_000;
+            let final_max_hp = predicted.effective_player_max_hp();
+            let expected_hp = (before_hp * intermediate_max_hp / before_max_hp) * final_max_hp
+                / intermediate_max_hp;
+            let mut events = Vec::new();
+            let outcome =
+                game.drain_player_life_force(amount, "demo.actor.small-kobold", &mut events);
+            assert_eq!((outcome.before, outcome.after), (1, 0));
+            assert_eq!(game.rng, expected_rng);
+            assert_eq!(game.progress.hp_progression, growth);
+            assert_eq!(game.player.hp, expected_hp, "seed {seed}, drain {amount}");
+            assert_eq!(game.progress.life_force, 1_000);
+            assert!(game.player.hp < game.effective_player_max_hp());
+        }
+    }
+}
+
+#[test]
+fn unlife_endpoint_zero_and_same_native_still_draw_before_rejected_change() {
+    let base = unlife_command_game(vec![unlife_effect(1)]);
+    let mut positive = base.clone();
+    let before = positive.rng.clone();
+    let mut events = Vec::new();
+    positive.drain_player_life_force(0, "demo.actor.small-kobold", &mut events);
+    assert_eq!(positive.rng, before);
+    assert!(events.is_empty());
+    positive.progress.life_force = 3;
+    positive.drain_player_life_force(1, "demo.actor.small-kobold", &mut events);
+    assert_eq!(positive.progress.life_force, 2);
+    assert_eq!(positive.rng, before);
+    assert!(events.is_empty());
+    for amount in [0, 1] {
+        let mut game = base.clone();
+        game.progress.life_force = 0;
+        game.rng = RfbRng::seeded(7);
+        let mut expected_rng = game.rng.clone();
+        let target = UNLIFE_TARGETS[expected_rng.bounded(5) as usize];
+        game.build.as_mut().unwrap().race_id = target.to_owned();
+        game.player.hp = game.effective_player_max_hp() / 2;
+        let growth = game.progress.hp_progression.clone();
+        let mut events = Vec::new();
+        game.drain_player_life_force(amount, "demo.actor.small-kobold", &mut events);
+        assert_eq!(game.rng, expected_rng);
+        assert_eq!(game.progress.hp_progression, growth);
+        assert_eq!(game.progress.life_force, 1_000);
+        assert!(
+            !events
+                .iter()
+                .any(|event| matches!(event, DomainEvent::PlayerRaceChanged { .. }))
+        );
+        assert!(!game.player_is_dead());
+    }
+}
+
+#[test]
+fn unlife_endpoint_failed_or_living_form_kills_without_absorption_and_stops_remaining_effects() {
+    let base = unlife_command_game(vec![
+        unlife_effect(2),
+        unlife_effect(2),
+        MeleeBlowEffectDefinition::Damage {
+            chance_percent: None,
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_type: ActorDamageType::Physical,
+            armor_mitigated: false,
+            vampiric: false,
+        },
+    ]);
+    for immune in [false, true] {
+        let mut game = base.clone();
+        game.apply_player_experience(game.experience_required_for_level(30), &mut Vec::new());
+        choose_human_talent_if_pending(&mut game);
+        if immune {
+            game.build.as_mut().unwrap().race_id = "rfb-legacy.race.android".to_owned();
+        }
+        let mut status =
+            monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 1000, "test.form").status;
+        status.granted_race_id = Some("demo.race.rfb-human".to_owned());
+        game.player.statuses.push(status);
+        let mut invulnerability =
+            monster_combat::melee_status(STATUS_INVULNERABILITY, 1000, "test.protection").status;
+        invulnerability.incoming_damage_percent = 0;
+        game.player.statuses.push(invulnerability);
+        game.player.statuses.push(
+            monster_combat::melee_status(STATUS_TRANSCENDENCE, 1000, "test.protection").status,
+        );
+        game.refresh_player_resource_maxima();
+        let mana = game.resources.get_mut("demo.resource.mana").unwrap();
+        mana.current = mana.maximum;
+        game.player.hp = 1;
+        game.rng = RfbRng::seeded(0);
+        let update = dispatch_next(&mut game, GameCommand::Wait);
+        assert!(game.player_is_dead());
+        assert_eq!(game.progress.life_force, 0);
+        let mana = &game.resources["demo.resource.mana"];
+        assert!(mana.current > 10);
+        assert_eq!(mana.current, mana.maximum);
+        assert_eq!(game.entities[0].power_per_mille, 1_002);
+        assert_eq!(
+            update
+                .events
+                .iter()
+                .filter(|event| event.kind == "combat.monster-unlife-drained")
+                .count(),
+            1
+        );
+        assert_eq!(
+            update
+                .events
+                .iter()
+                .filter(|event| event.kind == "combat.player-death")
+                .count(),
+            1
+        );
+        assert!(
+            !update
+                .events
+                .iter()
+                .any(|event| event.kind == "combat.monster-hit")
+        );
+        assert_eq!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "player.race-changed"),
+            !immune
+        );
+    }
+}
+
+#[test]
+fn unlife_endpoint_success_ignores_later_unlife_but_resolves_remaining_damage() {
+    let mut game = unlife_command_game(vec![
+        unlife_effect(2),
+        unlife_effect(2),
+        MeleeBlowEffectDefinition::Damage {
+            chance_percent: None,
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_type: ActorDamageType::Physical,
+            armor_mitigated: false,
+            vampiric: false,
+        },
+    ]);
+    game.rng = RfbRng::seeded(0);
+    let update = dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.progress.life_force, 1_000);
+    assert!(!game.player_is_dead());
+    assert_eq!(game.entities[0].power_per_mille, 1_002);
+    assert_eq!(
+        update
+            .events
+            .iter()
+            .filter(|event| event.kind == "combat.monster-unlife-drained")
+            .count(),
+        1
+    );
+    assert!(
+        update
+            .events
+            .iter()
+            .any(|event| event.kind == "combat.monster-hit")
+    );
+}
+
+#[test]
+fn unlife_endpoint_immunity_and_hold_life_save_do_not_draw_a_target() {
+    let base = unlife_command_game(vec![unlife_effect(2)]);
+    let mut nonliving = base.clone();
+    nonliving.build.as_mut().unwrap().race_id = UNLIFE_TARGETS[1].to_owned();
+    let before = nonliving.rng.clone();
+    let mut events = Vec::new();
+    nonliving.resolve_monster_unlife_against_player(0, 2, true, &mut events, &mut BTreeSet::new());
+    assert_eq!(nonliving.rng, before);
+    assert_eq!(nonliving.progress.life_force, 1);
+    assert!(events.is_empty());
+    let mut saved = base.clone();
+    saved
+        .player
+        .statuses
+        .push(monster_combat::melee_status(STATUS_HOLD_LIFE, 1000, "test.hold-life").status);
+    let player_power = (6 + crate::stats::original_save_adjustment(
+        saved
+            .effective_player_attributes()
+            .index(AttributeKind::Charisma),
+    ))
+    .max(1) as u64;
+    let seed = (0..100)
+        .find(|seed| {
+            let mut rng = RfbRng::seeded(*seed);
+            rng.bounded(4) <= rng.bounded(player_power)
+        })
+        .unwrap();
+    saved.rng = RfbRng::seeded(seed);
+    let mut expected_rng = saved.rng.clone();
+    assert!(expected_rng.bounded(4) <= expected_rng.bounded(player_power));
+    saved.resolve_monster_unlife_against_player(0, 2, true, &mut events, &mut BTreeSet::new());
+    assert_eq!(saved.rng, expected_rng);
+    assert_eq!(saved.progress.life_force, 1);
+    assert_eq!(saved.entities[0].power_per_mille, 1_000);
+    assert!(events.is_empty());
+}
+
+#[test]
+fn unlife_endpoint_nether_diverts_before_incoming_damage_reduction_without_empowering_a_caster() {
+    for invulnerable in [false, true] {
+        let mut game = unlife_command_game(vec![unlife_effect(2)]);
+        if invulnerable {
+            let mut status =
+                monster_combat::melee_status(STATUS_INVULNERABILITY, 1000, "test.invulnerable")
+                    .status;
+            status.incoming_damage_percent = 0;
+            game.player.statuses.push(status);
+        }
+        game.rng = RfbRng::seeded(0);
+        let mut expected = game.clone();
+        expected.drain_player_life_force(3, "demo.actor.small-kobold", &mut Vec::new());
+        let mut events = Vec::new();
+        let result = game.resolve_monster_damage_to_player(
+            "test.unlife",
+            "demo.actor.small-kobold",
+            "test.nether",
+            0,
+            20,
+            20,
+            DamageType::Nether,
+            &mut events,
+        );
+        let expected_damage = if invulnerable { 0 } else { 17 };
+        assert!(
+            matches!(result, AbilityEffectResolutionDto::Damage { resolution, .. } if resolution.final_damage == expected_damage)
+        );
+        assert_eq!(game.player.hp, expected.player.hp - expected_damage);
+        assert_eq!(game.rng, expected.rng);
+        assert_eq!(game.progress.life_force, 1_000);
+        assert_eq!(game.entities[0].power_per_mille, 1_000);
+        assert!(events.iter().any(|event| matches!(
+            event,
+            DomainEvent::MonsterUnlifeDrained {
+                amount: 3,
+                power_before: 1_000,
+                power_after: 1_000,
+                ..
+            }
+        )));
+    }
+}
+
+#[test]
+fn unlife_endpoint_contact_death_stops_later_contact_effects() {
+    let mut game = unlife_command_game(vec![unlife_effect(2)]);
+    let mut definition = game
+        .content
+        .actor("demo.actor.small-kobold")
+        .unwrap()
+        .clone();
+    definition.contact_effects = vec![
+        unlife_effect(2),
+        MeleeBlowEffectDefinition::Stun {
+            chance_percent: None,
+            duration_dice: 1,
+            duration_sides: 1,
+        },
+    ];
+    let mut status =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 1000, "test.form").status;
+    status.granted_race_id = Some("demo.race.rfb-human".to_owned());
+    game.player.statuses.push(status);
+    let mut events = Vec::new();
+    assert!(game.resolve_monster_contact_auras(0, &definition, &mut events, &mut BTreeSet::new()));
+    assert!(game.player_is_dead());
+    assert_eq!(game.progress.life_force, 0);
+    assert_eq!(game.entities[0].power_per_mille, 1_002);
+    assert_eq!(
+        events
+            .iter()
+            .filter(|event| matches!(event, DomainEvent::PlayerDied { .. }))
+            .count(),
+        1
+    );
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterContactAuraApplied { .. }))
+    );
+}
+
+#[test]
+fn unlife_endpoint_nether_contact_aura_diverts_and_empowers_even_under_invulnerability() {
+    let mut game = unlife_command_game(vec![unlife_effect(2)]);
+    let mut definition = game
+        .content
+        .actor("demo.actor.small-kobold")
+        .unwrap()
+        .clone();
+    definition.contact_auras = vec![rfb_content::ActorContactAuraDefinition {
+        damage_type: ActorDamageType::Nether,
+        damage_dice: 20,
+        damage_sides: 1,
+        chance_percent: None,
+        ravages_time: false,
+    }];
+    let mut status =
+        monster_combat::melee_status(STATUS_INVULNERABILITY, 1000, "test.invulnerable").status;
+    status.incoming_damage_percent = 0;
+    game.player.statuses.push(status);
+    let mut events = Vec::new();
+    assert!(!game.resolve_monster_contact_auras(0, &definition, &mut events, &mut BTreeSet::new()));
+    assert_eq!(game.progress.life_force, 1_000);
+    assert_eq!(game.entities[0].power_per_mille, 1_003);
+    assert!(
+        !events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterMeleeHit { .. }))
+    );
+    assert!(
+        events
+            .iter()
+            .any(|event| matches!(event, DomainEvent::MonsterUnlifeDrained { amount: 3, .. }))
+    );
+}
+
+#[test]
+fn unlife_endpoint_nether_melee_empowers_before_remaining_damage_and_stops_on_death() {
+    let base = unlife_command_game(vec![MeleeBlowEffectDefinition::Damage {
+        chance_percent: None,
+        damage_dice: 20,
+        damage_sides: 1,
+        damage_type: ActorDamageType::Nether,
+        armor_mitigated: false,
+        vampiric: false,
+    }]);
+    for living_form in [false, true] {
+        let mut game = base.clone();
+        if living_form {
+            let mut status =
+                monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 1000, "test.form").status;
+            status.granted_race_id = Some("demo.race.rfb-human".to_owned());
+            game.player.statuses.push(status);
+        }
+        game.rng = RfbRng::seeded(0);
+        let update = dispatch_next(&mut game, GameCommand::Wait);
+        assert_eq!(game.entities[0].power_per_mille, 1_003);
+        let drained = update
+            .events
+            .iter()
+            .position(|event| event.kind == "combat.monster-unlife-drained")
+            .unwrap();
+        assert_eq!(update.events[drained].args["amount"], "3");
+        let hit = update
+            .events
+            .iter()
+            .position(|event| event.kind == "combat.monster-hit");
+        if living_form {
+            assert!(game.player_is_dead());
+            assert_eq!(game.progress.life_force, 0);
+            assert!(hit.is_none());
+            assert_eq!(
+                update
+                    .events
+                    .iter()
+                    .filter(|event| event.kind == "combat.player-death")
+                    .count(),
+                1
+            );
+        } else {
+            assert_eq!(game.progress.life_force, 1_000);
+            assert!(hit.unwrap() > drained);
+        }
+    }
+}
+
+#[test]
+fn unlife_endpoint_later_blows_use_the_transformed_body_or_stop_after_death() {
+    let effects = vec![
+        unlife_effect(2),
+        unlife_effect(2),
+        MeleeBlowEffectDefinition::Damage {
+            chance_percent: None,
+            damage_dice: 1,
+            damage_sides: 1,
+            damage_type: ActorDamageType::Physical,
+            armor_mitigated: false,
+            vampiric: false,
+        },
+    ];
+    let base = unlife_command_game_with_blows(
+        effects
+            .into_iter()
+            .map(|effect| rfb_content::MeleeBlowDefinition {
+                method_id: "rfb.blow.touch".to_owned(),
+                to_hit: 0,
+                self_destructs: false,
+                effects: vec![effect],
+            })
+            .collect(),
+    );
+    for living_form in [false, true] {
+        let mut game = base.clone();
+        if living_form {
+            let mut status =
+                monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 1000, "test.form").status;
+            status.granted_race_id = Some("demo.race.rfb-human".to_owned());
+            game.player.statuses.push(status);
+        }
+        game.rng = RfbRng::seeded(0);
+        let update = dispatch_next(&mut game, GameCommand::Wait);
+        assert_eq!(game.player_is_dead(), living_form);
+        assert_eq!(game.entities[0].power_per_mille, 1_002);
+        assert_eq!(
+            update
+                .events
+                .iter()
+                .filter(|event| event.kind == "combat.monster-unlife-drained")
+                .count(),
+            1
+        );
+        assert_eq!(
+            update
+                .events
+                .iter()
+                .any(|event| event.kind == "combat.monster-hit"),
+            !living_form
+        );
+    }
+}

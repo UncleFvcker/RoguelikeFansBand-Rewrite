@@ -627,3 +627,7 @@ player-light-source-burn = { $source }灼伤了你亡灵的肉体！
 player-light-death = 你被光灼烧而死。
 
 player-race-changed = 你的种族改变了。
+
+player-life-force-exhausted = 你的生命力枯竭了！
+monster-unlife-drained-restored = { $source }吸取了{ $amount }点生命力；你转化后的生命力恢复至{ $lifeForceFinal }。
+monster-unlife-drained-ranged = { $source }吸取了{ $amount }点生命力。

@@ -697,7 +697,8 @@ impl Game {
             max_level: self.progress.max_level,
             experience: self.progress.experience,
             maximum_experience: self.progress.maximum_experience,
-            life_force: self.progress.life_force,
+            life_force: u16::try_from(self.progress.life_force)
+                .expect("settled life force must be nonnegative"),
             level_cap,
             attribute_cap: CharacterProgress::attribute_cap(victory_unlocked),
             attribute_index_cap: CharacterProgress::attribute_index_cap(victory_unlocked),

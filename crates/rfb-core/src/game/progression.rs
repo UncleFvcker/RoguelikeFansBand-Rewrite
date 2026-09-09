@@ -180,14 +180,20 @@ pub(super) fn apply_life_force_restoration(
     progress: &mut CharacterProgress,
     request: LifeForceRestorationRequest,
 ) -> LifeForceChangeOutcome {
-    let before = progress.life_force;
+    let before =
+        u16::try_from(progress.life_force).expect("settled life force must be nonnegative");
     progress.life_force = match request.restoration {
-        LifeForceRestoration::Add(amount) => progress.life_force.saturating_add(amount).min(1_000),
-        LifeForceRestoration::AtLeast(minimum) => progress.life_force.max(minimum).min(1_000),
+        LifeForceRestoration::Add(amount) => progress
+            .life_force
+            .saturating_add(i32::from(amount))
+            .min(1_000),
+        LifeForceRestoration::AtLeast(minimum) => {
+            progress.life_force.max(i32::from(minimum)).min(1_000)
+        }
     };
     LifeForceChangeOutcome {
         before,
-        after: progress.life_force,
+        after: u16::try_from(progress.life_force).expect("settled life force must be nonnegative"),
     }
 }
 
@@ -195,11 +201,12 @@ pub(super) fn apply_life_force_drain(
     progress: &mut CharacterProgress,
     amount: u16,
 ) -> LifeForceChangeOutcome {
-    let before = progress.life_force;
-    progress.life_force = progress.life_force.saturating_sub(amount);
+    let before =
+        u16::try_from(progress.life_force).expect("settled life force must be nonnegative");
+    progress.life_force = progress.life_force.saturating_sub(i32::from(amount)).max(0);
     LifeForceChangeOutcome {
         before,
-        after: progress.life_force,
+        after: u16::try_from(progress.life_force).expect("settled life force must be nonnegative"),
     }
 }
 
@@ -511,11 +518,11 @@ fn rescale_u32(current: u32, previous_maximum: u32, next_maximum: u32) -> u32 {
 }
 
 impl Game {
-    /// Permanent native-race change. The effect endpoint is wired in the next stage.
-    #[cfg_attr(not(test), allow(dead_code))]
+    /// The first HP refresh consumes the caller's settled maximum, including pending life-force loss.
     pub(super) fn change_player_race(
         &mut self,
         race_id: &str,
+        mut previous_max_hp: i32,
         events: &mut Vec<DomainEvent>,
     ) -> bool {
         let Some(identity) = self.build.as_ref() else {
@@ -554,7 +561,11 @@ impl Game {
             };
             for id in ids {
                 if self.progress.locked_mutation_ids.remove(&id) {
-                    self.lose_mutation(&id, events);
+                    let resources = self.player_resource_maxima();
+                    self.lose_mutation_without_refresh(&id, events);
+                    self.reconcile_player_body_slots_for_current_form();
+                    self.refresh_after_attribute_change(previous_max_hp, &resources);
+                    previous_max_hp = self.effective_player_max_hp();
                 }
             }
         }
@@ -563,7 +574,6 @@ impl Game {
             race_id: race_id.to_owned(),
         });
         self.add_virtue(rfb_protocol::VirtueKindDto::Chance, 2);
-        let previous_max_hp = self.effective_player_max_hp();
         let previous_resources = self.player_resource_maxima();
         self.build
             .as_mut()
@@ -608,10 +618,61 @@ impl Game {
         outcome
     }
 
-    pub(super) fn drain_player_life_force(&mut self, amount: u16) -> LifeForceChangeOutcome {
+    pub(super) fn drain_player_life_force(
+        &mut self,
+        amount: u16,
+        source_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> LifeForceChangeOutcome {
         let previous_max_hp = self.effective_player_max_hp();
         let outcome = apply_life_force_drain(&mut self.progress, amount);
-        self.rescale_player_hp_after_life_force_change(previous_max_hp);
+        if outcome.after > 0 {
+            self.rescale_player_hp_after_life_force_change(previous_max_hp);
+            return outcome;
+        }
+        // lp_player preserves the signed overdraw until change_race's HP refresh.
+        // Do not first rescale the old body to zero life force: that adds rounding loss.
+        self.progress.life_force = i32::from(outcome.before) - i32::from(amount);
+        let targets = [
+            "rfb-legacy.race.vampire",
+            "rfb-legacy.race.skeleton",
+            "rfb-legacy.race.zombie",
+            "rfb-legacy.race.spectre",
+            "rfb-legacy.race.einheri",
+        ];
+        let target = targets[self.rng.bounded(5) as usize];
+        events.push(DomainEvent::PlayerLifeForceExhausted);
+        let changed = self.change_player_race(target, previous_max_hp, events);
+        let refreshed_max_hp = if changed {
+            self.effective_player_max_hp()
+        } else {
+            previous_max_hp
+        };
+        if self.player_is_nonliving() {
+            self.progress.life_force = 1_000;
+            self.rescale_player_hp_after_life_force_change(refreshed_max_hp);
+        } else {
+            self.progress.life_force = 0;
+            // DAMAGE_NOESCAPE bypasses invulnerability and mana absorption.
+            let damage = crate::effect::resolve_damage(
+                crate::effect::DamagePacket::new(
+                    self.player.hp.saturating_add(10).max(0),
+                    crate::resistance::DamageType::Physical,
+                ),
+                crate::resistance::ResistanceLevel::Normal,
+            );
+            let application = super::damage::plan_damage_application(
+                &self.player,
+                damage,
+                super::FatalityPolicy::BelowZero,
+            );
+            super::damage::commit_damage_application(&mut self.player, &application);
+            events.push(DomainEvent::PlayerDied {
+                source_kind_id: source_kind_id.to_owned(),
+                method_id: Some("rfb.life-force-exhaustion".to_owned()),
+                damage,
+            });
+        }
         outcome
     }
 

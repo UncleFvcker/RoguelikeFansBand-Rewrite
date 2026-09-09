@@ -642,3 +642,7 @@ player-light-source-burn = { $source } scorches your undead flesh!
 player-light-death = You die from the burning light.
 
 player-race-changed = Your race has changed.
+
+player-life-force-exhausted = Your life force is exhausted!
+monster-unlife-drained-restored = { $source } drains { $amount } life force; after transformation, your life force returns to { $lifeForceFinal }.
+monster-unlife-drained-ranged = { $source } drains { $amount } life force.

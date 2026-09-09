@@ -519,7 +519,7 @@ fn restore_character_progress(
         attribute_potentials,
         experience: saved.experience,
         maximum_experience: saved.maximum_experience,
-        life_force: saved.life_force,
+        life_force: i32::from(saved.life_force),
         level: saved.level,
         max_level: saved.max_level,
         pending_attribute_increases: saved.pending_attribute_increases,

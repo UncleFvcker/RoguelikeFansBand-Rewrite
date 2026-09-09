@@ -105,7 +105,7 @@ pub(crate) enum BoltReflectionOutcome {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum DomainEvent {
-    #[allow(dead_code)]
+    PlayerLifeForceExhausted,
     PlayerRaceChanged {
         previous_race_id: String,
         race_id: String,
@@ -448,6 +448,7 @@ pub(crate) enum DomainEvent {
         amount: u16,
         life_force_before: u16,
         life_force_after: u16,
+        life_force_final: u16,
         power_before: u16,
         power_after: u16,
     },
@@ -1551,6 +1552,9 @@ pub(crate) enum DomainEvent {
 impl DomainEvent {
     pub(crate) fn into_dto(self) -> GameEventDto {
         match self {
+            Self::PlayerLifeForceExhausted => {
+                dto_without_args("player.life-force-exhausted", "player-life-force-exhausted")
+            }
             Self::PlayerRaceChanged {
                 previous_race_id,
                 race_id,
@@ -2490,16 +2494,24 @@ impl DomainEvent {
                 amount,
                 life_force_before,
                 life_force_after,
+                life_force_final,
                 power_before,
                 power_after,
             } => dto(
                 "combat.monster-unlife-drained",
-                "monster-unlife-drained",
+                if life_force_after != life_force_final {
+                    "monster-unlife-drained-restored"
+                } else if power_before == power_after {
+                    "monster-unlife-drained-ranged"
+                } else {
+                    "monster-unlife-drained"
+                },
                 [
                     ("source", source_kind_id),
                     ("amount", amount.to_string()),
                     ("lifeForceBefore", life_force_before.to_string()),
                     ("lifeForceAfter", life_force_after.to_string()),
+                    ("lifeForceFinal", life_force_final.to_string()),
                     ("powerBefore", power_before.to_string()),
                     ("powerAfter", power_after.to_string()),
                 ],

@@ -31,6 +31,7 @@ fn tomte_item_feelings_survive_recording_save_reload_and_stack_splits() {
             "position": payload.player.position,
             "quantity": 4,
             "quality": "fine",
+            "previouslyWorn": false,
             "affixIds": ["demo.affix.frost-hunter"],
             "permanentDestructionImmunities": [],
             "capturedActor": null
