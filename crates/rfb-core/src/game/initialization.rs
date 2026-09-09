@@ -534,6 +534,7 @@ impl Game {
             height,
             terrain,
             glow: vec![false; usize::from(width) * usize::from(height)],
+            vault_cells: vec![false; usize::from(width) * usize::from(height)],
             player_name,
             player,
             riding_actor_id: None,

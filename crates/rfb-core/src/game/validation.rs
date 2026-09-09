@@ -664,7 +664,10 @@ impl Game {
                 "active floor region state is invalid",
             ));
         }
-        if self.explored.len() != self.terrain.len() || self.glow.len() != self.terrain.len() {
+        if self.explored.len() != self.terrain.len()
+            || self.glow.len() != self.terrain.len()
+            || self.vault_cells.len() != self.terrain.len()
+        {
             return Err(CoreError::InvalidSave(
                 "terrain state dimensions are invalid",
             ));
@@ -832,7 +835,14 @@ impl Game {
             match &item.location {
                 ItemLocation::Ground(position) => {
                     if !common_valid
-                        || !self.is_walkable(*position)
+                        || !self.index(*position).is_some_and(|index| {
+                            self.content
+                                .terrain(&self.terrain[index])
+                                .is_some_and(|terrain| {
+                                    terrain.walkable
+                                        || terrain.tags.iter().any(|tag| tag == "item-drop")
+                                })
+                        })
                         || item.quantity > definition.max_stack
                     {
                         return Err(CoreError::InvalidSave("item state is invalid"));
@@ -969,6 +979,7 @@ impl Game {
             if floor.terrain.len() != expected_len
                 || floor.explored.len() != expected_len
                 || floor.glow.len() != expected_len
+                || floor.vault_cells.len() != expected_len
                 || !revealed_terrain_is_valid(
                     &floor.revealed_terrain,
                     &floor.terrain,
@@ -1066,6 +1077,20 @@ impl Game {
                 let location_is_valid = match &item.location {
                     ItemLocation::Ground(position) => {
                         floor_position_is_walkable(floor, *position, &self.content)
+                            || (position.x >= 0
+                                && position.y >= 0
+                                && position.x < i32::from(floor.width)
+                                && position.y < i32::from(floor.height)
+                                && self
+                                    .content
+                                    .terrain(
+                                        &floor.terrain[position.y as usize
+                                            * usize::from(floor.width)
+                                            + position.x as usize],
+                                    )
+                                    .is_some_and(|terrain| {
+                                        terrain.tags.iter().any(|tag| tag == "item-drop")
+                                    }))
                     }
                     ItemLocation::CarriedBy { actor_id } => floor_monster_ids.contains(actor_id),
                     ItemLocation::Inventory

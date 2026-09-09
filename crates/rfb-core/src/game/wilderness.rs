@@ -998,9 +998,11 @@ impl Game {
 
         let old_terrain = std::mem::take(&mut self.terrain);
         let old_glow = std::mem::take(&mut self.glow);
+        let old_vault_cells = std::mem::take(&mut self.vault_cells);
         let old_explored = std::mem::take(&mut self.explored);
         let mut terrain = self.cached_wilderness_view_terrain(next_world);
         let mut glow = vec![false; terrain.len()];
+        let mut vault_cells = vec![false; terrain.len()];
         let mut explored = vec![false; terrain.len()];
         let width = usize::from(WILDERNESS_VIEW_WIDTH);
         for y in 0..i32::from(WILDERNESS_VIEW_HEIGHT) {
@@ -1018,11 +1020,13 @@ impl Game {
                         .expect("translated wilderness x must fit usize");
                 terrain[destination_index] = old_terrain[source_index].clone();
                 glow[destination_index] = old_glow[source_index];
+                vault_cells[destination_index] = old_vault_cells[source_index];
                 explored[destination_index] = old_explored[source_index];
             }
         }
         self.terrain = terrain;
         self.glow = glow;
+        self.vault_cells = vault_cells;
         self.explored = explored;
         self.revealed_terrain = std::mem::take(&mut self.revealed_terrain)
             .into_iter()
@@ -1193,6 +1197,7 @@ impl Game {
                 height: self.height,
                 terrain: std::mem::take(&mut self.terrain),
                 glow: std::mem::take(&mut self.glow),
+                vault_cells: std::mem::take(&mut self.vault_cells),
                 player_position: self.player.position,
                 entities: std::mem::take(&mut self.entities),
                 items: floor_items,
@@ -1428,6 +1433,7 @@ impl Game {
                         + usize::try_from(view.x).expect("view x must fit usize");
                     floor.terrain[local_index] = self.terrain[view_index].clone();
                     floor.glow[local_index] = self.glow[view_index];
+                    floor.vault_cells[local_index] = self.vault_cells[view_index];
                     floor.explored[local_index] = self.explored[view_index];
                 }
             }
@@ -1607,6 +1613,7 @@ impl Game {
                         + usize::try_from(view.x).expect("view x must fit usize");
                     self.terrain[view_index] = floor.terrain[local_index].clone();
                     self.glow[view_index] = floor.glow[local_index];
+                    self.vault_cells[view_index] = floor.vault_cells[local_index];
                     self.explored[view_index] = floor.explored[local_index];
                 }
             }
@@ -2073,6 +2080,7 @@ impl Game {
             height,
             terrain,
             glow: vec![false; usize::from(width) * usize::from(height)],
+            vault_cells: vec![false; usize::from(width) * usize::from(height)],
             player_position,
             entities: Vec::new(),
             items: Vec::new(),

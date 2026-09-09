@@ -22,7 +22,7 @@
       "revision": 0,
       "turn": 0,
       "lastCommandSeq": 0,
-      "stateHash": "a2a3359580448a2066b9016be13b4483e5e8d0879f2f000eae1e38458d4fe910",
+      "stateHash": "d3dd00b5f0a642c581c49138b5a4f4a3d47968005112245e5d195794885bdb5b",
       "playerAttributes": {
         "weaponProficiencies": {
           "demo.item.broad-sword": {
@@ -33,6 +33,6 @@
         }
       }
     },
-    "saveRoundTripStateHash": "a2a3359580448a2066b9016be13b4483e5e8d0879f2f000eae1e38458d4fe910"
+    "saveRoundTripStateHash": "d3dd00b5f0a642c581c49138b5a4f4a3d47968005112245e5d195794885bdb5b"
   }
 }

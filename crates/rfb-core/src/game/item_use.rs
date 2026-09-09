@@ -12,6 +12,7 @@ const SNOTLING_RACE_ID: &str = "rfb-legacy.race.snotling";
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) enum ItemUsePlan {
+    CancelledActivation,
     AbilityEffect {
         ability: Box<AbilityDefinition>,
         target_plan: AbilityTargetPlan,
@@ -2619,6 +2620,11 @@ impl Game {
             }
         }
 
+        // RFB checks an equipment activation before asking for its direction.
+        // Cancelling that attempt keeps the spent turn/check, but not the cooldown.
+        if matches!(plan, ItemUsePlan::CancelledActivation) {
+            return Ok(());
+        }
         if let Some(cost) = cost {
             self.items[index]
                 .charges
@@ -2686,16 +2692,29 @@ impl Game {
             (
                 ItemUseEffectDefinition::AbilityEffect { .. },
                 ItemUsePlan::AbilityEffect {
-                    ability,
+                    mut ability,
                     target_plan,
                 },
-            ) => self.resolve_player_ability_effect(
-                *ability,
-                target_plan,
-                events,
-                changed,
-                removed_entities,
-            )?,
+            ) => {
+                if let AbilityEffectDefinition::FetchItem {
+                    maximum_weight_tenths_pound,
+                } = &mut ability.effect
+                {
+                    *maximum_weight_tenths_pound = u32::try_from(
+                        u64::from(*maximum_weight_tenths_pound)
+                            * device_power_value(100, device_power_bonus)
+                            / 100,
+                    )
+                    .expect("device fetch weight must fit u32");
+                }
+                self.resolve_player_ability_effect(
+                    *ability,
+                    target_plan,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             (
                 effect @ (ItemUseEffectDefinition::Heal { .. }
                 | ItemUseEffectDefinition::NoNumericEffect
@@ -3147,6 +3166,11 @@ impl Game {
                 affects_ground_items,
             } => {
                 let target_definition = target_definition?.clone();
+                if target.is_none()
+                    && matches!(effect.as_ref(), AbilityEffectDefinition::FetchItem { .. })
+                {
+                    return Some(ItemUsePlan::CancelledActivation);
+                }
                 let selection = target.cloned().unwrap_or(TargetSelection::SelfTarget);
                 let ability = AbilityDefinition {
                     schema: rfb_content::ABILITY_SCHEMA.to_owned(),

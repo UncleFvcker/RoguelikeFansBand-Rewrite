@@ -27,7 +27,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "5e8856a6f7d5adbf5f3bcabf6a8aeb8ef0bfe219553859bb67d9a3df8a6e1bd4",
+      "stateHash": "793d25c85a12d9e6e0ecbe1393da99a09e88bcba35ab632bcb20217b7ab2fe39",
       "playerAttributes": {
         "pendingAttributeIncreases": 0,
         "attributes": {
@@ -54,6 +54,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "5e8856a6f7d5adbf5f3bcabf6a8aeb8ef0bfe219553859bb67d9a3df8a6e1bd4"
+    "saveRoundTripStateHash": "793d25c85a12d9e6e0ecbe1393da99a09e88bcba35ab632bcb20217b7ab2fe39"
   }
 }

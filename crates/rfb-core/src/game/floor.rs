@@ -1014,6 +1014,7 @@ impl Game {
             height: self.height,
             terrain: std::mem::take(&mut self.terrain),
             glow: std::mem::take(&mut self.glow),
+            vault_cells: std::mem::take(&mut self.vault_cells),
             player_position: self.player.position,
             entities: std::mem::take(&mut self.entities),
             items: floor_items,
@@ -1398,6 +1399,7 @@ impl Game {
         self.height = floor.height;
         self.terrain = floor.terrain;
         self.glow = floor.glow;
+        self.vault_cells = floor.vault_cells;
         self.player.position = floor.player_position;
         self.entities = floor.entities;
         global_items.extend(floor.items);

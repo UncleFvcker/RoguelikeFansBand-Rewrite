@@ -8,5 +8,5 @@
   "walkable": false,
   "blocksSight": false,
   "movementModes": ["fly", "swim"],
-  "tags": ["outdoor", "surface", "water", "deep", "shore"]
+  "tags": ["projectable", "no-item-drop", "outdoor", "surface", "water", "deep", "shore"]
 }

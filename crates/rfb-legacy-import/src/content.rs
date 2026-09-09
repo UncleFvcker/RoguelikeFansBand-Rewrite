@@ -2173,8 +2173,15 @@ pub fn parse_r_info(text: &str) -> Result<Vec<LegacyMonsterEntry>, LegacyImportE
     Ok(entries)
 }
 
-const MAPPED_TERRAIN_FLAGS: [&str; 6] =
-    ["MOVE", "LOS", "PROJECT", "PERMANENT", "HURT_DISI", "GLYPH"];
+const MAPPED_TERRAIN_FLAGS: [&str; 7] = [
+    "MOVE",
+    "LOS",
+    "PROJECT",
+    "DROP",
+    "PERMANENT",
+    "HURT_DISI",
+    "GLYPH",
+];
 
 /// Parses k_info entries; `&` article and `~` plural markers strip out of
 /// names, and the `N:*:` auto-index form continues the running counter.
@@ -5747,9 +5754,9 @@ fn legacy_device_item_effect(
         }
         "TELEKINESIS" => (
             device_ability_effect(
-                serde_json::json!({"type": "fetch-item", "maximumWeightTenthsPound": level * 150}),
+                serde_json::json!({"type": "fetch-item", "maximumWeightTenthsPound": level * 7}),
             ),
-            projectile,
+            serde_json::json!({"modes": ["direction", "position", "entity"], "range": 18, "requiresLineOfEffect": false}),
             false,
         ),
         "TELEPATHY" => (
@@ -9023,6 +9030,15 @@ fn terrain_json(
     let walkable = entry.flags.iter().any(|flag| flag == "MOVE");
     let blocks_sight = !entry.flags.iter().any(|flag| flag == "LOS");
     let mut tags = vec!["legacy-import"];
+    if !entry.flags.iter().any(|flag| flag == "DROP") {
+        tags.push("no-item-drop");
+    }
+    let projectable = entry.flags.iter().any(|flag| flag == "PROJECT");
+    if projectable && !walkable {
+        tags.push("projectable");
+    } else if !projectable && walkable {
+        tags.push("blocks-projectiles");
+    }
     if entry.flags.iter().any(|flag| flag == "TRAP") {
         tags.push("trap");
     }
@@ -26017,6 +26033,27 @@ static cptr _ego_name_zh[] =
                 .map(|candidate| (255 / u32::from(candidate.rarity)).max(1))
                 .sum::<u32>(),
             expectation.total_weight
+        );
+    }
+
+    #[test]
+    fn telekinesis_activation_preserves_original_weight_and_target_rules() {
+        let candidate = LegacyEgoActivationCandidate {
+            source_order: 0,
+            token: "TELEKINESIS".to_owned(),
+            level: 25,
+            recovery_turns: 30,
+            rarity: 1,
+            biases: Vec::new(),
+        };
+        let (effect, target, _) = legacy_device_item_effect(&candidate).unwrap();
+        assert_eq!(effect["effect"]["maximumWeightTenthsPound"], 175);
+        assert_eq!(
+            target,
+            serde_json::json!({
+                "modes": ["direction", "position", "entity"], "range": 18,
+                "requiresLineOfEffect": false,
+            })
         );
     }
 

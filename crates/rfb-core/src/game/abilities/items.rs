@@ -12,8 +12,9 @@ use crate::game::inventory::{
     item_instances_stack_compatible,
 };
 use crate::game::loot::GeneratedItemDraft;
-use crate::game::projectile_geometry::has_line_of_effect;
+use crate::game::projectile_geometry::{has_line_of_effect, projectile_path_between, rfb_distance};
 use crate::game::terrain::TerrainChangeSource;
+use crate::game::visibility::has_line_of_sight;
 use crate::game::{Game, device_recharge_resolved_event, weapon_brand_dto};
 use crate::resistance::DamageType;
 use crate::rng::rfb_m_bonus;
@@ -25,7 +26,7 @@ use rfb_content::{
 use rfb_protocol::{
     AbilityEffectResolutionDto, AbilityEffectsResolutionDto, ItemCurseRemovalResolutionDto,
     ItemCurseSeverityDto, ItemEnchantmentComponentResolutionDto, ItemEnchantmentsDto,
-    ItemOriginKindDto, ItemQualityDto, Position, VirtueKindDto,
+    ItemOriginKindDto, ItemQualityDto, Position, TargetSelection, VirtueKindDto,
 };
 use std::collections::BTreeSet;
 
@@ -400,7 +401,7 @@ impl Game {
     pub(super) fn resolve_player_fetch_item_effect(
         &mut self,
         ability: &AbilityDefinition,
-        path: Vec<Position>,
+        target: TargetSelection,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
@@ -410,7 +411,69 @@ impl Game {
         else {
             unreachable!("fetch item executor requires a fetch item effect");
         };
-        let candidate = path.iter().find_map(|position| {
+        let origin = self.player.position;
+        let range = ability.target.range.min(18);
+        let positions = match target {
+            TargetSelection::Direction { .. } => self
+                .projectile_path(&target, range)
+                .expect("validated fetch direction")
+                .into_iter()
+                .take_while(|position| {
+                    rfb_distance(origin, *position) <= u32::from(range)
+                        && self.fetch_projectable(*position)
+                })
+                .collect::<Vec<_>>(),
+            _ => {
+                let position = match target {
+                    TargetSelection::Position { position } => position,
+                    TargetSelection::Entity { entity_id } => {
+                        self.entities
+                            .iter()
+                            .find(|entity| entity.id == entity_id)
+                            .expect("validated fetch entity")
+                            .position
+                    }
+                    _ => unreachable!("validated fetch target"),
+                };
+                let valid = rfb_distance(origin, position) <= u32::from(range)
+                    && self
+                        .index(position)
+                        .is_some_and(|index| !self.vault_cells[index])
+                    && (!ability.target.requires_line_of_effect
+                        || (has_line_of_sight(self, origin, position)
+                            && projectile_path_between(origin, position, range).is_some_and(
+                                |path| path.into_iter().all(|at| self.fetch_projectable(at)),
+                            )));
+                if valid { vec![position] } else { Vec::new() }
+            }
+        };
+        let can_drop = self.index(origin).is_some_and(|index| {
+            let terrain = self
+                .content
+                .terrain(&self.terrain[index])
+                .expect("validated terrain");
+            (terrain.walkable || terrain.tags.iter().any(|tag| tag == "item-drop"))
+                && !terrain.tags.iter().any(|tag| {
+                    matches!(
+                        tag.as_str(),
+                        "no-item-drop"
+                            | "warding-glyph"
+                            | "explosive-rune"
+                            | "door"
+                            | "stairs-up"
+                            | "stairs-down"
+                            | "task-entry"
+                            | "shop-entrance"
+                            | "town-facility-entrance"
+                            | "building"
+                    )
+                })
+        }) && !self
+            .items
+            .iter()
+            .any(|item| item.location == ItemLocation::Ground(origin))
+            && !self.gold_piles.iter().any(|pile| pile.position == origin);
+        let candidate = positions.iter().filter(|_| can_drop).find_map(|position| {
             self.items
                 .iter()
                 .enumerate()
@@ -422,8 +485,7 @@ impl Game {
         let mut from = None;
         let mut moved = false;
         if let Some((index, id, position)) = candidate {
-            let weight = u32::from(self.item_weight_tenths_pound(&self.items[index].kind_id))
-                .saturating_mul(self.items[index].quantity);
+            let weight = u32::from(self.item_weight_tenths_pound(&self.items[index].kind_id));
             item_id = Some(id);
             from = Some(position);
             if weight <= maximum_weight_tenths_pound {
@@ -448,6 +510,17 @@ impl Game {
             },
             trace: None,
         });
+    }
+
+    fn fetch_projectable(&self, position: Position) -> bool {
+        self.index(position).is_some_and(|index| {
+            let terrain = self
+                .content
+                .terrain(&self.terrain[index])
+                .expect("validated terrain");
+            (terrain.walkable || terrain.tags.iter().any(|tag| tag == "projectable"))
+                && !terrain.tags.iter().any(|tag| tag == "blocks-projectiles")
+        })
     }
 
     fn roll_rfb_ammunition_magic_power(&mut self) -> i8 {

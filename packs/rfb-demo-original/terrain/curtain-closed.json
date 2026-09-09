@@ -9,5 +9,5 @@
   "blocksSight": true,
   "allowsWallPassage": true,
   "openToTerrainId": "demo.terrain.curtain-open",
-  "tags": ["curtain", "passage"]
+  "tags": ["curtain", "passage", "projectable", "item-drop"]
 }

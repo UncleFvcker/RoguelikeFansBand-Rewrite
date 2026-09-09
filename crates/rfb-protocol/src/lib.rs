@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.230";
+pub const PROTOCOL_VERSION: &str = "1.231";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 5;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 6;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -4750,6 +4750,7 @@ pub struct TerrainSaveDto {
     pub height: u16,
     pub terrain_ids: Vec<String>,
     pub glow: Vec<bool>,
+    pub vault_cells: Vec<bool>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -5849,6 +5850,7 @@ mod tests {
                 height: 1,
                 terrain_ids: vec!["demo.terrain.floor".to_owned()],
                 glow: vec![false],
+                vault_cells: vec![false],
             },
             player: PlayerDto {
                 trait_details: CharacterTraitDetailsDto::default(),

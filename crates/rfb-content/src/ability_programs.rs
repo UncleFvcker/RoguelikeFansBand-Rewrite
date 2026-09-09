@@ -440,6 +440,7 @@ fn ability_program_input_matches_target(
                     || matches!(
                         effect,
                         AbilityEffectDefinition::DarkenRoom
+                            | AbilityEffectDefinition::FetchItem { .. }
                             | AbilityEffectDefinition::DimensionDoor { .. }
                     ))
         }

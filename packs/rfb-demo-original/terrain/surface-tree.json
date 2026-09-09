@@ -9,5 +9,5 @@
   "blocksSight": true,
   "allowsWallPassage": true,
   "movementModes": ["fly"],
-  "tags": ["outdoor", "surface", "tree"]
+  "tags": ["item-drop", "outdoor", "surface", "tree"]
 }
