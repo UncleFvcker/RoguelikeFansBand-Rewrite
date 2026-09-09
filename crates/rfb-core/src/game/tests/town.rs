@@ -1005,6 +1005,100 @@ fn stored_blood_sours_and_only_museum_donations_clear_inscriptions() {
 }
 
 #[test]
+fn shared_museum_import_preserves_instances_and_knowledge_without_id_collisions() {
+    let facility = "demo.town-facility.morivant-museum";
+    let mut donor = morivant_facility_game(109, "demo.build.warrior", facility);
+    donor.mark_shop_visited_at_player().unwrap();
+    donor.reveal_current_visibility();
+    support::give_inventory_item(&mut donor, "test.device", "demo.item.magic-missile-wand");
+    support::give_inventory_item(&mut donor, "test.ball", "demo.item.capture-ball");
+    support::give_inventory_item(&mut donor, "test.unknown", "demo.item.healing-potion");
+    let device = donor
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.device")
+        .unwrap();
+    device.charges.as_mut().unwrap().current -= 1;
+    device.device_recovery_progress = 1;
+    donor.identify_item_instance("test.device", ItemIdentificationRequest::new(true));
+    donor
+        .items
+        .iter_mut()
+        .find(|item| item.id == "test.ball")
+        .unwrap()
+        .captured_actor = Some(CapturedActor {
+        kind_id: "demo.actor.horse".to_owned(),
+        speed: 117,
+        hp: 3,
+        max_hp: 8,
+        experience: 19,
+    });
+    for id in ["test.device", "test.ball", "test.unknown"] {
+        donor.deposit_at_home(facility, id, 1).unwrap();
+    }
+    let museum = donor.shared_museum().unwrap();
+    let mut recipient = morivant_facility_game(110, "demo.build.warrior", facility);
+    recipient.mark_shop_visited_at_player().unwrap();
+    recipient.reveal_current_visibility();
+    support::give_inventory_item(&mut recipient, "test.device", "demo.item.dagger");
+    let unchanged = recipient.state_hash();
+    let imported = recipient.with_shared_museum(&museum).unwrap().unwrap();
+    assert_eq!(recipient.state_hash(), unchanged);
+    let result = imported.shared_museum().unwrap();
+    for original in &museum.inventory {
+        let incoming = result
+            .inventory
+            .iter()
+            .find(|item| item.kind_id == original.kind_id)
+            .unwrap();
+        assert_ne!(incoming.id, original.id);
+        let mut normalized = incoming.clone();
+        normalized.id = original.id.clone();
+        assert_eq!(&normalized, original);
+        let before = museum
+            .item_property_knowledge
+            .iter()
+            .find(|entry| entry.item_id == original.id);
+        let after = result
+            .item_property_knowledge
+            .iter()
+            .find(|entry| entry.item_id == incoming.id);
+        assert_eq!(
+            before.map(|entry| (entry.appraised, entry.identified, &entry.known_affix_ids)),
+            after.map(|entry| (entry.appraised, entry.identified, &entry.known_affix_ids))
+        );
+    }
+    let projection = imported.snapshot();
+    let home = projection
+        .homes
+        .iter()
+        .find(|home| home.id == facility)
+        .unwrap();
+    assert_eq!(
+        home.stored_items
+            .iter()
+            .find(|item| item.kind_id == "demo.item.healing-potion")
+            .unwrap()
+            .details
+            .as_ref()
+            .unwrap()
+            .knowledge,
+        rfb_protocol::ItemKnowledgeDto::Unknown
+    );
+    assert_eq!(
+        Game::from_save(imported.to_save()).unwrap().state_hash(),
+        imported.state_hash()
+    );
+    let mut corrupt = museum.clone();
+    corrupt.inventory.push(corrupt.inventory[0].clone());
+    assert!(recipient.with_shared_museum(&corrupt).is_err());
+    corrupt = museum;
+    corrupt.inventory[0].kind_id = "demo.item.arkenstone-of-thrain".to_owned();
+    assert!(recipient.with_shared_museum(&corrupt).is_err());
+    assert_eq!(recipient.state_hash(), unchanged);
+}
+
+#[test]
 fn shroomery_trade_maintenance_and_save_round_trip_use_existing_shop_state() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Outpost game should start");

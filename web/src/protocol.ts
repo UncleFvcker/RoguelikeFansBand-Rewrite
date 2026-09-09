@@ -421,7 +421,7 @@ export type ShopDto = { id: string, nameKey: string, descriptionKey: string, cat
 
 export type HomeItemDto = { id: string, details?: InventoryItemDto | null, kindId: string, displayNameKey: string, quantity: number, inscription?: string | null, capturedActor?: CapturedActorDto | null, maximumQuantity: number, weightTenthsPound: number, fuel?: ItemFuelDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, };
 
-export type HomeDto = { id: string, nameKey: string, descriptionKey: string, entrancePosition: Position, entranceTerrainId: string, visited: boolean, playerAtEntrance: boolean, storedItems: Array<HomeItemDto>, depositItems: Array<HomeItemDto>, };
+export type HomeDto = { id: string, museum?: boolean, nameKey: string, descriptionKey: string, entrancePosition: Position, entranceTerrainId: string, visited: boolean, playerAtEntrance: boolean, storedItems: Array<HomeItemDto>, depositItems: Array<HomeItemDto>, };
 
 export type FacilityMembershipDto = "visitor" | "member" | "owner";
 

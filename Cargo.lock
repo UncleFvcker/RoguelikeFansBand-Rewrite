@@ -2785,6 +2785,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-wdio-webdriver",
+ "uuid",
 ]
 
 [[package]]

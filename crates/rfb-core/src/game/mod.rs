@@ -136,6 +136,7 @@ mod monster_ecology;
 mod movement;
 // M2 deliberately establishes this core transaction boundary before any item
 // effect is allowed to call it; Polymorph remains blocked until its own batch.
+mod museum;
 #[allow(dead_code)]
 mod mutations;
 mod persistence;
@@ -152,6 +153,7 @@ mod status_effects;
 mod tasks;
 mod terrain;
 pub(crate) mod town;
+pub use museum::SharedMuseum;
 mod trait_details;
 mod travel;
 mod turn;

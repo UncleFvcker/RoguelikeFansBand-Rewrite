@@ -499,7 +499,8 @@ export class SessionShell {
       header.className = "native-save-header";
       const name = this.#dom.loadList.ownerDocument.createElement("span");
       name.className = "native-save-name";
-      name.textContent = summary.slotName;
+      name.textContent = summary.museumCheckpoint
+        ? this.#localization.format("museum-checkpoint-name", { name: summary.slotName }) : summary.slotName;
       const status = this.#dom.loadList.ownerDocument.createElement("span");
       status.className = `native-save-status native-save-status-${summary.status}`;
       status.textContent = this.#localization.format(sessionSaveStatusKey(summary.status));
@@ -532,7 +533,8 @@ export class SessionShell {
       );
       remove.disabled = this.#busy;
       remove.addEventListener("click", () => void this.#delete(summary));
-      actions.append(load, remove);
+      actions.append(load);
+      if (!summary.museumCheckpoint) actions.append(remove);
       row.append(header, metadata, actions);
       this.#dom.loadList.append(row);
     }
@@ -540,6 +542,7 @@ export class SessionShell {
   }
 
   #metadata(summary: NativeSaveSummary): string {
+    if (summary.museumCheckpoint) return this.#localization.format("museum-checkpoint-details", { turn: summary.turn ?? "?" });
     if (summary.turn === null || summary.savedAt === null) {
       return this.#localization.format("native-save-meta-unavailable");
     }

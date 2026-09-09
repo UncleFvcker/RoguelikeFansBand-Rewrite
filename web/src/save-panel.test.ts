@@ -14,4 +14,8 @@ test("native save panel preserves actionable error message categories", () => {
   assert.equal(nativeSaveErrorKey("native-save-write"), "native-save-error-write");
   assert.equal(nativeSaveErrorKey("native-save-lock"), "native-save-error-unavailable");
   assert.equal(nativeSaveErrorKey("unexpected"), "native-save-error-internal");
+  assert.equal(nativeSaveErrorKey("museum-collection-stale"), "museum-error-stale");
+  assert.equal(nativeSaveErrorKey("museum-character-stale"), "museum-error-character-stale");
+  assert.equal(nativeSaveErrorKey("museum-profile-mismatch"), "museum-error-profile");
+  assert.equal(nativeSaveErrorKey("museum-unbound-save"), "museum-error-unbound");
 });

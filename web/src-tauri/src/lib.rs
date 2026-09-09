@@ -3,20 +3,24 @@
 #[cfg(all(feature = "webdriver", not(debug_assertions)))]
 compile_error!("the webdriver feature is restricted to debug-only E2E builds");
 
-use std::sync::Mutex;
+use std::{path::PathBuf, sync::Mutex};
 
 use serde::Serialize;
 use tauri::Manager;
 
 use rfb_core::Game;
 use rfb_protocol::{
-    CharacterSummary, GameCommand, GameCommandEnvelope, GameSnapshot, GameUpdate, PROTOCOL_VERSION,
-    SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1,
+    CharacterSummary, GameCommand, GameCommandEnvelope, GameSnapshot, GameUpdate,
+    MuseumBindingSaveDto, PROTOCOL_VERSION, SAVE_HEADER_SCHEMA_VERSION, SaveHeaderV1,
 };
 use rfb_replay::ReplayRecorder;
 
 mod crash_diagnostics;
+mod museum_storage;
+#[cfg(test)]
+mod museum_storage_tests;
 mod native_storage;
+use museum_storage::MuseumStore;
 
 use crash_diagnostics::{
     CrashDiagnosticState, CrashDiagnosticStatus, CrashDiagnostics, DiagnosticMetadata,
@@ -27,18 +31,29 @@ use native_storage::{
     validate_slot_name,
 };
 
+#[derive(Clone)]
 struct GameSession {
     recorder: ReplayRecorder,
     created_at: String,
+    binding: MuseumBindingSaveDto,
+    museum_loaded: bool,
 }
 
-#[derive(Default)]
 struct AppState {
     session: Mutex<Option<GameSession>>,
     storage: Mutex<()>,
+    profile_root: PathBuf,
 }
 
 impl AppState {
+    fn new(profile_root: PathBuf) -> Self {
+        Self {
+            session: Mutex::new(None),
+            storage: Mutex::new(()),
+            profile_root,
+        }
+    }
+
     fn initialize(
         &self,
         seed: &str,
@@ -50,12 +65,20 @@ impl AppState {
         let seed = seed
             .parse::<u64>()
             .map_err(|error| format!("invalid seed: {error}"))?;
-        let recorder = ReplayRecorder::new(initial_game(seed, build_id, race_id, player_name)?);
-        let snapshot = recorder.game().snapshot();
-        self.replace_session(GameSession {
-            recorder,
+        let game = initial_game(seed, build_id, race_id, player_name)?;
+        let mut session = self.lock_session()?;
+        let mut store = MuseumStore::open(&self.profile_root)?;
+        let binding = store.new_character()?;
+        let mut next = GameSession {
+            recorder: ReplayRecorder::new(game),
             created_at,
-        })?;
+            binding,
+            museum_loaded: false,
+        };
+        next.sync_museum(&store)?;
+        let snapshot = next.recorder.game().snapshot();
+        store.commit()?;
+        *session = Some(next);
         Ok(snapshot)
     }
 
@@ -66,16 +89,77 @@ impl AppState {
         command: GameCommand,
     ) -> Result<GameUpdate, String> {
         let mut session = self.lock_session()?;
-        session
-            .as_mut()
-            .ok_or_else(|| "game session is not initialized".to_owned())?
+        let current = session.as_ref().ok_or("game session is not initialized")?;
+        let transfer = current.recorder.game().is_museum_transfer(&command);
+        let mut store = transfer
+            .then(|| MuseumStore::open(&self.profile_root))
+            .transpose()?;
+        if let Some(store) = &store {
+            store.ensure_current(&current.binding)?;
+            if current.binding.collection_revision != store.profile.revision {
+                return Err(
+                    "museum-collection-stale: refresh the museum before transferring".to_owned(),
+                );
+            }
+        }
+        let mut next = current.clone();
+        let mut update = next
             .recorder
             .dispatch_envelope(GameCommandEnvelope {
                 command_seq,
                 expected_revision,
                 command,
             })
-            .map_err(|error| error.to_string())
+            .map_err(|error| error.to_string())?;
+        if let Some(store) = &mut store {
+            if update
+                .events
+                .iter()
+                .any(|event| event.kind == "home.deposit" || event.kind == "home.withdraw")
+            {
+                let museum = next
+                    .recorder
+                    .game()
+                    .shared_museum()
+                    .ok_or("museum-unavailable")?;
+                // Validate the post-transfer character before making either owner durable.
+                Game::from_save(next.recorder.game().to_save()).map_err(|e| e.to_string())?;
+                next.binding.epoch = next
+                    .binding
+                    .epoch
+                    .checked_add(1)
+                    .ok_or("museum-epoch-exhausted")?;
+                store.profile.revision = store
+                    .profile
+                    .revision
+                    .checked_add(1)
+                    .ok_or("museum-revision-exhausted")?;
+                next.binding.collection_revision = store.profile.revision;
+                store.profile.museum = museum;
+                let checkpoint = next.encode(String::new(), update.player.name.clone())?;
+                let character = store
+                    .profile
+                    .characters
+                    .get_mut(&next.binding.character_id)
+                    .unwrap();
+                character.epoch = next.binding.epoch;
+                character.save = Some(checkpoint);
+                store.commit()?;
+            }
+        } else if !next.museum_loaded && next.recorder.game().has_shared_museum() {
+            let store = MuseumStore::open(&self.profile_root)?;
+            store.ensure_current(&next.binding)?;
+            next.sync_museum(&store)?;
+            let snapshot = next.recorder.game().snapshot();
+            update.homes = snapshot.homes;
+            update.items = snapshot.items;
+            update.inventory = snapshot.inventory;
+            update.equipment = snapshot.equipment;
+            update.player = snapshot.player;
+            update.state_hash = snapshot.state_hash;
+        }
+        *session = Some(next);
+        Ok(update)
     }
 
     fn save(&self, saved_at: String) -> Result<Vec<u8>, String> {
@@ -87,54 +171,73 @@ impl AppState {
         let session = session
             .as_ref()
             .ok_or_else(|| "game session is not initialized".to_owned())?;
-        let snapshot = session.recorder.game().snapshot();
-        let header = SaveHeaderV1 {
-            format: "rfb-save".to_owned(),
-            save_schema_version: SAVE_HEADER_SCHEMA_VERSION,
-            game_version: env!("CARGO_PKG_VERSION").to_owned(),
-            protocol_version: PROTOCOL_VERSION.to_owned(),
-            slot_name,
-            created_at: session.created_at.clone(),
-            saved_at,
-            character_summary: CharacterSummary {
-                display_name: snapshot.player.name.clone(),
-                level: snapshot.player.progress.level.into(),
-                location_key: session.recorder.game().location_key().to_owned(),
-                turn: snapshot.turn,
-            },
-            content_id: snapshot.content_id,
-            content_hash: snapshot.content_hash,
-            payload_encoding: "messagepack".to_owned(),
-        };
-        rfb_save::encode(&header, &session.recorder.game().to_save())
-            .map_err(|error| error.to_string())
+        let store = MuseumStore::open(&self.profile_root)?;
+        store.ensure_current(&session.binding)?;
+        session.encode(saved_at, slot_name)
     }
 
+    #[cfg(test)]
     fn load(&self, data: &[u8]) -> Result<GameSnapshot, String> {
-        let (header, payload) = rfb_save::decode(data).map_err(|error| error.to_string())?;
+        self.load_with_recovery(data).map(|(snapshot, _)| snapshot)
+    }
+
+    fn load_with_recovery(&self, data: &[u8]) -> Result<(GameSnapshot, bool), String> {
+        let mut session = self.lock_session()?;
+        let store = MuseumStore::open(&self.profile_root)?;
+        let (mut header, mut payload) =
+            rfb_save::decode(data).map_err(|error| error.to_string())?;
+        let binding = header
+            .museum_binding
+            .as_ref()
+            .ok_or("museum-unbound-save: start a new character")?;
+        let character = store.character(binding)?;
+        let character_id = binding.character_id;
+        let recovered = binding.epoch < character.epoch;
+        if recovered {
+            (header, payload) = rfb_save::decode(&store.checkpoint(binding.character_id)?)
+                .map_err(|e| e.to_string())?;
+        }
+        let binding = header.museum_binding.ok_or("museum-checkpoint-unbound")?;
+        if binding.character_id != character_id {
+            return Err("museum-checkpoint-mismatch".to_owned());
+        }
+        store.ensure_current(&binding)?;
         let game = Game::from_save(payload).map_err(|error| error.to_string())?;
-        let snapshot = game.snapshot();
-        self.replace_session(GameSession {
+        let museum_loaded = game.has_shared_museum();
+        let mut next = GameSession {
             recorder: ReplayRecorder::new(game),
             created_at: header.created_at,
-        })?;
+            binding,
+            museum_loaded,
+        };
+        next.sync_museum(&store)?;
+        let snapshot = next.recorder.game().snapshot();
+        *session = Some(next);
+        Ok((snapshot, recovered))
+    }
+
+    fn refresh_museum(&self) -> Result<GameSnapshot, String> {
+        let mut session = self.lock_session()?;
+        let current = session.as_ref().ok_or("game session is not initialized")?;
+        let store = MuseumStore::open(&self.profile_root)?;
+        store.ensure_current(&current.binding)?;
+        let mut next = current.clone();
+        next.sync_museum(&store)?;
+        let snapshot = next.recorder.game().snapshot();
+        *session = Some(next);
         Ok(snapshot)
     }
 
     fn export_replay(&self) -> Result<Vec<u8>, String> {
         let session = self.lock_session()?;
-        let session = session
-            .as_ref()
-            .ok_or_else(|| "game session is not initialized".to_owned())?;
+        let session = session.as_ref().ok_or("game session is not initialized")?;
         rfb_replay::encode(&session.recorder.replay_snapshot()).map_err(|error| error.to_string())
     }
 
     #[cfg(feature = "webdriver")]
     fn prepare_supply_e2e(&self, amount: u32) -> Result<GameSnapshot, String> {
         let mut session = self.lock_session()?;
-        let session = session
-            .as_mut()
-            .ok_or_else(|| "game session is not initialized".to_owned())?;
+        let session = session.as_mut().ok_or("game session is not initialized")?;
         let mut game = session.recorder.game().clone();
         game.debug_prepare_supply_e2e_gold(amount)
             .map_err(|error| error.to_string())?;
@@ -148,15 +251,60 @@ impl AppState {
             .map_err(|_| "game session lock is poisoned".to_owned())
     }
 
-    fn replace_session(&self, session: GameSession) -> Result<(), String> {
-        *self.lock_session()? = Some(session);
-        Ok(())
-    }
-
     fn lock_storage(&self) -> DesktopResult<std::sync::MutexGuard<'_, ()>> {
         self.storage
             .lock()
             .map_err(|_| DesktopCommandError::new("native-save-lock", "storage lock is poisoned"))
+    }
+}
+
+#[cfg(test)]
+impl Default for AppState {
+    fn default() -> Self {
+        Self::new(std::env::temp_dir().join(format!("rfb-museum-test-{}", uuid::Uuid::new_v4())))
+    }
+}
+
+impl GameSession {
+    fn sync_museum(&mut self, store: &MuseumStore) -> Result<(), String> {
+        if (!self.museum_loaded || self.binding.collection_revision != store.profile.revision)
+            && let Some(game) = self
+                .recorder
+                .game()
+                .with_shared_museum(&store.profile.museum)
+                .map_err(|e| e.to_string())?
+        {
+            // External profile input starts a new deterministic replay segment.
+            self.recorder = ReplayRecorder::new(game);
+            self.museum_loaded = true;
+            self.binding.collection_revision = store.profile.revision;
+        }
+        Ok(())
+    }
+
+    fn encode(&self, saved_at: String, slot_name: String) -> Result<Vec<u8>, String> {
+        let snapshot = self.recorder.game().snapshot();
+        let header = SaveHeaderV1 {
+            format: "rfb-save".to_owned(),
+            save_schema_version: SAVE_HEADER_SCHEMA_VERSION,
+            game_version: env!("CARGO_PKG_VERSION").to_owned(),
+            protocol_version: PROTOCOL_VERSION.to_owned(),
+            slot_name,
+            created_at: self.created_at.clone(),
+            saved_at,
+            character_summary: CharacterSummary {
+                display_name: snapshot.player.name.clone(),
+                level: snapshot.player.progress.level.into(),
+                location_key: self.recorder.game().location_key().to_owned(),
+                turn: snapshot.turn,
+            },
+            content_id: snapshot.content_id,
+            content_hash: snapshot.content_hash,
+            payload_encoding: "messagepack".to_owned(),
+            museum_binding: Some(self.binding.clone()),
+        };
+        rfb_save::encode(&header, &self.recorder.game().to_save())
+            .map_err(|error| error.to_string())
     }
 }
 
@@ -175,6 +323,7 @@ fn initial_game(
 struct NativeLoadResult {
     snapshot: GameSnapshot,
     recovery_backup: Option<u8>,
+    museum_recovered: bool,
 }
 
 fn native_store(app: &tauri::AppHandle) -> DesktopResult<NativeSaveStore> {
@@ -184,6 +333,15 @@ fn native_store(app: &tauri::AppHandle) -> DesktopResult<NativeSaveStore> {
         .map_err(|error| DesktopCommandError::new("native-save-directory", error.to_string()))?
         .join("saves");
     Ok(NativeSaveStore::new(root))
+}
+
+fn session_error(default_code: &str, error: String) -> DesktopCommandError {
+    let code = if error.starts_with("museum-") {
+        error.split(':').next().unwrap()
+    } else {
+        default_code
+    };
+    DesktopCommandError::new(code, error.clone())
 }
 
 fn desktop_log_path(app: &tauri::AppHandle) -> DesktopResult<std::path::PathBuf> {
@@ -259,8 +417,18 @@ fn save_game(state: tauri::State<'_, AppState>, saved_at: String) -> Result<Vec<
 }
 
 #[tauri::command]
-fn load_game(state: tauri::State<'_, AppState>, data: Vec<u8>) -> Result<GameSnapshot, String> {
-    state.load(&data)
+fn load_game(state: tauri::State<'_, AppState>, data: Vec<u8>) -> Result<NativeLoadResult, String> {
+    let (snapshot, museum_recovered) = state.load_with_recovery(&data)?;
+    Ok(NativeLoadResult {
+        snapshot,
+        museum_recovered,
+        recovery_backup: None,
+    })
+}
+
+#[tauri::command]
+fn refresh_museum(state: tauri::State<'_, AppState>) -> Result<GameSnapshot, String> {
+    state.refresh_museum()
 }
 
 #[tauri::command]
@@ -299,7 +467,17 @@ fn list_native_saves(
     state: tauri::State<'_, AppState>,
 ) -> DesktopResult<Vec<NativeSaveSummary>> {
     let _storage = state.lock_storage()?;
-    let result = native_store(&app)?.list();
+    let result: DesktopResult<Vec<NativeSaveSummary>> = (|| {
+        let mut summaries = native_store(&app)?.list()?;
+        let store = MuseumStore::open(&state.profile_root)
+            .map_err(|error| session_error("museum-read", error))?;
+        for (id, character) in &store.profile.characters {
+            if let Some(bytes) = &character.save {
+                summaries.push(native_storage::museum_checkpoint_summary(*id, bytes)?);
+            }
+        }
+        Ok(summaries)
+    })();
     if let Err(error) = &result {
         log_event(&app, "native-save-list-error", &error.code);
     }
@@ -319,9 +497,15 @@ fn save_native_game(
         let _storage = state.lock_storage()?;
         let store = native_store(&app)?;
         let slot_id = slot_id.map_or_else(|| store.create_slot_id(), Ok)?;
+        if museum_storage::checkpoint_id(&slot_id).is_some() {
+            return Err(DesktopCommandError::new(
+                "museum-checkpoint-read-only",
+                "save to a regular slot",
+            ));
+        }
         let bytes = state
             .save_named(saved_at, slot_name)
-            .map_err(|error| DesktopCommandError::new("native-save-encode", error))?;
+            .map_err(|error| session_error("native-save-encode", error))?;
         let summary = store.write(&slot_id, &bytes)?;
         log_event(&app, "native-save-written", &slot_id);
         Ok(summary)
@@ -340,10 +524,21 @@ fn load_native_game(
 ) -> DesktopResult<NativeLoadResult> {
     let result: DesktopResult<NativeLoadResult> = (|| {
         let _storage = state.lock_storage()?;
-        let loaded = native_store(&app)?.load(&slot_id)?;
-        let snapshot = state
-            .load(&loaded.bytes)
-            .map_err(|error| DesktopCommandError::new("native-save-load", error))?;
+        let loaded = if let Some(id) = museum_storage::checkpoint_id(&slot_id) {
+            let store = MuseumStore::open(&state.profile_root)
+                .map_err(|error| session_error("museum-read", error))?;
+            native_storage::NativeLoadedSave {
+                bytes: store
+                    .checkpoint(id)
+                    .map_err(|error| session_error("museum-read", error))?,
+                recovery_backup: None,
+            }
+        } else {
+            native_store(&app)?.load(&slot_id)?
+        };
+        let (snapshot, museum_recovered) = state
+            .load_with_recovery(&loaded.bytes)
+            .map_err(|error| session_error("native-save-load", error))?;
         log_event(
             &app,
             if loaded.recovery_backup.is_some() {
@@ -356,6 +551,7 @@ fn load_native_game(
         Ok(NativeLoadResult {
             snapshot,
             recovery_backup: loaded.recovery_backup,
+            museum_recovered,
         })
     })();
     if let Err(error) = &result {
@@ -372,6 +568,12 @@ fn delete_native_save(
 ) -> DesktopResult<()> {
     let result: DesktopResult<()> = (|| {
         let _storage = state.lock_storage()?;
+        if museum_storage::checkpoint_id(&slot_id).is_some() {
+            return Err(DesktopCommandError::new(
+                "museum-checkpoint-read-only",
+                "ownership checkpoints cannot be deleted",
+            ));
+        }
         native_store(&app)?.delete(&slot_id)?;
         log_event(&app, "native-save-deleted", &slot_id);
         Ok(())
@@ -395,6 +597,9 @@ pub fn run() {
 
     builder
         .setup(|app| {
+            app.manage(AppState::new(
+                app.path().app_local_data_dir()?.join("profile"),
+            ));
             let store = native_store(app.handle()).map_err(|error| {
                 std::io::Error::other(format!("{}: {}", error.code, error.detail))
             })?;
@@ -427,9 +632,9 @@ pub fn run() {
             append_log(&log_path, "desktop-start", env!("CARGO_PKG_VERSION"));
             Ok(())
         })
-        .manage(AppState::default())
         .invoke_handler(tauri::generate_handler![
             initialize_game,
+            refresh_museum,
             dispatch_game_command,
             prepare_supply_e2e,
             save_game,
@@ -499,7 +704,7 @@ mod tests {
             .expect("initial game should create"),
         )
         .expect("exported replay should verify");
-        let restored = AppState::default()
+        let restored = AppState::new(state.profile_root.clone())
             .load(&bytes)
             .expect("save should restore in a new native session");
 

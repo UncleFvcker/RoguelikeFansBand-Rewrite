@@ -2770,6 +2770,7 @@ impl Game {
                 deposit_items.sort_by(|left, right| left.id.cmp(&right.id));
                 HomeDto {
                     id: facility.id.clone(),
+                    museum: facility.reject_artifact_deposits,
                     name_key: facility.name_key.clone(),
                     description_key: facility.description_key.clone(),
                     entrance_position,

@@ -9,8 +9,8 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.234";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
+pub const PROTOCOL_VERSION: &str = "1.235";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 6;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 6;
 
 const fn default_actor_speed() -> u16 {
@@ -4228,6 +4228,8 @@ pub struct HomeItemDto {
 #[serde(rename_all = "camelCase")]
 pub struct HomeDto {
     pub id: String,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub museum: bool,
     pub name_key: String,
     pub description_key: String,
     pub entrance_position: Position,
@@ -5566,6 +5568,17 @@ pub struct SaveHeaderV1 {
     pub content_id: String,
     pub content_hash: String,
     pub payload_encoding: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub museum_binding: Option<MuseumBindingSaveDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct MuseumBindingSaveDto {
+    pub profile_id: String,
+    pub character_id: u64,
+    pub epoch: u64,
+    pub collection_revision: u64,
 }
 
 #[derive(Debug, Error)]

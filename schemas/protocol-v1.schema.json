@@ -10461,6 +10461,9 @@
         "id": {
           "type": "string"
         },
+        "museum": {
+          "type": "boolean"
+        },
         "nameKey": {
           "type": "string"
         },

@@ -166,6 +166,7 @@ mod tests {
             content_id: "rfb.test.content-v1".to_owned(),
             content_hash: "0".repeat(64),
             payload_encoding: "messagepack".to_owned(),
+            museum_binding: None,
         };
         let payload = SavePayloadV1 {
             schema_version: rfb_protocol::SAVE_PAYLOAD_SCHEMA_VERSION,

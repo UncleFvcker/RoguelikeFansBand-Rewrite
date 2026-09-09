@@ -323,6 +323,14 @@ const homePanel = new HomePanel({
   formatEvent,
   visibleItemName,
   inspectItem: (itemId) => inventoryPanel.openDetail(itemId),
+  refreshMuseum: async () => {
+    if (appState.busy) return;
+    appState.busy = true;
+    homePanel.updateActions();
+    try { applyLoadedSnapshot(await core.refreshMuseum()); }
+    catch (error) { showError(error); }
+    finally { appState.busy = false; homePanel.updateActions(); }
+  },
   beforeOpen: () => {
     playerUiLayout.closePage();
     inputController.cancelTargeting(false);
@@ -365,6 +373,10 @@ const sessionShell = new SessionShell({
   onStart: startNewSession,
   onLoad: async (result, summary) => {
     await initializeGameView(result.snapshot);
+    if (result.museumRecovered) {
+      addLocalizedMessage("message-museum-character-recovered", {}, "system");
+      return;
+    }
     if (result.recoveryBackup === null) {
       addLocalizedMessage(
         "message-native-save-loaded",
@@ -559,9 +571,9 @@ async function importSave(): Promise<void> {
   loadInput.value = "";
   if (!file) return;
   try {
-    const snapshot = await core.load(new Uint8Array(await file.arrayBuffer()));
-    applyLoadedSnapshot(snapshot);
-    addLocalizedMessage("message-save-loaded", undefined, "system");
+    const result = await core.load(new Uint8Array(await file.arrayBuffer()));
+    applyLoadedSnapshot(result.snapshot);
+    addLocalizedMessage(result.museumRecovered ? "message-museum-character-recovered" : "message-save-loaded", undefined, "system");
   } catch (error) {
     showError(error);
   }
@@ -798,6 +810,11 @@ function localizedMessageArgs(
 
 function showError(error: unknown): void {
   const message = error instanceof Error ? error.message : String(error);
+  const code = message.split(":")[0] ?? "";
+  if (code.startsWith("museum-")) {
+    addLocalizedMessage(nativeSaveErrorKey(code), {}, "error");
+    return;
+  }
   appState.connection = "error";
   renderConnectionStatus();
   addLocalizedMessage("message-error", { error: message }, "error");

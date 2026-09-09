@@ -17,9 +17,9 @@
 
 | 项目 | 值 | 来源 |
 | --- | --- | --- |
-| 协议 | 1.234 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| 协议 | 1.235 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | v109 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload | v5 / v6；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
+| save header / payload | v6 / v6；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
 | 内容包 | 1.384.10 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
 | 行为基线 | contract-v306，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
 | 内容定义数量 | 地形 209、角色 1402、物品 357、能力 1838、词缀 65、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
@@ -70,6 +70,8 @@
 城镇、荒野、地下城、任务、物品、怪物和变异已有内容与规则接入记录；本次五项流程验收不覆盖这些系统的所有内容。各专题中的历史“完成”保留其原有范围，不作为当前全量验收结论。
 
 莫里凡特已接入完整地图、九类商店、共享 Home、旅店和已支持建筑服务；巫术之塔的批量鉴定、盗贼公会的住宿/批量鉴定、旅店 2 金餐饮与驯兽师 1500 金怪物研究已开放。报价、饱食和研究知识由 Rust 处理，研究资料可保存恢复；传闻因原文再分发许可未明确而保持隐藏。Rogue 职业身份和完整原版服务计价仍未接入。入口、来源、适配差异及核心检查范围见[城镇适配](../docs/morivant-town-adaptation.md)，后续安排见[非任务建筑服务计划](morivant-building-services-plan-20260909.md)；这些增量未计入上述桌面验收。
+
+莫里凡特与萨洛斯博物馆已共享同一馆藏，支持存取、按已知信息检视、神器拒收和捐赠细节。Tauri 已接入本地资料中的跨角色馆藏事务、刷新、过期角色恢复和只读转移检查点；真实子进程验证了提交前后中断与竞争取出。存档绑定本地资料，从新角色开始；共享输入会开启新的回放段。详见[跨角色馆藏](../docs/shared-museum.md)。尚未进行本批桌面 UI E2E 或重建 standalone 产物。
 
 2026-09-09 地牢城镇方向增量：按权威 RFB master 修正水晶城堡入口世界坐标为 `(37,40)`，将入口守卫从玩家落点移至相邻位置，补充进入、返回地表与保存恢复的核心测试；修复无固定奖励地牢的来源校验。竞技场地牢仅新增来源计划，正式入口尚未开放，生成规则与最终奖励仍有依赖。具体范围与验证见[本批交付记录](dungeons-towns-source-audit-20260909.md)，不计为桌面或人工试玩验收。
 

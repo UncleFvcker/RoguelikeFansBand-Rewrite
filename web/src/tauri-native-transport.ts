@@ -39,17 +39,23 @@ export class TauriNativeTransport implements CoreTransport {
     return Uint8Array.from(bytes);
   }
 
-  async load(data: Uint8Array): Promise<GameSnapshot> {
-    const snapshot = await invoke<GameSnapshot>("load_game", {
+  async load(data: Uint8Array): Promise<{ snapshot: GameSnapshot; museumRecovered: boolean }> {
+    const result = await invoke<{ snapshot: GameSnapshot; museumRecovered: boolean }>("load_game", {
       data: Array.from(data),
     });
-    this.#syncSnapshot(snapshot);
-    return snapshot;
+    this.#syncSnapshot(result.snapshot);
+    return result;
   }
 
   async exportReplay(): Promise<Uint8Array> {
     const bytes = await invoke<number[]>("export_replay");
     return Uint8Array.from(bytes);
+  }
+
+  async refreshMuseum(): Promise<GameSnapshot> {
+    const snapshot = await invoke<GameSnapshot>("refresh_museum");
+    this.#syncSnapshot(snapshot);
+    return snapshot;
   }
 
   async prepareSupplyE2e(amount: number): Promise<GameSnapshot> {

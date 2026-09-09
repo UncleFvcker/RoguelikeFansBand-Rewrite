@@ -1331,6 +1331,7 @@ fn save_round_trip(game: &Game) -> Result<String, ContractError> {
         content_id: snapshot.content_id.clone(),
         content_hash: snapshot.content_hash.clone(),
         payload_encoding: "messagepack".to_owned(),
+        museum_binding: None,
     };
     let bytes = rfb_save::encode(&header, &game.to_save())?;
     let (_, payload) = rfb_save::decode(&bytes)?;
