@@ -2003,6 +2003,7 @@ impl Game {
         let materialization = quantity_succeeds
             .then(|| {
                 super::ego::roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    rfb_protocol::ItemEnchantmentsDto::default(),
                     &mut self.rng,
                     definition,
                     self.content.affix_definitions(),

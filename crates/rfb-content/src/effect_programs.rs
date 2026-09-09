@@ -221,11 +221,6 @@ pub(super) fn validate_effect_program_catalog(
         .iter()
         .map(|resource| resource.id.clone())
         .collect::<BTreeSet<_>>();
-    let affix_ids = content
-        .affixes
-        .iter()
-        .map(|affix| affix.id.clone())
-        .collect::<BTreeSet<_>>();
     let loot_table_ids = content
         .loot_tables
         .iter()
@@ -239,7 +234,6 @@ pub(super) fn validate_effect_program_catalog(
             &actor_tag_values,
             &item_tag_values,
             &resource_ids,
-            &affix_ids,
             &loot_table_ids,
         ) {
             return Err(ContentError::InvalidEffectProgram(id.clone()));

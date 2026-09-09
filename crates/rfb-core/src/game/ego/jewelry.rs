@@ -18,409 +18,6 @@ fn level_check(rng: &mut RfbRng, power: u16, level: i32) -> bool {
     level > 0 && rng.bounded((i32::from(power) * 100 / level).max(1) as u64) < 100
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::{game::Game, state::ItemLocation};
-
-    #[test]
-    fn jewelry_all_seventeen_egos_materialize_and_round_trip_both_power_levels() {
-        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
-        let mut seen = BTreeSet::new();
-        for kind in ["demo.item.ring", "demo.item.amulet"] {
-            game.debug_add_generated_inventory_item(kind, kind, 50)
-                .unwrap();
-            let template = game.items.last().unwrap().clone();
-            let definition = game.content.item(kind).unwrap();
-            for affix in game.content.affix_definitions().filter(|affix| {
-                affix.rfb_ego.as_ref().is_some_and(|ego| {
-                    can_apply(ego.source_index, definition.rfb_base_kind.unwrap().tval)
-                })
-            }) {
-                let source = affix.rfb_ego.as_ref().unwrap().source_index;
-                seen.insert(source);
-                for seed in 1..=80 {
-                    for power in [1, 2] {
-                        let result = materialize(
-                            &mut RfbRng::seeded(seed),
-                            definition,
-                            affix,
-                            (seed % 100 + 1) as u16,
-                            power,
-                        )
-                        .unwrap();
-                        let mut item = template.clone();
-                        item.quality = rfb_protocol::ItemQualityDto::Exceptional;
-                        result.apply_to(&mut item);
-                        assert!(
-                            item.rolled_affixes
-                                .iter()
-                                .any(RolledAffixState::has_instance_state),
-                            "{source}"
-                        );
-                        let dto =
-                            crate::save::inventory_to_save(std::slice::from_ref(&item)).remove(0);
-                        assert_eq!(
-                            crate::save::inventory_item_from_dto(dto, &game.content)
-                                .unwrap_or_else(|error| panic!("{source}/{seed}/{power}: {error}")),
-                            item
-                        );
-                    }
-                }
-            }
-        }
-        assert_eq!(
-            seen,
-            [200, 201]
-                .into_iter()
-                .chain(205..=211)
-                .chain(220..=227)
-                .collect()
-        );
-    }
-
-    #[test]
-    fn jewelry_natural_selection_includes_fifteen_egos_and_excludes_forced_rings() {
-        let game = Game::new_with_build(7, "demo.build.warrior").unwrap();
-        let mut seen = BTreeSet::new();
-        for kind in ["demo.item.ring", "demo.item.amulet"] {
-            let definition = game.content.item(kind).unwrap();
-            for seed in 1..=1500 {
-                let result = roll(
-                    &game.content,
-                    &mut RfbRng::seeded(seed),
-                    definition,
-                    (seed % 100 + 1) as u16,
-                    1,
-                )
-                .unwrap();
-                seen.insert(
-                    game.content
-                        .affix(&result.affix_ids[0])
-                        .unwrap()
-                        .rfb_ego
-                        .as_ref()
-                        .unwrap()
-                        .source_index,
-                );
-            }
-        }
-        assert_eq!(
-            seen,
-            [200, 201]
-                .into_iter()
-                .chain(205..=209)
-                .chain(220..=227)
-                .collect()
-        );
-    }
-
-    #[test]
-    fn jewelry_spell_damage_and_weapon_mastery_reach_equipped_consumers() {
-        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
-        game.debug_add_generated_inventory_item("test.jewelry", "demo.item.ring", 50)
-            .unwrap();
-        let item = game.items.last_mut().unwrap();
-        item.location = ItemLocation::Equipped {
-            slot_id: game
-                .body_slots
-                .iter()
-                .find(|slot| slot.slot_type == "ring")
-                .unwrap()
-                .id
-                .clone(),
-        };
-        item.affix_ids = vec!["rfb-legacy.affix.wizardry-ring".to_owned()];
-        item.enchantments.to_damage = 15;
-        assert_eq!(game.armor_spell_damage_bonus(), 15);
-        let before = game.player_melee_profile(&game.player_derived_stats());
-        let item = game.items.last_mut().unwrap();
-        item.affix_ids = vec!["rfb-legacy.affix.combat-ring".to_owned()];
-        item.rolled_affixes = vec![RolledAffixState {
-            affix_id: item.affix_ids[0].clone(),
-            properties: AffixPropertyBundleDefinition {
-                equipment_bonuses: rfb_content::EquipmentBonuses {
-                    weapon_dice_bonus: 2,
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            ..Default::default()
-        }];
-        let after = game.player_melee_profile(&game.player_derived_stats());
-        assert_eq!(game.armor_spell_damage_bonus(), 0);
-        assert_eq!(after.damage_dice, before.damage_dice + 2);
-        assert_eq!(after.to_damage, before.to_damage + 15);
-    }
-
-    #[test]
-    fn jewelry_ring_bonuses_follow_the_weapon_hand_and_two_handed_grip() {
-        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
-        let weapon_id = game.equipped_melee_weapons()[0].id.clone();
-        let offhand_slot = game
-            .body_slots
-            .iter()
-            .find(|slot| slot.slot_type == "shield")
-            .unwrap()
-            .id
-            .clone();
-        game.items.retain(|item| !matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &offhand_slot));
-        let weapon = game
-            .items
-            .iter_mut()
-            .find(|item| item.id == weapon_id)
-            .unwrap();
-        weapon.kind_id = "demo.item.dagger".to_owned();
-        game.debug_add_generated_inventory_item("test.ring", "demo.item.ring", 50)
-            .unwrap();
-        let ring = game.items.last_mut().unwrap();
-        ring.location = ItemLocation::Equipped {
-            slot_id: game
-                .body_slots
-                .iter()
-                .filter(|slot| slot.slot_type == "ring")
-                .nth(1)
-                .unwrap()
-                .id
-                .clone(),
-        };
-        ring.affix_ids = vec!["rfb-legacy.affix.combat-ring".to_owned()];
-        ring.enchantments = ItemEnchantmentsDto {
-            to_hit: 9,
-            to_damage: 12,
-            to_armor: 0,
-        };
-        ring.rolled_affixes = vec![RolledAffixState {
-            affix_id: ring.affix_ids[0].clone(),
-            properties: AffixPropertyBundleDefinition {
-                equipment_bonuses: rfb_content::EquipmentBonuses {
-                    weapon_dice_bonus: 2,
-                    melee_attacks_delta_percent: 50,
-                    ..Default::default()
-                },
-                brands: [WeaponBrand::Fire].into_iter().collect(),
-                ..Default::default()
-            },
-            ..Default::default()
-        }];
-        let dagger = game.player_melee_profile(&game.player_derived_stats());
-        game.items
-            .iter_mut()
-            .find(|item| item.id == weapon_id)
-            .unwrap()
-            .kind_id = "demo.item.long-sword".to_owned();
-        let two_handed = game.player_melee_profile(&game.player_derived_stats());
-        assert_eq!(two_handed.damage_dice, 4);
-        assert_eq!(two_handed.to_damage, dagger.to_damage + 12);
-        assert_eq!(two_handed.extra_attack_chance_percent, 50);
-        game.debug_add_generated_inventory_item("test.shield", "demo.item.small-metal-shield", 1)
-            .unwrap();
-        let shield = game.items.last_mut().unwrap();
-        shield.affix_ids.clear();
-        shield.rolled_affixes.clear();
-        shield.location = ItemLocation::Equipped {
-            slot_id: offhand_slot,
-        };
-        let shielded = game.player_melee_profile(&game.player_derived_stats());
-        assert_eq!(shielded.damage_dice, 2);
-        assert_eq!(shielded.extra_attack_chance_percent, 0);
-        assert_eq!(shielded.to_damage, two_handed.to_damage - 12);
-        game.items.last_mut().unwrap().kind_id = "demo.item.dagger".to_owned();
-        let dual = game.player_melee_profiles(&game.player_derived_stats());
-        assert_eq!(dual[0].damage_dice, 2);
-        assert_eq!(dual[0].extra_attack_chance_percent, 0);
-        assert_eq!(dual[1].damage_dice, 3);
-        assert_eq!(dual[1].extra_attack_chance_percent, 50);
-    }
-
-    #[test]
-    fn jewelry_anti_teleport_stops_actual_item_travel_and_round_trips() {
-        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
-        game.debug_add_generated_inventory_item("test.amulet", "demo.item.amulet", 70)
-            .unwrap();
-        let item = game.items.last_mut().unwrap();
-        item.location = ItemLocation::Equipped {
-            slot_id: game
-                .body_slots
-                .iter()
-                .find(|slot| slot.slot_type == "amulet")
-                .unwrap()
-                .id
-                .clone(),
-        };
-        item.quality = rfb_protocol::ItemQualityDto::Exceptional;
-        item.activation = None;
-        item.charges = None;
-        item.device_recovery_progress = 0;
-        item.affix_ids = vec!["rfb-legacy.affix.barbarian-talisman".to_owned()];
-        item.rolled_affixes = vec![RolledAffixState {
-            affix_id: item.affix_ids[0].clone(),
-            properties: AffixPropertyBundleDefinition {
-                passives: [Passive::AntiTeleport, Passive::AntiSummoning]
-                    .into_iter()
-                    .collect(),
-                ..Default::default()
-            },
-            ..Default::default()
-        }];
-        let before = game.player.position;
-        let destination = game.random_teleport_candidates(10)[0];
-        game.resolve_item_random_teleport(
-            "test".to_owned(),
-            None,
-            vec![destination],
-            &mut Vec::new(),
-            &mut BTreeSet::new(),
-        );
-        assert_eq!(game.player.position, before);
-        assert!(game.player_has_anti_teleport());
-        let blocked = (0..300)
-            .filter(|_| game.equipment_blocks_summoning())
-            .count();
-        assert!((150..=250).contains(&blocked));
-        let candidate = game
-            .content
-            .actor_definitions()
-            .find(|actor| {
-                actor.role == rfb_content::ActorRole::Monster
-                    && actor.level == 1
-                    && !actor.tags.iter().any(|tag| tag == "unique")
-            })
-            .unwrap()
-            .id
-            .clone();
-        let blocked_seed = (1..)
-            .find(|seed| RfbRng::seeded(*seed).bounded(3) != 0)
-            .unwrap();
-        for is_spell in [false, true] {
-            game.rng = RfbRng::seeded(blocked_seed);
-            let resolution = game.resolve_category_summon(
-                crate::game::CategorySummonSpec {
-                    is_spell,
-                    source_id: "test.summon",
-                    owner_id: "test",
-                    category: "any-monster",
-                    count_dice: 0,
-                    count_sides: 0,
-                    count_bonus: 1,
-                    maximum_count: Some(1),
-                    hostile: true,
-                    group_chance_percent: 0,
-                    group_count_dice: 0,
-                    group_count_sides: 0,
-                    group_count_bonus: 1,
-                    duration_turns: 0,
-                },
-                vec![candidate.clone()],
-                vec![destination],
-                &mut BTreeSet::new(),
-            );
-            assert_eq!(resolution.entity_ids.len(), usize::from(!is_spell));
-        }
-        let restored = Game::from_save(game.to_save()).unwrap();
-        assert!(restored.player_has_anti_teleport());
-        game.items.last_mut().unwrap().location = ItemLocation::Inventory;
-        assert!(!game.equipment_blocks_summoning());
-        game.resolve_item_random_teleport(
-            "test".to_owned(),
-            None,
-            vec![destination],
-            &mut Vec::new(),
-            &mut BTreeSet::new(),
-        );
-        assert_eq!(game.player.position, destination);
-    }
-
-    #[test]
-    fn jewelry_sacred_activations_execute_holiness_star_ball_and_starburst() {
-        for token in ["holiness", "star-ball", "starburst"] {
-            let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
-            game.entities.clear();
-            game.debug_add_generated_inventory_item("test.amulet", "demo.item.amulet", 70)
-                .unwrap();
-            let affix = game
-                .content
-                .affix("rfb-legacy.affix.sacred-pendant")
-                .unwrap();
-            let profile = affix
-                .device_generation
-                .as_ref()
-                .unwrap()
-                .activations
-                .iter()
-                .find(|profile| profile.id.ends_with(&format!("-{token}")))
-                .unwrap();
-            let (activation, charges) = materialize_rfb_activation(profile);
-            let item = game.items.last_mut().unwrap();
-            item.affix_ids = vec![affix.id.clone()];
-            item.rolled_affixes.clear();
-            item.intrinsic_properties = Default::default();
-            item.location = ItemLocation::Equipped {
-                slot_id: game
-                    .body_slots
-                    .iter()
-                    .find(|slot| slot.slot_type == "amulet")
-                    .unwrap()
-                    .id
-                    .clone(),
-            };
-            item.activation = Some(activation);
-            item.charges = Some(charges);
-            game.player.hp = 1;
-            let mut events = Vec::new();
-            let mut changed = BTreeSet::new();
-            for _ in 0..100 {
-                game.use_inventory_item(
-                    "test.amulet",
-                    None,
-                    None,
-                    &mut events,
-                    &mut changed,
-                    &mut Vec::new(),
-                )
-                .unwrap();
-                if game.items.last().unwrap().charges.unwrap().current == 0 {
-                    break;
-                }
-            }
-            assert_eq!(
-                game.items.last().unwrap().charges.unwrap().current,
-                0,
-                "{token}"
-            );
-            if token == "holiness" {
-                assert!(game.player.hp > 1);
-                assert!(
-                    game.player
-                        .statuses
-                        .iter()
-                        .any(|status| status.kind_id == crate::effect::STATUS_PROTECTION_FROM_EVIL)
-                );
-            } else {
-                let blasts = events
-                    .iter()
-                    .filter(|event| {
-                        matches!(event, crate::event::DomainEvent::AbilityAreaDamage { .. })
-                    })
-                    .count();
-                assert!(
-                    blasts >= if token == "star-ball" { 5 } else { 1 },
-                    "{token}: {blasts}"
-                );
-                assert!(!changed.is_empty());
-            }
-            if token == "starburst" {
-                assert!(
-                    game.player
-                        .statuses
-                        .iter()
-                        .any(|status| status.kind_id == crate::effect::STATUS_BLINDNESS)
-                );
-            }
-        }
-    }
-}
-
 pub(in crate::game) fn roll(
     content: &ContentCatalog,
     rng: &mut RfbRng,
@@ -955,6 +552,7 @@ fn activation_token(affix: &AffixDefinition, token: &str) -> Option<usize> {
         })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn amulet(
     rng: &mut RfbRng,
     index: u32,
@@ -1346,6 +944,7 @@ fn add_lordly_resistance(rng: &mut RfbRng, properties: &mut AffixPropertyBundleD
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn elemental(
     rng: &mut RfbRng,
     properties: &mut AffixPropertyBundleDefinition,
@@ -1429,10 +1028,10 @@ fn elemental(
                     ),
                 };
                 add_resistance(properties, element);
-                if let Some(aura) = aura {
-                    if one_in(rng, 3) {
-                        properties.passives.insert(aura);
-                    }
+                if let Some(aura) = aura
+                    && one_in(rng, 3)
+                {
+                    properties.passives.insert(aura);
                 }
                 if one_in(rng, 7) {
                     properties.brands.insert(brand);
@@ -1450,6 +1049,409 @@ fn elemental(
         add_one_elemental_resistance(rng, properties);
         if one_in(rng, 3) {
             add_one_elemental_resistance(rng, properties);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{game::Game, state::ItemLocation};
+
+    #[test]
+    fn jewelry_all_seventeen_egos_materialize_and_round_trip_both_power_levels() {
+        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        let mut seen = BTreeSet::new();
+        for kind in ["demo.item.ring", "demo.item.amulet"] {
+            game.debug_add_generated_inventory_item(kind, kind, 50)
+                .unwrap();
+            let template = game.items.last().unwrap().clone();
+            let definition = game.content.item(kind).unwrap();
+            for affix in game.content.affix_definitions().filter(|affix| {
+                affix.rfb_ego.as_ref().is_some_and(|ego| {
+                    can_apply(ego.source_index, definition.rfb_base_kind.unwrap().tval)
+                })
+            }) {
+                let source = affix.rfb_ego.as_ref().unwrap().source_index;
+                seen.insert(source);
+                for seed in 1..=80 {
+                    for power in [1, 2] {
+                        let result = materialize(
+                            &mut RfbRng::seeded(seed),
+                            definition,
+                            affix,
+                            (seed % 100 + 1) as u16,
+                            power,
+                        )
+                        .unwrap();
+                        let mut item = template.clone();
+                        item.quality = rfb_protocol::ItemQualityDto::Exceptional;
+                        result.apply_to(&mut item);
+                        assert!(
+                            item.rolled_affixes
+                                .iter()
+                                .any(RolledAffixState::has_instance_state),
+                            "{source}"
+                        );
+                        let dto =
+                            crate::save::inventory_to_save(std::slice::from_ref(&item)).remove(0);
+                        assert_eq!(
+                            crate::save::inventory_item_from_dto(dto, &game.content)
+                                .unwrap_or_else(|error| panic!("{source}/{seed}/{power}: {error}")),
+                            item
+                        );
+                    }
+                }
+            }
+        }
+        assert_eq!(
+            seen,
+            [200, 201]
+                .into_iter()
+                .chain(205..=211)
+                .chain(220..=227)
+                .collect()
+        );
+    }
+
+    #[test]
+    fn jewelry_natural_selection_includes_fifteen_egos_and_excludes_forced_rings() {
+        let game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        let mut seen = BTreeSet::new();
+        for kind in ["demo.item.ring", "demo.item.amulet"] {
+            let definition = game.content.item(kind).unwrap();
+            for seed in 1..=1500 {
+                let result = roll(
+                    &game.content,
+                    &mut RfbRng::seeded(seed),
+                    definition,
+                    (seed % 100 + 1) as u16,
+                    1,
+                )
+                .unwrap();
+                seen.insert(
+                    game.content
+                        .affix(&result.affix_ids[0])
+                        .unwrap()
+                        .rfb_ego
+                        .as_ref()
+                        .unwrap()
+                        .source_index,
+                );
+            }
+        }
+        assert_eq!(
+            seen,
+            [200, 201]
+                .into_iter()
+                .chain(205..=209)
+                .chain(220..=227)
+                .collect()
+        );
+    }
+
+    #[test]
+    fn jewelry_spell_damage_and_weapon_mastery_reach_equipped_consumers() {
+        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        game.debug_add_generated_inventory_item("test.jewelry", "demo.item.ring", 50)
+            .unwrap();
+        let item = game.items.last_mut().unwrap();
+        item.location = ItemLocation::Equipped {
+            slot_id: game
+                .body_slots
+                .iter()
+                .find(|slot| slot.slot_type == "ring")
+                .unwrap()
+                .id
+                .clone(),
+        };
+        item.affix_ids = vec!["rfb-legacy.affix.wizardry-ring".to_owned()];
+        item.enchantments.to_damage = 15;
+        assert_eq!(game.armor_spell_damage_bonus(), 15);
+        let before = game.player_melee_profile(&game.player_derived_stats());
+        let item = game.items.last_mut().unwrap();
+        item.affix_ids = vec!["rfb-legacy.affix.combat-ring".to_owned()];
+        item.rolled_affixes = vec![RolledAffixState {
+            affix_id: item.affix_ids[0].clone(),
+            properties: AffixPropertyBundleDefinition {
+                equipment_bonuses: rfb_content::EquipmentBonuses {
+                    weapon_dice_bonus: 2,
+                    ..Default::default()
+                },
+                ..Default::default()
+            },
+            ..Default::default()
+        }];
+        let after = game.player_melee_profile(&game.player_derived_stats());
+        assert_eq!(game.armor_spell_damage_bonus(), 0);
+        assert_eq!(after.damage_dice, before.damage_dice + 2);
+        assert_eq!(after.to_damage, before.to_damage + 15);
+    }
+
+    #[test]
+    fn jewelry_ring_bonuses_follow_the_weapon_hand_and_two_handed_grip() {
+        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        let weapon_id = game.equipped_melee_weapons()[0].id.clone();
+        let offhand_slot = game
+            .body_slots
+            .iter()
+            .find(|slot| slot.slot_type == "shield")
+            .unwrap()
+            .id
+            .clone();
+        game.items.retain(|item| !matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &offhand_slot));
+        let weapon = game
+            .items
+            .iter_mut()
+            .find(|item| item.id == weapon_id)
+            .unwrap();
+        weapon.kind_id = "demo.item.dagger".to_owned();
+        game.debug_add_generated_inventory_item("test.ring", "demo.item.ring", 50)
+            .unwrap();
+        let ring = game.items.last_mut().unwrap();
+        ring.location = ItemLocation::Equipped {
+            slot_id: game
+                .body_slots
+                .iter()
+                .filter(|slot| slot.slot_type == "ring")
+                .nth(1)
+                .unwrap()
+                .id
+                .clone(),
+        };
+        ring.affix_ids = vec!["rfb-legacy.affix.combat-ring".to_owned()];
+        ring.enchantments = ItemEnchantmentsDto {
+            to_hit: 9,
+            to_damage: 12,
+            to_armor: 0,
+        };
+        ring.rolled_affixes = vec![RolledAffixState {
+            affix_id: ring.affix_ids[0].clone(),
+            properties: AffixPropertyBundleDefinition {
+                equipment_bonuses: rfb_content::EquipmentBonuses {
+                    weapon_dice_bonus: 2,
+                    melee_attacks_delta_percent: 50,
+                    ..Default::default()
+                },
+                brands: [WeaponBrand::Fire].into_iter().collect(),
+                ..Default::default()
+            },
+            ..Default::default()
+        }];
+        let dagger = game.player_melee_profile(&game.player_derived_stats());
+        game.items
+            .iter_mut()
+            .find(|item| item.id == weapon_id)
+            .unwrap()
+            .kind_id = "demo.item.long-sword".to_owned();
+        let two_handed = game.player_melee_profile(&game.player_derived_stats());
+        assert_eq!(two_handed.damage_dice, 4);
+        assert_eq!(two_handed.to_damage, dagger.to_damage + 12);
+        assert_eq!(two_handed.extra_attack_chance_percent, 50);
+        game.debug_add_generated_inventory_item("test.shield", "demo.item.small-metal-shield", 1)
+            .unwrap();
+        let shield = game.items.last_mut().unwrap();
+        shield.affix_ids.clear();
+        shield.rolled_affixes.clear();
+        shield.location = ItemLocation::Equipped {
+            slot_id: offhand_slot,
+        };
+        let shielded = game.player_melee_profile(&game.player_derived_stats());
+        assert_eq!(shielded.damage_dice, 2);
+        assert_eq!(shielded.extra_attack_chance_percent, 0);
+        assert_eq!(shielded.to_damage, two_handed.to_damage - 12);
+        game.items.last_mut().unwrap().kind_id = "demo.item.dagger".to_owned();
+        let dual = game.player_melee_profiles(&game.player_derived_stats());
+        assert_eq!(dual[0].damage_dice, 2);
+        assert_eq!(dual[0].extra_attack_chance_percent, 0);
+        assert_eq!(dual[1].damage_dice, 3);
+        assert_eq!(dual[1].extra_attack_chance_percent, 50);
+    }
+
+    #[test]
+    fn jewelry_anti_teleport_stops_actual_item_travel_and_round_trips() {
+        let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+        game.debug_add_generated_inventory_item("test.amulet", "demo.item.amulet", 70)
+            .unwrap();
+        let item = game.items.last_mut().unwrap();
+        item.location = ItemLocation::Equipped {
+            slot_id: game
+                .body_slots
+                .iter()
+                .find(|slot| slot.slot_type == "amulet")
+                .unwrap()
+                .id
+                .clone(),
+        };
+        item.quality = rfb_protocol::ItemQualityDto::Exceptional;
+        item.activation = None;
+        item.charges = None;
+        item.device_recovery_progress = 0;
+        item.affix_ids = vec!["rfb-legacy.affix.barbarian-talisman".to_owned()];
+        item.rolled_affixes = vec![RolledAffixState {
+            affix_id: item.affix_ids[0].clone(),
+            properties: AffixPropertyBundleDefinition {
+                passives: [Passive::AntiTeleport, Passive::AntiSummoning]
+                    .into_iter()
+                    .collect(),
+                ..Default::default()
+            },
+            ..Default::default()
+        }];
+        let before = game.player.position;
+        let destination = game.random_teleport_candidates(10)[0];
+        game.resolve_item_random_teleport(
+            "test".to_owned(),
+            None,
+            vec![destination],
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+        );
+        assert_eq!(game.player.position, before);
+        assert!(game.player_has_anti_teleport());
+        let blocked = (0..300)
+            .filter(|_| game.equipment_blocks_summoning())
+            .count();
+        assert!((150..=250).contains(&blocked));
+        let candidate = game
+            .content
+            .actor_definitions()
+            .find(|actor| {
+                actor.role == rfb_content::ActorRole::Monster
+                    && actor.level == 1
+                    && !actor.tags.iter().any(|tag| tag == "unique")
+            })
+            .unwrap()
+            .id
+            .clone();
+        let blocked_seed = (1..)
+            .find(|seed| RfbRng::seeded(*seed).bounded(3) != 0)
+            .unwrap();
+        for is_spell in [false, true] {
+            game.rng = RfbRng::seeded(blocked_seed);
+            let resolution = game.resolve_category_summon(
+                crate::game::CategorySummonSpec {
+                    is_spell,
+                    source_id: "test.summon",
+                    owner_id: "test",
+                    category: "any-monster",
+                    count_dice: 0,
+                    count_sides: 0,
+                    count_bonus: 1,
+                    maximum_count: Some(1),
+                    hostile: true,
+                    group_chance_percent: 0,
+                    group_count_dice: 0,
+                    group_count_sides: 0,
+                    group_count_bonus: 1,
+                    duration_turns: 0,
+                },
+                vec![candidate.clone()],
+                vec![destination],
+                &mut BTreeSet::new(),
+            );
+            assert_eq!(resolution.entity_ids.len(), usize::from(!is_spell));
+        }
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert!(restored.player_has_anti_teleport());
+        game.items.last_mut().unwrap().location = ItemLocation::Inventory;
+        assert!(!game.equipment_blocks_summoning());
+        game.resolve_item_random_teleport(
+            "test".to_owned(),
+            None,
+            vec![destination],
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+        );
+        assert_eq!(game.player.position, destination);
+    }
+
+    #[test]
+    fn jewelry_sacred_activations_execute_holiness_star_ball_and_starburst() {
+        for token in ["holiness", "star-ball", "starburst"] {
+            let mut game = Game::new_with_build(7, "demo.build.warrior").unwrap();
+            game.entities.clear();
+            game.debug_add_generated_inventory_item("test.amulet", "demo.item.amulet", 70)
+                .unwrap();
+            let affix = game
+                .content
+                .affix("rfb-legacy.affix.sacred-pendant")
+                .unwrap();
+            let profile = affix
+                .device_generation
+                .as_ref()
+                .unwrap()
+                .activations
+                .iter()
+                .find(|profile| profile.id.ends_with(&format!("-{token}")))
+                .unwrap();
+            let (activation, charges) = materialize_rfb_activation(profile);
+            let item = game.items.last_mut().unwrap();
+            item.affix_ids = vec![affix.id.clone()];
+            item.rolled_affixes.clear();
+            item.intrinsic_properties = Default::default();
+            item.location = ItemLocation::Equipped {
+                slot_id: game
+                    .body_slots
+                    .iter()
+                    .find(|slot| slot.slot_type == "amulet")
+                    .unwrap()
+                    .id
+                    .clone(),
+            };
+            item.activation = Some(activation);
+            item.charges = Some(charges);
+            game.player.hp = 1;
+            let mut events = Vec::new();
+            let mut changed = BTreeSet::new();
+            for _ in 0..100 {
+                game.use_inventory_item(
+                    "test.amulet",
+                    None,
+                    None,
+                    &mut events,
+                    &mut changed,
+                    &mut Vec::new(),
+                )
+                .unwrap();
+                if game.items.last().unwrap().charges.unwrap().current == 0 {
+                    break;
+                }
+            }
+            assert_eq!(
+                game.items.last().unwrap().charges.unwrap().current,
+                0,
+                "{token}"
+            );
+            if token == "holiness" {
+                assert!(game.player.hp > 1);
+                assert!(
+                    game.player
+                        .statuses
+                        .iter()
+                        .any(|status| status.kind_id == crate::effect::STATUS_PROTECTION_FROM_EVIL)
+                );
+            } else {
+                let blasts = events
+                    .iter()
+                    .filter(|event| {
+                        matches!(event, crate::event::DomainEvent::AbilityAreaDamage { .. })
+                    })
+                    .count();
+                assert!(
+                    blasts >= if token == "star-ball" { 5 } else { 1 },
+                    "{token}: {blasts}"
+                );
+                assert!(!changed.is_empty());
+            }
+            if token == "starburst" {
+                assert!(
+                    game.player
+                        .statuses
+                        .iter()
+                        .any(|status| status.kind_id == crate::effect::STATUS_BLINDNESS)
+                );
+            }
         }
     }
 }

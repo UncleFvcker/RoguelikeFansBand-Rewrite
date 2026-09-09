@@ -2185,21 +2185,13 @@
     {"itemKindId":"demo.item.mithril-shod-boots","minDepth":50,"quantity":1,"weight":50},
     {"itemKindId":"demo.item.iron-crown","minDepth":30,"quantity":1,"weight":100},
     {"itemKindId":"demo.item.quiver","minDepth":20,"quantity":1,"weight":100},
-    {"itemKindId":"demo.item.feanorian-lamp","maxDepth":40,"minDepth":15,"quantity":1,"weight":100}
+    {"itemKindId":"demo.item.feanorian-lamp","maxDepth":40,"minDepth":15,"quantity":1,"weight":100},
+    {"itemKindId":"demo.item.wizardstaff","minDepth":25,"quantity":1,"weight":25}
   ],
   "qualityPolicy": {
     "kind": "rfb-depth",
     "goodCapPercent": 75,
     "greatCapPercent": 20
   },
-  "rfbEgoPolicy": "weapon-digger",
-  "affixWeights": [
-    {
-      "weight": 9
-    },
-    {
-      "affixId": "rfb-legacy.affix.protection",
-      "weight": 1
-    }
-  ]
+  "rfbEgoPolicy": "weapon-digger"
 }

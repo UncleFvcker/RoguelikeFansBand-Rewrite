@@ -1,15 +1,34 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.wizardstaff",
-  "nameKey": "item-demo-wizardstaff-name",
-  "descriptionKey": "item-demo-wizardstaff-description",
-  "glyph": "\\",
-  "generationLevel": 25,
-  "weightTenthsPound": 40,
-  "maxStack": 1,
   "baseValue": 4000,
+  "descriptionKey": "item-demo-wizardstaff-description",
   "equipmentSlot": "weapon",
-  "meleeProfile": { "attacks": 1, "toHit": 0, "toDamage": 0, "damageDice": 1, "damageSides": 2 },
-  "tags": ["equipment", "legacy-import", "mana-efficient", "weapon"]
+  "formatVersion": 1,
+  "generationLevel": 25,
+  "glyph": "\\",
+  "id": "demo.item.wizardstaff",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 2,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "nameKey": "item-demo-wizardstaff-name",
+  "passives": [
+    "reduced-mana-cost"
+  ],
+  "rfbBaseKind": {
+    "sourceIndex": 137,
+    "sval": 21,
+    "tval": 21
+  },
+  "tags": [
+    "equipment",
+    "legacy-import",
+    "mana-efficient",
+    "weapon"
+  ],
+  "weightTenthsPound": 40
 }

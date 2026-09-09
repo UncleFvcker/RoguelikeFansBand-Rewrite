@@ -1888,7 +1888,7 @@ impl Game {
         }
         let extra_blows = self.items.iter().filter(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
-                && (Some(item.id.as_str()) == selected_item_id || !self.content.item(&item.kind_id).is_some_and(|definition| definition.melee_profile.is_some()))
+                && (Some(item.id.as_str()) == selected_item_id || self.content.item(&item.kind_id).is_none_or(|definition| definition.melee_profile.is_none()))
         }).map(|item| {
             let ItemLocation::Equipped { slot_id } = &item.location else { unreachable!(); };
             let amount = self.item_equipment_bonuses(item).melee_attacks_delta_percent;

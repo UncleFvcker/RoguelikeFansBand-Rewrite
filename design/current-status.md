@@ -20,9 +20,9 @@
 | 协议 | 1.234 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | v111 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload | v6 / v6；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.390.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
-| 行为基线 | contract-v310，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
-| 内容定义数量 | 地形 201、角色 1402、物品 363、能力 1838、词缀 169、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
+| 内容包 | 1.391.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 行为基线 | contract-v311，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
+| 内容定义数量 | 地形 201、角色 1402、物品 363、能力 1838、词缀 168、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
 
 版本与哈希以源文件为准。玩家入口以 [PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS](../web/src/session-shell.ts) 和 [新游戏表单](../web/index.html) 为准。
@@ -60,13 +60,22 @@
 
 ## 版本验收与限制
 
+2026-09-09，`codex/realms-items` 推进 E8 集成审计：160 条 source 身份、权威名称和实例存档检查通过，
+通用池及 12 个怪物主题池统一使用共享 Ego 选择/物化，删除旧随机配方和重复 Combat 定义。
+补齐五件武器的基础身份、巫师法杖普通获取与实际减耗，修正正向质量/固定神器顺序、基础附魔、发射器缩放和自然弹药骰数提交。
+物品界面按用户要求移除“完全鉴定”“无 ego”提示，鉴定后直接展示已知属性；箭袋槽位名称已补齐。
+代表性桌面专项验证拾取、鉴定、装备、照明激活、工艺和保存恢复；普通桌面 E2E 另覆盖战士与死亡高阶法师流程。
+核心 909 项、内容 133 项、导入器 174 项、前端 181 项及相关最终专项通过；26 条契约、里程碑完整回放、Clippy、生成物检查和 standalone Tauri 构建通过。
+**E8 尚未达到完整原版等价验收**：负向生成/诅咒、随机神器、首饰价值重试、龙系基础生成、背包和未开放职业专属修正仍有缺口。
+详细证据、复现命令和范围见[集成审计](ego-integration-audit.md)；本次不记录为人工试玩。
+
 2026-09-09，`codex/realms-items` 接入 E7 的 38 条非 Craft Ego：首饰 17、光源 9、箭袋 4、装置 7、特殊 1。
 35 条进入对应类型自然生成；戒灵/矮人戒指及 `(炸毁的)` 保持 rarity 0，仅显式或诅咒入口可达。
 首饰采用独立 pval/能力次数分支，装置先初始化效果再加 Ego，光源与箭袋保留各自燃料/容量规则。
 实际消费者包括首饰左右手加值、反传送/抑制召唤、燃料与视觉、箭袋重量/保护/补弹，以及装置威力、恢复和使用能量。
 炸毁清除旧词缀及正式神器身份，保留源版激活；所有动态结果进入存档。逐条核对原版 `master` 的中英文名、身份与稀有度，38 条全部一致。
 核心回归 906 项、内容 133 项、导入器 174 项、前端 181 项及类型检查通过；最后的抑制召唤调整专项复验通过，全部 26 条 active fixture 复验通过，协议绑定与内容 schema 一致性检查通过。
-详见[非 Craft Ego 审计](noncraft-ego-import-audit.md)。E8 的最外层质量/神器/luck/RNG 审计与桌面集成验收仍待推进；本批未做桌面构建、E2E 或人工试玩。
+详见[非 Craft Ego 审计](noncraft-ego-import-audit.md)。这是 E7 当批验证记录；E8 后续审计和桌面结果见上文。
 
 2026-09-09，`codex/realms-items` 完成 E6 工艺事务。工艺卷轴通过共享选择器，以玩家等级为生成等级，
 从 122 条 Craft 类型定义中的 121 条非零稀有度 Ego 选择并物化；旧显式等概率候选列表已删除。

@@ -13,5 +13,5 @@
     "goodCapPercent": 75,
     "greatCapPercent": 20
   },
-  "affixWeights": [{ "weight": 1 }]
+  "rfbEgoPolicy": "weapon-digger"
 }

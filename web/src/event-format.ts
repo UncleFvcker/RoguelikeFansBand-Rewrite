@@ -1803,7 +1803,7 @@ export function createPresentationFormatter(
 
   function itemPropertyName(nameKey: string | undefined): string {
     if (nameKey && localization.hasMessage(localization.locale, nameKey)) {
-      return localization.format(nameKey);
+      return localization.format(nameKey).replace(/^&\s*/, "").replaceAll("~", "");
     }
     return localization.format("item-unknown-name");
   }
@@ -1836,6 +1836,7 @@ export function createPresentationFormatter(
     light: "equipment-slot-light",
     container: "equipment-slot-container",
     tool: "equipment-slot-tool",
+    quiver: "equipment-slot-quiver",
   };
 
   function equipmentSlotName(slotType: string | undefined): string {

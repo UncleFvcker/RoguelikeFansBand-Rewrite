@@ -917,7 +917,7 @@ fn equipment_and_ego_identities_match_source() {
             .filter_map(|item| item.rfb_base_kind)
             .filter(|kind| matches!(kind.tval, 20..=23))
             .collect::<Vec<_>>();
-        assert_eq!(base_kinds.len(), 63);
+        assert_eq!(base_kinds.len(), 68);
         assert_eq!(
             base_kinds
                 .iter()
@@ -1248,7 +1248,7 @@ fn fixed_artifact_generation_matches_rfb_records_and_rejects_invalid_content() {
 }
 
 #[test]
-fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
+fn natural_affix_compatibility_separates_source_policy_and_explicit_pools() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let slaying = artifact
         .content
@@ -1302,16 +1302,7 @@ fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
     }
     assert_eq!(protection.generation_level, 0);
     assert_eq!(protection.generation_max_level, 30);
-    assert_eq!(protection.roll_groups.len(), 1);
-    assert_eq!(protection.roll_groups[0].rolls, 1);
-    assert_eq!(
-        protection.roll_groups[0]
-            .candidates
-            .iter()
-            .map(|candidate| (candidate.weight, candidate.properties.modifiers.defense))
-            .collect::<Vec<_>>(),
-        (1..=10).map(|defense| (1, defense)).collect::<Vec<_>>()
-    );
+    assert!(protection.roll_groups.is_empty());
 
     let mut bounded = slaying.clone();
     bounded.generation_level = 20;
@@ -1320,25 +1311,43 @@ fn natural_affix_compatibility_uses_slot_depth_and_explicit_none_fallback() {
     assert!(affix_is_compatible_with_item(&bounded, halberd, 20));
     assert!(!affix_is_compatible_with_item(&bounded, halberd, 31));
 
-    let mut missing_fallback = artifact.content.clone();
+    // Explicit pools still require a no-affix outcome for incompatible bases.
+    let mut explicit = artifact.content.clone();
+    let table = explicit
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.warrior")
+        .unwrap();
+    table.rfb_ego_policy = None;
+    table.affix_weights = vec![
+        LootAffixWeightDefinition {
+            affix_id: None,
+            weight: 9,
+        },
+        LootAffixWeightDefinition {
+            affix_id: Some(protection.id.clone()),
+            weight: 1,
+        },
+    ];
+    let mut missing_fallback = explicit.clone();
     missing_fallback
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.base-items")
-        .expect("Orc Cave loot should exist")
+        .find(|table| table.id == "demo.loot-table.warrior")
+        .expect("explicit warrior loot should exist")
         .affix_weights
         .retain(|entry| entry.affix_id.is_some());
     assert!(matches!(
         validate_and_normalize(&mut missing_fallback),
-        Err(ContentError::InvalidLootTable(id)) if id == "demo.loot-table.base-items"
+        Err(ContentError::InvalidLootTable(id)) if id == "demo.loot-table.warrior"
     ));
 
-    let mut outside_depth = artifact.content.clone();
+    let mut outside_depth = explicit;
     let table = outside_depth
         .loot_tables
         .iter_mut()
-        .find(|table| table.id == "demo.loot-table.base-items")
-        .expect("base item pool should exist");
+        .find(|table| table.id == "demo.loot-table.warrior")
+        .expect("explicit warrior loot should exist");
     table.entries.retain(|entry| entry.min_depth <= 10);
     table
         .entries

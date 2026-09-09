@@ -5,5 +5,5 @@
   "rolls": 1,
   "entries": [{ "itemKindId": "demo.item.ring", "weight": 1, "quantity": 1 }],
   "qualityWeights": [{ "quality": "fine", "weight": 1 }],
-  "affixWeights": [{ "affixId": "rfb-legacy.affix.combat", "weight": 1 }]
+  "affixWeights": [{ "affixId": "rfb-legacy.affix.combat-ring", "weight": 1 }]
 }

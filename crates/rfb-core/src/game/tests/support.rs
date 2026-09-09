@@ -583,7 +583,7 @@ fn task_service_artifact() -> rfb_content::CompiledArtifact {
                     item_kind_id: "demo.item.broad-sword".to_owned(),
                     quantity: 1,
                     weight: 1,
-                    affix_ids: vec!["rfb-legacy.affix.combat".to_owned()],
+                    affix_ids: vec!["rfb-legacy.affix.slaying".to_owned()],
                 }],
             }],
         }),

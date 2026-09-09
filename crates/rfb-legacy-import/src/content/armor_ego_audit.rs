@@ -100,9 +100,7 @@ pub fn sync_demo_armor_egos(source: &Path, pack_root: &Path) -> Result<usize, Le
             .unwrap();
         let id = expected.affix_id.strip_prefix("rfb-legacy.affix.").unwrap();
         let mut value = ego_json(entry, id, &mut report);
-        if entry.index != 50 {
-            value.as_object_mut().unwrap().remove("rollGroups");
-        }
+        value.as_object_mut().unwrap().remove("rollGroups");
         if let Some(activations) = armor_activations(entry, id, &candidates) {
             for activation in &activations {
                 used_activations.insert(

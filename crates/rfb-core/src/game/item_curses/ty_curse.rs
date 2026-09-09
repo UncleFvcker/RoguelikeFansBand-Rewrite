@@ -99,8 +99,8 @@ impl Game {
                     8 => {
                         let free_action =
                             self.player_status_immunities().contains(STATUS_PARALYSIS);
-                        if !stop
-                            && !(free_action
+                        if !(stop
+                            || free_action
                                 && (self.rng.bounded(125) + 1)
                                     < self.player_derived_stats().saving_throw_skill.value.max(0)
                                         as u64)

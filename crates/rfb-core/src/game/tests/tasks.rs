@@ -59,6 +59,34 @@ fn direct_warrens_death_drops(
 }
 
 #[test]
+fn natural_ammunition_damage_dice_survive_generation_and_save() {
+    let mut game = Game::new(67);
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: "demo.floor.orc-cave-depth-32".into(),
+        depth: 80,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.ammo-dice".into(),
+        },
+    };
+    game.rng = RfbRng::seeded(2295);
+    let drops = game
+        .generate_loot_instances(&context, ItemLocation::Inventory)
+        .unwrap();
+    let expected = drops[0].clone();
+    assert_eq!(expected.kind_id, "demo.item.sheaf-arrow");
+    assert_eq!(expected.damage_dice_override, Some(6));
+    game.items.extend(drops);
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(
+        restored.items.iter().find(|item| item.id == expected.id),
+        Some(&expected)
+    );
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.rng, game.rng);
+}
+
+#[test]
 fn base_item_natural_egos_cover_all_equipment_types() {
     let base =
         Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).expect("Orc Cave loot test should create");
@@ -72,7 +100,7 @@ fn base_item_natural_egos_cover_all_equipment_types() {
     };
     let mut seen = BTreeSet::new();
     // Fixed representatives exercise the real shared pool without a large seed sweep.
-    for seed in [1, 7, 50, 103, 248, 324, 1148, 1588, 4111, 8334] {
+    for seed in [1, 3, 46, 71, 75, 112, 177, 200, 1819, 3725] {
         let mut game = base.clone();
         game.rng = RfbRng::seeded(seed);
         let drops = game
@@ -932,7 +960,7 @@ fn task_rewards_use_one_weighted_default_choice_and_class_affix_overrides() {
         .find(|item| item.id == "demo.task.test-prerequisite.reward.1")
         .expect("fixed reward instance should enter inventory");
     assert_eq!(item.quality, ItemQualityDto::Fine);
-    assert_eq!(item.affix_ids, ["rfb-legacy.affix.combat"]);
+    assert_eq!(item.affix_ids, ["rfb-legacy.affix.slaying"]);
     assert_eq!(item.rolled_affixes.len(), 1);
 }
 
@@ -2195,7 +2223,7 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
         .iter()
         .filter(|item| !item_ids_before_guardian.contains(&item.id))
         .find(|item| {
-            item.kind_id == "demo.item.ring" && item.affix_ids == ["rfb-legacy.affix.combat"]
+            item.kind_id == "demo.item.ring" && item.affix_ids == ["rfb-legacy.affix.combat-ring"]
         })
         .expect("Othrod should drop the fixed Combat ring");
     assert_eq!(
@@ -2203,11 +2231,11 @@ fn orc_cave_guardian_conquest_reward_and_surface_return_round_trip() {
         ItemLocation::Ground(guardian_position)
     );
     assert_eq!(combat_ring.quality, ItemQualityDto::Fine);
-    assert_eq!(combat_ring.affix_ids, ["rfb-legacy.affix.combat"]);
+    assert_eq!(combat_ring.affix_ids, ["rfb-legacy.affix.combat-ring"]);
     assert_eq!(combat_ring.rolled_affixes.len(), 1);
     assert_eq!(
         combat_ring.rolled_affixes[0].affix_id,
-        "rfb-legacy.affix.combat"
+        "rfb-legacy.affix.combat-ring"
     );
 
     let conquered_hash = game.state_hash();

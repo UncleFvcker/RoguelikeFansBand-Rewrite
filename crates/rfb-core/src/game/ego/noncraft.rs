@@ -471,6 +471,7 @@ mod tests {
                 ..Default::default()
             };
             let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                rfb_protocol::ItemEnchantmentsDto::default(),
                 &mut rng,
                 &definition,
                 game.content.affix_definitions(),
@@ -615,6 +616,7 @@ mod tests {
                 // Lower levels also exercise W: maximum generation depths.
                 let level = (seed % 100 + 1) as u16;
                 let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    rfb_protocol::ItemEnchantmentsDto::default(),
                     &mut RfbRng::seeded(seed),
                     item,
                     game.content.affix_definitions(),

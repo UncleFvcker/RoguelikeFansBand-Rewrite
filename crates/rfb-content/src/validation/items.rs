@@ -22,7 +22,6 @@ pub(crate) fn valid_item_effect(
     actor_tag_values: &BTreeSet<String>,
     item_tag_values: &BTreeSet<String>,
     resource_ids: &BTreeSet<String>,
-    affix_ids: &BTreeSet<String>,
     loot_table_ids: &BTreeSet<String>,
 ) -> bool {
     match effect {
@@ -431,7 +430,6 @@ pub(crate) fn valid_item_effect(
                         actor_tag_values,
                         item_tag_values,
                         resource_ids,
-                        affix_ids,
                         loot_table_ids,
                     )
                 })
@@ -1010,7 +1008,6 @@ pub(super) fn validate_items(
                 actor_tag_values,
                 item_tag_values,
                 resource_ids,
-                affix_ids,
                 loot_table_ids,
             ) && (item_effect_is_self_targeted(&action.effect)
                 || matches!(
@@ -1146,7 +1143,6 @@ pub(super) fn validate_items(
                     actor_tag_values,
                     item_tag_values,
                     resource_ids,
-                    affix_ids,
                     loot_table_ids,
                 )
             {
@@ -1189,7 +1185,6 @@ pub(super) fn validate_items(
                             actor_tag_values,
                             item_tag_values,
                             resource_ids,
-                            affix_ids,
                             loot_table_ids,
                         )
                         && !matches!(

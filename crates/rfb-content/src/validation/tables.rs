@@ -104,7 +104,8 @@ pub(super) fn validate_tables(
                     Some(LootQualityPolicyDefinition::RfbDepth { .. })
                 ),
             })
-            || table.affix_weights.is_empty()
+            || (table.rfb_ego_policy.is_none() && table.affix_weights.is_empty())
+            || (table.rfb_ego_policy.is_some() && !table.affix_weights.is_empty())
             || table.affix_weights.len() > 64
         {
             return Err(ContentError::InvalidLootTable(table.id.clone()));
@@ -196,10 +197,11 @@ pub(super) fn validate_tables(
                     .expect("validated affix reference must remain available")
             })
             .collect::<Vec<_>>();
-        let forces_affix = table
-            .affix_weights
-            .iter()
-            .all(|entry| entry.affix_id.is_some());
+        let forces_affix = !table.affix_weights.is_empty()
+            && table
+                .affix_weights
+                .iter()
+                .all(|entry| entry.affix_id.is_some());
         let can_generate_ordinary = table.quality_policy.is_some()
             || table
                 .quality_weights
@@ -235,7 +237,7 @@ pub(super) fn validate_tables(
         }
         if entry_weight == 0
             || (table.quality_policy.is_none() && quality_weight == 0)
-            || affix_weight == 0
+            || (table.rfb_ego_policy.is_none() && affix_weight == 0)
         {
             return Err(ContentError::InvalidLootTable(table.id.clone()));
         }

@@ -4,7 +4,8 @@
 
 工作树：`D:/codex/RoguelikeFansBand-Rewrite-realms-items`；工作分支：`codex/realms-items`。
 E5.0 起始代码基线：`da7ba67be`，起始 main：`62f959f3b`。E0–E4 的完成说明保留历史批次版本；
-E5 已完成全部护甲消费者与生成，E6 已完成工艺事务，E7 已接入 38 条非 Craft ego，当前内容为 1.390.0；E8 为后续集成审计与验收。
+E5 已接入护甲物化与消费者，E6 已完成工艺事务，E7 已接入 38 条非 Craft ego，当前内容为 1.391.0。
+E8 已推进旧近似清理与集成检查；[完整审计](ego-integration-audit.md)列出六项仍未闭合的共享生成契约，尚不满足完整原版等价完成条件。
 
 本计划把 ego 作为独立的物品生成里程碑推进，并优先闭合 Craft 第四册「工艺」所依赖的
 武器、护甲与弹药候选。领域内容在 ego 候选与实例化行为完整以前不开放「工艺」。
@@ -20,7 +21,7 @@ E5 已完成全部护甲消费者与生成，E6 已完成工艺事务，E7 已�
 | `e_info.txt` ego 总数 | 160 |
 | E5.0 审计时的 currentImporterExpressible / Inexpressible | 134 / 26；历史审计值，不是运行时完成数 |
 | e_info 显式 E: activation 记录 | 13；不含 ego.c 分支随机激活，也不是未实现数 |
-| demo pack 正式 affix | 169；其中 160 条为唯一原版 source 身份，122 条为 Craft 类型定义 |
+| demo pack 正式 affix | 168；其中 160 条为唯一原版 source 身份，122 条为 Craft 类型定义 |
 | 武器/工具、远程/竖琴 source-index 物化及自然生成路径 | 30 + 16；见 E3/E4 的入口限制 |
 | 权威中文名 | 160 |
 | 中文名 unresolved | 0 |
@@ -43,12 +44,12 @@ Craft 类型兼容的 122 条记录按权威 `T:` 分类为：
 
 剩余缺口：
 
-- 首饰、光源、箭袋和装置等非 Craft 类型仍需在 E7 接入；已有旧适配不能作为整类完成的依据；
+- E7 各非 Craft 类型已接入，但负向质量/诅咒、随机神器、首饰价值重试、龙系基础生成、背包和未开放职业专属修正仍待闭合，见 E8 审计；
 - Craft 领域的 32 个法术及四册内容尚未导入，需要按领域流程另行审计和实施；
 - 本次 160 个权威中文名全部可解；新基础物品仍需单独核对 `kind_name_zh.inc`。
 
-当前顺序：**E0–E6 已完成 → E7 非 Craft → E8 整体验收**。
-巫师法杖与法力消耗机制已随 E5 补齐；Craft 领域本身仍按领域流程另外导入。
+当前顺序：**E0–E7 已接入 → E8 集成审计与共享缺口收口**。
+巫师法杖的基础身份、普通获取和实际减耗已在 E8 复核补齐；Craft 领域本身仍按领域流程另外导入。
 
 ## 2. 唯一权威来源
 
@@ -215,7 +216,7 @@ source 1–27、40–42 的选择、拒绝重试、物化和相关消费者已�
 本批已闭合普通属性、精确 Slaying/Craft、共享 pval、独立附魔、基础物品拒绝重试、近战骰面、
 Mana/Vorpal/Order/Wild/Impact/Stun/Blessed、装备副作用、具体重诅咒和 activation。4 条显式 `E:`
 之外还有 9 条分支随机 activation，去重后共 12 条可能带 activation；已有专用实例化和激活测试。
-`WEAPON/DIGGER` policy 已开放。Mattock 已补入；Wizardstaff 和 Mauler-only 重量调整仍按专题说明保留缺口。
+`WEAPON/DIGGER` policy 已开放。Mattock 已补入；Wizardstaff 的剩余入口缺口已在 E8 补齐，Mauler-only 重量调整仍待职业接入。
 
 ### E4：弹药、发射器与竖琴 16 条（已完成）
 
@@ -295,7 +296,11 @@ Craft 领域当前尚未导入；本批只完成「工艺」所需的共享行�
 总计 38。按实际类型调度复用选择核与物化，不把首饰/装置强行套入普通武器的 great-item 门槛。
 已有定义不重复创建；rarity 0、强制生成和职业专属路径分别记录。E7 不阻塞 E6，但依赖的公共能力应复用 E5 底座。
 
-### E8：自然掉落与完整验收
+### E8：自然掉落与完整验收（进行中）
+
+本次结果见[集成审计](ego-integration-audit.md)和[160 条机器可读矩阵](ego-contract-audit.json)。
+通用池及 12 个主题池已统一，旧配方与重复 Combat 已删除；160 条身份/实例检查和代表性桌面流程已落实。
+六项共享契约尚未闭合，当前不能标记 Ego 方向全部完成。
 
 - 收口各批已经开放的自然生成 policy，删除残留的旧近似随机池，不等到最后才一次性开放全部类型；
 - 按 `obj_create_weapon/armor`、首饰、光源、箭袋和装置各自的源码调度核对 quality、神器和 luck/RNG 顺序；
@@ -338,12 +343,12 @@ git diff --check
 
 ego 方向完成时必须同时满足：
 
-- [ ] 160 条 source ego 都有稳定 index 身份、权威英文名和权威中文名或明确 unresolved；
-- [ ] rarity、类型和等级惩罚选择与 `ego.c` 一致，rarity 0 不进入标准池；
+- [x] 160 条 source ego 都有稳定 index 身份、权威英文名和权威中文名或明确 unresolved；
+- [x] rarity、类型和等级惩罚选择核与 `ego.c` 一致，rarity 0 不进入标准池；外围生成概率仍见 E8 缺口；
 - [ ] 每条可生成 ego 都有真实属性消费者，不存在只显示名称的 no-op affix；
-- [ ] 动态结果在物品实例中物化并经 save/state hash 稳定往返，不在读档时重掷；
-- [ ] 自然掉落、Craft 和显式强制 ego 共用一个选择/实例化 owner；
-- [ ] Craft 的 121 条标准候选完整，且永不生成神器；
+- [x] 已实现的动态结果在物品实例中物化并经 save/state hash 稳定往返，不在读档时重掷；
+- [x] 自然掉落、Craft 和显式强制 ego 共用选择/实例化 owner；
+- [x] Craft 的 121 条标准候选完整，且永不生成神器；
 - [ ] importer 的每项未映射记录都有可核查分类，真实行为缺口归零；原版无消费者标记与 SPECIAL 不靠 no-op 消数；
-- [ ] demo pack、内容锁、必要 schema/bindings 和直接受影响 fixtures 已按真实变化收口；
-- [ ] 每个实施批次均有独立提交，没有混入其他领域或无关重构。
+- [x] demo pack、内容锁、必要 schema/bindings 和直接受影响 fixtures 已按真实变化收口；
+- [x] 已实施批次均独立提交；尚未完成的 E8 共享契约明确保留，不混入其他领域。

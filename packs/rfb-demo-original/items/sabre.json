@@ -21,8 +21,13 @@
     "toHit": 0
   },
   "mogaminatorRare": false,
-  "ridingWeaponKind": "compatible",
   "nameKey": "item-demo-sabre-name",
+  "rfbBaseKind": {
+    "sourceIndex": 54,
+    "sval": 11,
+    "tval": 23
+  },
+  "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",
     "rfb-compatibility",

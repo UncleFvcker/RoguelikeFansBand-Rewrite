@@ -2408,7 +2408,7 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     assert_eq!(generated[0].location, ItemLocation::Ground(position));
     assert_eq!(generated[0].quality, ItemQualityDto::Exceptional);
     assert!(generated[0].id.starts_with("generated.item."));
-    assert_eq!(single.rng_draw_counter(), draws_before + 7);
+    assert_eq!(single.rng_draw_counter(), draws_before + 30);
     assert!(update.events.iter().any(|event| {
         event.kind == "item.use-acquirement"
             && event.args.get("count").map(String::as_str) == Some("1")
@@ -2433,7 +2433,7 @@ fn p3_5_acquirement_uses_stable_ids_current_position_and_exact_rng_draws() {
     );
     let generated_count = multiple.items.len() - (before_count - 1);
     assert!((2..=3).contains(&generated_count));
-    assert_eq!(multiple.rng_draw_counter(), draws_before + 38);
+    assert_eq!(multiple.rng_draw_counter(), draws_before + 57);
 }
 
 #[test]
@@ -2895,6 +2895,7 @@ fn e6_crafting_uses_shared_weighted_materialization_at_player_level() {
         game.rng = RfbRng::seeded(7);
         let mut expected = game.items[1].clone();
         let materialized = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            rfb_protocol::ItemEnchantmentsDto::default(),
             &mut game.rng.clone(),
             game.content.item(kind_id).unwrap(),
             game.content.affix_definitions(),
@@ -3012,7 +3013,10 @@ fn fixed_artifact_selection_uses_source_order_ood_rarity_and_uniqueness() {
         .find(|seed| RfbRng::seeded(*seed).bounded(10) != 0)
         .expect("an instant-artifact gate rejection seed should exist");
     instant.rng = RfbRng::seeded(instant_rejection_seed);
-    assert_eq!(instant.roll_instant_fixed_artifact_kind_id(&context), None);
+    assert_eq!(
+        instant.roll_instant_fixed_artifact_kind_id(&context, 10),
+        None
+    );
     assert_eq!(instant.rng_draw_counter(), 1);
 
     let crisdurian_seed = (0..10_000)

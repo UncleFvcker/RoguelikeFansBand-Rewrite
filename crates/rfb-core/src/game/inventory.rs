@@ -909,6 +909,7 @@ impl Game {
         if quantity > 0 {
             let id = self.allocate_item_instance_id()?;
             let item = super::loot::GeneratedItemDraft {
+                damage_dice_override: None,
                 kind_id: kind_id.to_owned(),
                 quantity,
                 origin_kind: Some(ItemOriginKindDto::EndlessQuiver),

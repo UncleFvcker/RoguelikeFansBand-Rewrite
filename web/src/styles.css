@@ -957,12 +957,6 @@ h1 {
   color: var(--ui-accent, #d6b56f);
 }
 
-.item-identification-identified,
-.item-identification-identified-ego,
-.item-identification-identified-ordinary {
-  color: #8fd8c4;
-}
-
 .inventory-empty {
   border-bottom: 0;
   color: #64788c;

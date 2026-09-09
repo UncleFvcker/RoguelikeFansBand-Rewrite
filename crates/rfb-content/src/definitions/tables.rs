@@ -99,6 +99,7 @@ pub struct LootTableDefinition {
     pub quality_policy: Option<LootQualityPolicyDefinition>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub rfb_ego_policy: Option<LootRfbEgoPolicyDefinition>,
+    #[serde(default)]
     pub affix_weights: Vec<LootAffixWeightDefinition>,
 }
 

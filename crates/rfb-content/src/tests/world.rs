@@ -4555,23 +4555,15 @@ fn room_dungeon_bindings_match_source() {
         assert_eq!(reward.entries[0].item_kind_id, "demo.item.ring");
         assert_eq!(
             reward.affix_weights[0].affix_id.as_deref(),
-            Some("rfb-legacy.affix.combat")
+            Some("rfb-legacy.affix.combat-ring")
         );
         let combat = content
             .affixes
             .iter()
-            .find(|affix| affix.id == "rfb-legacy.affix.combat")
+            .find(|affix| affix.id == "rfb-legacy.affix.combat-ring")
             .expect("the Combat ego should be imported");
-        assert_eq!(combat.roll_groups.len(), 1);
-        assert_eq!(combat.roll_groups[0].rolls, 3);
-        assert_eq!(
-            combat.roll_groups[0]
-                .candidates
-                .iter()
-                .map(|candidate| candidate.weight)
-                .sum::<u32>(),
-            100
-        );
+        assert_eq!(combat.rfb_ego.as_ref().unwrap().source_index, 206);
+        assert!(combat.roll_groups.is_empty());
     }
 
     {
@@ -12047,7 +12039,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 352);
+    assert_eq!(base_items.entries.len(), 353);
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -12095,7 +12087,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
                     .to_owned()
             });
     }
-    assert_eq!(active_source_items.len(), 326);
+    assert_eq!(active_source_items.len(), 328);
 
     let source_items_without_allocations =
         BTreeSet::from([33, 34, 36, 37, 261, 345, 346, 347, 400, 401, 460]);
@@ -12114,7 +12106,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 318);
+    assert_eq!(expected_item_ids.len(), 319);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -12131,14 +12123,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         base_items.rfb_ego_policy,
         Some(LootRfbEgoPolicyDefinition::WeaponDigger)
     );
-    assert_eq!(
-        base_items
-            .affix_weights
-            .iter()
-            .map(|affix| (affix.affix_id.as_deref(), affix.weight))
-            .collect::<Vec<_>>(),
-        vec![(None, 9), (Some("rfb-legacy.affix.protection"), 1),]
-    );
+    assert!(base_items.affix_weights.is_empty());
     assert!(!artifact.content.loot_tables.iter().any(|table| {
         matches!(
             table.id.as_str(),
@@ -12233,6 +12218,9 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
         ("demo.loot-table.dwarf", 6),
         ("demo.loot-table.ninja", 3),
         ("demo.loot-table.hobbit", 32),
+        ("demo.loot-table.evil-paladin", 6),
+        ("demo.loot-table.rogue", 8),
+        ("demo.loot-table.samurai", 3),
     ] {
         let table = artifact
             .content
@@ -12243,44 +12231,18 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
         assert_eq!(table.entries.len(), expected_entries, "{table_id}");
         assert_eq!(table.quality_policy, policy, "{table_id}");
         assert!(table.quality_weights.is_empty(), "{table_id}");
+        assert_eq!(
+            table.rfb_ego_policy,
+            Some(LootRfbEgoPolicyDefinition::WeaponDigger),
+            "{table_id}"
+        );
+        assert!(table.affix_weights.is_empty(), "{table_id}");
         assert!(
             table
                 .entries
                 .iter()
                 .all(|entry| !matches!(entry.max_depth, 9 | 32)),
             "{table_id} should not retain a dungeon depth cap"
-        );
-    }
-
-    for table_id in [
-        "demo.loot-table.warrior",
-        "demo.loot-table.paladin",
-        "demo.loot-table.dwarf",
-        "demo.loot-table.mage",
-    ] {
-        let table = artifact
-            .content
-            .loot_tables
-            .iter()
-            .find(|table| table.id == table_id)
-            .expect("Protection theme table should exist");
-        let expected = if table_id == "demo.loot-table.warrior" {
-            vec![
-                (None, 9),
-                (Some("rfb-legacy.affix.protection"), 1),
-                (Some("rfb-legacy.affix.slaying"), 1),
-            ]
-        } else {
-            vec![(None, 9), (Some("rfb-legacy.affix.protection"), 1)]
-        };
-        assert_eq!(
-            table
-                .affix_weights
-                .iter()
-                .map(|entry| (entry.affix_id.as_deref(), entry.weight))
-                .collect::<Vec<_>>(),
-            expected,
-            "{table_id}"
         );
     }
 
@@ -12352,14 +12314,6 @@ fn formal_drop_themes_use_source_allocations_and_rfb_depth_quality() {
             .collect::<BTreeSet<_>>()
             .len(),
         26
-    );
-    assert_eq!(
-        hobbit
-            .affix_weights
-            .iter()
-            .map(|entry| (entry.affix_id.as_deref(), entry.weight))
-            .collect::<Vec<_>>(),
-        vec![(None, 1)]
     );
     assert_eq!(
         hobbit

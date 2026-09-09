@@ -646,6 +646,7 @@ fn saved_device_ego(
     })
 }
 
+#[allow(clippy::too_many_arguments)]
 fn validate_item_runtime_state(
     definition: &rfb_content::ItemDefinition,
     device_generation: Option<&ItemDeviceGenerationDefinition>,

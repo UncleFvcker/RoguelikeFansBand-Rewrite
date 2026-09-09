@@ -8,6 +8,7 @@ import path from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { runRendererProfile } from "./render-profile.e2e.mjs";
+import { runEgoScenario } from "./ego.e2e.mjs";
 
 const webDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const repositoryDirectory = path.resolve(webDirectory, "..");
@@ -47,6 +48,7 @@ const artifactDirectory = path.join(repositoryDirectory, "test-results");
 const diagnosticDirectory = path.join(artifactDirectory, "e2e-crash-diagnostics");
 const desktopLogPath = path.join(artifactDirectory, "e2e-rfb-desktop.log");
 const renderProfileOnly = process.argv.includes("--render-profile");
+const egoOnly = process.argv.includes("--ego");
 const logs = [];
 let child;
 let client;
@@ -87,6 +89,8 @@ async function main() {
     client = await WebDriverClient.create(port, child);
     if (renderProfileOnly) {
       await runRendererProfile(client, artifactDirectory);
+    } else if (egoOnly) {
+      await runEgoScenario(client, artifactDirectory);
     } else {
       await runScenario(client);
     }

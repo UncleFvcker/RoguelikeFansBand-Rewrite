@@ -530,6 +530,7 @@ impl Game {
             .item(&item.kind_id)
             .expect("created ammunition kind must remain defined");
         let materialization = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+            rfb_protocol::ItemEnchantmentsDto::default(),
             &mut self.rng,
             definition,
             self.content.affix_definitions(),
@@ -554,6 +555,7 @@ impl Game {
             unreachable!("item creation executor requires a create-item effect");
         };
         let draft = GeneratedItemDraft {
+            damage_dice_override: None,
             kind_id: item_kind_id.clone(),
             quantity: *quantity,
             origin_kind: Some(ItemOriginKindDto::Acquire),

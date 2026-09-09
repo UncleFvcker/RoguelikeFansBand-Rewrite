@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v310`，机器可读政策固定在：
+当前逻辑基线是 `contract-v311`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -367,3 +367,8 @@ Protocol 升至 1.231、State Hash Schema 升至 v109，内容包升至 1.387.0�
 共用存档/哈希结构，首饰、光源、箭袋和装置生成改变共用 RNG 调度，新增 passive 改变属性投影。
 Protocol 升至 1.234、State Hash Schema 升至 v111、save header/payload 升至 v6，内容包
 升至 1.390.0。因此刷新并复验全部 26 条 active fixture，保持原有场景、命令和零 waiver。
+
+`contract-v311` 推进 E8 集成审计。正向质量、固定神器、基础附魔与主题掉落入口改变共用生成 RNG，
+内容包升至 1.391.0。没有新增持久字段，Protocol 1.234、State Hash Schema v111 和 save v6 保持不变；
+content schema 允许 RFB policy 省略旧 `affixWeights`。按明确集成里程碑刷新并复验全部 26 条 active fixture，
+不改场景和命令、不增加 waiver。160 条身份和实例检查不代表完整原版等价，剩余共享契约见 [E8 审计](ego-integration-audit.md)。

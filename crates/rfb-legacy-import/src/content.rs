@@ -4864,9 +4864,6 @@ fn ego_json_with_activation_candidates(
         if attribute_flag_is_mapped(flag) {
             continue;
         }
-        if ego_roll_recipe_consumes(entry, flag) {
-            continue;
-        }
         if item_destruction_flag_is_mapped(flag) {
             continue;
         }
@@ -4918,7 +4915,6 @@ fn ego_json_with_activation_candidates(
     apply_defensive_fold(&mut value, &fold);
     apply_offensive_fold(&mut value, &offense);
     apply_equipment_fold(&mut value, &equipment);
-    apply_ego_roll_recipe(&mut value, entry);
     if let Some(device_generation) = device_generation {
         value["deviceGeneration"] = device_generation;
     }
@@ -5806,69 +5802,6 @@ fn legacy_device_item_effect(
         _ => return None,
     };
     Some(result)
-}
-
-fn ego_roll_recipe_consumes(entry: &LegacyEgoEntry, flag: &str) -> bool {
-    matches!(entry.index, 148 | 209) && flag == "SPEED"
-}
-
-fn apply_ego_roll_recipe(value: &mut serde_json::Value, entry: &LegacyEgoEntry) {
-    let groups = match entry.index {
-        // Original `of Protection` rolls a uniform +1..+10 armor bonus.
-        50 => vec![serde_json::json!({
-            "rolls": 1,
-            "candidates": (1..=10)
-                .map(|defense| serde_json::json!({
-                    "weight": 1,
-                    "properties": {"modifiers": {"defense": defense}}
-                }))
-                .collect::<Vec<_>>(),
-        })],
-        // Original boots/ring speed pvals are depth-biased generation rolls.
-        // Increasing minDepth thresholds keep high bonuses out of shallow
-        // instances while preserving the materialized per-item value.
-        148 | 209 => vec![serde_json::json!({
-            "rolls": 1,
-            "candidates": speed_roll_candidates(entry.index == 209),
-        })],
-        // `of Combat` jewelry rolls fighting attributes, accuracy, damage,
-        // or fear resistance. Three materialized rolls preserve that mix for
-        // the Orc Cave guardian reward without adding an item-only runtime.
-        206 => vec![serde_json::json!({
-            "rolls": 3,
-            "candidates": combat_ring_roll_candidates(),
-        })],
-        _ => Vec::new(),
-    };
-    if !groups.is_empty() {
-        value["rollGroups"] = serde_json::Value::Array(groups);
-    }
-}
-
-fn combat_ring_roll_candidates() -> Vec<serde_json::Value> {
-    vec![
-        serde_json::json!({"weight": 10, "properties": {"modifiers": {"constitution": 1}}}),
-        serde_json::json!({"weight": 10, "properties": {"modifiers": {"dexterity": 1}}}),
-        serde_json::json!({"weight": 10, "properties": {"modifiers": {"strength": 1}}}),
-        serde_json::json!({"weight": 20, "properties": {"equipmentBonuses": {"meleeSkill": 5}}}),
-        serde_json::json!({"weight": 20, "properties": {"equipmentBonuses": {"meleeDamage": 5}}}),
-        serde_json::json!({"weight": 20, "properties": {"equipmentBonuses": {"meleeSkill": 4, "meleeDamage": 4}}}),
-        serde_json::json!({"weight": 10, "properties": {"statusImmunities": ["rfb.status.fear"]}}),
-    ]
-}
-
-fn speed_roll_candidates(ring: bool) -> Vec<serde_json::Value> {
-    let maximum = if ring { 12_i32 } else { 10_i32 };
-    (1..=maximum)
-        .map(|speed| {
-            let min_depth = u16::try_from((speed - 1).saturating_mul(10)).unwrap_or(u16::MAX);
-            serde_json::json!({
-                "weight": u32::try_from(maximum - speed + 1).unwrap_or(1),
-                "minDepth": min_depth,
-                "properties": {"modifiers": {"speed": speed}}
-            })
-        })
-        .collect()
 }
 
 fn artifact_json(
@@ -18455,20 +18388,45 @@ fn sync_demo_weapon_digger_base_kinds(
     )?)?;
     let selection: DemoItemSelection =
         serde_json::from_slice(&fs::read(pack_root.join("legacy-item-selection.json"))?)?;
-    let selected = selected_demo_items(&selection, &entries)?;
-    for (selected_entry, entry) in selected
+    let mut selected = selected_demo_items(&selection, &entries)?
+        .into_iter()
+        .map(|(selected, entry)| (selected.id.clone(), entry))
+        .collect::<Vec<_>>();
+    let adaptations: DemoItemAdaptationLedger =
+        serde_json::from_slice(&fs::read(pack_root.join("legacy-item-adaptations.json"))?)?;
+    for adaptation in adaptations
+        .items
+        .iter()
+        .filter(|item| item.status == DemoItemCoverageStatus::Active)
+    {
+        if let Some(entry) = entries
+            .iter()
+            .find(|entry| entry.index == adaptation.source_index)
+            && matches!(entry.tval, 20..=23)
+        {
+            selected.push((
+                adaptation
+                    .item_id
+                    .trim_start_matches("demo.item.")
+                    .to_owned(),
+                entry,
+            ));
+        }
+    }
+    for (id, entry) in selected
         .into_iter()
         .filter(|(_, entry)| matches!(entry.tval, 20..=23))
     {
-        let path = pack_root
-            .join("items")
-            .join(format!("{}.json", selected_entry.id));
+        let path = pack_root.join("items").join(format!("{id}.json"));
         let mut value: serde_json::Value = serde_json::from_slice(&fs::read(&path)?)?;
         value["rfbBaseKind"] = serde_json::json!({
             "sourceIndex": entry.index,
             "tval": entry.tval,
             "sval": entry.sval,
         });
+        if entry.flags.iter().any(|flag| flag == "DEC_MANA") {
+            value["passives"] = serde_json::json!(["reduced-mana-cost"]);
+        }
         fs::write(path, serde_json::to_string_pretty(&value)? + "\n")?;
     }
     Ok(())
@@ -26182,7 +26140,7 @@ static cptr _ego_name_zh[] =
     }
 
     #[test]
-    fn protection_ego_materializes_uniform_armor_rolls() {
+    fn protection_ego_defers_enchantment_to_the_shared_materializer() {
         let egos = parse_e_info(
             "N:50:of Protection\nT:BODY_ARMOR | SHIELD | CLOAK | HELMET | GLOVES | BOOTS\nW:0:30:2\nC:0:0:10:0\nF:IGNORE_ACID\n",
         )
@@ -26203,20 +26161,8 @@ static cptr _ego_name_zh[] =
             serde_json::json!(["acid"])
         );
         assert!(protection.get("modifiers").is_none());
-        let candidates = protection["rollGroups"][0]["candidates"]
-            .as_array()
-            .expect("Protection should retain armor candidates");
-        assert_eq!(candidates.len(), 10);
-        assert_eq!(
-            candidates
-                .iter()
-                .map(|candidate| candidate["properties"]["modifiers"]["defense"]
-                    .as_i64()
-                    .unwrap())
-                .collect::<Vec<_>>(),
-            (1..=10).collect::<Vec<_>>()
-        );
-        assert!(candidates.iter().all(|candidate| candidate["weight"] == 1));
+        assert!(protection.get("rollGroups").is_none());
+        assert_eq!(protection["rfbEgo"]["sourceIndex"], 50);
     }
 
     #[test]
@@ -26238,7 +26184,7 @@ static cptr _ego_name_zh[] =
     }
 
     #[test]
-    fn combat_ring_ego_materializes_three_original_weighted_rolls() {
+    fn combat_ring_ego_defers_power_rolls_to_the_shared_materializer() {
         let egos = parse_e_info("N:206:of Combat\nT:RING\nW:10:*:2\nF:HIDE_TYPE\n")
             .expect("Combat ego should parse");
         let outcome = convert_content(
@@ -26251,18 +26197,8 @@ static cptr _ego_name_zh[] =
         );
         let combat = &outcome.affix_files[0].1;
         assert_eq!(combat["id"], "rfb-legacy.affix.combat");
-        assert_eq!(combat["rollGroups"][0]["rolls"], 3);
-        let candidates = combat["rollGroups"][0]["candidates"]
-            .as_array()
-            .expect("Combat ego should retain weighted candidates");
-        assert_eq!(candidates.len(), 7);
-        assert_eq!(
-            candidates
-                .iter()
-                .map(|candidate| candidate["weight"].as_u64().unwrap())
-                .sum::<u64>(),
-            100
-        );
+        assert!(combat.get("rollGroups").is_none());
+        assert_eq!(combat["rfbEgo"]["sourceIndex"], 206);
     }
 
     #[test]

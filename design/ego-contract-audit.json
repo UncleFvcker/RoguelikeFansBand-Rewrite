@@ -1,0 +1,5113 @@
+{
+  "sourceRef": "master",
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "identityContractsVerified": 160,
+  "craftSelectableCount": 121,
+  "runtimeRoundTripTest": "game::ego::contracts::all_160_source_egos_have_an_effect_and_save_stable_instances",
+  "runtimeParityComplete": false,
+  "naturalTablesUsingSharedPolicy": [
+    "demo.loot-table.archer",
+    "demo.loot-table.base-items",
+    "demo.loot-table.dwarf",
+    "demo.loot-table.evil-paladin",
+    "demo.loot-table.evil-priest",
+    "demo.loot-table.hobbit",
+    "demo.loot-table.mage",
+    "demo.loot-table.ninja",
+    "demo.loot-table.paladin",
+    "demo.loot-table.priest",
+    "demo.loot-table.rogue",
+    "demo.loot-table.samurai",
+    "demo.loot-table.warrior"
+  ],
+  "unresolvedSharedGenerationContracts": [
+    {
+      "scope": "all natural equipment",
+      "contract": "negative power, curse_object / one_biff and value-dependent severity",
+      "source": "src/object2.c:2125; src/artifact.c:1960"
+    },
+    {
+      "scope": "non-ammunition random artifacts",
+      "contract": "_check_rand_art / _art_create_random",
+      "source": "src/ego.c:303"
+    },
+    {
+      "scope": "rings and amulets",
+      "contract": "obj_value_real scoring and up to 1000 candidate retries",
+      "source": "src/ego.c:411"
+    },
+    {
+      "scope": "dragon base kinds",
+      "contract": "dragon_resist and its pre-ego suppression roll",
+      "source": "src/object2.c:2312"
+    },
+    {
+      "scope": "bags",
+      "contract": "SV_BAG capacity and quiver-ego behavior in the container system",
+      "source": "src/ego.c:3691"
+    },
+    {
+      "scope": "unavailable classes and races",
+      "contract": "Mauler, Bard, Monster Ring and Vortex special generation modifiers",
+      "source": "src/ego.c; src/object2.c"
+    }
+  ],
+  "retainedNonSourceAffixes": [
+    "demo.affix.frost-hunter",
+    "demo.affix.holy-blade",
+    "demo.affix.regeneration",
+    "demo.affix.vampiric",
+    "rfb-legacy.affix.amulet-am-quest",
+    "rfb-legacy.affix.artifact-extra-res-or-power",
+    "rfb-legacy.affix.equipment-am-quest",
+    "rfb-legacy.affix.lite-am-quest"
+  ],
+  "equipmentBases": [
+    {
+      "itemId": "demo.item.mattock",
+      "status": "source-type-verified",
+      "sourceIndex": 156,
+      "sval": 7,
+      "tval": 20
+    },
+    {
+      "itemId": "demo.item.adamantine-bolt",
+      "status": "source-type-verified",
+      "sourceIndex": 189,
+      "sval": 5,
+      "tval": 18
+    },
+    {
+      "itemId": "demo.item.arrow",
+      "status": "source-type-verified",
+      "sourceIndex": 175,
+      "sval": 1,
+      "tval": 17
+    },
+    {
+      "itemId": "demo.item.augmented-chain-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 275,
+      "sval": 6,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.awl-pike",
+      "status": "source-type-verified",
+      "sourceIndex": 88,
+      "sval": 4,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.ball-and-chain",
+      "status": "source-type-verified",
+      "sourceIndex": 125,
+      "sval": 6,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.basillard",
+      "status": "source-type-verified",
+      "sourceIndex": 52,
+      "sval": 9,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.bastard-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 64,
+      "sval": 21,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.battle-axe",
+      "status": "source-type-verified",
+      "sourceIndex": 103,
+      "sval": 22,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.beaked-axe",
+      "status": "source-type-verified",
+      "sourceIndex": 94,
+      "sval": 10,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.blade-of-chaos",
+      "status": "source-type-verified",
+      "sourceIndex": 73,
+      "sval": 30,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.bo-staff",
+      "status": "source-type-verified",
+      "sourceIndex": 131,
+      "sval": 14,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.bolt",
+      "status": "source-type-verified",
+      "sourceIndex": 185,
+      "sval": 1,
+      "tval": 18
+    },
+    {
+      "itemId": "demo.item.brass-lantern",
+      "status": "source-type-verified",
+      "sourceIndex": 601,
+      "sval": 1,
+      "tval": 39
+    },
+    {
+      "itemId": "demo.item.broad-axe",
+      "status": "source-type-verified",
+      "sourceIndex": 95,
+      "sval": 11,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.broad-spear",
+      "status": "source-type-verified",
+      "sourceIndex": 91,
+      "sval": 7,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.broad-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 59,
+      "sval": 16,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.broken-dagger",
+      "status": "source-type-verified",
+      "sourceIndex": 45,
+      "sval": 1,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.broken-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 46,
+      "sval": 2,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.capture-ball",
+      "status": "separate-container-or-capture-system",
+      "equipmentSlot": "shield"
+    },
+    {
+      "itemId": "demo.item.chain-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 273,
+      "sval": 4,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.claymore",
+      "status": "source-type-verified",
+      "sourceIndex": 66,
+      "sval": 23,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.cloak",
+      "status": "source-type-verified",
+      "sourceIndex": 195,
+      "sval": 1,
+      "tval": 35
+    },
+    {
+      "itemId": "demo.item.club",
+      "status": "source-type-verified",
+      "sourceIndex": 120,
+      "sval": 1,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.cord-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 254,
+      "sval": 9,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.cutlass",
+      "status": "source-type-verified",
+      "sourceIndex": 55,
+      "sval": 12,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.dagger",
+      "status": "source-type-verified",
+      "sourceIndex": 47,
+      "sval": 4,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.diamond-edge",
+      "status": "source-type-verified",
+      "sourceIndex": 74,
+      "sval": 31,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.dwarven-backpack",
+      "status": "separate-container-or-capture-system",
+      "equipmentSlot": "container"
+    },
+    {
+      "itemId": "demo.item.elven-cloak",
+      "status": "source-type-verified",
+      "sourceIndex": 196,
+      "sval": 2,
+      "tval": 35
+    },
+    {
+      "itemId": "demo.item.espadon",
+      "status": "source-type-verified",
+      "sourceIndex": 67,
+      "sval": 24,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.executioners-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 71,
+      "sval": 28,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.fabric-bag",
+      "status": "separate-container-or-capture-system",
+      "equipmentSlot": "container"
+    },
+    {
+      "itemId": "demo.item.falchion",
+      "status": "source-type-verified",
+      "sourceIndex": 65,
+      "sval": 22,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.falcon-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 76,
+      "sval": 33,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.fauchard",
+      "status": "source-type-verified",
+      "sourceIndex": 90,
+      "sval": 6,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.filthy-rag",
+      "status": "source-type-verified",
+      "sourceIndex": 246,
+      "sval": 1,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.flail",
+      "status": "source-type-verified",
+      "sourceIndex": 130,
+      "sval": 13,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.flamberge",
+      "status": "source-type-verified",
+      "sourceIndex": 69,
+      "sval": 26,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.fur-cloak",
+      "status": "source-type-verified",
+      "sourceIndex": 197,
+      "sval": 3,
+      "tval": 35
+    },
+    {
+      "itemId": "demo.item.glaive",
+      "status": "source-type-verified",
+      "sourceIndex": 97,
+      "sval": 13,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.gnomish-shovel",
+      "status": "source-type-verified",
+      "sourceIndex": 151,
+      "sval": 2,
+      "tval": 20
+    },
+    {
+      "itemId": "demo.item.halberd",
+      "status": "source-type-verified",
+      "sourceIndex": 99,
+      "sval": 15,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.hard-leather-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 251,
+      "sval": 6,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.hard-leather-cap",
+      "status": "source-type-verified",
+      "sourceIndex": 212,
+      "sval": 2,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.hard-studded-leather",
+      "status": "source-type-verified",
+      "sourceIndex": 252,
+      "sval": 7,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.harp",
+      "status": "source-type-verified",
+      "sourceIndex": 168,
+      "sval": 70,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.hatchet",
+      "status": "source-type-verified",
+      "sourceIndex": 85,
+      "sval": 1,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.heavy-crossbow",
+      "status": "source-type-verified",
+      "sourceIndex": 164,
+      "sval": 24,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.heavy-lance",
+      "status": "source-type-verified",
+      "sourceIndex": 107,
+      "sval": 29,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.iron-helm",
+      "status": "source-type-verified",
+      "sourceIndex": 215,
+      "sval": 5,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.iron-shot",
+      "status": "source-type-verified",
+      "sourceIndex": 191,
+      "sval": 2,
+      "tval": 16
+    },
+    {
+      "itemId": "demo.item.jingasa",
+      "status": "source-type-verified",
+      "sourceIndex": 214,
+      "sval": 4,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.jo-staff",
+      "status": "source-type-verified",
+      "sourceIndex": 126,
+      "sval": 7,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.katana",
+      "status": "source-type-verified",
+      "sourceIndex": 63,
+      "sval": 20,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.khopesh",
+      "status": "source-type-verified",
+      "sourceIndex": 57,
+      "sval": 14,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.knit-cap",
+      "status": "source-type-verified",
+      "sourceIndex": 224,
+      "sval": 1,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.lance",
+      "status": "source-type-verified",
+      "sourceIndex": 102,
+      "sval": 20,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.large-leather-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 237,
+      "sval": 4,
+      "tval": 34
+    },
+    {
+      "itemId": "demo.item.large-metal-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 238,
+      "sval": 5,
+      "tval": 34
+    },
+    {
+      "itemId": "demo.item.lead-filled-mace",
+      "status": "source-type-verified",
+      "sourceIndex": 132,
+      "sval": 15,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.leather-gloves",
+      "status": "source-type-verified",
+      "sourceIndex": 227,
+      "sval": 1,
+      "tval": 31
+    },
+    {
+      "itemId": "demo.item.leather-jacket",
+      "status": "source-type-verified",
+      "sourceIndex": 257,
+      "sval": 12,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.leather-pouch",
+      "status": "separate-container-or-capture-system",
+      "equipmentSlot": "container"
+    },
+    {
+      "itemId": "demo.item.leather-scale-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 256,
+      "sval": 11,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.light-crossbow",
+      "status": "source-type-verified",
+      "sourceIndex": 163,
+      "sval": 23,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.long-bow",
+      "status": "source-type-verified",
+      "sourceIndex": 162,
+      "sval": 13,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.long-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 60,
+      "sval": 17,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.lucerne-hammer",
+      "status": "source-type-verified",
+      "sourceIndex": 96,
+      "sval": 12,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.mace",
+      "status": "source-type-verified",
+      "sourceIndex": 124,
+      "sval": 5,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.main-gauche",
+      "status": "source-type-verified",
+      "sourceIndex": 48,
+      "sval": 5,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.metal-cap",
+      "status": "source-type-verified",
+      "sourceIndex": 213,
+      "sval": 3,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.metal-lamellar-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 282,
+      "sval": 13,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.mirror-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 242,
+      "sval": 10,
+      "tval": 34
+    },
+    {
+      "itemId": "demo.item.mithril-arrow",
+      "status": "source-type-verified",
+      "sourceIndex": 177,
+      "sval": 3,
+      "tval": 17
+    },
+    {
+      "itemId": "demo.item.mithril-bolt",
+      "status": "source-type-verified",
+      "sourceIndex": 187,
+      "sval": 3,
+      "tval": 18
+    },
+    {
+      "itemId": "demo.item.mithril-shot",
+      "status": "source-type-verified",
+      "sourceIndex": 192,
+      "sval": 3,
+      "tval": 16
+    },
+    {
+      "itemId": "demo.item.morning-star",
+      "status": "source-type-verified",
+      "sourceIndex": 129,
+      "sval": 12,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.multi-hued-dragon-scale-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 297,
+      "sval": 6,
+      "tval": 38
+    },
+    {
+      "itemId": "demo.item.ninjato",
+      "status": "source-type-verified",
+      "sourceIndex": 62,
+      "sval": 19,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.no-dachi",
+      "status": "source-type-verified",
+      "sourceIndex": 70,
+      "sval": 27,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.nunchaku",
+      "status": "source-type-verified",
+      "sourceIndex": 123,
+      "sval": 4,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.orcish-pick",
+      "status": "source-type-verified",
+      "sourceIndex": 154,
+      "sval": 5,
+      "tval": 20
+    },
+    {
+      "itemId": "demo.item.padded-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 255,
+      "sval": 10,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.pair-of-hard-leather-boots",
+      "status": "source-type-verified",
+      "sourceIndex": 206,
+      "sval": 3,
+      "tval": 30
+    },
+    {
+      "itemId": "demo.item.pair-of-metal-shod-boots",
+      "status": "source-type-verified",
+      "sourceIndex": 208,
+      "sval": 5,
+      "tval": 30
+    },
+    {
+      "itemId": "demo.item.paper-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 248,
+      "sval": 3,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.pick",
+      "status": "source-type-verified",
+      "sourceIndex": 153,
+      "sval": 4,
+      "tval": 20
+    },
+    {
+      "itemId": "demo.item.pike",
+      "status": "source-type-verified",
+      "sourceIndex": 92,
+      "sval": 8,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.pointy-hat",
+      "status": "source-type-verified",
+      "sourceIndex": 225,
+      "sval": 10,
+      "tval": 32
+    },
+    {
+      "itemId": "demo.item.quarterstaff",
+      "status": "source-type-verified",
+      "sourceIndex": 122,
+      "sval": 3,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.rapier",
+      "status": "source-type-verified",
+      "sourceIndex": 50,
+      "sval": 7,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.rhino-hide-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 253,
+      "sval": 8,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.ring",
+      "status": "source-type-verified",
+      "sourceIndex": 310,
+      "sval": 0,
+      "tval": 45
+    },
+    {
+      "itemId": "demo.item.ring-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 271,
+      "sval": 2,
+      "tval": 37
+    },
+    {
+      "itemId": "demo.item.robe",
+      "status": "source-type-verified",
+      "sourceIndex": 247,
+      "sval": 2,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.rounded-pebble",
+      "status": "source-type-verified",
+      "sourceIndex": 190,
+      "sval": 1,
+      "tval": 16
+    },
+    {
+      "itemId": "demo.item.rune-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 77,
+      "sval": 34,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.sabre",
+      "status": "source-type-verified",
+      "sourceIndex": 54,
+      "sval": 11,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.scimitar",
+      "status": "source-type-verified",
+      "sourceIndex": 61,
+      "sval": 18,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.seeker-arrow",
+      "status": "source-type-verified",
+      "sourceIndex": 178,
+      "sval": 4,
+      "tval": 17
+    },
+    {
+      "itemId": "demo.item.seeker-bolt",
+      "status": "source-type-verified",
+      "sourceIndex": 188,
+      "sval": 4,
+      "tval": 18
+    },
+    {
+      "itemId": "demo.item.set-of-gauntlets",
+      "status": "source-type-verified",
+      "sourceIndex": 229,
+      "sval": 3,
+      "tval": 31
+    },
+    {
+      "itemId": "demo.item.set-of-spiked-gauntlets",
+      "status": "source-type-verified",
+      "sourceIndex": 230,
+      "sval": 4,
+      "tval": 31
+    },
+    {
+      "itemId": "demo.item.set-of-studded-leather-gloves",
+      "status": "source-type-verified",
+      "sourceIndex": 228,
+      "sval": 2,
+      "tval": 31
+    },
+    {
+      "itemId": "demo.item.sheaf-arrow",
+      "status": "source-type-verified",
+      "sourceIndex": 176,
+      "sval": 2,
+      "tval": 17
+    },
+    {
+      "itemId": "demo.item.short-bow",
+      "status": "source-type-verified",
+      "sourceIndex": 161,
+      "sval": 12,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.short-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 53,
+      "sval": 10,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.shovel",
+      "status": "source-type-verified",
+      "sourceIndex": 150,
+      "sval": 1,
+      "tval": 20
+    },
+    {
+      "itemId": "demo.item.sickle",
+      "status": "source-type-verified",
+      "sourceIndex": 87,
+      "sval": 3,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.sling",
+      "status": "source-type-verified",
+      "sourceIndex": 160,
+      "sval": 2,
+      "tval": 19
+    },
+    {
+      "itemId": "demo.item.small-leather-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 235,
+      "sval": 2,
+      "tval": 34
+    },
+    {
+      "itemId": "demo.item.small-metal-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 236,
+      "sval": 3,
+      "tval": 34
+    },
+    {
+      "itemId": "demo.item.small-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 51,
+      "sval": 8,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.soft-leather-armour",
+      "status": "source-type-verified",
+      "sourceIndex": 249,
+      "sval": 4,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.soft-leather-boots",
+      "status": "source-type-verified",
+      "sourceIndex": 205,
+      "sval": 2,
+      "tval": 30
+    },
+    {
+      "itemId": "demo.item.soft-studded-leather",
+      "status": "source-type-verified",
+      "sourceIndex": 250,
+      "sval": 5,
+      "tval": 36
+    },
+    {
+      "itemId": "demo.item.spear",
+      "status": "source-type-verified",
+      "sourceIndex": 86,
+      "sval": 2,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.steel-bolt",
+      "status": "source-type-verified",
+      "sourceIndex": 186,
+      "sval": 2,
+      "tval": 18
+    },
+    {
+      "itemId": "demo.item.tanto",
+      "status": "source-type-verified",
+      "sourceIndex": 49,
+      "sval": 6,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.three-piece-rod",
+      "status": "source-type-verified",
+      "sourceIndex": 128,
+      "sval": 11,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.trident",
+      "status": "source-type-verified",
+      "sourceIndex": 89,
+      "sval": 5,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.trifurcate-spear",
+      "status": "source-type-verified",
+      "sourceIndex": 105,
+      "sval": 26,
+      "tval": 22
+    },
+    {
+      "itemId": "demo.item.tulwar",
+      "status": "source-type-verified",
+      "sourceIndex": 58,
+      "sval": 15,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.two-handed-sword",
+      "status": "source-type-verified",
+      "sourceIndex": 68,
+      "sval": 25,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.wakizashi",
+      "status": "source-type-verified",
+      "sourceIndex": 56,
+      "sval": 13,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.war-hammer",
+      "status": "source-type-verified",
+      "sourceIndex": 127,
+      "sval": 8,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.whip",
+      "status": "source-type-verified",
+      "sourceIndex": 121,
+      "sval": 2,
+      "tval": 21
+    },
+    {
+      "itemId": "demo.item.wooden-torch",
+      "status": "source-type-verified",
+      "sourceIndex": 600,
+      "sval": 0,
+      "tval": 39
+    },
+    {
+      "itemId": "demo.item.zweihander",
+      "status": "source-type-verified",
+      "sourceIndex": 72,
+      "sval": 29,
+      "tval": 23
+    },
+    {
+      "itemId": "demo.item.law-dragon-scale-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 299,
+      "sval": 12,
+      "tval": 38
+    },
+    {
+      "itemId": "demo.item.gold-dragon-scale-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 302,
+      "sval": 16,
+      "tval": 38
+    },
+    {
+      "itemId": "demo.item.chaos-dragon-scale-mail",
+      "status": "source-type-verified",
+      "sourceIndex": 303,
+      "sval": 18,
+      "tval": 38
+    },
+    {
+      "itemId": "demo.item.mithril-shod-boots",
+      "status": "source-type-verified",
+      "sourceIndex": 209,
+      "sval": 6,
+      "tval": 30
+    },
+    {
+      "itemId": "demo.item.iron-crown",
+      "status": "source-type-verified",
+      "sourceIndex": 220,
+      "sval": 10,
+      "tval": 33
+    },
+    {
+      "itemId": "demo.item.quiver",
+      "status": "source-type-verified",
+      "sourceIndex": 169,
+      "sval": 0,
+      "tval": 46
+    },
+    {
+      "itemId": "demo.item.feanorian-lamp",
+      "status": "source-type-verified",
+      "sourceIndex": 603,
+      "sval": 2,
+      "tval": 39
+    },
+    {
+      "itemId": "demo.item.wizardstaff",
+      "status": "source-type-verified",
+      "sourceIndex": 137,
+      "sval": 21,
+      "tval": 21
+    }
+  ],
+  "unmappedFlagReview": [
+    {
+      "flag": "AGGRAVATE",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/item_curses.rs"
+    },
+    {
+      "flag": "AWARE",
+      "occurrences": 14,
+      "classification": "source-declaration-without-runtime-consumer",
+      "evidence": "master:src/ego.c; master:lib/edit/e_info.txt"
+    },
+    {
+      "flag": "BLESSED",
+      "occurrences": 5,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_combat.rs; crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "BLOWS",
+      "occurrences": 3,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_combat.rs; crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "BRAND_MANA",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_combat.rs; crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "BRAND_ORDER",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_combat.rs; crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "BRAND_WILD",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_combat.rs; crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "CURSED",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/ego.rs; crates/rfb-core/src/game/ego/armor.rs; crates/rfb-core/src/game/ego/jewelry.rs"
+    },
+    {
+      "flag": "DEC_LIFE",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs; crates/rfb-core/src/game/progression.rs"
+    },
+    {
+      "flag": "DEC_SPEED",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "DEC_STEALTH",
+      "occurrences": 5,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "DEVICE_POWER",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_abilities.rs; crates/rfb-core/src/game/item_use.rs; crates/rfb-core/src/game/monster_abilities.rs"
+    },
+    {
+      "flag": "DRAIN_EXP",
+      "occurrences": 3,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/item_curses.rs"
+    },
+    {
+      "flag": "ESP_ANIMAL",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "ESP_GIANT",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "ESP_ORC",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "ESP_TROLL",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "ESP_UNDEAD",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "HEAVY_CURSE",
+      "occurrences": 4,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/ego.rs; crates/rfb-core/src/game/ego/armor.rs; crates/rfb-core/src/game/ego/jewelry.rs"
+    },
+    {
+      "flag": "INFRA",
+      "occurrences": 3,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "LIFE",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs; crates/rfb-core/src/game/progression.rs"
+    },
+    {
+      "flag": "MAGIC_MASTERY",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_abilities.rs; crates/rfb-core/src/game/item_use.rs; crates/rfb-core/src/game/monster_abilities.rs"
+    },
+    {
+      "flag": "MAGIC_RESISTANCE",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_abilities.rs; crates/rfb-core/src/game/item_use.rs; crates/rfb-core/src/game/monster_abilities.rs"
+    },
+    {
+      "flag": "ONE_SUSTAIN",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/ego.rs; crates/rfb-core/src/game/ego/armor.rs"
+    },
+    {
+      "flag": "RANDOM_CURSE2",
+      "occurrences": 4,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/ego.rs; crates/rfb-core/src/game/ego/armor.rs; crates/rfb-core/src/game/ego/jewelry.rs"
+    },
+    {
+      "flag": "SEARCH",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "SLOW_DIGEST",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "SPEED",
+      "occurrences": 15,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "SPELL_CAP",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_abilities.rs; crates/rfb-core/src/game/item_use.rs; crates/rfb-core/src/game/monster_abilities.rs"
+    },
+    {
+      "flag": "STEALTH",
+      "occurrences": 16,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "TELEPATHY",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "TELEPORT",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/item_curses.rs"
+    },
+    {
+      "flag": "TUNNEL",
+      "occurrences": 5,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/mining.rs; crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "TY_CURSE",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/item_curses.rs"
+    },
+    {
+      "flag": "VORPAL",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/player_combat.rs; crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "XTRA_E_RES",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/ego.rs; crates/rfb-core/src/game/ego/armor.rs"
+    },
+    {
+      "flag": "XTRA_H_RES",
+      "occurrences": 19,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/ego.rs; crates/rfb-core/src/game/ego/armor.rs"
+    },
+    {
+      "flag": "XTRA_MIGHT",
+      "occurrences": 1,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/ego.rs; crates/rfb-core/src/game/player_stats.rs"
+    },
+    {
+      "flag": "XTRA_POWER",
+      "occurrences": 3,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/ego.rs; crates/rfb-core/src/game/ego/armor.rs"
+    },
+    {
+      "flag": "XTRA_RES",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/ego.rs; crates/rfb-core/src/game/ego/armor.rs"
+    },
+    {
+      "flag": "XTRA_SHOTS",
+      "occurrences": 2,
+      "classification": "runtime-consumer",
+      "evidence": "crates/rfb-core/src/game/ego.rs; crates/rfb-core/src/game/player_stats.rs"
+    }
+  ],
+  "entries": [
+    {
+      "sourceIndex": 1,
+      "affixId": "rfb-legacy.affix.slaying",
+      "chineseName": "杀戮之",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 2,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 2,
+      "affixId": "rfb-legacy.affix.sharpness",
+      "chineseName": "锋利之",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 2,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "VORPAL",
+        "TUNNEL"
+      ],
+      "importerUnmappedFlags": [
+        "TUNNEL",
+        "VORPAL"
+      ]
+    },
+    {
+      "sourceIndex": 3,
+      "affixId": "rfb-legacy.affix.force",
+      "chineseName": "原力之",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 4,
+      "level": 20,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "INT",
+        "WIS",
+        "BRAND_MANA",
+        "SEE_INVIS"
+      ],
+      "importerUnmappedFlags": [
+        "BRAND_MANA"
+      ]
+    },
+    {
+      "sourceIndex": 4,
+      "affixId": "rfb-legacy.affix.blessed",
+      "chineseName": "(受祝福的)",
+      "types": [
+        "WEAPON",
+        "DIGGER"
+      ],
+      "rarity": 8,
+      "level": 0,
+      "maxLevel": 60,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "WIS",
+        "BLESSED",
+        "XTRA_POWER"
+      ],
+      "importerUnmappedFlags": [
+        "BLESSED",
+        "XTRA_POWER"
+      ]
+    },
+    {
+      "sourceIndex": 5,
+      "affixId": "rfb-legacy.affix.extra-attacks",
+      "chineseName": "额外攻击之",
+      "types": [
+        "WEAPON",
+        "DIGGER"
+      ],
+      "rarity": 8,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "BLOWS"
+      ],
+      "importerUnmappedFlags": [
+        "BLOWS"
+      ]
+    },
+    {
+      "sourceIndex": 6,
+      "affixId": "rfb-legacy.affix.arcane",
+      "chineseName": "(奥秘的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 6,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SPELL_POWER",
+        "BRAND_MANA",
+        "DEC_STR",
+        "DEC_DEX",
+        "DEC_CON"
+      ],
+      "importerUnmappedFlags": [
+        "BRAND_MANA"
+      ]
+    },
+    {
+      "sourceIndex": 7,
+      "affixId": "rfb-legacy.affix.armageddon",
+      "chineseName": "(毁灭的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 3,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 8,
+      "affixId": "rfb-legacy.affix.chaos",
+      "chineseName": "(混沌的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 4,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "BRAND_CHAOS",
+        "RES_CHAOS",
+        "XTRA_RES",
+        "IGNORE_ELEC",
+        "IGNORE_ACID",
+        "IGNORE_FIRE"
+      ],
+      "importerUnmappedFlags": [
+        "XTRA_RES"
+      ]
+    },
+    {
+      "sourceIndex": 9,
+      "affixId": "rfb-legacy.affix.craft",
+      "chineseName": "(工匠的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 2,
+      "level": 15,
+      "maxLevel": 70,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "IGNORE_ELEC"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 10,
+      "affixId": "rfb-legacy.affix.crusade",
+      "chineseName": "(圣战的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 4,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "WIS",
+        "SLAY_EVIL",
+        "SLAY_UNDEAD",
+        "SLAY_DEMON",
+        "SEE_INVIS",
+        "BLESSED",
+        "RES_FEAR",
+        "ONE_SUSTAIN"
+      ],
+      "importerUnmappedFlags": [
+        "BLESSED",
+        "ONE_SUSTAIN"
+      ]
+    },
+    {
+      "sourceIndex": 11,
+      "affixId": "rfb-legacy.affix.daemon",
+      "chineseName": "(恶魔的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 6,
+      "level": 70,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": true,
+      "flags": [
+        "BLOWS",
+        "STR",
+        "DEX",
+        "DEC_WIS"
+      ],
+      "importerUnmappedFlags": [
+        "BLOWS"
+      ]
+    },
+    {
+      "sourceIndex": 12,
+      "affixId": "rfb-legacy.affix.death",
+      "chineseName": "(死亡的)",
+      "types": [
+        "WEAPON",
+        "DIGGER"
+      ],
+      "rarity": 4,
+      "level": 20,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "BRAND_VAMP",
+        "HOLD_LIFE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 13,
+      "affixId": "rfb-legacy.affix.life",
+      "chineseName": "(生命的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 4,
+      "level": 20,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "HOLD_LIFE",
+        "LIFE",
+        "BLESSED",
+        "SLAY_UNDEAD",
+        "SLAY_DEMON"
+      ],
+      "importerUnmappedFlags": [
+        "BLESSED",
+        "LIFE"
+      ]
+    },
+    {
+      "sourceIndex": 14,
+      "affixId": "rfb-legacy.affix.nature",
+      "chineseName": "(自然的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 2,
+      "level": 15,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "INT",
+        "SLAY_ANIMAL",
+        "REGEN",
+        "ESP_ANIMAL"
+      ],
+      "importerUnmappedFlags": [
+        "ESP_ANIMAL"
+      ]
+    },
+    {
+      "sourceIndex": 15,
+      "affixId": "rfb-legacy.affix.trump",
+      "chineseName": "(王牌的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 6,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": true,
+      "flags": [
+        "SLAY_EVIL",
+        "TELEPORT",
+        "FREE_ACT",
+        "SEARCH",
+        "REGEN",
+        "SLOW_DIGEST",
+        "RES_NEXUS",
+        "XTRA_H_RES"
+      ],
+      "importerUnmappedFlags": [
+        "SEARCH",
+        "SLOW_DIGEST",
+        "TELEPORT",
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 16,
+      "affixId": "rfb-legacy.affix.wild",
+      "chineseName": "(狂野的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 16,
+      "level": 80,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "BRAND_WILD",
+        "XTRA_RES",
+        "XTRA_H_RES",
+        "XTRA_POWER"
+      ],
+      "importerUnmappedFlags": [
+        "BRAND_WILD",
+        "XTRA_H_RES",
+        "XTRA_POWER",
+        "XTRA_RES"
+      ]
+    },
+    {
+      "sourceIndex": 17,
+      "affixId": "rfb-legacy.affix.order",
+      "chineseName": "(秩序的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 16,
+      "level": 90,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "BRAND_ORDER",
+        "RES_SOUND",
+        "RES_SHARDS"
+      ],
+      "importerUnmappedFlags": [
+        "BRAND_ORDER"
+      ]
+    },
+    {
+      "sourceIndex": 18,
+      "affixId": "rfb-legacy.affix.defender",
+      "chineseName": "(防御者的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 4,
+      "level": 20,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "FREE_ACT",
+        "SEE_INVIS",
+        "ONE_SUSTAIN",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "ONE_SUSTAIN"
+      ]
+    },
+    {
+      "sourceIndex": 19,
+      "affixId": "rfb-legacy.affix.westernesse",
+      "chineseName": "西方之地的",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 3,
+      "level": 20,
+      "maxLevel": 50,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "DEX",
+        "CON",
+        "SLAY_ORC",
+        "SLAY_TROLL",
+        "SLAY_GIANT",
+        "ESP_ORC",
+        "ESP_TROLL",
+        "ESP_GIANT",
+        "FREE_ACT",
+        "SEE_INVIS"
+      ],
+      "importerUnmappedFlags": [
+        "ESP_GIANT",
+        "ESP_ORC",
+        "ESP_TROLL"
+      ]
+    },
+    {
+      "sourceIndex": 20,
+      "affixId": "rfb-legacy.affix.gondolin",
+      "chineseName": "贡多林的",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 3,
+      "level": 25,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SLAY_DEMON",
+        "SLAY_ORC",
+        "SLAY_TROLL",
+        "SLAY_DRAGON",
+        "LITE",
+        "RES_DARK",
+        "SEE_INVIS",
+        "FREE_ACT",
+        "IGNORE_ACID",
+        "IGNORE_FIRE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 21,
+      "affixId": "rfb-legacy.affix.morgul",
+      "chineseName": "魔古尔的",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 16,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SEE_INVIS",
+        "AGGRAVATE",
+        "HEAVY_CURSE",
+        "CURSED",
+        "SLAY_UNDEAD",
+        "BRAND_POIS",
+        "ESP_UNDEAD",
+        "SLAY_GOOD",
+        "RANDOM_CURSE2"
+      ],
+      "importerUnmappedFlags": [
+        "AGGRAVATE",
+        "CURSED",
+        "ESP_UNDEAD",
+        "HEAVY_CURSE",
+        "RANDOM_CURSE2"
+      ]
+    },
+    {
+      "sourceIndex": 22,
+      "affixId": "rfb-legacy.affix.pattern",
+      "chineseName": "(图案的)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 6,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "CON",
+        "SLAY_EVIL",
+        "SLAY_DEMON",
+        "SLAY_UNDEAD",
+        "FREE_ACT",
+        "SEE_INVIS",
+        "XTRA_H_RES"
+      ],
+      "importerUnmappedFlags": [
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 23,
+      "affixId": "rfb-legacy.affix.the-noldor",
+      "chineseName": "诺多精灵的",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 50,
+      "level": 70,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "CHR",
+        "SPEED",
+        "REGEN",
+        "LITE",
+        "SLAY_EVIL",
+        "SLAY_DEMON",
+        "SLAY_UNDEAD",
+        "BRAND_COLD",
+        "RES_LITE",
+        "FREE_ACT",
+        "SEE_INVIS",
+        "SLOW_DIGEST",
+        "IGNORE_ACID",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "IGNORE_ELEC"
+      ],
+      "importerUnmappedFlags": [
+        "SLOW_DIGEST",
+        "SPEED"
+      ]
+    },
+    {
+      "sourceIndex": 24,
+      "affixId": "rfb-legacy.affix.jousting",
+      "chineseName": "马战之",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 1,
+      "level": 20,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": true,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 25,
+      "affixId": "rfb-legacy.affix.hell-lance",
+      "chineseName": "& 地狱长枪~",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 2,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SLAY_GOOD",
+        "FULL_NAME"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 26,
+      "affixId": "rfb-legacy.affix.holy-lance",
+      "chineseName": "& 神圣长枪~",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 4,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SLAY_EVIL",
+        "BLESSED",
+        "FULL_NAME"
+      ],
+      "importerUnmappedFlags": [
+        "BLESSED"
+      ]
+    },
+    {
+      "sourceIndex": 27,
+      "affixId": "rfb-legacy.affix.troika",
+      "chineseName": "(三头马车)",
+      "types": [
+        "WEAPON"
+      ],
+      "rarity": 24,
+      "level": 60,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 40,
+      "affixId": "rfb-legacy.affix.digging",
+      "chineseName": "挖掘之",
+      "types": [
+        "DIGGER"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": 40,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "TUNNEL",
+        "AWARE",
+        "IGNORE_ACID"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE",
+        "TUNNEL"
+      ]
+    },
+    {
+      "sourceIndex": 41,
+      "affixId": "rfb-legacy.affix.dissolving",
+      "chineseName": "溶解之",
+      "types": [
+        "DIGGER"
+      ],
+      "rarity": 2,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "TUNNEL",
+        "BRAND_ACID",
+        "IGNORE_ACID"
+      ],
+      "importerUnmappedFlags": [
+        "TUNNEL"
+      ]
+    },
+    {
+      "sourceIndex": 42,
+      "affixId": "rfb-legacy.affix.disruption",
+      "chineseName": "瓦解之",
+      "types": [
+        "DIGGER"
+      ],
+      "rarity": 4,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": true,
+      "flags": [
+        "TUNNEL",
+        "BRAND_ACID",
+        "STR",
+        "IGNORE_ACID"
+      ],
+      "importerUnmappedFlags": [
+        "TUNNEL"
+      ]
+    },
+    {
+      "sourceIndex": 50,
+      "affixId": "rfb-legacy.affix.protection",
+      "chineseName": "保护之",
+      "types": [
+        "BODY_ARMOR",
+        "SHIELD",
+        "CLOAK",
+        "HELMET",
+        "GLOVES",
+        "BOOTS"
+      ],
+      "rarity": 2,
+      "level": 0,
+      "maxLevel": 30,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_ACID"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 51,
+      "affixId": "rfb-legacy.affix.elemental-protection",
+      "chineseName": "元素保护之",
+      "types": [
+        "BODY_ARMOR",
+        "SHIELD",
+        "CLOAK"
+      ],
+      "rarity": 3,
+      "level": 0,
+      "maxLevel": 60,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 52,
+      "affixId": "rfb-legacy.affix.celestial-protection",
+      "chineseName": "天界保护之",
+      "types": [
+        "BODY_ARMOR",
+        "SHIELD",
+        "CROWN"
+      ],
+      "rarity": 4,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 53,
+      "affixId": "rfb-legacy.affix.elvenkind",
+      "chineseName": "精灵的",
+      "types": [
+        "BODY_ARMOR",
+        "SHIELD"
+      ],
+      "rarity": 8,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STEALTH",
+        "RES_ACID",
+        "RES_ELEC",
+        "RES_FIRE",
+        "RES_COLD",
+        "XTRA_H_RES",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "STEALTH",
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 54,
+      "affixId": "rfb-legacy.affix.stealth",
+      "chineseName": "潜行之",
+      "types": [
+        "CLOAK",
+        "BOOTS"
+      ],
+      "rarity": 2,
+      "level": 0,
+      "maxLevel": 40,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STEALTH",
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE",
+        "STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 55,
+      "affixId": "rfb-legacy.affix.free-action",
+      "chineseName": "行动自如之",
+      "types": [
+        "GLOVES",
+        "BOOTS"
+      ],
+      "rarity": 2,
+      "level": 0,
+      "maxLevel": 40,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "FREE_ACT",
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE"
+      ]
+    },
+    {
+      "sourceIndex": 56,
+      "affixId": "rfb-legacy.affix.seeing",
+      "chineseName": "视觉之",
+      "types": [
+        "HELMET",
+        "CROWN"
+      ],
+      "rarity": 2,
+      "level": 0,
+      "maxLevel": 60,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SEARCH",
+        "RES_BLIND",
+        "SEE_INVIS"
+      ],
+      "importerUnmappedFlags": [
+        "SEARCH"
+      ]
+    },
+    {
+      "sourceIndex": 60,
+      "affixId": "rfb-legacy.affix.dwarven",
+      "chineseName": "(矮人的)",
+      "types": [
+        "SHIELD"
+      ],
+      "rarity": 3,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SUST_STR",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 61,
+      "affixId": "rfb-legacy.affix.orcish",
+      "chineseName": "(兽人的)",
+      "types": [
+        "SHIELD"
+      ],
+      "rarity": 3,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "RES_DARK",
+        "XTRA_E_RES",
+        "DEC_INT",
+        "DEC_STEALTH",
+        "VULN_LITE",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "DEC_STEALTH",
+        "XTRA_E_RES"
+      ]
+    },
+    {
+      "sourceIndex": 62,
+      "affixId": "rfb-legacy.affix.reflection",
+      "chineseName": "反射之",
+      "types": [
+        "SHIELD"
+      ],
+      "rarity": 6,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "REFLECT",
+        "AWARE",
+        "IGNORE_ELEC",
+        "IGNORE_ACID",
+        "IGNORE_COLD",
+        "IGNORE_FIRE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE"
+      ]
+    },
+    {
+      "sourceIndex": 63,
+      "affixId": "rfb-legacy.affix.night-and-day",
+      "chineseName": "昼夜之",
+      "types": [
+        "SHIELD"
+      ],
+      "rarity": 6,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "RES_LITE",
+        "RES_DARK"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 64,
+      "affixId": "rfb-legacy.affix.endurance-64",
+      "chineseName": "耐力之",
+      "types": [
+        "SHIELD"
+      ],
+      "rarity": 4,
+      "level": 0,
+      "maxLevel": 70,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "CON"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 70,
+      "affixId": "rfb-legacy.affix.dwarven-70",
+      "chineseName": "(矮人的)",
+      "types": [
+        "BODY_ARMOR"
+      ],
+      "rarity": 3,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 71,
+      "affixId": "rfb-legacy.affix.the-uruk-hai",
+      "chineseName": "强兽人的",
+      "types": [
+        "BODY_ARMOR"
+      ],
+      "rarity": 8,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "DEC_INT",
+        "RES_ACID",
+        "RES_ELEC",
+        "RES_FIRE",
+        "RES_COLD",
+        "XTRA_H_RES",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "SHOW_MODS"
+      ],
+      "importerUnmappedFlags": [
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 72,
+      "affixId": "rfb-legacy.affix.olog-hai",
+      "chineseName": "食人妖的",
+      "types": [
+        "BODY_ARMOR"
+      ],
+      "rarity": 8,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": true,
+      "flags": [
+        "STR",
+        "REGEN",
+        "RES_ACID",
+        "RES_POIS",
+        "XTRA_H_RES",
+        "DEC_INT",
+        "IGNORE_ACID",
+        "SHOW_MODS"
+      ],
+      "importerUnmappedFlags": [
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 73,
+      "affixId": "rfb-legacy.affix.the-demon",
+      "chineseName": "恶魔的",
+      "types": [
+        "BODY_ARMOR"
+      ],
+      "rarity": 8,
+      "level": 60,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "INT",
+        "RES_FIRE",
+        "RES_POIS",
+        "RES_NETHER",
+        "AURA_FIRE",
+        "XTRA_H_RES",
+        "DEC_WIS",
+        "DEC_STEALTH",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "SHOW_MODS"
+      ],
+      "importerUnmappedFlags": [
+        "DEC_STEALTH",
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 74,
+      "affixId": "rfb-legacy.affix.the-demon-lord",
+      "chineseName": "恶魔领主的",
+      "types": [
+        "BODY_ARMOR"
+      ],
+      "rarity": 64,
+      "level": 90,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "INT",
+        "CON",
+        "TELEPATHY",
+        "IM_FIRE",
+        "RES_POIS",
+        "RES_NETHER",
+        "RES_CHAOS",
+        "AURA_FIRE",
+        "XTRA_H_RES",
+        "DEC_WIS",
+        "AGGRAVATE",
+        "TY_CURSE",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "SHOW_MODS"
+      ],
+      "importerUnmappedFlags": [
+        "AGGRAVATE",
+        "TELEPATHY",
+        "TY_CURSE",
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 75,
+      "affixId": "rfb-legacy.affix.the-imp",
+      "chineseName": "小恶魔的",
+      "types": [
+        "BODY_ARMOR"
+      ],
+      "rarity": 7,
+      "level": 18,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "RES_FIRE",
+        "SEE_INVIS",
+        "XTRA_H_RES",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "SHOW_MODS"
+      ],
+      "importerUnmappedFlags": [
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 76,
+      "affixId": "rfb-legacy.affix.augmentation",
+      "chineseName": "增幅之",
+      "types": [
+        "BODY_ARMOR"
+      ],
+      "rarity": 10,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "INT",
+        "WIS",
+        "DEX",
+        "CON",
+        "CHR",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 77,
+      "affixId": "rfb-legacy.affix.the-emu-lord",
+      "chineseName": "鸸鹋领主的",
+      "types": [
+        "BODY_ARMOR"
+      ],
+      "rarity": 64,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "FREE_ACT",
+        "SEE_INVIS",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 80,
+      "affixId": "rfb-legacy.affix.permanence",
+      "chineseName": "恒久之",
+      "types": [
+        "ROBE"
+      ],
+      "rarity": 1,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SUST_STR",
+        "SUST_DEX",
+        "SUST_CON",
+        "SUST_INT",
+        "SUST_WIS",
+        "SUST_CHR",
+        "HOLD_LIFE",
+        "RES_ACID",
+        "RES_ELEC",
+        "RES_FIRE",
+        "RES_COLD",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "XTRA_H_RES"
+      ],
+      "importerUnmappedFlags": [
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 81,
+      "affixId": "rfb-legacy.affix.the-twilight",
+      "chineseName": "暮光的",
+      "types": [
+        "ROBE"
+      ],
+      "rarity": 10,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SUST_STR",
+        "SUST_DEX",
+        "SUST_CON",
+        "SUST_INT",
+        "SUST_WIS",
+        "SUST_CHR",
+        "HOLD_LIFE",
+        "RES_ACID",
+        "RES_ELEC",
+        "RES_FIRE",
+        "RES_COLD",
+        "RES_POIS",
+        "RES_NETHER",
+        "RES_NEXUS",
+        "RES_CHAOS",
+        "RES_LITE",
+        "RES_DARK",
+        "RES_SHARDS",
+        "RES_SOUND",
+        "RES_DISEN",
+        "RES_CONF",
+        "RES_BLIND",
+        "RES_FEAR",
+        "FREE_ACT",
+        "SEE_INVIS",
+        "LEVITATION",
+        "REFLECT",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 82,
+      "affixId": "rfb-legacy.affix.the-sorcerer",
+      "chineseName": "咒术师的",
+      "types": [
+        "ROBE"
+      ],
+      "rarity": 10,
+      "level": 70,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "INT",
+        "SUST_INT",
+        "DEC_MANA",
+        "EASY_SPELL",
+        "SPELL_CAP",
+        "REFLECT",
+        "DEC_CON",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "SPELL_CAP"
+      ]
+    },
+    {
+      "sourceIndex": 85,
+      "affixId": "rfb-legacy.affix.lore",
+      "chineseName": "(学识的)",
+      "types": [
+        "DRAGON_ARMOR"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "INT",
+        "LORE2"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 86,
+      "affixId": "rfb-legacy.affix.breath",
+      "chineseName": "(吐息的)",
+      "types": [
+        "DRAGON_ARMOR"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "CON"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 87,
+      "affixId": "rfb-legacy.affix.attack",
+      "chineseName": "(攻击的)",
+      "types": [
+        "DRAGON_ARMOR"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 88,
+      "affixId": "rfb-legacy.affix.craft-88",
+      "chineseName": "(工匠的)",
+      "types": [
+        "DRAGON_ARMOR"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "WIS",
+        "MAGIC_MASTERY"
+      ],
+      "importerUnmappedFlags": [
+        "MAGIC_MASTERY"
+      ]
+    },
+    {
+      "sourceIndex": 89,
+      "affixId": "rfb-legacy.affix.armor",
+      "chineseName": "(装甲的)",
+      "types": [
+        "DRAGON_ARMOR"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "DEX"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 90,
+      "affixId": "rfb-legacy.affix.domination",
+      "chineseName": "(支配的)",
+      "types": [
+        "DRAGON_ARMOR"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "CHR",
+        "RES_FEAR"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 91,
+      "affixId": "rfb-legacy.affix.crusade-91",
+      "chineseName": "(圣战的)",
+      "types": [
+        "DRAGON_ARMOR"
+      ],
+      "rarity": 2,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "CHR",
+        "HOLD_LIFE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 92,
+      "affixId": "rfb-legacy.affix.death-92",
+      "chineseName": "(死亡的)",
+      "types": [
+        "DRAGON_ARMOR"
+      ],
+      "rarity": 3,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "RES_NETHER"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 95,
+      "affixId": "rfb-legacy.affix.cowardice",
+      "chineseName": "懦弱之",
+      "types": [
+        "CLOAK"
+      ],
+      "rarity": 4,
+      "level": 0,
+      "maxLevel": 70,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": true,
+      "flags": [
+        "SPEED",
+        "VULN_FEAR",
+        "DEC_CHR"
+      ],
+      "importerUnmappedFlags": [
+        "SPEED"
+      ]
+    },
+    {
+      "sourceIndex": 96,
+      "affixId": "rfb-legacy.affix.immolation",
+      "chineseName": "献祭之",
+      "types": [
+        "CLOAK"
+      ],
+      "rarity": 4,
+      "level": 10,
+      "maxLevel": 60,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_FIRE",
+        "AURA_FIRE",
+        "RES_FIRE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 97,
+      "affixId": "rfb-legacy.affix.electricity",
+      "chineseName": "电力之",
+      "types": [
+        "CLOAK"
+      ],
+      "rarity": 4,
+      "level": 10,
+      "maxLevel": 60,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_ELEC",
+        "AURA_ELEC",
+        "RES_ELEC"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 98,
+      "affixId": "rfb-legacy.affix.freezing",
+      "chineseName": "冰冻之",
+      "types": [
+        "CLOAK"
+      ],
+      "rarity": 4,
+      "level": 10,
+      "maxLevel": 60,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_COLD",
+        "AURA_COLD",
+        "RES_COLD"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 99,
+      "affixId": "rfb-legacy.affix.retribution",
+      "chineseName": "报复之",
+      "types": [
+        "CLOAK"
+      ],
+      "rarity": 32,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_ACID",
+        "AURA_REVENGE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 100,
+      "affixId": "rfb-legacy.affix.shadows",
+      "chineseName": "暗影之",
+      "types": [
+        "CLOAK"
+      ],
+      "rarity": 8,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STEALTH",
+        "RES_DARK",
+        "DARKNESS"
+      ],
+      "importerUnmappedFlags": [
+        "STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 101,
+      "affixId": "rfb-legacy.affix.aman",
+      "chineseName": "阿门洲的",
+      "types": [
+        "CLOAK"
+      ],
+      "rarity": 16,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STEALTH",
+        "SPEED",
+        "XTRA_H_RES",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "SPEED",
+        "STEALTH",
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 102,
+      "affixId": "rfb-legacy.affix.the-bat",
+      "chineseName": "蝙蝠的",
+      "types": [
+        "CLOAK"
+      ],
+      "rarity": 16,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SPEED",
+        "LEVITATION",
+        "RES_DARK",
+        "SEE_INVIS",
+        "INFRA",
+        "STEALTH",
+        "HIDE_TYPE",
+        "SHOW_MODS"
+      ],
+      "importerUnmappedFlags": [
+        "INFRA",
+        "SPEED",
+        "STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 103,
+      "affixId": "rfb-legacy.affix.the-nazgul",
+      "chineseName": "戒灵的",
+      "types": [
+        "CLOAK"
+      ],
+      "rarity": 0,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": false,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STEALTH",
+        "SPEED",
+        "RES_COLD",
+        "RES_POIS",
+        "RES_NETHER",
+        "FREE_ACT",
+        "SEE_INVIS",
+        "XTRA_H_RES",
+        "VULN_LITE",
+        "RANDOM_CURSE2",
+        "DEC_WIS",
+        "DEC_LIFE",
+        "DRAIN_EXP",
+        "HEAVY_CURSE",
+        "HIDE_TYPE",
+        "SHOW_MODS",
+        "IGNORE_ACID",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "IGNORE_ELEC"
+      ],
+      "importerUnmappedFlags": [
+        "DEC_LIFE",
+        "DRAIN_EXP",
+        "HEAVY_CURSE",
+        "RANDOM_CURSE2",
+        "SPEED",
+        "STEALTH",
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 104,
+      "affixId": "rfb-legacy.affix.the-hero",
+      "chineseName": "英雄的",
+      "types": [
+        "CLOAK"
+      ],
+      "rarity": 32,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "RES_FEAR",
+        "FREE_ACT",
+        "SUST_STR",
+        "SUST_CON",
+        "IGNORE_ACID",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "IGNORE_ELEC"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 110,
+      "affixId": "rfb-legacy.affix.knowledge",
+      "chineseName": "知识之",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": 40,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "INT",
+        "SUST_INT",
+        "LORE2"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 111,
+      "affixId": "rfb-legacy.affix.piety",
+      "chineseName": "虔诚之",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": 40,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "WIS",
+        "SUST_WIS"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 112,
+      "affixId": "rfb-legacy.affix.domination-112",
+      "chineseName": "支配之",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 2,
+      "level": 0,
+      "maxLevel": 40,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "CHR",
+        "SUST_CHR",
+        "RES_FEAR"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 113,
+      "affixId": "rfb-legacy.affix.fortitude",
+      "chineseName": "坚韧之",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 4,
+      "level": 0,
+      "maxLevel": 50,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "CON",
+        "SUST_CON"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 114,
+      "affixId": "rfb-legacy.affix.the-kobold",
+      "chineseName": "狗头人的",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 4,
+      "level": 10,
+      "maxLevel": 70,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "RES_POIS",
+        "DEC_CHR",
+        "SHOW_MODS"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 115,
+      "affixId": "rfb-legacy.affix.the-troll",
+      "chineseName": "巨魔的",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 6,
+      "level": 10,
+      "maxLevel": 60,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "REGEN",
+        "DEC_INT",
+        "VULN_LITE",
+        "SHOW_MODS"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 116,
+      "affixId": "rfb-legacy.affix.the-vampire",
+      "chineseName": "吸血鬼的",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 16,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "DARKNESS",
+        "RES_DARK",
+        "RES_POIS",
+        "HOLD_LIFE",
+        "STR",
+        "CHR",
+        "STEALTH",
+        "DEC_WIS",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 117,
+      "affixId": "rfb-legacy.affix.sunlight",
+      "chineseName": "阳光的",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 4,
+      "level": 10,
+      "maxLevel": 50,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "LITE",
+        "RES_LITE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 118,
+      "affixId": "rfb-legacy.affix.dwarven-118",
+      "chineseName": "(矮人的)",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 18,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "RES_BLIND",
+        "INFRA",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "INFRA"
+      ]
+    },
+    {
+      "sourceIndex": 119,
+      "affixId": "rfb-legacy.affix.the-valkyrie",
+      "chineseName": "女武神的",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 32,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": true,
+      "flags": [
+        "SPEED",
+        "STR",
+        "CHR",
+        "RES_FEAR",
+        "SHOW_MODS",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "SPEED"
+      ]
+    },
+    {
+      "sourceIndex": 120,
+      "affixId": "rfb-legacy.affix.rage",
+      "chineseName": "狂怒之",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 32,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": true,
+      "flags": [
+        "STR",
+        "RES_FEAR",
+        "DEC_INT",
+        "DEC_WIS",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "SHOW_MODS"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 121,
+      "affixId": "rfb-legacy.affix.the-tomte",
+      "chineseName": "托姆特的",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 2,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STEALTH",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "SHOW_MODS"
+      ],
+      "importerUnmappedFlags": [
+        "STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 122,
+      "affixId": "rfb-legacy.affix.the-witch",
+      "chineseName": "女巫的",
+      "types": [
+        "HELMET"
+      ],
+      "rarity": 2,
+      "level": 15,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "INT"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 125,
+      "affixId": "rfb-legacy.affix.telepathy",
+      "chineseName": "心灵感应之",
+      "types": [
+        "CROWN"
+      ],
+      "rarity": 2,
+      "level": 10,
+      "maxLevel": 80,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 126,
+      "affixId": "rfb-legacy.affix.magi-headgear",
+      "chineseName": "贤者的",
+      "types": [
+        "CROWN",
+        "HELMET"
+      ],
+      "rarity": 8,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "INT",
+        "SUST_INT",
+        "XTRA_H_RES",
+        "XTRA_POWER",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "XTRA_H_RES",
+        "XTRA_POWER"
+      ]
+    },
+    {
+      "sourceIndex": 127,
+      "affixId": "rfb-legacy.affix.might",
+      "chineseName": "力量之",
+      "types": [
+        "CROWN"
+      ],
+      "rarity": 4,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "DEX",
+        "CON",
+        "SUST_STR",
+        "SUST_DEX",
+        "SUST_CON",
+        "FREE_ACT",
+        "DEC_INT"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 128,
+      "affixId": "rfb-legacy.affix.lordliness",
+      "chineseName": "贵族之",
+      "types": [
+        "CROWN"
+      ],
+      "rarity": 4,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "WIS",
+        "CHR",
+        "SUST_WIS",
+        "SUST_CHR",
+        "XTRA_H_RES"
+      ],
+      "importerUnmappedFlags": [
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 129,
+      "affixId": "rfb-legacy.affix.angmar",
+      "chineseName": "安格马的",
+      "types": [
+        "CROWN"
+      ],
+      "rarity": 32,
+      "level": 90,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "TELEPATHY",
+        "RES_COLD",
+        "RES_POIS",
+        "RES_DARK",
+        "RES_NETHER",
+        "HOLD_LIFE",
+        "SEE_INVIS",
+        "STEALTH",
+        "VULN_LITE",
+        "VULN_FIRE",
+        "TY_CURSE",
+        "DEC_CON",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "HIDE_TYPE",
+        "SHOW_MODS"
+      ],
+      "importerUnmappedFlags": [
+        "STEALTH",
+        "TELEPATHY",
+        "TY_CURSE"
+      ]
+    },
+    {
+      "sourceIndex": 130,
+      "affixId": "rfb-legacy.affix.the-unbeliever",
+      "chineseName": "不信者的",
+      "types": [
+        "CROWN"
+      ],
+      "rarity": 32,
+      "level": 70,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "CON",
+        "SEE_INVIS",
+        "RES_CONF",
+        "XTRA_H_RES",
+        "MAGIC_RESISTANCE",
+        "NO_MAGIC",
+        "DEC_INT",
+        "DEC_WIS",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "MAGIC_RESISTANCE",
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 135,
+      "affixId": "rfb-legacy.affix.slaying-135",
+      "chineseName": "杀戮之",
+      "types": [
+        "GLOVES"
+      ],
+      "rarity": 2,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SHOW_MODS",
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE"
+      ]
+    },
+    {
+      "sourceIndex": 136,
+      "affixId": "rfb-legacy.affix.the-thief",
+      "chineseName": "盗贼的",
+      "types": [
+        "GLOVES"
+      ],
+      "rarity": 3,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "DEX",
+        "STEALTH",
+        "SUST_DEX",
+        "HIDE_TYPE"
+      ],
+      "importerUnmappedFlags": [
+        "STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 137,
+      "affixId": "rfb-legacy.affix.the-giant",
+      "chineseName": "巨人的",
+      "types": [
+        "GLOVES"
+      ],
+      "rarity": 6,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "CON",
+        "SHOW_MODS",
+        "HIDE_TYPE",
+        "SUST_STR",
+        "DEC_INT"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 138,
+      "affixId": "rfb-legacy.affix.wizard-gloves",
+      "chineseName": "巫师的",
+      "types": [
+        "GLOVES"
+      ],
+      "rarity": 4,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "INT",
+        "MAGIC_MASTERY",
+        "HIDE_TYPE"
+      ],
+      "importerUnmappedFlags": [
+        "MAGIC_MASTERY"
+      ]
+    },
+    {
+      "sourceIndex": 139,
+      "affixId": "rfb-legacy.affix.the-yeek",
+      "chineseName": "伊克人的",
+      "types": [
+        "GLOVES"
+      ],
+      "rarity": 16,
+      "level": 0,
+      "maxLevel": 50,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "DEC_STR",
+        "DEC_DEX",
+        "DEC_CON",
+        "DEC_CHR",
+        "STEALTH",
+        "HIDE_TYPE",
+        "RES_ACID",
+        "IGNORE_ACID"
+      ],
+      "importerUnmappedFlags": [
+        "STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 140,
+      "affixId": "rfb-legacy.affix.genji",
+      "chineseName": "源氏的",
+      "types": [
+        "GLOVES"
+      ],
+      "rarity": 16,
+      "level": 60,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "DEX",
+        "SHOW_MODS",
+        "HIDE_TYPE",
+        "DUAL_WIELDING"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 141,
+      "affixId": "rfb-legacy.affix.the-sniper",
+      "chineseName": "狙击手的",
+      "types": [
+        "GLOVES"
+      ],
+      "rarity": 16,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "XTRA_MIGHT",
+        "STEALTH",
+        "SHOW_MODS",
+        "HIDE_TYPE"
+      ],
+      "importerUnmappedFlags": [
+        "STEALTH",
+        "XTRA_MIGHT"
+      ]
+    },
+    {
+      "sourceIndex": 142,
+      "affixId": "rfb-legacy.affix.the-berserker",
+      "chineseName": "狂战士的",
+      "types": [
+        "GLOVES"
+      ],
+      "rarity": 32,
+      "level": 70,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": true,
+      "flags": [
+        "BLOWS",
+        "SHOW_MODS",
+        "RES_FEAR",
+        "DEC_STEALTH",
+        "DEC_INT",
+        "NO_ENCHANT"
+      ],
+      "importerUnmappedFlags": [
+        "BLOWS",
+        "DEC_STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 145,
+      "affixId": "rfb-legacy.affix.levitation",
+      "chineseName": "漂浮之",
+      "types": [
+        "BOOTS"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": 70,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "LEVITATION",
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE"
+      ]
+    },
+    {
+      "sourceIndex": 146,
+      "affixId": "rfb-legacy.affix.gnomish",
+      "chineseName": "(侏儒的)",
+      "types": [
+        "BOOTS"
+      ],
+      "rarity": 2,
+      "level": 0,
+      "maxLevel": 60,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": true,
+      "flags": [
+        "FREE_ACT"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 147,
+      "affixId": "rfb-legacy.affix.dwarven-147",
+      "chineseName": "(矮人的)",
+      "types": [
+        "BOOTS"
+      ],
+      "rarity": 3,
+      "level": 15,
+      "maxLevel": 80,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "FREE_ACT",
+        "CON",
+        "DEC_STEALTH",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "DEC_STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 148,
+      "affixId": "rfb-legacy.affix.speed",
+      "chineseName": "速度之",
+      "types": [
+        "BOOTS"
+      ],
+      "rarity": 5,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SPEED",
+        "HIDE_TYPE",
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE",
+        "SPEED"
+      ]
+    },
+    {
+      "sourceIndex": 149,
+      "affixId": "rfb-legacy.affix.elvenkind-149",
+      "chineseName": "精灵的",
+      "types": [
+        "BOOTS"
+      ],
+      "rarity": 8,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STEALTH",
+        "SPEED",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "SPEED",
+        "STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 150,
+      "affixId": "rfb-legacy.affix.feanor",
+      "chineseName": "费诺的",
+      "types": [
+        "BOOTS"
+      ],
+      "rarity": 250,
+      "level": 100,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": true,
+      "flags": [
+        "SPEED",
+        "HIDE_TYPE",
+        "FREE_ACT",
+        "RES_NEXUS",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "SPEED"
+      ]
+    },
+    {
+      "sourceIndex": 151,
+      "affixId": "rfb-legacy.affix.the-sprite",
+      "chineseName": "妖精的",
+      "types": [
+        "BOOTS"
+      ],
+      "rarity": 6,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "LEVITATION",
+        "SPEED",
+        "RES_LITE",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "SPEED"
+      ]
+    },
+    {
+      "sourceIndex": 152,
+      "affixId": "rfb-legacy.affix.the-golem",
+      "chineseName": "魔像的",
+      "types": [
+        "BOOTS"
+      ],
+      "rarity": 12,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego/armor.rs",
+      "fixedActivation": false,
+      "flags": [
+        "DEC_SPEED",
+        "STR",
+        "CON",
+        "DEC_DEX",
+        "LIFE",
+        "RES_POIS",
+        "FREE_ACT",
+        "SEE_INVIS",
+        "XTRA_H_RES",
+        "IGNORE_ACID",
+        "IGNORE_ELEC",
+        "IGNORE_FIRE",
+        "IGNORE_COLD"
+      ],
+      "importerUnmappedFlags": [
+        "DEC_SPEED",
+        "LIFE",
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 160,
+      "affixId": "rfb-legacy.affix.accuracy",
+      "chineseName": "精度之",
+      "types": [
+        "BOW"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": 40,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE"
+      ]
+    },
+    {
+      "sourceIndex": 161,
+      "affixId": "rfb-legacy.affix.velocity",
+      "chineseName": "极速之",
+      "types": [
+        "BOW"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": 60,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE"
+      ]
+    },
+    {
+      "sourceIndex": 162,
+      "affixId": "rfb-legacy.affix.extra-might",
+      "chineseName": "额外力量之",
+      "types": [
+        "BOW"
+      ],
+      "rarity": 2,
+      "level": 20,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 163,
+      "affixId": "rfb-legacy.affix.extra-shots",
+      "chineseName": "额外射击之",
+      "types": [
+        "BOW"
+      ],
+      "rarity": 2,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "XTRA_SHOTS",
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE",
+        "XTRA_SHOTS"
+      ]
+    },
+    {
+      "sourceIndex": 164,
+      "affixId": "rfb-legacy.affix.lothlorien",
+      "chineseName": "罗斯洛立安的",
+      "types": [
+        "BOW"
+      ],
+      "rarity": 4,
+      "level": 60,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "DEX",
+        "STEALTH",
+        "IGNORE_ACID",
+        "IGNORE_FIRE"
+      ],
+      "importerUnmappedFlags": [
+        "STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 165,
+      "affixId": "rfb-legacy.affix.the-haradrim",
+      "chineseName": "哈拉德人的",
+      "types": [
+        "BOW"
+      ],
+      "rarity": 6,
+      "level": 70,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "IGNORE_ACID",
+        "IGNORE_FIRE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 166,
+      "affixId": "rfb-legacy.affix.buckland",
+      "chineseName": "雄鹿地的",
+      "types": [
+        "BOW"
+      ],
+      "rarity": 3,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SPEED",
+        "XTRA_SHOTS",
+        "IGNORE_ACID",
+        "IGNORE_FIRE"
+      ],
+      "importerUnmappedFlags": [
+        "SPEED",
+        "XTRA_SHOTS"
+      ]
+    },
+    {
+      "sourceIndex": 167,
+      "affixId": "rfb-legacy.affix.the-hunter",
+      "chineseName": "猎人的",
+      "types": [
+        "BOW"
+      ],
+      "rarity": 3,
+      "level": 20,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STEALTH"
+      ],
+      "importerUnmappedFlags": [
+        "STEALTH"
+      ]
+    },
+    {
+      "sourceIndex": 180,
+      "affixId": "rfb-legacy.affix.slaying-180",
+      "chineseName": "杀戮之",
+      "types": [
+        "AMMO"
+      ],
+      "rarity": 2,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 181,
+      "affixId": "rfb-legacy.affix.elemental",
+      "chineseName": "(元素的)",
+      "types": [
+        "AMMO"
+      ],
+      "rarity": 3,
+      "level": 20,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_ACID",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "IGNORE_ELEC"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 182,
+      "affixId": "rfb-legacy.affix.holy-might",
+      "chineseName": "神圣力量之",
+      "types": [
+        "AMMO"
+      ],
+      "rarity": 7,
+      "level": 60,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SLAY_EVIL",
+        "SLAY_DEMON",
+        "SLAY_UNDEAD",
+        "BRAND_FIRE",
+        "BLESSED",
+        "IGNORE_ACID",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "IGNORE_ELEC"
+      ],
+      "importerUnmappedFlags": [
+        "BLESSED"
+      ]
+    },
+    {
+      "sourceIndex": 183,
+      "affixId": "rfb-legacy.affix.returning",
+      "chineseName": "返回之",
+      "types": [
+        "AMMO"
+      ],
+      "rarity": 4,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 184,
+      "affixId": "rfb-legacy.affix.endurance",
+      "chineseName": "耐力之",
+      "types": [
+        "AMMO"
+      ],
+      "rarity": 4,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_ACID",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "IGNORE_ELEC"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 185,
+      "affixId": "rfb-legacy.affix.exploding",
+      "chineseName": "爆炸之",
+      "types": [
+        "AMMO"
+      ],
+      "rarity": 5,
+      "level": 1,
+      "maxLevel": 60,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 195,
+      "affixId": "rfb-legacy.affix.the-vanyar",
+      "chineseName": "凡雅精灵的",
+      "types": [
+        "HARP"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "CHR",
+        "WIS",
+        "SUST_CHR",
+        "SUST_WIS",
+        "RES_DARK"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 196,
+      "affixId": "rfb-legacy.affix.erebor",
+      "chineseName": "伊鲁伯的",
+      "types": [
+        "HARP"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": true,
+      "materializer": "crates/rfb-core/src/game/ego.rs",
+      "fixedActivation": false,
+      "flags": [
+        "CHR",
+        "SUST_CHR",
+        "SUST_STR",
+        "SUST_CON",
+        "RES_FEAR",
+        "RES_BLIND"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 200,
+      "affixId": "rfb-legacy.affix.defender-jewelry",
+      "chineseName": "(防御者的)",
+      "types": [
+        "RING",
+        "AMULET"
+      ],
+      "rarity": 6,
+      "level": 70,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_ACID",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "IGNORE_ELEC"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 201,
+      "affixId": "rfb-legacy.affix.elemental-jewelry",
+      "chineseName": "(元素的)",
+      "types": [
+        "RING",
+        "AMULET"
+      ],
+      "rarity": 2,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 205,
+      "affixId": "rfb-legacy.affix.protection-ring",
+      "chineseName": "保护之",
+      "types": [
+        "RING"
+      ],
+      "rarity": 2,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 206,
+      "affixId": "rfb-legacy.affix.combat-ring",
+      "chineseName": "战斗之",
+      "types": [
+        "RING"
+      ],
+      "rarity": 2,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "HIDE_TYPE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 207,
+      "affixId": "rfb-legacy.affix.archery-ring",
+      "chineseName": "箭术之",
+      "types": [
+        "RING"
+      ],
+      "rarity": 3,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "HIDE_TYPE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 208,
+      "affixId": "rfb-legacy.affix.wizardry-ring",
+      "chineseName": "巫术之",
+      "types": [
+        "RING"
+      ],
+      "rarity": 3,
+      "level": 25,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 209,
+      "affixId": "rfb-legacy.affix.speed-ring",
+      "chineseName": "速度之",
+      "types": [
+        "RING"
+      ],
+      "rarity": 5,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SPEED",
+        "HIDE_TYPE",
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE",
+        "SPEED"
+      ]
+    },
+    {
+      "sourceIndex": 210,
+      "affixId": "rfb-legacy.affix.nazgul-ring",
+      "chineseName": "戒灵的",
+      "types": [
+        "RING"
+      ],
+      "rarity": 0,
+      "level": 70,
+      "maxLevel": null,
+      "standardSelectable": false,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STEALTH",
+        "SPEED",
+        "RES_COLD",
+        "RES_POIS",
+        "RES_NETHER",
+        "FREE_ACT",
+        "SEE_INVIS",
+        "XTRA_H_RES",
+        "STR",
+        "INT",
+        "DEC_WIS",
+        "DEX",
+        "DEC_CON",
+        "CHR",
+        "VULN_LITE",
+        "RANDOM_CURSE2",
+        "DEC_LIFE",
+        "DRAIN_EXP",
+        "HEAVY_CURSE",
+        "HIDE_TYPE",
+        "SHOW_MODS",
+        "IGNORE_ACID",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "IGNORE_ELEC"
+      ],
+      "importerUnmappedFlags": [
+        "DEC_LIFE",
+        "DRAIN_EXP",
+        "HEAVY_CURSE",
+        "RANDOM_CURSE2",
+        "SPEED",
+        "STEALTH",
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 211,
+      "affixId": "rfb-legacy.affix.dwarves-ring",
+      "chineseName": "矮人的",
+      "types": [
+        "RING"
+      ],
+      "rarity": 0,
+      "level": 70,
+      "maxLevel": null,
+      "standardSelectable": false,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "STR",
+        "CON",
+        "TUNNEL",
+        "DEC_STEALTH",
+        "REGEN",
+        "RES_BLIND",
+        "XTRA_H_RES",
+        "RANDOM_CURSE2",
+        "DRAIN_EXP",
+        "HEAVY_CURSE",
+        "FREE_ACT",
+        "SEE_INVIS",
+        "SUST_CON",
+        "HIDE_TYPE",
+        "SHOW_MODS",
+        "IGNORE_ACID",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "IGNORE_ELEC"
+      ],
+      "importerUnmappedFlags": [
+        "DEC_STEALTH",
+        "DRAIN_EXP",
+        "HEAVY_CURSE",
+        "RANDOM_CURSE2",
+        "TUNNEL",
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 220,
+      "affixId": "rfb-legacy.affix.barbarian-talisman",
+      "chineseName": "& 野蛮人护身符~",
+      "types": [
+        "AMULET"
+      ],
+      "rarity": 2,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "FULL_NAME"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 221,
+      "affixId": "rfb-legacy.affix.sacred-pendant",
+      "chineseName": "& 神圣吊坠~",
+      "types": [
+        "AMULET"
+      ],
+      "rarity": 2,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "FULL_NAME",
+        "HIDE_TYPE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 222,
+      "affixId": "rfb-legacy.affix.hell-harness",
+      "chineseName": "& 地狱挽具~",
+      "types": [
+        "AMULET"
+      ],
+      "rarity": 3,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "FULL_NAME"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 223,
+      "affixId": "rfb-legacy.affix.dwarven-necklace",
+      "chineseName": "& 矮人项链~",
+      "types": [
+        "AMULET"
+      ],
+      "rarity": 2,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "FULL_NAME",
+        "HIDE_TYPE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 224,
+      "affixId": "rfb-legacy.affix.magi-amulet",
+      "chineseName": "贤者的",
+      "types": [
+        "AMULET"
+      ],
+      "rarity": 3,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 225,
+      "affixId": "rfb-legacy.affix.hero-torc",
+      "chineseName": "& 英雄项圈~",
+      "types": [
+        "AMULET"
+      ],
+      "rarity": 16,
+      "level": 60,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "FREE_ACT",
+        "SEE_INVIS",
+        "SUST_STR",
+        "SUST_DEX",
+        "RES_FEAR",
+        "REGEN",
+        "AURA_FIRE",
+        "HIDE_TYPE",
+        "FULL_NAME"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 226,
+      "affixId": "rfb-legacy.affix.devotion-amulet",
+      "chineseName": "奉献之",
+      "types": [
+        "AMULET"
+      ],
+      "rarity": 3,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 227,
+      "affixId": "rfb-legacy.affix.trickery-amulet",
+      "chineseName": "诡计之",
+      "types": [
+        "AMULET"
+      ],
+      "rarity": 3,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/jewelry.rs",
+      "fixedActivation": false,
+      "flags": [
+        "HIDE_TYPE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 235,
+      "affixId": "rfb-legacy.affix.extra-light-light",
+      "chineseName": "额外光明之",
+      "types": [
+        "LITE"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": 30,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "LITE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 236,
+      "affixId": "rfb-legacy.affix.illumination-light",
+      "chineseName": "照明之",
+      "types": [
+        "LITE"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": 30,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": true,
+      "flags": [
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE"
+      ]
+    },
+    {
+      "sourceIndex": 237,
+      "affixId": "rfb-legacy.affix.duration-light",
+      "chineseName": "持续之",
+      "types": [
+        "LITE"
+      ],
+      "rarity": 1,
+      "level": 0,
+      "maxLevel": 30,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE"
+      ]
+    },
+    {
+      "sourceIndex": 238,
+      "affixId": "rfb-legacy.affix.infravision-light",
+      "chineseName": "红外视觉之",
+      "types": [
+        "LITE"
+      ],
+      "rarity": 2,
+      "level": 0,
+      "maxLevel": 40,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "INFRA",
+        "AWARE"
+      ],
+      "importerUnmappedFlags": [
+        "AWARE",
+        "INFRA"
+      ]
+    },
+    {
+      "sourceIndex": 239,
+      "affixId": "rfb-legacy.affix.immolation-light",
+      "chineseName": "献祭之",
+      "types": [
+        "LITE"
+      ],
+      "rarity": 4,
+      "level": 20,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "AURA_FIRE",
+        "IGNORE_FIRE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 240,
+      "affixId": "rfb-legacy.affix.darkness-light",
+      "chineseName": "黑暗之",
+      "types": [
+        "LITE"
+      ],
+      "rarity": 8,
+      "level": 20,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "DARKNESS"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 241,
+      "affixId": "rfb-legacy.affix.immortal-eye-light",
+      "chineseName": "不朽之眼之",
+      "types": [
+        "LITE"
+      ],
+      "rarity": 8,
+      "level": 20,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "RES_BLIND",
+        "SEE_INVIS"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 242,
+      "affixId": "rfb-legacy.affix.valinor-light",
+      "chineseName": "维林诺的",
+      "types": [
+        "LITE"
+      ],
+      "rarity": 16,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "RES_LITE",
+        "SPEED",
+        "XTRA_H_RES"
+      ],
+      "importerUnmappedFlags": [
+        "SPEED",
+        "XTRA_H_RES"
+      ]
+    },
+    {
+      "sourceIndex": 243,
+      "affixId": "rfb-legacy.affix.scrying-light",
+      "chineseName": "探知之",
+      "types": [
+        "LITE"
+      ],
+      "rarity": 8,
+      "level": 40,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 250,
+      "affixId": "rfb-legacy.affix.resistance-device",
+      "chineseName": "抗性之",
+      "types": [
+        "DEVICE"
+      ],
+      "rarity": 1,
+      "level": 10,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "IGNORE_ACID",
+        "IGNORE_FIRE",
+        "IGNORE_COLD",
+        "IGNORE_ELEC"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 251,
+      "affixId": "rfb-legacy.affix.capacity-device",
+      "chineseName": "容量之",
+      "types": [
+        "DEVICE"
+      ],
+      "rarity": 1,
+      "level": 15,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 252,
+      "affixId": "rfb-legacy.affix.regeneration-device",
+      "chineseName": "再生之",
+      "types": [
+        "DEVICE"
+      ],
+      "rarity": 2,
+      "level": 30,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "REGEN"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 253,
+      "affixId": "rfb-legacy.affix.simplicity-device",
+      "chineseName": "简易之",
+      "types": [
+        "DEVICE"
+      ],
+      "rarity": 1,
+      "level": 15,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "EASY_SPELL"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 254,
+      "affixId": "rfb-legacy.affix.power-device",
+      "chineseName": "力量之",
+      "types": [
+        "DEVICE"
+      ],
+      "rarity": 8,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "DEVICE_POWER"
+      ],
+      "importerUnmappedFlags": [
+        "DEVICE_POWER"
+      ]
+    },
+    {
+      "sourceIndex": 255,
+      "affixId": "rfb-legacy.affix.holding-device",
+      "chineseName": "容纳之",
+      "types": [
+        "DEVICE"
+      ],
+      "rarity": 3,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "HOLD_LIFE"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 256,
+      "affixId": "rfb-legacy.affix.quickness-device",
+      "chineseName": "迅捷之",
+      "types": [
+        "DEVICE"
+      ],
+      "rarity": 16,
+      "level": 60,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "SPEED"
+      ],
+      "importerUnmappedFlags": [
+        "SPEED"
+      ]
+    },
+    {
+      "sourceIndex": 260,
+      "affixId": "rfb-legacy.affix.blasted",
+      "chineseName": "(炸毁的)",
+      "types": [
+        "SPECIAL"
+      ],
+      "rarity": 0,
+      "level": 0,
+      "maxLevel": null,
+      "standardSelectable": false,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/inventory.rs: curse_equipped_item",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 265,
+      "affixId": "rfb-legacy.affix.holding-quiver",
+      "chineseName": "容纳之",
+      "types": [
+        "QUIVER"
+      ],
+      "rarity": 1,
+      "level": 1,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 266,
+      "affixId": "rfb-legacy.affix.quiver-protection",
+      "chineseName": "保护之",
+      "types": [
+        "QUIVER"
+      ],
+      "rarity": 1,
+      "level": 1,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 267,
+      "affixId": "rfb-legacy.affix.endless-quiver",
+      "chineseName": "& 无尽箭袋~",
+      "types": [
+        "QUIVER"
+      ],
+      "rarity": 4,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": true,
+      "flags": [
+        "FULL_NAME"
+      ],
+      "importerUnmappedFlags": []
+    },
+    {
+      "sourceIndex": 268,
+      "affixId": "rfb-legacy.affix.phase-quiver",
+      "chineseName": "& 相位箭袋~",
+      "types": [
+        "QUIVER"
+      ],
+      "rarity": 4,
+      "level": 50,
+      "maxLevel": null,
+      "standardSelectable": true,
+      "craftSelectable": false,
+      "materializer": "crates/rfb-core/src/game/ego/noncraft.rs",
+      "fixedActivation": false,
+      "flags": [
+        "FULL_NAME"
+      ],
+      "importerUnmappedFlags": []
+    }
+  ]
+}

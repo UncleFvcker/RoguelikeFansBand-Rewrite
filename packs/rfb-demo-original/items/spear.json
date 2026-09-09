@@ -21,8 +21,13 @@
     "toHit": 0
   },
   "mogaminatorRare": false,
-  "ridingWeaponKind": "compatible",
   "nameKey": "item-demo-spear-name",
+  "rfbBaseKind": {
+    "sourceIndex": 86,
+    "sval": 2,
+    "tval": 22
+  },
+  "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",
     "rfb-compatibility",

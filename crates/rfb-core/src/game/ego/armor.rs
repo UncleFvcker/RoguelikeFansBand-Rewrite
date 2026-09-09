@@ -1405,6 +1405,7 @@ mod tests {
         let mut seen = BTreeSet::new();
         for seed in 1..=12_000 {
             let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                rfb_protocol::ItemEnchantmentsDto::default(),
                 &mut RfbRng::seeded(seed),
                 definition,
                 game.content.affix_definitions(),
@@ -1539,6 +1540,7 @@ mod tests {
             let definition = game.content.item(&format!("demo.item.{id}")).unwrap();
             for seed in 1..=3000 {
                 let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    rfb_protocol::ItemEnchantmentsDto::default(),
                     &mut RfbRng::seeded(seed),
                     definition,
                     game.content.affix_definitions(),
@@ -1752,7 +1754,7 @@ mod tests {
                 let mut item = item_for(&game, &definition.id);
                 item.enchantments.to_armor = 12;
                 result.apply_to(&mut item);
-                assert_eq!(item.affix_ids, [affix.id.clone()]);
+                assert_eq!(item.affix_ids.as_slice(), std::slice::from_ref(&affix.id));
                 assert!(
                     crate::game::validation::rolled_affixes_are_valid(&item),
                     "ego {index}, seed {seed}"
@@ -1784,6 +1786,7 @@ mod tests {
             let item = game.content.item(&format!("demo.item.{id}")).unwrap();
             for seed in 1..=6000 {
                 let result = roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    rfb_protocol::ItemEnchantmentsDto::default(),
                     &mut RfbRng::seeded(seed),
                     item,
                     game.content.affix_definitions(),

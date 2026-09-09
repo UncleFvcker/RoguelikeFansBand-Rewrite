@@ -535,9 +535,8 @@ export class InventoryPanel {
       current: item.fuel.current, maximum: item.fuel.maximum,
     });
     if (item.curse) return this.#itemCurseSeverityName(item.curse);
-    return item.equipmentSlot ? this.#localization.format(itemIdentificationMessageKey(
-      item.identification, item.knownProperties?.length ?? 0,
-    ), { count: item.knownProperties?.length ?? 0 }) : "";
+    const identificationKey = itemIdentificationMessageKey(item.identification);
+    return item.equipmentSlot && identificationKey ? this.#localization.format(identificationKey) : "";
   }
 
   #chooseSlotItem(slotId: string): void {
@@ -734,13 +733,11 @@ export class InventoryPanel {
         : this.#localization.format("capture-ball-empty");
       container.append(captured);
     }
-    if ("slotId" in item || item.equipmentSlot !== null) {
+    const identificationKey = itemIdentificationMessageKey(item.identification);
+    if (("slotId" in item || item.equipmentSlot !== null) && identificationKey) {
       const identification = container.ownerDocument.createElement("span");
       identification.className = `item-identification item-identification-${item.identification}`;
-      identification.textContent = this.#localization.format(
-        itemIdentificationMessageKey(item.identification, item.knownProperties?.length ?? 0),
-        { count: item.knownProperties?.length ?? 0 },
-      );
+      identification.textContent = this.#localization.format(identificationKey);
       container.append(identification);
     }
     this.#appendItemModifiers(container, item.modifiers);
@@ -1394,13 +1391,10 @@ export function formatTenthsPound(value: number): string {
 
 export function itemIdentificationMessageKey(
   identification: InventoryItemDto["identification"],
-  knownPropertyCount: number,
-): MessageKey {
+): MessageKey | undefined {
   if (identification === "unexamined") return "item-identification-unexamined";
   if (identification === "appraised") return "item-identification-appraised";
-  return knownPropertyCount > 0
-    ? "item-identification-identified-ego"
-    : "item-identification-identified-ordinary";
+  return undefined;
 }
 
 export function formatTenthsPoundArgument(value: string | undefined): string {
