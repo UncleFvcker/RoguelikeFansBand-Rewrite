@@ -10,8 +10,8 @@
     "debugClearEntities": true,
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 32,
-      "y": 14
+      "x": 83,
+      "y": 31
     }
   },
   "commands": [
@@ -27,10 +27,10 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "ab198f9cb5dd47d0cd05a8b21c47871a950ba9f4219d186d27131ba2cb2a0c63",
+      "stateHash": "01857e6663344718d599b97ae9f5d62c8ca05dcdcf72cebdd8e01b3bbc619788",
       "playerPosition": {
-        "x": 32,
-        "y": 13
+        "x": 83,
+        "y": 30
       },
       "shops": {
         "demo.shop.outpost-general-store": {
@@ -41,12 +41,12 @@
     },
     "changedCells": [
       {
-        "x": 32,
-        "y": 13
+        "x": 83,
+        "y": 30
       },
       {
-        "x": 32,
-        "y": 14
+        "x": 83,
+        "y": 31
       }
     ]
   }

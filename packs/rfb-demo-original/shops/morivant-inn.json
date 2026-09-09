@@ -7,8 +7,8 @@
   "townId": "demo.town.morivant",
   "category": "general-store",
   "entrancePosition": {
-    "x": 30,
-    "y": 22
+    "x": 92,
+    "y": 43
   },
   "entranceTerrainId": "demo.terrain.inn-entrance",
   "innStayCost": 20,

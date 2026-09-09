@@ -9,8 +9,8 @@
     "world": "demo.world.middle-earth",
     "playerBuildId": "demo.build.warrior",
     "playerPosition": {
-      "x": 44,
-      "y": 16
+      "x": 95,
+      "y": 33
     },
     "entities": [
       {
@@ -18,8 +18,8 @@
         "kindId": "demo.actor.adobe-golem",
         "experience": 0,
         "position": {
-          "x": 45,
-          "y": 16
+          "x": 96,
+          "y": 33
         },
         "hp": 84,
         "maxHp": 84,
@@ -48,7 +48,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "d35642b3b38e9bd80d1ed55339946a6a5c5c7a0f41fc556956be18b92f57dac6",
+      "stateHash": "ec60cfecbefee2f95f0c52045c5f02deb6e9ac9ba2b7552b508c24f04bbf7147",
       "playerAttributes": {
         "weaponProficiencies": {
           "demo.item.broad-sword": {
@@ -60,8 +60,8 @@
       },
       "rngDrawCounter": 200,
       "playerPosition": {
-        "x": 44,
-        "y": 16
+        "x": 95,
+        "y": 33
       }
     },
     "events": [

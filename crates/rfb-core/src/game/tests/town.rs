@@ -107,11 +107,11 @@ fn morivant_facilities_are_reachable_and_nine_shops_trade_and_save() {
         );
     }
     for local in [
-        Position { x: 32, y: 0 },
-        Position { x: 32, y: 30 },
-        Position { x: 0, y: 15 },
-        Position { x: 64, y: 15 },
-        Position { x: 7, y: 23 },
+        Position { x: 99, y: 0 },
+        Position { x: 99, y: 65 },
+        Position { x: 0, y: 33 },
+        Position { x: 153, y: 19 },
+        Position { x: 14, y: 46 },
     ] {
         let position = game
             .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, local)
@@ -183,7 +183,7 @@ fn morivant_facilities_are_reachable_and_nine_shops_trade_and_save() {
 #[test]
 fn morivant_shares_home_rests_and_revisits_through_inns() {
     let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
-    game.player.position = Position { x: 42, y: 13 };
+    game.player.position = Position { x: 93, y: 30 };
     let item = game.snapshot().homes[0].deposit_items[0].clone();
     dispatch_next(
         &mut game,
@@ -196,7 +196,7 @@ fn morivant_shares_home_rests_and_revisits_through_inns() {
     assert_eq!(game.home_states[HOME_ID].inventory.len(), 1);
     enter_morivant(&mut game);
     game.player.position = game
-        .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, Position { x: 44, y: 22 })
+        .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, Position { x: 131, y: 41 })
         .unwrap();
     let home = game
         .snapshot()
@@ -216,7 +216,7 @@ fn morivant_shares_home_rests_and_revisits_through_inns() {
     assert!(game.home_states[HOME_ID].inventory.is_empty());
     assert_eq!(game.home_states.len(), 1);
     game.player.position = game
-        .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, Position { x: 30, y: 22 })
+        .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, Position { x: 92, y: 43 })
         .unwrap();
     game.mark_shop_visited_at_player().unwrap();
     game.gold = 1_020;
@@ -272,7 +272,7 @@ fn projected_shop<'a>(shops: &'a [ShopDto], shop_id: &str) -> &'a ShopDto {
 fn store_game(seed: u64) -> Game {
     let mut game =
         Game::new_with_build(seed, "demo.build.warrior").expect("Warrens game should start");
-    game.player.position = Position { x: 32, y: 13 };
+    game.player.position = Position { x: 83, y: 30 };
     game.mark_shop_visited_at_player().unwrap();
     game
 }
@@ -289,7 +289,7 @@ fn anambar_inn_game(seed: u64) -> Game {
     );
     game.wilderness_position = Some(Position { x: 26, y: 39 });
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
-    game.player.position = Position { x: 45, y: 15 };
+    game.player.position = Position { x: 96, y: 32 };
     game.mark_shop_visited_at_player().unwrap();
     assert!(projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).player_at_entrance);
     game
@@ -326,7 +326,7 @@ fn anambar_library_game(seed: u64) -> Game {
     );
     game.wilderness_position = Some(Position { x: 26, y: 39 });
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
-    game.player.position = Position { x: 43, y: 7 };
+    game.player.position = Position { x: 94, y: 24 };
     assert!(
         game.snapshot()
             .task_services
@@ -393,7 +393,7 @@ fn add_bounty_remains(game: &mut Game, id: &str, actor_kind_id: &str) {
 fn white_horse_inn_game(seed: u64) -> Game {
     let mut game =
         Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth game should start");
-    game.player.position = Position { x: 63, y: 13 };
+    game.player.position = Position { x: 114, y: 30 };
     game.mark_shop_visited_at_player().unwrap();
     assert!(projected_shop(&game.snapshot().shops, WHITE_HORSE_INN_ID).player_at_entrance);
     game
@@ -402,7 +402,7 @@ fn white_horse_inn_game(seed: u64) -> Game {
 fn outpost_count_game(seed: u64) -> Game {
     let mut game =
         Game::new_with_build(seed, "demo.build.warrior").expect("Middle-earth game should start");
-    game.player.position = Position { x: 26, y: 13 };
+    game.player.position = Position { x: 77, y: 30 };
     game
 }
 
@@ -429,42 +429,42 @@ fn outpost_shops_are_projected_from_authoritative_content() {
     assert_eq!(snapshot.homes[0].id, HOME_ID);
     assert_eq!(
         snapshot.homes[0].entrance_position,
-        Position { x: 42, y: 13 }
+        Position { x: 93, y: 30 }
     );
     assert!(!snapshot.homes[0].visited);
     let general_store = projected_shop(&snapshot.shops, GENERAL_STORE_ID);
-    assert_eq!(general_store.entrance_position, Position { x: 32, y: 13 });
+    assert_eq!(general_store.entrance_position, Position { x: 83, y: 30 });
     assert_eq!(
         general_store.entrance_terrain_id,
         "demo.terrain.general-store-entrance"
     );
     assert_eq!(general_store.category, ShopCategoryDto::GeneralStore);
     let temple = projected_shop(&snapshot.shops, TEMPLE_ID);
-    assert_eq!(temple.entrance_position, Position { x: 45, y: 19 });
+    assert_eq!(temple.entrance_position, Position { x: 96, y: 36 });
     assert_eq!(temple.category, ShopCategoryDto::Temple);
     let alchemist = projected_shop(&snapshot.shops, ALCHEMIST_ID);
-    assert_eq!(alchemist.entrance_position, Position { x: 53, y: 13 });
+    assert_eq!(alchemist.entrance_position, Position { x: 104, y: 30 });
     assert_eq!(alchemist.category, ShopCategoryDto::Alchemist);
     let magic_shop = projected_shop(&snapshot.shops, MAGIC_SHOP_ID);
-    assert_eq!(magic_shop.entrance_position, Position { x: 57, y: 13 });
+    assert_eq!(magic_shop.entrance_position, Position { x: 108, y: 30 });
     assert_eq!(magic_shop.category, ShopCategoryDto::MagicShop);
     let bookstore = projected_shop(&snapshot.shops, BOOKSTORE_ID);
-    assert_eq!(bookstore.entrance_position, Position { x: 55, y: 13 });
+    assert_eq!(bookstore.entrance_position, Position { x: 106, y: 30 });
     assert_eq!(bookstore.category, ShopCategoryDto::Bookstore);
     let armoury = projected_shop(&snapshot.shops, ARMOURY_ID);
-    assert_eq!(armoury.entrance_position, Position { x: 30, y: 19 });
+    assert_eq!(armoury.entrance_position, Position { x: 81, y: 36 });
     assert_eq!(armoury.category, ShopCategoryDto::Armoury);
     let weaponsmith = projected_shop(&snapshot.shops, WEAPONSMITH_ID);
-    assert_eq!(weaponsmith.entrance_position, Position { x: 34, y: 19 });
+    assert_eq!(weaponsmith.entrance_position, Position { x: 85, y: 36 });
     assert_eq!(weaponsmith.category, ShopCategoryDto::Weaponsmith);
     let black_market = projected_shop(&snapshot.shops, BLACK_MARKET_ID);
-    assert_eq!(black_market.entrance_position, Position { x: 55, y: 19 });
+    assert_eq!(black_market.entrance_position, Position { x: 106, y: 36 });
     assert_eq!(black_market.category, ShopCategoryDto::BlackMarket);
     let shroomery = projected_shop(&snapshot.shops, SHROOMERY_ID);
-    assert_eq!(shroomery.entrance_position, Position { x: 61, y: 19 });
+    assert_eq!(shroomery.entrance_position, Position { x: 112, y: 36 });
     assert_eq!(shroomery.category, ShopCategoryDto::Shroomery);
     let white_horse = projected_shop(&snapshot.shops, WHITE_HORSE_INN_ID);
-    assert_eq!(white_horse.entrance_position, Position { x: 63, y: 13 });
+    assert_eq!(white_horse.entrance_position, Position { x: 114, y: 30 });
     assert_eq!(white_horse.inn_stay_cost, Some(20));
     assert!(white_horse.inn_travel_destinations.is_empty());
     assert!(
@@ -497,7 +497,7 @@ fn p108c_thalos_projects_its_embedded_icky_cave_and_returns_to_town() {
         Some("demo.town.thalos")
     );
     assert!(game.town_states["demo.town.thalos"].visited);
-    let entrance = Position { x: 55, y: 15 };
+    let entrance = Position { x: 106, y: 32 };
     assert_eq!(game.terrain_at(entrance), "demo.terrain.icky-cave-entrance");
     assert_eq!(
         game.terrain
@@ -534,7 +534,7 @@ fn p108c_thalos_projects_its_embedded_icky_cave_and_returns_to_town() {
 #[test]
 fn p109c_thalos_inn_travels_to_a_visited_town_for_five_hundred_gold() {
     let mut game = thalos_game(109);
-    game.player.position = Position { x: 57, y: 7 };
+    game.player.position = Position { x: 108, y: 24 };
     game.mark_shop_visited_at_player().unwrap();
     game.gold = 500;
 
@@ -556,13 +556,13 @@ fn p109c_thalos_inn_travels_to_a_visited_town_for_five_hundred_gold() {
     assert_eq!(update.events[0].args["cost"], "500");
     assert_eq!(game.gold, 0);
     assert_eq!(game.wilderness_position, Some(Position { x: 28, y: 52 }));
-    assert_eq!(game.player.position, Position { x: 63, y: 13 });
+    assert_eq!(game.player.position, Position { x: 114, y: 30 });
 }
 
 #[test]
 fn p109d_thalos_museum_stores_ordinary_items_and_rejects_true_artifacts() {
     let mut game = thalos_game(109);
-    game.player.position = Position { x: 57, y: 15 };
+    game.player.position = Position { x: 108, y: 32 };
     game.mark_shop_visited_at_player().unwrap();
     support::give_inventory_item(&mut game, "test.museum.dagger", "demo.item.dagger");
     support::give_inventory_item(
@@ -637,7 +637,7 @@ fn shroomery_trade_maintenance_and_save_round_trip_use_existing_shop_state() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Outpost game should start");
     game.gold = 10_000;
-    game.player.position = Position { x: 61, y: 19 };
+    game.player.position = Position { x: 112, y: 36 };
     game.mark_shop_visited_at_player().unwrap();
 
     let shop = projected_shop(&game.snapshot().shops, SHROOMERY_ID).clone();
@@ -701,7 +701,7 @@ fn shroomery_trade_maintenance_and_save_round_trip_use_existing_shop_state() {
 fn shroomery_refuses_formal_and_temporary_snotlings() {
     let prepare = |game: &mut Game| {
         game.gold = 10_000;
-        game.player.position = Position { x: 61, y: 19 };
+        game.player.position = Position { x: 112, y: 36 };
         game.mark_shop_visited_at_player().unwrap();
         game.shop_states[SHROOMERY_ID]
             .inventory
@@ -901,7 +901,7 @@ fn inn_travel_requires_a_visited_town_and_arrives_at_its_inn() {
     assert_eq!(to_outpost.events[0].args["cost"], "500");
     assert_eq!(game.gold, 500);
     assert_eq!(game.wilderness_position, Some(Position { x: 28, y: 52 }));
-    assert_eq!(game.player.position, Position { x: 63, y: 13 });
+    assert_eq!(game.player.position, Position { x: 114, y: 30 });
     let white_horse = projected_shop(&game.snapshot().shops, WHITE_HORSE_INN_ID).clone();
     assert!(white_horse.player_at_entrance);
     assert_eq!(
@@ -919,7 +919,7 @@ fn inn_travel_requires_a_visited_town_and_arrives_at_its_inn() {
     assert_eq!(to_anambar.events[0].kind, "inn.travel");
     assert_eq!(game.gold, 0);
     assert_eq!(game.wilderness_position, Some(Position { x: 26, y: 39 }));
-    assert_eq!(game.player.position, Position { x: 45, y: 15 });
+    assert_eq!(game.player.position, Position { x: 96, y: 32 });
     assert!(projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).player_at_entrance);
 }
 
@@ -1145,7 +1145,7 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
         "demo.build.warrior",
         None,
         ANAMBAR_WARRIOR_GUILD_ID,
-        Position { x: 35, y: 7 },
+        Position { x: 86, y: 24 },
     );
     let guild = warrior
         .snapshot()
@@ -1192,7 +1192,7 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
         "demo.build.archer",
         None,
         ANAMBAR_ARCHER_GUILD_ID,
-        Position { x: 47, y: 7 },
+        Position { x: 98, y: 24 },
     );
     let archer_guild = archer
         .snapshot()
@@ -1220,7 +1220,7 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
         "demo.build.paladin-death",
         None,
         ANAMBAR_MAMMON_TEMPLE_ID,
-        Position { x: 39, y: 7 },
+        Position { x: 90, y: 24 },
     );
     let temple = healing
         .snapshot()
@@ -1273,7 +1273,7 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
         "demo.build.warrior",
         None,
         ANAMBAR_MAMMON_TEMPLE_ID,
-        Position { x: 39, y: 7 },
+        Position { x: 90, y: 24 },
     );
     restored.progress.attributes.strength = restored
         .progress
@@ -1313,7 +1313,7 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
         "demo.build.warrior",
         None,
         ANAMBAR_MAMMON_TEMPLE_ID,
-        Position { x: 39, y: 7 },
+        Position { x: 90, y: 24 },
     );
     mutated.progress.active_mutation_ids.clear();
     mutated.progress.locked_mutation_ids.clear();
@@ -1344,7 +1344,7 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
         "demo.build.warrior",
         None,
         ANAMBAR_WEAPON_MASTER_ID,
-        Position { x: 31, y: 7 },
+        Position { x: 82, y: 24 },
     );
     assessed.gold = 400;
     let update = dispatch_next(
@@ -1368,7 +1368,7 @@ fn p105c_anambar_facilities_apply_roles_prices_recovery_enchantment_assessment_a
         "demo.build.warrior",
         None,
         ANAMBAR_TRUMP_TOWER_ID,
-        Position { x: 35, y: 15 },
+        Position { x: 86, y: 32 },
     );
     let mut amberite_form =
         monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 20, "test.p105").status;
@@ -1419,7 +1419,10 @@ fn outpost_temple_has_walkable_space_on_both_sides_and_to_the_south() {
     for y in 19..=24 {
         for x in [38, 52] {
             assert_eq!(
-                game.terrain_at(Position { x, y }),
+                game.terrain_at(
+                    game.town_local_to_active_position("demo.town.outpost", Position { x, y })
+                        .unwrap()
+                ),
                 "demo.terrain.surface-grass",
                 "temple side passage at ({x}, {y}) should remain walkable"
             );
@@ -1427,7 +1430,10 @@ fn outpost_temple_has_walkable_space_on_both_sides_and_to_the_south() {
     }
     for x in 38..=52 {
         assert_eq!(
-            game.terrain_at(Position { x, y: 24 }),
+            game.terrain_at(
+                game.town_local_to_active_position("demo.town.outpost", Position { x, y: 24 })
+                    .unwrap()
+            ),
             "demo.terrain.surface-grass",
             "temple south passage at ({x}, 24) should remain walkable"
         );
@@ -1438,7 +1444,7 @@ fn outpost_temple_has_walkable_space_on_both_sides_and_to_the_south() {
 fn home_deposit_withdraw_grouping_and_save_are_authoritative() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens game should start");
-    game.player.position = Position { x: 42, y: 13 };
+    game.player.position = Position { x: 93, y: 30 };
     game.mark_shop_visited_at_player().unwrap();
     let home = game.snapshot().homes[0].clone();
     assert!(home.visited);
@@ -1524,7 +1530,7 @@ fn home_deposit_withdraw_grouping_and_save_are_authoritative() {
 fn anambar_home_uses_the_outpost_home_inventory() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens game should start");
-    game.player.position = Position { x: 42, y: 13 };
+    game.player.position = Position { x: 93, y: 30 };
     game.mark_shop_visited_at_player().unwrap();
     let ration = game.snapshot().homes[0]
         .deposit_items
@@ -1568,7 +1574,7 @@ fn anambar_home_uses_the_outpost_home_inventory() {
             .any(|shop_id| shop_id.starts_with("demo.shop.anambar-"))
     );
 
-    game.player.position = Position { x: 45, y: 15 };
+    game.player.position = Position { x: 96, y: 32 };
     game.mark_shop_visited_at_player().unwrap();
     let inn = projected_shop(&game.snapshot().shops, ANAMBAR_INN_ID).clone();
     assert!(inn.visited && inn.player_at_entrance && !inn.stock.is_empty());
@@ -1583,7 +1589,7 @@ fn anambar_home_uses_the_outpost_home_inventory() {
         .contains(&item.kind_id.as_str())
     }));
 
-    game.player.position = Position { x: 37, y: 15 };
+    game.player.position = Position { x: 88, y: 32 };
     game.mark_shop_visited_at_player().unwrap();
     let home = game
         .snapshot()
@@ -1615,7 +1621,7 @@ fn anambar_home_uses_the_outpost_home_inventory() {
 fn overburdened_player_can_withdraw_from_home() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens game should start");
-    game.player.position = Position { x: 42, y: 13 };
+    game.player.position = Position { x: 93, y: 30 };
     game.mark_shop_visited_at_player().unwrap();
     support::give_inventory_item(&mut game, "test.heavy-stack", "demo.item.burdened-mail");
     game.items
@@ -1695,7 +1701,7 @@ fn home_inventory_ids_are_reserved_by_the_global_allocator() {
 fn entering_general_store_entrance_marks_persistent_shop_visit() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens game should start");
-    game.player.position = Position { x: 32, y: 14 };
+    game.player.position = Position { x: 83, y: 31 };
 
     let update = dispatch_next(
         &mut game,
@@ -1748,7 +1754,7 @@ fn missing_unentered_shop_state_is_created_on_first_entry() {
     let mut restored = Game::from_save(payload).expect("unentered shop state may remain sparse");
     assert!(restored.shop_states.is_empty());
 
-    restored.player.position = Position { x: 32, y: 14 };
+    restored.player.position = Position { x: 83, y: 31 };
     let update = dispatch_next(
         &mut restored,
         GameCommand::Move {
@@ -1866,7 +1872,7 @@ fn black_market_uses_original_warrior_markup_and_markdown() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens game should start");
     game.gold = 1_000_000;
-    game.player.position = Position { x: 55, y: 19 };
+    game.player.position = Position { x: 106, y: 36 };
     game.mark_shop_visited_at_player().unwrap();
     let snapshot = game.snapshot();
     let shop = projected_shop(&snapshot.shops, BLACK_MARKET_ID);
@@ -1918,7 +1924,7 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens game should start");
     game.gold = 1_000;
-    game.player.position = Position { x: 45, y: 19 };
+    game.player.position = Position { x: 96, y: 36 };
     game.mark_shop_visited_at_player().unwrap();
     let temple_snapshot = game.snapshot();
     let temple = projected_shop(&temple_snapshot.shops, TEMPLE_ID);
@@ -1957,7 +1963,7 @@ fn temple_purchase_and_alchemist_visit_use_independent_shop_state() {
     assert_eq!(game.gold, 980);
     assert_eq!(game.shop_states[ALCHEMIST_ID], alchemist_before);
 
-    game.player.position = Position { x: 53, y: 13 };
+    game.player.position = Position { x: 104, y: 30 };
     game.mark_shop_visited_at_player().unwrap();
     let snapshot = game.snapshot();
     let alchemist = projected_shop(&snapshot.shops, ALCHEMIST_ID);
@@ -1983,7 +1989,7 @@ fn bookstore_purchase_can_supply_an_original_spellbook_for_study() {
     game.gold = 10_000;
     game.items
         .retain(|item| item.location != ItemLocation::Inventory);
-    game.player.position = Position { x: 55, y: 13 };
+    game.player.position = Position { x: 106, y: 30 };
     game.mark_shop_visited_at_player().unwrap();
 
     let shop = projected_shop(&game.snapshot().shops, BOOKSTORE_ID).clone();
@@ -2080,7 +2086,7 @@ fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
         .expect("weaponsmith state should exist")
         .inventory
         .push(extra_arrows);
-    game.player.position = Position { x: 34, y: 19 };
+    game.player.position = Position { x: 85, y: 36 };
     game.mark_shop_visited_at_player().unwrap();
 
     let weaponsmith = projected_shop(&game.snapshot().shops, WEAPONSMITH_ID).clone();
@@ -2106,7 +2112,7 @@ fn shared_forge_shops_group_stock_and_sell_equipment_that_can_be_used() {
         "compatible arrow instances should group across the stack limit"
     );
 
-    game.player.position = Position { x: 30, y: 19 };
+    game.player.position = Position { x: 81, y: 36 };
     game.mark_shop_visited_at_player().unwrap();
     let armoury = projected_shop(&game.snapshot().shops, ARMOURY_ID).clone();
     assert!(armoury.visited);
@@ -2159,7 +2165,7 @@ fn magic_shop_purchase_device_use_and_save_are_authoritative() {
     let mut game =
         Game::new_with_build(43, "demo.build.warrior").expect("Warrens game should start");
     game.gold = 10_000;
-    game.player.position = Position { x: 57, y: 13 };
+    game.player.position = Position { x: 108, y: 30 };
     game.mark_shop_visited_at_player().unwrap();
 
     let shop = projected_shop(&game.snapshot().shops, MAGIC_SHOP_ID).clone();
@@ -2629,7 +2635,7 @@ fn maintenance_refills_only_after_interval_at_entrance() {
 fn p106_bounty_office_projects_and_redeems_daily_and_wanted_remains() {
     let mut game =
         Game::new_with_build(106, "demo.build.warrior").expect("Middle-earth game should start");
-    game.player.position = Position { x: 57, y: 19 };
+    game.player.position = Position { x: 108, y: 36 };
     let office = game
         .snapshot()
         .task_services
@@ -2706,7 +2712,7 @@ fn p106_bounty_office_projects_and_redeems_daily_and_wanted_remains() {
 fn p106_dynamic_bounty_spawns_only_counted_targets_and_round_trips() {
     let mut game =
         Game::new_with_build(206, "demo.build.warrior").expect("Middle-earth game should start");
-    game.player.position = Position { x: 57, y: 19 };
+    game.player.position = Position { x: 108, y: 36 };
     let update = dispatch_next(
         &mut game,
         GameCommand::UseBountyOffice {

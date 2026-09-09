@@ -8,8 +8,8 @@
   "category": "home",
   "storageId": "demo.town-facility.outpost-home",
   "entrancePosition": {
-    "x": 44,
-    "y": 22
+    "x": 131,
+    "y": 41
   },
   "entranceTerrainId": "demo.terrain.home-entrance"
 }

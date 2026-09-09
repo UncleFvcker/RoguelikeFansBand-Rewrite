@@ -30,10 +30,10 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "09c5bda0b2254e78e097fd9b55d3bf6ad1ecd518b6607bb7ce251855e9337ae1",
+      "stateHash": "25df4664f8139cf9b022b6ffdb8ee0bcb0b91b46209750dd06dfc3bdc23aadde",
       "playerPosition": {
-        "x": 34,
-        "y": 14
+        "x": 85,
+        "y": 31
       },
       "inventoryStackCount": 6,
       "itemKnowledge": {
@@ -49,27 +49,27 @@
         "kind": "item.use-teleported",
         "messageKey": "item-use-teleported",
         "args": {
-          "fromX": "44",
-          "fromY": "16",
+          "fromX": "95",
+          "fromY": "33",
           "source": "demo.item.flicker-scroll",
-          "toX": "34",
-          "toY": "14"
+          "toX": "85",
+          "toY": "31"
         },
         "outcome": {
           "type": "ability-teleport",
           "resolution": {
             "from": {
-              "x": 44,
-              "y": 16
+              "x": 95,
+              "y": 33
             },
             "to": {
-              "x": 34,
-              "y": 14
+              "x": 85,
+              "y": 31
             }
           }
         }
       }
     ],
-    "saveRoundTripStateHash": "09c5bda0b2254e78e097fd9b55d3bf6ad1ecd518b6607bb7ce251855e9337ae1"
+    "saveRoundTripStateHash": "25df4664f8139cf9b022b6ffdb8ee0bcb0b91b46209750dd06dfc3bdc23aadde"
   }
 }

@@ -7,8 +7,8 @@
   "townId": "demo.town.morivant",
   "category": "general-store",
   "entrancePosition": {
-    "x": 43,
-    "y": 14
+    "x": 110,
+    "y": 33
   },
   "entranceTerrainId": "demo.terrain.general-store-entrance",
   "owner": {

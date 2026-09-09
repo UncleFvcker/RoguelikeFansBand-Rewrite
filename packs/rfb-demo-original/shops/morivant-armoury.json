@@ -7,8 +7,8 @@
   "townId": "demo.town.morivant",
   "category": "armoury",
   "entrancePosition": {
-    "x": 34,
-    "y": 10
+    "x": 97,
+    "y": 26
   },
   "entranceTerrainId": "demo.terrain.armoury-entrance",
   "owner": {

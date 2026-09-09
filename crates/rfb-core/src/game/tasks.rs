@@ -757,31 +757,59 @@ impl Game {
                 ))
             })
             .collect::<Vec<_>>();
-        let mut changed = Vec::new();
+        let town = self
+            .current_town()
+            .expect("accessible facility must belong to current town");
+        let stored_town = if self.is_wilderness_floor() {
+            Some(
+                self.stored_floors
+                    .get(&town.floor_id)
+                    .ok_or("task-entry-unavailable")?,
+            )
+        } else {
+            None
+        };
+        let (terrain, width) = stored_town
+            .map(|floor| (&floor.terrain, floor.width))
+            .unwrap_or((&self.terrain, self.width));
+        let town_floor_id = town.floor_id.clone();
+        let mut changes = Vec::new();
         for (available_terrain_id, _) in &entry_changes {
-            let mut positions = self
-                .terrain
+            let positions = terrain
                 .iter()
                 .enumerate()
                 .filter_map(|(index, terrain_id)| {
-                    (terrain_id == available_terrain_id).then_some(rfb_protocol::Position {
-                        x: i32::try_from(index % usize::from(self.width)).ok()?,
-                        y: i32::try_from(index / usize::from(self.width)).ok()?,
-                    })
+                    let local = rfb_protocol::Position {
+                        x: i32::try_from(index % usize::from(width)).ok()?,
+                        y: i32::try_from(index / usize::from(width)).ok()?,
+                    };
+                    let visible = self
+                        .town_local_to_active_position(&town.id, local)
+                        .and_then(|position| self.index(position).map(|index| (position, index)));
+                    // Visible cells are authoritative; the stored floor retains offscreen cells.
+                    let effective = visible.map_or(terrain_id, |(_, index)| &self.terrain[index]);
+                    (effective == available_terrain_id).then_some((index, visible))
                 })
                 .collect::<Vec<_>>();
             if positions.len() != 1 {
                 return Err("task-entry-unavailable");
             }
-            changed.append(&mut positions);
+            changes.push(positions[0]);
         }
         state.status = TaskStatusKindDto::Taken;
         self.task_states.insert(task_id.to_owned(), state);
-        for ((_, entry_terrain_id), position) in entry_changes.iter().zip(&changed) {
-            let index = usize::try_from(position.y).expect("task entry y must be non-negative")
-                * usize::from(self.width)
-                + usize::try_from(position.x).expect("task entry x must be non-negative");
-            self.terrain[index] = entry_terrain_id.clone();
+        let mut changed = Vec::new();
+        for ((_, entry_terrain_id), (local_index, visible)) in entry_changes.iter().zip(changes) {
+            if self.is_wilderness_floor() {
+                self.stored_floors
+                    .get_mut(&town_floor_id)
+                    .expect("task town was validated before mutation")
+                    .terrain[local_index] = entry_terrain_id.clone();
+            }
+            if let Some((position, index)) = visible {
+                self.terrain[index] = entry_terrain_id.clone();
+                changed.push(position);
+            }
         }
         Ok(changed)
     }
@@ -1205,6 +1233,12 @@ mod collect_item_tests {
         let mut world = game.content.world(&game.world_id).unwrap().clone();
         let task_id = "demo.task.morivant-snakes";
         let floor_id = "demo.floor.morivant-snakes";
+        let initial = task_initial_state(
+            &world,
+            task_definition(&world, task_id).unwrap(),
+            &game.task_states,
+        );
+        game.task_states.insert(task_id.to_owned(), initial);
         let state = game.task_states.get_mut(task_id).unwrap();
         state.status = TaskStatusKindDto::Active;
         state.active_floor_id = Some(floor_id.to_owned());

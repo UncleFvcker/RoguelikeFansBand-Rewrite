@@ -3,6 +3,55 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn morivant_full_map_preserves_both_castle_doors_and_validates_additional_entrances() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let world = &artifact.content.worlds[0];
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.morivant")
+        .unwrap();
+    assert_eq!((floor.width, floor.height), (198, 66));
+    let map = floor.inline_map.as_ref().unwrap();
+    assert_eq!(
+        map.terrain_overrides
+            .iter()
+            .map(|entry| entry.positions.len())
+            .sum::<usize>(),
+        198 * 66
+    );
+    let castle_id = "demo.town-facility.morivant-castle";
+    let castle = artifact
+        .content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == castle_id)
+        .unwrap();
+    assert_eq!(
+        castle.entrance_positions().collect::<Vec<_>>(),
+        [
+            ContentPosition { x: 153, y: 18 },
+            ContentPosition { x: 153, y: 19 }
+        ]
+    );
+    for invalid in [
+        ContentPosition { x: 153, y: 18 },
+        ContentPosition { x: 99, y: 38 },
+    ] {
+        let mut content = artifact.content.clone();
+        content
+            .town_facilities
+            .iter_mut()
+            .find(|facility| facility.id == castle_id)
+            .unwrap()
+            .additional_entrance_positions = vec![invalid];
+        assert!(
+            matches!(validate_and_normalize(&mut content), Err(ContentError::InvalidTownFacility(id)) if id == castle_id)
+        );
+    }
+}
+
+#[test]
 fn morivant_snakes_map_and_find_artifact_match_rfb_master() {
     // master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: q_info N:51, q_snakes.txt.
     // ':' retains the default FLOOR; '+' is the historical secret-door glyph (rooms.c).
@@ -10174,22 +10223,22 @@ fn town_entrances_and_shared_facilities_match_source() {
             [
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 17, y: 29 },
-                    map_origin: ContentPosition { x: 37, y: 6 },
+                    map_origin: ContentPosition { x: 88, y: 23 },
                     town_id: "demo.town.thalos".to_owned(),
                 },
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 26, y: 39 },
-                    map_origin: ContentPosition { x: 27, y: 6 },
+                    map_origin: ContentPosition { x: 78, y: 23 },
                     town_id: "demo.town.anambar".to_owned(),
                 },
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 28, y: 52 },
-                    map_origin: ContentPosition { x: 0, y: 0 },
+                    map_origin: ContentPosition { x: 51, y: 17 },
                     town_id: "demo.town.outpost".to_owned(),
                 },
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 47, y: 50 },
-                    map_origin: ContentPosition { x: 16, y: 1 },
+                    map_origin: ContentPosition { x: 0, y: 0 },
                     town_id: "demo.town.morivant".to_owned(),
                 },
                 WildernessLocationDefinition::Dungeon {
@@ -10547,7 +10596,7 @@ fn town_entrances_and_shared_facilities_match_source() {
                 location,
                 WildernessLocationDefinition::Town {
                     position: ContentPosition { x: 17, y: 29 },
-                    map_origin: ContentPosition { x: 37, y: 6 },
+                    map_origin: ContentPosition { x: 88, y: 23 },
                     town_id,
                 } if town_id == "demo.town.thalos"
             )
@@ -13186,7 +13235,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
                 x: wilderness.start_position.x + 1,
                 y: wilderness.start_position.y,
             },
-            map_origin: ContentPosition { x: 45, y: 15 },
+            map_origin: ContentPosition { x: 96, y: 32 },
             town_id: town_id.to_owned(),
         });
 
@@ -13218,7 +13267,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
     };
 
     let mut invalid_origin = content.clone();
-    set_second_town_origin(&mut invalid_origin, ContentPosition { x: 93, y: 31 });
+    set_second_town_origin(&mut invalid_origin, ContentPosition { x: 195, y: 64 });
     assert!(matches!(
         validate_and_normalize(&mut invalid_origin),
         Err(ContentError::InvalidTown(id)) if id == town_id

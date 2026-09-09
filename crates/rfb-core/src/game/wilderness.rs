@@ -10,8 +10,8 @@ pub(super) const WILDERNESS_FLOOR_ID: &str = "core.floor.wilderness";
 pub(super) const WORLD_MAP_ACTION_MULTIPLIER: i32 = 132;
 pub(super) const WILDERNESS_DAY_TICKS: u32 = 100_000;
 pub(super) const WILDERNESS_NIGHT_START_TICK: u32 = WILDERNESS_DAY_TICKS * 3 / 4 + 1;
-pub(super) const WILDERNESS_CHUNK_WIDTH: u16 = 32;
-pub(super) const WILDERNESS_CHUNK_HEIGHT: u16 = 11;
+pub(super) const WILDERNESS_CHUNK_WIDTH: u16 = WILDERNESS_WORLD_CELL_WIDTH / 3;
+pub(super) const WILDERNESS_CHUNK_HEIGHT: u16 = WILDERNESS_WORLD_CELL_HEIGHT / 3;
 pub(super) const WILDERNESS_VIEW_WIDTH: u16 = WILDERNESS_WORLD_CELL_WIDTH;
 pub(super) const WILDERNESS_VIEW_HEIGHT: u16 = WILDERNESS_WORLD_CELL_HEIGHT;
 
@@ -2328,11 +2328,11 @@ mod tests {
         assert_eq!(diagonal.len(), 5);
         assert_eq!(
             wilderness_exposed_positions(Position { x: 1, y: 0 }).len(),
-            32 * 33
+            66 * 66
         );
         assert_eq!(
             wilderness_exposed_positions(Position { x: 1, y: 1 }).len(),
-            32 * 33 + 96 * 11 - 32 * 11
+            66 * 66 + 198 * 22 - 66 * 22
         );
     }
 
@@ -2381,10 +2381,10 @@ mod tests {
         let allowed = game.wilderness_positions_outside_visible_towns(view);
 
         assert_eq!(allowed.len(), view_cell_count - 23 * 11);
-        assert!(!allowed.contains(&Position { x: 27, y: 6 }));
-        assert!(!allowed.contains(&Position { x: 49, y: 16 }));
-        assert!(allowed.contains(&Position { x: 26, y: 6 }));
-        assert!(allowed.contains(&Position { x: 50, y: 16 }));
+        assert!(!allowed.contains(&Position { x: 78, y: 23 }));
+        assert!(!allowed.contains(&Position { x: 100, y: 33 }));
+        assert!(allowed.contains(&Position { x: 77, y: 23 }));
+        assert!(allowed.contains(&Position { x: 101, y: 33 }));
     }
 
     #[test]
@@ -2417,19 +2417,16 @@ mod tests {
             .wilderness_position
             .expect("Warrens journey should define a wilderness start");
         let terrain = game.cached_wilderness_view_terrain(position);
-        let view_index = 6 * usize::from(WILDERNESS_VIEW_WIDTH) + 22;
+        let view_index = 23 * usize::from(WILDERNESS_VIEW_WIDTH) + 73;
         assert_eq!(terrain[view_index], "demo.terrain.outpost-fortification");
 
         let center = wilderness_view_center_chunk(position, Position::default());
-        let top_left_chunk = Position {
-            x: center.x - 1,
-            y: center.y - 1,
-        };
+        let map_chunk = center;
         let cached = game
             .wilderness_terrain_cache
-            .get(&top_left_chunk)
+            .get(&map_chunk)
             .expect("visible base chunk should remain cached");
-        let chunk_index = 6 * usize::from(WILDERNESS_CHUNK_WIDTH) + 22;
+        let chunk_index = usize::from(WILDERNESS_CHUNK_WIDTH) + 7;
         assert_ne!(cached[chunk_index], "demo.terrain.outpost-fortification");
     }
 
@@ -2447,14 +2444,14 @@ mod tests {
         for y in 0..usize::from(WILDERNESS_VIEW_HEIGHT) {
             for x in 0..width {
                 let index = y * width + x;
-                if (27..50).contains(&x) && (6..17).contains(&y) {
+                if (78..101).contains(&x) && (23..34).contains(&y) {
                     assert_eq!(evolved[index], initial[index]);
                 } else if evolved[index] != initial[index] {
                     outside_changed = true;
                 }
             }
         }
-        assert_eq!(initial[16 * width + 48], "demo.terrain.outpost-gate");
+        assert_eq!(initial[33 * width + 99], "demo.terrain.outpost-gate");
         assert!(outside_changed);
     }
 
@@ -2468,25 +2465,25 @@ mod tests {
                 Position { x: 25, y: 39 },
                 Position { x: 1, y: 0 },
                 Position { x: -1, y: 0 },
-                Position { x: -32, y: 0 },
+                Position { x: -66, y: 0 },
             ),
             (
                 Position { x: 27, y: 39 },
                 Position { x: -1, y: 0 },
                 Position { x: 1, y: 0 },
-                Position { x: 32, y: 0 },
+                Position { x: 66, y: 0 },
             ),
             (
                 Position { x: 26, y: 38 },
                 Position { x: 0, y: 1 },
                 Position { x: 0, y: -1 },
-                Position { x: 0, y: -11 },
+                Position { x: 0, y: -22 },
             ),
             (
                 Position { x: 26, y: 40 },
                 Position { x: 0, y: -1 },
                 Position { x: 0, y: 1 },
-                Position { x: 0, y: 11 },
+                Position { x: 0, y: 22 },
             ),
         ];
         let width = usize::from(WILDERNESS_VIEW_WIDTH);
@@ -2526,7 +2523,7 @@ mod tests {
             Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
 
         assert_eq!(game.current_floor_id, WILDERNESS_FLOOR_ID);
-        assert_eq!((game.width, game.height), (96, 33));
+        assert_eq!((game.width, game.height), (198, 66));
         assert_eq!(
             game.current_town().map(|town| town.id.as_str()),
             Some("demo.town.outpost")
@@ -2534,7 +2531,7 @@ mod tests {
         assert!(game.stored_floors.contains_key("demo.floor.surface"));
         assert!(game.items.iter().any(|item| {
             item.id == "demo.item.warrens-short-sword.1"
-                && item.location == ItemLocation::Ground(Position { x: 45, y: 16 })
+                && item.location == ItemLocation::Ground(Position { x: 96, y: 33 })
         }));
         assert!(game.stored_floors["demo.floor.surface"].items.is_empty());
     }
@@ -2543,7 +2540,8 @@ mod tests {
     fn town_state_moves_to_backing_storage_and_returns_with_the_view() {
         let mut game =
             Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
-        let remembered = Position { x: 10, y: 10 };
+        let local = Position { x: 10, y: 10 };
+        let remembered = Position { x: 61, y: 27 };
         let actor_definition = game
             .content
             .actor("demo.actor.small-kobold")
@@ -2562,9 +2560,9 @@ mod tests {
             .iter_mut()
             .find(|item| item.id == "demo.item.warrens-short-sword.1")
             .expect("birth town item should remain active");
-        item.location = ItemLocation::Ground(Position { x: 11, y: 10 });
+        item.location = ItemLocation::Ground(Position { x: 62, y: 27 });
         let gold = game
-            .generate_gold_pile(Position { x: 12, y: 10 }, 1, false)
+            .generate_gold_pile(Position { x: 63, y: 27 }, 1, false)
             .expect("test gold should generate");
         let gold_id = gold.id.clone();
         game.gold_piles.push(gold);
@@ -2574,9 +2572,9 @@ mod tests {
         game.explored[remembered_index] = true;
         game.revealed_terrain.insert(remembered);
 
-        game.player.position = Position { x: 63, y: 16 };
+        game.player.position = Position { x: 131, y: 33 };
         let east = game
-            .scroll_wilderness_for_player_entry(Position { x: 64, y: 16 }, &mut Vec::new())
+            .scroll_wilderness_for_player_entry(Position { x: 132, y: 33 }, &mut Vec::new())
             .expect("eastward scroll should resolve");
         let WildernessPlayerEntry::Local { target, .. } = east else {
             panic!("eastward scroll should retain the wilderness floor");
@@ -2588,10 +2586,13 @@ mod tests {
         assert_eq!(backing.terrain[backing_index], "demo.terrain.created-trap");
         assert!(backing.glow[backing_index]);
         assert!(backing.explored[backing_index]);
-        assert!(backing.revealed_terrain.contains(&remembered));
-        assert!(backing.entities.iter().any(|actor| {
-            actor.id == "test.town-surface.actor" && actor.position == remembered
-        }));
+        assert!(backing.revealed_terrain.contains(&local));
+        assert!(
+            backing
+                .entities
+                .iter()
+                .any(|actor| { actor.id == "test.town-surface.actor" && actor.position == local })
+        );
         assert!(backing.items.iter().any(|item| {
             item.id == "demo.item.warrens-short-sword.1"
                 && item.location == ItemLocation::Ground(Position { x: 11, y: 10 })
@@ -2610,7 +2611,7 @@ mod tests {
         );
 
         let west = game
-            .scroll_wilderness_for_player_entry(Position { x: 31, y: 16 }, &mut Vec::new())
+            .scroll_wilderness_for_player_entry(Position { x: 65, y: 33 }, &mut Vec::new())
             .expect("westward scroll should resolve");
         let WildernessPlayerEntry::Local { target, .. } = west else {
             panic!("westward scroll should retain the wilderness floor");
@@ -2622,12 +2623,12 @@ mod tests {
         }));
         assert!(game.items.iter().any(|item| {
             item.id == "demo.item.warrens-short-sword.1"
-                && item.location == ItemLocation::Ground(Position { x: 11, y: 10 })
+                && item.location == ItemLocation::Ground(Position { x: 62, y: 27 })
         }));
         assert!(
             game.gold_piles
                 .iter()
-                .any(|pile| pile.id == gold_id && pile.position == Position { x: 12, y: 10 })
+                .any(|pile| pile.id == gold_id && pile.position == Position { x: 63, y: 27 })
         );
         assert_eq!(game.terrain[remembered_index], "demo.terrain.created-trap");
         assert!(game.glow[remembered_index]);
@@ -2652,9 +2653,9 @@ mod tests {
         let mut game =
             Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
         game.store_visible_town_states();
-        game.wilderness_position = Some(Position { x: 25, y: 39 });
-        game.wilderness_view_offset = Position { x: 1, y: 0 };
-        let terrain = game.cached_wilderness_view_terrain(Position { x: 25, y: 39 });
+        game.wilderness_position = Some(Position { x: 26, y: 39 });
+        game.wilderness_view_offset = Position { x: -1, y: 0 };
+        let terrain = game.cached_wilderness_view_terrain(Position { x: 26, y: 39 });
         game.terrain = terrain;
         game.glow.fill(false);
         game.explored.fill(false);
@@ -2666,7 +2667,7 @@ mod tests {
         let anambar = &game.stored_floors["demo.floor.anambar"];
         assert_eq!((anambar.width, anambar.height), (23, 11));
         assert_eq!(
-            game.terrain_at(Position { x: 91, y: 6 }),
+            game.terrain_at(Position { x: 144, y: 23 }),
             "demo.terrain.outpost-wall"
         );
     }

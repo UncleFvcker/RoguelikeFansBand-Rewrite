@@ -472,8 +472,8 @@ fn undead_race_intrinsics_share_cold_unlock_and_temporary_form_lifecycle() {
 
 #[test]
 fn formal_wood_elf_and_temporary_form_cross_trees_without_delay() {
-    let start = Position { x: 48, y: 16 };
-    let target = Position { x: 49, y: 16 };
+    let start = Position { x: 99, y: 33 };
+    let target = Position { x: 100, y: 33 };
 
     let mut wood_elf = wood_elf_game(386);
     clear_monsters(&mut wood_elf);

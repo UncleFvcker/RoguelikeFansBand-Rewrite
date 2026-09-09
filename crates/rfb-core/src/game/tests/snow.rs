@@ -9,8 +9,8 @@ fn local_snow_game(seed: u64) -> (Game, Position, Position) {
     let mut game =
         Game::new_with_build(seed, "demo.build.warrior").expect("snow test game should create");
     clear_monsters(&mut game);
-    let start = Position { x: 48, y: 16 };
-    let target = Position { x: 49, y: 16 };
+    let start = Position { x: 99, y: 33 };
+    let target = Position { x: 100, y: 33 };
     replace_terrain(&mut game, start, "demo.terrain.floor");
     replace_terrain(&mut game, target, SNOW_ID);
     game.player.position = start;
@@ -34,7 +34,7 @@ fn mounted_snow_game(seed: u64, snow_adapted: bool) -> Game {
         }
     });
     clear_monsters(&mut game);
-    let position = Position { x: 48, y: 16 };
+    let position = Position { x: 99, y: 33 };
     replace_terrain(&mut game, position, SNOW_ID);
     game.player.position = position;
     game.push_generated_actor("test.snow-mount".to_owned(), "demo.actor.horse", position);

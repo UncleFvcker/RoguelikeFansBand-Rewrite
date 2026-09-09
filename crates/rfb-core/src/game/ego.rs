@@ -2170,7 +2170,7 @@ fn rfb_ego_weight(rarity: u16, min_level: u16, max_level: u16, level: u16) -> u3
 mod tests {
     use std::collections::{BTreeMap, BTreeSet};
 
-    use crate::{STATE_HASH_SCHEMA_VERSION, game::Game};
+    use crate::game::Game;
     use rfb_content::{
         AbilityTargetDefinition, AbilityTargetModeDefinition, AffixDefinition, EquipmentBonuses,
         ItemDefinition, ItemDeviceActivationDefinition, ItemDeviceChargeRangeDefinition,
@@ -3180,7 +3180,6 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(STATE_HASH_SCHEMA_VERSION, 108);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,

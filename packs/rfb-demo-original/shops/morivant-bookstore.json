@@ -7,8 +7,8 @@
   "townId": "demo.town.morivant",
   "category": "bookstore",
   "entrancePosition": {
-    "x": 45,
-    "y": 10
+    "x": 112,
+    "y": 26
   },
   "entranceTerrainId": "demo.terrain.bookstore-entrance",
   "owner": {

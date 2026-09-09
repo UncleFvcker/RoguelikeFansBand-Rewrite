@@ -2,7 +2,9 @@
 
 use std::{collections::BTreeSet, fmt, str::FromStr};
 
-use rfb_content::WildernessLocationDefinition;
+use rfb_content::{
+    WILDERNESS_WORLD_CELL_HEIGHT, WILDERNESS_WORLD_CELL_WIDTH, WildernessLocationDefinition,
+};
 use rfb_core::{CoreError, DEFAULT_WORLD_ID, Game, load_built_in_content};
 use rfb_protocol::{
     AbilityDto, AbilityLearningDto, AbilityProgressSaveDto, ActorSaveDto, CampaignStateDto,
@@ -745,30 +747,47 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
             return Err(ContractError::InvalidPlayerPositionPrecondition(position));
         }
         payload.player.position = position;
-        if let Some(town) = content.world(&payload.world_id).and_then(|world| {
+        if let Some((town, map_origin)) = content.world(&payload.world_id).and_then(|world| {
             world
                 .wilderness
                 .iter()
                 .flat_map(|wilderness| &wilderness.locations)
                 .find_map(|location| match location {
                     WildernessLocationDefinition::Town {
-                        position, town_id, ..
-                    } => content.town(town_id).filter(|town| {
-                        town.floor_id == payload.current_floor_id
-                            || payload.wilderness_position.is_some_and(|current| {
-                                current.x == i32::from(position.x)
-                                    && current.y == i32::from(position.y)
-                            })
-                    }),
+                        position,
+                        town_id,
+                        map_origin,
+                    } => content
+                        .town(town_id)
+                        .filter(|town| {
+                            town.floor_id == payload.current_floor_id
+                                || payload.wilderness_position.is_some_and(|current| {
+                                    current.x == i32::from(position.x)
+                                        && current.y == i32::from(position.y)
+                                })
+                        })
+                        .map(|town| (town, map_origin)),
                     WildernessLocationDefinition::Dungeon { .. } => None,
                 })
         }) {
+            let local = if town.floor_id == payload.current_floor_id {
+                position
+            } else {
+                Position {
+                    x: position.x - i32::from(map_origin.x)
+                        + payload.wilderness_view_offset.x
+                            * i32::from(WILDERNESS_WORLD_CELL_WIDTH / 3),
+                    y: position.y - i32::from(map_origin.y)
+                        + payload.wilderness_view_offset.y
+                            * i32::from(WILDERNESS_WORLD_CELL_HEIGHT / 3),
+                }
+            };
             for shop_id in &town.shop_ids {
                 let Some(shop) = content.shop(shop_id) else {
                     continue;
                 };
-                if position.x == i32::from(shop.entrance_position.x)
-                    && position.y == i32::from(shop.entrance_position.y)
+                if local.x == i32::from(shop.entrance_position.x)
+                    && local.y == i32::from(shop.entrance_position.y)
                     && let Some(state) = payload
                         .shop_states
                         .iter_mut()
@@ -781,12 +800,12 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
                 let Some(facility) = content.town_facility(facility_id) else {
                     continue;
                 };
-                if position.x == i32::from(facility.entrance_position.x)
-                    && position.y == i32::from(facility.entrance_position.y)
-                    && let Some(state) = payload
-                        .home_states
-                        .iter_mut()
-                        .find(|state| &state.facility_id == facility_id)
+                if facility.entrance_positions().any(|entrance| {
+                    local.x == i32::from(entrance.x) && local.y == i32::from(entrance.y)
+                }) && let Some(state) = payload
+                    .home_states
+                    .iter_mut()
+                    .find(|state| &state.facility_id == facility_id)
                 {
                     state.visited = true;
                 }

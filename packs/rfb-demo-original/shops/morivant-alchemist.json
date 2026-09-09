@@ -7,8 +7,8 @@
   "townId": "demo.town.morivant",
   "category": "alchemist",
   "entrancePosition": {
-    "x": 28,
-    "y": 14
+    "x": 90,
+    "y": 32
   },
   "entranceTerrainId": "demo.terrain.alchemist-entrance",
   "owner": {

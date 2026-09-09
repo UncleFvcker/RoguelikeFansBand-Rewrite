@@ -69,7 +69,16 @@ pub struct TownFacilityDefinition {
     #[serde(default)]
     pub bounty_office: Option<TownFacilityBountyDefinition>,
     pub entrance_position: ContentPosition,
+    #[serde(default)]
+    pub additional_entrance_positions: Vec<ContentPosition>,
     pub entrance_terrain_id: String,
+}
+
+impl TownFacilityDefinition {
+    pub fn entrance_positions(&self) -> impl Iterator<Item = ContentPosition> + '_ {
+        std::iter::once(self.entrance_position)
+            .chain(self.additional_entrance_positions.iter().copied())
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

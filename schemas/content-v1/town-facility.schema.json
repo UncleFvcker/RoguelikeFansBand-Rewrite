@@ -92,6 +92,13 @@
     "$schema": {
       "type": "string"
     },
+    "additionalEntrancePositions": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/ContentPosition"
+      },
+      "type": "array"
+    },
     "bountyOffice": {
       "anyOf": [
         {

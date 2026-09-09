@@ -140,7 +140,7 @@ fn game_with_second_town(seed: u64) -> (Game, Position) {
                 x: u16::try_from(position.x).unwrap(),
                 y: u16::try_from(position.y).unwrap(),
             },
-            map_origin: rfb_content::ContentPosition { x: 45, y: 15 },
+            map_origin: rfb_content::ContentPosition { x: 96, y: 32 },
             town_id: town_id.to_owned(),
         });
 
@@ -257,11 +257,11 @@ fn p89c_outpost_shared_entrance_routes_only_to_the_active_dungeon() {
         assert!(game.actor_kind_is_dungeon_guardian(active_guardian));
         assert!(!game.actor_kind_is_dungeon_guardian(suppressed_guardian));
         assert_eq!(
-            game.terrain_at(Position { x: 74, y: 16 }),
+            game.terrain_at(Position { x: 125, y: 33 }),
             "demo.terrain.stairs-down"
         );
 
-        game.player.position = Position { x: 93, y: 29 };
+        game.player.position = Position { x: 144, y: 46 };
         assert_eq!(
             game.terrain_at(game.player.position),
             "demo.terrain.hideout-entrance"
@@ -801,7 +801,7 @@ fn p89d_hideout_reward_materializes_a_nonblank_am_quest_amulet() {
 
 fn p89_reach_shared_dungeon_guardian(seed: u64, dungeon_id: &str) -> Game {
     let mut game = game_with_dungeon_substitution(seed);
-    game.player.position = Position { x: 93, y: 29 };
+    game.player.position = Position { x: 144, y: 46 };
     for depth in 8..=18 {
         let update = dispatch_next(&mut game, GameCommand::TraverseStairs);
         assert_eq!(
@@ -2508,22 +2508,22 @@ fn middle_earth_starts_on_an_outdoor_surface_with_a_working_warrens_entrance() {
     assert!(game.entities.is_empty());
     assert_eq!(game.world_id, DEFAULT_WORLD_ID);
     assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
-    assert_eq!((game.width, game.height), (96, 33));
-    assert_eq!(game.player.position, Position { x: 44, y: 16 });
+    assert_eq!((game.width, game.height), (198, 66));
+    assert_eq!(game.player.position, Position { x: 95, y: 33 });
     assert_eq!(
-        game.terrain_at(Position { x: 44, y: 16 }),
+        game.terrain_at(Position { x: 95, y: 33 }),
         "demo.terrain.surface-path"
     );
     assert_eq!(
-        game.terrain_at(Position { x: 74, y: 16 }),
+        game.terrain_at(Position { x: 125, y: 33 }),
         "demo.terrain.stairs-down"
     );
     assert_eq!(
-        game.terrain_at(Position { x: 0, y: 0 }),
+        game.terrain_at(Position { x: 51, y: 17 }),
         "demo.terrain.surface-grass"
     );
 
-    game.player.position = Position { x: 73, y: 16 };
+    game.player.position = Position { x: 124, y: 33 };
     dispatch_next(
         &mut game,
         GameCommand::Move {
@@ -2541,8 +2541,8 @@ fn dungeon_round_trip_restores_the_scrolled_town_position() {
     let world_position = game
         .wilderness_position
         .expect("Warrens journey should start in the wilderness");
-    game.player.position = Position { x: 63, y: 16 };
-    let target = Position { x: 64, y: 16 };
+    game.player.position = Position { x: 131, y: 33 };
+    let target = Position { x: 132, y: 33 };
     let target_index = game.index(target).expect("scroll target should exist");
     game.terrain[target_index] = "demo.terrain.surface-path".to_owned();
     let transition = game
@@ -2554,7 +2554,7 @@ fn dungeon_round_trip_restores_the_scrolled_town_position() {
     game.relocate_player(target, &mut BTreeSet::new());
     assert_eq!(game.wilderness_view_offset, Position { x: 1, y: 0 });
 
-    let entrance = Position { x: 42, y: 16 };
+    let entrance = Position { x: 59, y: 33 };
     assert_eq!(game.terrain_at(entrance), "demo.terrain.stairs-down");
     game.player.position = entrance;
     dispatch_next(&mut game, GameCommand::TraverseStairs);
@@ -4012,9 +4012,9 @@ fn world_map_projects_authoritative_wilderness_cells_and_restores_the_local_map(
 
     let left = dispatch_next(&mut restored, GameCommand::LeaveWorldMap);
     assert_eq!(left.map_scale, MapScaleDto::Local);
-    assert_eq!((left.width, left.height), (96, 33));
+    assert_eq!((left.width, left.height), (198, 66));
     assert_eq!(left.player.position, local_position);
-    assert_eq!(left.changed_cells.len(), 96 * 33);
+    assert_eq!(left.changed_cells.len(), 198 * 66);
     assert_eq!(restored.world_tick, world_tick);
 }
 
@@ -4080,7 +4080,10 @@ fn entering_world_map_advances_the_wilderness_generation_and_clears_cached_terra
 fn world_map_round_trip_preserves_the_visible_town_surface() {
     let mut game =
         Game::new_with_build(42, "demo.build.warrior").expect("Warrens journey should create");
-    let remembered = Position { x: 10, y: 10 };
+    let local = Position { x: 10, y: 10 };
+    let remembered = game
+        .town_local_to_active_position("demo.town.outpost", local)
+        .unwrap();
     let remembered_index = game.index(remembered).expect("town cell should exist");
     game.terrain[remembered_index] = "demo.terrain.created-trap".to_owned();
     game.explored[remembered_index] = true;
@@ -4092,7 +4095,7 @@ fn world_map_round_trip_preserves_the_visible_town_surface() {
     let backing_index = 10 * usize::from(backing.width) + 10;
     assert_eq!(backing.terrain[backing_index], "demo.terrain.created-trap");
     assert!(backing.explored[backing_index]);
-    assert!(backing.revealed_terrain.contains(&remembered));
+    assert!(backing.revealed_terrain.contains(&local));
 
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
 
@@ -4247,8 +4250,8 @@ fn local_wilderness_is_coordinate_seeded_and_restores_from_save() {
     let game = enter_eastern_wilderness(42);
     let duplicate = enter_eastern_wilderness(42);
     assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
-    assert_eq!((game.width, game.height), (96, 33));
-    assert_eq!(game.player.position, Position { x: 48, y: 16 });
+    assert_eq!((game.width, game.height), (198, 66));
+    assert_eq!(game.player.position, Position { x: 99, y: 33 });
     assert_eq!(game.wilderness_view_offset, Position::default());
     assert_eq!(game.terrain, duplicate.terrain);
     assert_eq!(game.entities, duplicate.entities);
@@ -4262,11 +4265,11 @@ fn local_wilderness_is_coordinate_seeded_and_restores_from_save() {
         4
     );
     assert_eq!(
-        game.terrain_at(Position { x: 0, y: 16 }),
+        game.terrain_at(Position { x: 0, y: 33 }),
         "demo.terrain.surface-path"
     );
     assert_eq!(
-        game.terrain_at(Position { x: 95, y: 16 }),
+        game.terrain_at(Position { x: 197, y: 33 }),
         "demo.terrain.surface-path"
     );
     assert!(game.stored_floors.contains_key("demo.floor.surface"));
@@ -4293,7 +4296,7 @@ fn small_town_excludes_only_its_rectangle_from_wilderness_monsters() {
         .collect::<Vec<_>>();
     assert!(!wilderness_monsters.is_empty());
     assert!(wilderness_monsters.iter().all(|entity| {
-        !(45..50).contains(&entity.position.x) || !(15..18).contains(&entity.position.y)
+        !(96..101).contains(&entity.position.x) || !(32..35).contains(&entity.position.y)
     }));
 }
 
@@ -4312,8 +4315,8 @@ fn walking_into_the_outer_band_scrolls_and_normalizes_the_wilderness_view() {
     game.entities.clear();
     game.items
         .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
-    game.player.position = Position { x: 63, y: 16 };
-    let target = Position { x: 64, y: 16 };
+    game.player.position = Position { x: 131, y: 33 };
+    let target = Position { x: 132, y: 33 };
     let target_index = game
         .index(target)
         .expect("scroll target should be in bounds");
@@ -4330,15 +4333,15 @@ fn walking_into_the_outer_band_scrolls_and_normalizes_the_wilderness_view() {
     assert_eq!(game.wilderness_position, Some(Position { x: 29, y: 52 }));
     assert_eq!(game.wilderness_view_offset, Position { x: 1, y: 0 });
     assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
-    assert_eq!(game.player.position, Position { x: 32, y: 16 });
+    assert_eq!(game.player.position, Position { x: 66, y: 33 });
     assert_eq!(
         first_scroll.map_translation,
-        Some(Position { x: -32, y: 0 })
+        Some(Position { x: -66, y: 0 })
     );
-    assert_eq!(first_scroll.changed_cells.len(), 96 * 33);
-    assert_eq!(first_scroll.changed_visual_cells.len(), 96 * 33);
+    assert_eq!(first_scroll.changed_cells.len(), 198 * 66);
+    assert_eq!(first_scroll.changed_visual_cells.len(), 198 * 66);
 
-    game.player.position = Position { x: 63, y: 16 };
+    game.player.position = Position { x: 131, y: 33 };
     let target_index = game
         .index(target)
         .expect("scroll target should remain in bounds");
@@ -4353,8 +4356,8 @@ fn walking_into_the_outer_band_scrolls_and_normalizes_the_wilderness_view() {
 
     assert_eq!(game.wilderness_position, Some(Position { x: 30, y: 52 }));
     assert_eq!(game.wilderness_view_offset, Position { x: -1, y: 0 });
-    assert_eq!(game.player.position, Position { x: 32, y: 16 });
-    assert_eq!(second_scroll.changed_cells.len(), 96 * 33);
+    assert_eq!(game.player.position, Position { x: 66, y: 33 });
+    assert_eq!(second_scroll.changed_cells.len(), 198 * 66);
     assert_eq!(game.stored_floors.len(), 1);
 }
 
@@ -4382,20 +4385,20 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
     actor.summon = None;
     let mut retained = actor.clone();
     retained.id = "test.scroll.retained".to_owned();
-    retained.position = Position { x: 70, y: 16 };
+    retained.position = Position { x: 138, y: 33 };
     let mut dropped = actor.clone();
     dropped.id = "test.scroll.dropped".to_owned();
     dropped.position = Position { x: 10, y: 16 };
     let mut mount = actor.clone();
     mount.id = "test.scroll.mount".to_owned();
-    mount.position = Position { x: 63, y: 16 };
+    mount.position = Position { x: 131, y: 33 };
     mount.controller_id = Some(game.player.id.clone());
     game.riding_actor_id = Some(mount.id.clone());
     let pack_id = "test.scroll.pack".to_owned();
     let leader_id = "test.scroll.pack-leader".to_owned();
     let mut pack_leader = actor.clone();
     pack_leader.id = leader_id.clone();
-    pack_leader.position = Position { x: 70, y: 15 };
+    pack_leader.position = Position { x: 138, y: 32 };
     pack_leader.pack = Some(MonsterPackIdentity {
         id: pack_id.clone(),
         leader_id: leader_id.clone(),
@@ -4420,7 +4423,7 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
         .clone();
     let mut retained_item = item_template.clone();
     retained_item.id = "test.scroll.item-retained".to_owned();
-    retained_item.location = ItemLocation::Ground(Position { x: 40, y: 12 });
+    retained_item.location = ItemLocation::Ground(Position { x: 74, y: 24 });
     let mut dropped_item = item_template.clone();
     dropped_item.id = "test.scroll.item-dropped".to_owned();
     dropped_item.location = ItemLocation::Ground(Position { x: 10, y: 12 });
@@ -4434,7 +4437,7 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
     game.gold_piles = vec![
         GoldPile {
             id: "test.scroll.gold-retained".to_owned(),
-            position: Position { x: 40, y: 13 },
+            position: Position { x: 74, y: 25 },
             amount: 1,
             appearance: GoldAppearanceDto::Copper,
             discovered: true,
@@ -4448,7 +4451,7 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
         },
     ];
 
-    let remembered = Position { x: 40, y: 12 };
+    let remembered = Position { x: 74, y: 24 };
     let remembered_index = game
         .index(remembered)
         .expect("remembered cell should exist");
@@ -4460,24 +4463,24 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
         mode: SummonCommandModeDto::Guard,
         guard_position: Some(remembered),
     };
-    game.player.position = Position { x: 63, y: 16 };
+    game.player.position = Position { x: 131, y: 33 };
     let mut removed = Vec::new();
 
     let transition = game
-        .scroll_wilderness_for_player_entry(Position { x: 64, y: 16 }, &mut removed)
+        .scroll_wilderness_for_player_entry(Position { x: 132, y: 33 }, &mut removed)
         .expect("wilderness scroll should resolve");
 
     assert!(matches!(
         transition,
         wilderness::WildernessPlayerEntry::Local {
-            target: Position { x: 32, y: 16 },
+            target: Position { x: 66, y: 33 },
             crossed_world_cell: false,
-            translation: Some(Position { x: -32, y: 0 }),
+            translation: Some(Position { x: -66, y: 0 }),
         }
     ));
-    assert_eq!(game.player.position, Position { x: 31, y: 16 });
+    assert_eq!(game.player.position, Position { x: 65, y: 33 });
     assert_eq!(game.wilderness_view_offset, Position { x: 1, y: 0 });
-    let translated = Position { x: 8, y: 12 };
+    let translated = Position { x: 8, y: 24 };
     let translated_index = game
         .index(translated)
         .expect("translated cell should exist");
@@ -4492,8 +4495,8 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
             .map(|entity| (entity.id.as_str(), entity.position))
             .collect::<Vec<_>>(),
         [
-            ("test.scroll.retained", Position { x: 38, y: 16 }),
-            ("test.scroll.mount", Position { x: 31, y: 16 }),
+            ("test.scroll.retained", Position { x: 72, y: 33 }),
+            ("test.scroll.mount", Position { x: 65, y: 33 }),
         ]
     );
     assert_eq!(
@@ -4506,7 +4509,7 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
     );
     assert!(game.items.iter().any(|item| {
         item.id == "test.scroll.item-retained"
-            && item.location == ItemLocation::Ground(Position { x: 8, y: 12 })
+            && item.location == ItemLocation::Ground(Position { x: 8, y: 24 })
     }));
     assert!(!game.items.iter().any(|item| matches!(
         item.id.as_str(),
@@ -4517,7 +4520,7 @@ fn wilderness_scroll_translates_overlap_and_crops_entities_items_gold_and_packs(
             .iter()
             .map(|pile| (pile.id.as_str(), pile.position))
             .collect::<Vec<_>>(),
-        [("test.scroll.gold-retained", Position { x: 8, y: 13 })]
+        [("test.scroll.gold-retained", Position { x: 8, y: 25 })]
     );
 }
 
@@ -4533,21 +4536,21 @@ fn diagonal_wilderness_scroll_translates_by_one_chunk_on_each_axis() {
         },
     );
     dispatch_next(&mut game, GameCommand::LeaveWorldMap);
-    game.player.position = Position { x: 63, y: 21 };
+    game.player.position = Position { x: 131, y: 43 };
 
     let transition = game
-        .scroll_wilderness_for_player_entry(Position { x: 64, y: 22 }, &mut Vec::new())
+        .scroll_wilderness_for_player_entry(Position { x: 132, y: 44 }, &mut Vec::new())
         .expect("diagonal wilderness scroll should resolve");
 
     assert!(matches!(
         transition,
         wilderness::WildernessPlayerEntry::Local {
-            target: Position { x: 32, y: 11 },
+            target: Position { x: 66, y: 22 },
             crossed_world_cell: false,
-            translation: Some(Position { x: -32, y: -11 }),
+            translation: Some(Position { x: -66, y: -22 }),
         }
     ));
-    assert_eq!(game.player.position, Position { x: 31, y: 10 });
+    assert_eq!(game.player.position, Position { x: 65, y: 21 });
     assert_eq!(game.wilderness_view_offset, Position { x: 1, y: 1 });
 }
 
@@ -4566,8 +4569,8 @@ fn wilderness_scroll_populates_only_the_new_strip_without_using_ambush_rolls() {
     game.entities.clear();
     game.items
         .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
-    game.player.position = Position { x: 63, y: 16 };
-    let target = Position { x: 64, y: 16 };
+    game.player.position = Position { x: 131, y: 33 };
+    let target = Position { x: 132, y: 33 };
     let target_index = game.index(target).expect("scroll target should exist");
     game.terrain[target_index] = "demo.terrain.surface-path".to_owned();
     game.revealed_terrain.remove(&target);
@@ -4601,7 +4604,7 @@ fn wilderness_scroll_populates_only_the_new_strip_without_using_ambush_rolls() {
         .filter(|entity| !entity.id.contains(".companion."))
         .count();
     assert!(matches!(leader_count, 1 | 2));
-    assert!(spawned.iter().all(|entity| entity.position.x >= 64));
+    assert!(spawned.iter().all(|entity| entity.position.x >= 132));
     assert!(spawned.iter().all(|entity| !entity.id.contains(".ambush.")));
     assert_eq!(game.rng, global_rng);
     assert_eq!(game.monster_division_remainders, division_remainders);
@@ -4616,8 +4619,8 @@ fn wilderness_scroll_keeps_new_monsters_outside_a_visible_small_town() {
 
     let mut last_translation = None;
     for _ in 0..2 {
-        game.player.position = Position { x: 63, y: 16 };
-        let target = Position { x: 64, y: 16 };
+        game.player.position = Position { x: 131, y: 33 };
+        let target = Position { x: 132, y: 33 };
         let target_index = game.index(target).expect("scroll target should exist");
         game.terrain[target_index] = "demo.terrain.surface-path".to_owned();
         game.revealed_terrain.remove(&target);
@@ -4646,9 +4649,9 @@ fn wilderness_scroll_keeps_new_monsters_outside_a_visible_small_town() {
         .filter(|entity| entity.id.contains(".scroll."))
         .collect::<Vec<_>>();
     assert!(!spawned.is_empty());
-    assert!(spawned.iter().all(|entity| entity.position.x >= 64));
+    assert!(spawned.iter().all(|entity| entity.position.x >= 132));
     assert!(spawned.iter().all(|entity| {
-        !(77..82).contains(&entity.position.x) || !(15..18).contains(&entity.position.y)
+        !(162..167).contains(&entity.position.x) || !(32..35).contains(&entity.position.y)
     }));
 }
 
@@ -4687,18 +4690,18 @@ fn scrolling_into_and_out_of_a_town_stays_on_the_continuous_wilderness_surface()
     assert!(game.wilderness_terrain_cache.len() >= 9);
     let wilderness_seed = game.wilderness_seed;
 
-    game.player.position = Position { x: 32, y: 16 };
+    game.player.position = Position { x: 66, y: 33 };
     let first = game
-        .scroll_wilderness_for_player_entry(Position { x: 31, y: 16 }, &mut Vec::new())
+        .scroll_wilderness_for_player_entry(Position { x: 65, y: 33 }, &mut Vec::new())
         .expect("first westward scroll should resolve");
     let wilderness::WildernessPlayerEntry::Local { target, .. } = first else {
         panic!("first westward scroll should stay local");
     };
     game.relocate_player(target, &mut BTreeSet::new());
 
-    game.player.position = Position { x: 32, y: 16 };
+    game.player.position = Position { x: 66, y: 33 };
     let second = game
-        .scroll_wilderness_for_player_entry(Position { x: 31, y: 16 }, &mut Vec::new())
+        .scroll_wilderness_for_player_entry(Position { x: 65, y: 33 }, &mut Vec::new())
         .expect("town boundary scroll should resolve");
     let wilderness::WildernessPlayerEntry::Local {
         target,
@@ -4709,7 +4712,7 @@ fn scrolling_into_and_out_of_a_town_stays_on_the_continuous_wilderness_surface()
         panic!("town boundary scroll should stay local");
     };
     assert!(crossed_world_cell);
-    assert_eq!(translation, Some(Position { x: 32, y: 0 }));
+    assert_eq!(translation, Some(Position { x: 66, y: 0 }));
     game.relocate_player(target, &mut BTreeSet::new());
 
     assert_eq!(game.wilderness_position, Some(town_position));
@@ -4719,13 +4722,13 @@ fn scrolling_into_and_out_of_a_town_stays_on_the_continuous_wilderness_surface()
     assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert!(game.current_town().is_none());
     assert_eq!(
-        game.terrain_at(Position { x: 17, y: 16 }),
+        game.terrain_at(Position { x: 34, y: 33 }),
         "demo.terrain.outpost-gate"
     );
 
-    game.player.position = Position { x: 32, y: 16 };
+    game.player.position = Position { x: 66, y: 33 };
     let centered = game
-        .scroll_wilderness_for_player_entry(Position { x: 31, y: 16 }, &mut Vec::new())
+        .scroll_wilderness_for_player_entry(Position { x: 65, y: 33 }, &mut Vec::new())
         .expect("centering scroll should resolve");
     let wilderness::WildernessPlayerEntry::Local { target, .. } = centered else {
         panic!("centering scroll should stay local");
@@ -4734,7 +4737,7 @@ fn scrolling_into_and_out_of_a_town_stays_on_the_continuous_wilderness_surface()
     assert_eq!(game.wilderness_view_offset, Position::default());
     let terrain_cache = game.wilderness_terrain_cache.clone();
 
-    game.player.position = Position { x: 50, y: 16 };
+    game.player.position = Position { x: 101, y: 33 };
     let entered = dispatch_next(
         &mut game,
         GameCommand::Move {
@@ -4750,17 +4753,17 @@ fn scrolling_into_and_out_of_a_town_stays_on_the_continuous_wilderness_surface()
     assert!(game.town_states["demo.town.second"].visited);
     assert_eq!(
         entered.shops[0].entrance_position,
-        Position { x: 47, y: 16 }
+        Position { x: 98, y: 33 }
     );
     assert_eq!(
         entered.homes[0].entrance_position,
-        Position { x: 48, y: 16 }
+        Position { x: 99, y: 33 }
     );
 
-    let outside = Position { x: 44, y: 16 };
+    let outside = Position { x: 95, y: 33 };
     let outside_index = game.index(outside).expect("outside town cell should exist");
     game.terrain[outside_index] = "demo.terrain.surface-path".to_owned();
-    game.player.position = Position { x: 45, y: 16 };
+    game.player.position = Position { x: 96, y: 33 };
     let left = dispatch_next(
         &mut game,
         GameCommand::Move {
@@ -4772,7 +4775,7 @@ fn scrolling_into_and_out_of_a_town_stays_on_the_continuous_wilderness_surface()
     assert!(left.shops.is_empty());
     assert!(left.homes.is_empty());
     assert_eq!(
-        game.terrain_at(Position { x: 49, y: 16 }),
+        game.terrain_at(Position { x: 100, y: 33 }),
         "demo.terrain.outpost-gate"
     );
     assert_eq!(game.wilderness_terrain_cache, terrain_cache);
@@ -4802,8 +4805,8 @@ fn wilderness_view_offset_round_trips_and_rejects_out_of_range_values() {
     game.entities.clear();
     game.items
         .retain(|item| !matches!(item.location, ItemLocation::CarriedBy { .. }));
-    game.player.position = Position { x: 63, y: 16 };
-    let target = Position { x: 64, y: 16 };
+    game.player.position = Position { x: 131, y: 33 };
+    let target = Position { x: 132, y: 33 };
     let target_index = game.index(target).expect("scroll target should exist");
     game.terrain[target_index] = "demo.terrain.surface-path".to_owned();
     game.revealed_terrain.remove(&target);
@@ -4855,9 +4858,20 @@ fn returning_to_the_outpost_coordinate_restores_its_preserved_floor() {
 
     assert_eq!(game.current_floor_id, wilderness::WILDERNESS_FLOOR_ID);
     assert_eq!(game.player.position, town_position);
-    assert_eq!(&game.terrain[..96 * 32], &town_terrain[..96 * 32]);
-    assert_eq!(game.entities, town_entities);
-    assert_eq!(returned.changed_cells.len(), 96 * 33);
+    for y in 17..49 {
+        let row = y * usize::from(game.width) + 51;
+        assert_eq!(&game.terrain[row..row + 96], &town_terrain[row..row + 96]);
+    }
+    assert_eq!(
+        game.entities
+            .iter()
+            .filter(|actor| (51..147).contains(&actor.position.x)
+                && (17..49).contains(&actor.position.y))
+            .cloned()
+            .collect::<Vec<_>>(),
+        town_entities
+    );
+    assert_eq!(returned.changed_cells.len(), 198 * 66);
     assert!(game.stored_floors.contains_key("demo.floor.surface"));
 }
 

@@ -1553,10 +1553,7 @@ impl Game {
             })
             .map(|facility| {
                 let entrance_position = self
-                    .town_local_to_active_position(
-                        &town.id,
-                        position_from_content(facility.entrance_position),
-                    )
+                    .town_facility_entrance_position(facility)
                     .expect("current town task service must retain an active position");
                 let player_at_entrance = self.player.position == entrance_position;
                 let tasks = if player_at_entrance {

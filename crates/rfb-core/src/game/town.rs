@@ -296,7 +296,9 @@ pub(super) fn restore_home_states(
             .flat_map(|town| home_facilities(town, content))
             .any(|facility| {
                 facility.storage_id.as_deref() == Some(saved.facility_id.as_str())
-                    && player_position == position_from_content(facility.entrance_position)
+                    && facility
+                        .entrance_positions()
+                        .any(|position| player_position == position_from_content(position))
             });
         if !expected.contains(&saved.facility_id)
             || storage.category != TownFacilityCategory::Home
@@ -700,10 +702,7 @@ fn home_accessible(game: &Game, facility_id: &str) -> bool {
     game.current_town()
         .is_some_and(|current| current.id == town.id)
         && game.home_states.contains_key(storage_id)
-        && game.town_local_to_active_position(
-            &town.id,
-            position_from_content(facility.entrance_position),
-        ) == Some(game.player.position)
+        && game.town_facility_accessible(facility_id)
 }
 
 fn home_item_group(
@@ -1324,10 +1323,20 @@ impl Game {
         };
         facility.town_id == town.id
             && town.facility_ids.contains(&facility.id)
-            && self.town_local_to_active_position(
-                &town.id,
-                position_from_content(facility.entrance_position),
-            ) == Some(self.player.position)
+            && self.town_facility_entrance_position(facility) == Some(self.player.position)
+    }
+
+    pub(super) fn town_facility_entrance_position(
+        &self,
+        facility: &TownFacilityDefinition,
+    ) -> Option<Position> {
+        let mut positions = facility.entrance_positions().filter_map(|position| {
+            self.town_local_to_active_position(&facility.town_id, position_from_content(position))
+        });
+        let primary = positions.next();
+        positions
+            .find(|position| *position == self.player.position)
+            .or(primary)
     }
 
     pub(super) fn identify_at_facility(
@@ -2342,10 +2351,7 @@ impl Game {
             }
         }
         for facility in home_facilities(&town, &self.content) {
-            if self.town_local_to_active_position(
-                &town.id,
-                position_from_content(facility.entrance_position),
-            ) == Some(self.player.position)
+            if self.town_facility_entrance_position(facility) == Some(self.player.position)
                 && let Some(state) = self.home_states.get_mut(
                     facility
                         .storage_id
@@ -2536,10 +2542,7 @@ impl Game {
             .filter(|facility| facility.category == TownFacilityCategory::Home)
             .map(|facility| {
                 let entrance_position = self
-                    .town_local_to_active_position(
-                        &town.id,
-                        position_from_content(facility.entrance_position),
-                    )
+                    .town_facility_entrance_position(facility)
                     .expect("current town Home must retain an active position");
                 let player_at_entrance = self.player.position == entrance_position;
                 let state = facility

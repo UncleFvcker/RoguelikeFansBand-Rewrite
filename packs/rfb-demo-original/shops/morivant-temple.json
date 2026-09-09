@@ -7,8 +7,8 @@
   "townId": "demo.town.morivant",
   "category": "temple",
   "entrancePosition": {
-    "x": 28,
-    "y": 10
+    "x": 88,
+    "y": 24
   },
   "entranceTerrainId": "demo.terrain.temple-entrance",
   "owner": {

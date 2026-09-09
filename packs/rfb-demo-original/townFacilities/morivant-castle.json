@@ -11,8 +11,14 @@
     "demo.task.morivant-snakes"
   ],
   "entrancePosition": {
-    "x": 53,
-    "y": 8
+    "x": 153,
+    "y": 18
   },
-  "entranceTerrainId": "demo.terrain.morivant-castle-entrance"
+  "entranceTerrainId": "demo.terrain.morivant-castle-entrance",
+  "additionalEntrancePositions": [
+    {
+      "x": 153,
+      "y": 19
+    }
+  ]
 }

@@ -24,10 +24,10 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "ad664b1841706a980604d602267119b11fafc557d2db72478d4cffce9d51d9f0",
+      "stateHash": "16177ea2966fd67a41861c0d22f8b39d18c6b18bc7707150ec0ed6b8a898a18c",
       "playerPosition": {
-        "x": 44,
-        "y": 16
+        "x": 95,
+        "y": 33
       },
       "playerGold": 100,
       "playerNutrition": 9999

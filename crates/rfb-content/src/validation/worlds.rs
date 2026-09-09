@@ -3079,9 +3079,9 @@ pub(super) fn validate_world(
                     .get(&terrain_override.terrain_id)
                     .is_some_and(|tags| tags.contains("path"))
                 && ((position.x == 0 || position.x == world.width - 1)
-                    && position.y.abs_diff(WILDERNESS_WORLD_CELL_HEIGHT / 2) <= 1
+                    && position.y.abs_diff(world.height / 2) <= 1
                     || (position.y == 0 || position.y == world.height - 1)
-                        && position.x.abs_diff(WILDERNESS_WORLD_CELL_WIDTH / 2) <= 1);
+                        && position.x.abs_diff(world.width / 2) <= 1);
             if (on_border && !valid_town_exit)
                 || override_terrain
                     .insert(*position, terrain_override.terrain_id.clone())
@@ -3198,25 +3198,22 @@ pub(super) fn validate_world(
             let facility = town_facilities
                 .get(facility_id)
                 .expect("validated town facility reference must remain available");
-            validate_position(
-                facility.entrance_position,
-                town_width,
-                town_height,
-                &facility.id,
-            )?;
             require_reference(terrain_ids, &facility.entrance_terrain_id, &facility.id)?;
-            let effective_terrain_id = town_terrain
-                .get(&facility.entrance_position)
-                .copied()
-                .unwrap_or(town_fill_terrain_id);
-            if !entrance_positions.insert(facility.entrance_position)
-                || effective_terrain_id != facility.entrance_terrain_id
-                || terrain_walkability.get(effective_terrain_id) != Some(&true)
-                || !terrain_tags
-                    .get(effective_terrain_id)
-                    .is_some_and(|tags| tags.contains("town-facility-entrance"))
-            {
-                return Err(ContentError::InvalidTownFacility(facility.id.clone()));
+            for position in facility.entrance_positions() {
+                validate_position(position, town_width, town_height, &facility.id)?;
+                let effective_terrain_id = town_terrain
+                    .get(&position)
+                    .copied()
+                    .unwrap_or(town_fill_terrain_id);
+                if !entrance_positions.insert(position)
+                    || effective_terrain_id != facility.entrance_terrain_id
+                    || terrain_walkability.get(effective_terrain_id) != Some(&true)
+                    || !terrain_tags
+                        .get(effective_terrain_id)
+                        .is_some_and(|tags| tags.contains("town-facility-entrance"))
+                {
+                    return Err(ContentError::InvalidTownFacility(facility.id.clone()));
+                }
             }
         }
         let mut shop_entrance_positions = BTreeSet::new();
@@ -3234,7 +3231,9 @@ pub(super) fn validate_world(
             let shares_quest_service = town.facility_ids.iter().any(|facility_id| {
                 town_facilities.get(facility_id).is_some_and(|facility| {
                     facility.category == TownFacilityCategory::QuestGiver
-                        && facility.entrance_position == shop.entrance_position
+                        && facility
+                            .entrance_positions()
+                            .any(|position| position == shop.entrance_position)
                         && facility.entrance_terrain_id == shop.entrance_terrain_id
                 })
             });

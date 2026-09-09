@@ -7,8 +7,8 @@
   "townId": "demo.town.morivant",
   "category": "weaponsmith",
   "entrancePosition": {
-    "x": 40,
-    "y": 10
+    "x": 105,
+    "y": 26
   },
   "entranceTerrainId": "demo.terrain.weaponsmith-entrance",
   "owner": {

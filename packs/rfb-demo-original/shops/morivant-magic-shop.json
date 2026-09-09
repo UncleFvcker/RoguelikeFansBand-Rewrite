@@ -7,8 +7,8 @@
   "townId": "demo.town.morivant",
   "category": "magic-shop",
   "entrancePosition": {
-    "x": 28,
-    "y": 18
+    "x": 90,
+    "y": 34
   },
   "entranceTerrainId": "demo.terrain.magic-shop-entrance",
   "owner": {

@@ -6,8 +6,9 @@ use serde::{Deserialize, Serialize};
 
 use super::{ActorDamageType, ActorMovementMode, ItemQuality};
 
-pub const WILDERNESS_WORLD_CELL_WIDTH: u16 = 96;
-pub const WILDERNESS_WORLD_CELL_HEIGHT: u16 = 33;
+// RFB defines.h: MAX_WID / MAX_HGT. Full town maps occupy one world cell.
+pub const WILDERNESS_WORLD_CELL_WIDTH: u16 = 198;
+pub const WILDERNESS_WORLD_CELL_HEIGHT: u16 = 66;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]

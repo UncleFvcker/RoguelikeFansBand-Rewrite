@@ -21,22 +21,22 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "dd9ee2bfd13616870c5339ad0bc5a728b983ac4aaaf9d378524903efb95890c8",
+      "stateHash": "0394f40071c068e1408fd6aac606ff8ea2b99859a0841699de0b6915fc43bd20",
       "worldTick": 10,
       "playerPosition": {
-        "x": 45,
-        "y": 16
+        "x": 96,
+        "y": 33
       },
       "playerEnergyNeed": 0
     },
     "changedCells": [
       {
-        "x": 44,
-        "y": 16
+        "x": 95,
+        "y": 33
       },
       {
-        "x": 45,
-        "y": 16
+        "x": 96,
+        "y": 33
       }
     ]
   }
