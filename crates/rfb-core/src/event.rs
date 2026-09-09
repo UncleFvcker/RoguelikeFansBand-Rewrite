@@ -1149,6 +1149,10 @@ pub(crate) enum DomainEvent {
         target_kind_id: String,
         split: bool,
     },
+    ItemCraftingFailed {
+        target_item_id: String,
+        target_kind_id: String,
+    },
     ItemCrafted {
         source_kind_id: String,
         display_name_key: String,
@@ -4632,6 +4636,14 @@ impl DomainEvent {
                     ("target", target_kind_id),
                     ("split", split.to_string()),
                 ],
+            ),
+            Self::ItemCraftingFailed {
+                target_item_id,
+                target_kind_id,
+            } => dto(
+                "item.use-crafting-failed",
+                "item-use-crafting-failed",
+                [("targetId", target_item_id), ("target", target_kind_id)],
             ),
             Self::ItemCrafted {
                 source_kind_id,

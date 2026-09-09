@@ -78,6 +78,7 @@ pub(super) fn materialize(
     item: &ItemDefinition,
     affix: &AffixDefinition,
     level: u16,
+    intrinsic_properties: Option<&AffixPropertyBundleDefinition>,
 ) -> Option<EgoMaterialization> {
     use EquipmentPassive as Passive;
     use Pval::*;
@@ -100,12 +101,26 @@ pub(super) fn materialize(
     let mut flags = BTreeSet::new();
     let mut pval = 0;
     if base.tval == 35 && base.sval == 2 {
-        pval = randint1(rng, 4);
+        pval = intrinsic_properties.map_or_else(
+            || randint1(rng, 4),
+            |intrinsic| {
+                (item.equipment_bonuses.stealth_skill + intrinsic.equipment_bonuses.stealth_skill)
+                    as u16
+            },
+        );
         flags.extend([Stealth, Search]);
         state.properties.equipment_bonuses.stealth_skill -= item.equipment_bonuses.stealth_skill;
         state.properties.equipment_bonuses.search_skill -= item.equipment_bonuses.search_skill;
         state.properties.equipment_bonuses.perception_skill -=
             item.equipment_bonuses.perception_skill;
+        if let Some(intrinsic) = intrinsic_properties {
+            state.properties.equipment_bonuses.stealth_skill -=
+                intrinsic.equipment_bonuses.stealth_skill;
+            state.properties.equipment_bonuses.search_skill -=
+                intrinsic.equipment_bonuses.search_skill;
+            state.properties.equipment_bonuses.perception_skill -=
+                intrinsic.equipment_bonuses.perception_skill;
+        }
     }
     let mut activation = None;
     let mut curse = None;
@@ -1480,7 +1495,8 @@ mod tests {
             .unwrap();
         let result = (1..10_000)
             .find_map(|seed| {
-                materialize(&mut RfbRng::seeded(seed), definition, affix, 90).filter(&predicate)
+                materialize(&mut RfbRng::seeded(seed), definition, affix, 90, None)
+                    .filter(&predicate)
             })
             .expect("requested generated armor property");
         let mut item = item_for(game, &definition.id);
@@ -1725,7 +1741,7 @@ mod tests {
             for seed in 1..=48 {
                 let mut rng = RfbRng::seeded(seed);
                 let result = loop {
-                    if let Some(result) = materialize(&mut rng, definition, affix, 90) {
+                    if let Some(result) = materialize(&mut rng, definition, affix, 90, None) {
                         break result;
                     }
                 };
@@ -1811,7 +1827,7 @@ mod tests {
                 .unwrap();
             for seed in 1..=32 {
                 let mut item = item_for(&game, &definition.id);
-                materialize(&mut RfbRng::seeded(seed), definition, affix, 90)
+                materialize(&mut RfbRng::seeded(seed), definition, affix, 90, None)
                     .unwrap()
                     .apply_to(&mut item);
                 let bonuses = game.item_equipment_bonuses(&item);
@@ -2176,7 +2192,7 @@ mod tests {
         let definition = game.content.item("demo.item.small-metal-shield").unwrap();
         let affix = game.content.affix("rfb-legacy.affix.dwarven").unwrap();
         let mut item = item_for(&game, &definition.id);
-        materialize(&mut rng, definition, affix, 30)
+        materialize(&mut rng, definition, affix, 30, None)
             .unwrap()
             .apply_to(&mut item);
         assert_eq!(
@@ -2190,7 +2206,7 @@ mod tests {
                 .content
                 .item(&format!("demo.item.{id}-dragon-scale-mail"))
                 .unwrap();
-            let result = materialize(&mut rng, definition, breath, 90).unwrap();
+            let result = materialize(&mut rng, definition, breath, 90, None).unwrap();
             let activation = result.activation.unwrap();
             assert!(activation.profile_id.ends_with(&format!(
                 "-{}",

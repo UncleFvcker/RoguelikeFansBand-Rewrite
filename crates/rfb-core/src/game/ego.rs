@@ -166,7 +166,7 @@ pub(super) fn materialize_ego_with_rng(
         && armor::can_apply(ego.source_index, base.tval, base.sval)
     {
         loop {
-            if let Some(result) = armor::materialize(rng, item, affix, roll_depth(affix)) {
+            if let Some(result) = armor::materialize(rng, item, affix, roll_depth(affix), None) {
                 return result;
             }
         }
@@ -1238,7 +1238,8 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
     }
     if !affixes.clone().any(|affix| {
         affix.rfb_ego.as_ref().is_some_and(|ego| {
-            ego.types.contains(&allowed_type)
+            ego.rarity > 0
+                && ego.types.contains(&allowed_type)
                 && rfb_ego_can_apply_to_base(ego.source_index, base_kind.tval, base_kind.sval, item)
         })
     }) {
@@ -1266,7 +1267,7 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
             | RfbEgoTypeDefinition::BodyArmor
             | RfbEgoTypeDefinition::Robe
             | RfbEgoTypeDefinition::DragonArmor => {
-                armor::materialize(rng, item, affix, generation_level)
+                armor::materialize(rng, item, affix, generation_level, intrinsic_properties)
             }
             RfbEgoTypeDefinition::Ammo => {
                 materialize_rfb_ammunition_ego_with_rng(rng, item, affix, generation_level)
@@ -3103,6 +3104,7 @@ mod tests {
                 .unwrap(),
             game.content.affix(&affix_ids[0]).unwrap(),
             36,
+            None,
         )
         .unwrap();
 

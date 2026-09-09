@@ -468,7 +468,8 @@ impl Game {
                 }),
             TargetSelection::SelfTarget
             | TargetSelection::Item { .. }
-            | TargetSelection::Town { .. } => None,
+            | TargetSelection::Town { .. }
+            | TargetSelection::CraftingItem { .. } => None,
         }
     }
 }

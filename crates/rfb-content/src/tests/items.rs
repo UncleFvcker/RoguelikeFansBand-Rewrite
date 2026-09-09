@@ -2,6 +2,62 @@ use super::*;
 use std::collections::BTreeSet;
 
 #[test]
+fn crafting_uses_the_complete_rfb_policy_without_explicit_candidates() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let action = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.crafting-scroll")
+        .unwrap()
+        .use_action
+        .as_ref()
+        .unwrap();
+    assert!(matches!(
+        action.effect,
+        ItemUseEffectDefinition::CraftItem {
+            rfb_ego_policy: LootRfbEgoPolicyDefinition::WeaponDigger,
+        }
+    ));
+    let egos = artifact
+        .content
+        .affixes
+        .iter()
+        .filter_map(|affix| affix.rfb_ego.as_ref())
+        .filter(|ego| {
+            ego.types.iter().any(|kind| {
+                matches!(
+                    kind,
+                    RfbEgoTypeDefinition::Weapon
+                        | RfbEgoTypeDefinition::Digger
+                        | RfbEgoTypeDefinition::Ammo
+                        | RfbEgoTypeDefinition::Bow
+                        | RfbEgoTypeDefinition::Harp
+                        | RfbEgoTypeDefinition::BodyArmor
+                        | RfbEgoTypeDefinition::DragonArmor
+                        | RfbEgoTypeDefinition::Shield
+                        | RfbEgoTypeDefinition::Crown
+                        | RfbEgoTypeDefinition::Helmet
+                        | RfbEgoTypeDefinition::Cloak
+                        | RfbEgoTypeDefinition::Gloves
+                        | RfbEgoTypeDefinition::Boots
+                        | RfbEgoTypeDefinition::Robe
+                )
+            })
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(egos.len(), 122);
+    assert_eq!(egos.iter().filter(|ego| ego.rarity > 0).count(), 121);
+    assert!(
+        serde_json::from_value::<ItemUseEffectDefinition>(serde_json::json!({
+            "type": "craft-item", "weaponAffixIds": ["demo.affix.vampiric"],
+            "armorAffixIds": ["demo.affix.regeneration"]
+        }))
+        .is_err()
+    );
+}
+
+#[test]
 fn mattock_identity_and_allocation_match_authoritative_source() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let item = artifact

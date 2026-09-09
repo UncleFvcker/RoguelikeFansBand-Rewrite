@@ -979,6 +979,9 @@ impl Game {
                                     _ => None,
                                 })
                         }),
+                    requires_crafting_target: self.inventory_item_use_effect(&item.id).is_some_and(
+                        |(effect, _)| matches!(effect, ItemUseEffectDefinition::CraftItem { .. }),
+                    ),
                     requires_target_glyph: self.inventory_item_use_effect(&item.id).is_some_and(
                         |(effect, _)| matches!(effect, ItemUseEffectDefinition::Genocide { .. }),
                     ),

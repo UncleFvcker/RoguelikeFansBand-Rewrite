@@ -5680,27 +5680,17 @@
         {
           "additionalProperties": false,
           "properties": {
-            "armorAffixIds": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
+            "rfbEgoPolicy": {
+              "$ref": "#/$defs/LootRfbEgoPolicyDefinition"
             },
             "type": {
               "const": "craft-item",
               "type": "string"
-            },
-            "weaponAffixIds": {
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
             }
           },
           "required": [
             "type",
-            "weaponAffixIds",
-            "armorAffixIds"
+            "rfbEgoPolicy"
           ],
           "type": "object"
         },
@@ -6293,6 +6283,12 @@
           "type": "object"
         }
       ]
+    },
+    "LootRfbEgoPolicyDefinition": {
+      "enum": [
+        "weapon-digger"
+      ],
+      "type": "string"
     },
     "SniperShotModeDefinition": {
       "enum": [

@@ -1097,3 +1097,4 @@ bounty-mission-progress = 前往{ $floor }（深度 { $depth }）消灭{ $actor 
 action-bounty-abandon-mission = 放弃悬赏任务
 bounty-mission-complete = 悬赏已完成：{ $actor }，奖励{ $item }
 action-bounty-claim-mission = 领取悬赏奖励
+inventory-crafting-confirm = 对整叠 { $quantity } 支弹药使用工艺有 { $chance }% 的失败几率，失败仍会消耗本次使用。继续吗？

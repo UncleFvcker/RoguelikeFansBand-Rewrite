@@ -131,7 +131,7 @@ pub(super) fn rolled_affixes_are_valid(item: &ItemInstance) -> bool {
             <= 1
 }
 
-fn item_creation_state_is_valid(
+pub(super) fn item_creation_state_is_valid(
     item: &ItemInstance,
     definition: &rfb_content::ItemDefinition,
 ) -> bool {

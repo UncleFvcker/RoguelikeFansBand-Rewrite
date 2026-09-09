@@ -10761,6 +10761,9 @@
           "format": "uint32",
           "minimum": 0
         },
+        "requiresCraftingTarget": {
+          "type": "boolean"
+        },
         "requiresRechargeTargets": {
           "type": "boolean"
         },
@@ -13635,6 +13638,28 @@
           "required": [
             "type",
             "itemId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "itemId": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            },
+            "type": {
+              "type": "string",
+              "const": "crafting-item"
+            }
+          },
+          "required": [
+            "type",
+            "itemId",
+            "quantity"
           ]
         },
         {

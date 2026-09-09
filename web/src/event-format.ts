@@ -1365,6 +1365,10 @@ export function createPresentationFormatter(
           source: visibleItemName(event.args.nameKey, event.args.source),
           target: visibleItemNameForKind(event.args.target),
         });
+      case "item-use-crafting-failed":
+        return localization.format("message-item-use-crafting-failed", {
+          target: visibleItemNameForKind(event.args.target),
+        });
       case "item-use-crafting":
         return localization.format("message-item-use-crafting", {
           source: visibleItemName(event.args.nameKey, event.args.source),

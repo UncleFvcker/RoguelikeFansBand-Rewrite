@@ -337,6 +337,32 @@ test("using items starts map targeting only for map targets and preserves rechar
   assert.deepEqual(commands[1], { type: "use-item-for-recharge", itemId: "wand", sourceItemId: "source", targetItemId: "target" });
 });
 
+test("crafting confirms risky whole stacks and cancelling dispatches nothing", (t) => {
+  const { panel, dom, state, commands, document } = createInventoryFixture(t);
+  const source = item("craft", { usable: true, requiresCraftingTarget: true });
+  let accepted = false;
+  const prompts = [];
+  document.defaultView = { confirm: (message) => { prompts.push(message); return accepted; } };
+  const choose = (quantity) => {
+    panel.render([source, item("arrows", { quantity })], []);
+    state.selectedInventoryIds.add("craft");
+    dom.inventoryUse.dispatchEvent(new Event("click"));
+    const form = document.body.children[0].children[0];
+    form.children[1].children[1].value = "arrows";
+    form.dispatchEvent(new Event("submit", { cancelable: true }));
+  };
+  choose(31);
+  assert.equal(commands.length, 0);
+  assert.match(prompts[0], /"chance":3/);
+  accepted = true;
+  choose(59);
+  assert.match(prompts[1], /"chance":97/);
+  assert.deepEqual(commands[0], { type: "use-item", itemId: "craft", target: { type: "crafting-item", itemId: "arrows", quantity: 59 } });
+  choose(30);
+  assert.equal(prompts.length, 2);
+  assert.equal(commands[1].target.quantity, 30);
+});
+
 function createInventoryFixture(t) {
   // The controller's DOM boundary only; this does not simulate browser layout.
   class Element extends EventTarget {

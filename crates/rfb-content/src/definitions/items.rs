@@ -712,8 +712,7 @@ pub enum ItemUseEffectDefinition {
     },
     MundanifyItem,
     CraftItem {
-        weapon_affix_ids: Vec<String>,
-        armor_affix_ids: Vec<String>,
+        rfb_ego_policy: super::LootRfbEgoPolicyDefinition,
     },
     ShowRumour {
         message_key: String,

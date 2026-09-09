@@ -17,11 +17,11 @@
 
 | 项目 | 值 | 来源 |
 | --- | --- | --- |
-| 协议 | 1.232 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| 协议 | 1.233 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | v110 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload | v5 / v5；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.388.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
-| 行为基线 | contract-v308，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
+| 内容包 | 1.389.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 行为基线 | contract-v309，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
 | 内容定义数量 | 地形 201、角色 1402、物品 363、能力 1838、词缀 136、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
 
@@ -59,6 +59,15 @@
 内容引用见 [builds](../packs/rfb-demo-original/builds/) 和 [abilityBooks](../packs/rfb-demo-original/abilityBooks/)。领域身份、源码核对与机制边界见[法术领域交接](spell-realm-import-handoff.md)。未开放领域需要单独安排入口变更与玩家流程验收，本文不改变开放范围。
 
 ## 版本验收与限制
+
+2026-09-09，`codex/realms-items` 完成 E6 工艺事务。工艺卷轴通过共享选择器，以玩家等级为生成等级，
+从 122 条 Craft 类型定义中的 121 条非零稀有度 Ego 选择并物化；旧显式等概率候选列表已删除。
+非弹药只接受单件无名装备；弹药整叠处理，上限 59，31–59 支须确认数量失败风险。
+取消、非法目标及数量已变化的确认不消耗使用或游戏时间；已开始的数量判定失败消耗使用，目标不变。
+成功一次提交完整实例、完全鉴定、工艺来源与 99% 折价，按原版调整附魔美德。
+7 项工艺专项覆盖数量边界、原子失败、玩家等级、既有附魔和底材属性、保存恢复；核心回归 892 项、前端 181 项及类型检查通过。
+协议更新至 1.233，并刷新复验 26 条 active fixture；本次未改变 State Hash 输入结构，仍为 v110。
+Craft 领域及其四册尚未导入，本批未开放该领域，也未做桌面人工试玩。
 
 2026-09-09，`codex/realms-items` 完成 E5 后半 48 条，头冠、头盔、披风、手套和靴子接入后，
 [护甲 Ego 审计](armor-ego-import-audit.md)中的 76 条均有生成分支、底材限制、随机属性和激活处理。

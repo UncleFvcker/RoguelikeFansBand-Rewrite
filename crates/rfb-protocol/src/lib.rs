@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.232";
+pub const PROTOCOL_VERSION: &str = "1.233";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 5;
 
@@ -794,6 +794,10 @@ pub enum TargetSelection {
     },
     Item {
         item_id: String,
+    },
+    CraftingItem {
+        item_id: String,
+        quantity: u32,
     },
     Town {
         town_id: String,
@@ -3957,6 +3961,8 @@ pub struct InventoryItemDto {
     pub requires_target_glyph: bool,
     #[serde(default, skip_serializing_if = "is_false")]
     pub requires_recharge_targets: bool,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub requires_crafting_target: bool,
     #[serde(default)]
     pub can_receive_recharge: bool,
     #[serde(default)]
@@ -6006,6 +6012,7 @@ mod tests {
                 use_target_spec: None,
                 requires_target_glyph: false,
                 requires_recharge_targets: false,
+                requires_crafting_target: false,
                 can_receive_recharge: false,
                 can_supply_recharge: false,
                 quantity: 1,

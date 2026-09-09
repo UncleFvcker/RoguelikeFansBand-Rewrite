@@ -821,6 +821,23 @@ export class InventoryPanel {
     if (selected.length !== 1 || !selected[0]?.usable) return;
     const item = selected[0];
     if (item.requiresRechargeTargets) return;
+    if (item.requiresCraftingTarget) {
+      this.selectItemTarget(item.id, async (targetItemId) => {
+        const target = [...this.#state.inventory, ...this.#state.equipment, ...(this.#state.status?.items ?? [])]
+          .find((candidate) => candidate.id === targetItemId);
+        if (!target || this.#state.busy || this.#state.playerDead || this.#state.worldMap) return;
+        if (target.quantity > 30 && target.quantity <= 59 &&
+          !this.#dom.inventoryList.ownerDocument.defaultView?.confirm(
+            this.#localization.format("inventory-crafting-confirm", {
+              quantity: target.quantity,
+              chance: Math.trunc((target.quantity * 20 - 597) / 6),
+            }),
+          )) return;
+        await this.#dispatch({ type: "use-item", itemId: item.id,
+          target: { type: "crafting-item", itemId: targetItemId, quantity: target.quantity } });
+      });
+      return;
+    }
     if (item.requiresTargetGlyph) {
       this.#selectGlyphTarget((glyph) =>
         this.#dispatch({ type: "use-item-by-glyph", itemId: item.id, glyph }),

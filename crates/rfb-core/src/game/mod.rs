@@ -3441,6 +3441,7 @@ impl Game {
                 ItemUseEffectDefinition::AbilityEffect { .. }
                     | ItemUseEffectDefinition::IdentifyItem { .. }
                     | ItemUseEffectDefinition::EnchantItem { .. }
+                    | ItemUseEffectDefinition::CraftItem { .. }
                     | ItemUseEffectDefinition::RechargeFromDevice { .. }
                     | ItemUseEffectDefinition::RandomTeleport { .. }
                     | ItemUseEffectDefinition::TeleportLevel
@@ -3469,6 +3470,7 @@ impl Game {
             TargetSelection::Entity { .. } => AbilityTargetModeDefinition::Entity,
             TargetSelection::Item { .. } => AbilityTargetModeDefinition::Item,
             TargetSelection::Town { .. } => AbilityTargetModeDefinition::Town,
+            TargetSelection::CraftingItem { .. } => return None,
             TargetSelection::SelfTarget => AbilityTargetModeDefinition::SelfTarget,
         };
         target_definition

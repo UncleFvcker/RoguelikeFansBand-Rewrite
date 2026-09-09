@@ -320,17 +320,8 @@ pub(crate) fn valid_item_effect(
                 && maximum_count <= &8
         }
         ItemUseEffectDefinition::CraftItem {
-            weapon_affix_ids,
-            armor_affix_ids,
-        } => {
-            let valid_candidates = |candidates: &[String]| {
-                !candidates.is_empty()
-                    && candidates.len() <= 32
-                    && candidates.windows(2).all(|pair| pair[0] < pair[1])
-                    && candidates.iter().all(|id| affix_ids.contains(id))
-            };
-            valid_candidates(weapon_affix_ids) && valid_candidates(armor_affix_ids)
-        }
+            rfb_ego_policy: crate::LootRfbEgoPolicyDefinition::WeaponDigger,
+        } => true,
         ItemUseEffectDefinition::ShowRumour { message_key } => {
             validate_message_key(message_key).is_ok()
         }

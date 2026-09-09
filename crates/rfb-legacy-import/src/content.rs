@@ -3000,11 +3000,7 @@ fn fixed_consumable_use_action_with_terrain(
         ),
         (70, 55) => serde_json::json!({
             "type": "craft-item",
-            "weaponAffixIds": [
-                "rfb-legacy.affix.of-sharpness",
-                "rfb-legacy.affix.of-slaying"
-            ],
-            "armorAffixIds": ["rfb-legacy.affix.of-protection"]
+            "rfbEgoPolicy": "weapon-digger"
         }),
         (70, 62) => serde_json::json!({
             "type": "banish-visible",
@@ -26798,6 +26794,9 @@ static cptr _ego_name_zh[] =
         assert_eq!(effect(47)["maximumCount"], 3);
         assert_eq!(effect(51)["type"], "show-rumour");
         assert_eq!(effect(55)["type"], "craft-item");
+        assert_eq!(effect(55)["rfbEgoPolicy"], "weapon-digger");
+        assert!(effect(55).get("weaponAffixIds").is_none());
+        assert!(effect(55).get("armorAffixIds").is_none());
 
         let mut report = ContentImportReport::default();
         let _ = item_json(

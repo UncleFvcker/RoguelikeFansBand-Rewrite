@@ -1844,20 +1844,26 @@ impl Game {
     }
 
     fn item_is_valid_crafting_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
-        let Some(item) = self.item_mutation_target(source_item_id, target_item_id) else {
+        let Some(item) = self.items.iter().find(|item| {
+            item.id == target_item_id && item.id != source_item_id && item.quantity > 0
+                && (matches!(item.location, ItemLocation::Inventory | ItemLocation::Equipped { .. })
+                    || matches!(item.location, ItemLocation::Ground(position) if position == self.player.position))
+        }) else {
             return false;
         };
         self.content.item(&item.kind_id).is_some_and(|definition| {
-            item.quality == ItemQualityDto::Ordinary
-                && item.affix_ids.is_empty()
-                && definition.tags.iter().any(|tag| {
-                    matches!(tag.as_str(), "weapon" | "launcher" | "ammunition" | "armor")
+            item.affix_ids.is_empty()
+                && item.rolled_affixes.is_empty()
+                && definition.rfb_base_kind.is_some_and(|base| {
+                    matches!(base.tval, 16..=23 | 30..=38)
+                        && !matches!((base.tval, base.sval), (23, 32 | 34) | (22, 50))
+                        && if matches!(base.tval, 16..=18) {
+                            item.quantity <= 59
+                        } else {
+                            item.quantity == 1
+                        }
                 })
-                && !definition
-                    .tags
-                    .iter()
-                    .any(|tag| matches!(tag.as_str(), "artifact" | "no-enchant"))
-                && !self.item_resists_enchantment(item)
+                && !definition.tags.iter().any(|tag| tag == "artifact")
         })
     }
 
@@ -1968,57 +1974,71 @@ impl Game {
         &mut self,
         source_kind_id: &str,
         target_item_id: &str,
-        weapon_affix_ids: Vec<String>,
-        armor_affix_ids: Vec<String>,
         events: &mut Vec<DomainEvent>,
     ) -> Result<(), CoreError> {
-        let definition = self
+        let index = self
             .items
             .iter()
-            .find(|item| item.id == target_item_id)
-            .and_then(|item| self.content.item(&item.kind_id))
-            .expect("preflighted crafting target must retain its definition");
-        let candidates = if definition.tags.iter().any(|tag| tag == "armor") {
-            armor_affix_ids
-        } else {
-            weapon_affix_ids
-        };
-        let (index, split) = self.split_item_for_mutation(target_item_id)?;
-        let target_item_id = self.items[index].id.clone();
+            .position(|item| item.id == target_item_id)
+            .expect("preflighted crafting target must remain available");
         let target_kind_id = self.items[index].kind_id.clone();
-        let selected = usize::try_from(self.rng.bounded(candidates.len() as u64))
-            .expect("validated crafting candidate count must fit usize");
-        let affix_id = candidates[selected].clone();
-        let depth = self.floor_depth(&self.current_floor_id);
-        let materialization = materialize_ego_with_rng(
-            &self.content,
-            &mut self.rng,
-            &target_kind_id,
-            vec![affix_id.clone()],
-            |_| depth,
-            depth,
-        );
-        materialization.apply_to(&mut self.items[index]);
-        self.items[index].quality = ItemQualityDto::Exceptional;
-        self.items[index].origin_kind = Some(ItemOriginKindDto::PlayerMade);
-        self.items[index].discount_percent = 99;
-        self.item_property_knowledge.insert(
-            target_item_id.clone(),
-            ItemPropertyKnowledgeState {
-                discovered: true,
-                appraised: true,
-                identified: true,
-                known_affix_ids: BTreeSet::from([affix_id.clone()]),
-            },
-        );
+        let definition = self
+            .content
+            .item(&target_kind_id)
+            .expect("preflighted crafting target must retain its definition");
+        // Prepare the entire result before touching the target. Quantity failure
+        // consumes the use, but never splits, enchants or partially brands it.
+        let ammo = definition
+            .rfb_base_kind
+            .is_some_and(|base| matches!(base.tval, 16..=18));
+        let quantity_succeeds =
+            !ammo || self.rng.bounded(30) as i32 + 1 > self.items[index].quantity as i32 - 30;
+        let materialization = quantity_succeeds
+            .then(|| {
+                super::ego::roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    &mut self.rng,
+                    definition,
+                    self.content.affix_definitions(),
+                    self.progress.level,
+                    Some(&self.items[index].intrinsic_properties),
+                )
+            })
+            .flatten()
+            .and_then(|materialization| {
+                let mut crafted = self.items[index].clone();
+                let affix_id = materialization.affix_ids[0].clone();
+                materialization.apply_to(&mut crafted);
+                crafted.quality = ItemQualityDto::Exceptional;
+                crafted.origin_kind = Some(ItemOriginKindDto::PlayerMade);
+                crafted.discount_percent = 99;
+                self.content
+                    .item(&crafted.kind_id)
+                    .is_some_and(|definition| {
+                        super::validation::item_creation_state_is_valid(&crafted, definition)
+                    })
+                    .then_some((affix_id, crafted))
+            });
         self.mark_item_aware(source_kind_id);
+        let Some((affix_id, crafted)) = materialization else {
+            if self.rng.bounded(3) == 0 {
+                self.add_virtue(VirtueKindDto::Enchantment, -1);
+            }
+            events.push(DomainEvent::ItemCraftingFailed {
+                target_item_id: target_item_id.to_owned(),
+                target_kind_id,
+            });
+            return Ok(());
+        };
+        self.items[index] = crafted;
+        self.identify_item_instance(target_item_id, ItemIdentificationRequest::new(true));
+        self.add_virtue(VirtueKindDto::Enchantment, 1);
         events.push(DomainEvent::ItemCrafted {
             source_kind_id: source_kind_id.to_owned(),
             display_name_key: self.item_display_name_key(source_kind_id),
-            target_item_id,
-            target_kind_id,
+            target_item_id: target_item_id.to_owned(),
+            target_kind_id: self.items[index].kind_id.clone(),
             affix_id,
-            split,
+            split: false,
         });
         Ok(())
     }
@@ -2784,17 +2804,10 @@ impl Game {
             }
             (
                 ItemUseEffectDefinition::CraftItem {
-                    weapon_affix_ids,
-                    armor_affix_ids,
+                    rfb_ego_policy: rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger,
                 },
                 ItemUsePlan::Item { item_id },
-            ) => self.resolve_item_crafting(
-                &kind_id,
-                &item_id,
-                weapon_affix_ids,
-                armor_affix_ids,
-                events,
-            )?,
+            ) => self.resolve_item_crafting(&kind_id, &item_id, events)?,
             (ItemUseEffectDefinition::ShowRumour { message_key }, ItemUsePlan::SelfTarget) => {
                 self.mark_item_aware(&kind_id);
                 events.push(DomainEvent::ItemRumour {
@@ -3398,16 +3411,20 @@ impl Game {
                     })
             }
             ItemUseEffectDefinition::CraftItem { .. } => {
-                let TargetSelection::Item {
-                    item_id: target_item_id,
-                } = target?
-                else {
-                    return None;
+                let (target_item_id, confirmed_quantity) = match target? {
+                    TargetSelection::Item { item_id } => (item_id, None),
+                    TargetSelection::CraftingItem { item_id, quantity } => {
+                        (item_id, Some(*quantity))
+                    }
+                    _ => return None,
                 };
-                self.item_is_valid_crafting_target(source_item_id, target_item_id)
-                    .then(|| ItemUsePlan::Item {
-                        item_id: target_item_id.clone(),
-                    })
+                let item = self.items.iter().find(|item| item.id == *target_item_id)?;
+                (self.item_is_valid_crafting_target(source_item_id, target_item_id)
+                    && confirmed_quantity.is_none_or(|quantity| quantity == item.quantity)
+                    && (item.quantity <= 30 || confirmed_quantity == Some(item.quantity)))
+                .then(|| ItemUsePlan::Item {
+                    item_id: target_item_id.clone(),
+                })
             }
             effect @ ItemUseEffectDefinition::EnchantItem { .. } => {
                 let TargetSelection::Item {

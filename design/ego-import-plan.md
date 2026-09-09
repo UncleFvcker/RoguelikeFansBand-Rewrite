@@ -4,7 +4,7 @@
 
 工作树：`D:/codex/RoguelikeFansBand-Rewrite-realms-items`；工作分支：`codex/realms-items`。
 E5.0 起始代码基线：`da7ba67be`，起始 main：`62f959f3b`。E0–E4 的完成说明保留历史批次版本；
-E5.0 已完成审计和基础身份回填，内容为 1.386.0；E5.1–E8 仍是后续执行安排。
+E5 已完成全部护甲消费者与生成，E6 已完成工艺事务，当前内容为 1.389.0；E7–E8 为后续执行安排。
 
 本计划把 ego 作为独立的物品生成里程碑推进，并优先闭合 Craft 第四册「工艺」所依赖的
 武器、护甲与弹药候选。领域内容在 ego 候选与实例化行为完整以前不开放「工艺」。
@@ -18,9 +18,9 @@ E5.0 已完成审计和基础身份回填，内容为 1.386.0；E5.1–E8 仍是
 | 项目 | 当前结果 |
 | --- | ---: |
 | `e_info.txt` ego 总数 | 160 |
-| audit 的 currentImporterExpressible / Inexpressible | 134 / 26；不是运行时完成数 |
+| E5.0 审计时的 currentImporterExpressible / Inexpressible | 134 / 26；历史审计值，不是运行时完成数 |
 | e_info 显式 E: activation 记录 | 13；不含 ego.c 分支随机激活，也不是未实现数 |
-| demo pack 正式 affix | 65；含旧适配及非完整权威定义 |
+| demo pack 正式 affix | 136；其中 122 条为完整 Craft 类型定义 |
 | 武器/工具、远程/竖琴 source-index 物化及自然生成路径 | 30 + 16；见 E3/E4 的入口限制 |
 | 权威中文名 | 160 |
 | 中文名 unresolved | 0 |
@@ -38,20 +38,17 @@ Craft 类型兼容的 122 条记录按权威 `T:` 分类为：
 其余 38 条为首饰 17、光源 9、箭袋 4、装置 7，以及 `SPECIAL` 1 条。
 这些记录仍属于完整 ego 方向，但不阻塞「工艺」。
 
-当前已具备权威中文表、rarity/source-order 选择核、共享原子物化、武器与远程消费者。
-`base-items` 的现有 policy 已覆盖 WEAPON/DIGGER/BOW/AMMO/HARP；不重新实现 E0–E4。
+当前已具备权威中文表、rarity/source-order 选择核、共享原子物化、武器、远程和护甲消费者。
+`base-items` 与工艺卷轴共用选择和物化入口，覆盖全部 Craft 类型；前者使用生成等级，后者使用玩家等级。
 
 剩余缺口：
 
-- `ego.rs::roll_and_materialize_rfb_ego_from_affixes_with_rng` 尚不分派护甲、首饰、光源、箭袋或装置；
-- 已有部分护甲/首饰 affix 供旧适配或固定消费者使用，不能据此把整类判为已完成；
-- `item_use.rs::resolve_item_crafting` 仍从显式列表等概率选择，且使用楼层深度；E6 才迁移至原版权重和玩家等级；
-- 鹤嘴锄已在 `16334d288` 打通 Disruption 自然生成。Arcane 仍缺 Wizardstaff，后者基础 `DEC_MANA`
-  需要真实费用消费者，不能照搬鹤嘴锄的纯内容补法；
+- 首饰、光源、箭袋和装置等非 Craft 类型仍需在 E7 接入；已有旧适配不能作为整类完成的依据；
+- Craft 领域的 32 个法术及四册内容尚未导入，需要按领域流程另行审计和实施；
 - 本次 160 个权威中文名全部可解；新基础物品仍需单独核对 `kind_name_zh.inc`。
 
-当前顺序：**E5.0 审计已完成 → E5.1 共享缺口 → E5 护甲逐类闭合 → E6 工艺事务 → E7 非 Craft → E8 整体验收**。
-Wizardstaff 随 E5 的法力消耗机制补齐，不阻塞先行的盾牌批次。Craft 领域本身仍按领域流程另外导入。
+当前顺序：**E0–E6 已完成 → E7 非 Craft → E8 整体验收**。
+巫师法杖与法力消耗机制已随 E5 补齐；Craft 领域本身仍按领域流程另外导入。
 
 ## 2. 唯一权威来源
 
@@ -63,6 +60,7 @@ Wizardstaff 随 E5 的法力消耗机制补齐，不阻塞先行的盾牌批次�
 | `master:src/ego.c` | ego 选择权重、各类型选择顺序和实例化随机流程 |
 | `master:src/object2.c` | `apply_magic` 的 quality、神器、ego 调度与 RNG 顺序 |
 | `master:src/spells3.c` | Craft「工艺」调用的 `brand_weapon_aux` / `brand_armour_aux` |
+| `master:src/spells_c.c` | `crafting_spell` 的目标限制、数量确认、失败率、美德与来源 |
 
 中文名只采用 `ego_name_zh.inc` 对应 source index 的字符串。该项为 `NULL` 时记录 unresolved，
 不得按英文自行翻译。英文重名 ego 继续用 source index 消歧，不能依赖名称排序恢复原始顺序。
@@ -108,7 +106,7 @@ importer 从 source index/flags 生成对应内容。
 - 自然生成与 Craft 均不能选择和基础物品类型不兼容的 ego；
 - `AM_CRAFTING` 禁止固定神器和随机神器，不得把「工艺」变成神器生成入口；
 - 「工艺」只能处理无 ego、无神器的合法武器/护甲/弹药，并保留原版堆叠弹药数量与失败规则；
-- 现有 crafting scroll 的小型显式候选行为在迁移到共享选择器前保持不变，不增加第二套永久系统。
+- 现有 crafting scroll 已迁移到共享选择器，显式等概率候选路径已删除。
 
 ## 4. 数据与运行时设计
 
@@ -265,7 +263,7 @@ E5.0 已交付 `audit-egos` 的 76 条静态契约检查和 `sync-demo-armor-ego
 
 本页不预先规定一套“护甲状态框架”。每批按实际源码选择已有字段或最窄扩展，所有随机结果只在生成时物化。
 
-### E6：Craft「工艺」解锁
+### E6：Craft「工艺」事务（已完成）
 
 - 此时 122 条 Craft 类型定义全部存在，121 条标准候选行为完整；
 - `craft-item` 增加 RFB ego policy，选择等级固定为玩家等级；
@@ -273,7 +271,10 @@ E5.0 已交付 `audit-egos` 的 76 条静态契约检查和 `sync-demo-armor-ego
 - 成功后完全鉴定、记录 crafting origin 和 virtue；失败不留下 affix 或部分属性；
 - 与自然生成共享选择和实例化，且明确断言不会生成神器。
 
-先让现有 crafting scroll 走完整事务，删除被替代的显式等概率候选路径。
+现有 crafting scroll 已走完整事务，替代了显式等概率候选路径。弹药使用 `randint1(30) > quantity - 30`
+判定数量成功；确认提示使用原版整数百分比。确认绑定目标数量，过期确认按取消处理。
+失败消耗已开始的使用，目标实例和属性保持原样；成功复用完整鉴定并设置工艺来源、折价和美德。
+7 项核心专项、前端确认测试、内容和导入器检查覆盖此入口；版本与回归结果见[当前状态](current-status.md)。
 Craft 领域当前尚未导入；本批只完成「工艺」所需的共享行为，不等于第四册或新游戏入口已开放。
 后续领域工作仍先审计完整 32 法术，再按四册实施，不能直接挂一个孤立的第四册法术。
 

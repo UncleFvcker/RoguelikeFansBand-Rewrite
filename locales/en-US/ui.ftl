@@ -1101,3 +1101,4 @@ bounty-mission-progress = Kill { $actor } on { $floor } (depth { $depth }): { $r
 action-bounty-abandon-mission = Abandon bounty mission
 bounty-mission-complete = Bounty complete: { $actor }; reward { $item }
 action-bounty-claim-mission = Claim bounty reward
+inventory-crafting-confirm = Crafting all { $quantity } projectiles has a { $chance }% chance of failure. The use is consumed even on failure. Continue?

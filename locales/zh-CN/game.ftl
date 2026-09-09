@@ -619,3 +619,4 @@ bounty-mission-requested = 已接受悬赏任务：前往{ $floor }消灭 { $tot
 bounty-mission-abandoned = 已放弃当前悬赏任务。
 bounty-mission-rewarded = 已领取悬赏任务奖励{ $item }。
 bounty-mission-completed = 已消灭全部悬赏目标{ $actor }；返回赏金设施领取奖励。
+message-item-use-crafting-failed = 对{ $target }的工艺附魔失败了。
