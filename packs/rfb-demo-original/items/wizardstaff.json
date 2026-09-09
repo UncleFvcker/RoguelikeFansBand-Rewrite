@@ -24,6 +24,14 @@
     "sval": 21,
     "tval": 21
   },
+  "rfbValue": {
+    "flags": [
+      "DEC_MANA",
+      "SHOW_MODS"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "equipment",
     "legacy-import",

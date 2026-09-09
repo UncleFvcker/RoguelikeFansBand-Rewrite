@@ -2,6 +2,7 @@
 
 use super::*;
 use crate::game::Game;
+use std::collections::BTreeMap;
 
 #[test]
 #[ignore = "exports the real save used by the explicit E8 desktop acceptance pass"]
@@ -46,6 +47,7 @@ fn export_ego_desktop_acceptance_save() {
                 vec![affix.to_owned()],
                 |_| 20,
                 20,
+                2,
             );
             let item = game.items.last_mut().unwrap();
             materialized.apply_to(item);
@@ -155,6 +157,7 @@ fn all_160_source_egos_have_an_effect_and_save_stable_instances() {
                     vec![affix.id.clone()],
                     |_| level,
                     level,
+                    2,
                 );
                 let empty = EgoMaterialization::new(
                     vec![affix.id.clone()],
@@ -209,6 +212,20 @@ fn all_160_source_egos_have_an_effect_and_save_stable_instances() {
                     assert_eq!(probe.items[index].fuel.unwrap().current, 9);
                 }
             }
+            let values = game
+                .items
+                .iter()
+                .map(|item| {
+                    let value = crate::game::item_value::obj_value_real(&content, item);
+                    if item.affix_ids.contains(&affix.id) && !(250..=256).contains(&source) {
+                        assert!(
+                            value.is_some(),
+                            "source {source}, level {level}: missing real equipment value"
+                        );
+                    }
+                    (item.id.clone(), value)
+                })
+                .collect::<BTreeMap<_, _>>();
             let restored = Game::from_save(game.to_save())
                 .unwrap_or_else(|error| panic!("source {source}, level {level}: {error}"));
             assert_eq!(restored.rng, game.rng, "source {source}, level {level}");
@@ -222,6 +239,12 @@ fn all_160_source_egos_have_an_effect_and_save_stable_instances() {
             actual.sort_by(|left, right| left.id.cmp(&right.id));
             expected.sort_by(|left, right| left.id.cmp(&right.id));
             assert_eq!(actual, expected, "source {source}, level {level}");
+            for item in &restored.items {
+                assert_eq!(
+                    crate::game::item_value::obj_value_real(&content, item),
+                    values[&item.id]
+                );
+            }
         }
     }
 }
@@ -262,6 +285,7 @@ fn adapted_weapon_bases_and_wizardstaff_use_the_shared_owner() {
         vec![affix.id.clone()],
         |_| 50,
         50,
+        2,
     );
     assert_eq!(
         materialized.affix_ids.as_slice(),

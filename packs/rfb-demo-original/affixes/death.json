@@ -25,6 +25,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 10500,
         "target": {
           "modes": [
             "self"
@@ -57,6 +58,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 20400,
         "target": {
           "modes": [
             "self"
@@ -93,6 +95,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 11500,
         "target": {
           "modes": [
             "direction",
@@ -136,6 +139,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 12500,
         "target": {
           "modes": [
             "self"
@@ -181,6 +185,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -216,6 +221,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "direction",
@@ -256,6 +262,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 930,
         "target": {
           "modes": [
             "direction",
@@ -297,6 +304,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 1160,
         "target": {
           "modes": [
             "direction",
@@ -338,6 +346,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 16550,
         "target": {
           "modes": [
             "direction",
@@ -380,6 +389,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 3425,
         "target": {
           "modes": [
             "direction",
@@ -421,6 +431,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 6000,
         "target": {
           "modes": [
             "direction",
@@ -463,6 +474,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 7500,
         "target": {
           "modes": [
             "direction",
@@ -508,6 +520,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 2000,
         "target": {
           "modes": [
             "self"
@@ -551,6 +564,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 1740,
         "target": {
           "modes": [
             "self"
@@ -589,6 +603,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 2450,
         "target": {
           "modes": [
             "direction",
@@ -630,6 +645,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 16875,
         "target": {
           "modes": [
             "self"
@@ -667,6 +683,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "self"
@@ -705,6 +722,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 600,
         "target": {
           "modes": [
             "self"
@@ -725,6 +743,10 @@
     "vampiric"
   ],
   "rfbEgo": {
+    "flags": [
+      "BRAND_VAMP",
+      "HOLD_LIFE"
+    ],
     "rarity": 4,
     "sourceIndex": 12,
     "types": [

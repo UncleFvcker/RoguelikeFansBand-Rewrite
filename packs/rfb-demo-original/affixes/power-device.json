@@ -6,6 +6,9 @@
   "id": "rfb-legacy.affix.power-device",
   "nameKey": "affix-legacy-power-device-name",
   "rfbEgo": {
+    "flags": [
+      "DEVICE_POWER"
+    ],
     "rarity": 8,
     "sourceIndex": 254,
     "types": [

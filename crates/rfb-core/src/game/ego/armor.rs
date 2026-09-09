@@ -2,39 +2,7 @@
 
 use super::*;
 
-#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub(super) enum Pval {
-    Strength,
-    Intelligence,
-    Wisdom,
-    Dexterity,
-    Constitution,
-    Charisma,
-    LessStrength,
-    LessIntelligence,
-    LessWisdom,
-    LessDexterity,
-    LessConstitution,
-    LessCharisma,
-    Stealth,
-    LessStealth,
-    Speed,
-    LessSpeed,
-    Life,
-    LessLife,
-    Infra,
-    Digging,
-    SpellPower,
-    DevicePower,
-    MagicResistance,
-    Might,
-    Search,
-    Mastery,
-    Capacity,
-    Blows,
-    Shots,
-    WeaponMastery,
-}
+pub(super) use rfb_content::RfbPvalFlagDefinition as Pval;
 
 pub(super) fn can_apply(index: u32, tval: u16, sval: u16) -> bool {
     if tval == 32 && sval == 10 && !matches!(index, 56 | 110 | 121 | 122 | 126) {
@@ -546,6 +514,7 @@ pub(super) fn materialize(
                 properties
                     .resistances
                     .insert(ActorDamageType::Cold, ActorResistanceLevel::Immune);
+                properties.rfb_flags.insert("IM_COLD".to_owned());
             }
             while one_in(rng, 6) {
                 add_one_high_resistance(rng, properties);
@@ -753,6 +722,7 @@ pub(super) fn materialize(
         129 => {
             flags.extend([Stealth, LessConstitution]);
             state.curse_effects.insert(ItemCurseEffectDto::TyCurse);
+            properties.rfb_flags.insert("TY_CURSE".to_owned());
         }
         130 => {
             flags.extend([
@@ -825,6 +795,7 @@ pub(super) fn materialize(
                 properties
                     .resistances
                     .insert(ActorDamageType::Acid, ActorResistanceLevel::Immune);
+                properties.rfb_flags.insert("IM_ACID".to_owned());
             }
         }
         140 => {
@@ -1018,6 +989,9 @@ fn gloves_slaying(rng: &mut RfbRng, properties: &mut AffixPropertyBundleDefiniti
 
 fn add_vulnerability(properties: &mut AffixPropertyBundleDefinition, element: ActorDamageType) {
     properties
+        .rfb_flags
+        .insert(format!("VULN_{}", rfb_resistance_element(element)));
+    properties
         .resistances
         .insert(element, ActorResistanceLevel::Vulnerable);
 }
@@ -1158,6 +1132,7 @@ pub(super) fn random_activation(
 
 pub(super) fn apply_pval(properties: &mut AffixPropertyBundleDefinition, flag: Pval, value: i32) {
     use Pval::*;
+    remember_rfb_pval(properties, [flag], value);
     match flag {
         Strength => properties.modifiers.strength += value,
         Intelligence => properties.modifiers.intelligence += value,

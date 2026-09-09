@@ -26,6 +26,11 @@
     "sval": 4,
     "tval": 31
   },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

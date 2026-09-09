@@ -27,6 +27,14 @@
     "sval": 23,
     "tval": 19
   },
+  "rfbValue": {
+    "flags": [
+      "SHOW_MODS",
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "equipment",
     "launcher",

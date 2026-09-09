@@ -172,12 +172,13 @@ pub(super) fn materialize_ego_with_rng(
     mut affix_ids: Vec<String>,
     roll_depth: impl Fn(&AffixDefinition) -> u16,
     activation_depth: u16,
+    power: i16,
 ) -> EgoMaterialization {
     affix_ids.sort();
     if let [affix_id] = affix_ids.as_slice()
         && let Some(item) = content.item(kind_id)
         && let Some(affix) = content.affix(affix_id)
-        && let Some(result) = jewelry::materialize(rng, item, affix, roll_depth(affix), 2)
+        && let Some(result) = jewelry::materialize(rng, item, affix, roll_depth(affix), power)
     {
         return result;
     }
@@ -314,6 +315,10 @@ pub(super) fn merge_affix_properties(
     total: &mut AffixPropertyBundleDefinition,
     addition: &AffixPropertyBundleDefinition,
 ) {
+    total.rfb_flags.extend(addition.rfb_flags.iter().cloned());
+    if let Some(pval) = &addition.rfb_pval {
+        remember_rfb_pval(total, pval.flags.iter().copied(), i32::from(pval.value));
+    }
     if addition.ammunition_capacity.is_some() {
         total.ammunition_capacity = addition.ammunition_capacity;
     }
@@ -358,6 +363,16 @@ fn merge_stat_modifiers(total: &mut StatModifiers, addition: &StatModifiers) {
         .saturating_add(addition.spell_power_bonus);
 }
 
+pub(super) fn remember_rfb_pval(
+    properties: &mut AffixPropertyBundleDefinition,
+    flags: impl IntoIterator<Item = rfb_content::RfbPvalFlagDefinition>,
+    value: i32,
+) {
+    let pval = properties.rfb_pval.get_or_insert_with(Default::default);
+    pval.value = i16::try_from(value).expect("RFB pval fits its signed source field");
+    pval.flags.extend(flags);
+}
+
 const TV_SHOT: u16 = 16;
 const TV_ARROW: u16 = 17;
 const TV_BOLT: u16 = 18;
@@ -392,13 +407,10 @@ pub(super) fn materialize_rfb_harp_intrinsic_with_rng(
     if base_kind.tval != TV_BOW || base_kind.sval != SV_HARP {
         return None;
     }
-    Some(AffixPropertyBundleDefinition {
-        modifiers: StatModifiers {
-            charisma: i32::from(1_u16.saturating_add(rfb_m_bonus(rng, 1, generation_level))),
-            ..StatModifiers::default()
-        },
-        ..AffixPropertyBundleDefinition::default()
-    })
+    let mut properties = AffixPropertyBundleDefinition::default();
+    let pval = i32::from(1_u16.saturating_add(rfb_m_bonus(rng, 1, generation_level)));
+    armor::apply_pval(&mut properties, armor::Pval::Charisma, pval);
+    Some(properties)
 }
 
 /// Materializes one selected RFB Harp ego from the already rolled base pval.
@@ -423,7 +435,7 @@ pub(crate) fn materialize_rfb_harp_ego(
     };
     match source_index {
         195 => {
-            state.properties.modifiers.wisdom = pval;
+            armor::apply_pval(&mut state.properties, armor::Pval::Wisdom, pval);
             state.properties.passives.extend([
                 EquipmentPassive::SustainCharisma,
                 EquipmentPassive::SustainWisdom,
@@ -699,6 +711,31 @@ fn apply_rfb_launcher_pval(
     pval: u16,
     extra_shots: bool,
 ) {
+    use armor::Pval::*;
+    let flags = match source_index {
+        162 => vec![Strength],
+        163 => vec![Shots],
+        164 => {
+            if extra_shots {
+                vec![Dexterity, Stealth, Shots]
+            } else {
+                vec![Dexterity, Stealth]
+            }
+        }
+        165 => {
+            if extra_shots {
+                vec![Strength, LessSpeed, LessStealth, Shots]
+            } else {
+                vec![Strength]
+            }
+        }
+        166 => vec![Speed, Shots],
+        167 => vec![Stealth],
+        _ => vec![],
+    };
+    if !flags.is_empty() {
+        remember_rfb_pval(properties, flags, i32::from(pval));
+    }
     let pval = i32::from(pval);
     match source_index {
         162 => properties.modifiers.strength = pval,
@@ -909,6 +946,10 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
                 roll.state
                     .curse_effects
                     .insert(ItemCurseEffectDto::Aggravate);
+                roll.state
+                    .properties
+                    .rfb_flags
+                    .insert("AGGRAVATE".to_owned());
             } else {
                 roll.stealth_penalty_pval = true;
             }
@@ -1011,6 +1052,10 @@ pub(crate) fn materialize_rfb_weapon_ego_with_rng(
         }
         21 if is_weapon => {
             roll.curse = Some(ItemCurseSeverityDto::Heavy);
+            roll.state
+                .properties
+                .rfb_flags
+                .insert("AGGRAVATE".to_owned());
             roll.state
                 .curse_effects
                 .insert(ItemCurseEffectDto::Aggravate);
@@ -1251,25 +1296,21 @@ pub(super) fn roll_rfb_weapon_enchantment(
     rng: &mut RfbRng,
     item: &ItemDefinition,
     level: u16,
-    quality: rfb_protocol::ItemQualityDto,
+    power: i16,
 ) -> Option<ItemEnchantmentsDto> {
     let mut to_hit = randint1(rng, 5) + rfb_m_bonus(rng, 5, level);
     let mut to_damage = randint1(rng, 5) + rfb_m_bonus(rng, 5, level);
     let mut extra_hit = rfb_m_bonus(rng, 10, level);
     let mut extra_damage = rfb_m_bonus(rng, 10, level);
     let base = item.rfb_base_kind?;
-    if base.tval == TV_SWORD
-        && base.sval == SV_DIAMOND_EDGE
-        && quality == rfb_protocol::ItemQualityDto::Exceptional
-        && !one_in(rng, 7)
-    {
+    if base.tval == TV_SWORD && base.sval == SV_DIAMOND_EDGE && power >= 2 && !one_in(rng, 7) {
         return None;
     }
     if matches!(base.tval, TV_SHOT | TV_ARROW | TV_BOLT) {
         extra_hit = extra_hit.div_ceil(2);
         extra_damage = extra_damage.div_ceil(2);
     }
-    if quality == rfb_protocol::ItemQualityDto::Exceptional {
+    if power.abs() >= 2 {
         to_hit += extra_hit;
         to_damage += extra_damage;
     }
@@ -1277,25 +1318,22 @@ pub(super) fn roll_rfb_weapon_enchantment(
         ItemEnchantmentsDto::default()
     } else {
         ItemEnchantmentsDto {
-            to_hit: to_hit as i16,
-            to_damage: to_damage as i16,
+            to_hit: to_hit as i16 * power.signum(),
+            to_damage: to_damage as i16 * power.signum(),
             to_armor: 0,
         }
     })
 }
 
-pub(super) fn roll_rfb_armor_enchantment(
-    rng: &mut RfbRng,
-    level: u16,
-    quality: rfb_protocol::ItemQualityDto,
-) -> i16 {
+pub(super) fn roll_rfb_armor_enchantment(rng: &mut RfbRng, level: u16, power: i16) -> i16 {
     let first = randint1(rng, 5) + rfb_m_bonus(rng, 5, level);
     let second = rfb_m_bonus(rng, 10, level);
-    match quality {
-        rfb_protocol::ItemQualityDto::Ordinary => 0,
-        rfb_protocol::ItemQualityDto::Fine => first as i16,
-        rfb_protocol::ItemQualityDto::Exceptional => (first + second) as i16,
-    }
+    let amount = if power.abs() >= 2 {
+        first + second
+    } else {
+        first
+    };
+    amount as i16 * power.signum()
 }
 
 pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
@@ -1557,6 +1595,39 @@ fn apply_rfb_pval(
     blows_pval: bool,
     stealth_penalty_pval: bool,
 ) {
+    use armor::Pval::*;
+    let mut flags = match source_index {
+        2 | 40 | 41 => vec![Digging],
+        3 => vec![Intelligence, Wisdom],
+        4 => vec![Wisdom],
+        5 => vec![Blows],
+        10 => vec![Wisdom],
+        11 => vec![Blows, Strength, Dexterity, LessWisdom],
+        6 => vec![SpellPower, LessStrength, LessDexterity, LessConstitution],
+        13 => vec![Life],
+        14 => vec![Intelligence],
+        15 => vec![Search],
+        19 => vec![Strength, Dexterity, Constitution],
+        22 => vec![Strength, Constitution],
+        23 => vec![Charisma, Speed],
+        42 => vec![Digging, Strength],
+        _ => vec![],
+    };
+    if matches!(source_index, 10 | 27) && blows_pval {
+        flags.push(Blows);
+    }
+    if source_index == 11 && stealth_penalty_pval {
+        flags.push(LessStealth);
+    }
+    if source_index == 15 && charisma_pval {
+        flags.push(Charisma);
+    }
+    if source_index == 22 && dexterity_pval {
+        flags.push(Dexterity);
+    }
+    if !flags.is_empty() {
+        remember_rfb_pval(properties, flags, i32::from(pval));
+    }
     let pval_i32 = i32::from(pval);
     match source_index {
         2 | 40 | 41 => properties.equipment_bonuses.digging_skill = pval_i32,
@@ -1904,12 +1975,14 @@ fn roll_rfb_death(rng: &mut RfbRng, roll: &mut RfbWeaponRoll, dice: &mut MeleeDa
     let state = &mut roll.state;
     if one_in(rng, 16) {
         state.properties.equipment_bonuses.light_radius = -1;
+        state.properties.rfb_flags.insert("DARKNESS".to_owned());
         add_resistance(&mut state.properties, ActorDamageType::Dark);
         if one_in(rng, 6) {
             state
                 .properties
                 .resistances
                 .insert(ActorDamageType::Light, ActorResistanceLevel::Vulnerable);
+            state.properties.rfb_flags.insert("VULN_LITE".to_owned());
         }
     }
     if one_in(rng, 3) {
@@ -2015,6 +2088,10 @@ fn roll_rfb_troika(
         gained_power = true;
     }
     if one_in(rng, lva) || roll.state.weapon_traits.contains(&WeaponTraitDto::Vorpal2) {
+        roll.state
+            .properties
+            .rfb_flags
+            .insert("AGGRAVATE".to_owned());
         roll.state
             .curse_effects
             .insert(ItemCurseEffectDto::Aggravate);
@@ -2275,6 +2352,24 @@ const fn weak_esp(index: u64) -> EquipmentPassive {
 }
 
 fn add_slay(properties: &mut AffixPropertyBundleDefinition, target: SlayTarget, level: SlayLevel) {
+    let name = match target {
+        SlayTarget::Animal => "ANIMAL",
+        SlayTarget::Evil => "EVIL",
+        SlayTarget::Good => "GOOD",
+        SlayTarget::Living => "LIVING",
+        SlayTarget::Human => "HUMAN",
+        SlayTarget::Undead => "UNDEAD",
+        SlayTarget::Demon => "DEMON",
+        SlayTarget::Orc => "ORC",
+        SlayTarget::Troll => "TROLL",
+        SlayTarget::Giant => "GIANT",
+        SlayTarget::Dragon => "DRAGON",
+    };
+    let prefix = match level {
+        SlayLevel::Slay => "SLAY",
+        SlayLevel::Kill => "KILL",
+    };
+    properties.rfb_flags.insert(format!("{prefix}_{name}"));
     properties
         .slays
         .entry(target)
@@ -2284,9 +2379,35 @@ fn add_slay(properties: &mut AffixPropertyBundleDefinition, target: SlayTarget, 
 
 fn add_resistance(properties: &mut AffixPropertyBundleDefinition, damage_type: ActorDamageType) {
     properties
+        .rfb_flags
+        .insert(format!("RES_{}", rfb_resistance_element(damage_type)));
+    properties
         .resistances
         .entry(damage_type)
         .or_insert(ActorResistanceLevel::Resistant);
+}
+
+fn rfb_resistance_element(element: ActorDamageType) -> &'static str {
+    match element {
+        ActorDamageType::Acid => "ACID",
+        ActorDamageType::Electricity => "ELEC",
+        ActorDamageType::Fire => "FIRE",
+        ActorDamageType::Cold => "COLD",
+        ActorDamageType::Poison => "POIS",
+        ActorDamageType::Light => "LITE",
+        ActorDamageType::Dark => "DARK",
+        ActorDamageType::Blindness => "BLIND",
+        ActorDamageType::Fear => "FEAR",
+        ActorDamageType::Confusion => "CONF",
+        ActorDamageType::Nether => "NETHER",
+        ActorDamageType::Nexus => "NEXUS",
+        ActorDamageType::Sound => "SOUND",
+        ActorDamageType::Shards => "SHARDS",
+        ActorDamageType::Chaos => "CHAOS",
+        ActorDamageType::Disenchant => "DISEN",
+        ActorDamageType::Time => "TIME",
+        _ => unreachable!("RFB equipment resistance"),
+    }
 }
 
 fn add_status_immunity(properties: &mut AffixPropertyBundleDefinition, status_id: &str) {
@@ -2301,6 +2422,7 @@ fn add_status_immunity(properties: &mut AffixPropertyBundleDefinition, status_id
 }
 
 fn add_light(properties: &mut AffixPropertyBundleDefinition) {
+    properties.rfb_flags.insert("LITE".to_owned());
     properties.equipment_bonuses.light_radius = properties.equipment_bonuses.light_radius.max(1);
 }
 
@@ -2415,6 +2537,7 @@ mod tests {
             generation_level: min_level,
             generation_max_level: max_level,
             rfb_ego: Some(RfbEgoGenerationDefinition {
+                flags: Default::default(),
                 source_index,
                 rarity,
                 types,
@@ -2519,6 +2642,7 @@ mod tests {
         difficulty: i32,
     ) -> ItemDeviceActivationDefinition {
         ItemDeviceActivationDefinition {
+            rfb_value: None,
             id: id.to_owned(),
             name_key: format!("{id}-name"),
             weight,
@@ -3249,6 +3373,7 @@ mod tests {
             affix_ids.clone(),
             |_| 36,
             36,
+            2,
         );
 
         assert_eq!(materialized.affix_ids, affix_ids);
@@ -3400,7 +3525,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(STATE_HASH_SCHEMA_VERSION, 111);
+        assert_eq!(STATE_HASH_SCHEMA_VERSION, 112);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,

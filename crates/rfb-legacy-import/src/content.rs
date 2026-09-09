@@ -3736,6 +3736,11 @@ fn item_json_with_terrain(
             "tval": entry.tval,
             "sval": entry.sval,
         });
+        if matches!(entry.tval, 16..=23 | 30..=40 | 45 | 46) {
+            value["rfbValue"] = serde_json::json!({
+                "flags": entry.flags, "pval": entry.pval, "toArmor": entry.to_armor,
+            });
+        }
     }
     if matches!((entry.tval, entry.sval), (23, 34)) {
         value["initialCurse"] = serde_json::json!("permanent");
@@ -4896,6 +4901,7 @@ fn ego_json_with_activation_candidates(
         "generationLevel": entry.level,
         "rfbEgo": {
             "sourceIndex": entry.index,
+            "flags": entry.flags,
             "rarity": entry.rarity,
             "types": entry.slots.iter().map(|slot| {
                 slot.to_ascii_lowercase().replace('_', "-")
@@ -5825,6 +5831,9 @@ fn artifact_json(
         "baseValue": entry.base_value,
         "resistsProjectionDestruction": true,
         "tags": ["artifact", "legacy-import"],
+        "rfbValue": {
+            "flags": entry.flags, "pval": entry.pval, "toArmor": entry.to_armor,
+        },
     });
     if let Some(base_item_kind_id) = base_item_kind_id {
         value["artifactGeneration"] = serde_json::json!({
@@ -5918,10 +5927,8 @@ fn artifact_json(
             modifiers.insert("defense".to_owned(), serde_json::json!(defense));
         }
         if !shape.melee && !shape.launcher {
-            let attack = entry.to_hit.max(entry.to_damage);
-            if attack != 0 {
-                modifiers.insert("attack".to_owned(), serde_json::json!(attack));
-            }
+            add_equipment_bonus(&mut equipment, "meleeSkill", entry.to_hit);
+            add_equipment_bonus(&mut equipment, "meleeDamage", entry.to_damage);
         }
         attribute_modifiers_from_flags(&entry.flags, entry.pval, &mut modifiers);
         if fold.speed != 0 {
@@ -9909,6 +9916,9 @@ fn monster_death_drop_json(entry: &LegacyMonsterEntry) -> Option<serde_json::Val
         "countDice": count_dice,
         "minimumQuality": minimum_quality,
     });
+    if minimum_quality == "exceptional" && !entry.flags.iter().any(|flag| flag == "DROP_GOOD") {
+        value["greatOnly"] = serde_json::json!(true);
+    }
     if allows_items {
         value["itemTableId"] = serde_json::json!(LEGACY_DROP_TABLE_ID);
         if entry.drop_theme.as_deref() == Some("DROP_WARRIOR") {
@@ -28019,7 +28029,9 @@ E:你的护手被冰雪所覆盖……
         assert_eq!(paurnimmen["generationLevel"], 30);
         assert_eq!(paurnimmen["weightTenthsPound"], 25);
         assert_eq!(paurnimmen["baseValue"], 13_000);
-        assert_eq!(paurnimmen["modifiers"]["attack"], 2);
+        assert_eq!(paurnimmen["equipmentBonuses"]["meleeSkill"], 2);
+        assert_eq!(paurnimmen["equipmentBonuses"]["meleeDamage"], 2);
+        assert!(paurnimmen["modifiers"].get("attack").is_none());
         assert_eq!(paurnimmen["modifiers"]["defense"], 9);
         assert_eq!(paurnimmen["brands"], serde_json::json!(["cold"]));
         assert_eq!(paurnimmen["resistances"]["cold"], "resistant");

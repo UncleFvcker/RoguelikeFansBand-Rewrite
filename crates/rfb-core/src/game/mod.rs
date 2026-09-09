@@ -126,6 +126,9 @@ mod item_combat;
 mod item_curses;
 mod item_knowledge;
 mod item_use;
+// E8.1 supplies COST_REAL; value-gated generation is enabled by E8.2/E8.5/E8.6.
+#[allow(dead_code)]
+mod item_value;
 mod lighting;
 mod loot;
 mod mining;
@@ -227,7 +230,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 111;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 112;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -776,6 +779,13 @@ fn initial_item_runtime_state(
     let current = selected.charges.cost.saturating_add(
         u32::try_from(rng.bounded(current_span)).expect("bounded current charge roll must fit u32"),
     );
+    // Original equipment effects have their own fixed effect level; object
+    // generation depth only selects the profile. Devices retain depth power.
+    let power = if selected.rfb_value.is_some() {
+        u16::try_from(selected.device_check_difficulty).expect("validated equipment effect level")
+    } else {
+        power
+    };
     (
         Some(ItemActivationDto {
             profile_id: selected.id.clone(),

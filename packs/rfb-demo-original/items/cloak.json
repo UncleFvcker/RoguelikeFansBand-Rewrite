@@ -22,6 +22,13 @@
     "sval": 1,
     "tval": 35
   },
+  "rfbValue": {
+    "flags": [
+      "TOWN"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "armor",
     "equipment",

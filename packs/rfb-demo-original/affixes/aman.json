@@ -12,6 +12,15 @@
   "id": "rfb-legacy.affix.aman",
   "nameKey": "affix-legacy-aman-name",
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SPEED",
+      "STEALTH",
+      "XTRA_H_RES"
+    ],
     "rarity": 16,
     "sourceIndex": 101,
     "types": [

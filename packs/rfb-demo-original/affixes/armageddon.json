@@ -6,6 +6,7 @@
   "id": "rfb-legacy.affix.armageddon",
   "nameKey": "affix-legacy-armageddon-name",
   "rfbEgo": {
+    "flags": [],
     "rarity": 3,
     "sourceIndex": 7,
     "types": [

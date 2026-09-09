@@ -200,7 +200,11 @@ pub(super) fn equipment_bonuses_out_of_range(bonuses: &EquipmentBonuses) -> bool
 }
 
 pub(super) fn affix_property_bundle_out_of_range(bundle: &AffixPropertyBundleDefinition) -> bool {
-    bundle.modifiers.max_hp < -1_000_000
+    bundle
+        .rfb_flags
+        .iter()
+        .any(|flag| !crate::valid_rfb_runtime_flag(flag))
+        || bundle.modifiers.max_hp < -1_000_000
         || bundle.modifiers.max_hp > 1_000_000
         || bundle.modifiers.attack < -1_000_000
         || bundle.modifiers.attack > 1_000_000

@@ -18,6 +18,15 @@
     "light": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LEVITATION",
+      "RES_LITE",
+      "SPEED"
+    ],
     "rarity": 6,
     "sourceIndex": 151,
     "types": [

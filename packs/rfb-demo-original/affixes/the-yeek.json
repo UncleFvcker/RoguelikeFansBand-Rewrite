@@ -13,6 +13,16 @@
     "acid": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "DEC_CHR",
+      "DEC_CON",
+      "DEC_DEX",
+      "DEC_STR",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "RES_ACID",
+      "STEALTH"
+    ],
     "rarity": 16,
     "sourceIndex": 139,
     "types": [

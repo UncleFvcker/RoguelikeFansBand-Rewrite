@@ -24,6 +24,7 @@
           "intervalTicks": 1000
         },
         "rfbBiases": [],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -44,6 +45,11 @@
     "fear": "vulnerable"
   },
   "rfbEgo": {
+    "flags": [
+      "DEC_CHR",
+      "SPEED",
+      "VULN_FEAR"
+    ],
     "rarity": 4,
     "sourceIndex": 95,
     "types": [

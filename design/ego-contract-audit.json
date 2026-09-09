@@ -33,7 +33,7 @@
     },
     {
       "scope": "rings and amulets",
-      "contract": "obj_value_real scoring and up to 1000 candidate retries",
+      "contract": "value limits and up to 1000 candidate retries (real scoring implemented in E8.1)",
       "source": "src/ego.c:411"
     },
     {
@@ -48,7 +48,7 @@
     },
     {
       "scope": "unavailable classes and races",
-      "contract": "Mauler, Bard, Monster Ring and Vortex special generation modifiers",
+      "contract": "Mauler, Bard and Monster Ring special generation modifiers",
       "source": "src/ego.c; src/object2.c"
     }
   ],

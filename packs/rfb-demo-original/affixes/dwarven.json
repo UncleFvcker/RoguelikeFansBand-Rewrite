@@ -15,6 +15,13 @@
     "sustain-strength"
   ],
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SUST_STR"
+    ],
     "rarity": 3,
     "sourceIndex": 60,
     "types": [

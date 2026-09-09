@@ -112,6 +112,7 @@ pub(super) fn materialize(
                     properties
                         .resistances
                         .insert(ActorDamageType::Cold, ActorResistanceLevel::Immune);
+                    properties.rfb_flags.insert("IM_COLD".to_owned());
                 }
                 if one_in(rng, 6) {
                     add_slay(properties, SlayTarget::Good, SlayLevel::Slay);
@@ -125,6 +126,7 @@ pub(super) fn materialize(
             } else {
                 if one_in(rng, 6) {
                     state.curse_effects.insert(ItemCurseEffectDto::Aggravate);
+                    properties.rfb_flags.insert("AGGRAVATE".to_owned());
                 }
                 if one_in(rng, 2) {
                     add_resistance(properties, ActorDamageType::Dark);
@@ -664,6 +666,7 @@ fn amulet(
             (222, 1) => {
                 if one_in(rng, 3) {
                     curse_effects.insert(ItemCurseEffectDto::Aggravate);
+                    properties.rfb_flags.insert("AGGRAVATE".to_owned());
                     add_one_demon_resistance(rng, properties);
                 } else {
                     flags.extend([LessStealth, LessWisdom]);
@@ -685,6 +688,7 @@ fn amulet(
                     properties
                         .resistances
                         .insert(ActorDamageType::Cold, ActorResistanceLevel::Vulnerable);
+                    properties.rfb_flags.insert("VULN_COLD".to_owned());
                     delta.to_hit += randint1(rng, 3) as i16;
                     delta.to_damage += randint1(rng, 5) as i16;
                     delta.to_armor -= randint1(rng, 5) as i16;
@@ -696,14 +700,17 @@ fn amulet(
                 delta.to_damage += bonus(rng, 5, level);
                 if one_in(rng, 6) {
                     curse_effects.insert(ItemCurseEffectDto::DrainExperience);
+                    properties.rfb_flags.insert("DRAIN_EXP".to_owned());
                     add_one_demon_resistance(rng, properties);
                 }
             }
             (222, 6) if power.abs() >= 2 && one_in(rng, 66) && level >= 66 => {
                 curse_effects.insert(ItemCurseEffectDto::TyCurse);
+                properties.rfb_flags.insert("TY_CURSE".to_owned());
                 properties
                     .resistances
                     .insert(ActorDamageType::Fire, ActorResistanceLevel::Immune);
+                properties.rfb_flags.insert("IM_FIRE".to_owned());
                 delta.to_hit += randint1(rng, 6) as i16;
                 delta.to_damage += randint1(rng, 6) as i16;
                 delta.to_armor -= randint1(rng, 20) as i16;
@@ -825,6 +832,7 @@ fn amulet(
             delta.to_hit = delta.to_hit.min(20);
             if delta.to_damage > 16 {
                 curse_effects.insert(ItemCurseEffectDto::Aggravate);
+                properties.rfb_flags.insert("AGGRAVATE".to_owned());
                 delta.to_damage = 16;
             }
         }
@@ -1039,6 +1047,9 @@ fn elemental(
                     properties
                         .resistances
                         .insert(element, ActorResistanceLevel::Immune);
+                    properties
+                        .rfb_flags
+                        .insert(format!("IM_{}", rfb_resistance_element(element)));
                 }
                 if one_in(rng, 5) {
                     *activation = roll_biased_activation_profile_index(rng, affix, bias, level);

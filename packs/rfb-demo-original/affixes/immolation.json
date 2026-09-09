@@ -38,6 +38,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -77,6 +78,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "direction",
@@ -117,6 +119,7 @@
         "rfbBiases": [
           "fire"
         ],
+        "rfbValue": 3920,
         "target": {
           "modes": [
             "direction",
@@ -158,6 +161,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 780,
         "target": {
           "modes": [
             "direction",
@@ -200,6 +204,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1710,
         "target": {
           "modes": [
             "direction",
@@ -241,6 +246,7 @@
         "rfbBiases": [
           "fire"
         ],
+        "rfbValue": 5600,
         "target": {
           "modes": [
             "direction",
@@ -269,6 +275,11 @@
     "fire": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "AURA_FIRE",
+      "IGNORE_FIRE",
+      "RES_FIRE"
+    ],
     "rarity": 4,
     "sourceIndex": 96,
     "types": [

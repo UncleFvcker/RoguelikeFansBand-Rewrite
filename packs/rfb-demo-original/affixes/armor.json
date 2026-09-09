@@ -6,6 +6,9 @@
   "id": "rfb-legacy.affix.armor",
   "nameKey": "affix-legacy-armor-name",
   "rfbEgo": {
+    "flags": [
+      "DEX"
+    ],
     "rarity": 1,
     "sourceIndex": 89,
     "types": [

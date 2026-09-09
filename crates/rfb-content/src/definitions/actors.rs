@@ -362,6 +362,9 @@ pub struct MonsterDropDiceDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct MonsterDropDefinition {
+    /// RFB DROP_GREAT without DROP_GOOD still rolls the outer good-quality gate.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub great_only: bool,
     pub kind: MonsterDropKindDefinition,
     #[serde(default)]
     pub item_table_id: Option<String>,

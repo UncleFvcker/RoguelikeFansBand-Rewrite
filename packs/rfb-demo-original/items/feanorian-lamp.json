@@ -20,6 +20,13 @@
     "sval": 2,
     "tval": 39
   },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_FIRE"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "equipment",
     "legacy-import",

@@ -28,6 +28,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -70,6 +71,7 @@
         "rfbBiases": [
           "acid"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -112,6 +114,7 @@
         "rfbBiases": [
           "electricity"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -155,6 +158,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -197,6 +201,7 @@
         "rfbBiases": [
           "cold"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -239,6 +244,7 @@
         "rfbBiases": [
           "poison"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "self"
@@ -275,6 +281,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 5500,
         "target": {
           "modes": [
             "self"
@@ -314,6 +321,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "self"
@@ -350,6 +358,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 14000,
         "target": {
           "modes": [
             "self"
@@ -366,6 +375,7 @@
   "id": "rfb-legacy.affix.protection-ring",
   "nameKey": "affix-legacy-protection-ring-name",
   "rfbEgo": {
+    "flags": [],
     "rarity": 2,
     "sourceIndex": 205,
     "types": [

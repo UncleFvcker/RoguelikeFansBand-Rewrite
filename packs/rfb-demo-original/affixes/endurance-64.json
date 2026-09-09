@@ -7,6 +7,9 @@
   "id": "rfb-legacy.affix.endurance-64",
   "nameKey": "affix-legacy-endurance-64-name",
   "rfbEgo": {
+    "flags": [
+      "CON"
+    ],
     "rarity": 4,
     "sourceIndex": 64,
     "types": [

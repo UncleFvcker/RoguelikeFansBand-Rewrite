@@ -67,6 +67,7 @@ fn natural_ammunition_damage_dice_survive_generation_and_save() {
         depth: 80,
         source: LootSource::MonsterDeath {
             actor_id: "test.ammo-dice".into(),
+            themed: false,
         },
     };
     game.rng = RfbRng::seeded(2295);
@@ -87,6 +88,87 @@ fn natural_ammunition_damage_dice_survive_generation_and_save() {
 }
 
 #[test]
+fn monster_object_level_and_theme_reach_real_jewelry_generation() {
+    let root =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
+    let table = artifact
+        .content
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
+    table
+        .entries
+        .retain(|entry| entry.item_kind_id == "demo.item.ring");
+    table.entries[0].min_depth = 0;
+    table.quality_policy = Some(rfb_content::LootQualityPolicyDefinition::RfbDepth {
+        good_cap_percent: 0,
+        great_cap_percent: 0,
+    });
+    let actor = artifact
+        .content
+        .actors
+        .iter_mut()
+        .find(|actor| actor.death_drop.is_some())
+        .unwrap();
+    actor.level = 80;
+    let actor_kind = actor.id.clone();
+    actor.death_drop = Some(rfb_content::MonsterDropDefinition {
+        great_only: false,
+        kind: rfb_content::MonsterDropKindDefinition::Items,
+        item_table_id: Some(table.id.clone()),
+        theme_table_id: Some(table.id.clone()),
+        theme_chance_percent: 100,
+        base_rolls: 1,
+        chance_rolls: vec![],
+        count_dice: vec![],
+        minimum_quality: rfb_content::ItemQuality::Ordinary,
+    });
+    let mut actual = Game::new_with_build(81, "demo.build.warrior").unwrap();
+    actual.content = Arc::new(rfb_content::ContentCatalog::from_artifact(
+        rfb_content::encode_content(artifact.content).unwrap(),
+    ));
+    actual.current_floor_id = "demo.floor.warrens-depth-1".into();
+    let actor = actual.generated_actor(
+        "test.object-level".into(),
+        &actor_kind,
+        actual.player.position,
+    );
+    actual.rng = RfbRng::seeded(81);
+    let mut expected = actual.clone();
+    expected.rng.bounded(100); // The real monster theme gate precedes make_object.
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".into(),
+        floor_id: actual.current_floor_id.clone(),
+        depth: 80, // _mon_drop_lvl(1, 80), independently from the floor depth.
+        source: LootSource::MonsterDeath {
+            actor_id: actor.id.clone(),
+            themed: true,
+        },
+    };
+    let expected_items = expected
+        .generate_loot_instances_internal(
+            &context,
+            ItemLocation::Ground(actor.position),
+            false,
+            Some(1),
+            ItemGenerationMode::Ordinary,
+        )
+        .unwrap();
+    let (items, gold) = actual.generate_death_loot(&actor).unwrap();
+    assert_eq!(items, expected_items);
+    assert_eq!(actual.rng, expected.rng);
+    assert!(gold.is_empty());
+    assert_eq!(items.len(), 1);
+    assert_eq!(items[0].kind_id, "demo.item.ring");
+    assert!(
+        !items[0].affix_ids.is_empty(),
+        "theme promotes power zero jewelry to power one"
+    );
+}
+
+#[test]
 fn base_item_natural_egos_cover_all_equipment_types() {
     let base =
         Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).expect("Orc Cave loot test should create");
@@ -96,6 +178,7 @@ fn base_item_natural_egos_cover_all_equipment_types() {
         depth: 30,
         source: LootSource::MonsterDeath {
             actor_id: "test.orc-cave.loot-source".to_owned(),
+            themed: false,
         },
     };
     let mut seen = BTreeSet::new();
@@ -235,6 +318,7 @@ fn shared_base_and_warrior_loot_use_depth_instead_of_dungeon_identity() {
                 depth,
                 source: LootSource::MonsterDeath {
                     actor_id: "test.shared-loot.actor".to_owned(),
+                    themed: false,
                 },
             },
             ItemLocation::Ground(game.player.position),
@@ -381,6 +465,7 @@ fn warrens_monster_drops_follow_original_probability_and_remains_profiles() {
                 depth: 0,
                 source: LootSource::MonsterDeath {
                     actor_id: "test.small-kobold.surface".to_owned(),
+                    themed: false,
                 },
             },
             ItemLocation::Ground(surface.player.position),

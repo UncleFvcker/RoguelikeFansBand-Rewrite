@@ -12,6 +12,14 @@
   "id": "rfb-legacy.affix.elvenkind-149",
   "nameKey": "affix-legacy-elvenkind-149-name",
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SPEED",
+      "STEALTH"
+    ],
     "rarity": 8,
     "sourceIndex": 149,
     "types": [

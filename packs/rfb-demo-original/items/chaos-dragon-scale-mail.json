@@ -20,6 +20,7 @@
           "energyPerMille": 1000,
           "intervalTicks": 1000
         },
+        "rfbValue": 9900,
         "target": {
           "modes": [
             "direction"
@@ -63,6 +64,18 @@
     "sourceIndex": 303,
     "sval": 18,
     "tval": 38
+  },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_CHAOS",
+      "RES_DISEN"
+    ],
+    "pval": 0,
+    "toArmor": 10
   },
   "tags": [
     "armor",

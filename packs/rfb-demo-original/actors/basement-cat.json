@@ -5,6 +5,7 @@
   "damageSides": 15,
   "damageType": "physical",
   "deathDrop": {
+    "greatOnly": true,
     "chanceRolls": [],
     "countDice": [
       {

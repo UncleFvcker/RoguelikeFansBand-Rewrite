@@ -26,6 +26,13 @@
     "sval": 2,
     "tval": 23
   },
+  "rfbValue": {
+    "flags": [
+      "SHOW_MODS"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

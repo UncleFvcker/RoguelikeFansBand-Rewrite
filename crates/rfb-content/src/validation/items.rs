@@ -802,6 +802,14 @@ pub(super) fn validate_items(
         if item.base_value > 999_999_999 {
             return Err(ContentError::InvalidItemValue(item.id.clone()));
         }
+        if item.rfb_value.as_ref().is_some_and(|value| {
+            value
+                .flags
+                .iter()
+                .any(|flag| !crate::valid_rfb_source_flag(flag))
+        }) {
+            return Err(ContentError::InvalidItemValue(item.id.clone()));
+        }
         if item.break_chance_percent > 100 {
             return Err(ContentError::InvalidItemBreakChance(item.id.clone()));
         }
@@ -1170,6 +1178,12 @@ pub(super) fn validate_items(
                     activation_ids.insert(activation.id.clone())
                         && validate_id(&activation.id).is_ok()
                         && validate_message_key(&activation.name_key).is_ok()
+                        && activation.rfb_value.is_none_or(|value| {
+                            value >= 0
+                                && (i32::from(activation.min_depth)
+                                    ..=i32::from(activation.max_depth))
+                                    .contains(&activation.device_check_difficulty)
+                        })
                         && (1..=1_000_000).contains(&activation.weight)
                         && (1..=100).contains(&activation.min_depth)
                         && activation.min_depth <= activation.max_depth

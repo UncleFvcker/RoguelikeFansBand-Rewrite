@@ -6,6 +6,7 @@
   "id": "rfb-legacy.affix.capacity-device",
   "nameKey": "affix-legacy-capacity-device-name",
   "rfbEgo": {
+    "flags": [],
     "rarity": 1,
     "sourceIndex": 251,
     "types": [

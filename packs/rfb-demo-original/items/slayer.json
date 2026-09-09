@@ -1,37 +1,65 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.slayer",
-  "nameKey": "item-demo-slayer-name",
-  "descriptionKey": "item-demo-slayer-description",
-  "elementalDestructionVulnerabilities": ["acid", "fire"],
-  "glyph": "|",
-  "generationLevel": 60,
-  "weightTenthsPound": 260,
-  "maxStack": 1,
-  "baseValue": 200000,
-  "equipmentSlot": "weapon",
-  "weaponProficiencyBaseItemId": "demo.item.executioners-sword",
   "artifactGeneration": {
-    "sourceIndex": 123,
     "baseItemKindId": "demo.item.executioners-sword",
+    "instant": false,
     "rarityOneIn": 60,
-    "instant": false
+    "sourceIndex": 123
   },
+  "baseValue": 200000,
+  "descriptionKey": "item-demo-slayer-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "glyph": "|",
+  "id": "demo.item.slayer",
+  "maxStack": 1,
   "meleeProfile": {
     "attacks": 3,
-    "toHit": 15,
-    "toDamage": 15,
     "damageDice": 5,
-    "damageSides": 6
+    "damageSides": 6,
+    "toDamage": 15,
+    "toHit": 15
+  },
+  "nameKey": "item-demo-slayer-name",
+  "passives": [
+    "hold-life",
+    "regeneration",
+    "vampiric"
+  ],
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "BLOWS",
+      "BRAND_VAMP",
+      "HOLD_LIFE",
+      "REGEN",
+      "RES_BLIND",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "SLAY_HUMAN",
+      "SLAY_UNDEAD",
+      "SLOW_DIGEST"
+    ],
+    "pval": 2,
+    "toArmor": 0
   },
   "slays": {
     "evil": "slay",
     "human": "slay",
     "undead": "slay"
   },
-  "passives": ["hold-life", "regeneration", "vampiric"],
-  "resistsMonsterDestruction": true,
-  "resistsProjectionDestruction": true,
-  "tags": ["artifact", "equipment", "old-castle-reward", "weapon"]
+  "tags": [
+    "artifact",
+    "equipment",
+    "old-castle-reward",
+    "weapon"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.executioners-sword",
+  "weightTenthsPound": 260
 }

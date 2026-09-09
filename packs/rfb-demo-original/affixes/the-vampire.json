@@ -22,6 +22,20 @@
     "poison": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "CHR",
+      "DARKNESS",
+      "DEC_WIS",
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_DARK",
+      "RES_POIS",
+      "STEALTH",
+      "STR"
+    ],
     "rarity": 16,
     "sourceIndex": 116,
     "types": [

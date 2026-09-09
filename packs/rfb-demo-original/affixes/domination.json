@@ -6,6 +6,10 @@
   "id": "rfb-legacy.affix.domination",
   "nameKey": "affix-legacy-domination-name",
   "rfbEgo": {
+    "flags": [
+      "CHR",
+      "RES_FEAR"
+    ],
     "rarity": 1,
     "sourceIndex": 90,
     "types": [

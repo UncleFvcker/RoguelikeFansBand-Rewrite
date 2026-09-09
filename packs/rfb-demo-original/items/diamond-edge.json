@@ -26,6 +26,16 @@
     "sval": 31,
     "tval": 23
   },
+  "rfbValue": {
+    "flags": [
+      "RIDING",
+      "SHOW_MODS",
+      "TUNNEL",
+      "VORPAL"
+    ],
+    "pval": 4,
+    "toArmor": 0
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "dungeon-reward",

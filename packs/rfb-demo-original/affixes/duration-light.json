@@ -7,6 +7,9 @@
   "id": "rfb-legacy.affix.duration-light",
   "nameKey": "affix-legacy-duration-light-name",
   "rfbEgo": {
+    "flags": [
+      "AWARE"
+    ],
     "rarity": 1,
     "sourceIndex": 237,
     "types": [

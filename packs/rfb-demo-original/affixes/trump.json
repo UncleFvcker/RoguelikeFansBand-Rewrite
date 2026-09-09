@@ -19,6 +19,7 @@
           "energyPerMille": 1000,
           "intervalTicks": 250
         },
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -41,6 +42,16 @@
     "nexus": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "FREE_ACT",
+      "REGEN",
+      "RES_NEXUS",
+      "SEARCH",
+      "SLAY_EVIL",
+      "SLOW_DIGEST",
+      "TELEPORT",
+      "XTRA_H_RES"
+    ],
     "rarity": 6,
     "sourceIndex": 15,
     "types": [

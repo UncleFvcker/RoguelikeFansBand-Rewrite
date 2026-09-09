@@ -6,6 +6,12 @@
   "id": "rfb-legacy.affix.the-sniper",
   "nameKey": "affix-legacy-the-sniper-name",
   "rfbEgo": {
+    "flags": [
+      "HIDE_TYPE",
+      "SHOW_MODS",
+      "STEALTH",
+      "XTRA_MIGHT"
+    ],
     "rarity": 16,
     "sourceIndex": 141,
     "types": [

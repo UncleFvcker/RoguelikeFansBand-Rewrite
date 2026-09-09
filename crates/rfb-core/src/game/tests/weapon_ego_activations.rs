@@ -42,6 +42,7 @@ fn mattock_natural_disruption_activation_round_trips() {
         depth: 50,
         source: LootSource::MonsterDeath {
             actor_id: "test.loot-source".to_owned(),
+            themed: false,
         },
     };
     game.rng = RfbRng::seeded(63);
@@ -166,6 +167,7 @@ fn riding_charge_game(seed: u64) -> Game {
     affix.device_generation = Some(rfb_content::ItemDeviceGenerationDefinition {
         activation_optional: false,
         activations: vec![rfb_content::ItemDeviceActivationDefinition {
+            rfb_value: None,
             id: ACTIVATION_ID.to_owned(),
             name_key: "test-device-activation-riding-charge-name".to_owned(),
             weight: 1,

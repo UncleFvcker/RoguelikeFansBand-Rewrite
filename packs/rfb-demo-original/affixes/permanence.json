@@ -27,6 +27,24 @@
     "fire": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "HOLD_LIFE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "SUST_CHR",
+      "SUST_CON",
+      "SUST_DEX",
+      "SUST_INT",
+      "SUST_STR",
+      "SUST_WIS",
+      "XTRA_H_RES"
+    ],
     "rarity": 1,
     "sourceIndex": 80,
     "types": [

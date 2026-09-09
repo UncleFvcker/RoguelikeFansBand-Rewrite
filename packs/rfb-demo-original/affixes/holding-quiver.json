@@ -6,6 +6,7 @@
   "id": "rfb-legacy.affix.holding-quiver",
   "nameKey": "affix-legacy-holding-quiver-name",
   "rfbEgo": {
+    "flags": [],
     "rarity": 1,
     "sourceIndex": 265,
     "types": [

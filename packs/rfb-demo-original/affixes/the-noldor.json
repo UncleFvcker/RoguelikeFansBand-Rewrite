@@ -25,6 +25,24 @@
     "light": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "BRAND_COLD",
+      "CHR",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LITE",
+      "REGEN",
+      "RES_LITE",
+      "SEE_INVIS",
+      "SLAY_DEMON",
+      "SLAY_EVIL",
+      "SLAY_UNDEAD",
+      "SLOW_DIGEST",
+      "SPEED"
+    ],
     "rarity": 50,
     "sourceIndex": 23,
     "types": [

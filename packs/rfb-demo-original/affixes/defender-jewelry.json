@@ -28,6 +28,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -70,6 +71,7 @@
         "rfbBiases": [
           "poison"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "self"
@@ -106,6 +108,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 5500,
         "target": {
           "modes": [
             "self"
@@ -145,6 +148,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "self"
@@ -181,6 +185,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 14000,
         "target": {
           "modes": [
             "self"
@@ -203,6 +208,12 @@
   "id": "rfb-legacy.affix.defender-jewelry",
   "nameKey": "affix-legacy-defender-jewelry-name",
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE"
+    ],
     "rarity": 6,
     "sourceIndex": 200,
     "types": [

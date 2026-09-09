@@ -9,6 +9,11 @@
     "hold-life"
   ],
   "rfbEgo": {
+    "flags": [
+      "CHR",
+      "HOLD_LIFE",
+      "STR"
+    ],
     "rarity": 2,
     "sourceIndex": 91,
     "types": [

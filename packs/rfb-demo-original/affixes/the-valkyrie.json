@@ -32,6 +32,7 @@
           "intervalTicks": 500
         },
         "rfbBiases": [],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -54,6 +55,17 @@
   "id": "rfb-legacy.affix.the-valkyrie",
   "nameKey": "affix-legacy-the-valkyrie-name",
   "rfbEgo": {
+    "flags": [
+      "CHR",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FEAR",
+      "SHOW_MODS",
+      "SPEED",
+      "STR"
+    ],
     "rarity": 32,
     "sourceIndex": 119,
     "types": [

@@ -26,6 +26,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 10500,
         "target": {
           "modes": [
             "self"
@@ -58,6 +59,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 20400,
         "target": {
           "modes": [
             "self"
@@ -99,6 +101,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 12500,
         "target": {
           "modes": [
             "self"
@@ -138,6 +141,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 16875,
         "target": {
           "modes": [
             "self"
@@ -157,6 +161,10 @@
     "nether": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "RES_NETHER",
+      "STR"
+    ],
     "rarity": 3,
     "sourceIndex": 92,
     "types": [

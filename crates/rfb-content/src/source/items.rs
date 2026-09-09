@@ -41,6 +41,8 @@ pub(crate) struct SourceItemDefinition {
     mogaminator_rare: bool,
     #[serde(default)]
     rfb_base_kind: Option<RfbBaseKindDefinition>,
+    #[serde(default)]
+    rfb_value: Option<crate::RfbItemValueDefinition>,
     weight_tenths_pound: u16,
     #[serde(default)]
     tunneling_pval: i16,
@@ -154,6 +156,8 @@ struct SourceItemDeviceActivationDefinition {
     max_depth: u16,
     device_check_difficulty: i32,
     #[serde(default)]
+    rfb_value: Option<i32>,
+    #[serde(default)]
     rfb_biases: BTreeSet<RfbActivationBiasDefinition>,
     charges: ItemDeviceChargeRangeDefinition,
     #[serde(default)]
@@ -210,6 +214,7 @@ impl SourceItemDeviceActivationDefinition {
             max_depth: self.max_depth,
             device_check_difficulty: self.device_check_difficulty,
             rfb_biases: self.rfb_biases,
+            rfb_value: self.rfb_value,
             charges: self.charges,
             recovery: self.recovery,
             target: self.target,
@@ -276,6 +281,7 @@ impl SourceItemDefinition {
             generation_level: self.generation_level,
             mogaminator_rare: self.mogaminator_rare,
             rfb_base_kind: self.rfb_base_kind,
+            rfb_value: self.rfb_value,
             weight_tenths_pound: self.weight_tenths_pound,
             tunneling_pval: self.tunneling_pval,
             max_stack: self.max_stack,

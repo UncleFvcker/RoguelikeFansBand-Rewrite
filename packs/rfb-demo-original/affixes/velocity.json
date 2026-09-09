@@ -7,6 +7,9 @@
   "id": "rfb-legacy.affix.velocity",
   "nameKey": "affix-legacy-velocity-name",
   "rfbEgo": {
+    "flags": [
+      "AWARE"
+    ],
     "rarity": 1,
     "sourceIndex": 161,
     "types": [

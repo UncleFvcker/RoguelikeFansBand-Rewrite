@@ -10,6 +10,11 @@
     "sustain-charisma"
   ],
   "rfbEgo": {
+    "flags": [
+      "CHR",
+      "RES_FEAR",
+      "SUST_CHR"
+    ],
     "rarity": 2,
     "sourceIndex": 112,
     "types": [

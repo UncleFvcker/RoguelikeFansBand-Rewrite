@@ -32,6 +32,7 @@
           "intervalTicks": 2000
         },
         "rfbBiases": [],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "self"
@@ -57,6 +58,16 @@
     "nexus": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "FREE_ACT",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_NEXUS",
+      "SPEED"
+    ],
     "rarity": 250,
     "sourceIndex": 150,
     "types": [

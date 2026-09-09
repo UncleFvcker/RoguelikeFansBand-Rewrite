@@ -22,7 +22,8 @@
     "kind": "items",
     "minimumQuality": "exceptional",
     "themeChancePercent": 50,
-    "themeTableId": "demo.loot-table.ninja"
+    "themeTableId": "demo.loot-table.ninja",
+    "greatOnly": true
   },
   "defense": 19,
   "descriptionKey": "actor-demo-festivus-the-teenage-offscreen-ninja-drolem-description",

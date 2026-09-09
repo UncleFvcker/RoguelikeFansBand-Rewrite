@@ -31,6 +31,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 300,
         "target": {
           "modes": [
             "self"
@@ -78,6 +79,7 @@
           "intervalTicks": 500
         },
         "rfbBiases": [],
+        "rfbValue": 1300,
         "target": {
           "modes": [
             "self"
@@ -116,6 +118,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -153,6 +156,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 10000,
         "target": {
           "modes": [
             "self"
@@ -172,6 +176,11 @@
     "light": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "RES_LITE",
+      "SPEED",
+      "XTRA_H_RES"
+    ],
     "rarity": 16,
     "sourceIndex": 242,
     "types": [

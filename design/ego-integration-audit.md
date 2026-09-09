@@ -51,16 +51,18 @@ node scripts/audit-egos.mjs D:/codex/Frogcomposband/master
 
 ## 尚未闭合的共享契约
 
+E8.1 已实现七类 COST_REAL、实际实例读取和生成上下文；见[本批记录](contract-v312-real-equipment-value.md)。
+原审计将 Vortex 笼统列为直接生成修正缺口，本次未在相关三个源文件发现该直接条件，改为待核查装备模板/消费者链。
 六项的依赖、实施批次与验收条件见[共享生成契约实施计划](ego-shared-generation-plan.md)。
 
 | 范围 | 原版要求 | 尚缺工作 |
 | --- | --- | --- |
 | 自然装备的负向质量 | `object2.c:2125`；`curse_object` / `one_biff` | 负向 power 的条件掷骰、属性处理及依赖价值的诅咒强度；当前不是完整负向生成流程 |
 | 非弹药随机神器 | `ego.c:303` 的 `_check_rand_art` / `_art_create_random` | 接入真实随机神器生成及它占用的 RNG；固定神器尝试不能替代此分支 |
-| 戒指与项链 | `ego.c:411` 的价值限制与最多 1000 次重试 | 真实 `obj_value_real` 评估、上下限和候选重试；目前已有各 Ego 能力分支，但不等价于完整首饰生成分布 |
+| 戒指与项链 | `ego.c:411` 的价值限制与最多 1000 次重试 | 上下限和候选重试（E8.1 已提供真实 `obj_value_real` 评估）；目前已有各 Ego 能力分支，但不等价于完整首饰生成分布 |
 | 龙系基础装备 | `object2.c:2312` 的 `dragon_resist` 与生成前抑制 | 基础随机抗性和 Ego 前置概率；已有龙甲 Ego 与吐息不代表基础物品分支完整 |
 | 背包 | `ego.c:3691`，`TV_QUIVER/SV_BAG` | 与当前背包容器系统对接容量和适用 Ego；现有四种箭袋 Ego 不能自动推广到背包 |
-| 尚未开放的职业/种族 | Mauler、Bard、Monster Ring、Vortex 等专属生成修正 | 随真实职业/种族入口接入后验证，不能用当前构筑测试作替代 |
+| 尚未开放的职业/种族 | Mauler、Bard、Monster Ring 等专属生成修正 | 随真实职业/种族入口接入后验证，不能用当前构筑测试作替代 |
 
 上述缺口不以静态 affix 或未使用标记“清零”。Craft 领域四册/32 法术仍属另一个导入任务。
 怪物主题池此次只统一 Ego/质量调度，未宣称把既有所有主题的基础物品分配表完整重建。

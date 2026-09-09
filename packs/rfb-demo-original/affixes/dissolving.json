@@ -12,6 +12,11 @@
   "id": "rfb-legacy.affix.dissolving",
   "nameKey": "affix-legacy-dissolving-name",
   "rfbEgo": {
+    "flags": [
+      "BRAND_ACID",
+      "IGNORE_ACID",
+      "TUNNEL"
+    ],
     "rarity": 2,
     "sourceIndex": 41,
     "types": [

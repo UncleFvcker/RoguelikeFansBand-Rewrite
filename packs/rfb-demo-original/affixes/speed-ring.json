@@ -34,6 +34,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "self"
@@ -67,6 +68,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5425,
         "target": {
           "modes": [
             "self"
@@ -104,6 +106,7 @@
           "intervalTicks": 9990
         },
         "rfbBiases": [],
+        "rfbValue": 13000,
         "target": {
           "modes": [
             "self"
@@ -120,6 +123,11 @@
   "id": "rfb-legacy.affix.speed-ring",
   "nameKey": "affix-legacy-speed-ring-name",
   "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "HIDE_TYPE",
+      "SPEED"
+    ],
     "rarity": 5,
     "sourceIndex": 209,
     "types": [

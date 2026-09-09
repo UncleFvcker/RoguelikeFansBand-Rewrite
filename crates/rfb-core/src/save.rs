@@ -709,6 +709,8 @@ fn validate_item_runtime_state(
                     activation.name_key == profile.name_key
                         && activation.cost == profile.charges.cost
                         && activation.device_check_difficulty == difficulty
+                        && (profile.rfb_value.is_none()
+                            || i32::from(activation.power) == profile.device_check_difficulty)
                         && activation.target_spec == target_spec
                         && profile.min_depth <= activation.power
                         && activation.power <= profile.max_depth
@@ -1108,6 +1110,8 @@ fn rolled_affixes_to_save(rolled_affixes: &[RolledAffixState]) -> Vec<RolledAffi
             let mut status_immunities = properties.status_immunities.clone();
             status_immunities.sort();
             RolledAffixSaveDto {
+                rfb_pval: rfb_pval_to_save(properties.rfb_pval.as_ref()),
+                rfb_flags: properties.rfb_flags.iter().cloned().collect(),
                 device_pval: rolled.device_pval,
                 ammunition_capacity: rolled.properties.ammunition_capacity,
                 affix_id: rolled.affix_id.clone(),
@@ -1164,6 +1168,8 @@ fn intrinsic_properties_to_save(
     let mut status_immunities = properties.status_immunities.clone();
     status_immunities.sort();
     ItemIntrinsicPropertiesSaveDto {
+        rfb_pval: rfb_pval_to_save(properties.rfb_pval.as_ref()),
+        rfb_flags: properties.rfb_flags.iter().cloned().collect(),
         ammunition_capacity: properties.ammunition_capacity,
         modifiers: stat_modifiers_to_dto(&properties.modifiers),
         equipment_bonuses: equipment_bonuses_to_dto(&properties.equipment_bonuses),
@@ -1197,6 +1203,60 @@ fn intrinsic_properties_to_save(
             .map(equipment_passive_dto)
             .collect(),
     }
+}
+
+fn rfb_flags_from_save(flags: Vec<String>) -> Result<BTreeSet<String>, CoreError> {
+    if flags.windows(2).any(|pair| pair[0] >= pair[1])
+        || flags
+            .iter()
+            .any(|flag| !rfb_content::valid_rfb_runtime_flag(flag))
+    {
+        return Err(CoreError::InvalidSave("invalid original item flags"));
+    }
+    Ok(flags.into_iter().collect())
+}
+
+fn rfb_pval_to_save(
+    value: Option<&rfb_content::RfbPvalDefinition>,
+) -> Option<rfb_protocol::RfbPvalSaveDto> {
+    value.map(|value| {
+        let mut flags: Vec<_> = value
+            .flags
+            .iter()
+            .map(|flag| flag.source_flag().to_owned())
+            .collect();
+        flags.sort();
+        rfb_protocol::RfbPvalSaveDto {
+            value: value.value,
+            flags,
+        }
+    })
+}
+
+fn rfb_pval_from_save(
+    value: Option<rfb_protocol::RfbPvalSaveDto>,
+) -> Result<Option<rfb_content::RfbPvalDefinition>, CoreError> {
+    value
+        .map(|value| {
+            if value.flags.windows(2).any(|pair| pair[0] >= pair[1]) {
+                return Err(CoreError::InvalidSave("RFB pval flags are invalid"));
+            }
+            let flags = value
+                .flags
+                .iter()
+                .map(|token| {
+                    rfb_content::RfbPvalFlagDefinition::ALL
+                        .into_iter()
+                        .find(|flag| flag.source_flag() == token)
+                        .ok_or(CoreError::InvalidSave("RFB pval flag is unknown"))
+                })
+                .collect::<Result<_, _>>()?;
+            Ok(rfb_content::RfbPvalDefinition {
+                value: value.value,
+                flags,
+            })
+        })
+        .transpose()
 }
 
 fn intrinsic_properties_from_save(
@@ -1240,6 +1300,8 @@ fn intrinsic_properties_from_save(
         resistances.insert(damage_type, level);
     }
     let properties = AffixPropertyBundleDefinition {
+        rfb_pval: rfb_pval_from_save(saved.rfb_pval)?,
+        rfb_flags: rfb_flags_from_save(saved.rfb_flags)?,
         ammunition_capacity: saved.ammunition_capacity,
         modifiers: stat_modifiers_from_dto(saved.modifiers),
         equipment_bonuses: equipment_bonuses_from_dto(saved.equipment_bonuses),
@@ -1343,6 +1405,8 @@ fn rolled_affixes_from_save(
                 resistances.insert(damage_type, level);
             }
             let properties = AffixPropertyBundleDefinition {
+                rfb_pval: rfb_pval_from_save(rolled.rfb_pval)?,
+                rfb_flags: rfb_flags_from_save(rolled.rfb_flags)?,
                 ammunition_capacity: rolled.ammunition_capacity,
                 modifiers: stat_modifiers_from_dto(rolled.modifiers),
                 equipment_bonuses: equipment_bonuses_from_dto(rolled.equipment_bonuses),

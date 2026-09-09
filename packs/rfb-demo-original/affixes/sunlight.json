@@ -31,6 +31,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 300,
         "target": {
           "modes": [
             "self"
@@ -78,6 +79,7 @@
           "intervalTicks": 500
         },
         "rfbBiases": [],
+        "rfbValue": 1300,
         "target": {
           "modes": [
             "self"
@@ -113,6 +115,7 @@
           "intervalTicks": 250
         },
         "rfbBiases": [],
+        "rfbValue": 930,
         "target": {
           "modes": [
             "direction",
@@ -148,6 +151,7 @@
           "intervalTicks": 200
         },
         "rfbBiases": [],
+        "rfbValue": 540,
         "target": {
           "modes": [
             "direction",
@@ -185,6 +189,7 @@
           "intervalTicks": 1000
         },
         "rfbBiases": [],
+        "rfbValue": 2600,
         "target": {
           "modes": [
             "direction",
@@ -223,6 +228,7 @@
           "intervalTicks": 1000
         },
         "rfbBiases": [],
+        "rfbValue": 10000,
         "target": {
           "modes": [
             "direction",
@@ -261,6 +267,7 @@
           "intervalTicks": 1250
         },
         "rfbBiases": [],
+        "rfbValue": 6000,
         "target": {
           "modes": [
             "direction",
@@ -338,6 +345,7 @@
         "rfbBiases": [
           "chaos"
         ],
+        "rfbValue": 7200,
         "target": {
           "modes": [
             "self"
@@ -361,6 +369,10 @@
     "light": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "LITE",
+      "RES_LITE"
+    ],
     "rarity": 4,
     "sourceIndex": 117,
     "types": [

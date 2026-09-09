@@ -26,6 +26,7 @@
           "intervalTicks": 500
         },
         "rfbBiases": [],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -52,6 +53,16 @@
     "poison": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "DEC_INT",
+      "IGNORE_ACID",
+      "REGEN",
+      "RES_ACID",
+      "RES_POIS",
+      "SHOW_MODS",
+      "STR",
+      "XTRA_H_RES"
+    ],
     "rarity": 8,
     "sourceIndex": 72,
     "types": [

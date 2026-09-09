@@ -182,7 +182,7 @@ pub(super) fn materialize_light(
     let mut profile = None;
     match index {
         236 => profile = affix.device_generation.as_ref()?.activations.first(),
-        238 => properties.equipment_bonuses.infravision += i32::from(randint1(rng, 3)),
+        238 => armor::apply_pval(properties, armor::Pval::Infra, i32::from(randint1(rng, 3))),
         242 => {
             let stealth = one_in(rng, 7);
             if one_in(rng, 5) {
@@ -195,9 +195,9 @@ pub(super) fn materialize_light(
                 add_one_high_resistance(rng, properties);
             }
             let pval = i32::from(randint1(rng, 2));
-            properties.modifiers.speed += pval;
+            armor::apply_pval(properties, armor::Pval::Speed, pval);
             if stealth {
-                properties.equipment_bonuses.stealth_skill += pval;
+                armor::apply_pval(properties, armor::Pval::Stealth, pval);
             }
         }
         243 => {
@@ -537,6 +537,7 @@ mod tests {
             vec!["rfb-legacy.affix.endless-quiver".to_owned()],
             |_| 100,
             100,
+            2,
         );
         result.apply_to(&mut game.items[index]);
         game.items.retain(|item| {
@@ -691,6 +692,7 @@ mod tests {
             vec!["rfb-legacy.affix.darkness-light".to_owned()],
             |_| 50,
             50,
+            2,
         );
         result.apply_to(&mut game.items[index]);
         assert_eq!(game.items[index].fuel.unwrap().current, 0);

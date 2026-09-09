@@ -1,29 +1,55 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.crisdurian",
-  "nameKey": "item-demo-crisdurian-name",
-  "descriptionKey": "item-demo-crisdurian-description",
-  "elementalDestructionVulnerabilities": ["acid", "fire"],
-  "glyph": "|",
-  "generationLevel": 60,
-  "weightTenthsPound": 260,
-  "maxStack": 1,
-  "baseValue": 111000,
-  "equipmentSlot": "weapon",
-  "weaponProficiencyBaseItemId": "demo.item.executioners-sword",
   "artifactGeneration": {
-    "sourceIndex": 80,
     "baseItemKindId": "demo.item.executioners-sword",
+    "instant": false,
     "rarityOneIn": 15,
-    "instant": false
+    "sourceIndex": 80
   },
+  "baseValue": 111000,
+  "brands": [
+    "poison"
+  ],
+  "descriptionKey": "item-demo-crisdurian-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "glyph": "|",
+  "id": "demo.item.crisdurian",
+  "maxStack": 1,
   "meleeProfile": {
     "attacks": 1,
-    "toHit": 23,
-    "toDamage": 24,
     "damageDice": 4,
-    "damageSides": 6
+    "damageSides": 6,
+    "toDamage": 24,
+    "toHit": 23
+  },
+  "nameKey": "item-demo-crisdurian-name",
+  "passives": [
+    "see-invisible"
+  ],
+  "resistsMonsterDestruction": true,
+  "resistsProjectionDestruction": true,
+  "rfbValue": {
+    "flags": [
+      "BRAND_POIS",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_DRAGON",
+      "SLAY_EVIL",
+      "SLAY_GIANT",
+      "SLAY_HUMAN",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "SLAY_UNDEAD",
+      "VORPAL"
+    ],
+    "pval": 0,
+    "toArmor": 0
   },
   "slays": {
     "dragon": "slay",
@@ -34,9 +60,12 @@
     "troll": "slay",
     "undead": "slay"
   },
-  "brands": ["poison"],
-  "passives": ["see-invisible"],
-  "resistsMonsterDestruction": true,
-  "resistsProjectionDestruction": true,
-  "tags": ["artifact", "equipment", "old-castle-reward", "weapon"]
+  "tags": [
+    "artifact",
+    "equipment",
+    "old-castle-reward",
+    "weapon"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.executioners-sword",
+  "weightTenthsPound": 260
 }

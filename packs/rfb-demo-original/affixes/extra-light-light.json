@@ -10,6 +10,9 @@
   "id": "rfb-legacy.affix.extra-light-light",
   "nameKey": "affix-legacy-extra-light-light-name",
   "rfbEgo": {
+    "flags": [
+      "LITE"
+    ],
     "rarity": 1,
     "sourceIndex": 235,
     "types": [

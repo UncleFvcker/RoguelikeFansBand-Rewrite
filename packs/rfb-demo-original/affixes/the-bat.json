@@ -13,6 +13,16 @@
     "dark": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "HIDE_TYPE",
+      "INFRA",
+      "LEVITATION",
+      "RES_DARK",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SPEED",
+      "STEALTH"
+    ],
     "rarity": 16,
     "sourceIndex": 102,
     "types": [

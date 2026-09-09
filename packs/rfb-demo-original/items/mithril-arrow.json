@@ -32,6 +32,17 @@
     "sval": 3,
     "tval": 17
   },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SHOW_MODS"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "ammunition",
     "rfb-compatibility"

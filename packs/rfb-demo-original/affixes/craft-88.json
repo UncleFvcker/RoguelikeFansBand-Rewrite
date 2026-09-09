@@ -6,6 +6,10 @@
   "id": "rfb-legacy.affix.craft-88",
   "nameKey": "affix-legacy-craft-88-name",
   "rfbEgo": {
+    "flags": [
+      "MAGIC_MASTERY",
+      "WIS"
+    ],
     "rarity": 1,
     "sourceIndex": 88,
     "types": [

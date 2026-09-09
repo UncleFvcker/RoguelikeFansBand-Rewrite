@@ -28,6 +28,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -61,6 +62,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -102,6 +104,7 @@
           "priestly",
           "demon"
         ],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -135,6 +138,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -168,6 +172,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5425,
         "target": {
           "modes": [
             "self"
@@ -190,6 +195,13 @@
   "id": "rfb-legacy.affix.dwarven-70",
   "nameKey": "affix-legacy-dwarven-70-name",
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "STR"
+    ],
     "rarity": 3,
     "sourceIndex": 70,
     "types": [

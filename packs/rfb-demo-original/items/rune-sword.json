@@ -32,6 +32,18 @@
     "sval": 34,
     "tval": 23
   },
+  "rfbValue": {
+    "flags": [
+      "BRAND_VAMP",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "NO_ENCHANT"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",

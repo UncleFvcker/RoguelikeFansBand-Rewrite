@@ -9,6 +9,12 @@
     "dual-wielding"
   ],
   "rfbEgo": {
+    "flags": [
+      "DEX",
+      "DUAL_WIELDING",
+      "HIDE_TYPE",
+      "SHOW_MODS"
+    ],
     "rarity": 16,
     "sourceIndex": 140,
     "types": [

@@ -33,6 +33,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -70,6 +71,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 10000,
         "target": {
           "modes": [
             "self"
@@ -143,6 +145,7 @@
           "intervalTicks": 500
         },
         "rfbBiases": [],
+        "rfbValue": 2000,
         "target": {
           "modes": [
             "self"
@@ -178,6 +181,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "item"
@@ -211,6 +215,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 2500,
         "target": {
           "modes": [
             "self"
@@ -230,6 +235,10 @@
     "auto-identify"
   ],
   "rfbEgo": {
+    "flags": [
+      "INT",
+      "LORE2"
+    ],
     "rarity": 1,
     "sourceIndex": 85,
     "types": [

@@ -12,6 +12,10 @@
     "revenge-aura"
   ],
   "rfbEgo": {
+    "flags": [
+      "AURA_REVENGE",
+      "IGNORE_ACID"
+    ],
     "rarity": 32,
     "sourceIndex": 99,
     "types": [

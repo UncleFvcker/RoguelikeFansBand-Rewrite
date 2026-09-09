@@ -6,6 +6,12 @@
   "id": "rfb-legacy.affix.wild",
   "nameKey": "affix-legacy-wild-name",
   "rfbEgo": {
+    "flags": [
+      "BRAND_WILD",
+      "XTRA_H_RES",
+      "XTRA_POWER",
+      "XTRA_RES"
+    ],
     "rarity": 16,
     "sourceIndex": 16,
     "types": [

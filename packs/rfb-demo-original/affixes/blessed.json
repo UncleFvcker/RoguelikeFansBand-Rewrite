@@ -7,6 +7,11 @@
   "id": "rfb-legacy.affix.blessed",
   "nameKey": "affix-legacy-blessed-name",
   "rfbEgo": {
+    "flags": [
+      "BLESSED",
+      "WIS",
+      "XTRA_POWER"
+    ],
     "rarity": 8,
     "sourceIndex": 4,
     "types": [

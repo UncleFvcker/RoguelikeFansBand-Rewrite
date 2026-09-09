@@ -6,6 +6,9 @@
   "id": "rfb-legacy.affix.attack",
   "nameKey": "affix-legacy-attack-name",
   "rfbEgo": {
+    "flags": [
+      "STR"
+    ],
     "rarity": 1,
     "sourceIndex": 87,
     "types": [

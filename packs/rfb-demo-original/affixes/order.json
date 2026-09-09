@@ -10,6 +10,11 @@
     "sound": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "BRAND_ORDER",
+      "RES_SHARDS",
+      "RES_SOUND"
+    ],
     "rarity": 16,
     "sourceIndex": 17,
     "types": [

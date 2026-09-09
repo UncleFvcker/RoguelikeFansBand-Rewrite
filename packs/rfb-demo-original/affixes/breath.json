@@ -30,6 +30,7 @@
           "energyPerMille": 1000,
           "intervalTicks": 350
         },
+        "rfbValue": 10000,
         "target": {
           "modes": [
             "direction"
@@ -63,6 +64,7 @@
           "energyPerMille": 1000,
           "intervalTicks": 500
         },
+        "rfbValue": 12650,
         "target": {
           "modes": [
             "direction"
@@ -98,6 +100,7 @@
           "energyPerMille": 1000,
           "intervalTicks": 200
         },
+        "rfbValue": 7150,
         "target": {
           "modes": [
             "direction"
@@ -131,6 +134,7 @@
           "energyPerMille": 1000,
           "intervalTicks": 500
         },
+        "rfbValue": 9900,
         "target": {
           "modes": [
             "direction"
@@ -147,6 +151,9 @@
   "id": "rfb-legacy.affix.breath",
   "nameKey": "affix-legacy-breath-name",
   "rfbEgo": {
+    "flags": [
+      "CON"
+    ],
     "rarity": 1,
     "sourceIndex": 86,
     "types": [

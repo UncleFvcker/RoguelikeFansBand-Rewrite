@@ -6,6 +6,7 @@
   "id": "rfb-legacy.affix.blasted",
   "nameKey": "affix-legacy-blasted-name",
   "rfbEgo": {
+    "flags": [],
     "rarity": 0,
     "sourceIndex": 260,
     "types": [

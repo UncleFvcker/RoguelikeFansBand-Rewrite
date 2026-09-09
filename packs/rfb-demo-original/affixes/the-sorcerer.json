@@ -18,6 +18,19 @@
     "sustain-intelligence"
   ],
   "rfbEgo": {
+    "flags": [
+      "DEC_CON",
+      "DEC_MANA",
+      "EASY_SPELL",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "REFLECT",
+      "SPELL_CAP",
+      "SUST_INT"
+    ],
     "rarity": 10,
     "sourceIndex": 82,
     "types": [

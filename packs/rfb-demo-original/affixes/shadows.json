@@ -12,6 +12,11 @@
     "dark": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "DARKNESS",
+      "RES_DARK",
+      "STEALTH"
+    ],
     "rarity": 8,
     "sourceIndex": 100,
     "types": [

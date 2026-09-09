@@ -12,6 +12,12 @@
   "id": "rfb-legacy.affix.resistance-device",
   "nameKey": "affix-legacy-resistance-device-name",
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE"
+    ],
     "rarity": 1,
     "sourceIndex": 250,
     "types": [

@@ -17,15 +17,19 @@
 
 | 项目 | 值 | 来源 |
 | --- | --- | --- |
-| 协议 | 1.234 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | v111 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload | v6 / v6；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.391.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
-| 行为基线 | contract-v311，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
+| 协议 | 1.235 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | v112 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload | v7 / v7；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
+| 内容包 | 1.392.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 行为基线 | contract-v312，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
 | 内容定义数量 | 地形 201、角色 1402、物品 363、能力 1838、词缀 168、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
 
 版本与哈希以源文件为准。玩家入口以 [PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS](../web/src/session-shell.ts) 和 [新游戏表单](../web/index.html) 为准。
+
+E8.1 已接入七类装备的真实估值、原始 flags/pval 持久化及有符号生成 power。
+295 组独立 C 公式输入与 146 个真实底材/固定神器输入验证通过；值不进入 UI 或商店定价。
+负向生成、随机神器及首饰筛选仍按[共享生成计划](ego-shared-generation-plan.md)继续；详见[本批记录](contract-v312-real-equipment-value.md)。
 
 ## 职业与玩家入口
 

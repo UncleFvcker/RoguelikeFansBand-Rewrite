@@ -37,6 +37,7 @@
         "rfbBiases": [
           "electricity"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -75,6 +76,7 @@
         "rfbBiases": [
           "electricity"
         ],
+        "rfbValue": 550,
         "target": {
           "modes": [
             "direction",
@@ -115,6 +117,7 @@
         "rfbBiases": [
           "electricity"
         ],
+        "rfbValue": 720,
         "target": {
           "modes": [
             "direction",
@@ -156,6 +159,7 @@
         "rfbBiases": [
           "electricity"
         ],
+        "rfbValue": 1380,
         "target": {
           "modes": [
             "direction",
@@ -197,6 +201,7 @@
         "rfbBiases": [
           "electricity"
         ],
+        "rfbValue": 6650,
         "target": {
           "modes": [
             "direction",
@@ -225,6 +230,11 @@
     "electricity": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "AURA_ELEC",
+      "IGNORE_ELEC",
+      "RES_ELEC"
+    ],
     "rarity": 4,
     "sourceIndex": 97,
     "types": [

@@ -18,6 +18,11 @@
     "sval": 0,
     "tval": 45
   },
+  "rfbValue": {
+    "flags": [],
+    "pval": 0,
+    "toArmor": 0
+  },
   "tags": [
     "equipment",
     "jewelry",

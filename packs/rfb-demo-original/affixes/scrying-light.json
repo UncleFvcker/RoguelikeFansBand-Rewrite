@@ -6,6 +6,7 @@
   "id": "rfb-legacy.affix.scrying-light",
   "nameKey": "affix-legacy-scrying-light-name",
   "rfbEgo": {
+    "flags": [],
     "rarity": 8,
     "sourceIndex": 243,
     "types": [

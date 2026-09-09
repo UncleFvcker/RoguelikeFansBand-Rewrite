@@ -476,6 +476,14 @@
           "type": "array",
           "uniqueItems": true
         },
+        "rfbValue": {
+          "default": null,
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
         "target": {
           "$ref": "#/$defs/AbilityTargetDefinition"
         },
@@ -838,6 +846,37 @@
         "sourceIndex",
         "tval",
         "sval"
+      ],
+      "type": "object"
+    },
+    "RfbItemValueDefinition": {
+      "additionalProperties": false,
+      "description": "Source information lost when flags/pval and base AC/+AC are projected into\ngameplay bonuses. Runtime enchantments and generated properties remain separate.",
+      "properties": {
+        "flags": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "pval": {
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "integer"
+        },
+        "toArmor": {
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "flags",
+        "pval",
+        "toArmor"
       ],
       "type": "object"
     },
@@ -1358,6 +1397,17 @@
       "anyOf": [
         {
           "$ref": "#/$defs/RfbBaseKindDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "rfbValue": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RfbItemValueDefinition"
         },
         {
           "type": "null"

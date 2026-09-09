@@ -15,6 +15,17 @@
   "id": "rfb-legacy.affix.holy-might",
   "nameKey": "affix-legacy-holy-might-name",
   "rfbEgo": {
+    "flags": [
+      "BLESSED",
+      "BRAND_FIRE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SLAY_DEMON",
+      "SLAY_EVIL",
+      "SLAY_UNDEAD"
+    ],
     "rarity": 7,
     "sourceIndex": 182,
     "types": [

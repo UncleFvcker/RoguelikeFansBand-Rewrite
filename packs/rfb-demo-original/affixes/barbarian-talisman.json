@@ -28,6 +28,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -45,6 +46,9 @@
   "nameKey": "affix-legacy-barbarian-talisman-name",
   "namePlacement": "full-name",
   "rfbEgo": {
+    "flags": [
+      "FULL_NAME"
+    ],
     "rarity": 2,
     "sourceIndex": 220,
     "types": [

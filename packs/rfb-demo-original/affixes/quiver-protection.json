@@ -8,6 +8,7 @@
   "preservesOrdinaryQuality": true,
   "protectsQuiverAmmunition": true,
   "rfbEgo": {
+    "flags": [],
     "rarity": 1,
     "sourceIndex": 266,
     "types": [

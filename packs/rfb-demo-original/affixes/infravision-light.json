@@ -7,6 +7,10 @@
   "id": "rfb-legacy.affix.infravision-light",
   "nameKey": "affix-legacy-infravision-light-name",
   "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "INFRA"
+    ],
     "rarity": 2,
     "sourceIndex": 238,
     "types": [

@@ -7,6 +7,7 @@
   "id": "rfb-legacy.affix.telepathy",
   "nameKey": "affix-legacy-telepathy-name",
   "rfbEgo": {
+    "flags": [],
     "rarity": 2,
     "sourceIndex": 125,
     "types": [

@@ -24,6 +24,7 @@
           "intervalTicks": 50
         },
         "rfbBiases": [],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -41,6 +42,9 @@
   "id": "rfb-legacy.affix.gnomish",
   "nameKey": "affix-legacy-gnomish-name",
   "rfbEgo": {
+    "flags": [
+      "FREE_ACT"
+    ],
     "rarity": 2,
     "sourceIndex": 146,
     "types": [

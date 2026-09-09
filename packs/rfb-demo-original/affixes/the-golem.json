@@ -18,6 +18,21 @@
     "poison": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "CON",
+      "DEC_DEX",
+      "DEC_SPEED",
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "LIFE",
+      "RES_POIS",
+      "SEE_INVIS",
+      "STR",
+      "XTRA_H_RES"
+    ],
     "rarity": 12,
     "sourceIndex": 152,
     "types": [

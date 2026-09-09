@@ -6,6 +6,9 @@
   "id": "rfb-legacy.affix.extra-might",
   "nameKey": "affix-legacy-extra-might-name",
   "rfbEgo": {
+    "flags": [
+      "STR"
+    ],
     "rarity": 2,
     "sourceIndex": 162,
     "types": [

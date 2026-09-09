@@ -6,6 +6,10 @@
   "id": "rfb-legacy.affix.extra-shots",
   "nameKey": "affix-legacy-extra-shots-name",
   "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "XTRA_SHOTS"
+    ],
     "rarity": 2,
     "sourceIndex": 163,
     "types": [

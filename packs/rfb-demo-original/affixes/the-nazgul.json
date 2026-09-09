@@ -26,6 +26,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 10500,
         "target": {
           "modes": [
             "self"
@@ -58,6 +59,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 20400,
         "target": {
           "modes": [
             "self"
@@ -94,6 +96,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 11500,
         "target": {
           "modes": [
             "direction",
@@ -137,6 +140,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 12500,
         "target": {
           "modes": [
             "self"
@@ -182,6 +186,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -217,6 +222,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "direction",
@@ -257,6 +263,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 930,
         "target": {
           "modes": [
             "direction",
@@ -298,6 +305,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 1160,
         "target": {
           "modes": [
             "direction",
@@ -339,6 +347,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 16550,
         "target": {
           "modes": [
             "direction",
@@ -381,6 +390,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 3425,
         "target": {
           "modes": [
             "direction",
@@ -422,6 +432,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 6000,
         "target": {
           "modes": [
             "direction",
@@ -464,6 +475,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 7500,
         "target": {
           "modes": [
             "direction",
@@ -509,6 +521,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 2000,
         "target": {
           "modes": [
             "self"
@@ -552,6 +565,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 1740,
         "target": {
           "modes": [
             "self"
@@ -590,6 +604,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 2450,
         "target": {
           "modes": [
             "direction",
@@ -631,6 +646,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 16875,
         "target": {
           "modes": [
             "self"
@@ -668,6 +684,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "self"
@@ -706,6 +723,7 @@
         "rfbBiases": [
           "necromantic"
         ],
+        "rfbValue": 600,
         "target": {
           "modes": [
             "self"
@@ -737,6 +755,28 @@
     "poison": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "DEC_LIFE",
+      "DEC_WIS",
+      "DRAIN_EXP",
+      "FREE_ACT",
+      "HEAVY_CURSE",
+      "HIDE_TYPE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RANDOM_CURSE2",
+      "RES_COLD",
+      "RES_NETHER",
+      "RES_POIS",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SPEED",
+      "STEALTH",
+      "VULN_LITE",
+      "XTRA_H_RES"
+    ],
     "rarity": 0,
     "sourceIndex": 103,
     "types": [

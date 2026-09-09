@@ -9,6 +9,9 @@
     "regeneration"
   ],
   "rfbEgo": {
+    "flags": [
+      "REGEN"
+    ],
     "rarity": 2,
     "sourceIndex": 252,
     "types": [

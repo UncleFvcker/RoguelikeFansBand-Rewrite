@@ -30,6 +30,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -65,6 +66,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -104,6 +106,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 975,
         "target": {
           "modes": [
             "self"
@@ -163,6 +166,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -222,6 +226,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 11210,
         "target": {
           "modes": [
             "self"
@@ -263,6 +268,7 @@
           "priestly",
           "ranger"
         ],
+        "rfbValue": 500,
         "target": {
           "modes": [
             "self"
@@ -302,6 +308,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "self"
@@ -336,6 +343,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -370,6 +378,7 @@
         "rfbBiases": [
           "priestly"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -403,6 +412,7 @@
           "priestly",
           "mage"
         ],
+        "rfbValue": 1750,
         "target": {
           "modes": [
             "self"
@@ -423,6 +433,10 @@
     "sustain-wisdom"
   ],
   "rfbEgo": {
+    "flags": [
+      "SUST_WIS",
+      "WIS"
+    ],
     "rarity": 1,
     "sourceIndex": 111,
     "types": [

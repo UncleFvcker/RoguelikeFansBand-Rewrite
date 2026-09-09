@@ -21,6 +21,7 @@
           "energyPerMille": 1000,
           "intervalTicks": 1500
         },
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -38,6 +39,9 @@
   "nameKey": "affix-legacy-endless-quiver-name",
   "namePlacement": "full-name",
   "rfbEgo": {
+    "flags": [
+      "FULL_NAME"
+    ],
     "rarity": 4,
     "sourceIndex": 267,
     "types": [

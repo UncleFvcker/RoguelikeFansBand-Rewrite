@@ -10,6 +10,11 @@
   "id": "rfb-legacy.affix.digging",
   "nameKey": "affix-legacy-digging-name",
   "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "IGNORE_ACID",
+      "TUNNEL"
+    ],
     "rarity": 1,
     "sourceIndex": 40,
     "types": [

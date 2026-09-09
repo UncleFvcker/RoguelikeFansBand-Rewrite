@@ -15,6 +15,14 @@
     "see-invisible"
   ],
   "rfbEgo": {
+    "flags": [
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "SEE_INVIS"
+    ],
     "rarity": 64,
     "sourceIndex": 77,
     "types": [

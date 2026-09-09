@@ -29,6 +29,7 @@
         "rfbBiases": [
           "ranger"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "direction",
@@ -70,6 +71,7 @@
           "intervalTicks": 1000
         },
         "rfbBiases": [],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -103,6 +105,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -136,6 +139,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -177,6 +181,7 @@
           "priestly",
           "demon"
         ],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -210,6 +215,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -243,6 +249,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5425,
         "target": {
           "modes": [
             "self"
@@ -259,6 +266,9 @@
   "id": "rfb-legacy.affix.combat-ring",
   "nameKey": "affix-legacy-combat-ring-name",
   "rfbEgo": {
+    "flags": [
+      "HIDE_TYPE"
+    ],
     "rarity": 2,
     "sourceIndex": 206,
     "types": [

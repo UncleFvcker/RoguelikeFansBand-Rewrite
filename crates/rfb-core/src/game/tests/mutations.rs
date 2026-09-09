@@ -1,4 +1,4 @@
-use crate::game::loot::{quality_allows_natural_affix, rfb_depth_quality_percentages};
+use crate::game::loot::{power_allows_natural_affix, rfb_depth_quality_percentages};
 use crate::game::mutations::LuckBias;
 use std::sync::Arc;
 
@@ -942,15 +942,9 @@ fn rfb_depth_quality_short_circuits_good_and_great_rolls() {
         rfb_depth_quality_percentages(policy, 15, false, LuckBias::Bad),
         (25, 15)
     );
-    assert!(quality_allows_natural_affix(
-        Some(policy),
-        ItemQualityDto::Exceptional
-    ));
-    assert!(!quality_allows_natural_affix(
-        Some(policy),
-        ItemQualityDto::Fine
-    ));
-    assert!(quality_allows_natural_affix(None, ItemQualityDto::Fine));
+    assert!(power_allows_natural_affix(Some(policy), 2));
+    assert!(!power_allows_natural_affix(Some(policy), 1));
+    assert!(power_allows_natural_affix(None, 1));
 
     let mut game = m6_game("rfb.mutation.good-luck", "demo.build.warrior");
     game.progress.active_mutation_ids.clear();
@@ -989,10 +983,46 @@ fn rfb_depth_quality_short_circuits_good_and_great_rolls() {
         let seed = seed_matching(|rng| rolls.iter().all(|roll| rng.bounded(100) == *roll));
         game.rng = RfbRng::seeded(seed);
         assert_eq!(
-            game.roll_rfb_depth_loot_quality(policy, 15, false, minimum),
+            crate::game::loot::power_quality(game.roll_rfb_depth_loot_power(
+                policy,
+                15,
+                false,
+                minimum.into()
+            )),
             expected
         );
         assert_eq!(game.rng_draw_counter(), rolls.len() as u64);
+    }
+    let before = game.rng.clone();
+    assert_eq!(
+        game.roll_rfb_depth_loot_power(
+            policy,
+            15,
+            false,
+            crate::game::loot::ItemGenerationMode::Artifact
+        ),
+        3
+    );
+    assert_eq!(
+        game.rng, before,
+        "GOOD | GREAT | SPECIAL short-circuits both quality rolls"
+    );
+    for (roll, expected) in [(24, 2), (25, 0)] {
+        game.rng = RfbRng::seeded(seed_matching(|rng| rng.bounded(100) == roll));
+        assert_eq!(
+            game.roll_rfb_depth_loot_power(
+                policy,
+                15,
+                false,
+                crate::game::loot::ItemGenerationMode::GreatOnly
+            ),
+            expected
+        );
+        assert_eq!(
+            game.rng_draw_counter(),
+            1,
+            "AM_GREAT alone retains the outer good roll"
+        );
     }
 }
 

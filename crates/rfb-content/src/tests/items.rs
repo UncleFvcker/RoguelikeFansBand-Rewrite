@@ -443,7 +443,14 @@ fn fixed_artifact_combat_and_activation_data_match_source() {
         assert_eq!(generation.rarity_one_in, 20);
         assert_eq!((item.generation_level, item.weight_tenths_pound), (30, 25));
         assert_eq!(item.base_value, 13_000);
-        assert_eq!((item.modifiers.attack, item.modifiers.defense), (2, 9));
+        assert_eq!((item.modifiers.attack, item.modifiers.defense), (0, 9));
+        assert_eq!(
+            (
+                item.equipment_bonuses.melee_skill,
+                item.equipment_bonuses.melee_damage
+            ),
+            (2, 2)
+        );
         assert_eq!(item.brands, BTreeSet::from([WeaponBrand::Cold]));
         assert_eq!(
             item.resistances.get(&ActorDamageType::Cold),
@@ -857,6 +864,7 @@ fn item_shape_validation_uses_current_rfb_content() {
 fn rfb_ego_affix_metadata_requires_identity_unique_source_and_distinct_types() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
     let metadata = RfbEgoGenerationDefinition {
+        flags: Default::default(),
         source_index: u32::MAX,
         rarity: 0,
         types: vec![RfbEgoTypeDefinition::Weapon, RfbEgoTypeDefinition::Digger],

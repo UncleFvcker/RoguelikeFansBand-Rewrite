@@ -1,37 +1,76 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
-  "formatVersion": 1,
-  "id": "demo.item.trifurcate-spear-of-wrath",
-  "nameKey": "item-demo-trifurcate-spear-of-wrath-name",
-  "descriptionKey": "item-demo-trifurcate-spear-of-wrath-description",
-  "elementalDestructionVulnerabilities": ["acid", "fire"],
-  "glyph": "/",
-  "generationLevel": 70,
-  "weightTenthsPound": 300,
-  "maxStack": 1,
-  "ridingWeaponKind": "compatible",
-  "baseValue": 90000,
-  "equipmentSlot": "weapon",
-  "weaponProficiencyBaseItemId": "demo.item.trifurcate-spear",
   "artifactGeneration": {
-    "sourceIndex": 107,
     "baseItemKindId": "demo.item.trifurcate-spear",
+    "instant": false,
     "rarityOneIn": 12,
-    "instant": false
+    "sourceIndex": 107
   },
-  "modifiers": { "strength": 2, "dexterity": 2 },
+  "baseValue": 90000,
+  "brands": [
+    "chaos"
+  ],
+  "descriptionKey": "item-demo-trifurcate-spear-of-wrath-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "weapon",
+  "formatVersion": 1,
+  "generationLevel": 70,
+  "glyph": "/",
+  "id": "demo.item.trifurcate-spear-of-wrath",
+  "maxStack": 1,
   "meleeProfile": {
     "attacks": 1,
-    "toHit": 16,
-    "toDamage": 18,
     "damageDice": 3,
-    "damageSides": 10
+    "damageSides": 10,
+    "toDamage": 18,
+    "toHit": 16
   },
-  "slays": { "evil": "slay", "undead": "slay" },
-  "brands": ["chaos"],
-  "resistances": { "light": "resistant", "dark": "resistant" },
-  "passives": ["see-invisible"],
+  "modifiers": {
+    "dexterity": 2,
+    "strength": 2
+  },
+  "nameKey": "item-demo-trifurcate-spear-of-wrath-name",
+  "passives": [
+    "see-invisible"
+  ],
+  "resistances": {
+    "dark": "resistant",
+    "light": "resistant"
+  },
   "resistsMonsterDestruction": true,
   "resistsProjectionDestruction": true,
-  "tags": ["artifact", "blessed-weapon", "equipment", "weapon"]
+  "rfbValue": {
+    "flags": [
+      "BLESSED",
+      "BRAND_CHAOS",
+      "DEX",
+      "HIDE_TYPE",
+      "RES_DARK",
+      "RES_LITE",
+      "RIDING",
+      "SEE_INVIS",
+      "SHOW_MODS",
+      "SLAY_EVIL",
+      "SLAY_UNDEAD",
+      "STR"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
+  "ridingWeaponKind": "compatible",
+  "slays": {
+    "evil": "slay",
+    "undead": "slay"
+  },
+  "tags": [
+    "artifact",
+    "blessed-weapon",
+    "equipment",
+    "weapon"
+  ],
+  "weaponProficiencyBaseItemId": "demo.item.trifurcate-spear",
+  "weightTenthsPound": 300
 }

@@ -12,6 +12,10 @@
     "fire-aura"
   ],
   "rfbEgo": {
+    "flags": [
+      "AURA_FIRE",
+      "IGNORE_FIRE"
+    ],
     "rarity": 4,
     "sourceIndex": 239,
     "types": [

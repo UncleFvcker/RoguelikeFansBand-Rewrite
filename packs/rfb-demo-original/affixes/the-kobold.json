@@ -10,6 +10,12 @@
     "poison": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "DEC_CHR",
+      "RES_POIS",
+      "SHOW_MODS",
+      "STR"
+    ],
     "rarity": 4,
     "sourceIndex": 114,
     "types": [

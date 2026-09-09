@@ -35,6 +35,7 @@
         "rfbBiases": [
           "demon"
         ],
+        "rfbValue": 7075,
         "target": {
           "modes": [
             "self"
@@ -70,6 +71,7 @@
           "mage",
           "demon"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "item"
@@ -105,6 +107,7 @@
           "mage",
           "demon"
         ],
+        "rfbValue": 5700,
         "target": {
           "modes": [
             "item"
@@ -151,6 +154,7 @@
           "chaos",
           "demon"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -187,6 +191,7 @@
           "chaos",
           "demon"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "direction",
@@ -228,6 +233,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 1160,
         "target": {
           "modes": [
             "direction",
@@ -269,6 +275,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 780,
         "target": {
           "modes": [
             "direction",
@@ -311,6 +318,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1710,
         "target": {
           "modes": [
             "direction",
@@ -353,6 +361,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 3425,
         "target": {
           "modes": [
             "direction",
@@ -395,6 +404,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 7500,
         "target": {
           "modes": [
             "direction",
@@ -436,6 +446,7 @@
         "rfbBiases": [
           "demon"
         ],
+        "rfbValue": 11600,
         "target": {
           "modes": [
             "direction",
@@ -468,6 +479,22 @@
     "poison": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "AURA_FIRE",
+      "DEC_STEALTH",
+      "DEC_WIS",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "RES_FIRE",
+      "RES_NETHER",
+      "RES_POIS",
+      "SHOW_MODS",
+      "STR",
+      "XTRA_H_RES"
+    ],
     "rarity": 8,
     "sourceIndex": 73,
     "types": [

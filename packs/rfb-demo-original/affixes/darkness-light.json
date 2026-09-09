@@ -9,6 +9,9 @@
   "id": "rfb-legacy.affix.darkness-light",
   "nameKey": "affix-legacy-darkness-light-name",
   "rfbEgo": {
+    "flags": [
+      "DARKNESS"
+    ],
     "rarity": 8,
     "sourceIndex": 240,
     "types": [

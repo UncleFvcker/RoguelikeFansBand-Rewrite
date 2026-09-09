@@ -10,6 +10,9 @@
   "id": "rfb-legacy.affix.protection",
   "nameKey": "affix-legacy-protection-name",
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID"
+    ],
     "rarity": 2,
     "sourceIndex": 50,
     "types": [

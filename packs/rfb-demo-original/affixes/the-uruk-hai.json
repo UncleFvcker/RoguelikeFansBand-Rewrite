@@ -18,6 +18,20 @@
     "fire": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "DEC_INT",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_ACID",
+      "RES_COLD",
+      "RES_ELEC",
+      "RES_FIRE",
+      "SHOW_MODS",
+      "STR",
+      "XTRA_H_RES"
+    ],
     "rarity": 8,
     "sourceIndex": 71,
     "types": [

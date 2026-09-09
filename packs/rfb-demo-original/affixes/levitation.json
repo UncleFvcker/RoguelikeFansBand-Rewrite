@@ -10,6 +10,10 @@
     "levitation"
   ],
   "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "LEVITATION"
+    ],
     "rarity": 1,
     "sourceIndex": 145,
     "types": [

@@ -1533,6 +1533,15 @@ impl Game {
 
     fn blast_item(&mut self, index: usize) {
         let definition = self.content.item(&self.items[index].kind_id).unwrap();
+        // blast_object clears object flags but deliberately retains the shared pval.
+        let pval = self.items[index]
+            .rolled_affixes
+            .iter()
+            .rev()
+            .find_map(|rolled| rolled.properties.rfb_pval.as_ref())
+            .or(self.items[index].intrinsic_properties.rfb_pval.as_ref())
+            .map(|pval| pval.value)
+            .or_else(|| definition.rfb_value.as_ref().map(|value| value.pval));
         let armor = definition.tags.iter().any(|tag| tag == "armor");
         let weapon = definition.melee_profile.is_some();
         let base_id = definition
@@ -1555,6 +1564,10 @@ impl Game {
         };
         // Blasting clears the instance's AC and dice, but base-kind flags survive.
         blasted.properties.modifiers.defense = -base.modifiers.defense;
+        blasted.properties.rfb_pval = pval.map(|value| rfb_content::RfbPvalDefinition {
+            value,
+            flags: Default::default(),
+        });
         if weapon {
             blasted.melee_damage_dice =
                 Some(rfb_protocol::MeleeDamageDiceDto { dice: 0, sides: 0 });

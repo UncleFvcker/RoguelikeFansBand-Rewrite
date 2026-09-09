@@ -28,6 +28,13 @@ pub(super) fn validate_affixes(
         validate_definition_text(&affix.id, &affix.name_key, &affix.description_key)?;
         validate_status_immunities(&affix.id, &mut affix.status_immunities)?;
         if let Some(generation) = &affix.rfb_ego {
+            if generation
+                .flags
+                .iter()
+                .any(|flag| !valid_rfb_source_flag(flag))
+            {
+                return Err(ContentError::InvalidAffixModifiers(affix.id.clone()));
+            }
             let unique_types = generation.types.iter().copied().collect::<BTreeSet<_>>();
             if generation.source_index == 0
                 || generation.types.is_empty()
@@ -196,6 +203,11 @@ fn valid_affix_device_generation(generation: &ItemDeviceGenerationDefinition) ->
                 && (1..=1_000_000).contains(&activation.weight)
                 && activation.min_depth <= activation.max_depth
                 && (1..=1_000_000).contains(&activation.device_check_difficulty)
+                && activation.rfb_value.is_none_or(|value| {
+                    value >= 0
+                        && (i32::from(activation.min_depth)..=i32::from(activation.max_depth))
+                            .contains(&activation.device_check_difficulty)
+                })
                 && (1..=1_000_000).contains(&activation.charges.minimum)
                 && activation.charges.minimum <= activation.charges.maximum
                 && activation.charges.maximum <= 1_000_000

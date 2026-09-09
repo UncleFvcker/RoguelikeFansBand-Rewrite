@@ -9,6 +9,12 @@
     "sustain-dexterity"
   ],
   "rfbEgo": {
+    "flags": [
+      "DEX",
+      "HIDE_TYPE",
+      "STEALTH",
+      "SUST_DEX"
+    ],
     "rarity": 3,
     "sourceIndex": 136,
     "types": [

@@ -6,6 +6,9 @@
   "id": "rfb-legacy.affix.quickness-device",
   "nameKey": "affix-legacy-quickness-device-name",
   "rfbEgo": {
+    "flags": [
+      "SPEED"
+    ],
     "rarity": 16,
     "sourceIndex": 256,
     "types": [

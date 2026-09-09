@@ -68,6 +68,7 @@
           "intervalTicks": 500
         },
         "rfbBiases": [],
+        "rfbValue": 2000,
         "target": {
           "modes": [
             "self"
@@ -97,6 +98,7 @@
           "intervalTicks": 200
         },
         "rfbBiases": [],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -125,6 +127,7 @@
           "intervalTicks": 700
         },
         "rfbBiases": [],
+        "rfbValue": 2000,
         "target": {
           "modes": [
             "self"
@@ -156,6 +159,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 500,
         "target": {
           "modes": [
             "item"
@@ -191,6 +195,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "item"
@@ -223,6 +228,7 @@
           "intervalTicks": 500
         },
         "rfbBiases": [],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "direction",
@@ -264,6 +270,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "self"
@@ -297,6 +304,7 @@
           "intervalTicks": 1000
         },
         "rfbBiases": [],
+        "rfbValue": 1125,
         "target": {
           "modes": [
             "self"
@@ -313,6 +321,9 @@
   "id": "rfb-legacy.affix.trickery-amulet",
   "nameKey": "affix-legacy-trickery-amulet-name",
   "rfbEgo": {
+    "flags": [
+      "HIDE_TYPE"
+    ],
     "rarity": 3,
     "sourceIndex": 227,
     "types": [

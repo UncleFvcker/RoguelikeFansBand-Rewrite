@@ -10,6 +10,11 @@
     "see-invisible"
   ],
   "rfbEgo": {
+    "flags": [
+      "RES_BLIND",
+      "SEARCH",
+      "SEE_INVIS"
+    ],
     "rarity": 2,
     "sourceIndex": 56,
     "types": [

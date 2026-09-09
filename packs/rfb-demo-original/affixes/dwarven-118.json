@@ -12,6 +12,14 @@
   "id": "rfb-legacy.affix.dwarven-118",
   "nameKey": "affix-legacy-dwarven-118-name",
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INFRA",
+      "RES_BLIND"
+    ],
     "rarity": 18,
     "sourceIndex": 118,
     "types": [

@@ -26,6 +26,7 @@
           "intervalTicks": 500
         },
         "rfbBiases": [],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -48,6 +49,17 @@
   "id": "rfb-legacy.affix.rage",
   "nameKey": "affix-legacy-rage-name",
   "rfbEgo": {
+    "flags": [
+      "DEC_INT",
+      "DEC_WIS",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_FEAR",
+      "SHOW_MODS",
+      "STR"
+    ],
     "rarity": 32,
     "sourceIndex": 120,
     "types": [

@@ -13,6 +13,13 @@
     "light": "vulnerable"
   },
   "rfbEgo": {
+    "flags": [
+      "DEC_INT",
+      "REGEN",
+      "SHOW_MODS",
+      "STR",
+      "VULN_LITE"
+    ],
     "rarity": 6,
     "sourceIndex": 115,
     "types": [

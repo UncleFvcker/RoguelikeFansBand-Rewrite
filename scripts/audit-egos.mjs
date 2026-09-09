@@ -102,10 +102,10 @@ const report = {
   unresolvedSharedGenerationContracts: [
     { scope: "all natural equipment", contract: "negative power, curse_object / one_biff and value-dependent severity", source: "src/object2.c:2125; src/artifact.c:1960" },
     { scope: "non-ammunition random artifacts", contract: "_check_rand_art / _art_create_random", source: "src/ego.c:303" },
-    { scope: "rings and amulets", contract: "obj_value_real scoring and up to 1000 candidate retries", source: "src/ego.c:411" },
+    { scope: "rings and amulets", contract: "value limits and up to 1000 candidate retries (real scoring implemented in E8.1)", source: "src/ego.c:411" },
     { scope: "dragon base kinds", contract: "dragon_resist and its pre-ego suppression roll", source: "src/object2.c:2312" },
     { scope: "bags", contract: "SV_BAG capacity and quiver-ego behavior in the container system", source: "src/ego.c:3691" },
-    { scope: "unavailable classes and races", contract: "Mauler, Bard, Monster Ring and Vortex special generation modifiers", source: "src/ego.c; src/object2.c" },
+    { scope: "unavailable classes and races", contract: "Mauler, Bard and Monster Ring special generation modifiers", source: "src/ego.c; src/object2.c" },
   ],
   retainedNonSourceAffixes: affixes.filter(affix => !affix.rfbEgo).map(affix => affix.id).sort(),
   equipmentBases, unmappedFlagReview, entries,

@@ -6,6 +6,11 @@
   "id": "rfb-legacy.affix.wizard-gloves",
   "nameKey": "affix-legacy-wizard-gloves-name",
   "rfbEgo": {
+    "flags": [
+      "HIDE_TYPE",
+      "INT",
+      "MAGIC_MASTERY"
+    ],
     "rarity": 4,
     "sourceIndex": 138,
     "types": [

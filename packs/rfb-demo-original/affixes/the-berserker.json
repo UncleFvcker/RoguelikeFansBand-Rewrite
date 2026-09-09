@@ -26,6 +26,7 @@
           "intervalTicks": 2500
         },
         "rfbBiases": [],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -45,6 +46,14 @@
     "no-enchant"
   ],
   "rfbEgo": {
+    "flags": [
+      "BLOWS",
+      "DEC_INT",
+      "DEC_STEALTH",
+      "NO_ENCHANT",
+      "RES_FEAR",
+      "SHOW_MODS"
+    ],
     "rarity": 32,
     "sourceIndex": 142,
     "types": [

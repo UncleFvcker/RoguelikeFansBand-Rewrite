@@ -6,6 +6,10 @@
   "id": "rfb-legacy.affix.sharpness",
   "nameKey": "affix-legacy-sharpness-name",
   "rfbEgo": {
+    "flags": [
+      "TUNNEL",
+      "VORPAL"
+    ],
     "rarity": 2,
     "sourceIndex": 2,
     "types": [

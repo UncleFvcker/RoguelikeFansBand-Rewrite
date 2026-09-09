@@ -35,6 +35,7 @@
         "rfbBiases": [
           "demon"
         ],
+        "rfbValue": 7075,
         "target": {
           "modes": [
             "self"
@@ -70,6 +71,7 @@
           "mage",
           "demon"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "item"
@@ -105,6 +107,7 @@
           "mage",
           "demon"
         ],
+        "rfbValue": 5700,
         "target": {
           "modes": [
             "item"
@@ -148,6 +151,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -188,6 +192,7 @@
           "priestly",
           "demon"
         ],
+        "rfbValue": 1600,
         "target": {
           "modes": [
             "self"
@@ -229,6 +234,7 @@
           "priestly",
           "demon"
         ],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -275,6 +281,7 @@
           "chaos",
           "demon"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -311,6 +318,7 @@
           "chaos",
           "demon"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "direction",
@@ -352,6 +360,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "direction",
@@ -393,6 +402,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 1160,
         "target": {
           "modes": [
             "direction",
@@ -434,6 +444,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 780,
         "target": {
           "modes": [
             "direction",
@@ -476,6 +487,7 @@
           "fire",
           "demon"
         ],
+        "rfbValue": 1710,
         "target": {
           "modes": [
             "direction",
@@ -518,6 +530,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 3425,
         "target": {
           "modes": [
             "direction",
@@ -560,6 +573,7 @@
           "necromantic",
           "demon"
         ],
+        "rfbValue": 7500,
         "target": {
           "modes": [
             "direction",
@@ -601,6 +615,7 @@
         "rfbBiases": [
           "demon"
         ],
+        "rfbValue": 11600,
         "target": {
           "modes": [
             "direction",
@@ -636,6 +651,7 @@
         "rfbBiases": [
           "demon"
         ],
+        "rfbValue": 100,
         "target": {
           "modes": [
             "self"
@@ -652,6 +668,9 @@
   "id": "rfb-legacy.affix.the-witch",
   "nameKey": "affix-legacy-the-witch-name",
   "rfbEgo": {
+    "flags": [
+      "INT"
+    ],
     "rarity": 2,
     "sourceIndex": 122,
     "types": [

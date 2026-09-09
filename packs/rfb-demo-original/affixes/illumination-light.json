@@ -29,6 +29,7 @@
           "intervalTicks": 100
         },
         "rfbBiases": [],
+        "rfbValue": 300,
         "target": {
           "modes": [
             "self"
@@ -46,6 +47,9 @@
   "id": "rfb-legacy.affix.illumination-light",
   "nameKey": "affix-legacy-illumination-light-name",
   "rfbEgo": {
+    "flags": [
+      "AWARE"
+    ],
     "rarity": 1,
     "sourceIndex": 236,
     "types": [

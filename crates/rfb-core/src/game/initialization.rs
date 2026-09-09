@@ -412,6 +412,7 @@ impl Game {
                     spawn.affix_ids.clone(),
                     |_| 1,
                     1,
+                    2,
                 );
                 let mut item = ItemInstance {
                     id: spawn.instance_id.clone(),

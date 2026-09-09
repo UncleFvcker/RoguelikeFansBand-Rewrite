@@ -27,6 +27,14 @@
     "sval": 26,
     "tval": 22
   },
+  "rfbValue": {
+    "flags": [
+      "RIDING",
+      "SHOW_MODS"
+    ],
+    "pval": 0,
+    "toArmor": 0
+  },
   "ridingWeaponKind": "compatible",
   "tags": [
     "equipment",

@@ -6,6 +6,7 @@
   "id": "rfb-legacy.affix.troika",
   "nameKey": "affix-legacy-troika-name",
   "rfbEgo": {
+    "flags": [],
     "rarity": 24,
     "sourceIndex": 27,
     "types": [

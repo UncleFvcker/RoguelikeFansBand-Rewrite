@@ -16,6 +16,18 @@
     "light": "vulnerable"
   },
   "rfbEgo": {
+    "flags": [
+      "DEC_INT",
+      "DEC_STEALTH",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "RES_DARK",
+      "STR",
+      "VULN_LITE",
+      "XTRA_E_RES"
+    ],
     "rarity": 3,
     "sourceIndex": 61,
     "types": [

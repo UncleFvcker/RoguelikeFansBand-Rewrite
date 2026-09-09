@@ -11,6 +11,14 @@
     "sustain-strength"
   ],
   "rfbEgo": {
+    "flags": [
+      "CHR",
+      "RES_BLIND",
+      "RES_FEAR",
+      "SUST_CHR",
+      "SUST_CON",
+      "SUST_STR"
+    ],
     "rarity": 1,
     "sourceIndex": 196,
     "types": [

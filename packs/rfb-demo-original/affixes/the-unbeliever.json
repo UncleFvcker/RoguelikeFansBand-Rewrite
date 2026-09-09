@@ -19,6 +19,21 @@
     "confusion": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "CON",
+      "DEC_INT",
+      "DEC_WIS",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "MAGIC_RESISTANCE",
+      "NO_MAGIC",
+      "RES_CONF",
+      "SEE_INVIS",
+      "STR",
+      "XTRA_H_RES"
+    ],
     "rarity": 32,
     "sourceIndex": 130,
     "types": [

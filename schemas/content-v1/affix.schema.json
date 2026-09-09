@@ -3889,6 +3889,25 @@
           },
           "type": "object"
         },
+        "rfbFlags": {
+          "description": "Original object flags whose distinction is lost by gameplay projection\n(notably OF curses versus the separate OFC random curse effects).",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "rfbPval": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RfbPvalDefinition"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Preserves the shared original pval and flags before gameplay projection."
+        },
         "slays": {
           "additionalProperties": false,
           "default": {},
@@ -4299,6 +4318,14 @@
           },
           "type": "array",
           "uniqueItems": true
+        },
+        "rfbValue": {
+          "description": "RFB effect_value at this profile's fixed power, before timeout scaling.",
+          "format": "int32",
+          "type": [
+            "integer",
+            "null"
+          ]
         },
         "target": {
           "$ref": "#/$defs/AbilityTargetDefinition"
@@ -6964,6 +6991,14 @@
       "additionalProperties": false,
       "description": "Identity and allocation inputs copied from one authoritative `e_info`\nrecord. Affixes without this metadata never enter the RFB ego pool.",
       "properties": {
+        "flags": {
+          "description": "Original object flags, including flag presence when pval is zero.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
         "rarity": {
           "format": "uint16",
           "maximum": 65535,
@@ -7012,6 +7047,64 @@
         "quiver",
         "device",
         "special"
+      ],
+      "type": "string"
+    },
+    "RfbPvalDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "flags": {
+          "items": {
+            "$ref": "#/$defs/RfbPvalFlagDefinition"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "value": {
+          "format": "int16",
+          "maximum": 32767,
+          "minimum": -32768,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "value",
+        "flags"
+      ],
+      "type": "object"
+    },
+    "RfbPvalFlagDefinition": {
+      "enum": [
+        "strength",
+        "intelligence",
+        "wisdom",
+        "dexterity",
+        "constitution",
+        "charisma",
+        "less-strength",
+        "less-intelligence",
+        "less-wisdom",
+        "less-dexterity",
+        "less-constitution",
+        "less-charisma",
+        "stealth",
+        "less-stealth",
+        "speed",
+        "less-speed",
+        "life",
+        "less-life",
+        "infra",
+        "digging",
+        "spell-power",
+        "device-power",
+        "magic-resistance",
+        "might",
+        "search",
+        "mastery",
+        "capacity",
+        "blows",
+        "shots",
+        "weapon-mastery"
       ],
       "type": "string"
     },

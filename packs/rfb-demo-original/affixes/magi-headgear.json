@@ -32,6 +32,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 10000,
         "target": {
           "modes": [
             "self"
@@ -67,6 +68,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "direction",
@@ -103,6 +105,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 10000,
         "target": {
           "modes": [
             "position"
@@ -139,6 +142,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -174,6 +178,7 @@
           "mage",
           "demon"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "item"
@@ -209,6 +214,7 @@
           "mage",
           "demon"
         ],
+        "rfbValue": 5700,
         "target": {
           "modes": [
             "item"
@@ -240,6 +246,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 500,
         "target": {
           "modes": [
             "item"
@@ -275,6 +282,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "item"
@@ -308,6 +316,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -345,6 +354,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 500,
         "target": {
           "modes": [
             "self"
@@ -379,6 +389,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 10500,
         "target": {
           "modes": [
             "self"
@@ -413,6 +424,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 1400,
         "target": {
           "modes": [
             "direction",
@@ -450,6 +462,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 2000,
         "target": {
           "modes": [
             "item"
@@ -483,6 +496,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 2500,
         "target": {
           "modes": [
             "self"
@@ -522,6 +536,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 3000,
         "target": {
           "modes": [
             "self"
@@ -561,6 +576,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 3500,
         "target": {
           "modes": [
             "self"
@@ -597,6 +613,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 14000,
         "target": {
           "modes": [
             "self"
@@ -642,6 +659,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -687,6 +705,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -732,6 +751,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 1000,
         "target": {
           "modes": [
             "self"
@@ -777,6 +797,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 1500,
         "target": {
           "modes": [
             "self"
@@ -812,6 +833,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 750,
         "target": {
           "modes": [
             "direction",
@@ -845,6 +867,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 10000,
         "target": {
           "modes": [
             "self"
@@ -878,6 +901,7 @@
           "priestly",
           "mage"
         ],
+        "rfbValue": 1750,
         "target": {
           "modes": [
             "self"
@@ -911,6 +935,7 @@
           "priestly",
           "mage"
         ],
+        "rfbValue": 4750,
         "target": {
           "modes": [
             "self"
@@ -949,6 +974,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 3520,
         "target": {
           "modes": [
             "direction",
@@ -989,6 +1015,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 4880,
         "target": {
           "modes": [
             "direction",
@@ -1030,6 +1057,7 @@
           "mage",
           "cold"
         ],
+        "rfbValue": 3520,
         "target": {
           "modes": [
             "direction",
@@ -1071,6 +1099,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 8550,
         "target": {
           "modes": [
             "direction",
@@ -1112,6 +1141,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 11850,
         "target": {
           "modes": [
             "direction",
@@ -1153,6 +1183,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 4620,
         "target": {
           "modes": [
             "direction",
@@ -1194,6 +1225,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 16875,
         "target": {
           "modes": [
             "self"
@@ -1232,6 +1264,7 @@
         "rfbBiases": [
           "mage"
         ],
+        "rfbValue": 4500,
         "target": {
           "modes": [
             "self"
@@ -1257,6 +1290,16 @@
     "sustain-intelligence"
   ],
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "INT",
+      "SUST_INT",
+      "XTRA_H_RES",
+      "XTRA_POWER"
+    ],
     "rarity": 8,
     "sourceIndex": 126,
     "types": [

@@ -12,6 +12,12 @@
   "id": "rfb-legacy.affix.celestial-protection",
   "nameKey": "affix-legacy-celestial-protection-name",
   "rfbEgo": {
+    "flags": [
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE"
+    ],
     "rarity": 4,
     "sourceIndex": 52,
     "types": [

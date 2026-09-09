@@ -10,6 +10,19 @@
     "see-invisible"
   ],
   "rfbEgo": {
+    "flags": [
+      "CON",
+      "DEX",
+      "ESP_GIANT",
+      "ESP_ORC",
+      "ESP_TROLL",
+      "FREE_ACT",
+      "SEE_INVIS",
+      "SLAY_GIANT",
+      "SLAY_ORC",
+      "SLAY_TROLL",
+      "STR"
+    ],
     "rarity": 3,
     "sourceIndex": 19,
     "types": [

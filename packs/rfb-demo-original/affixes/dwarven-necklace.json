@@ -7,6 +7,10 @@
   "nameKey": "affix-legacy-dwarven-necklace-name",
   "namePlacement": "full-name",
   "rfbEgo": {
+    "flags": [
+      "FULL_NAME",
+      "HIDE_TYPE"
+    ],
     "rarity": 2,
     "sourceIndex": 223,
     "types": [

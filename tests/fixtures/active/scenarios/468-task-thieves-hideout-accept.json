@@ -26,7 +26,7 @@
     "finalState": {
       "lastCommandSeq": 1,
       "revision": 1,
-      "stateHash": "c59e26086509029f8d950a114498b17428754f0d7c6dac0dd3b225c2319893bf",
+      "stateHash": "3481e67424ad41a859b069106d8dc5955f2d68423f3b388d2f983888ba83f9f5",
       "tasks": {
         "demo.task.thieves-hideout": {
           "required": 1,

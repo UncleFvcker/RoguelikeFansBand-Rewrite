@@ -472,3 +472,9 @@ Schema 升至 v111。`RolledAffixSaveDto.devicePval` 保存装置 Ego 的 1–5 
 反传送与抑制召唤使用已存档属性包中的 passive；不另存派生开关。正式神器炸毁后返回底材，
 仍通过既有 profile ID 恢复保留下来的激活。所有结果原样恢复，不在读档时重新生成。
 二进制容器仍为 v1，测试从新档开始，不增加旧开发存档兼容分支。
+
+E8.1（contract-v312）将 Protocol 升至 1.235、save header/payload schema 升至 v7、State Hash Schema
+升至 v112，容器仍为 v1。固有属性和 rolled affix 的 `rfbPval` 保存有符号共享 pval 与其 source flags；
+`rfbFlags` 保存投影不能反推的 OF 标记。标记按字典序唯一保存，恢复拒绝未知、重复或乱序值；
+空 pval 标记集允许炸毁后的原始 pval 保留。字段进入状态哈希，恢复不抽 RNG、不重新生成。
+不提供旧开发存档迁移。详见 [E8.1](contract-v312-real-equipment-value.md)。

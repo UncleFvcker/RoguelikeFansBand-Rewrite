@@ -6,6 +6,11 @@
   "id": "rfb-legacy.affix.speed",
   "nameKey": "affix-legacy-speed-name",
   "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "HIDE_TYPE",
+      "SPEED"
+    ],
     "rarity": 5,
     "sourceIndex": 148,
     "types": [

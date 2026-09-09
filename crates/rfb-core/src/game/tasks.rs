@@ -657,6 +657,7 @@ pub(super) fn reward_item(
         entry.affix_ids,
         |affix| affix.generation_level.max(1),
         1,
+        2,
     );
     if let Some(charges) = &mut materialization.charges {
         charges.current = charges.maximum;

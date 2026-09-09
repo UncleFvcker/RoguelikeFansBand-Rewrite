@@ -707,6 +707,7 @@ impl Game {
             spawn.affix_ids.clone(),
             |_| definition.depth,
             definition.depth,
+            2,
         );
         let mut item = ItemInstance {
             id: spawn.instance_id.clone(),

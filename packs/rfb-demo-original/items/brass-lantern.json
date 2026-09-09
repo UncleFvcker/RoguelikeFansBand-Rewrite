@@ -27,6 +27,14 @@
     "sval": 1,
     "tval": 39
   },
+  "rfbValue": {
+    "flags": [
+      "IGNORE_FIRE",
+      "TOWN"
+    ],
+    "pval": 7500,
+    "toArmor": 0
+  },
   "tags": [
     "equipment",
     "light-source",

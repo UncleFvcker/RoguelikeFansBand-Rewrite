@@ -28,6 +28,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -61,6 +62,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5000,
         "target": {
           "modes": [
             "self"
@@ -102,6 +104,7 @@
           "priestly",
           "demon"
         ],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -135,6 +138,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 2125,
         "target": {
           "modes": [
             "self"
@@ -168,6 +172,7 @@
         "rfbBiases": [
           "warrior"
         ],
+        "rfbValue": 5425,
         "target": {
           "modes": [
             "self"
@@ -189,6 +194,16 @@
     "sustain-strength"
   ],
   "rfbEgo": {
+    "flags": [
+      "CON",
+      "DEC_INT",
+      "DEX",
+      "FREE_ACT",
+      "STR",
+      "SUST_CON",
+      "SUST_DEX",
+      "SUST_STR"
+    ],
     "rarity": 4,
     "sourceIndex": 127,
     "types": [

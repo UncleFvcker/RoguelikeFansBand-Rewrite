@@ -9,6 +9,12 @@
     "see-invisible"
   ],
   "rfbEgo": {
+    "flags": [
+      "BRAND_MANA",
+      "INT",
+      "SEE_INVIS",
+      "WIS"
+    ],
     "rarity": 4,
     "sourceIndex": 3,
     "types": [

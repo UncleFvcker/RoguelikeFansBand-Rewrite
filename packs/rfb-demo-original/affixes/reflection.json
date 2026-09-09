@@ -15,6 +15,14 @@
     "reflects-bolts"
   ],
   "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "IGNORE_ACID",
+      "IGNORE_COLD",
+      "IGNORE_ELEC",
+      "IGNORE_FIRE",
+      "REFLECT"
+    ],
     "rarity": 6,
     "sourceIndex": 62,
     "types": [

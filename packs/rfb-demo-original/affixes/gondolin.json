@@ -19,6 +19,18 @@
     "dark": "resistant"
   },
   "rfbEgo": {
+    "flags": [
+      "FREE_ACT",
+      "IGNORE_ACID",
+      "IGNORE_FIRE",
+      "LITE",
+      "RES_DARK",
+      "SEE_INVIS",
+      "SLAY_DEMON",
+      "SLAY_DRAGON",
+      "SLAY_ORC",
+      "SLAY_TROLL"
+    ],
     "rarity": 3,
     "sourceIndex": 20,
     "types": [

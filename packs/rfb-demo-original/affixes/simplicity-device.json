@@ -9,6 +9,9 @@
     "easy-spell"
   ],
   "rfbEgo": {
+    "flags": [
+      "EASY_SPELL"
+    ],
     "rarity": 1,
     "sourceIndex": 253,
     "types": [

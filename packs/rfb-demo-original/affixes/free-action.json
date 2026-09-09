@@ -7,6 +7,10 @@
   "id": "rfb-legacy.affix.free-action",
   "nameKey": "affix-legacy-free-action-name",
   "rfbEgo": {
+    "flags": [
+      "AWARE",
+      "FREE_ACT"
+    ],
     "rarity": 2,
     "sourceIndex": 55,
     "types": [

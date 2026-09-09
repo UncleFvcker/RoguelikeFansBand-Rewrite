@@ -22,6 +22,15 @@
     "sval": 4,
     "tval": 20
   },
+  "rfbValue": {
+    "flags": [
+      "SHOW_MODS",
+      "TOWN",
+      "TUNNEL"
+    ],
+    "pval": 2,
+    "toArmor": 0
+  },
   "tags": [
     "equipment",
     "rfb-compatibility",
