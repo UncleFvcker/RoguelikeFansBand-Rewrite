@@ -3,6 +3,61 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn telmora_keeps_the_full_map_and_unopened_quest_terrain() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let floor = artifact.content.worlds[0]
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.telmora")
+        .unwrap();
+    assert_eq!((floor.width, floor.height), (198, 66));
+    let map = floor.inline_map.as_ref().unwrap();
+    let tiles = map
+        .terrain_overrides
+        .iter()
+        .flat_map(|entry| {
+            entry
+                .positions
+                .iter()
+                .map(|position| ((position.x, position.y), entry.terrain_id.as_str()))
+        })
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(tiles.len(), 198 * 66);
+    // t_telmo.txt defaults; none of these are live quest/building entrances in T1.
+    for (position, terrain) in [
+        ((47, 25), "demo.terrain.floor"),
+        ((197, 0), "demo.terrain.floor"),
+        ((3, 14), "demo.terrain.permanent-wall"),
+        ((133, 14), "demo.terrain.permanent-wall"),
+        ((194, 30), "demo.terrain.surface-grass"),
+        ((175, 18), "demo.terrain.surface-lava-deep"),
+        ((99, 8), "demo.terrain.permanent-wall"),
+        ((157, 58), "demo.terrain.permanent-wall"),
+        ((192, 14), "demo.terrain.surface-mountain"),
+        ((187, 35), "demo.terrain.surface-mountain"),
+        ((58, 46), "demo.terrain.permanent-wall"),
+    ] {
+        assert_eq!(tiles[&position], terrain);
+    }
+    for x in 41..=44 {
+        assert_eq!(tiles[&(x, 21)], "demo.terrain.permanent-wall");
+    }
+    // Unassigned spaces leave the source TERRAIN_TOWN background (FLOOR).
+    assert_eq!(tiles[&(130, 0)], "demo.terrain.floor");
+    let museum = artifact
+        .content
+        .town_facilities
+        .iter()
+        .find(|facility| facility.id == "demo.town-facility.telmora-museum")
+        .unwrap();
+    assert!(museum.reject_artifact_deposits);
+    assert_eq!(
+        museum.storage_id.as_deref(),
+        Some("demo.town-facility.thalos-museum")
+    );
+}
+
+#[test]
 fn morivant_full_map_preserves_both_castle_doors_and_validates_additional_entrances() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let world = &artifact.content.worlds[0];

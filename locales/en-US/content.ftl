@@ -8524,3 +8524,10 @@ terrain-demo-casino-entrance-description = Enter the casino here.
 town-facility-demo-morivant-casino-name = Casino
 town-facility-demo-morivant-casino-description = Choose a game and wager before playing.
 town-facility-demo-morivant-casino-owner-name = Sandar
+
+town-demo-telmora-name = Telmora
+town-demo-telmora-description = Walls and a moat surround the shops, inn, and museum.
+floor-demo-telmora-name = Telmora
+shop-demo-telmora-inn-name = Inn
+shop-demo-telmora-inn-description = Owain the Bald offers meals, rest, reputation inquiries, and travel to visited towns.
+shop-owner-demo-telmora-owain-name = Owain the Bald

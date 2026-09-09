@@ -8528,3 +8528,10 @@ terrain-demo-casino-entrance-description = 在这里进入赌场。
 town-facility-demo-morivant-casino-name = 赌场
 town-facility-demo-morivant-casino-description = 选择赌局，下注后按规则结算。
 town-facility-demo-morivant-casino-owner-name = 桑达尔
+
+town-demo-telmora-name = 泰尔莫拉
+town-demo-telmora-description = 城墙与护城河环绕着商铺、旅店和博物馆。
+floor-demo-telmora-name = 泰尔莫拉
+shop-demo-telmora-inn-name = 旅店
+shop-demo-telmora-inn-description = 秃子欧文提供餐饮、住宿、声望查询及前往已访问城镇的传送。
+shop-owner-demo-telmora-owain-name = 秃子欧文

@@ -34,6 +34,10 @@ const MORIVANT_SORCERY_TOWER_ID: &str = "demo.town-facility.morivant-sorcery-tow
 const MORIVANT_THIEVES_GUILD_ID: &str = "demo.town-facility.morivant-thieves-guild";
 
 fn enter_morivant(game: &mut Game) {
+    enter_town(game, MORIVANT_TOWN_ID, Position { x: 47, y: 50 });
+}
+
+fn enter_town(game: &mut Game, town_id: &str, position: Position) {
     dispatch_next(
         game,
         GameCommand::EnterWorldMap {
@@ -41,9 +45,9 @@ fn enter_morivant(game: &mut Game) {
             cancel_recall: false,
         },
     );
-    game.wilderness_position = Some(Position { x: 47, y: 50 });
+    game.wilderness_position = Some(position);
     dispatch_next(game, GameCommand::LeaveWorldMap);
-    assert_eq!(game.current_town().unwrap().id, MORIVANT_TOWN_ID);
+    assert_eq!(game.current_town().unwrap().id, town_id);
 }
 
 fn morivant_facility_game(seed: u64, build_id: &str, facility_id: &str) -> Game {
@@ -896,15 +900,34 @@ fn morivant_identification_uses_the_projected_membership_price() {
 
 #[test]
 fn morivant_nine_shops_trade_and_save() {
-    let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
-    assert!(
-        !game
-            .shop_states
-            .keys()
-            .any(|id| id.starts_with("demo.shop.morivant-"))
+    nine_shops_trade_and_save(
+        MORIVANT_TOWN_ID,
+        MORIVANT_INN_ID,
+        Position { x: 47, y: 50 },
+        12,
     );
-    enter_morivant(&mut game);
-    let town = game.content.town(MORIVANT_TOWN_ID).unwrap().clone();
+}
+
+#[test]
+fn telmora_nine_shops_trade_and_save() {
+    nine_shops_trade_and_save(
+        "demo.town.telmora",
+        "demo.shop.telmora-inn",
+        Position { x: 87, y: 49 },
+        0,
+    );
+}
+
+fn nine_shops_trade_and_save(
+    town_id: &str,
+    inn_id: &str,
+    position: Position,
+    service_count: usize,
+) {
+    let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
+    let town = game.content.town(town_id).unwrap().clone();
+    assert!(!game.shop_states.keys().any(|id| town.shop_ids.contains(id)));
+    enter_town(&mut game, town_id, position);
     let snapshot = game.snapshot();
     assert_eq!(snapshot.shops.len(), 10);
     assert!(
@@ -914,20 +937,16 @@ fn morivant_nine_shops_trade_and_save() {
             .all(|shop| !shop.visited && shop.stock.is_empty())
     );
     assert_eq!(snapshot.homes.len(), 2);
-    assert_eq!(snapshot.task_services.len(), 12);
+    assert_eq!(snapshot.task_services.len(), service_count);
     game.gold = 1_000_000;
-    for shop_id in town
-        .shop_ids
-        .iter()
-        .filter(|id| id.as_str() != MORIVANT_INN_ID)
-    {
+    for shop_id in town.shop_ids.iter().filter(|id| id.as_str() != inn_id) {
         let definition = game.content.shop(shop_id).unwrap();
         let local = Position {
             x: i32::from(definition.entrance_position.x),
             y: i32::from(definition.entrance_position.y),
         };
         game.player.position = game
-            .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, local)
+            .town_local_to_wilderness_view_position(town_id, local)
             .unwrap();
         game.mark_shop_visited_at_player().unwrap();
         let shop = projected_shop(&game.snapshot().shops, shop_id).clone();
@@ -1054,6 +1073,159 @@ fn morivant_shares_home_rests_and_revisits_through_inns() {
     assert_eq!(game.shop_states[MORIVANT_INN_ID].inventory, stock);
     let restored = Game::from_save(game.to_save()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn telmora_inn_services_and_visited_travel_survive_save() {
+    let town = "demo.town.telmora";
+    let inn = "demo.shop.telmora-inn";
+    let mut game = white_horse_inn_game(51);
+    assert!(
+        projected_shop(&game.snapshot().shops, WHITE_HORSE_INN_ID)
+            .inn_travel_destinations
+            .iter()
+            .all(|destination| destination.town_id != town)
+    );
+    enter_town(&mut game, town, Position { x: 87, y: 49 });
+    assert!(game.town_states[town].visited);
+    assert_eq!(game.player.position, Position { x: 99, y: 33 });
+    game.player.position = game
+        .town_local_to_wilderness_view_position(town, Position { x: 56, y: 28 })
+        .unwrap();
+    game.mark_shop_visited_at_player().unwrap();
+    let projected = projected_shop(&game.snapshot().shops, inn).clone();
+    assert_eq!(projected.inn_food_cost, Some(game.town_service_price(1)));
+    assert_eq!(projected.inn_stay_cost, Some(game.town_service_price(20)));
+    let destination = projected
+        .inn_travel_destinations
+        .iter()
+        .find(|destination| destination.town_id == "demo.town.outpost")
+        .unwrap();
+    assert_eq!(destination.cost, game.town_service_price(500));
+    game.gold = projected.inn_food_cost.unwrap()
+        + projected.inn_stay_cost.unwrap()
+        + projected.inn_reputation_cost.unwrap()
+        + 2 * destination.cost;
+    game.nutrition = 100;
+    dispatch_next(
+        &mut game,
+        GameCommand::EatAtInn {
+            facility_id: inn.to_owned(),
+        },
+    );
+    assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+    let reputation = dispatch_next(
+        &mut game,
+        GameCommand::AskReputationAtInn {
+            facility_id: inn.to_owned(),
+        },
+    );
+    assert_eq!(reputation.events[0].message_key, "inn-reputation-unknown");
+    game.player.hp = 1;
+    game.world_tick = 12_345;
+    dispatch_next(
+        &mut game,
+        GameCommand::StayAtInn {
+            facility_id: inn.to_owned(),
+        },
+    );
+    assert_eq!(game.player.hp, game.effective_player_max_hp());
+    assert_eq!(game.world_tick, 50_000);
+    let stock = game.shop_states[inn].inventory.clone();
+    let mut game = Game::from_save(game.to_save()).unwrap();
+    dispatch_next(
+        &mut game,
+        GameCommand::TravelFromInn {
+            facility_id: inn.to_owned(),
+            destination_town_id: "demo.town.outpost".to_owned(),
+        },
+    );
+    assert_eq!(game.current_town().unwrap().id, "demo.town.outpost");
+    assert!(
+        projected_shop(&game.snapshot().shops, WHITE_HORSE_INN_ID)
+            .inn_travel_destinations
+            .iter()
+            .any(|destination| destination.town_id == town)
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::TravelFromInn {
+            facility_id: WHITE_HORSE_INN_ID.to_owned(),
+            destination_town_id: town.to_owned(),
+        },
+    );
+    assert_eq!(game.current_town().unwrap().id, town);
+    assert_eq!(game.gold, 0);
+    assert!(projected_shop(&game.snapshot().shops, inn).player_at_entrance);
+    assert_eq!(game.shop_states[inn].inventory, stock);
+    assert_eq!(
+        Game::from_save(game.to_save()).unwrap().state_hash(),
+        game.state_hash()
+    );
+}
+
+#[test]
+fn telmora_home_and_museum_use_existing_storage() {
+    for (facility, storage, position) in [
+        (
+            "demo.town-facility.telmora-home",
+            HOME_ID,
+            Position { x: 33, y: 50 },
+        ),
+        (
+            "demo.town-facility.telmora-museum",
+            THALOS_MUSEUM_ID,
+            Position { x: 22, y: 18 },
+        ),
+    ] {
+        let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
+        enter_town(&mut game, "demo.town.telmora", Position { x: 87, y: 49 });
+        game.player.position = game
+            .town_local_to_wilderness_view_position("demo.town.telmora", position)
+            .unwrap();
+        game.mark_shop_visited_at_player().unwrap();
+        let home = game
+            .snapshot()
+            .homes
+            .into_iter()
+            .find(|home| home.id == facility)
+            .unwrap();
+        assert!(home.player_at_entrance);
+        let item = home.deposit_items[0].clone();
+        dispatch_next(
+            &mut game,
+            GameCommand::DepositAtHome {
+                facility_id: facility.to_owned(),
+                item_id: item.id,
+                quantity: 1,
+            },
+        );
+        assert_eq!(game.home_states.len(), 2);
+        assert_eq!(game.home_states[storage].inventory.len(), 1);
+        assert!(!game.home_states.contains_key(facility));
+        let mut game = Game::from_save(game.to_save()).unwrap();
+        let home = game
+            .snapshot()
+            .homes
+            .into_iter()
+            .find(|home| home.id == facility)
+            .unwrap();
+        let stored = &home.stored_items[0];
+        assert!(stored.details.is_some());
+        dispatch_next(
+            &mut game,
+            GameCommand::WithdrawFromHome {
+                facility_id: facility.to_owned(),
+                item_id: stored.id.clone(),
+                quantity: 1,
+            },
+        );
+        assert!(game.home_states[storage].inventory.is_empty());
+        assert_eq!(
+            Game::from_save(game.to_save()).unwrap().state_hash(),
+            game.state_hash()
+        );
+    }
 }
 
 #[test]

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town.telmora",
+  "nameKey": "town-demo-telmora-name",
+  "descriptionKey": "town-demo-telmora-description",
+  "floorId": "demo.floor.telmora",
+  "facilityIds": [
+    "demo.town-facility.telmora-home",
+    "demo.town-facility.telmora-museum"
+  ],
+  "shopIds": [
+    "demo.shop.telmora-alchemist",
+    "demo.shop.telmora-armoury",
+    "demo.shop.telmora-black-market",
+    "demo.shop.telmora-bookstore",
+    "demo.shop.telmora-general-store",
+    "demo.shop.telmora-inn",
+    "demo.shop.telmora-magic-shop",
+    "demo.shop.telmora-shroomery",
+    "demo.shop.telmora-temple",
+    "demo.shop.telmora-weaponsmith"
+  ]
+}
