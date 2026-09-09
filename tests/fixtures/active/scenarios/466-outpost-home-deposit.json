@@ -26,24 +26,49 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
-      "lastCommandSeq": 1,
-      "stateHash": "715c26e1e2bcfbc762bd97524c1cd47ccae68e512514e4be62940d6c10526a99",
       "homes": {
         "demo.town-facility.outpost-home": {
-          "visited": true,
           "playerAtEntrance": true,
           "storedItems": [
             {
+              "details": {
+                "canReceiveRecharge": false,
+                "canSupplyRecharge": false,
+                "captureBall": false,
+                "displayNameKey": "item-demo-ration-of-food-name",
+                "equipmentSlot": null,
+                "id": "generated.item.203",
+                "identification": "unexamined",
+                "kindId": "demo.item.ration-of-food",
+                "knowledge": "aware",
+                "modifiers": {
+                  "attack": 0,
+                  "charisma": 0,
+                  "constitution": 0,
+                  "defense": 0,
+                  "devicePowerBonus": 0,
+                  "dexterity": 0,
+                  "intelligence": 0,
+                  "maxHp": 0,
+                  "speed": 0,
+                  "spellPowerBonus": 0,
+                  "strength": 0,
+                  "wisdom": 0
+                },
+                "mountUsable": false,
+                "quantity": 1,
+                "usable": true,
+                "weightTenthsPound": 10
+              },
+              "displayNameKey": "item-demo-ration-of-food-name",
               "id": "generated.item.203",
               "kindId": "demo.item.ration-of-food",
-              "displayNameKey": "item-demo-ration-of-food-name",
-              "quantity": 1,
               "maximumQuantity": 1,
+              "quantity": 1,
               "weightTenthsPound": 10
             }
-          ]
+          ],
+          "visited": true
         }
       },
       "inventory": {
@@ -51,7 +76,11 @@
           "kindId": "demo.item.ration-of-food",
           "quantity": 6
         }
-      }
+      },
+      "lastCommandSeq": 1,
+      "revision": 1,
+      "stateHash": "715c26e1e2bcfbc762bd97524c1cd47ccae68e512514e4be62940d6c10526a99",
+      "turn": 1
     },
     "events": [
       {

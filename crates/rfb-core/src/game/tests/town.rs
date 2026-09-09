@@ -372,7 +372,7 @@ fn morivant_nine_shops_trade_and_save() {
             .iter()
             .all(|shop| !shop.visited && shop.stock.is_empty())
     );
-    assert_eq!(snapshot.homes.len(), 1);
+    assert_eq!(snapshot.homes.len(), 2);
     assert_eq!(snapshot.task_services.len(), 11);
     game.gold = 1_000_000;
     for shop_id in town
@@ -467,7 +467,7 @@ fn morivant_shares_home_rests_and_revisits_through_inns() {
         },
     );
     assert!(game.home_states[HOME_ID].inventory.is_empty());
-    assert_eq!(game.home_states.len(), 1);
+    assert_eq!(game.home_states.len(), 2);
     game.player.position = game
         .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, Position { x: 92, y: 43 })
         .unwrap();
@@ -851,16 +851,30 @@ fn p109c_thalos_inn_travels_to_a_visited_town_for_five_hundred_gold() {
 }
 
 #[test]
-fn p109d_thalos_museum_stores_ordinary_items_and_rejects_true_artifacts() {
+fn museums_share_ordinary_items_across_towns_and_reject_true_artifacts() {
     let mut game = thalos_game(109);
     game.player.position = Position { x: 108, y: 32 };
     game.mark_shop_visited_at_player().unwrap();
     support::give_inventory_item(&mut game, "test.museum.dagger", "demo.item.dagger");
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.museum.dagger")
+        .unwrap()
+        .inscription = Some("keep".to_owned());
+    let sacrifice = game
+        .virtues
+        .iter()
+        .position(|virtue| virtue.kind == rfb_protocol::VirtueKindDto::Sacrifice)
+        .unwrap_or(0);
+    game.virtues[sacrifice].kind = rfb_protocol::VirtueKindDto::Sacrifice;
+    game.virtues[sacrifice].value = 0;
     support::give_inventory_item(
         &mut game,
         "test.museum.arkenstone",
         "demo.item.arkenstone-of-thrain",
     );
+    game.generated_artifact_ids
+        .insert("demo.item.arkenstone-of-thrain".to_owned());
 
     let museum = game
         .snapshot()
@@ -902,6 +916,10 @@ fn p109d_thalos_museum_stores_ordinary_items_and_rejects_true_artifacts() {
         },
     );
     assert_eq!(deposited.events[0].kind, "home.deposit");
+    assert_eq!(
+        game.virtue_current(rfb_protocol::VirtueKindDto::Sacrifice),
+        1
+    );
     let stored = game
         .snapshot()
         .homes
@@ -912,15 +930,78 @@ fn p109d_thalos_museum_stores_ordinary_items_and_rejects_true_artifacts() {
         .into_iter()
         .find(|item| item.kind_id == "demo.item.dagger")
         .expect("donated dagger should be displayed");
+    assert!(stored.inscription.is_none());
+    assert!(stored.details.as_ref().unwrap().inscription.is_none());
+    let home_before = game.home_states["demo.town-facility.outpost-home"].clone();
+    enter_morivant(&mut game);
+    game.player.position = game
+        .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, Position { x: 98, y: 17 })
+        .unwrap();
+    let same_collection = game
+        .snapshot()
+        .homes
+        .into_iter()
+        .find(|home| home.id == "demo.town-facility.morivant-museum")
+        .unwrap();
+    assert_eq!(same_collection.stored_items, vec![stored.clone()]);
     let withdrawn = dispatch_next(
         &mut game,
         GameCommand::WithdrawFromHome {
-            facility_id: THALOS_MUSEUM_ID.to_owned(),
+            facility_id: "demo.town-facility.morivant-museum".to_owned(),
             item_id: stored.id,
             quantity: 1,
         },
     );
     assert_eq!(withdrawn.events[0].kind, "home.withdraw");
+    assert!(game.home_states[THALOS_MUSEUM_ID].inventory.is_empty());
+    assert_eq!(
+        game.home_states["demo.town-facility.outpost-home"],
+        home_before
+    );
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn stored_blood_sours_and_only_museum_donations_clear_inscriptions() {
+    for (facility, museum) in [
+        (MORIVANT_HOME_ID, false),
+        ("demo.town-facility.morivant-museum", true),
+    ] {
+        let mut game = morivant_facility_game(109, "demo.build.warrior", facility);
+        game.mark_shop_visited_at_player().unwrap();
+        game.reveal_current_visibility();
+        support::give_inventory_item(&mut game, "test.blood", "demo.item.blood-potion");
+        let blood = game
+            .items
+            .iter_mut()
+            .find(|item| item.id == "test.blood")
+            .unwrap();
+        blood.quantity = 2;
+        blood.inscription = Some("sample".to_owned());
+        let outcome = game.deposit_at_home(facility, "test.blood", 1).unwrap();
+        assert_eq!(outcome.item_kind_id, "demo.item.salt-water");
+        let home = game
+            .snapshot()
+            .homes
+            .into_iter()
+            .find(|home| home.id == facility)
+            .unwrap();
+        assert_eq!(home.stored_items[0].kind_id, "demo.item.salt-water");
+        assert_eq!(home.stored_items[0].inscription.is_none(), museum);
+        let retained = game
+            .items
+            .iter()
+            .find(|item| item.id == "test.blood")
+            .unwrap();
+        assert_eq!(retained.kind_id, "demo.item.blood-potion");
+        assert_eq!(retained.quantity, 1);
+        assert_eq!(retained.inscription.as_deref(), Some("sample"));
+        assert_eq!(
+            Game::from_save(game.to_save()).unwrap().state_hash(),
+            game.state_hash()
+        );
+    }
 }
 
 #[test]

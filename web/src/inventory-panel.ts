@@ -454,7 +454,7 @@ export class InventoryPanel {
       inspect.className = "inventory-item-inspect";
       inspect.textContent = this.#localization.format("action-inventory-details");
       inspect.setAttribute("aria-label", this.#localization.format("inventory-details-for", { name: this.#itemName(item) }));
-      inspect.addEventListener("click", () => this.#openDetail(item.id));
+      inspect.addEventListener("click", () => this.openDetail(item.id));
       label.append(checkbox, this.#itemGlyph(item), name, quantity, status, weight);
       row.append(label, inspect);
       rows.push(row);
@@ -510,7 +510,7 @@ export class InventoryPanel {
       slotButton.append(slotTag, this.#itemGlyph(item), name);
       slotButton.addEventListener("click", () => {
         const current = this.#state.equipment.find((entry) => entry.slotId === slot.id);
-        if (current) this.#openDetail(current.id);
+        if (current) this.openDetail(current.id);
         else this.#chooseSlotItem(slot.id);
       });
       row.className = item ? "equipment-item" : "equipment-item equipment-slot-vacant";
@@ -555,7 +555,7 @@ export class InventoryPanel {
     });
   }
 
-  #openDetail(itemId: string): void {
+  openDetail(itemId: string): void {
     this.#detailItemId = itemId;
     this.#renderDetail();
     if (this.#detailItemId && !this.#dom.inventoryDetailDialog.open) {
@@ -574,7 +574,9 @@ export class InventoryPanel {
   };
 
   #renderDetail(): void {
-    const item = [...this.#state.inventory, ...this.#state.equipment].find((entry) => entry.id === this.#detailItemId);
+    const homeItems = (this.#state.status?.homes ?? []).flatMap((home) => [...home.storedItems, ...home.depositItems])
+      .flatMap((item) => item.details ? [item.details] : []);
+    const item = [...this.#state.inventory, ...this.#state.equipment, ...homeItems].find((entry) => entry.id === this.#detailItemId);
     if (!item) { this.#closeDetail(); return; }
     this.#dom.inventoryDetailTitle.textContent = this.#itemName(item);
     const body = this.#dom.inventoryDetailBody;

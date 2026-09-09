@@ -2016,10 +2016,11 @@ impl Game {
         else {
             return Err("item-unavailable");
         };
-        if self
+        let museum = self
             .content
             .town_facility(facility_id)
-            .is_some_and(|facility| facility.reject_artifact_deposits)
+            .is_some_and(|facility| facility.reject_artifact_deposits);
+        if museum
             && self
                 .content
                 .item(&item.kind_id)
@@ -2030,27 +2031,44 @@ impl Game {
         if quantity > available_quantity {
             return Err("insufficient-quantity");
         }
+        if item.kind_id == "demo.item.blood-potion"
+            && self.content.item("demo.item.salt-water").is_none()
+        {
+            return Err("item-unavailable");
+        }
         let split_required = group_requires_split(&self.items, &source_ids, quantity);
         let split_id = split_required
             .then(|| self.allocate_item_instance_id())
             .transpose()
             .map_err(|_| "item-id-exhausted")?;
-        let deposited =
+        let mut deposited =
             transfer_inventory_group_to_home(self, &storage_id, &source_ids, quantity, split_id);
+        for item in &mut deposited {
+            if museum {
+                item.inscription = None;
+            }
+            if item.kind_id == "demo.item.blood-potion" {
+                item.kind_id = "demo.item.salt-water".to_owned();
+            }
+        }
         let destination_id = deposited
             .first()
             .expect("successful deposit must have a destination")
             .id
             .clone();
+        let item_kind_id = deposited[0].kind_id.clone();
         self.home_states
             .get_mut(&storage_id)
             .expect("preflighted home must remain available")
             .inventory
             .extend(deposited);
+        if museum {
+            self.add_virtue(rfb_protocol::VirtueKindDto::Sacrifice, 1);
+        }
         Ok(HomeTransferOutcome {
             facility_id: facility_id.to_owned(),
             item_id: destination_id,
-            item_kind_id: item.kind_id,
+            item_kind_id,
             quantity,
         })
     }
@@ -2690,6 +2708,7 @@ impl Game {
                             let slot_carryable = self.inventory_quantity_capacity_for(item, true);
                             HomeItemDto {
                                 id: item.id.clone(),
+                                details: Some(self.inventory_item_dto(item)),
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: self.item_display_name_key(&item.kind_id),
                                 quantity,
@@ -2727,6 +2746,7 @@ impl Game {
                                 .expect("inventory item kind must remain available");
                             HomeItemDto {
                                 id: item.id.clone(),
+                                details: Some(self.inventory_item_dto(item)),
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: self.item_display_name_key(&item.kind_id),
                                 quantity,

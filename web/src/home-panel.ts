@@ -31,6 +31,7 @@ export class HomePanel {
   readonly #dispatch: (command: GameCommand) => Promise<void>;
   readonly #formatEvent: (event: GameEventDto) => string;
   readonly #visibleItemName: (displayNameKey: string, kindId: string) => string;
+  readonly #inspectItem: (itemId: string) => void;
   readonly #beforeOpen: () => void;
   readonly #dom: HomeDom;
   #mode: HomeMode = "withdraw";
@@ -47,6 +48,7 @@ export class HomePanel {
     dispatch: (command: GameCommand) => Promise<void>;
     formatEvent: (event: GameEventDto) => string;
     visibleItemName: (displayNameKey: string, kindId: string) => string;
+    inspectItem: (itemId: string) => void;
     beforeOpen: () => void;
   }) {
     this.#state = options.state;
@@ -54,6 +56,7 @@ export class HomePanel {
     this.#dispatch = options.dispatch;
     this.#formatEvent = options.formatEvent;
     this.#visibleItemName = options.visibleItemName;
+    this.#inspectItem = options.inspectItem;
     this.#beforeOpen = options.beforeOpen;
     this.#dom = createHomeDom(options.document);
   }
@@ -235,6 +238,14 @@ export class HomePanel {
         span(this.#dom.list, "shop-item-stock", this.#localization.format(this.#mode === "withdraw" ? "home-stored-count" : "shop-owned-count", { quantity: item.quantity })),
       );
       row.append(button);
+      if (item.details) {
+        const inspect = this.#dom.list.ownerDocument.createElement("button");
+        inspect.type = "button";
+        inspect.textContent = this.#localization.format("action-inventory-details");
+        inspect.setAttribute("aria-label", this.#localization.format("inventory-details-for", { name }));
+        inspect.addEventListener("click", () => this.#inspectItem(item.id));
+        row.append(inspect);
+      }
       this.#dom.list.append(row);
     }
   }

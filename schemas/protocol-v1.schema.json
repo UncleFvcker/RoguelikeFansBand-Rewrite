@@ -10501,6 +10501,16 @@
             }
           ]
         },
+        "details": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/InventoryItemDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "displayNameKey": {
           "type": "string"
         },

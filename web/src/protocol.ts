@@ -419,7 +419,7 @@ export type InnTravelDestinationDto = { townId: string, townNameKey: string, cos
 
 export type ShopDto = { id: string, nameKey: string, descriptionKey: string, category: ShopCategoryDto, entrancePosition: Position, entranceTerrainId: string, innStayCost?: number | null, innFoodCost?: number | null, innTravelDestinations: Array<InnTravelDestinationDto>, visited: boolean, playerAtEntrance: boolean, owner: ShopOwnerDto, stock: Array<ShopStockItemDto>, sellQuotes: Array<ShopSellQuoteDto>, };
 
-export type HomeItemDto = { id: string, kindId: string, displayNameKey: string, quantity: number, inscription?: string | null, capturedActor?: CapturedActorDto | null, maximumQuantity: number, weightTenthsPound: number, fuel?: ItemFuelDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, };
+export type HomeItemDto = { id: string, details?: InventoryItemDto | null, kindId: string, displayNameKey: string, quantity: number, inscription?: string | null, capturedActor?: CapturedActorDto | null, maximumQuantity: number, weightTenthsPound: number, fuel?: ItemFuelDto | null, permanentDestructionImmunities?: Array<ItemDestructionElementDto>, };
 
 export type HomeDto = { id: string, nameKey: string, descriptionKey: string, entrancePosition: Position, entranceTerrainId: string, visited: boolean, playerAtEntrance: boolean, storedItems: Array<HomeItemDto>, depositItems: Array<HomeItemDto>, };
 

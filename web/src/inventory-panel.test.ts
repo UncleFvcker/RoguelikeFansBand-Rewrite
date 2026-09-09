@@ -183,6 +183,21 @@ test("compact rows keep multi-selection and show live details without losing lis
   assert.deepEqual([...state.selectedInventoryIds], ["potion"]);
 });
 
+test("stored items can be inspected without inventory actions or commands", (t) => {
+  const { panel, dom, state, commands } = createInventoryFixture(t);
+  const stored = item("stored", { displayNameKey: "appearance.potion.blue", knowledge: "unknown" });
+  state.status.homes = [{ storedItems: [{ id: stored.id, details: stored }], depositItems: [] }];
+  panel.render([], []);
+  panel.openDetail(stored.id);
+  assert.equal(dom.inventoryDetailDialog.open, true);
+  assert.equal(dom.inventoryDetailTitle.textContent, "appearance.potion.blue");
+  assert.equal(dom.inventoryDetailActions.children.length, 0);
+  assert.deepEqual(commands, []);
+  state.status.homes = [];
+  panel.render([], []);
+  assert.equal(dom.inventoryDetailDialog.open, false);
+});
+
 test("equipped details reuse refuel and unequip commands and retain activation availability", (t) => {
   const { panel, dom, commands } = createInventoryFixture(t);
   const source = item("oil", { fuel: { kind: "oil", current: 20, maximum: 20 } });

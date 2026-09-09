@@ -322,6 +322,7 @@ const homePanel = new HomePanel({
   dispatch,
   formatEvent,
   visibleItemName,
+  inspectItem: (itemId) => inventoryPanel.openDetail(itemId),
   beforeOpen: () => {
     playerUiLayout.closePage();
     inputController.cancelTargeting(false);
