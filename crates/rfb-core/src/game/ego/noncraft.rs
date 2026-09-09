@@ -375,7 +375,8 @@ mod tests {
                 &item.affix_ids,
                 item.activation
                     .as_ref()
-                    .map(|activation| activation.profile_id.as_str())
+                    .map(|activation| activation.profile_id.as_str()),
+                item.artifact_name.is_some()
             )
             .is_some()
         );

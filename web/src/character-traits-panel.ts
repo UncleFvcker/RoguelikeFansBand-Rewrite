@@ -49,7 +49,7 @@ export function renderCharacterTraitsDetails(
   const focus = (document.activeElement as HTMLElement | null)?.dataset.traitFocus;
   const sourceName = (id: string): string => {
     const item = items.find((item) => item.id === id);
-    if (item) return `${f(item.displayNameKey)} · ${"slotId" in item ? item.slotId : f("trait-inventory-source")}`;
+    if (item) return `${f(item.displayNameKey)}${item.artifactName ? ` ${item.artifactName}` : ""} · ${"slotId" in item ? item.slotId : f("trait-inventory-source")}`;
     const mutation = player.mutations?.find((mutation) => mutation.id === id);
     if (mutation) return mutation.name;
     if (id === player.kindId) return f("trait-origin-base");

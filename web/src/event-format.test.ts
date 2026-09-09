@@ -23,6 +23,16 @@ const formatter = createPresentationFormatter(localization, () => state, {
   itemCurseSeverityName: () => "?",
 });
 
+test("instance artifact names retain their source text in either locale", () => {
+  for (const locale of ["en-US", "zh-CN"]) {
+    localization.setLocale(locale);
+    const base = formatter.visibleItemName("item-dagger", "demo.item.dagger");
+    assert.equal(formatter.visibleItemName("item-dagger", "demo.item.dagger", "(永恒蘑菇)"), `${base} (永恒蘑菇)`);
+    assert.equal(formatter.visibleItemName("item-dagger", "demo.item.dagger", null), base);
+  }
+  localization.setLocale("en-US");
+});
+
 test("Fast Recovery uses the localized regeneration status name", () => {
   assert.equal(formatter.statusName("rfb.status.regeneration"), "regeneration");
   localization.setLocale("zh-CN");

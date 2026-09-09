@@ -3,6 +3,12 @@
 use super::*;
 
 impl Game {
+    pub(super) fn visible_artifact_name(&self, item: &ItemInstance) -> Option<String> {
+        (self.item_identification(item) == ItemIdentificationDto::Identified)
+            .then(|| item.artifact_name.clone())
+            .flatten()
+    }
+
     pub(super) fn visible_item_bag_capacity(&self, item: &ItemInstance) -> Option<u16> {
         (self.item_identification(item) == ItemIdentificationDto::Identified)
             .then(|| super::inventory::item_bag_capacity(&self.content, item))
@@ -190,6 +196,8 @@ impl Game {
         if self.item_identification(item) != ItemIdentificationDto::Identified {
             visible.enchantments = Default::default();
             visible.intrinsic_properties = Default::default();
+            visible.intrinsic_melee_damage_dice = None;
+            visible.intrinsic_weapon_traits.clear();
             let known = self.item_property_knowledge.get(&item.id);
             visible
                 .affix_ids

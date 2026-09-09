@@ -1846,13 +1846,25 @@ impl Game {
         let Some(item) = self.item_mutation_target(source_item_id, target_item_id) else {
             return false;
         };
-        self.content.item(&item.kind_id).is_some_and(|definition| {
+        let eligible = self.content.item(&item.kind_id).is_some_and(|definition| {
             !definition.tags.iter().any(|tag| tag == "artifact")
-                && (item.quality != ItemQualityDto::Ordinary
+                && (item.artifact_name.is_some()
+                    || item.quality != ItemQualityDto::Ordinary
                     || !item.affix_ids.is_empty()
                     || !item.enchantments.is_empty()
                     || item.curse.is_some())
-        })
+        });
+        if !eligible {
+            return false;
+        }
+        let mut projected = self.items.clone();
+        let target = projected
+            .iter_mut()
+            .find(|item| item.id == target_item_id)
+            .unwrap();
+        Self::clear_random_artifact_state(target);
+        projected.retain(|item| item.id != source_item_id || item.quantity > 1);
+        self.inventory_fits(&projected)
     }
 
     fn item_is_valid_crafting_target(&self, source_item_id: &str, target_item_id: &str) -> bool {
@@ -1875,7 +1887,7 @@ impl Game {
                             item.quantity == 1
                         }
                 })
-                && !definition.tags.iter().any(|tag| tag == "artifact")
+                && !item.is_artifact(&self.content)
         })
     }
 
@@ -1960,6 +1972,7 @@ impl Game {
         self.items[index].quality = ItemQualityDto::Ordinary;
         self.items[index].affix_ids.clear();
         self.items[index].rolled_affixes.clear();
+        Self::clear_random_artifact_state(&mut self.items[index]);
         self.items[index].enchantments = ItemEnchantmentsDto::default();
         self.items[index].curse = None;
         self.item_property_knowledge.insert(
@@ -1980,6 +1993,20 @@ impl Game {
             split,
         });
         Ok(())
+    }
+
+    fn clear_random_artifact_state(item: &mut ItemInstance) {
+        if item.artifact_name.take().is_some() {
+            item.intrinsic_properties = Default::default();
+            item.intrinsic_melee_damage_dice = None;
+            item.intrinsic_weight_tenths_pound = None;
+            item.intrinsic_weapon_traits.clear();
+            item.intrinsic_curse_effects.clear();
+            item.permanent_destruction_immunities.clear();
+            item.activation = None;
+            item.charges = None;
+            item.device_recovery_progress = 0;
+        }
     }
 
     fn resolve_item_crafting(
@@ -2542,6 +2569,7 @@ impl Game {
                     &self.items[index].kind_id,
                     &self.items[index].affix_ids,
                     Some(&activation.profile_id),
+                    self.items[index].artifact_name.is_some(),
                 )
                 .and_then(|generation| {
                     generation

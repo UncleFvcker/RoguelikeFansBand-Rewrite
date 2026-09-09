@@ -60,7 +60,7 @@ type InventoryDom = Pick<
 >;
 
 interface InventoryFormatter {
-  visibleItemName(displayNameKey: string, kindId: string): string;
+  visibleItemName(displayNameKey: string, kindId: string, artifactName?: string | null): string;
   itemPropertyName(nameKey: string): string;
   itemQualityName(quality: NonNullable<InventoryItemDto["quality"]>): string;
   equipmentSlotName(slot: string): string;
@@ -226,7 +226,7 @@ export class InventoryPanel {
       [this.#dom.inventoryEquip, Boolean(item?.equipmentSlot)],
       [this.#dom.inventoryUse, Boolean((item?.usable && !item.requiresRechargeTargets) || selectedRechargingItems(selected))],
       [this.#dom.inventoryAbsorb, absorbableItemCandidates(this.#state,
-        (key, kindId) => this.#formatter.visibleItemName(key, kindId)).length > 0],
+        (key, kindId, artifactName) => this.#formatter.visibleItemName(key, kindId, artifactName)).length > 0],
       [this.#dom.inventoryUseOnMount, Boolean(item?.mountUsable && this.#state.status?.player.ridingActorId)],
       [this.#dom.inventoryAppraise, item?.identification === "unexamined"],
       [this.#dom.inventoryDrop, selected.length > 0],
@@ -278,7 +278,7 @@ export class InventoryPanel {
     const candidates = itemTargetCandidates(
       this.#state,
       excludedItemId,
-      (displayNameKey, kindId) => this.#formatter.visibleItemName(displayNameKey, kindId),
+      (displayNameKey, kindId, artifactName) => this.#formatter.visibleItemName(displayNameKey, kindId, artifactName),
     );
     this.#selectItemTargetFrom(candidates, onSelect);
   }
@@ -294,7 +294,7 @@ export class InventoryPanel {
     this.#selectItemTargetFrom(
       absorbableItemCandidates(
         this.#state,
-        (displayNameKey, kindId) => this.#formatter.visibleItemName(displayNameKey, kindId),
+        (displayNameKey, kindId, artifactName) => this.#formatter.visibleItemName(displayNameKey, kindId, artifactName),
       ),
       (itemId) => this.#dispatch({ type: "absorb-device", itemId }),
     );
@@ -758,7 +758,7 @@ export class InventoryPanel {
   }
 
   #itemName(item: InventoryItemDto | EquipmentItemDto): string {
-    const ball = this.#formatter.visibleItemName(item.displayNameKey, item.kindId);
+    const ball = this.#formatter.visibleItemName(item.displayNameKey, item.kindId, item.artifactName);
     return item.capturedActor
       ? this.#localization.format("capture-ball-name-contained", {
           ball,
@@ -934,7 +934,7 @@ export class InventoryPanel {
       )
       .map((item) => ({
         id: item.id,
-        label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId),
+        label: this.#formatter.visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
       }));
     this.#selectItemTargetFrom(candidates, (targetItemId) =>
       this.#dispatch({
@@ -1347,7 +1347,7 @@ export function selectedRechargingItems(
 export function itemTargetCandidates(
   state: Pick<AppState, "inventory" | "equipment" | "status">,
   excludedItemId: string | undefined,
-  visibleItemName: (displayNameKey: string, kindId: string) => string,
+  visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string,
 ): Array<{ id: string; label: string }> {
   const playerPosition = state.status?.player.position;
   const groundItems = playerPosition
@@ -1360,13 +1360,13 @@ export function itemTargetCandidates(
     .filter((item) => item.id !== excludedItemId)
     .map((item) => ({
       id: item.id,
-      label: visibleItemName(item.displayNameKey, item.kindId),
+      label: visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
     }));
 }
 
 export function absorbableItemCandidates(
   state: Pick<AppState, "inventory" | "status">,
-  visibleItemName: (displayNameKey: string, kindId: string) => string,
+  visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string,
 ): Array<{ id: string; label: string }> {
   const playerPosition = state.status?.player.position;
   const groundItems = playerPosition
@@ -1379,7 +1379,7 @@ export function absorbableItemCandidates(
     : [];
   return [...state.inventory.filter((item) => item.absorbable), ...groundItems].map((item) => ({
     id: item.id,
-    label: visibleItemName(item.displayNameKey, item.kindId),
+    label: visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
   }));
 }
 

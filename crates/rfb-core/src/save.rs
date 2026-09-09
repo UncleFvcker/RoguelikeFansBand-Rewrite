@@ -342,6 +342,7 @@ pub(crate) fn item_from_dto(
             item.activation
                 .as_ref()
                 .map(|activation| activation.profile_id.as_str()),
+            item.artifact_name.is_some(),
         ),
         item.activation.as_ref(),
         item.charges,
@@ -360,6 +361,11 @@ pub(crate) fn item_from_dto(
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
+        artifact_name: item.artifact_name,
+        intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+        intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+        intrinsic_weapon_traits: intrinsic_set_from_save(item.intrinsic_weapon_traits)?,
+        intrinsic_curse_effects: intrinsic_set_from_save(item.intrinsic_curse_effects)?,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -405,6 +411,7 @@ pub(crate) fn inventory_item_from_dto(
             item.activation
                 .as_ref()
                 .map(|activation| activation.profile_id.as_str()),
+            item.artifact_name.is_some(),
         ),
         item.activation.as_ref(),
         item.charges,
@@ -423,6 +430,11 @@ pub(crate) fn inventory_item_from_dto(
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
+        artifact_name: item.artifact_name,
+        intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+        intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+        intrinsic_weapon_traits: intrinsic_set_from_save(item.intrinsic_weapon_traits)?,
+        intrinsic_curse_effects: intrinsic_set_from_save(item.intrinsic_curse_effects)?,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -473,6 +485,7 @@ pub(crate) fn equipment_item_from_dto(
             item.activation
                 .as_ref()
                 .map(|activation| activation.profile_id.as_str()),
+            item.artifact_name.is_some(),
         ),
         item.activation.as_ref(),
         item.charges,
@@ -491,6 +504,11 @@ pub(crate) fn equipment_item_from_dto(
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
+        artifact_name: item.artifact_name,
+        intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+        intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+        intrinsic_weapon_traits: intrinsic_set_from_save(item.intrinsic_weapon_traits)?,
+        intrinsic_curse_effects: intrinsic_set_from_save(item.intrinsic_curse_effects)?,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -538,6 +556,7 @@ pub(crate) fn carried_item_from_dto(
             item.activation
                 .as_ref()
                 .map(|activation| activation.profile_id.as_str()),
+            item.artifact_name.is_some(),
         ),
         item.activation.as_ref(),
         item.charges,
@@ -556,6 +575,11 @@ pub(crate) fn carried_item_from_dto(
     let intrinsic_properties = intrinsic_properties_from_save(item.intrinsic_properties)?;
     let captured_actor = captured_actor_from_save(item.captured_actor, definition, content)?;
     Ok(ItemInstance {
+        artifact_name: item.artifact_name,
+        intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+        intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+        intrinsic_weapon_traits: intrinsic_set_from_save(item.intrinsic_weapon_traits)?,
+        intrinsic_curse_effects: intrinsic_set_from_save(item.intrinsic_curse_effects)?,
         id: item.id,
         kind_id: item.kind_id,
         quantity: item.quantity,
@@ -1329,6 +1353,15 @@ fn intrinsic_properties_from_save(
     Ok(properties)
 }
 
+fn intrinsic_set_from_save<T: Ord>(values: Vec<T>) -> Result<BTreeSet<T>, CoreError> {
+    if values.windows(2).any(|pair| pair[0] >= pair[1]) {
+        return Err(CoreError::InvalidSave(
+            "intrinsic item traits are not canonical",
+        ));
+    }
+    Ok(values.into_iter().collect())
+}
+
 fn rolled_affixes_from_save(
     rolled_affixes: Vec<RolledAffixSaveDto>,
     affix_ids: &[String],
@@ -1896,6 +1929,11 @@ pub(crate) fn items_to_save(items: &[ItemInstance]) -> Vec<ItemSaveDto> {
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
+                artifact_name: item.artifact_name.clone(),
+                intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+                intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+                intrinsic_weapon_traits: item.intrinsic_weapon_traits.iter().copied().collect(),
+                intrinsic_curse_effects: item.intrinsic_curse_effects.iter().copied().collect(),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item
@@ -1936,6 +1974,11 @@ pub(crate) fn inventory_to_save(items: &[ItemInstance]) -> Vec<InventoryItemSave
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
+                artifact_name: item.artifact_name.clone(),
+                intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+                intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+                intrinsic_weapon_traits: item.intrinsic_weapon_traits.iter().copied().collect(),
+                intrinsic_curse_effects: item.intrinsic_curse_effects.iter().copied().collect(),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item
@@ -1977,6 +2020,11 @@ pub(crate) fn equipment_to_save(items: &[ItemInstance]) -> Vec<EquipmentItemSave
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
+                artifact_name: item.artifact_name.clone(),
+                intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+                intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+                intrinsic_weapon_traits: item.intrinsic_weapon_traits.iter().copied().collect(),
+                intrinsic_curse_effects: item.intrinsic_curse_effects.iter().copied().collect(),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item
@@ -2022,6 +2070,11 @@ pub(crate) fn carried_items_to_save(items: &[ItemInstance]) -> Vec<CarriedItemSa
                 affix_ids: item.affix_ids.clone(),
                 rolled_affixes: rolled_affixes_to_save(&item.rolled_affixes),
                 intrinsic_properties: intrinsic_properties_to_save(&item.intrinsic_properties),
+                artifact_name: item.artifact_name.clone(),
+                intrinsic_melee_damage_dice: item.intrinsic_melee_damage_dice,
+                intrinsic_weight_tenths_pound: item.intrinsic_weight_tenths_pound,
+                intrinsic_weapon_traits: item.intrinsic_weapon_traits.iter().copied().collect(),
+                intrinsic_curse_effects: item.intrinsic_curse_effects.iter().copied().collect(),
                 enchantments: item.enchantments,
                 curse: item.curse,
                 permanent_destruction_immunities: item

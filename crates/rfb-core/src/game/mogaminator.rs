@@ -581,6 +581,7 @@ impl Game {
                         item.activation
                             .as_ref()
                             .map(|activation| activation.profile_id.as_str()),
+                        item.artifact_name.is_some(),
                     ),
                 ) && let Some(profile) = generation.activations.iter().find(|profile| {
                     profile.id == activation.profile_id
@@ -751,16 +752,24 @@ impl Game {
                 .iter()
                 .map(|affix| affix.affix_id.clone()),
         );
-        let name = names
+        if item.artifact_name.is_some() {
+            affix_ids.clear();
+        }
+        let mut name = names
             .item_name(
                 &self.content,
                 &item.kind_id,
                 &affix_ids,
                 item.activation
                     .as_ref()
+                    .filter(|_| item.artifact_name.is_none())
                     .map(|activation| activation.profile_id.as_str()),
             )
             .ok()?;
+        if let Some(artifact_name) = self.visible_artifact_name(item) {
+            name.push(' ');
+            name.push_str(&artifact_name);
+        }
         compiled.rules.iter().find_map(|compiled_rule| {
             self.mogaminator_rule_matches(compiled_rule, locale, item, &name)
                 .then(|| {
@@ -946,11 +955,12 @@ impl Game {
             MogaminatorPredicate::Cursed => self.visible_item_curse(item).is_some(),
             MogaminatorPredicate::Ego => known_affixes.is_some_and(|affixes| !affixes.is_empty()),
             MogaminatorPredicate::Artifact => {
-                identification != ItemIdentificationDto::Unexamined && tagged("artifact")
+                identification != ItemIdentificationDto::Unexamined
+                    && item.is_artifact(&self.content)
             }
             MogaminatorPredicate::Nameless => {
                 identification != ItemIdentificationDto::Unexamined
-                    && !tagged("artifact")
+                    && !item.is_artifact(&self.content)
                     && known_affixes.is_none_or(BTreeSet::is_empty)
             }
             MogaminatorPredicate::Rare => definition.mogaminator_rare,
@@ -998,7 +1008,7 @@ impl Game {
             MogaminatorPredicate::Collecting => self.items.iter().any(|other| {
                 other.id != item.id
                     && other.location == ItemLocation::Inventory
-                    && inventory::item_instances_stack_compatible(other, item)
+                    && inventory::item_instances_stack_compatible(&self.content, other, item)
             }),
             MogaminatorPredicate::Special => class.is_some_and(|class| {
                 definition.tags.iter().any(|tag| {
@@ -1216,6 +1226,11 @@ mod tests {
         discovered: bool,
     ) {
         game.items.push(ItemInstance {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: id.to_owned(),
             kind_id: kind_id.to_owned(),
             quantity: 1,

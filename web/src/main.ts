@@ -750,7 +750,7 @@ function describeLookPosition(position: { readonly x: number; readonly y: number
   if (item) {
     return withTerrain(
       localization.format("look-contents-item", {
-        item: visibleItemName(item.displayNameKey, item.kindId),
+        item: visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
       }),
     );
   }

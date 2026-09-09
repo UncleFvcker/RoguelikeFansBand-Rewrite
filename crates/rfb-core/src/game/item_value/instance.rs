@@ -40,9 +40,7 @@ pub(in crate::game) fn value_object(
         to_d: definition.equipment_bonuses.melee_damage + i32::from(item.enchantments.to_damage),
         base_to_h: base.equipment_bonuses.melee_skill,
         weight: i32::from(
-            item.rolled_affixes
-                .iter()
-                .find_map(|roll| roll.weight_tenths_pound)
+            item.weight_override()
                 .unwrap_or(definition.weight_tenths_pound),
         ),
         capacity: i32::from(
@@ -53,7 +51,7 @@ pub(in crate::game) fn value_object(
             .artifact_generation
             .as_ref()
             .map_or(0, |art| art.source_index),
-        artifact: definition.artifact_generation.is_some(),
+        artifact: item.is_artifact(content),
         permanent_curse: item.curse == Some(ItemCurseSeverityDto::Permanent),
         ..Default::default()
     };
@@ -108,27 +106,31 @@ pub(in crate::game) fn value_object(
         }
     }
     object.properties(&item.intrinsic_properties);
+    if let Some(dice) = item.melee_damage_dice() {
+        object.dd = i32::from(dice.dice);
+        object.ds = i32::from(dice.sides);
+    }
     for rolled in &item.rolled_affixes {
         object.properties(&rolled.properties);
-        if let Some(dice) = &rolled.melee_damage_dice {
-            object.dd = i32::from(dice.dice);
-            object.ds = i32::from(dice.sides);
-        }
-        for trait_ in &rolled.weapon_traits {
-            object.flags.insert(
-                match trait_ {
-                    WeaponTraitDto::ManaBrand => "BRAND_MANA",
-                    WeaponTraitDto::Vorpal => "VORPAL",
-                    WeaponTraitDto::Vorpal2 => "VORPAL2",
-                    WeaponTraitDto::Order => "ORDER",
-                    WeaponTraitDto::Wild => "BRAND_WILD",
-                    WeaponTraitDto::Impact => "IMPACT",
-                    WeaponTraitDto::Stun => "STUN",
-                    WeaponTraitDto::Blessed => "BLESSED",
-                }
-                .to_owned(),
-            );
-        }
+    }
+    for trait_ in item.intrinsic_weapon_traits.iter().chain(
+        item.rolled_affixes
+            .iter()
+            .flat_map(|roll| &roll.weapon_traits),
+    ) {
+        object.flags.insert(
+            match trait_ {
+                WeaponTraitDto::ManaBrand => "BRAND_MANA",
+                WeaponTraitDto::Vorpal => "VORPAL",
+                WeaponTraitDto::Vorpal2 => "VORPAL2",
+                WeaponTraitDto::Order => "ORDER",
+                WeaponTraitDto::Wild => "BRAND_WILD",
+                WeaponTraitDto::Impact => "IMPACT",
+                WeaponTraitDto::Stun => "STUN",
+                WeaponTraitDto::Blessed => "BLESSED",
+            }
+            .to_owned(),
+        );
     }
     if definition.vorpal {
         object.flags.insert("VORPAL".to_owned());
@@ -154,6 +156,7 @@ pub(in crate::game) fn value_object(
             &item.kind_id,
             &item.affix_ids,
             Some(&activation.profile_id),
+            item.artifact_name.is_some(),
         )?;
         let profile = generation
             .activations

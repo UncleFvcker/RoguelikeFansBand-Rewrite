@@ -578,7 +578,7 @@ fn compatible_inventory_space(
         .filter(|carried| {
             carried.location == ItemLocation::Inventory
                 && carried.quantity < definition.max_stack
-                && item_instances_stack_compatible(carried, incoming)
+                && item_instances_stack_compatible(content, carried, incoming)
                 && (!match_knowledge
                     || item_properties_match(
                         item_property_knowledge.get(&carried.id),
@@ -609,7 +609,7 @@ fn additional_pack_slots(
         .filter(|(_, carried)| {
             carried.location == ItemLocation::Inventory
                 && carried.quantity < definition.max_stack
-                && item_instances_stack_compatible(carried, incoming)
+                && item_instances_stack_compatible(content, carried, incoming)
                 && (!match_knowledge
                     || item_properties_match(
                         item_property_knowledge.get(&carried.id),
@@ -878,7 +878,7 @@ fn plan_pick_up(
             carried.location == ItemLocation::Inventory
                 && carried.kind_id == kind_id
                 && carried.quantity < definition.max_stack
-                && item_instances_stack_compatible(carried, pickup_item)
+                && item_instances_stack_compatible(content, carried, pickup_item)
                 && item_properties_match(item_property_knowledge.get(&carried.id), pickup_knowledge)
         })
         .map(|(index, _)| index)
@@ -904,8 +904,19 @@ fn plan_pick_up(
     }))
 }
 
-pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemInstance) -> bool {
-    left.kind_id == right.kind_id
+pub(super) fn item_instances_stack_compatible(
+    content: &ContentCatalog,
+    left: &ItemInstance,
+    right: &ItemInstance,
+) -> bool {
+    !left.is_artifact(content)
+        && !right.is_artifact(content)
+        && left.kind_id == right.kind_id
+        && left.intrinsic_melee_damage_dice == right.intrinsic_melee_damage_dice
+        && left.intrinsic_weight_tenths_pound == right.intrinsic_weight_tenths_pound
+        && left.intrinsic_weapon_traits == right.intrinsic_weapon_traits
+        && left.intrinsic_curse_effects == right.intrinsic_curse_effects
+        && left.permanent_destruction_immunities == right.permanent_destruction_immunities
         && left.inscription == right.inscription
         && left.origin_actor_kind_id == right.origin_actor_kind_id
         && left.origin_kind == right.origin_kind
@@ -1071,11 +1082,7 @@ impl Game {
                 .enumerate()
                 .filter(|(_, item)| item.location == ItemLocation::Inventory && item.quantity > 0)
                 .filter(|(_, item)| !protected_ammunition.contains(item.id.as_str()))
-                .filter(|(_, item)| {
-                    self.content.item(&item.kind_id).is_some_and(|definition| {
-                        !definition.tags.iter().any(|tag| tag == "artifact")
-                    })
-                })
+                .filter(|(_, item)| !item.is_artifact(&self.content))
                 .filter(|(_, item)| self.element_destroys_item(item, profile.element, true))
                 .map(|(index, _)| index)
                 .collect::<Vec<_>>();
@@ -1124,7 +1131,7 @@ impl Game {
             .content
             .item(&item.kind_id)
             .ok_or(DestroyItemFailure::Indestructible)?;
-        if definition.tags.iter().any(|tag| tag == "artifact") {
+        if item.is_artifact(&self.content) {
             return Err(DestroyItemFailure::Artifact);
         }
         if definition.tags.iter().any(|tag| tag == "indestructible") {
@@ -1256,7 +1263,7 @@ impl Game {
             .filter(|(_, carried)| {
                 carried.location == ItemLocation::Inventory
                     && carried.quantity < definition.max_stack
-                    && item_instances_stack_compatible(carried, &item)
+                    && item_instances_stack_compatible(&self.content, carried, &item)
             })
             .map(|(index, _)| index)
             .collect::<Vec<_>>();
@@ -1399,7 +1406,7 @@ impl Game {
             .content
             .item(&item_kind_id)
             .expect("planned enchantment kind must remain available");
-        let artifact = definition.tags.iter().any(|tag| tag == "artifact");
+        let artifact = item.is_artifact(&self.content);
         let ammunition = definition.tags.iter().any(|tag| tag == "ammunition");
         let resists_enchantment = self.item_resists_enchantment(item);
         let before = item.enchantments;
@@ -1547,10 +1554,7 @@ impl Game {
         let item_kind_id = self.items[item_index].kind_id.clone();
         let blessed = !request.blast
             && Self::item_has_weapon_trait(&self.items[item_index], WeaponTraitDto::Blessed);
-        let artifact = self
-            .content
-            .item(&item_kind_id)
-            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        let artifact = self.items[item_index].is_artifact(&self.content);
         let can_resist = artifact || blessed;
         let resisted = can_resist
             && if self.debug_item_curses_land {
@@ -1630,6 +1634,9 @@ impl Game {
         item.affix_ids = vec![blasted.affix_id.clone()];
         item.rolled_affixes = vec![blasted];
         item.intrinsic_properties = Default::default();
+        // blast_object leaves art_name, weight and curse_flags intact.
+        item.intrinsic_melee_damage_dice = None;
+        item.intrinsic_weapon_traits.clear();
         item.permanent_destruction_immunities.clear();
         item.enchantments.to_hit = item.enchantments.to_hit.min(0);
         item.enchantments.to_damage = item.enchantments.to_damage.min(0);
@@ -1679,6 +1686,7 @@ impl Game {
             }
             if was_cursed && item.curse.is_none() {
                 item.intrinsic_properties.rfb_heavy_curse = false;
+                item.intrinsic_curse_effects.clear();
                 for roll in &mut item.rolled_affixes {
                     roll.curse_effects.clear();
                     roll.properties.rfb_heavy_curse = false;
@@ -1783,6 +1791,7 @@ impl Game {
                 item.activation
                     .as_ref()
                     .map(|activation| activation.profile_id.as_str()),
+                item.artifact_name.is_some(),
             )
             .is_some()
             && item
@@ -1839,10 +1848,7 @@ impl Game {
                 .bounded(u64::from(request.source_destruction_one_in))
         });
         let destroy = destruction_roll == Some(0);
-        let artifact = self
-            .content
-            .item(&source_kind_id)
-            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        let artifact = self.items[source_index].is_artifact(&self.content);
         let source_destroyed =
             destroy && !artifact && !self.player_has_status_kind(STATUS_INVENTORY_PROTECTION);
         if source_destroyed {

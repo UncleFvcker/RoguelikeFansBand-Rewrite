@@ -25,7 +25,7 @@ pub mod policy;
 pub mod snapshot;
 
 pub const CONTRACT_SCHEMA_VERSION: u16 = 5;
-pub const ACTIVE_BASELINE: &str = "contract-v315";
+pub const ACTIVE_BASELINE: &str = "contract-v316";
 pub const ACTIVE_FIXTURE_DIRECTORY: &str = "active";
 pub const LEGACY_BASELINE_COMMIT: &str = "191f48c3fd1cdbc81a3d3395a88cd6758402b4d9";
 pub const HISTORICAL_TEST_WORLD: &str = "demo.original-v1";
@@ -678,6 +678,11 @@ pub fn observe(fixture: &ContractFixture) -> Result<ContractAssertions, Contract
         .filter(|item| item.generation_depth.is_none())
     {
         payload.inventory.push(InventoryItemSaveDto {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Vec::new(),
+            intrinsic_curse_effects: Vec::new(),
             id: item.id.clone(),
             kind_id: item.kind_id.clone(),
             quantity: item.quantity,

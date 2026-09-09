@@ -695,10 +695,7 @@ impl Game {
         let light_index = self.items.iter().position(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "light")
                 && item.fuel.is_some_and(|fuel| fuel.current > 0)
-                && self
-                    .content
-                    .item(&item.kind_id)
-                    .is_some_and(|definition| !definition.tags.iter().any(|tag| tag == "artifact"))
+                && !item.is_artifact(&self.content)
         });
         if let Some(index) = light_index {
             let item = &mut self.items[index];

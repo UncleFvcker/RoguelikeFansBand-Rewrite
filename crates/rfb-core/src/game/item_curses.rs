@@ -93,10 +93,11 @@ impl Game {
         matches!(item.location, ItemLocation::Equipped { .. })
             && (self.item_has_intrinsic_curse_effect(item, effect)
                 || (item.curse.is_some()
-                    && item
-                        .rolled_affixes
-                        .iter()
-                        .any(|rolled| rolled.curse_effects.contains(&effect))))
+                    && (item.intrinsic_curse_effects.contains(&effect)
+                        || item
+                            .rolled_affixes
+                            .iter()
+                            .any(|rolled| rolled.curse_effects.contains(&effect)))))
     }
 
     pub(super) fn player_has_equipped_aggravation(&self) -> bool {

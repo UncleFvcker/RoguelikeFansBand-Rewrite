@@ -491,6 +491,11 @@ fn plain_shop_item(
 ) -> Result<ItemInstance, CoreError> {
     let (activation, charges) = initial_item_runtime_state(content, rng, item_kind_id, &[], 15);
     Ok(ItemInstance {
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
         id: allocate_shop_item_id(next_serial)?,
         kind_id: item_kind_id.to_owned(),
         quantity,
@@ -609,7 +614,11 @@ pub(super) fn sell_unit_price(base_value: u32, factor: u16, cap: u32) -> u32 {
         .min(cap)
 }
 
-fn discounted_item_base_value(item: &ItemInstance, base_value: u32) -> u32 {
+fn discounted_item_base_value(
+    content: &ContentCatalog,
+    item: &ItemInstance,
+    base_value: u32,
+) -> u32 {
     if item
         .affix_ids
         .iter()
@@ -617,6 +626,13 @@ fn discounted_item_base_value(item: &ItemInstance, base_value: u32) -> u32 {
     {
         return 0;
     }
+    let base_value = if item.artifact_name.is_some() {
+        super::item_value::obj_value_real(content, item)
+            .expect("random artifact must retain supported COST_REAL inputs")
+            .max(0) as u32
+    } else {
+        base_value
+    };
     base_value.saturating_sub(base_value.saturating_mul(u32::from(item.discount_percent)) / 100)
 }
 
@@ -730,7 +746,7 @@ fn home_item_group(
         .inventory
         .iter()
         .filter(|item| {
-            item_instances_stack_compatible(item, &anchor)
+            (item.id == anchor.id || item_instances_stack_compatible(&game.content, item, &anchor))
                 && item_properties_match(
                     game.item_property_knowledge.get(&item.id),
                     anchor_knowledge,
@@ -760,7 +776,7 @@ fn grouped_home_items<'a>(
     for item in sorted {
         let knowledge = game.item_property_knowledge.get(&item.id);
         if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
-            item_instances_stack_compatible(anchor, item)
+            item_instances_stack_compatible(&game.content, anchor, item)
                 && item_properties_match(game.item_property_knowledge.get(&anchor.id), knowledge)
         }) {
             *quantity = quantity.saturating_add(item.quantity);
@@ -782,7 +798,7 @@ fn grouped_inventory_for_home(game: &Game) -> Vec<(&ItemInstance, u32)> {
     for item in sorted {
         let knowledge = game.item_property_knowledge.get(&item.id);
         if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
-            item_instances_stack_compatible(anchor, item)
+            item_instances_stack_compatible(&game.content, anchor, item)
                 && item_properties_match(game.item_property_knowledge.get(&anchor.id), knowledge)
         }) {
             *quantity = quantity.saturating_add(item.quantity);
@@ -894,7 +910,7 @@ fn carry_home_withdrawal_item(game: &mut Game, mut item: ItemInstance) -> Vec<St
         .filter(|(_, carried)| {
             carried.location == ItemLocation::Inventory
                 && carried.quantity < definition.max_stack
-                && item_instances_stack_compatible(carried, &item)
+                && item_instances_stack_compatible(&game.content, carried, &item)
                 && item_properties_match(
                     game.item_property_knowledge.get(&carried.id),
                     source_knowledge.as_ref(),
@@ -954,7 +970,9 @@ fn shop_purchase_group(
     let mut items = state
         .inventory
         .iter()
-        .filter(|item| item_instances_stack_compatible(item, &anchor))
+        .filter(|item| {
+            item.id == anchor.id || item_instances_stack_compatible(&game.content, item, &anchor)
+        })
         .collect::<Vec<_>>();
     items.sort_by(|left, right| left.id.cmp(&right.id));
     let quantity = items
@@ -979,7 +997,8 @@ fn inventory_sale_group(game: &Game, item_id: &str) -> Option<(ItemInstance, Vec
         .iter()
         .filter(|item| {
             item.location == ItemLocation::Inventory
-                && item_instances_stack_compatible(item, &anchor)
+                && (item.id == anchor.id
+                    || item_instances_stack_compatible(&game.content, item, &anchor))
                 && item_properties_match(
                     game.item_property_knowledge.get(&item.id),
                     anchor_knowledge,
@@ -1015,14 +1034,17 @@ fn group_requires_split(items: &[ItemInstance], item_ids: &[String], quantity: u
     false
 }
 
-fn grouped_shop_items(items: &[ItemInstance]) -> Vec<(&ItemInstance, u32)> {
+fn grouped_shop_items<'a>(
+    content: &ContentCatalog,
+    items: &'a [ItemInstance],
+) -> Vec<(&'a ItemInstance, u32)> {
     let mut sorted = items.iter().collect::<Vec<_>>();
     sorted.sort_by(|left, right| left.id.cmp(&right.id));
     let mut groups: Vec<(&ItemInstance, u32)> = Vec::new();
     for item in sorted {
         if let Some((_, quantity)) = groups
             .iter_mut()
-            .find(|(anchor, _)| item_instances_stack_compatible(anchor, item))
+            .find(|(anchor, _)| item_instances_stack_compatible(content, anchor, item))
         {
             *quantity = quantity.saturating_add(item.quantity);
         } else {
@@ -1046,7 +1068,7 @@ fn grouped_inventory_items(game: &Game) -> Vec<(&ItemInstance, u32)> {
             let knowledge = game.item_property_knowledge.get(&item.id);
             if let Some((_, quantity)) = groups.iter_mut().find(|(anchor, _)| {
                 item_is_legal_for_shop(game, anchor)
-                    && item_instances_stack_compatible(anchor, item)
+                    && item_instances_stack_compatible(&game.content, anchor, item)
                     && item_properties_match(
                         game.item_property_knowledge.get(&anchor.id),
                         knowledge,
@@ -2025,7 +2047,7 @@ impl Game {
         let unit_price = player_purchase_unit_price(
             self,
             &shop,
-            discounted_item_base_value(&item, definition.base_value),
+            discounted_item_base_value(&self.content, &item, definition.base_value),
             shop_price_factor(self, &shop),
         );
         let Some(total_price) = unit_price.checked_mul(quantity) else {
@@ -2134,7 +2156,7 @@ impl Game {
         let unit_price = player_sale_unit_price(
             self,
             &shop,
-            discounted_item_base_value(&item, definition.base_value),
+            discounted_item_base_value(&self.content, &item, definition.base_value),
             shop_price_factor(self, &shop),
         );
         let Some(total_price) = unit_price.checked_mul(quantity) else {
@@ -2422,7 +2444,7 @@ impl Game {
                 let state = self.shop_states.get(&shop.id);
                 let mut stock = if player_at_entrance {
                     state
-                        .map(|state| grouped_shop_items(&state.inventory))
+                        .map(|state| grouped_shop_items(&self.content, &state.inventory))
                         .unwrap_or_default()
                         .into_iter()
                         .map(|(item, quantity)| {
@@ -2433,7 +2455,11 @@ impl Game {
                             let unit_price = player_purchase_unit_price(
                                 self,
                                 shop,
-                                discounted_item_base_value(item, definition.base_value),
+                                discounted_item_base_value(
+                                    &self.content,
+                                    item,
+                                    definition.base_value,
+                                ),
                                 factor,
                             );
                             let affordable = self.gold / unit_price.max(1);
@@ -2442,12 +2468,13 @@ impl Game {
                                 id: item.id.clone(),
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: definition.name_key.clone(),
+                                artifact_name: item.artifact_name.clone(),
                                 quantity,
                                 inscription: item.inscription.clone(),
                                 captured_actor: self.captured_actor_dto(item),
                                 maximum_quantity: quantity.min(affordable).min(slot_carryable),
                                 unit_price,
-                                weight_tenths_pound: definition.weight_tenths_pound,
+                                weight_tenths_pound: self.item_instance_weight(item),
                                 fuel: item.fuel,
                                 charges: item.charges,
                                 activation: item.activation.clone(),
@@ -2485,7 +2512,11 @@ impl Game {
                                         player_sale_unit_price(
                                             self,
                                             shop,
-                                            discounted_item_base_value(item, definition.base_value),
+                                            discounted_item_base_value(
+                                                &self.content,
+                                                item,
+                                                definition.base_value,
+                                            ),
                                             factor,
                                         )
                                     },
@@ -2559,20 +2590,17 @@ impl Game {
                         .unwrap_or_default()
                         .into_iter()
                         .map(|(item, quantity)| {
-                            let definition = self
-                                .content
-                                .item(&item.kind_id)
-                                .expect("home item kind must remain available");
                             let slot_carryable = self.inventory_quantity_capacity_for(item, true);
                             HomeItemDto {
                                 id: item.id.clone(),
                                 kind_id: item.kind_id.clone(),
                                 display_name_key: self.item_display_name_key(&item.kind_id),
+                                artifact_name: self.visible_artifact_name(item),
                                 quantity,
                                 inscription: item.inscription.clone(),
                                 captured_actor: self.captured_actor_dto(item),
                                 maximum_quantity: quantity.min(slot_carryable),
-                                weight_tenths_pound: definition.weight_tenths_pound,
+                                weight_tenths_pound: self.item_instance_weight(item),
                                 fuel: item.fuel,
                                 permanent_destruction_immunities: item
                                     .permanent_destruction_immunities
@@ -2596,28 +2624,23 @@ impl Game {
                                     definition.artifact_generation.is_none()
                                 })
                         })
-                        .map(|(item, quantity)| {
-                            let definition = self
-                                .content
-                                .item(&item.kind_id)
-                                .expect("inventory item kind must remain available");
-                            HomeItemDto {
-                                id: item.id.clone(),
-                                kind_id: item.kind_id.clone(),
-                                display_name_key: self.item_display_name_key(&item.kind_id),
-                                quantity,
-                                inscription: item.inscription.clone(),
-                                captured_actor: self.captured_actor_dto(item),
-                                maximum_quantity: quantity,
-                                weight_tenths_pound: definition.weight_tenths_pound,
-                                fuel: item.fuel,
-                                permanent_destruction_immunities: item
-                                    .permanent_destruction_immunities
-                                    .iter()
-                                    .copied()
-                                    .map(item_destruction_element_to_dto)
-                                    .collect(),
-                            }
+                        .map(|(item, quantity)| HomeItemDto {
+                            id: item.id.clone(),
+                            kind_id: item.kind_id.clone(),
+                            display_name_key: self.item_display_name_key(&item.kind_id),
+                            artifact_name: self.visible_artifact_name(item),
+                            quantity,
+                            inscription: item.inscription.clone(),
+                            captured_actor: self.captured_actor_dto(item),
+                            maximum_quantity: quantity,
+                            weight_tenths_pound: self.item_instance_weight(item),
+                            fuel: item.fuel,
+                            permanent_destruction_immunities: item
+                                .permanent_destruction_immunities
+                                .iter()
+                                .copied()
+                                .map(item_destruction_element_to_dto)
+                                .collect(),
                         })
                         .collect::<Vec<_>>()
                 } else {

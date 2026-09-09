@@ -1210,9 +1210,7 @@ impl Game {
             .and_then(|definition| definition.melee_profile.as_ref())
             .map(|profile| {
                 let damage = item
-                    .rolled_affixes
-                    .iter()
-                    .find_map(|rolled| rolled.melee_damage_dice)
+                    .melee_damage_dice()
                     .map_or((profile.damage_dice, profile.damage_sides), |damage| {
                         (damage.dice, damage.sides)
                     });
@@ -1235,9 +1233,11 @@ impl Game {
     }
 
     pub(super) fn item_has_weapon_trait(item: &ItemInstance, trait_: WeaponTraitDto) -> bool {
-        item.rolled_affixes
-            .iter()
-            .any(|rolled| rolled.weapon_traits.contains(&trait_))
+        item.intrinsic_weapon_traits.contains(&trait_)
+            || item
+                .rolled_affixes
+                .iter()
+                .any(|rolled| rolled.weapon_traits.contains(&trait_))
     }
 
     pub(super) fn item_projectile_profile(
@@ -1290,9 +1290,7 @@ impl Game {
     }
 
     pub(super) fn item_instance_weight(&self, item: &ItemInstance) -> u16 {
-        item.rolled_affixes
-            .iter()
-            .find_map(|rolled| rolled.weight_tenths_pound)
+        item.weight_override()
             .unwrap_or_else(|| self.item_weight_tenths_pound(&item.kind_id))
     }
 
@@ -1476,7 +1474,7 @@ impl Game {
                     let hold = crate::stats::strength_hold_pounds(
                         self.effective_player_attributes().strength,
                     );
-                    let launcher_weight_pounds = launcher_definition.weight_tenths_pound / 10;
+                    let launcher_weight_pounds = self.item_instance_weight(item) / 10;
                     let heavy_shoot = hold < launcher_weight_pounds;
                     let heavy_to_hit = if heavy_shoot {
                         2_i32.saturating_mul(
@@ -1589,7 +1587,7 @@ impl Game {
                         ammunition_endurance,
                         ammo_item_id: ammunition.map(|item| item.id.clone()),
                         ammo_kind_id: ammo_definition.id.clone(),
-                        ammunition_weight_tenths_pound: ammo_definition.weight_tenths_pound,
+                        ammunition_weight_tenths_pound: ammunition.map_or(ammo_definition.weight_tenths_pound, |item| self.item_instance_weight(item)),
                         ammunition_type: profile.ammunition_type,
                         ammo_break_chance_percent,
                         base_shot,
@@ -1662,7 +1660,7 @@ impl Game {
         let definition = self.content.item(&weapon.kind_id).unwrap();
         other_empty
             && self.riding_mount_level().is_none()
-            && (definition.weight_tenths_pound > 99
+            && (self.item_instance_weight(weapon) > 99
                 || definition
                     .rfb_base_kind
                     .is_some_and(|kind| kind.tval == 22 || (kind.tval == 21 && kind.sval == 51)))
@@ -1724,7 +1722,7 @@ impl Game {
                             item.kind_id.clone(),
                             profile,
                             item_definition.riding_weapon_kind,
-                            item_definition.weight_tenths_pound,
+                            self.item_instance_weight(item),
                             i32::from(item.enchantments.to_hit)
                                 - self.equipped_curse_penalty(
                                     item,
@@ -1732,9 +1730,7 @@ impl Game {
                                     5,
                                     15,
                                 ),
-                            item.rolled_affixes
-                                .iter()
-                                .find_map(|rolled| rolled.melee_damage_dice),
+                            item.melee_damage_dice(),
                             good_priest_weapon_penalty(
                                 priest_class,
                                 good_realm,
@@ -2654,7 +2650,7 @@ impl Game {
                 if matches!(slot_type, Some("weapon" | "tool"))
                     && let Some(definition) = self.content.item(&item.kind_id)
                 {
-                    let bonus = i32::from(definition.weight_tenths_pound / 10)
+                    let bonus = i32::from(self.item_instance_weight(item) / 10)
                         .saturating_add(i32::from(definition.tunneling_pval).saturating_mul(20));
                     if bonus > digging_equipment.1 {
                         digging_equipment = (item.id.clone(), bonus);

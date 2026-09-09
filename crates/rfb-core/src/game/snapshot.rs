@@ -904,6 +904,7 @@ impl Game {
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
+                    artifact_name: self.visible_artifact_name(item),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     absorbable: self.item_can_be_absorbed(item),
                     position: *position,
@@ -938,6 +939,7 @@ impl Game {
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
+                    artifact_name: self.visible_artifact_name(item),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     usable: self.content.item(&item.kind_id).is_some_and(|definition| {
                         definition.use_action.as_ref().is_some_and(|action| {
@@ -1041,6 +1043,7 @@ impl Game {
                     id: item.id.clone(),
                     kind_id: item.kind_id.clone(),
                     display_name_key: self.item_display_name_key(&item.kind_id),
+                    artifact_name: self.visible_artifact_name(item),
                     knowledge: self.item_knowledge_dto(&item.kind_id),
                     capture_ball: self
                         .content

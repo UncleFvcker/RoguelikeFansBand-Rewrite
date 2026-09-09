@@ -1240,11 +1240,7 @@ impl Game {
             .iter()
             .enumerate()
             .filter(|(_, item)| item.location == ItemLocation::Inventory)
-            .filter(|(_, item)| {
-                self.content
-                    .item(&item.kind_id)
-                    .is_some_and(|definition| !definition.tags.iter().any(|tag| tag == "artifact"))
-            })
+            .filter(|(_, item)| !item.is_artifact(&self.content))
             .map(|(item_index, item)| (item.id.clone(), item_index))
             .collect::<Vec<_>>();
         candidates.sort_by(|left, right| left.0.cmp(&right.0));
@@ -1301,7 +1297,7 @@ impl Game {
             .filter(|(_, item)| {
                 self.content.item(&item.kind_id).is_some_and(|definition| {
                     definition.tags.iter().any(|tag| tag == "food")
-                        && !definition.tags.iter().any(|tag| tag == "artifact")
+                        && !item.is_artifact(&self.content)
                 })
             })
             .map(|(item_index, item)| (item.id.clone(), item_index))
@@ -1333,10 +1329,7 @@ impl Game {
         let Some(item_index) = self.items.iter().position(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == "light")
                 && item.fuel.is_some_and(|fuel| fuel.current > 0)
-                && self
-                    .content
-                    .item(&item.kind_id)
-                    .is_some_and(|definition| !definition.tags.iter().any(|tag| tag == "artifact"))
+                && !item.is_artifact(&self.content)
         }) else {
             return;
         };
@@ -1426,10 +1419,7 @@ impl Game {
         if enchantments.is_empty() {
             return;
         }
-        let is_artifact = self
-            .content
-            .item(&self.items[item_index].kind_id)
-            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        let is_artifact = self.items[item_index].is_artifact(&self.content);
         if is_artifact && self.rng.bounded(100) < 71 {
             return;
         }
@@ -2418,6 +2408,112 @@ impl Game {
             });
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod artifact_identity_tests {
+    use super::*;
+
+    fn weapon_game() -> Game {
+        let mut game = Game::new_with_build(85, "demo.build.warrior").unwrap();
+        let mut weapon = game
+            .items
+            .iter()
+            .find(|item| {
+                game.content
+                    .item(&item.kind_id)
+                    .unwrap()
+                    .melee_profile
+                    .is_some()
+            })
+            .unwrap()
+            .clone();
+        weapon.artifact_name = Some("(永恒蘑菇)".to_owned());
+        weapon.enchantments = ItemEnchantmentsDto {
+            to_hit: 4,
+            to_damage: 4,
+            to_armor: 0,
+        };
+        game.items = vec![weapon];
+        game
+    }
+
+    #[test]
+    fn artifact_identity_disenchantment_uses_the_source_seventy_one_percent_save() {
+        let game = weapon_game();
+        let mut resisted = 0;
+        let mut reduced = 0;
+        for seed in 0..128 {
+            let mut trial = game.clone();
+            trial.rng = RfbRng::seeded(seed);
+            let mut expected_rng = trial.rng.clone();
+            let status_branch = expected_rng.bounded(5) != 0;
+            let protected = if status_branch {
+                true
+            } else {
+                expected_rng.bounded(1);
+                expected_rng.bounded(100) < 71
+            };
+            trial.resolve_player_disenchantment();
+            assert_eq!(
+                trial.items[0].enchantments.to_hit,
+                if protected { 4 } else { 3 }
+            );
+            assert_eq!(trial.rng, expected_rng);
+            if !status_branch {
+                if protected {
+                    resisted += 1;
+                } else {
+                    reduced += 1;
+                }
+            }
+        }
+        assert!(resisted > 0 && reduced > 0);
+    }
+
+    #[test]
+    fn artifact_identity_monster_theft_and_light_drain_exclude_the_instance() {
+        let mut game = weapon_game();
+        game.entities = vec![game.player.clone()];
+        apply_status_application(
+            &mut game.player.statuses,
+            melee_status(STATUS_PARALYSIS, 100, "test.monster"),
+        );
+        game.items[0].location = ItemLocation::Inventory;
+        let before = game.items.clone();
+        let rng = game.rng.clone();
+        assert!(!game.monster_steal_item(0, &mut Vec::new()).unwrap());
+        assert_eq!(game.items, before);
+        assert_eq!(game.rng, rng);
+        game.items[0].artifact_name = None;
+        assert!(game.monster_steal_item(0, &mut Vec::new()).unwrap());
+        assert!(matches!(
+            game.items[0].location,
+            ItemLocation::CarriedBy { .. }
+        ));
+
+        let mut game = Game::new_with_build(85, "demo.build.warrior").unwrap();
+        game.entities = vec![game.player.clone()];
+        let mut light = game
+            .items
+            .iter()
+            .find(|item| item.fuel.is_some())
+            .unwrap()
+            .clone();
+        light.location = ItemLocation::Equipped {
+            slot_id: "light".to_owned(),
+        };
+        light.artifact_name = Some("(永恒蘑菇)".to_owned());
+        game.items = vec![light];
+        let before = game.items.clone();
+        let rng = game.rng.clone();
+        game.monster_eat_light(0, &mut Vec::new());
+        assert_eq!(game.items, before);
+        assert_eq!(game.rng, rng);
+        game.items[0].artifact_name = None;
+        game.monster_eat_light(0, &mut Vec::new());
+        assert!(game.items[0].fuel.unwrap().current < before[0].fuel.unwrap().current);
     }
 }
 

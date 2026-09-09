@@ -17,6 +17,7 @@ use super::*;
 
 mod abilities;
 mod archer;
+mod artifact_identity;
 mod attribute_sources;
 mod capture_ball;
 mod cavalry;

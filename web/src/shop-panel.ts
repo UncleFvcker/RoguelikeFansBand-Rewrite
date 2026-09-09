@@ -59,6 +59,7 @@ interface ShopSelection {
   readonly id: string;
   readonly kindId: string;
   readonly displayNameKey: string;
+  readonly artifactName?: string | null;
   readonly quantity: number;
   readonly inscription?: string;
   readonly capturedActor?: InventoryItemDto["capturedActor"];
@@ -74,7 +75,7 @@ export class ShopPanel {
   readonly #localization: Localization;
   readonly #dispatch: (command: GameCommand) => Promise<void>;
   readonly #formatEvent: (event: GameEventDto) => string;
-  readonly #visibleItemName: (displayNameKey: string, kindId: string) => string;
+  readonly #visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
   readonly #contentName: (id: string | undefined) => string;
   readonly #beforeOpen: () => void;
   readonly #dom: ShopDom;
@@ -91,7 +92,7 @@ export class ShopPanel {
     localization: Localization;
     dispatch: (command: GameCommand) => Promise<void>;
     formatEvent: (event: GameEventDto) => string;
-    visibleItemName: (displayNameKey: string, kindId: string) => string;
+    visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
     contentName: (id: string | undefined) => string;
     beforeOpen: () => void;
   }) {
@@ -549,6 +550,7 @@ export class ShopPanel {
         id: item.id,
         kindId: item.kindId,
         displayNameKey: item.displayNameKey,
+        artifactName: item.artifactName,
         quantity: item.quantity,
         inscription: item.inscription ?? undefined,
         capturedActor: item.capturedActor,
@@ -597,7 +599,7 @@ export class ShopPanel {
   }
 
   #itemName(selection: ShopSelection): string {
-    const ball = this.#visibleItemName(selection.displayNameKey, selection.kindId);
+    const ball = this.#visibleItemName(selection.displayNameKey, selection.kindId, selection.artifactName);
     return selection.capturedActor
       ? this.#localization.format("capture-ball-name-contained", {
           ball,
@@ -699,6 +701,7 @@ function sellSelection(item: InventoryItemDto, quote: ShopSellQuoteDto): ShopSel
     id: item.id,
     kindId: item.kindId,
     displayNameKey: item.displayNameKey,
+        artifactName: item.artifactName,
     quantity: quote.unavailableReason ? item.quantity : quote.maximumQuantity,
     inscription: item.inscription ?? undefined,
     capturedActor: item.capturedActor,

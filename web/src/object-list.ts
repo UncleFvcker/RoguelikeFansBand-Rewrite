@@ -41,7 +41,7 @@ export interface ObjectListProjection {
   readonly glyphFor: (contentId: string) => string | undefined;
   readonly localize: (nameKey: string) => string;
   readonly contentName: (contentId: string) => string;
-  readonly visibleItemName: (displayNameKey: string, kindId: string) => string;
+  readonly visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
 }
 
 interface ObjectListDom {
@@ -58,7 +58,7 @@ export class ObjectListPanel {
   readonly #state: AppState;
   readonly #localization: Localization;
   readonly #contentName: (contentId: string) => string;
-  readonly #visibleItemName: (displayNameKey: string, kindId: string) => string;
+  readonly #visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
   readonly #onTravel: (position: Position) => void;
   readonly #dom: ObjectListDom;
   #entries: ObjectListEntry[] = [];
@@ -72,7 +72,7 @@ export class ObjectListPanel {
     state: AppState;
     localization: Localization;
     contentName: (contentId: string) => string;
-    visibleItemName: (displayNameKey: string, kindId: string) => string;
+    visibleItemName: (displayNameKey: string, kindId: string, artifactName?: string | null) => string;
     onTravel: (position: Position) => void;
   }) {
     this.#document = options.document;
@@ -380,8 +380,8 @@ export function buildObjectListEntries(options: ObjectListProjection): ObjectLis
       category: action?.disposition === "pick-up" ? "needed" : "items",
       position: item.position,
       name: item.inscription
-        ? `${options.visibleItemName(item.displayNameKey, item.kindId)} {${item.inscription}}`
-        : options.visibleItemName(item.displayNameKey, item.kindId),
+        ? `${options.visibleItemName(item.displayNameKey, item.kindId, item.artifactName)} {${item.inscription}}`
+        : options.visibleItemName(item.displayNameKey, item.kindId, item.artifactName),
       glyph: options.glyphFor(item.kindId) ?? "?",
       distance: gridDistance(options.playerPosition, item.position),
       offsetX: item.position.x - options.playerPosition.x,

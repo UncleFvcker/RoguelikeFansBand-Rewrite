@@ -174,6 +174,11 @@ fn append_starting_item(
                     .expect("validated birth item quantity must fit u32")
         });
     items.push(ItemInstance {
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
         id,
         kind_id: starting_item.item_kind_id.clone(),
         quantity,
@@ -415,6 +420,11 @@ impl Game {
                     2,
                 );
                 let mut item = ItemInstance {
+                    artifact_name: None,
+                    intrinsic_melee_damage_dice: None,
+                    intrinsic_weight_tenths_pound: None,
+                    intrinsic_weapon_traits: Default::default(),
+                    intrinsic_curse_effects: Default::default(),
                     id: spawn.instance_id.clone(),
                     kind_id: spawn.kind_id.clone(),
                     quantity: spawn.quantity,

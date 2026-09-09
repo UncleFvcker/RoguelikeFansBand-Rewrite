@@ -91,6 +91,11 @@ pub(super) struct GeneratedItemDraft {
 impl GeneratedItemDraft {
     pub(super) fn into_item_instance(self, id: String, location: ItemLocation) -> ItemInstance {
         ItemInstance {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id,
             kind_id: self.kind_id,
             quantity: self.quantity,

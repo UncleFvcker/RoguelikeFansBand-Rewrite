@@ -668,6 +668,11 @@ pub(super) fn reward_item(
         ItemQualityDto::Fine
     };
     let mut item = ItemInstance {
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
         id: reward.item_instance_id.clone(),
         kind_id: entry.item_kind_id.clone(),
         quantity: entry.quantity,
@@ -872,7 +877,7 @@ impl Game {
             .filter(|(_, item)| {
                 item.location == ItemLocation::Inventory
                     && item.quantity < definition.max_stack
-                    && item_instances_stack_compatible(item, &reward)
+                    && item_instances_stack_compatible(&self.content, item, &reward)
             })
             .map(|(index, _)| index)
             .collect::<Vec<_>>();

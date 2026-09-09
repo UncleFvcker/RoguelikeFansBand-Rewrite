@@ -414,7 +414,7 @@ export function renderCharacterAttributeSources(
           const value = signedModifier(item.modifiers[row.attribute]);
           equipmentDetails.append(text("p", localization.format("attribute-source-item", {
             slot: `${localization.format(`equipment-slot-${slot.slotType}` as MessageKey)} (${slot.id})`,
-            name: localization.format(item.displayNameKey as MessageKey),
+            name: `${localization.format(item.displayNameKey as MessageKey)}${item.artifactName ? ` ${item.artifactName}` : ""}`,
             value: known ? value : localization.format("attribute-source-known-value", { value }),
           })));
         }

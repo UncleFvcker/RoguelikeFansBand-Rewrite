@@ -512,6 +512,11 @@ impl Game {
             let (activation, charges) =
                 initial_item_runtime_state(&self.content, &mut self.rng, &kind_id, &[], 1);
             Some(ItemInstance {
+                artifact_name: None,
+                intrinsic_melee_damage_dice: None,
+                intrinsic_weight_tenths_pound: None,
+                intrinsic_weapon_traits: Default::default(),
+                intrinsic_curse_effects: Default::default(),
                 id: self.allocate_item_instance_id()?,
                 activation,
                 charges,

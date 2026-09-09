@@ -112,9 +112,11 @@ impl Game {
                     .and_then(|kind| kind.rfb_base_kind)
                     .map_or(0, |kind| kind.tval);
                 let new = ego::curses::get_curse(&mut self.rng, power, tval);
-                self.items[index].rolled_affixes[0]
-                    .curse_effects
-                    .insert(new);
+                if let Some(roll) = self.items[index].rolled_affixes.first_mut() {
+                    roll.curse_effects.insert(new);
+                } else {
+                    self.items[index].intrinsic_curse_effects.insert(new);
+                }
             }
         }
         for (effect, odds, category) in [

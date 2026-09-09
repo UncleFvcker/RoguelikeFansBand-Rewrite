@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.237";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 9;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 9;
+pub const PROTOCOL_VERSION: &str = "1.238";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 10;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 10;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -3765,6 +3765,8 @@ pub struct SummonDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ItemDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_name: Option<String>,
     pub id: String,
     pub kind_id: String,
     #[serde(default)]
@@ -4004,6 +4006,8 @@ pub struct CapturedActorDto {
 #[serde(rename_all = "camelCase")]
 pub struct InventoryItemDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bag_capacity: Option<u16>,
     pub id: String,
     pub kind_id: String,
@@ -4095,6 +4099,8 @@ pub struct BodySlotDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentItemDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_name: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub bag_capacity: Option<u16>,
     pub id: String,
@@ -4235,6 +4241,8 @@ pub struct ShopOwnerDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ShopStockItemDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_name: Option<String>,
     pub id: String,
     pub kind_id: String,
     pub display_name_key: String,
@@ -4309,6 +4317,8 @@ pub struct ShopDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase")]
 pub struct HomeItemDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_name: Option<String>,
     pub id: String,
     pub kind_id: String,
     pub display_name_key: String,
@@ -5167,6 +5177,16 @@ pub struct CapturedActorSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ItemSaveDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intrinsic_melee_damage_dice: Option<MeleeDamageDiceDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intrinsic_weight_tenths_pound: Option<u16>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub intrinsic_weapon_traits: Vec<WeaponTraitDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub intrinsic_curse_effects: Vec<ItemCurseEffectDto>,
     pub id: String,
     pub kind_id: String,
     pub position: Position,
@@ -5211,6 +5231,16 @@ pub struct ItemSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InventoryItemSaveDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intrinsic_melee_damage_dice: Option<MeleeDamageDiceDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intrinsic_weight_tenths_pound: Option<u16>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub intrinsic_weapon_traits: Vec<WeaponTraitDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub intrinsic_curse_effects: Vec<ItemCurseEffectDto>,
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
@@ -5254,6 +5284,16 @@ pub struct InventoryItemSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentItemSaveDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intrinsic_melee_damage_dice: Option<MeleeDamageDiceDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intrinsic_weight_tenths_pound: Option<u16>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub intrinsic_weapon_traits: Vec<WeaponTraitDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub intrinsic_curse_effects: Vec<ItemCurseEffectDto>,
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
@@ -5298,6 +5338,16 @@ pub struct EquipmentItemSaveDto {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CarriedItemSaveDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub artifact_name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intrinsic_melee_damage_dice: Option<MeleeDamageDiceDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub intrinsic_weight_tenths_pound: Option<u16>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub intrinsic_weapon_traits: Vec<WeaponTraitDto>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub intrinsic_curse_effects: Vec<ItemCurseEffectDto>,
     pub id: String,
     pub kind_id: String,
     pub quantity: u32,
@@ -6056,6 +6106,7 @@ mod tests {
                 summon: None,
             }],
             items: vec![ItemDto {
+                artifact_name: None,
                 id: "demo.item.ground.1".to_owned(),
                 kind_id: "demo.item.shard".to_owned(),
                 display_name_key: "item-demo-shard-name".to_owned(),
@@ -6071,6 +6122,7 @@ mod tests {
             }],
             defeated_unique_actor_kind_ids: Vec::new(),
             inventory: vec![InventoryItemDto {
+                artifact_name: None,
                 bag_capacity: None,
                 id: "demo.item.inventory.1".to_owned(),
                 kind_id: "demo.item.charm".to_owned(),
@@ -6117,6 +6169,7 @@ mod tests {
                 throw_profile: None,
             }],
             equipment: vec![EquipmentItemDto {
+                artifact_name: None,
                 bag_capacity: None,
                 id: "demo.item.equipment.1".to_owned(),
                 kind_id: "demo.item.charm".to_owned(),

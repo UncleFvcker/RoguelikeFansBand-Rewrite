@@ -1,0 +1,78 @@
+{
+  "sourceCommit": "a0d92b6378d148c5262cc236b8fa6ed2ca06a54c",
+  "name": "(永恒蘑菇)",
+  "nameSource": "src/spells3.c:Eternal Mushroom",
+  "cases": [
+    {
+      "kindId": "demo.item.dagger",
+      "object": {
+        "tval": 23,
+        "sval": 4,
+        "pval": 2,
+        "ac": 0,
+        "toH": 7,
+        "toD": 9,
+        "toA": 0,
+        "baseToH": 0,
+        "dd": 3,
+        "ds": 7,
+        "baseDd": 1,
+        "baseDs": 5,
+        "mult": 0,
+        "baseMult": 0,
+        "weight": 77,
+        "flags": [
+          "BLESSED",
+          "BRAND_COLD",
+          "FREE_ACT",
+          "RES_FIRE",
+          "SHOW_MODS",
+          "STR",
+          "TOWN"
+        ],
+        "capacity": 0,
+        "artifact": true,
+        "fixedArtifact": 0,
+        "permanentCurse": false,
+        "activationValue": 300,
+        "activationTimeout": 10
+      },
+      "expected": 12626
+    },
+    {
+      "kindId": "demo.item.feanorian-lamp",
+      "object": {
+        "tval": 39,
+        "sval": 2,
+        "pval": 2,
+        "ac": 0,
+        "toH": 7,
+        "toD": 9,
+        "toA": 0,
+        "baseToH": 0,
+        "dd": 1,
+        "ds": 1,
+        "baseDd": 1,
+        "baseDs": 1,
+        "mult": 0,
+        "baseMult": 0,
+        "weight": 77,
+        "flags": [
+          "BLESSED",
+          "BRAND_COLD",
+          "FREE_ACT",
+          "IGNORE_FIRE",
+          "RES_FIRE",
+          "STR"
+        ],
+        "capacity": 0,
+        "artifact": true,
+        "fixedArtifact": 0,
+        "permanentCurse": false,
+        "activationValue": 300,
+        "activationTimeout": 10
+      },
+      "expected": 19912
+    }
+  ]
+}

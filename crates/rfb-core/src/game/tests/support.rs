@@ -394,6 +394,11 @@ pub(super) fn give_inventory_item(game: &mut Game, id: &str, kind_id: &str) {
     let (activation, charges) =
         initial_item_runtime_state(&game.content, &mut game.rng, kind_id, &[], 1);
     game.items.push(ItemInstance {
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
         id: id.to_owned(),
         kind_id: kind_id.to_owned(),
         quantity: 1,

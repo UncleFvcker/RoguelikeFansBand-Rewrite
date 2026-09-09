@@ -17,6 +17,16 @@ import {
   selectedRechargingItems,
 } from "./inventory-panel.ts";
 
+test("inventory rows and search use the projected instance artifact name", (t) => {
+  const { panel, dom } = createInventoryFixture(t);
+  const known = item("dagger", { artifactName: "(永恒蘑菇)", equipmentSlot: "weapon" });
+  panel.render([known, item("unknown")], []);
+  assert.match(dom.inventoryList.children[0].children[0].children[2].textContent, /永恒蘑菇/);
+  dom.inventorySearch.value = "永恒蘑菇";
+  dom.inventorySearch.dispatchEvent(new Event("input"));
+  assert.deepEqual(dom.inventoryList.children.map((row) => row.dataset.itemId), ["dagger"]);
+});
+
 test("inventory filters use public capabilities and distinguish lights from fuel", () => {
   const items = [
     item("sword", { equipmentSlot: "weapon" }),
@@ -436,7 +446,7 @@ function createInventoryFixture(t) {
   const panel = new InventoryPanel({
     dom, state,
     localization: { format: (key, args) => `${key} ${JSON.stringify(args)}` },
-    formatter: { visibleItemName: (key) => key, equipmentSlotName: (slot) => slot, itemPropertyName: (key) => key },
+    formatter: { visibleItemName: (key, _kind, name) => name ? `${key} ${name}` : key, equipmentSlotName: (slot) => slot, itemPropertyName: (key) => key },
     dispatch: async (command) => { commands.push(command); },
     startTargeting: (...args) => targets.push(args), updateCampaignAction: () => {}, announce: () => {},
   });

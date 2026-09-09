@@ -397,6 +397,7 @@ impl Game {
                 item.activation
                     .as_ref()
                     .map(|activation| activation.profile_id.as_str()),
+                item.artifact_name.is_some(),
             )
             .and_then(|generation| {
                 item.activation

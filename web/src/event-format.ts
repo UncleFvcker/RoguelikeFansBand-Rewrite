@@ -1783,11 +1783,12 @@ export function createPresentationFormatter(
   function visibleItemName(
     displayNameKey: string | undefined,
     fallbackKindId: string | undefined,
+    artifactName?: string | null,
   ): string {
-    if (displayNameKey && localization.hasMessage(localization.locale, displayNameKey)) {
-      return localization.format(displayNameKey);
-    }
-    return contentName(fallbackKindId);
+    const base = displayNameKey && localization.hasMessage(localization.locale, displayNameKey)
+      ? localization.format(displayNameKey)
+      : contentName(fallbackKindId);
+    return artifactName ? `${base} ${artifactName}` : base;
   }
 
   function visibleItemNameForKind(kindId: string | undefined): string {

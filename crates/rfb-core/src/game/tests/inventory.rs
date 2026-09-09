@@ -297,6 +297,11 @@ fn elemental_brand_is_suppressed_only_by_matching_immunity() {
         |item| !matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &weapon_slot),
     );
     game.items.push(ItemInstance {
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
         id: "test.item.ember-edge".to_owned(),
         kind_id: "demo.item.ember-edge".to_owned(),
         quantity: 1,
@@ -358,6 +363,11 @@ fn offensive_flag_dto_hides_unknown_affix_contributions() {
     let mut game = Game::new(0);
     let item_id = "test.item.known-offense".to_owned();
     game.items.push(ItemInstance {
+        artifact_name: None,
+        intrinsic_melee_damage_dice: None,
+        intrinsic_weight_tenths_pound: None,
+        intrinsic_weapon_traits: Default::default(),
+        intrinsic_curse_effects: Default::default(),
         id: item_id.clone(),
         kind_id: "demo.item.ember-edge".to_owned(),
         quantity: 1,

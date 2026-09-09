@@ -491,3 +491,10 @@ Schema 升至 v114，容器仍为 v1。属性包新增 `bagCapacity`，表示非
 该底材的普通、Good 或 Holding 容量。Phase 复用既有重量覆盖字段。统一库存按实际
 非弹药格和箭袋数量重新校验，拒绝弹药侵占背包格的非法存档；不增加旧开发存档迁移。
 详见 [E8.4](contract-v315-bag-containers.md)。
+
+E8.5a（contract-v316）将 Protocol 升至 1.238、save header/payload 升至 v10、State Hash
+Schema 升至 v115，容器仍为 v1。四类物品 save DTO 增加 artifactName、intrinsicMeleeDamageDice、
+intrinsicWeightTenthsPound、intrinsicWeaponTraits、intrinsicCurseEffects；覆盖地面/离层、背包、
+装备、怪物携带、家与商店。随机神器保留普通底材与独立实例身份，恢复不重新抽样。非法名称、
+数量、底材组合、骰数/重量和非规范集合被拒绝；不添加旧开发存档兼容。详见
+[E8.5a](contract-v316-random-artifact-identity.md)。

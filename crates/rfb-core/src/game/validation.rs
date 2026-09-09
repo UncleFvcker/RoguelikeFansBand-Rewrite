@@ -192,6 +192,30 @@ pub(super) fn item_creation_state_is_valid(
         ])
         .all(|(range, value)| range.contains(&value));
     player_made_state_is_valid
+        && item.artifact_name.as_ref().is_none_or(|name| {
+            !name.trim().is_empty()
+                && name.len() < 1024
+                && !name.chars().any(char::is_control)
+                && item.quantity == 1
+                && definition
+                    .rfb_base_kind
+                    .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=40 | 45 | 46))
+                && definition.rfb_value.is_some()
+                && definition.artifact_generation.is_none()
+                && !definition.tags.iter().any(|tag| tag == "artifact")
+                && item
+                    .affix_ids
+                    .iter()
+                    .all(|id| id == "rfb-legacy.affix.blasted")
+        })
+        && item.intrinsic_melee_damage_dice.is_none_or(|dice| {
+            definition.melee_profile.is_some()
+                && (1..=255).contains(&dice.dice)
+                && (1..=255).contains(&dice.sides)
+        })
+        && item
+            .intrinsic_weight_tenths_pound
+            .is_none_or(|weight| weight <= 10_000)
         && item.rolled_affixes.iter().all(|rolled| {
             rolled.device_pval.is_none()
                 || (definition.tags.iter().any(|tag| tag == "device")

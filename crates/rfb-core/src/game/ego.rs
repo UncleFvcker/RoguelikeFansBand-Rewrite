@@ -2610,6 +2610,11 @@ mod tests {
 
     fn launcher_instance(kind_id: &str) -> ItemInstance {
         ItemInstance {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: "test.item.launcher".to_owned(),
             kind_id: kind_id.to_owned(),
             quantity: 1,
@@ -3406,6 +3411,11 @@ mod tests {
     #[test]
     fn ego_materialization_commits_complete_instance_state_only_after_success() {
         let mut item = ItemInstance {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: "test.item.weapon".to_owned(),
             kind_id: "demo.item.long-sword".to_owned(),
             quantity: 1,
@@ -3492,6 +3502,11 @@ mod tests {
     fn rolled_weapon_ego_state_round_trips_without_rng_draws() {
         let game = Game::new(57);
         let mut item = ItemInstance {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: "test.item.weapon".to_owned(),
             kind_id: "demo.item.long-sword".to_owned(),
             quantity: 1,
@@ -3547,7 +3562,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(STATE_HASH_SCHEMA_VERSION, 114);
+        assert_eq!(STATE_HASH_SCHEMA_VERSION, 115);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,
@@ -3561,6 +3576,11 @@ mod tests {
             ..AffixPropertyBundleDefinition::default()
         };
         let mut item = ItemInstance {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: "test.item.harp".to_owned(),
             kind_id: "demo.item.harp".to_owned(),
             quantity: 1,

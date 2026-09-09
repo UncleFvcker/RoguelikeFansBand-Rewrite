@@ -232,13 +232,17 @@ pub(in crate::game) fn curse_object(
             .map_or(roll.severity, |old| old.max(roll.severity)),
     );
     if !roll.effects.is_empty() {
-        if item.rolled_affixes.is_empty() {
-            item.rolled_affixes.push(RolledAffixState {
-                affix_id: item.affix_ids[0].clone(),
-                ..Default::default()
-            });
+        if item.affix_ids.is_empty() {
+            item.intrinsic_curse_effects.extend(roll.effects);
+        } else {
+            if item.rolled_affixes.is_empty() {
+                item.rolled_affixes.push(RolledAffixState {
+                    affix_id: item.affix_ids[0].clone(),
+                    ..Default::default()
+                });
+            }
+            item.rolled_affixes[0].curse_effects.extend(roll.effects);
         }
-        item.rolled_affixes[0].curse_effects.extend(roll.effects);
     }
     let mut pval = object.pval;
     let dynamic_pval = item

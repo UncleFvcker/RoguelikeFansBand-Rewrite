@@ -395,7 +395,10 @@ impl Game {
         let Some(definition) = self.content.item(&item.kind_id) else {
             return true;
         };
-        definition.resistances.contains_key(&ActorDamageType::Chaos)
+        item.intrinsic_properties
+            .resistances
+            .contains_key(&ActorDamageType::Chaos)
+            || definition.resistances.contains_key(&ActorDamageType::Chaos)
             || item.affix_ids.iter().any(|affix_id| {
                 self.content
                     .affix(affix_id)
@@ -412,7 +415,8 @@ impl Game {
         let Some(definition) = self.content.item(&item.kind_id) else {
             return true;
         };
-        definition.resists_projection_destruction
+        item.is_artifact(&self.content)
+            || definition.resists_projection_destruction
             || item.affix_ids.iter().any(|affix_id| {
                 self.content
                     .affix(affix_id)

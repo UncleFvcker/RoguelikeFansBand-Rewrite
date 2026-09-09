@@ -210,15 +210,13 @@ impl Game {
             &item.location,
             ItemLocation::Inventory | ItemLocation::Equipped { .. }
         ) || item.location == ItemLocation::Ground(self.player.position))
+            && !item.is_artifact(&self.content)
             && item.affix_ids.is_empty()
             && item.rolled_affixes.is_empty()
             && self.content.item(&item.kind_id).is_some_and(|definition| {
                 definition.melee_profile.is_some()
                     && !self.item_resists_enchantment(item)
-                    && !definition
-                        .tags
-                        .iter()
-                        .any(|tag| matches!(tag.as_str(), "artifact" | "unbrandable"))
+                    && !definition.tags.iter().any(|tag| tag == "unbrandable")
             })
     }
 
@@ -585,7 +583,7 @@ impl Game {
             .filter(|(_, existing)| {
                 existing.location == ItemLocation::Ground(position)
                     && existing.quantity < maximum_stack
-                    && item_instances_stack_compatible(existing, &item)
+                    && item_instances_stack_compatible(&self.content, existing, &item)
             })
             .map(|(index, _)| index)
             .collect::<Vec<_>>();
@@ -658,7 +656,11 @@ impl Game {
                             count + 1,
                             combines
                                 || (existing.quantity < maximum_stack
-                                    && item_instances_stack_compatible(existing, item)),
+                                    && item_instances_stack_compatible(
+                                        &self.content,
+                                        existing,
+                                        item,
+                                    )),
                         )
                     });
                 let pile_count = pile_count + usize::from(!combines);
@@ -721,6 +723,11 @@ impl Game {
 
         let item_id = self.allocate_item_instance_id()?;
         let mut item = ItemInstance {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: item_id.clone(),
             kind_id: item_kind_id.clone(),
             quantity,
@@ -859,10 +866,7 @@ impl Game {
             .position(|item| item.id == item_id)
             .expect("planned magic drain item must remain available");
         let item_kind_id = self.items[index].kind_id.clone();
-        let artifact = self
-            .content
-            .item(&item_kind_id)
-            .is_some_and(|definition| definition.tags.iter().any(|tag| tag == "artifact"));
+        let artifact = self.items[index].is_artifact(&self.content);
         let difficulty = self.items[index]
             .activation
             .as_ref()

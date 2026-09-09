@@ -772,6 +772,11 @@ impl Game {
             1,
         );
         self.items.push(ItemInstance {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id,
             kind_id: kind_id.to_owned(),
             quantity: 1,

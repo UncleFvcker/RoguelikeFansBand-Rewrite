@@ -1,6 +1,6 @@
 # E8 六项共享生成契约实施计划
 
-日期：2026-09-09。状态：E8.1–E8.4 已实现，验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)、[contract-v315](contract-v315-bag-containers.md)；E8.5 起待实施。负向随机神器仍随 E8.5 验收。
+日期：2026-09-10。状态：E8.1–E8.4、E8.5a 已实现，验证记录见 [contract-v312](contract-v312-real-equipment-value.md)、[contract-v313](contract-v313-negative-equipment.md)、[contract-v314](contract-v314-dragon-base-equipment.md)、[contract-v315](contract-v315-bag-containers.md)、[contract-v316](contract-v316-random-artifact-identity.md)；下一项为 E8.5b。自然随机神器与负向随机神器生成仍未开放。
 
 工作树：`D:/codex/RoguelikeFansBand-Rewrite-realms-items`，分支：`codex/realms-items`。
 代码基线：`1c9e62a2e`。缺口来自 [E8 集成审计](ego-integration-audit.md)。
@@ -22,7 +22,7 @@ Craft 领域四册/32 法术、怪物主题的完整基础物品分配表仍是�
 | E8.2 | 负向 power、负属性与价值驱动诅咒 | E8.1 | 1 | 中到大 |
 | E8.3 | 龙牙及五类龙系底材的基础生成 | E8.1 的 power/模式上下文 | 4 | 小到中 |
 | E8.4 | 三种背包的实例容量及 Ego 消费者 | 当前容器系统；使用 E8.1 上下文 | 5 | 中 |
-| E8.5a | 随机神器实例身份、属性表示及消费者 | E8.1、E8.2 | 2 | 中 |
+| E8.5a（已实现） | 随机神器实例身份、属性表示及消费者 | E8.1、E8.2 | 2 | 中 |
 | E8.5b | 真实 `create_artifact`、命名与估值筛选 | E8.5a；E8.3 的底材处理 | 2 | 大 |
 | E8.5c | 各非弹药类型的随机神器调度 | E8.5b | 2；3 的前置 | 中 |
 | E8.6 | 首饰价值上下限和完整重试 | E8.1、E8.2、E8.5c | 3 | 中 |
@@ -126,6 +126,8 @@ UI 显示真实已知容量和权威 Ego 名，不恢复“完全鉴定”“无
 ## 6. E8.5：非弹药随机神器
 
 ### E8.5a：实例身份与消费者
+
+已实现，验收与源端差别见 [contract-v316](contract-v316-random-artifact-identity.md)。以下为本批原始范围。
 
 当前神器判定多依赖物品定义的 `artifact` tag；随机神器需要保留普通底材并拥有实例神器身份和生成名称。
 在 [state.rs](../crates/rfb-core/src/state.rs) 增加必要实例信息，属性、激活、诅咒优先复用已有字段。

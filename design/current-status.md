@@ -1,6 +1,6 @@
 # 当前状态
 
-核对日期：2026-09-09。代码与测试基线以当前提交及下表版本为准。本文是当前能力、玩家入口和验收范围的统一记录；历史 contract、阶段方案和分支交接中的“当前”只指各自记录时点。
+核对日期：2026-09-10。代码与测试基线以当前提交及下表版本为准。本文是当前能力、玩家入口和验收范围的统一记录；历史 contract、阶段方案和分支交接中的“当前”只指各自记录时点。
 
 ## 状态口径
 
@@ -17,11 +17,11 @@
 
 | 项目 | 值 | 来源 |
 | --- | --- | --- |
-| 协议 | 1.237 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | v114 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
-| save header / payload | v9 / v9；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
+| 协议 | 1.238 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | v115 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| save header / payload | v10 / v10；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
 | 内容包 | 1.395.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
-| 行为基线 | contract-v315，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
+| 行为基线 | contract-v316，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
 | 内容定义数量 | 地形 201、角色 1402、物品 369、能力 1838、词缀 168、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
 
@@ -39,7 +39,12 @@ E8.3 已补入六种龙系底材及随机基础抗性/品牌、power 抑制与�
 
 E8.4 已将三种背包接入 SV_BAG 生成，使用最终容量及仅容纳非弹药的物品格；四种 Ego
 按真实消费者处理，Phase 背包不减内容重量。972 组独立 C 对照及拾取、换包、存档和容量
-显示通过，详见 [E8.4](contract-v315-bag-containers.md)。下一项为 E8.5 随机神器。
+显示通过，详见 [E8.4](contract-v315-bag-containers.md)。
+
+E8.5a 已接入普通底材上的随机神器实例身份、名称、实际属性/激活/诅咒及消费者，固定神器登记
+仍独立。两组 C 估值对照和实例装备、保护、鉴定、自动拾取、交易寄存、保存恢复通过，详见
+[E8.5a](contract-v316-random-artifact-identity.md)。本批仅内部表示；自然生成尚未开放，下一项为
+E8.5b 完整生成器与价值筛选。随机神器实例交易使用真实估值，普通物品和固定神器沿用既有定价。
 
 ## 职业与玩家入口
 

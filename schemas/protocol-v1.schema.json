@@ -8001,6 +8001,12 @@
             }
           ]
         },
+        "artifactName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "bagCapacity": {
           "type": [
             "integer",
@@ -10503,6 +10509,12 @@
     "HomeItemDto": {
       "type": "object",
       "properties": {
+        "artifactName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
         "capturedActor": {
           "anyOf": [
             {
@@ -10605,6 +10617,12 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "artifactName": {
+          "type": [
+            "string",
+            "null"
           ]
         },
         "bagCapacity": {
@@ -11027,6 +11045,12 @@
       "properties": {
         "absorbable": {
           "type": "boolean"
+        },
+        "artifactName": {
+          "type": [
+            "string",
+            "null"
+          ]
         },
         "curse": {
           "anyOf": [
@@ -13155,6 +13179,12 @@
             {
               "type": "null"
             }
+          ]
+        },
+        "artifactName": {
+          "type": [
+            "string",
+            "null"
           ]
         },
         "capturedActor": {

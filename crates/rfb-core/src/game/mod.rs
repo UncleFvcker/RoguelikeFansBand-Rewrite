@@ -230,7 +230,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 114;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 115;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -688,10 +688,11 @@ pub(crate) fn item_device_generation<'a>(
     kind_id: &str,
     affix_ids: &[String],
     profile_id: Option<&str>,
+    random_artifact: bool,
 ) -> Option<&'a ItemDeviceGenerationDefinition> {
     let definition = content.item(kind_id)?;
-    // blast_object preserves the activation after replacing artifact/ego identity.
-    if affix_ids.iter().any(|id| id == "rfb-legacy.affix.blasted")
+    // Instance activations outlive an Ego identity and are independent of the base kind.
+    if (random_artifact || affix_ids.iter().any(|id| id == "rfb-legacy.affix.blasted"))
         && let Some(id) = profile_id
     {
         return content
@@ -737,7 +738,7 @@ fn initial_item_runtime_state(
     if content.item(kind_id).is_none() {
         return (None, None);
     }
-    let Some(generation) = item_device_generation(content, kind_id, affix_ids, None) else {
+    let Some(generation) = item_device_generation(content, kind_id, affix_ids, None, false) else {
         return (None, initial_item_charges(content, kind_id));
     };
     let power = depth.clamp(1, 100);
@@ -2501,6 +2502,11 @@ impl Game {
         let (activation, charges) =
             initial_item_runtime_state(&self.content, &mut self.rng, kind_id, &[], depth);
         self.items.push(ItemInstance {
+            artifact_name: None,
+            intrinsic_melee_damage_dice: None,
+            intrinsic_weight_tenths_pound: None,
+            intrinsic_weapon_traits: Default::default(),
+            intrinsic_curse_effects: Default::default(),
             id: id.to_owned(),
             kind_id: kind_id.to_owned(),
             quantity: 1,
@@ -3093,10 +3099,10 @@ impl Game {
                     || (!through_walls && !self.is_visible(*position))
                     || !self.content.item(&item.kind_id).is_some_and(|definition| {
                         category == "item"
+                            || (category == "artifact" && item.is_artifact(&self.content))
                             || definition.tags.iter().any(|tag| tag == category)
                             || (category == "magic-item"
-                                && (definition.artifact_generation.is_some()
-                                    || definition.tags.iter().any(|tag| tag == "artifact")
+                                && (item.is_artifact(&self.content)
                                     || !item.affix_ids.is_empty()
                                     || !item.rolled_affixes.is_empty()
                                     || definition.device_generation.is_some()
@@ -3412,6 +3418,7 @@ impl Game {
                 item.activation
                     .as_ref()
                     .map(|activation| activation.profile_id.as_str()),
+                item.artifact_name.is_some(),
             )
             .and_then(|generation| {
                 generation
@@ -3449,6 +3456,7 @@ impl Game {
                 item.activation
                     .as_ref()
                     .map(|activation| activation.profile_id.as_str()),
+                item.artifact_name.is_some(),
             )?
             .activations
             .iter()
