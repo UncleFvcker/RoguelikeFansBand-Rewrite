@@ -557,7 +557,7 @@ impl Game {
                     continue;
                 }
             }
-            let harp_intrinsic_properties =
+            let mut base_intrinsic_properties =
                 self.content.item(&entry.item_kind_id).and_then(|item| {
                     materialize_rfb_harp_intrinsic_with_rng(&mut self.rng, item, generation_depth)
                 });
@@ -603,14 +603,50 @@ impl Game {
                 (item.max_stack == 1 && item.equipment_slot.is_some() && entry.quantity == 1)
                     || (table.rfb_ego_policy
                         == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
-                        && item.rfb_base_kind.is_some()
-                        && item.ammunition_profile.is_some())
+                        && ((item.rfb_base_kind.is_some() && item.ammunition_profile.is_some())
+                            || item.tags.iter().any(|tag| tag == "device")))
             });
-            let quality = if supports_quality {
+            let mut quality = if supports_quality {
                 rolled_quality
             } else {
                 ItemQualityDto::Ordinary
             };
+            let rfb_light = table.rfb_ego_policy
+                == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
+                && self
+                    .content
+                    .item(&entry.item_kind_id)
+                    .and_then(|item| item.rfb_base_kind)
+                    .is_some_and(|base| base.tval == 39);
+            let mut fuel = initial_item_fuel(&self.content, &entry.item_kind_id);
+            if rfb_light && let Some(fuel) = &mut fuel {
+                if fuel.current > 0 {
+                    fuel.current = 1 + self.rng.bounded(u64::from(fuel.current)) as u16;
+                }
+                if quality == ItemQualityDto::Fine && self.rng.bounded(3) == 0 {
+                    quality = ItemQualityDto::Exceptional;
+                }
+            }
+            let rfb_quiver = table.rfb_ego_policy
+                == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
+                && self
+                    .content
+                    .item(&entry.item_kind_id)
+                    .and_then(|item| item.rfb_base_kind)
+                    .is_some_and(|base| base.tval == 46 && base.sval == 0);
+            if rfb_quiver {
+                let capacity = super::ego::roll_quiver_capacity(&mut self.rng).saturating_add(
+                    if quality == ItemQualityDto::Fine {
+                        20
+                    } else {
+                        0
+                    },
+                );
+                base_intrinsic_properties = Some(AffixPropertyBundleDefinition {
+                    ammunition_capacity: Some(capacity),
+                    ..Default::default()
+                });
+            }
             let rfb_armor = table.rfb_ego_policy
                 == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
                 && self
@@ -623,24 +659,60 @@ impl Game {
             } else {
                 0
             };
-            let rfb_materialization = (table.rfb_ego_policy
+            let rfb_device = table.rfb_ego_policy
                 == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
-                && quality_allows_natural_affix(table.quality_policy, quality))
-            .then(|| {
+                && self
+                    .content
+                    .item(&entry.item_kind_id)
+                    .is_some_and(|item| item.tags.iter().any(|tag| tag == "device"));
+            let rfb_jewelry = jewelry
+                && table.rfb_ego_policy
+                    == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger);
+            let rfb_materialization = if rfb_jewelry {
                 self.content.item(&entry.item_kind_id).and_then(|item| {
-                    roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                    super::ego::roll_jewelry(
+                        &self.content,
                         &mut self.rng,
                         item,
-                        self.content.affix_definitions(),
                         generation_depth,
-                        harp_intrinsic_properties.as_ref(),
+                        if quality == ItemQualityDto::Exceptional {
+                            2
+                        } else {
+                            1
+                        },
                     )
                 })
-            })
-            .flatten();
+            } else if rfb_device {
+                self.content.item(&entry.item_kind_id).and_then(|item| {
+                    super::ego::materialize_device(
+                        &self.content,
+                        &mut self.rng,
+                        item,
+                        generation_depth,
+                        quality == ItemQualityDto::Exceptional,
+                        None,
+                    )
+                })
+            } else {
+                (table.rfb_ego_policy
+                    == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
+                    && quality_allows_natural_affix(table.quality_policy, quality))
+                .then(|| {
+                    self.content.item(&entry.item_kind_id).and_then(|item| {
+                        roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                            &mut self.rng,
+                            item,
+                            self.content.affix_definitions(),
+                            generation_depth,
+                            base_intrinsic_properties.as_ref(),
+                        )
+                    })
+                })
+                .flatten()
+            };
             let mut materialization = rfb_materialization.unwrap_or_else(|| {
                 let rolled_affix_id = preselected_generic_affix_id.unwrap_or_else(|| {
-                    if rfb_armor {
+                    if rfb_armor || rfb_light || rfb_quiver || rfb_device || rfb_jewelry {
                         return None;
                     }
                     let eligible_affixes = table
@@ -685,8 +757,19 @@ impl Game {
                     generation_depth,
                 )
             });
+            if rfb_jewelry
+                && !materialization.affix_ids.is_empty()
+                && quality == ItemQualityDto::Ordinary
+            {
+                quality = ItemQualityDto::Fine;
+            }
             if !materialization.clear_armor_enchantment {
                 materialization.enchantment_delta.to_armor += armor_enchantment;
+            }
+            if materialization.extinguish_fuel
+                && let Some(fuel) = &mut fuel
+            {
+                fuel.current = 0;
             }
             let EgoMaterialization {
                 kind_id_override,
@@ -699,7 +782,7 @@ impl Game {
                 charges,
                 ..
             } = materialization;
-            let mut intrinsic_properties = harp_intrinsic_properties.unwrap_or_default();
+            let mut intrinsic_properties = base_intrinsic_properties.unwrap_or_default();
             if rolled_affixes.is_empty()
                 && let Some(item) = self.content.item(&entry.item_kind_id).filter(|item| {
                     item.rfb_base_kind
@@ -741,7 +824,7 @@ impl Game {
                 curse,
                 activation,
                 charges,
-                fuel: initial_item_fuel(&self.content, &entry.item_kind_id),
+                fuel,
             });
         }
         generated

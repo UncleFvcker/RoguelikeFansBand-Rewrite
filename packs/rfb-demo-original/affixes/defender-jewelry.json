@@ -1,0 +1,218 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-defender-jewelry-description",
+  "deviceGeneration": {
+    "activationOptional": true,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "durationBonus": 20,
+          "durationDice": 1,
+          "durationSides": 20,
+          "type": "apply-stone-skin"
+        },
+        "id": "rfb.device-activation.ego-200-stone-skin",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-stone-skin-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 20,
+            "durationTicks": 20,
+            "grantedResistances": {
+              "poison": "resistant"
+            },
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.resist-poison",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-200-resist-pois",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-resist-pois-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "poison"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "durationBonus": 20,
+            "durationDice": 1,
+            "durationSides": 20,
+            "type": "resist-elements"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-200-resistance",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-resistance-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationTicks": 100,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.protection-from-evil",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-200-prot-evil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-prot-evil-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 90,
+        "effect": {
+          "effect": {
+            "durationBonus": 8,
+            "durationDice": 1,
+            "durationSides": 8,
+            "type": "invulnerability"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-200-invulnerability",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-invulnerability-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 7770
+        },
+        "rfbBiases": [
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 15
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 70,
+  "id": "rfb-legacy.affix.defender-jewelry",
+  "nameKey": "affix-legacy-defender-jewelry-name",
+  "rfbEgo": {
+    "rarity": 6,
+    "sourceIndex": 200,
+    "types": [
+      "ring",
+      "amulet"
+    ]
+  },
+  "tags": [
+    "amulet",
+    "legacy-import",
+    "ring"
+  ]
+}

@@ -1727,12 +1727,21 @@ impl Game {
                                     usize::try_from(self.rng.bounded(candidates.len() as u64))
                                         .expect("device candidate roll must fit usize");
                                 let item_index = candidates[candidate];
+                                let holds_energy = super::ego::item_has_ego(
+                                    &self.content,
+                                    &self.items[item_index],
+                                    255,
+                                );
                                 let target_kind_id = self.items[item_index].kind_id.clone();
                                 let charges = self.items[item_index]
                                     .charges
                                     .as_mut()
                                     .expect("selected device must retain charges");
-                                let drained = charges.current.min(definition.level);
+                                let drained = if holds_energy {
+                                    0
+                                } else {
+                                    charges.current.min(definition.level)
+                                };
                                 charges.current -= drained;
                                 let caster = &mut self.entities[index];
                                 caster.hp =

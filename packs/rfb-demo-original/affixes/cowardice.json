@@ -12,11 +12,8 @@
         },
         "deviceCheckDifficulty": 20,
         "effect": {
-          "effect": {
-            "minimumDistance": 100,
-            "type": "teleport-self"
-          },
-          "type": "ability-effect"
+          "maximumDistance": 100,
+          "type": "random-teleport"
         },
         "id": "rfb.device-activation.ego-95-teleport",
         "maxDepth": 100,

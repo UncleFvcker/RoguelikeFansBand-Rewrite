@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-resistance-device-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "id": "rfb-legacy.affix.resistance-device",
+  "nameKey": "affix-legacy-resistance-device-name",
+  "rfbEgo": {
+    "rarity": 1,
+    "sourceIndex": 250,
+    "types": [
+      "device"
+    ]
+  },
+  "tags": [
+    "device",
+    "legacy-import"
+  ]
+}

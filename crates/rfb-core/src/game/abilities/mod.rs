@@ -300,7 +300,7 @@ impl Game {
                 self.resolve_player_banish_evil_effect(&ability, events, changed);
             }
             (
-                AbilityEffectDefinition::WrathOfGod,
+                AbilityEffectDefinition::WrathOfGod { .. },
                 AbilityTargetPlan::Projectile {
                     path,
                     stop_at_actor,

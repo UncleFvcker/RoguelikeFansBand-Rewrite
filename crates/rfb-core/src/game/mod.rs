@@ -114,6 +114,7 @@ mod chaos_patron;
 mod damage;
 mod death;
 mod ego;
+pub(crate) use ego::{device_capacity, device_difficulty};
 mod environment_combat;
 mod floor;
 mod gold;
@@ -226,7 +227,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 110;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 111;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -275,6 +276,8 @@ struct GenocideResolution {
 
 #[derive(Debug, Clone, Copy)]
 struct CategorySummonSpec<'a> {
+    // summon_specific also places environmental creatures; NO_SUMMON only blocks spells.
+    is_spell: bool,
     source_id: &'a str,
     owner_id: &'a str,
     category: &'a str,
@@ -684,6 +687,25 @@ pub(crate) fn item_device_generation<'a>(
     profile_id: Option<&str>,
 ) -> Option<&'a ItemDeviceGenerationDefinition> {
     let definition = content.item(kind_id)?;
+    // blast_object preserves the activation after replacing artifact/ego identity.
+    if affix_ids.iter().any(|id| id == "rfb-legacy.affix.blasted")
+        && let Some(id) = profile_id
+    {
+        return content
+            .item_definitions()
+            .filter_map(|item| item.device_generation.as_ref())
+            .chain(
+                content
+                    .affix_definitions()
+                    .filter_map(|affix| affix.device_generation.as_ref()),
+            )
+            .find(|generation| {
+                generation
+                    .activations
+                    .iter()
+                    .any(|profile| profile.id == id)
+            });
+    }
     definition
         .device_generation
         .iter()
@@ -1142,6 +1164,12 @@ impl Game {
             action.energy_cost()
         };
         action_cost = self.player_mutation_action_energy_cost(&action, action_cost);
+        if let GameAction::UseItem { item_id, .. } = &action
+            && let Some(item) = self.items.iter().find(|item| item.id == *item_id)
+            && ego::item_has_ego(&self.content, item, 256)
+        {
+            action_cost -= action_cost * i32::from(ego::device_pval(item)) / 10;
+        }
         let astral_guide_blink = match &action {
             GameAction::CastAbility { ability_id, .. }
                 if self.player_has_astral_guide()
@@ -2700,7 +2728,10 @@ impl Game {
         positions: Vec<Position>,
         changed: &mut BTreeSet<Position>,
     ) -> AbilitySummonResolutionDto {
-        if candidates.is_empty() || positions.is_empty() {
+        if candidates.is_empty()
+            || positions.is_empty()
+            || (spec.is_spell && self.equipment_blocks_summoning())
+        {
             return AbilitySummonResolutionDto {
                 owner_id: spec.owner_id.to_owned(),
                 actor_kind_id: spec.category.to_owned(),
@@ -4373,6 +4404,7 @@ fn equipment_bonuses_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
         life_percent: bonuses.life_percent,
         launcher_multiplier_delta_percent: bonuses.launcher_multiplier_delta_percent,
         base_shot_delta_percent: bonuses.base_shot_delta_percent,
+        weapon_dice_bonus: bonuses.weapon_dice_bonus,
         melee_attacks_delta_percent: bonuses.melee_attacks_delta_percent,
         spell_capacity_bonus: bonuses.spell_capacity_bonus,
         magic_resistance_percent: bonuses.magic_resistance_percent,
@@ -4410,6 +4442,8 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
         EquipmentPassive::RevengeAura => EquipmentPassiveDto::RevengeAura,
         EquipmentPassive::ManaRegeneration => EquipmentPassiveDto::ManaRegeneration,
         EquipmentPassive::AntiMagic => EquipmentPassiveDto::AntiMagic,
+        EquipmentPassive::AntiTeleport => EquipmentPassiveDto::AntiTeleport,
+        EquipmentPassive::AntiSummoning => EquipmentPassiveDto::AntiSummoning,
         EquipmentPassive::NightVision => EquipmentPassiveDto::NightVision,
         EquipmentPassive::DualWielding => EquipmentPassiveDto::DualWielding,
         EquipmentPassive::NoEnchant => EquipmentPassiveDto::NoEnchant,
@@ -4465,6 +4499,9 @@ fn roll_weighted_index_with_rng(rng: &mut RfbRng, weights: &[u32]) -> usize {
 }
 
 fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBonuses) {
+    total.weapon_dice_bonus = total
+        .weapon_dice_bonus
+        .saturating_add(addition.weapon_dice_bonus);
     total.melee_attacks_delta_percent += addition.melee_attacks_delta_percent;
     total.spell_capacity_bonus += addition.spell_capacity_bonus;
     total.magic_resistance_percent += addition.magic_resistance_percent;

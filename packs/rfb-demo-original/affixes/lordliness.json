@@ -526,11 +526,11 @@
                 "type": "remove-status"
               },
               {
-                "statusKindId": "rfb.status.blind",
+                "statusKindId": "rfb.status.blindness",
                 "type": "remove-status"
               },
               {
-                "statusKindId": "rfb.status.confused",
+                "statusKindId": "rfb.status.confusion",
                 "type": "remove-status"
               },
               {
@@ -581,11 +581,11 @@
                 "type": "heal"
               },
               {
-                "statusKindId": "rfb.status.blind",
+                "statusKindId": "rfb.status.blindness",
                 "type": "remove-status"
               },
               {
-                "statusKindId": "rfb.status.confused",
+                "statusKindId": "rfb.status.confusion",
                 "type": "remove-status"
               },
               {
@@ -640,11 +640,11 @@
                 "type": "heal"
               },
               {
-                "statusKindId": "rfb.status.blind",
+                "statusKindId": "rfb.status.blindness",
                 "type": "remove-status"
               },
               {
-                "statusKindId": "rfb.status.confused",
+                "statusKindId": "rfb.status.confusion",
                 "type": "remove-status"
               },
               {
@@ -1107,12 +1107,15 @@
                 "type": "visible-damage"
               },
               {
-                "amount": 100,
-                "type": "heal"
+                "durationTicks": 50,
+                "intensity": 1,
+                "stacking": "extend",
+                "statusKindId": "rfb.status.protection-from-evil",
+                "type": "apply-status"
               },
               {
-                "statusKindId": "rfb.status.poison",
-                "type": "remove-status"
+                "amount": 100,
+                "type": "heal"
               },
               {
                 "statusKindId": "rfb.status.stun",
@@ -1120,10 +1123,6 @@
               },
               {
                 "statusKindId": "rfb.status.bleeding",
-                "type": "remove-status"
-              },
-              {
-                "statusKindId": "rfb.status.fear",
                 "type": "remove-status"
               }
             ],

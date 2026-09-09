@@ -89,7 +89,11 @@ pub(crate) fn valid_item_effect(
         | ItemUseEffectDefinition::IdentifyInventory
         | ItemUseEffectDefinition::SelfKnowledge
         | ItemUseEffectDefinition::TriggerTsuyoshiCrash
-        | ItemUseEffectDefinition::MundanifyItem => true,
+        | ItemUseEffectDefinition::MundanifyItem
+        | ItemUseEffectDefinition::RefillQuiver
+        | ItemUseEffectDefinition::StarBall
+        | ItemUseEffectDefinition::Escape => true,
+        ItemUseEffectDefinition::Starburst { damage } => (1..=10_000).contains(damage),
         ItemUseEffectDefinition::HealDice { dice, sides } => {
             (1..=100).contains(dice) && (1..=10_000).contains(sides)
         }
@@ -652,6 +656,10 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::IdentifyInventory
                     | ItemUseEffectDefinition::SelfKnowledge
                     | ItemUseEffectDefinition::Acquirement { .. }
+                    | ItemUseEffectDefinition::RefillQuiver
+                    | ItemUseEffectDefinition::StarBall
+                    | ItemUseEffectDefinition::Escape
+                    | ItemUseEffectDefinition::Starburst { .. }
                     | ItemUseEffectDefinition::ShowRumour { .. }
                     | ItemUseEffectDefinition::ApplyThermalResistance { .. }
                     | ItemUseEffectDefinition::ApplyBasicResistance { .. }

@@ -326,6 +326,11 @@
           "default": 0,
           "format": "int32",
           "type": "integer"
+        },
+        "weaponDiceBonus": {
+          "description": "RFB weapon mastery adds dice to equipped melee weapons.",
+          "format": "int32",
+          "type": "integer"
         }
       },
       "type": "object"
@@ -346,6 +351,8 @@
         "revenge-aura",
         "mana-regeneration",
         "anti-magic",
+        "anti-teleport",
+        "anti-summoning",
         "night-vision",
         "dual-wielding",
         "no-enchant",

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-capacity-device-description",
+  "formatVersion": 1,
+  "generationLevel": 15,
+  "id": "rfb-legacy.affix.capacity-device",
+  "nameKey": "affix-legacy-capacity-device-name",
+  "rfbEgo": {
+    "rarity": 1,
+    "sourceIndex": 251,
+    "types": [
+      "device"
+    ]
+  },
+  "tags": [
+    "device",
+    "legacy-import"
+  ]
+}

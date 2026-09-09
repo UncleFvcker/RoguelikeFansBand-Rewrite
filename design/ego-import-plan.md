@@ -4,7 +4,7 @@
 
 工作树：`D:/codex/RoguelikeFansBand-Rewrite-realms-items`；工作分支：`codex/realms-items`。
 E5.0 起始代码基线：`da7ba67be`，起始 main：`62f959f3b`。E0–E4 的完成说明保留历史批次版本；
-E5 已完成全部护甲消费者与生成，E6 已完成工艺事务，当前内容为 1.389.0；E7–E8 为后续执行安排。
+E5 已完成全部护甲消费者与生成，E6 已完成工艺事务，E7 已接入 38 条非 Craft ego，当前内容为 1.390.0；E8 为后续集成审计与验收。
 
 本计划把 ego 作为独立的物品生成里程碑推进，并优先闭合 Craft 第四册「工艺」所依赖的
 武器、护甲与弹药候选。领域内容在 ego 候选与实例化行为完整以前不开放「工艺」。
@@ -20,7 +20,7 @@ E5 已完成全部护甲消费者与生成，E6 已完成工艺事务，当前�
 | `e_info.txt` ego 总数 | 160 |
 | E5.0 审计时的 currentImporterExpressible / Inexpressible | 134 / 26；历史审计值，不是运行时完成数 |
 | e_info 显式 E: activation 记录 | 13；不含 ego.c 分支随机激活，也不是未实现数 |
-| demo pack 正式 affix | 136；其中 122 条为完整 Craft 类型定义 |
+| demo pack 正式 affix | 169；其中 160 条为唯一原版 source 身份，122 条为 Craft 类型定义 |
 | 武器/工具、远程/竖琴 source-index 物化及自然生成路径 | 30 + 16；见 E3/E4 的入口限制 |
 | 权威中文名 | 160 |
 | 中文名 unresolved | 0 |
@@ -278,7 +278,11 @@ E5.0 已交付 `audit-egos` 的 76 条静态契约检查和 `sync-demo-armor-ego
 Craft 领域当前尚未导入；本批只完成「工艺」所需的共享行为，不等于第四册或新游戏入口已开放。
 后续领域工作仍先审计完整 32 法术，再按四册实施，不能直接挂一个孤立的第四册法术。
 
-### E7：非 Craft ego 38 条
+### E7：非 Craft ego 38 条（已接入）
+
+身份、各类型生成与属性消费者、源版标记分类及 E8 边界见[非 Craft Ego 审计](noncraft-ego-import-audit.md)。
+首饰 17、光源 9、箭袋 4、装置 7、特殊 1 均已接入；复用五个旧 ID。210、211、260 不进入普通随机池。
+新增实例状态使用 Protocol 1.234、State Hash Schema v111、save header/payload v6，内容包 1.390.0。
 
 | 子批 | 去重条数 | 范围 |
 | --- | ---: | --- |

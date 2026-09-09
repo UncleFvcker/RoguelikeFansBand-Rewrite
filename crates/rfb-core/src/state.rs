@@ -118,6 +118,7 @@ pub(crate) struct CapturedActor {
 
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub(crate) struct RolledAffixState {
+    pub(crate) device_pval: Option<u16>,
     pub(crate) affix_id: String,
     pub(crate) properties: AffixPropertyBundleDefinition,
     pub(crate) enchantment_delta: ItemEnchantmentsDto,
@@ -130,7 +131,8 @@ pub(crate) struct RolledAffixState {
 
 impl RolledAffixState {
     pub(crate) fn has_instance_state(&self) -> bool {
-        self.properties != AffixPropertyBundleDefinition::default()
+        self.device_pval.is_some()
+            || self.properties != AffixPropertyBundleDefinition::default()
             || !self.enchantment_delta.is_empty()
             || self.melee_damage_dice.is_some()
             || self.weight_tenths_pound.is_some()

@@ -22,6 +22,11 @@
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-brass-lantern-name",
+  "rfbBaseKind": {
+    "sourceIndex": 601,
+    "sval": 1,
+    "tval": 39
+  },
   "tags": [
     "equipment",
     "light-source",

@@ -372,7 +372,7 @@
           "effect": {
             "durationTicks": 3,
             "intensity": 1,
-            "power": 25,
+            "power": 75,
             "stacking": "replace",
             "statusKindId": "rfb.status.slow",
             "type": "visible-apply-status"

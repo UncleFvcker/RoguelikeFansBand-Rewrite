@@ -797,7 +797,7 @@ fn curse_scroll_lands_on_equipped_weapon_and_artifact_can_resist() {
             item.location = ItemLocation::Inventory;
         }
         give_inventory_item(&mut game, SCROLL_ID, "demo.item.weapon-blight-scroll");
-        give_inventory_item(&mut game, WEAPON_ID, "demo.item.relic-blade");
+        give_inventory_item(&mut game, WEAPON_ID, "demo.item.soulsword");
         game.items
             .iter_mut()
             .find(|item| item.id == WEAPON_ID)
@@ -819,7 +819,14 @@ fn curse_scroll_lands_on_equipped_weapon_and_artifact_can_resist() {
     }
 
     let (landed, update, draws_before) = run(false);
-    assert_eq!(landed.rng_draw_counter(), draws_before);
+    assert_eq!(landed.rng_draw_counter(), draws_before + 4);
+    let blasted = landed
+        .items
+        .iter()
+        .find(|item| item.id == "test.item.relic-blade.1")
+        .unwrap();
+    assert_eq!(blasted.kind_id, "demo.item.scimitar");
+    assert_eq!(blasted.affix_ids, ["rfb-legacy.affix.blasted"]);
     assert_eq!(update.events[0].kind, "item.use-cursed");
     assert_eq!(
         landed

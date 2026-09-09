@@ -464,3 +464,11 @@ E4.2 为地面、背包、装备和怪物携带四类物品 save DTO 增加 `int
 百分点，额外射击使用 RFB `base_shot` 百分制；两者随同实例属性原样恢复且不抽 RNG。Protocol
 升至 1.228，save header/payload schema 升至 v5，State Hash Schema 升至 v108；二进制容器
 格式仍为 v1。
+
+E7（contract-v310）将 Protocol 升至 1.234，save header/payload schema 升至 v6，State Hash
+Schema 升至 v111。`RolledAffixSaveDto.devicePval` 保存装置 Ego 的 1–5 pval；属性包的
+`ammunitionCapacity` 保存生成期箭袋容量；`EquipmentBonusesDto.weaponDiceBonus` 保存首饰
+武器伤害骰加值。仅对应装置/箭袋允许这些实例字段，只有 `(炸毁的)` 可持有 0d0 武器骰子。
+反传送与抑制召唤使用已存档属性包中的 passive；不另存派生开关。正式神器炸毁后返回底材，
+仍通过既有 profile ID 恢复保留下来的激活。所有结果原样恢复，不在读档时重新生成。
+二进制容器仍为 v1，测试从新档开始，不增加旧开发存档兼容分支。

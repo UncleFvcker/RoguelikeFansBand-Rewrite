@@ -19,6 +19,11 @@
   "maxStack": 1,
   "mogaminatorRare": false,
   "nameKey": "item-demo-wooden-torch-name",
+  "rfbBaseKind": {
+    "sourceIndex": 600,
+    "sval": 0,
+    "tval": 39
+  },
   "tags": [
     "equipment",
     "light-source",

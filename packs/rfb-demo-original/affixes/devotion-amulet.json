@@ -1,0 +1,1170 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-devotion-amulet-description",
+  "deviceGeneration": {
+    "activationOptional": true,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "category": "all",
+            "persistent": true,
+            "radius": 18,
+            "subject": "terrain",
+            "throughWalls": true,
+            "type": "detect"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-enlightenment",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-enlightenment-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "effect": {
+            "category": "evil",
+            "persistent": true,
+            "radius": 18,
+            "subject": "actor",
+            "throughWalls": true,
+            "type": "detect"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-detect-evil",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-detect-evil-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 300
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "sourceTerrainIds": [
+              "demo.terrain.floor"
+            ],
+            "targetTerrainId": "demo.terrain.warding-glyph",
+            "type": "create-current-terrain"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-rune-protection",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-rune-protection-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "type": "banish-evil"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-banish-evil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-banish-evil-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationTicks": 100,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.protection-from-evil",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-prot-evil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-prot-evil-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "amount": 250,
+                "type": "heal"
+              },
+              {
+                "durationDice": 1,
+                "durationSides": 50,
+                "durationTicks": 50,
+                "intensity": 1,
+                "stacking": "extend",
+                "statusKindId": "rfb.status.magic-resistance",
+                "type": "apply-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-holy-grail",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-holy-grail-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 24,
+            "durationTicks": 6,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.blessed",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-bless",
+        "maxDepth": 32,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-bless-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "priestly",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationTicks": 25,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.heroism",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-heroism",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-heroism-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "warrior",
+          "priestly",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "allowUniqueHostile": true,
+            "category": "angel",
+            "countDice": 1,
+            "countSides": 1,
+            "durationTurns": 0,
+            "groupCountBonus": 1,
+            "groupCountDice": 1,
+            "groupCountSides": 3,
+            "hostileChancePercent": 0,
+            "hostileGroupChancePercent": 0,
+            "maximumLevel": 70,
+            "radius": 2,
+            "type": "summon-category"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-summon-angel",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-summon-angel-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 7770
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "lifeForce": 1,
+            "restoreAttributes": true,
+            "type": "restore-vitality"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-restore-stats",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-restore-stats-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 6000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "effect": {
+            "lifeForce": 1000,
+            "restoreAttributes": false,
+            "type": "restore-vitality"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-restore-exp",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-restore-exp-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "lifeForce": 1000,
+            "restoreAttributes": true,
+            "type": "restore-vitality"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-restoring",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-restoring-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 8000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 40,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "amount": 65,
+                "type": "heal"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-heal",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-heal-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 45,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "statusKindId": "rfb.status.fear",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.blindness",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.confusion",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.stun",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.bleeding",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-curing",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-curing-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "amount": 270,
+                "type": "heal"
+              },
+              {
+                "statusKindId": "rfb.status.blindness",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.confusion",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.stun",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.bleeding",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-heal-curing",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-heal-curing-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 9000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "amount": 300,
+                "type": "heal"
+              },
+              {
+                "statusKindId": "rfb.status.blindness",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.confusion",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.stun",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.bleeding",
+                "type": "remove-status"
+              },
+              {
+                "durationDice": 1,
+                "durationSides": 25,
+                "durationTicks": 25,
+                "intensity": 1,
+                "stacking": "extend",
+                "statusKindId": "rfb.status.heroism",
+                "type": "apply-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-heal-curing-hero",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-heal-curing-hero-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 9000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 10,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-cure-pois",
+        "maxDepth": 32,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-cure-pois-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 500
+        },
+        "rfbBiases": [
+          "poison",
+          "priestly",
+          "ranger"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "statusKindId": "rfb.status.fear",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-cure-fear",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-cure-fear-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "statusKindId": "rfb.status.fear",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.poison",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-cure-fear-pois",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-cure-fear-pois-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effect": {
+          "effect": {
+            "includeHeavy": false,
+            "type": "remove-equipped-curses"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-remove-curse",
+        "maxDepth": 92,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-remove-curse-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "effect": {
+            "includeHeavy": true,
+            "type": "remove-equipped-curses"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-remove-all-curse",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-remove-all-curse-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "amount": 10,
+          "resourceId": "demo.resource.mana",
+          "type": "restore-resource"
+        },
+        "id": "rfb.device-activation.ego-226-clarity",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-clarity-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 150
+        },
+        "rfbBiases": [
+          "priestly",
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 21
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 80,
+        "effect": {
+          "amount": 30,
+          "resourceId": "demo.resource.mana",
+          "type": "restore-resource"
+        },
+        "id": "rfb.device-activation.ego-226-great-clarity",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-great-clarity-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 750
+        },
+        "rfbBiases": [
+          "priestly",
+          "mage"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 3
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "damageBonus": 50,
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageType": "mana",
+                "targetCategory": "evil",
+                "type": "visible-damage"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-dispel-evil",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-dispel-evil-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "damageBonus": 69,
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageType": "mana",
+                "targetCategory": "evil",
+                "type": "visible-damage"
+              },
+              {
+                "durationDice": 1,
+                "durationSides": 25,
+                "durationTicks": 25,
+                "intensity": 1,
+                "stacking": "extend",
+                "statusKindId": "rfb.status.heroism",
+                "type": "apply-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-dispel-evil-hero",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-dispel-evil-hero-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2500
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 85
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 60,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "damageBonus": 132,
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageType": "mana",
+                "targetCategory": "undead",
+                "type": "visible-damage"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-dispel-undead",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-dispel-undead-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "effects": [
+              {
+                "damageBonus": 100,
+                "damageDice": 0,
+                "damageSides": 0,
+                "damageType": "holy-fire",
+                "targetCategory": "evil",
+                "type": "visible-damage"
+              },
+              {
+                "durationTicks": 50,
+                "intensity": 1,
+                "stacking": "extend",
+                "statusKindId": "rfb.status.protection-from-evil",
+                "type": "apply-status"
+              },
+              {
+                "amount": 100,
+                "type": "heal"
+              },
+              {
+                "statusKindId": "rfb.status.stun",
+                "type": "remove-status"
+              },
+              {
+                "statusKindId": "rfb.status.bleeding",
+                "type": "remove-status"
+              }
+            ],
+            "type": "sequence"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-226-holiness",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-holiness-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2500
+        },
+        "rfbBiases": [
+          "priestly"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 31
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.devotion-amulet",
+  "nameKey": "affix-legacy-devotion-amulet-name",
+  "rfbEgo": {
+    "rarity": 3,
+    "sourceIndex": 226,
+    "types": [
+      "amulet"
+    ]
+  },
+  "tags": [
+    "amulet",
+    "legacy-import"
+  ]
+}

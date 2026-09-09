@@ -114,14 +114,20 @@ pub(super) fn rolled_affixes_are_valid(item: &ItemInstance) -> bool {
             item.affix_ids.binary_search(&rolled.affix_id).is_ok()
                 && rolled.has_instance_state()
                 && rolled
-                    .melee_damage_dice
-                    .is_none_or(|dice| dice.dice > 0 && dice.sides > 0)
+                    .device_pval
+                    .is_none_or(|pval| (1..=5).contains(&pval))
+                && rolled.melee_damage_dice.is_none_or(|dice| {
+                    (dice.dice > 0 && dice.sides > 0)
+                        || (rolled.affix_id == "rfb-legacy.affix.blasted"
+                            && dice.dice == 0
+                            && dice.sides == 0)
+                })
                 && (-255..=255).contains(&rolled.enchantment_delta.to_hit)
                 && (-255..=255).contains(&rolled.enchantment_delta.to_damage)
                 && (-255..=255).contains(&rolled.enchantment_delta.to_armor)
                 && rolled
                     .weight_tenths_pound
-                    .is_none_or(|weight| (1..=10_000).contains(&weight))
+                    .is_none_or(|weight| weight <= 10_000)
         })
         && item
             .rolled_affixes
@@ -146,6 +152,9 @@ pub(super) fn item_creation_state_is_valid(
         }
         Some(ItemOriginKindDto::Acquire) => item.discount_percent == 0,
         Some(ItemOriginKindDto::Rubble) => item.discount_percent == 0,
+        Some(ItemOriginKindDto::EndlessQuiver) => {
+            item.discount_percent == 0 && definition.ammunition_profile.is_some()
+        }
     };
     let damage_override_is_valid = item.damage_dice_override.is_none_or(|dice| {
         (1..=9).contains(&dice) && definition.tags.iter().any(|tag| tag == "ammunition")
@@ -155,7 +164,7 @@ pub(super) fn item_creation_state_is_valid(
         .is_some_and(|base| matches!(base.tval, 30..=38));
     let limit = if definition
         .rfb_base_kind
-        .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=38))
+        .is_some_and(|base| matches!(base.tval, 16..=23 | 30..=38 | 40 | 45))
     {
         255
     } else {
@@ -163,10 +172,13 @@ pub(super) fn item_creation_state_is_valid(
     };
     let weight_is_valid = item.rolled_affixes.iter().all(|rolled| {
         rolled.weight_tenths_pound.is_none_or(|weight| {
-            armor
-                && (weight == definition.weight_tenths_pound * 2 / 3
-                    || weight == definition.weight_tenths_pound / 2
-                    || (weight == 8 && rolled.affix_id == "rfb-legacy.affix.the-tomte"))
+            (weight == 0
+                && definition.ammunition_capacity > 0
+                && rolled.affix_id == "rfb-legacy.affix.phase-quiver")
+                || armor
+                    && (weight == definition.weight_tenths_pound * 2 / 3
+                        || weight == definition.weight_tenths_pound / 2
+                        || (weight == 8 && rolled.affix_id == "rfb-legacy.affix.the-tomte"))
         })
     });
     let enchantments_are_valid = [-limit..=limit, -limit..=limit, -limit..=limit]
@@ -178,6 +190,28 @@ pub(super) fn item_creation_state_is_valid(
         ])
         .all(|(range, value)| range.contains(&value));
     player_made_state_is_valid
+        && item.rolled_affixes.iter().all(|rolled| {
+            rolled.device_pval.is_none()
+                || (definition.tags.iter().any(|tag| tag == "device")
+                    && matches!(
+                        rolled.affix_id.as_str(),
+                        "rfb-legacy.affix.capacity-device"
+                            | "rfb-legacy.affix.regeneration-device"
+                            | "rfb-legacy.affix.simplicity-device"
+                            | "rfb-legacy.affix.power-device"
+                            | "rfb-legacy.affix.quickness-device"
+                    ))
+        })
+        && item
+            .intrinsic_properties
+            .ammunition_capacity
+            .is_none_or(|capacity| capacity > 0 && definition.ammunition_capacity > 0)
+        && item.rolled_affixes.iter().all(|rolled| {
+            rolled
+                .properties
+                .ammunition_capacity
+                .is_none_or(|capacity| capacity > 0 && definition.ammunition_capacity > 0)
+        })
         && damage_override_is_valid
         && enchantments_are_valid
         && weight_is_valid
@@ -835,7 +869,10 @@ impl Game {
             let supports_quality = (definition.max_stack == 1
                 && definition.equipment_slot.is_some()
                 && item.quantity == 1)
-                || definition.tags.iter().any(|tag| tag == "ammunition");
+                || definition
+                    .tags
+                    .iter()
+                    .any(|tag| matches!(tag.as_str(), "ammunition" | "device"));
             let affixes_preserve_ordinary_quality = !item.affix_ids.is_empty()
                 && item.affix_ids.iter().all(|affix_id| {
                     self.content
@@ -931,7 +968,10 @@ impl Game {
                     .item(&item.kind_id)
                     .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
                 let supports_quality = (definition.max_stack == 1 && item.quantity == 1)
-                    || definition.tags.iter().any(|tag| tag == "ammunition");
+                    || definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "ammunition" | "device"));
                 let location_is_valid = matches!(
                     &item.location,
                     ItemLocation::Shop { shop_id: location_shop_id }
@@ -962,7 +1002,10 @@ impl Game {
                     .item(&item.kind_id)
                     .ok_or_else(|| CoreError::UnknownItem(item.kind_id.clone()))?;
                 let supports_quality = (definition.max_stack == 1 && item.quantity == 1)
-                    || definition.tags.iter().any(|tag| tag == "ammunition");
+                    || definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "ammunition" | "device"));
                 let location_is_valid = matches!(
                     &item.location,
                     ItemLocation::Home { facility_id: location_facility_id }
@@ -1075,7 +1118,10 @@ impl Game {
                 let supports_quality = (definition.max_stack == 1
                     && definition.equipment_slot.is_some()
                     && item.quantity == 1)
-                    || definition.tags.iter().any(|tag| tag == "ammunition");
+                    || definition
+                        .tags
+                        .iter()
+                        .any(|tag| matches!(tag.as_str(), "ammunition" | "device"));
                 let affixes_preserve_ordinary_quality = !item.affix_ids.is_empty()
                     && item.affix_ids.iter().all(|affix_id| {
                         self.content

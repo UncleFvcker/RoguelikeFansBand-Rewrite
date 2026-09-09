@@ -29,7 +29,7 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
         | AbilityEffectDefinition::DraconianBreathDamage { .. } => {
             unreachable!("non-projected effects are resolved before player ability projection")
         }
-        AbilityEffectDefinition::BlinkSelf { radius } => {
+        AbilityEffectDefinition::BlinkSelf { radius, .. } => {
             AbilityEffectSpecDto::BlinkSelf { radius: *radius }
         }
         AbilityEffectDefinition::BlinkTarget { radius } => {
@@ -455,8 +455,8 @@ pub(super) fn ability_effect_spec_dto(effect: &AbilityEffectDefinition) -> Abili
         AbilityEffectDefinition::DemonSummoning => AbilityEffectSpecDto::DemonSummoning,
         AbilityEffectDefinition::AngelSummoning => AbilityEffectSpecDto::AngelSummoning,
         AbilityEffectDefinition::BanishEvil => AbilityEffectSpecDto::BanishEvil { power: 0 },
-        AbilityEffectDefinition::WrathOfGod => AbilityEffectSpecDto::WrathOfGod {
-            damage: 0,
+        AbilityEffectDefinition::WrathOfGod { damage } => AbilityEffectSpecDto::WrathOfGod {
+            damage: damage.unwrap_or(0),
             radius: 2,
             minimum_count: 11,
             maximum_count: 20,
@@ -886,10 +886,17 @@ pub(super) fn player_ability_effect_spec_dto(
                 spell_power_value(100, ability.spell_power_bonus).min(u64::from(u16::MAX)) as u16;
         }
         AbilityEffectSpecDto::WrathOfGod { damage, .. } => {
-            let raw = level
-                .saturating_mul(3)
-                .saturating_add(25)
-                .saturating_add(spell_damage_bonus);
+            let raw = if let AbilityEffectDefinition::WrathOfGod {
+                damage: Some(damage),
+            } = effect
+            {
+                *damage
+            } else {
+                level
+                    .saturating_mul(3)
+                    .saturating_add(25)
+                    .saturating_add(spell_damage_bonus)
+            };
             *damage = spell_power_value(u64::from(raw), ability.spell_power_bonus)
                 .min(u64::from(u16::MAX)) as u16;
         }

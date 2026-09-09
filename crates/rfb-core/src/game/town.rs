@@ -610,6 +610,13 @@ pub(super) fn sell_unit_price(base_value: u32, factor: u16, cap: u32) -> u32 {
 }
 
 fn discounted_item_base_value(item: &ItemInstance, base_value: u32) -> u32 {
+    if item
+        .affix_ids
+        .iter()
+        .any(|id| id == "rfb-legacy.affix.blasted")
+    {
+        return 0;
+    }
     base_value.saturating_sub(base_value.saturating_mul(u32::from(item.discount_percent)) / 100)
 }
 

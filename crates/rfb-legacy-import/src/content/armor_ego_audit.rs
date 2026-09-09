@@ -387,7 +387,7 @@ fn sync_armor_bases(
     Ok(breaths)
 }
 
-fn append_source_array_entries(
+pub(super) fn append_source_array_entries(
     path: &Path,
     key: &str,
     entries: &[serde_json::Value],
@@ -408,7 +408,7 @@ fn append_source_array_entries(
     Ok(())
 }
 
-fn armor_activations(
+pub(super) fn armor_activations(
     entry: &LegacyEgoEntry,
     _id: &str,
     candidates: &[LegacyEgoActivationCandidate],
@@ -421,6 +421,41 @@ fn armor_activations(
             return candidate.token == activation.token;
         }
         match entry.index {
+            209 => matches!(
+                candidate.token.as_str(),
+                "SPEED" | "SPEED_HERO" | "LIGHT_SPEED"
+            ),
+            220 => candidate.token == "BERSERK",
+            200..=201 | 205..=208 | 210..=211 | 221..=222 | 224..=227 => {
+                let biases: &[&str] = match entry.index {
+                    200 | 205 => &["BIAS_PROTECTION"],
+                    201 => &[
+                        "BIAS_ACID",
+                        "BIAS_ELEC",
+                        "BIAS_FIRE",
+                        "BIAS_COLD",
+                        "BIAS_POIS",
+                    ],
+                    206 => &["BIAS_WARRIOR", "BIAS_STR"],
+                    207 => &["BIAS_ARCHER"],
+                    208 | 224 => &["BIAS_MAGE"],
+                    210 => &["BIAS_NECROMANTIC"],
+                    211 | 226 => &["BIAS_PRIESTLY"],
+                    221 => &["BIAS_LAW"],
+                    222 => &["BIAS_DEMON"],
+                    225 => &["BIAS_WARRIOR"],
+                    _ => &["BIAS_ROGUE"],
+                };
+                candidate.level >= entry.level / 3
+                    && candidate
+                        .biases
+                        .iter()
+                        .any(|bias| biases.contains(&bias.as_str()))
+            }
+            242 => matches!(
+                candidate.token.as_str(),
+                "LITE_AREA" | "LITE_MAP_AREA" | "ENLIGHTENMENT" | "CLAIRVOYANCE"
+            ),
             51 => candidate.biases.iter().any(|bias| {
                 matches!(
                     bias.as_str(),
@@ -506,6 +541,13 @@ fn armor_activations(
     };
     let profiles: Vec<_> = candidates.iter().filter(eligible).map(|candidate| {
         let (effect, target, ground) = match candidate.token.as_str() {
+            "STAR_BALL" => (serde_json::json!({"type":"star-ball"}), device_self_target(), false),
+            "ESCAPE" => (serde_json::json!({"type":"escape"}), device_self_target(), false),
+            "DESTROY_TRAPS" => (device_ability_effect(serde_json::json!({"type":"terrain-beam", "operation":"destroy-traps-and-doors"})), device_projectile_target(), false),
+            "STARBURST" => (serde_json::json!({"type":"starburst", "damage":375 + device_power_curve(200, candidate.level, 80)}), device_self_target(), false),
+            "WRATH_OF_GOD" => (device_ability_effect(serde_json::json!({"type":"wrath-of-god", "damage":25 + candidate.level * 3 / 2})), device_projectile_target(), true),
+            "EARTHQUAKE" => (device_ability_effect(serde_json::json!({"type":"earthquake","radius":10,"affectChancePercent":15,"floorTerrainId":"demo.terrain.floor","wallTerrainIds":["demo.terrain.wall","demo.terrain.quartz-vein","demo.terrain.magma-vein"]})), device_self_target(), false),
+            "LIGHT_SPEED" => (device_status_effect("rfb.status.light-speed", 0, 0, 16), device_self_target(), false),
             "DETECT_ALL" => (device_ability_effect(serde_json::json!({"type":"sequence", "effects": [
                 {"type":"detect","subject":"terrain","category":"trap","radius":30,"persistent":true,"throughWalls":true},
                 {"type":"detect","subject":"terrain","category":"passage","radius":30,"persistent":true,"throughWalls":true},
@@ -514,8 +556,9 @@ fn armor_activations(
                 {"type":"detect","subject":"actor","category":"any-monster","radius":30,"persistent":false,"throughWalls":true}
             ]})), device_self_target(), false),
             "WHIRLWIND_ATTACK" => (device_ability_effect(serde_json::json!({"type":"melee-adjacent"})), device_self_target(), false),
-            "PHASE_DOOR" => (device_ability_effect(serde_json::json!({"type":"teleport-self", "minimumDistance":10})), device_self_target(), false),
-            "TELEPORT" => (device_ability_effect(serde_json::json!({"type":"teleport-self", "minimumDistance":100})), device_self_target(), false),
+            "PHASE_DOOR" | "TELEPORT" => (serde_json::json!({"type":"random-teleport", "maximumDistance":if candidate.token == "PHASE_DOOR" {10} else {100}}), device_self_target(), false),
+            "STRAFING" => (device_ability_effect(serde_json::json!({"type":"blink-self", "radius":10, "lineOfSight":true})), device_self_target(), false),
+            "SLEEP_MONSTERS" => (serde_json::json!({"type":"visible-apply-status", "statusKindId":"rfb.status.sleep", "intensity":1, "durationTicks":500, "stacking":"replace", "power":candidate.level * 3}), device_self_target(), false),
             "IDENTIFY" => (serde_json::json!({"type":"identify-item","full":false}), device_item_target(), false),
             "DETECT_MONSTERS" | "DETECT_OBJECTS" | "DETECT_TRAPS" => {
                 let (subject, category, persistent) = match candidate.token.as_str() {
@@ -531,6 +574,13 @@ fn armor_activations(
                 (device_ability_effect(effect), device_self_target(), false)
             }
             "BOLT_MISSILE" => (device_damage_effect("damage", "missile", 2 + candidate.level / 10, 6, 0, 0), device_projectile_target(), false),
+            "BOLT_SOUND" => (device_damage_effect("damage", "sound", 7 + candidate.level / 6, 8, 0, 0), device_projectile_target(), false),
+            "BEAM_SOUND" => (device_damage_effect("beam-damage", "sound", 7 + candidate.level / 6, 8, 0, 0), device_projectile_target(), false),
+            "BALL_SOUND" => (device_damage_effect("area-damage", "sound", 0, 0, 70 + device_power_curve(280, candidate.level, 40), 3), device_projectile_target(), false),
+            "BALL_SHARDS" => (device_damage_effect("area-damage", "shards", 0, 0, 175 + device_power_curve(325, candidate.level, 75), 2), device_projectile_target(), false),
+            "BREATHE_SOUND" => (device_damage_effect("cone-damage", "sound", 0, 0, 50 + candidate.level * 2, 2), device_projectile_target(), false),
+            "BREATHE_SHARDS" => (device_damage_effect("cone-damage", "shards", 0, 0, 100 + candidate.level * 2, 2), device_projectile_target(), false),
+            "BOLT_SHARDS" => (device_damage_effect("damage", "shards", 7 + candidate.level / 5, 8, 0, 0), device_projectile_target(), false),
             "BOLT_LITE" => (device_damage_effect("damage", "light", 5 + candidate.level / 8, 8, 0, 0), device_projectile_target(), false),
             "BEAM_LITE_WEAK" => (device_ability_effect(serde_json::json!({"type":"light-line","damageDice":6,"damageSides":8})), device_projectile_target(), false),
             "BEAM_LITE" => (device_damage_effect("beam-damage", "light", 0, 0, 10 + device_power_curve(275, candidate.level, 0), 0), device_projectile_target(), false),
@@ -555,7 +605,7 @@ fn armor_activations(
             "nameKey": format!("device-activation-e5-{}-name", candidate.token.to_ascii_lowercase().replace('_', "-")),
             "weight": if fixed.is_some() {1} else {(255 / u32::from(candidate.rarity)).max(1)},
             "minDepth": 1,
-            "maxDepth": if fixed.is_some() || matches!(entry.index,85|92|110|111|117) {100} else {candidate.level.saturating_mul(3).saturating_add(2).min(100)},
+            "maxDepth": if fixed.is_some() || matches!(entry.index,85|92|110|111|117|209|220|242) {100} else {candidate.level.saturating_mul(3).saturating_add(2).min(100)},
             "deviceCheckDifficulty": fixed.map_or(candidate.level, |activation| activation.power),
             "rfbBiases": biases,
             "charges": {"minimum":1,"maximum":1,"cost":1},

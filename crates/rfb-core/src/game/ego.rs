@@ -3,6 +3,13 @@
 use std::collections::BTreeSet;
 
 mod armor;
+mod jewelry;
+pub(super) use jewelry::roll as roll_jewelry;
+mod noncraft;
+pub(super) use noncraft::item_has_ego;
+pub(super) use noncraft::roll_quiver_capacity;
+pub(crate) use noncraft::{device_capacity, device_difficulty};
+pub(super) use noncraft::{device_pval, materialize_device};
 
 use rfb_content::{
     ActorDamageType, ActorResistanceLevel, AffixDefinition, AffixPropertyBundleDefinition,
@@ -26,6 +33,7 @@ use super::{initial_item_runtime_state, merge_equipment_bonuses, roll_weighted_i
 /// Complete generated affix state shared by content-driven consumers.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct EgoMaterialization {
+    pub(super) extinguish_fuel: bool,
     pub(super) kind_id_override: Option<String>,
     pub(super) clear_armor_enchantment: bool,
     pub(super) clear_hit_enchantment: bool,
@@ -85,6 +93,7 @@ impl EgoMaterialization {
             .flat_map(|rolled| rolled.curse_effects.iter().copied())
             .collect();
         Self {
+            extinguish_fuel: false,
             kind_id_override: None,
             clear_armor_enchantment: false,
             clear_hit_enchantment: false,
@@ -105,6 +114,11 @@ impl EgoMaterialization {
 
     /// Commits a fully prepared materialization to an existing item in one step.
     pub(super) fn apply_to(self, item: &mut ItemInstance) {
+        if self.extinguish_fuel
+            && let Some(fuel) = &mut item.fuel
+        {
+            fuel.current = 0;
+        }
         if let Some(kind_id) = self.kind_id_override {
             item.kind_id = kind_id;
         }
@@ -158,6 +172,36 @@ pub(super) fn materialize_ego_with_rng(
     activation_depth: u16,
 ) -> EgoMaterialization {
     affix_ids.sort();
+    if let [affix_id] = affix_ids.as_slice()
+        && let Some(item) = content.item(kind_id)
+        && let Some(affix) = content.affix(affix_id)
+        && let Some(result) = jewelry::materialize(rng, item, affix, roll_depth(affix), 2)
+    {
+        return result;
+    }
+    if let [affix_id] = affix_ids.as_slice()
+        && let Some(item) = content.item(kind_id)
+        && let Some(affix) = content.affix(affix_id)
+        && let Some(result) =
+            noncraft::materialize_device(content, rng, item, roll_depth(affix), true, Some(affix))
+    {
+        return result;
+    }
+    if let [affix_id] = affix_ids.as_slice()
+        && let Some(item) = content.item(kind_id)
+        && let Some(affix) = content.affix(affix_id)
+        && !affix.preserves_ordinary_quality
+        && let Some(result) = noncraft::materialize_quiver(item, affix, item.ammunition_capacity)
+    {
+        return result;
+    }
+    if let [affix_id] = affix_ids.as_slice()
+        && let Some(item) = content.item(kind_id)
+        && let Some(affix) = content.affix(affix_id)
+        && let Some(result) = noncraft::materialize_light(rng, item, affix, roll_depth(affix))
+    {
+        return result;
+    }
     if let [affix_id] = affix_ids.as_slice()
         && let Some(item) = content.item(kind_id)
         && let Some(affix) = content.affix(affix_id)
@@ -242,6 +286,9 @@ pub(super) fn merge_affix_properties(
     total: &mut AffixPropertyBundleDefinition,
     addition: &AffixPropertyBundleDefinition,
 ) {
+    if addition.ammunition_capacity.is_some() {
+        total.ammunition_capacity = addition.ammunition_capacity;
+    }
     merge_stat_modifiers(&mut total.modifiers, &addition.modifiers);
     merge_equipment_bonuses(&mut total.equipment_bonuses, &addition.equipment_bonuses);
     for (damage_type, level) in &addition.resistances {
@@ -1208,6 +1255,10 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
         RfbEgoTypeDefinition::Harp
     } else if base_kind.tval == TV_BOW {
         RfbEgoTypeDefinition::Bow
+    } else if base_kind.tval == 46 && base_kind.sval == 0 {
+        RfbEgoTypeDefinition::Quiver
+    } else if base_kind.tval == 39 {
+        RfbEgoTypeDefinition::Lite
     } else if base_kind.tval == 30 {
         RfbEgoTypeDefinition::Boots
     } else if base_kind.tval == 31 {
@@ -1258,6 +1309,16 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
             .find(|affix| affix.id == affix_id)
             .expect("selected ego affix remains available");
         let materialized = match allowed_type {
+            RfbEgoTypeDefinition::Quiver => noncraft::materialize_quiver(
+                item,
+                affix,
+                intrinsic_properties
+                    .and_then(|properties| properties.ammunition_capacity)
+                    .unwrap_or(item.ammunition_capacity),
+            ),
+            RfbEgoTypeDefinition::Lite => {
+                noncraft::materialize_light(rng, item, affix, generation_level)
+            }
             RfbEgoTypeDefinition::Boots
             | RfbEgoTypeDefinition::Gloves
             | RfbEgoTypeDefinition::Helmet
@@ -1297,6 +1358,9 @@ fn rfb_ego_can_apply_to_base(
         .map(|profile| profile.damage_dice.saturating_mul(profile.damage_sides))
         .unwrap_or_default();
     match source_index {
+        200..=201 | 205..=211 | 220..=227 => jewelry::can_apply(source_index, tval),
+        265..=268 => tval == 46 && sval == 0,
+        235..=243 => noncraft::light_can_apply(source_index, tval, sval),
         50..=152 => armor::can_apply(source_index, tval, sval),
         2 => matches!(tval, TV_POLEARM | TV_SWORD),
         6 => tval == TV_HAFTED && sval == SV_WIZSTAFF,
@@ -2166,6 +2230,7 @@ fn add_status_immunity(properties: &mut AffixPropertyBundleDefinition, status_id
         .any(|id| id == status_id)
     {
         properties.status_immunities.push(status_id.to_owned());
+        properties.status_immunities.sort();
     }
 }
 
@@ -3267,7 +3332,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(STATE_HASH_SCHEMA_VERSION, 110);
+        assert_eq!(STATE_HASH_SCHEMA_VERSION, 111);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,
@@ -3545,7 +3610,7 @@ mod tests {
         );
         assert_eq!(
             rolled.properties.status_immunities,
-            ["rfb.status.fear", "rfb.status.blindness"]
+            ["rfb.status.blindness", "rfb.status.fear"]
         );
     }
 

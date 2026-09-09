@@ -12,11 +12,8 @@
         },
         "deviceCheckDifficulty": 1,
         "effect": {
-          "effect": {
-            "minimumDistance": 10,
-            "type": "teleport-self"
-          },
-          "type": "ability-effect"
+          "maximumDistance": 10,
+          "type": "random-teleport"
         },
         "id": "rfb.device-activation.ego-146-phase-door",
         "maxDepth": 100,

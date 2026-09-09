@@ -571,6 +571,8 @@ pub enum AbilityEffectDefinition {
     },
     BlinkSelf {
         radius: u8,
+        #[serde(default)]
+        line_of_sight: bool,
     },
     BlinkTarget {
         radius: u8,
@@ -640,7 +642,10 @@ pub enum AbilityEffectDefinition {
     DemonSummoning,
     AngelSummoning,
     BanishEvil,
-    WrathOfGod,
+    WrathOfGod {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        damage: Option<u16>,
+    },
     DivineIntervention,
     Crusade,
     InsanityCircle {
@@ -1008,7 +1013,7 @@ fn ability_level_scaling_base_and_limit(
             | AbilityEffectDefinition::Detect { radius, .. },
             AbilityLevelScalingField::Radius,
         ) => Some((u64::from(*radius), 16)),
-        (AbilityEffectDefinition::BlinkSelf { radius }, AbilityLevelScalingField::Radius) => {
+        (AbilityEffectDefinition::BlinkSelf { radius, .. }, AbilityLevelScalingField::Radius) => {
             Some((u64::from(*radius), 255))
         }
         (AbilityEffectDefinition::DimensionDoor { range }, AbilityLevelScalingField::Radius) => {

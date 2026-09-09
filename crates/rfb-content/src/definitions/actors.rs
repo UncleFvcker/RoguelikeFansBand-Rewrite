@@ -642,6 +642,9 @@ pub struct StatModifiers {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct EquipmentBonuses {
+    /// RFB weapon mastery adds dice to equipped melee weapons.
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub weapon_dice_bonus: i32,
     /// Additive adjustment to RFB's equipment life multiplier. `9` means +9% max HP.
     #[serde(default, skip_serializing_if = "is_zero_i32")]
     pub life_percent: i32,

@@ -114,8 +114,8 @@
         "effect": {
           "effect": {
             "durationDice": 1,
-            "durationSides": 90,
-            "durationTicks": 90,
+            "durationSides": 25,
+            "durationTicks": 25,
             "grantsWallPassage": true,
             "incomingDamagePercent": 50,
             "intensity": 1,
@@ -687,7 +687,7 @@
           "effect": {
             "durationTicks": 3,
             "intensity": 1,
-            "power": 20,
+            "power": 60,
             "stacking": "replace",
             "statusKindId": "rfb.status.fear",
             "type": "visible-apply-status"

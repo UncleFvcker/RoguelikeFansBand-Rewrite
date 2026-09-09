@@ -224,6 +224,7 @@ impl Game {
         let owner = self.player.id.clone();
         let mut resolution = self.resolve_category_summon(
             CategorySummonSpec {
+                is_spell: false,
                 source_id: source,
                 owner_id: &owner,
                 category,

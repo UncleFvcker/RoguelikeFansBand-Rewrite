@@ -132,11 +132,11 @@
                 "type": "remove-status"
               },
               {
-                "statusKindId": "rfb.status.blind",
+                "statusKindId": "rfb.status.blindness",
                 "type": "remove-status"
               },
               {
-                "statusKindId": "rfb.status.confused",
+                "statusKindId": "rfb.status.confusion",
                 "type": "remove-status"
               },
               {
@@ -187,11 +187,11 @@
                 "type": "heal"
               },
               {
-                "statusKindId": "rfb.status.blind",
+                "statusKindId": "rfb.status.blindness",
                 "type": "remove-status"
               },
               {
-                "statusKindId": "rfb.status.confused",
+                "statusKindId": "rfb.status.confusion",
                 "type": "remove-status"
               },
               {

@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-barbarian-talisman-description",
+  "deviceGeneration": {
+    "activationOptional": true,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "durationBonus": 25,
+          "durationDice": 1,
+          "durationSides": 25,
+          "type": "apply-berserk-strength"
+        },
+        "id": "rfb.device-activation.ego-220-berserk",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-berserk-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 10,
+  "id": "rfb-legacy.affix.barbarian-talisman",
+  "nameKey": "affix-legacy-barbarian-talisman-name",
+  "namePlacement": "full-name",
+  "rfbEgo": {
+    "rarity": 2,
+    "sourceIndex": 220,
+    "types": [
+      "amulet"
+    ]
+  },
+  "tags": [
+    "amulet",
+    "legacy-import"
+  ]
+}

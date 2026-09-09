@@ -1160,6 +1160,11 @@ impl Game {
             .clone();
         let owner_id = self.entities[source_index].id.clone();
         let mut entity_ids = Vec::with_capacity(positions.len());
+        let positions = positions
+            .iter()
+            .copied()
+            .filter(|_| !self.equipment_blocks_summoning())
+            .collect::<Vec<_>>();
         for (ordinal, position) in positions.iter().copied().enumerate() {
             let id = self.summon_entity_id(&plan.ability.id, ordinal);
             let mut entity = spawn_actor_from_definition(
@@ -2313,7 +2318,13 @@ impl Game {
                         .bounded(u64::try_from(destinations.len()).expect("candidate count fits")),
                 )
                 .expect("bounded draw fits usize");
-                let destination = destinations[choice];
+                let destination = if matches!(target, MonsterHostileTarget::Player { .. })
+                    && self.player_has_anti_teleport()
+                {
+                    self.player.position
+                } else {
+                    destinations[choice]
+                };
                 match target {
                     MonsterHostileTarget::Player { .. } => {
                         let from = self.player.position;
@@ -2389,7 +2400,13 @@ impl Game {
                 trace,
                 destination,
             } => {
-                let destination = *destination;
+                let destination = if matches!(target, MonsterHostileTarget::Player { .. })
+                    && self.player_has_anti_teleport()
+                {
+                    self.player.position
+                } else {
+                    *destination
+                };
                 match target {
                     MonsterHostileTarget::Player { .. } => {
                         let from = self.player.position;
@@ -2952,7 +2969,10 @@ impl Game {
                     );
                     let nexus_resisted = self.rng.bounded(55)
                         < u64::try_from(nexus.reduction_percent().max(0)).unwrap_or(0);
-                    if nexus_resisted || self.monster_curse_save(source_kind_id, events) {
+                    if self.player_has_anti_teleport()
+                        || nexus_resisted
+                        || self.monster_curse_save(source_kind_id, events)
+                    {
                         AbilityEffectResolutionDto::Skipped {
                             effect_index,
                             reason: AbilityEffectSkipReasonDto::Saved,
@@ -3475,7 +3495,7 @@ impl Game {
             {
                 (MonsterAbilityTargetPlan::SelfTarget, 0, 0)
             }
-            AbilityEffectDefinition::BlinkSelf { radius } => {
+            AbilityEffectDefinition::BlinkSelf { radius, .. } => {
                 let radius = u32::from(*radius);
                 let destinations = self.displacement_destinations(index, |position| {
                     origin

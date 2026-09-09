@@ -50,6 +50,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
+        if self.player_has_anti_teleport() {
+            return;
+        }
         let from = self.player.position;
         events.push(DomainEvent::AbilityTeleported {
             ability_id: ability.id.clone(),
@@ -118,6 +121,9 @@ impl Game {
         town_id: &str,
         events: &mut Vec<DomainEvent>,
     ) -> Result<(), CoreError> {
+        if self.player_has_anti_teleport() {
+            return Ok(());
+        }
         let from_town_id = self.current_town().map(|town| town.id.clone());
         self.teleport_to_town(town_id)?;
         events.push(DomainEvent::AbilityEffectsResolved {
@@ -237,6 +243,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
+        if self.player_has_anti_teleport() {
+            return Ok(());
+        }
         let prefer_upward = self.rng.bounded(2) == 0;
         let targets = if prefer_upward {
             if upward_targets.is_empty() {

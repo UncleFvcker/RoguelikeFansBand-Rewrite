@@ -1,0 +1,59 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-illumination-light-description",
+  "deviceGeneration": {
+    "activationOptional": false,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 1,
+        "effect": {
+          "effect": {
+            "damageDice": 2,
+            "damageSides": 15,
+            "radius": 3,
+            "type": "light-area"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-236-lite-area",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-lite-area-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 100
+        },
+        "rfbBiases": [],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 30,
+  "id": "rfb-legacy.affix.illumination-light",
+  "nameKey": "affix-legacy-illumination-light-name",
+  "rfbEgo": {
+    "rarity": 1,
+    "sourceIndex": 236,
+    "types": [
+      "lite"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "lite"
+  ]
+}

@@ -77,8 +77,8 @@
         "effect": {
           "effect": {
             "durationDice": 1,
-            "durationSides": 90,
-            "durationTicks": 90,
+            "durationSides": 25,
+            "durationTicks": 25,
             "grantsWallPassage": true,
             "incomingDamagePercent": 50,
             "intensity": 1,

@@ -2197,7 +2197,10 @@ fn racial_detection_and_mobility_bindings_match_source() {
     assert_ne!(phase_door.id, "demo.ability.sorcery-phase-door");
     assert!(matches!(
         phase_door.effect,
-        AbilityEffectDefinition::BlinkSelf { radius: 10 }
+        AbilityEffectDefinition::BlinkSelf {
+            radius: 10,
+            line_of_sight: false
+        }
     ));
 
     let half_giant = catalog

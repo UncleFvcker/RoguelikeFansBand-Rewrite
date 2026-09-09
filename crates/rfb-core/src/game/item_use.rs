@@ -487,6 +487,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) -> Result<(), CoreError> {
+        if self.player_has_anti_teleport() {
+            return Ok(());
+        }
         let prefer_upward = self.rng.bounded(2) == 0;
         let targets = if prefer_upward {
             if upward_targets.is_empty() {
@@ -568,6 +571,9 @@ impl Game {
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
     ) {
+        if self.player_has_anti_teleport() {
+            return;
+        }
         let candidate_index = usize::try_from(self.rng.bounded(candidates.len() as u64))
             .expect("bounded teleport candidate index must fit usize");
         let destination = candidates[candidate_index];
@@ -681,6 +687,7 @@ impl Game {
         let owner_id = self.player.id.clone();
         let resolution = self.resolve_category_summon(
             CategorySummonSpec {
+                is_spell: true,
                 source_id: &source_kind_id,
                 owner_id: &owner_id,
                 category: &category,
@@ -1717,7 +1724,7 @@ impl Game {
             ItemCurseTargetDefinition::Weapon => EquippedItemCurseTarget::Weapon,
             ItemCurseTargetDefinition::Armor => EquippedItemCurseTarget::Armor,
         };
-        let outcome = self.curse_equipped_item(CurseEquippedItemRequest::new(target));
+        let outcome = self.curse_equipped_item(CurseEquippedItemRequest::new(target).blasting());
         if outcome.item_id.is_some() {
             self.mark_item_aware(source_kind_id);
         }
@@ -2638,6 +2645,12 @@ impl Game {
             }
         }
 
+        let item_device_power_bonus =
+            if super::ego::item_has_ego(&self.content, &self.items[index], 254) {
+                i32::from(super::ego::device_pval(&self.items[index]))
+            } else {
+                0
+            };
         if let Some(cost) = cost {
             self.items[index]
                 .charges
@@ -2652,7 +2665,8 @@ impl Game {
         }
         let device_power_bonus = difficulty
             .map(|_| self.effective_player_device_power_bonus())
-            .unwrap_or(0);
+            .unwrap_or(0)
+            + item_device_power_bonus;
         self.resolve_inventory_item_effect(
             SettledItemUse {
                 kind_id,
@@ -2687,6 +2701,54 @@ impl Game {
         Ok(())
     }
 
+    fn boost_item_ability_effect(&mut self, effect: &mut AbilityEffectDefinition, bonus: i32) {
+        if bonus == 0 {
+            return;
+        }
+        match effect {
+            AbilityEffectDefinition::Sequence { effects } => {
+                for effect in effects {
+                    self.boost_item_ability_effect(effect, bonus);
+                }
+            }
+            AbilityEffectDefinition::DrainLife { damage_bonus, .. }
+            | AbilityEffectDefinition::ConeDamage { damage_bonus, .. }
+            | AbilityEffectDefinition::VisibleDamage { damage_bonus, .. } => {
+                *damage_bonus = device_power_value(u64::from(*damage_bonus), bonus) as u16;
+            }
+            AbilityEffectDefinition::WrathOfGod {
+                damage: Some(damage),
+            } => {
+                *damage = device_power_value(u64::from(*damage), bonus) as u16;
+            }
+            AbilityEffectDefinition::Heal { amount } => {
+                *amount = device_power_value(u64::from(*amount), bonus) as u32;
+            }
+            AbilityEffectDefinition::ApplyStatus {
+                duration_ticks,
+                duration_dice,
+                duration_sides,
+                ..
+            } => {
+                let rolled: u64 = (0..*duration_dice)
+                    .map(|_| self.rng.bounded(u64::from(*duration_sides)) + 1)
+                    .sum();
+                *duration_ticks =
+                    device_power_value(u64::from(*duration_ticks) + rolled, bonus) as u32;
+                *duration_dice = 0;
+                *duration_sides = 0;
+            }
+            AbilityEffectDefinition::VisibleApplyStatus {
+                power: Some(power), ..
+            }
+            | AbilityEffectDefinition::Control { power, .. }
+            | AbilityEffectDefinition::TeleportAway { power, .. } => {
+                *power = device_power_value(u64::from(*power), bonus) as u16;
+            }
+            _ => {}
+        }
+    }
+
     fn resolve_inventory_item_effect(
         &mut self,
         settled: SettledItemUse,
@@ -2702,19 +2764,143 @@ impl Game {
             device_power_bonus,
         } = settled;
         match (effect, plan) {
+            (ItemUseEffectDefinition::RefillQuiver, ItemUsePlan::SelfTarget) => {
+                self.refill_quiver(&kind_id, profile_id.as_deref(), events)?;
+            }
+            (ItemUseEffectDefinition::Escape, ItemUsePlan::SelfTarget) => {
+                let effect = match self.rng.bounded(13) {
+                    0..=4 => AbilityEffectDefinition::BlinkSelf {
+                        radius: 10,
+                        line_of_sight: false,
+                    },
+                    5..=9 => AbilityEffectDefinition::BlinkSelf {
+                        radius: 222,
+                        line_of_sight: false,
+                    },
+                    10..=11 => AbilityEffectDefinition::CreateStair {
+                        up_terrain_id: "demo.terrain.stairs-up".to_owned(),
+                        down_terrain_id: "demo.terrain.stairs-down".to_owned(),
+                    },
+                    _ => AbilityEffectDefinition::TeleportLevel,
+                };
+                let target = AbilityTargetDefinition {
+                    modes: vec![AbilityTargetModeDefinition::SelfTarget],
+                    range: 0,
+                    requires_line_of_effect: false,
+                };
+                if let Some(ItemUsePlan::AbilityEffect {
+                    ability,
+                    target_plan,
+                }) = self.item_use_plan(
+                    &kind_id,
+                    &ItemUseEffectDefinition::AbilityEffect {
+                        effect: Box::new(effect),
+                        affects_ground_items: false,
+                    },
+                    Some(&target),
+                    None,
+                    None,
+                ) {
+                    self.resolve_player_ability_effect(
+                        *ability,
+                        target_plan,
+                        events,
+                        changed,
+                        removed_entities,
+                    )?;
+                }
+            }
+            (ItemUseEffectDefinition::StarBall, ItemUsePlan::SelfTarget) => {
+                let count = self.roll_damage(5, 3);
+                let count = device_power_value(count as u64, device_power_bonus);
+                let damage = device_power_value(150, device_power_bonus) as i32;
+                for _ in 0..count {
+                    let mut target = self.player.position;
+                    for _ in 0..1000 {
+                        target = Position {
+                            x: self.player.position.x + self.rng.bounded(9) as i32 - 4,
+                            y: self.player.position.y + self.rng.bounded(9) as i32 - 4,
+                        };
+                        if super::projectile_geometry::rfb_distance(self.player.position, target)
+                            <= 4
+                            && target != self.player.position
+                            && self.is_walkable(target)
+                        {
+                            break;
+                        }
+                    }
+                    if let Some(path) = super::projectile_geometry::projectile_path_through_target(
+                        self.player.position,
+                        target,
+                        self.width.max(self.height),
+                    ) {
+                        self.resolve_player_area_damage_with_base_policy(
+                            &kind_id,
+                            path,
+                            true,
+                            DamageType::Electricity,
+                            3,
+                            None,
+                            damage,
+                            true,
+                            true,
+                            events,
+                            changed,
+                            removed_entities,
+                        )?;
+                    }
+                }
+            }
+            (ItemUseEffectDefinition::Starburst { damage }, ItemUsePlan::SelfTarget) => {
+                if !self.item_status_resisted(ActorDamageType::Blindness, STATUS_BLINDNESS)
+                    && !self.item_status_resisted(ActorDamageType::Light, "")
+                {
+                    self.resolve_item_status(
+                        &kind_id,
+                        STATUS_BLINDNESS,
+                        1,
+                        5,
+                        3,
+                        AbilityStatusStackingDefinition::Extend,
+                        None,
+                        &BTreeMap::new(),
+                        &StatModifiers::default(),
+                        &EquipmentBonuses::default(),
+                        100,
+                        events,
+                    );
+                }
+                self.resolve_player_area_damage_with_base_policy(
+                    &kind_id,
+                    Vec::new(),
+                    false,
+                    DamageType::Light,
+                    5,
+                    None,
+                    device_power_value(u64::from(damage) * 2, device_power_bonus) as i32,
+                    true,
+                    true,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             (
                 ItemUseEffectDefinition::AbilityEffect { .. },
                 ItemUsePlan::AbilityEffect {
-                    ability,
+                    mut ability,
                     target_plan,
                 },
-            ) => self.resolve_player_ability_effect(
-                *ability,
-                target_plan,
-                events,
-                changed,
-                removed_entities,
-            )?,
+            ) => {
+                self.boost_item_ability_effect(&mut ability.effect, device_power_bonus);
+                self.resolve_player_ability_effect(
+                    *ability,
+                    target_plan,
+                    events,
+                    changed,
+                    removed_entities,
+                )?;
+            }
             (
                 effect @ (ItemUseEffectDefinition::Heal { .. }
                 | ItemUseEffectDefinition::NoNumericEffect
@@ -3239,6 +3425,10 @@ impl Game {
             | ItemUseEffectDefinition::DrainResourceFull { .. }
             | ItemUseEffectDefinition::IdentifyInventory
             | ItemUseEffectDefinition::SelfKnowledge
+            | ItemUseEffectDefinition::RefillQuiver
+            | ItemUseEffectDefinition::StarBall
+            | ItemUseEffectDefinition::Escape
+            | ItemUseEffectDefinition::Starburst { .. }
             | ItemUseEffectDefinition::ShowRumour { .. }
             | ItemUseEffectDefinition::Sequence { .. }
             | ItemUseEffectDefinition::CurseEquippedItem { .. }
@@ -5437,6 +5627,10 @@ impl Game {
             | ItemUseEffectDefinition::CreateAdjacentTerrain { .. }
             | ItemUseEffectDefinition::CreateCurrentTerrain { .. }
             | ItemUseEffectDefinition::SetFloorGlow { .. }
+            | ItemUseEffectDefinition::RefillQuiver
+            | ItemUseEffectDefinition::StarBall
+            | ItemUseEffectDefinition::Escape
+            | ItemUseEffectDefinition::Starburst { .. }
             | ItemUseEffectDefinition::AreaDestruction { .. }
             | ItemUseEffectDefinition::DestroyAdjacentTrapsAndDoors
             | ItemUseEffectDefinition::DispelCategory { .. }

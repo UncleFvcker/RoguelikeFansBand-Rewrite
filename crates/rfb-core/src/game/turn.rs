@@ -416,8 +416,18 @@ impl Game {
                 item.device_recovery_progress = 0;
                 continue;
             }
+            let regeneration = if super::ego::item_has_ego(content, item, 252) {
+                1 + super::ego::device_pval(item)
+            } else {
+                1
+            };
+            let charges = item
+                .charges
+                .as_mut()
+                .expect("recovering device retains charges");
             let scaled = u64::from(charges.maximum)
                 .saturating_mul(u64::from(recovery.energy_per_mille))
+                .saturating_mul(u64::from(regeneration))
                 .saturating_add(u64::from(item.device_recovery_progress));
             let gain =
                 u32::try_from(scaled / 1_000).expect("validated device recovery gain must fit u32");

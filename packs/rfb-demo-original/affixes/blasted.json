@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-blasted-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.blasted",
+  "nameKey": "affix-legacy-blasted-name",
+  "rfbEgo": {
+    "rarity": 0,
+    "sourceIndex": 260,
+    "types": [
+      "special"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "special"
+  ]
+}

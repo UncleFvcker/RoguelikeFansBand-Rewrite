@@ -1440,6 +1440,10 @@
         {
           "additionalProperties": false,
           "properties": {
+            "lineOfSight": {
+              "default": false,
+              "type": "boolean"
+            },
             "radius": {
               "format": "uint8",
               "maximum": 255,
@@ -1854,6 +1858,15 @@
         {
           "additionalProperties": false,
           "properties": {
+            "damage": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
             "type": {
               "const": "wrath-of-god",
               "type": "string"
@@ -3780,6 +3793,11 @@
         },
         "throwingSkill": {
           "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "weaponDiceBonus": {
+          "description": "RFB weapon mastery adds dice to equipped melee weapons.",
           "format": "int32",
           "type": "integer"
         }

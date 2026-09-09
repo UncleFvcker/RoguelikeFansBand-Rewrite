@@ -297,7 +297,8 @@ impl Game {
                 }
             }
             MutationPeriodicEffectDefinition::RandomTeleport => {
-                if !self.periodic_resistance_save(DamageType::Nexus, "")
+                if !self.player_has_anti_teleport()
+                    && !self.periodic_resistance_save(DamageType::Nexus, "")
                     && self.rng.bounded(5_000) == 87
                 {
                     let candidates = self.random_teleport_candidates(40);
@@ -653,6 +654,7 @@ impl Game {
         let owner_id = self.player.id.clone();
         let resolution = self.resolve_category_summon(
             CategorySummonSpec {
+                is_spell: false,
                 source_id: &mutation.id,
                 owner_id: &owner_id,
                 category,
@@ -896,7 +898,7 @@ impl Game {
                 let _lose_all_information = self.rng.bounded(3) == 0;
                 self.clear_current_floor_memory(changed);
                 let candidates = self.random_teleport_candidates(100);
-                if !candidates.is_empty() {
+                if !self.player_has_anti_teleport() && !candidates.is_empty() {
                     let index = usize::try_from(self.rng.bounded(candidates.len() as u64))
                         .expect("bounded teleport candidate index must fit usize");
                     events.extend(self.relocate_player(candidates[index], changed));

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-immortal-eye-light-description",
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "id": "rfb-legacy.affix.immortal-eye-light",
+  "nameKey": "affix-legacy-immortal-eye-light-name",
+  "passives": [
+    "see-invisible"
+  ],
+  "rfbEgo": {
+    "rarity": 8,
+    "sourceIndex": 241,
+    "types": [
+      "lite"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.blindness"
+  ],
+  "tags": [
+    "legacy-import",
+    "lite"
+  ]
+}

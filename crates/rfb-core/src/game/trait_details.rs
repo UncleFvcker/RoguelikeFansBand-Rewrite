@@ -343,6 +343,8 @@ impl Game {
             EquipmentPassive::RevengeAura,
             EquipmentPassive::ManaRegeneration,
             EquipmentPassive::AntiMagic,
+            EquipmentPassive::AntiTeleport,
+            EquipmentPassive::AntiSummoning,
             EquipmentPassive::NightVision,
             EquipmentPassive::DualWielding,
             EquipmentPassive::NoEnchant,

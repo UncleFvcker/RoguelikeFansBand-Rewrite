@@ -382,6 +382,13 @@ impl Game {
         }) else {
             return;
         };
+        if super::ego::item_has_ego(&self.content, item, 237)
+            && self
+                .world_tick
+                .is_multiple_of(LIGHT_FUEL_INTERVAL_TICKS * 2)
+        {
+            return;
+        }
         let fuel = item.fuel.as_mut().expect("selected light must have fuel");
         fuel.current -= 1;
         if fuel.current == 0 {
@@ -400,11 +407,34 @@ impl Game {
                 ItemLocation::Equipped { slot_id } => {
                     let bonus = self.item_equipment_bonuses(item).light_radius;
                     if slot_id == "light" {
+                        if super::ego::item_has_ego(&self.content, item, 240) {
+                            return Some(
+                                match self
+                                    .content
+                                    .item(&item.kind_id)
+                                    .and_then(|definition| definition.rfb_base_kind)
+                                    .map(|base| base.sval)
+                                {
+                                    Some(0) => -1,
+                                    Some(1) => -2,
+                                    _ => -3,
+                                },
+                            );
+                        }
                         let fuel = item
                             .fuel
                             .filter(|fuel| fuel.current > 0)
                             .map_or(0, |fuel| i32::from(fuel.light_radius));
-                        Some(fuel.max(bonus))
+                        if self
+                            .content
+                            .item(&item.kind_id)
+                            .and_then(|definition| definition.rfb_base_kind)
+                            .is_some_and(|base| base.tval == 39)
+                        {
+                            Some(fuel + bonus)
+                        } else {
+                            Some(fuel.max(bonus))
+                        }
                     } else {
                         Some(bonus)
                     }

@@ -71,6 +71,8 @@ pub enum EquipmentPassive {
     RevengeAura,
     ManaRegeneration,
     AntiMagic,
+    AntiTeleport,
+    AntiSummoning,
     NightVision,
     DualWielding,
     NoEnchant,
@@ -185,6 +187,9 @@ fn is_automatic_affix_name_placement(value: &AffixNamePlacementDefinition) -> bo
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AffixPropertyBundleDefinition {
+    /// Generated quiver capacity, in ammunition units.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ammunition_capacity: Option<u16>,
     #[serde(default)]
     pub modifiers: StatModifiers,
     #[serde(default)]
@@ -711,6 +716,12 @@ pub enum ItemUseEffectDefinition {
         maximum_count: u8,
     },
     MundanifyItem,
+    RefillQuiver,
+    StarBall,
+    Escape,
+    Starburst {
+        damage: u16,
+    },
     CraftItem {
         rfb_ego_policy: super::LootRfbEgoPolicyDefinition,
     },
@@ -1116,7 +1127,9 @@ pub fn affix_is_compatible_with_item(
         return false;
     }
 
-    let compatible_tags: &[&str] = if item.tags.iter().any(|tag| tag == "ammunition") {
+    let compatible_tags: &[&str] = if item.tags.iter().any(|tag| tag == "device") {
+        &["device"]
+    } else if item.tags.iter().any(|tag| tag == "ammunition") {
         &["ammo"]
     } else {
         match item.equipment_slot.as_deref() {

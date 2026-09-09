@@ -1182,7 +1182,7 @@
           "effect": {
             "durationTicks": 3,
             "intensity": 1,
-            "power": 100,
+            "power": 150,
             "stacking": "replace",
             "statusKindId": "rfb.status.paralysis",
             "type": "visible-apply-status"

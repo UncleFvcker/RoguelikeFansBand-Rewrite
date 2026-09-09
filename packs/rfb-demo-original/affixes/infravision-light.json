@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-infravision-light-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 40,
+  "id": "rfb-legacy.affix.infravision-light",
+  "nameKey": "affix-legacy-infravision-light-name",
+  "rfbEgo": {
+    "rarity": 2,
+    "sourceIndex": 238,
+    "types": [
+      "lite"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "lite"
+  ]
+}

@@ -811,7 +811,7 @@ impl Game {
         self.content
             .item(&item.kind_id)?
             .rfb_base_kind
-            .filter(|base| matches!(base.tval, 30..=38))?;
+            .filter(|base| matches!(base.tval, 30..=38 | 40 | 45))?;
         Some(
             item.affix_ids
                 .iter()
@@ -833,12 +833,12 @@ impl Game {
         };
         // master:equip.c keeps sniper and magi bonuses out of melee, and the
         // listed melee egos out of archery.
-        if index == 126
-            || (!ranged && index == 141)
+        if matches!(index, 126 | 208 | 224)
+            || (!ranged && matches!(index, 141 | 207))
             || (ranged
                 && matches!(
                     index,
-                    60 | 61 | 95 | 102 | 115 | 120 | 127 | 135..=137 | 142
+                    60 | 61 | 95 | 102 | 115 | 120 | 127 | 135..=137 | 142 | 206
                 ))
         {
             return (0, 0);
@@ -850,7 +850,7 @@ impl Game {
     }
 
     pub(super) fn armor_spell_damage_bonus(&self) -> u16 {
-        self.items.iter().filter(|item| matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool")) && self.armor_ego_index(item) == Some(126))
+        self.items.iter().filter(|item| matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool")) && matches!(self.armor_ego_index(item), Some(126 | 208 | 224)))
             .map(|item| i32::from(item.enchantments.to_damage)).sum::<i32>().clamp(0, i32::from(u16::MAX)) as u16
     }
 
@@ -859,6 +859,17 @@ impl Game {
             || self
                 .player_equipment_passives()
                 .contains(&EquipmentPassive::AntiMagic)
+    }
+
+    pub(super) fn player_has_anti_teleport(&self) -> bool {
+        self.player_equipment_passives()
+            .contains(&EquipmentPassive::AntiTeleport)
+    }
+
+    pub(super) fn equipment_blocks_summoning(&mut self) -> bool {
+        self.player_equipment_passives()
+            .contains(&EquipmentPassive::AntiSummoning)
+            && self.rng.bounded(3) != 0
     }
 
     pub(super) fn player_equipment_passives(&self) -> BTreeSet<EquipmentPassive> {
@@ -1275,6 +1286,15 @@ impl Game {
     }
 
     pub(super) fn carried_weight_tenths_pound(&self) -> u32 {
+        let phase_quiver = self.items.iter().any(|item| {
+            matches!(item.location, ItemLocation::Equipped { .. })
+                && super::ego::item_has_ego(&self.content, item, 268)
+        });
+        let weightless_ammunition = if phase_quiver {
+            super::inventory::quivered_ammunition_item_ids(&self.content, &self.items)
+        } else {
+            BTreeSet::new()
+        };
         self.items
             .iter()
             .filter(|item| {
@@ -1283,6 +1303,7 @@ impl Game {
                     ItemLocation::Inventory | ItemLocation::Equipped { .. }
                 )
             })
+            .filter(|item| !weightless_ammunition.contains(item.id.as_str()))
             .fold(0_u32, |total, item| {
                 total.saturating_add(
                     u32::from(self.item_instance_weight(item)).saturating_mul(item.quantity),
@@ -1593,6 +1614,43 @@ impl Game {
             .collect()
     }
 
+    fn ring_affects_weapon(&self, ring_slot: &str, weapon_id: Option<&str>) -> bool {
+        let Some(weapon) = self
+            .items
+            .iter()
+            .find(|item| Some(item.id.as_str()) == weapon_id)
+        else {
+            return false;
+        };
+        let ItemLocation::Equipped { slot_id } = &weapon.location else {
+            return false;
+        };
+        let hands: Vec<_> = self
+            .body_slots
+            .iter()
+            .filter(|slot| matches!(slot.slot_type.as_str(), "weapon" | "shield"))
+            .collect();
+        let Some(hand) = hands.iter().position(|slot| &slot.id == slot_id) else {
+            return false;
+        };
+        let ring_hand = self
+            .body_slots
+            .iter()
+            .filter(|slot| slot.slot_type == "ring")
+            .position(|slot| slot.id == ring_slot);
+        if ring_hand == Some(hand) {
+            return true;
+        }
+        let other_empty = hands.iter().enumerate().any(|(index, slot)| index != hand && !self.items.iter().any(|item| matches!(&item.location, ItemLocation::Equipped { slot_id } if slot_id == &slot.id)));
+        let definition = self.content.item(&weapon.kind_id).unwrap();
+        other_empty
+            && self.riding_mount_level().is_none()
+            && (definition.weight_tenths_pound > 99
+                || definition
+                    .rfb_base_kind
+                    .is_some_and(|kind| kind.tval == 22 || (kind.tval == 21 && kind.sval == 51)))
+    }
+
     fn player_melee_profile_for_item(
         &self,
         stats: &ActorDerivedStats,
@@ -1761,6 +1819,7 @@ impl Game {
             .position(|item| Some(item.id.as_str()) == source_item_id.as_deref())
             .unwrap_or(0) as i32;
         let count = weapons.len().max(1) as i32;
+        let mut mastery = 0;
         for item in &self.items {
             let ItemLocation::Equipped { slot_id } = &item.location else {
                 continue;
@@ -1770,7 +1829,13 @@ impl Game {
             }
             let (hit, damage) = self.armor_combat_enchantments(item, false);
             let share = |value: i32| {
-                if count == 2 && self.body_slot_type(slot_id) == Some("gloves") {
+                if self.body_slot_type(slot_id) == Some("ring") {
+                    if self.ring_affects_weapon(slot_id, source_item_id.as_deref()) {
+                        value
+                    } else {
+                        0
+                    }
+                } else if count == 2 && self.body_slot_type(slot_id) == Some("gloves") {
                     if hand == 0 {
                         (value + 1) / 2
                     } else {
@@ -1786,6 +1851,7 @@ impl Game {
                 }
             };
             let hit_share = share(hit);
+            mastery += share(self.item_equipment_bonuses(item).weapon_dice_bonus);
             if hit_share != hit {
                 melee_skill = melee_skill.with_modifier(
                     StatLayer::Equipment,
@@ -1797,6 +1863,7 @@ impl Game {
             to_hit += hit_share;
             to_damage += share(damage) - damage;
         }
+        let dice = (i32::from(dice) + mastery).clamp(0, i32::from(u16::MAX)) as u16;
         if let Some(item_id) = source_item_id.as_deref() {
             let percent = self.dual_wielding_accuracy_per_mille(item_id);
             if percent != 1000 {
@@ -1822,7 +1889,15 @@ impl Game {
         let extra_blows = self.items.iter().filter(|item| {
             matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
                 && (Some(item.id.as_str()) == selected_item_id || !self.content.item(&item.kind_id).is_some_and(|definition| definition.melee_profile.is_some()))
-        }).map(|item| self.item_equipment_bonuses(item).melee_attacks_delta_percent).sum::<i32>().max(0);
+        }).map(|item| {
+            let ItemLocation::Equipped { slot_id } = &item.location else { unreachable!(); };
+            let amount = self.item_equipment_bonuses(item).melee_attacks_delta_percent;
+            if self.body_slot_type(slot_id) == Some("ring") {
+                if self.ring_affects_weapon(slot_id, source_item_id.as_deref()) { amount } else { 0 }
+            } else if Some(item.id.as_str()) == selected_item_id || (self.body_slot_type(slot_id) == Some("gloves") && amount < 0) {
+                amount
+            } else { amount / count }
+        }).sum::<i32>().max(0);
         ResolvedAttackProfile {
             attacks: u16::try_from(stats.melee_attacks.value + extra_blows / 100)
                 .expect("derived melee attack count must fit u16"),
@@ -2100,6 +2175,10 @@ impl Game {
         };
         for item in &self.items {
             if !matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+            {
+                continue;
+            }
+            if matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) == Some("ring") && !self.ring_affects_weapon(slot_id, profile.source_item_id.as_deref()))
             {
                 continue;
             }

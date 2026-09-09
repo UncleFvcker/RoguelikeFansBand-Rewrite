@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-immolation-light-description",
+  "elementalDestructionImmunities": [
+    "fire"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 20,
+  "id": "rfb-legacy.affix.immolation-light",
+  "nameKey": "affix-legacy-immolation-light-name",
+  "passives": [
+    "fire-aura"
+  ],
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 239,
+    "types": [
+      "lite"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "lite"
+  ]
+}

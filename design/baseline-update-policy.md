@@ -6,7 +6,7 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v307`，机器可读政策固定在：
+当前逻辑基线是 `contract-v310`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
@@ -362,3 +362,8 @@ ego。物品实例新增 `intrinsicProperties`，使 Protocol 最终升至 1.230
 `contract-v307` 开放 E5 前半 28 条护甲 Ego。实例重量和装备属性增加协议/存档字段，
 Protocol 升至 1.231、State Hash Schema 升至 v109，内容包升至 1.387.0；save header/payload
 仍为 v5。公共状态结构和属性投影变化要求统一刷新并复验全部 26 条 active fixture。
+
+`contract-v310` 接入 E7 的 38 条非 Craft Ego。实例装置 pval、箭袋容量和武器骰加值改变
+共用存档/哈希结构，首饰、光源、箭袋和装置生成改变共用 RNG 调度，新增 passive 改变属性投影。
+Protocol 升至 1.234、State Hash Schema 升至 v111、save header/payload 升至 v6，内容包
+升至 1.390.0。因此刷新并复验全部 26 条 active fixture，保持原有场景、命令和零 waiver。

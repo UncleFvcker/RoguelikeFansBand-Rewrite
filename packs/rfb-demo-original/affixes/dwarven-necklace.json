@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-dwarven-necklace-description",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.dwarven-necklace",
+  "nameKey": "affix-legacy-dwarven-necklace-name",
+  "namePlacement": "full-name",
+  "rfbEgo": {
+    "rarity": 2,
+    "sourceIndex": 223,
+    "types": [
+      "amulet"
+    ]
+  },
+  "tags": [
+    "amulet",
+    "legacy-import"
+  ]
+}

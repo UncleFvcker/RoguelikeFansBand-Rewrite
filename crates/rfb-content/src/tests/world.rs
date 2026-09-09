@@ -964,7 +964,10 @@ fn warrens_encounter_roster_matches_the_supported_legacy_ecology() {
         ability.id == "demo.ability.blink"
             && matches!(
                 ability.effect,
-                AbilityEffectDefinition::BlinkSelf { radius: 10 }
+                AbilityEffectDefinition::BlinkSelf {
+                    radius: 10,
+                    line_of_sight: false
+                }
             )
     }));
     assert!(
@@ -11009,24 +11012,9 @@ fn fixed_wilderness_task_geometry_and_rewards_match_source() {
             .iter()
             .find(|affix| affix.id == "rfb-legacy.affix.elemental-jewelry")
             .expect("the Elemental jewelry ego should exist");
-        assert_eq!(elemental.generation_level, 22);
-        assert_eq!(elemental.roll_groups.len(), 2);
-        assert_eq!(
-            elemental.roll_groups[0]
-                .candidates
-                .iter()
-                .map(|candidate| candidate.weight)
-                .sum::<u32>(),
-            4
-        );
-        assert_eq!(
-            elemental.roll_groups[1]
-                .candidates
-                .iter()
-                .map(|candidate| candidate.weight)
-                .sum::<u32>(),
-            12
-        );
+        assert_eq!(elemental.generation_level, 10);
+        assert_eq!(elemental.rfb_ego.as_ref().unwrap().source_index, 201);
+        assert!(elemental.roll_groups.is_empty());
     }
 
     {
@@ -12059,7 +12047,7 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .find(|table| table.id == "demo.loot-table.base-items")
         .expect("base item pool should exist");
 
-    assert_eq!(base_items.entries.len(), 350);
+    assert_eq!(base_items.entries.len(), 352);
 
     let selection: serde_json::Value = serde_json::from_slice(
         &std::fs::read(pack_path.join("legacy-item-selection.json"))
@@ -12115,14 +12103,18 @@ fn base_item_pool_is_shared_without_absorbing_fixed_rewards() {
         .iter()
         .filter(|(source_index, _)| !source_items_without_allocations.contains(source_index))
         .map(|(_, item_id)| item_id.as_str())
-        .chain(["demo.item.diamond-edge"])
+        .chain([
+            "demo.item.diamond-edge",
+            "demo.item.quiver",
+            "demo.item.feanorian-lamp",
+        ])
         .collect::<BTreeSet<_>>();
     let actual_item_ids = base_items
         .entries
         .iter()
         .map(|entry| entry.item_kind_id.as_str())
         .collect::<BTreeSet<_>>();
-    assert_eq!(expected_item_ids.len(), 316);
+    assert_eq!(expected_item_ids.len(), 318);
     assert_eq!(actual_item_ids, expected_item_ids);
 
     // Source 313 is one Staff allocation split into two formal adaptations.
@@ -13427,9 +13419,14 @@ fn anambar_service_roles_and_rewards_match_source() {
             .expect("Sacred Pendant should retain EGO identity");
         assert_eq!((ego.source_index, ego.rarity), (221, 2));
         assert_eq!(ego.types, [RfbEgoTypeDefinition::Amulet]);
-        assert_eq!(sacred.roll_groups.len(), 3);
-        assert_eq!(sacred.roll_groups[2].rolls, 5);
-        assert!(sacred.tags.contains(&"blessed-weapon".to_owned()));
+        assert!(sacred.roll_groups.is_empty());
+        assert!(
+            sacred
+                .device_generation
+                .as_ref()
+                .unwrap()
+                .activation_optional
+        );
     }
 }
 

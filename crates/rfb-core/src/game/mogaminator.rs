@@ -955,7 +955,11 @@ impl Game {
             }
             MogaminatorPredicate::Rare => definition.mogaminator_rare,
             MogaminatorPredicate::Common => !definition.mogaminator_rare,
-            MogaminatorPredicate::Worthless => aware && definition.base_value == 0,
+            MogaminatorPredicate::Worthless => {
+                aware
+                    && (definition.base_value == 0
+                        || super::ego::item_has_ego(&self.content, item, 260))
+            }
             MogaminatorPredicate::DiceBoosted => {
                 identification != ItemIdentificationDto::Unexamined
                     && definition.melee_profile.as_ref().is_some_and(|base| {

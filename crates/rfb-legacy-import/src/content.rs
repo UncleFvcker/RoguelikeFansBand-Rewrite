@@ -7,6 +7,8 @@
 //! the repository: unit tests use synthetic samples only.
 
 mod armor_ego_audit;
+mod noncraft_egos;
+pub use noncraft_egos::sync_demo_noncraft_egos;
 mod mutation_audit;
 
 pub use armor_ego_audit::sync_demo_armor_ego_identities;
@@ -4962,7 +4964,7 @@ fn weapon_ego_device_generation(
 }
 
 fn uses_shared_ego_materialization(entry: &LegacyEgoEntry) -> bool {
-    matches!(entry.index, 50..=56 | 60..=64 | 70..=77 | 80..=82 | 85..=92 | 95..=104 | 110..=122 | 125..=130 | 135..=142 | 145..=152)
+    matches!(entry.index, 200..=201 | 205..=211 | 220..=227 | 235..=243 | 50..=56 | 60..=64 | 70..=77 | 80..=82 | 85..=92 | 95..=104 | 110..=122 | 125..=130 | 135..=142 | 145..=152)
         || (matches!(entry.index, 1..=27 | 40..=42)
             && entry
                 .slots
@@ -5386,10 +5388,10 @@ fn legacy_device_item_effect(
         ),
         "CONFUSE_MONSTERS" | "SCARE_MONSTERS" | "SLOW_MONSTERS" | "STASIS_MONSTERS" => {
             let (status, power) = match candidate.token.as_str() {
-                "CONFUSE_MONSTERS" => ("rfb.status.confused", level),
-                "SCARE_MONSTERS" => ("rfb.status.fear", level),
-                "SLOW_MONSTERS" => ("rfb.status.slow", level),
-                _ => ("rfb.status.paralysis", level * 2),
+                "CONFUSE_MONSTERS" => ("rfb.status.confusion", level * 3),
+                "SCARE_MONSTERS" => ("rfb.status.fear", level * 3),
+                "SLOW_MONSTERS" => ("rfb.status.slow", level * 3),
+                _ => ("rfb.status.paralysis", level * 3),
             };
             (
                 device_ability_effect(
@@ -5401,9 +5403,11 @@ fn legacy_device_item_effect(
         }
         "CONFUSING_LITE" => (
             device_ability_effect(serde_json::json!({"type": "sequence", "effects": [
-                {"type": "visible-apply-status", "statusKindId": "rfb.status.confused", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level},
-                {"type": "visible-apply-status", "statusKindId": "rfb.status.blind", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level},
-                {"type": "visible-apply-status", "statusKindId": "rfb.status.stun", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level}
+                {"type": "visible-apply-status", "statusKindId": "rfb.status.slow", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level * 2},
+                {"type": "visible-apply-status", "statusKindId": "rfb.status.stun", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": 5 + level / 5},
+                {"type": "visible-apply-status", "statusKindId": "rfb.status.confusion", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level * 2},
+                {"type": "visible-apply-status", "statusKindId": "rfb.status.fear", "intensity": 1, "durationTicks": 3, "stacking": "replace", "power": level * 2},
+                {"type": "visible-apply-status", "statusKindId": "rfb.status.paralysis", "intensity": 1, "durationTicks": 500, "stacking": "replace", "power": level * 2 / 3}
             ]})),
             self_target,
             false,
@@ -5420,8 +5424,8 @@ fn legacy_device_item_effect(
             }
             if candidate.token == "CURING" {
                 for status in [
-                    "rfb.status.blind",
-                    "rfb.status.confused",
+                    "rfb.status.blindness",
+                    "rfb.status.confusion",
                     "rfb.status.stun",
                     "rfb.status.bleeding",
                 ] {
@@ -5468,14 +5472,16 @@ fn legacy_device_item_effect(
             serde_json::json!({"modes": ["position"], "range": level / 2 + 10, "requiresLineOfEffect": false}),
             false,
         ),
-        "DISPEL_EVIL" | "DISPEL_EVIL_HERO" | "DISPEL_GOOD" | "DISPEL_LIFE" | "DISPEL_UNDEAD" => {
+        "DISPEL_EVIL" | "DISPEL_EVIL_HERO" | "DISPEL_GOOD" | "DISPEL_LIFE" | "DISPEL_UNDEAD"
+        | "DISPEL_DEMON" => {
             let category = match candidate.token.as_str() {
                 "DISPEL_EVIL" | "DISPEL_EVIL_HERO" => "evil",
                 "DISPEL_GOOD" => "good",
                 "DISPEL_LIFE" => "living",
+                "DISPEL_DEMON" => "demon",
                 _ => "undead",
             };
-            let damage = if candidate.token == "DISPEL_UNDEAD" {
+            let damage = if matches!(candidate.token.as_str(), "DISPEL_UNDEAD" | "DISPEL_DEMON") {
                 100 + device_power_curve(400, level, 50)
             } else {
                 50 + device_power_curve(250, level, 50)
@@ -5527,8 +5533,8 @@ fn legacy_device_item_effect(
             let mut effects = vec![serde_json::json!({"type": "heal", "amount": amount})];
             if candidate.token != "HEAL" {
                 for status in [
-                    "rfb.status.blind",
-                    "rfb.status.confused",
+                    "rfb.status.blindness",
+                    "rfb.status.confusion",
                     "rfb.status.poison",
                     "rfb.status.stun",
                     "rfb.status.bleeding",
@@ -5554,11 +5560,10 @@ fn legacy_device_item_effect(
         "HOLINESS" => (
             device_ability_effect(serde_json::json!({"type": "sequence", "effects": [
                 {"type": "visible-damage", "damageDice": 0, "damageSides": 0, "damageBonus": level * 2, "damageType": "holy-fire", "targetCategory": "evil"},
+                {"type": "apply-status", "statusKindId": "rfb.status.protection-from-evil", "intensity": 1, "durationTicks": level, "stacking": "extend"},
                 {"type": "heal", "amount": level * 2},
-                {"type": "remove-status", "statusKindId": "rfb.status.poison"},
                 {"type": "remove-status", "statusKindId": "rfb.status.stun"},
-                {"type": "remove-status", "statusKindId": "rfb.status.bleeding"},
-                {"type": "remove-status", "statusKindId": "rfb.status.fear"}
+                {"type": "remove-status", "statusKindId": "rfb.status.bleeding"}
             ]})),
             self_target,
             false,
@@ -5793,7 +5798,7 @@ fn legacy_device_item_effect(
         ),
         "WRAITHFORM" => (
             device_ability_effect(
-                serde_json::json!({"type": "apply-status", "statusKindId": "rfb.status.wraithform", "intensity": 1, "durationTicks": level, "durationDice": 1, "durationSides": level, "stacking": "extend", "grantsWallPassage": true, "incomingDamagePercent": 50}),
+                serde_json::json!({"type": "apply-status", "statusKindId": "rfb.status.wraithform", "intensity": 1, "durationTicks": 25, "durationDice": 1, "durationSides": 25, "stacking": "extend", "grantsWallPassage": true, "incomingDamagePercent": 50}),
             ),
             self_target,
             false,
@@ -25696,36 +25701,36 @@ static personality_ptr _get_test_calm_personality(void)
     #[test]
     fn e_info_egos_become_affixes_with_maxima_modifiers() {
         const SYNTHETIC_E_INFO: &str = "V:1.1.0
-N:101:of Testing
+N:901:of Testing
 T:WEAPON
 W:0:35:2
 C:8:6:0:0
 F:SHOW_MODS
 
-N:102:of the Test Bear
+N:902:of the Test Bear
 T:AMULET | RING
 W:10:*:4
 C:0:0:0:3
 F:STR | DEC_INT | HIDE_TYPE | SPEED | SUST_STR | SUST_INT | SUST_WIS | SUST_DEX | SUST_CON | SUST_CHR
 E:BERSERK:50:100
 
-N:103:(Test Aura)
+N:903:(Test Aura)
 T:WEAPON
 W:50:*:6
 C:0:0:0:2
 F:SPELL_POWER
 
-N:104:of Test Warding
+N:904:of Test Warding
 T:CLOAK
 W:20:*:8
 F:RES_FIRE | IM_COLD | VULN_LITE | FREE_ACT | RES_FEAR
 
-N:105:of Test Dragonfire
+N:905:of Test Dragonfire
 T:WEAPON
 W:30:*:5
 F:SLAY_DRAGON | BRAND_FIRE
 
-N:106:(Death)
+N:906:(Death)
 T:WEAPON | DIGGER
 W:20:*:4
 F:BRAND_VAMP | HOLD_LIFE
@@ -25757,7 +25762,7 @@ F:BRAND_VAMP | HOLD_LIFE
         assert_eq!(name, "testing.json");
         assert_eq!(testing["id"], "rfb-legacy.affix.testing");
         assert_eq!(testing["generationMaxLevel"], 35);
-        assert_eq!(testing["rfbEgo"]["sourceIndex"], 101);
+        assert_eq!(testing["rfbEgo"]["sourceIndex"], 901);
         assert_eq!(testing["rfbEgo"]["rarity"], 2);
         assert_eq!(testing["rfbEgo"]["types"], serde_json::json!(["weapon"]));
         // C: maxima fold into a deterministic ceiling; attack takes the
@@ -25873,10 +25878,10 @@ T:WEAPON
 W:0:*:2
 C:8:6:0:0
 
-N:2:of Reflection
+N:2:of Missing Behavior
 T:CLOAK
 W:20:*:0
-F:REFLECT
+F:TEST_UNMAPPED
 
 N:3:of Ringing
 T:RING
@@ -25916,14 +25921,14 @@ static cptr _ego_name_zh[] =
         assert_eq!(report.current_importer_inexpressible_count, 1);
         assert_eq!(report.activation_count, 1);
         assert_eq!(report.type_counts["SHIELD"], 1);
-        assert_eq!(report.unmapped_flag_occurrences["REFLECT"], 1);
+        assert_eq!(report.unmapped_flag_occurrences["TEST_UNMAPPED"], 1);
         assert_eq!(report.entries[0].chinese_name.as_deref(), Some("测试之"));
         assert_eq!(report.entries[1].chinese_name, None);
         assert_eq!(report.entries[1].rarity, 0);
         assert!(!report.entries[1].standard_selectable);
         assert!(report.entries[1].craft_type);
         assert!(!report.entries[1].current_importer_expressible);
-        assert_eq!(report.entries[1].unmapped_flags, ["REFLECT"]);
+        assert_eq!(report.entries[1].unmapped_flags, ["TEST_UNMAPPED"]);
         assert!(report.entries[2].has_activation);
         assert_eq!(
             egos[2].activation,

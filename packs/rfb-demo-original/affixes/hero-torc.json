@@ -1,0 +1,168 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-hero-torc-description",
+  "deviceGeneration": {
+    "activationOptional": true,
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "type": "melee-adjacent"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-225-whirlwind-attack",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-whirlwind-attack-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "durationBonus": 20,
+          "durationDice": 1,
+          "durationSides": 20,
+          "type": "apply-stone-skin"
+        },
+        "id": "rfb.device-activation.ego-225-stone-skin",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-stone-skin-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "durationBonus": 25,
+          "durationDice": 1,
+          "durationSides": 25,
+          "type": "apply-berserk-strength"
+        },
+        "id": "rfb.device-activation.ego-225-berserk",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-berserk-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "durationBonus": 17,
+          "durationDice": 1,
+          "durationSides": 17,
+          "type": "apply-heroic-speed"
+        },
+        "id": "rfb.device-activation.ego-225-speed-hero",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-speed-hero-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 42
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 60,
+  "id": "rfb-legacy.affix.hero-torc",
+  "nameKey": "affix-legacy-hero-torc-name",
+  "namePlacement": "full-name",
+  "passives": [
+    "fire-aura",
+    "regeneration",
+    "see-invisible",
+    "sustain-dexterity",
+    "sustain-strength"
+  ],
+  "rfbEgo": {
+    "rarity": 16,
+    "sourceIndex": 225,
+    "types": [
+      "amulet"
+    ]
+  },
+  "statusImmunities": [
+    "rfb.status.fear",
+    "rfb.status.paralysis"
+  ],
+  "tags": [
+    "amulet",
+    "legacy-import"
+  ]
+}

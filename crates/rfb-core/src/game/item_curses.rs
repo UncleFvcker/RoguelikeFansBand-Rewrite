@@ -111,7 +111,8 @@ impl Game {
                     && self
                         .item_has_active_equipped_curse_effect(item, ItemCurseEffectDto::Teleport)
             });
-        if (!cursed_teleport && !intrinsic_teleport)
+        if self.player_has_anti_teleport()
+            || (!cursed_teleport && !intrinsic_teleport)
             || self.rng.bounded(RANDOM_TELEPORT_ONE_IN) != 0
         {
             return Ok(());

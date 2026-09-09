@@ -113,6 +113,7 @@ pub(super) enum EquippedItemCurseTarget {
 pub(super) struct CurseEquippedItemRequest {
     target: EquippedItemCurseTarget,
     heavy_chance_percent: u8,
+    blast: bool,
 }
 
 impl CurseEquippedItemRequest {
@@ -120,11 +121,17 @@ impl CurseEquippedItemRequest {
         Self {
             target,
             heavy_chance_percent: 0,
+            blast: false,
         }
     }
 
     pub(super) const fn with_heavy_chance(mut self, chance_percent: u8) -> Self {
         self.heavy_chance_percent = chance_percent;
+        self
+    }
+
+    pub(super) const fn blasting(mut self) -> Self {
+        self.blast = true;
         self
     }
 }
@@ -451,17 +458,32 @@ fn inventory_resistance_save(
     rng.bounded(power) < resistance
 }
 
-fn equipped_ammunition_capacity(content: &ContentCatalog, items: &[ItemInstance]) -> u32 {
+pub(super) fn equipped_ammunition_capacity(
+    content: &ContentCatalog,
+    items: &[ItemInstance],
+) -> u32 {
     items
         .iter()
         .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
-        .filter_map(|item| content.item(&item.kind_id))
-        .fold(0_u32, |capacity, definition| {
-            capacity.saturating_add(u32::from(definition.ammunition_capacity))
+        .fold(0_u32, |capacity, item| {
+            capacity.saturating_add(u32::from(
+                item.intrinsic_properties
+                    .ammunition_capacity
+                    .or_else(|| {
+                        item.rolled_affixes
+                            .iter()
+                            .find_map(|rolled| rolled.properties.ammunition_capacity)
+                    })
+                    .unwrap_or_else(|| {
+                        content
+                            .item(&item.kind_id)
+                            .map_or(0, |definition| definition.ammunition_capacity)
+                    }),
+            ))
         })
 }
 
-fn quivered_ammunition_item_ids<'a>(
+pub(super) fn quivered_ammunition_item_ids<'a>(
     content: &ContentCatalog,
     items: &'a [ItemInstance],
 ) -> BTreeSet<&'a str> {
@@ -845,6 +867,88 @@ pub(super) fn item_instances_stack_compatible(left: &ItemInstance, right: &ItemI
 }
 
 impl Game {
+    pub(super) fn refill_quiver(
+        &mut self,
+        source_kind_id: &str,
+        profile_id: Option<&str>,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<(), CoreError> {
+        use rfb_content::AmmunitionTypeDefinition as Ammo;
+        use rfb_protocol::{
+            AbilityEffectResolutionDto, AbilityEffectsResolutionDto, ItemOriginKindDto,
+        };
+        let quivered = quivered_ammunition_item_ids(&self.content, &self.items);
+        let count: u32 = self
+            .items
+            .iter()
+            .filter(|item| quivered.contains(item.id.as_str()))
+            .map(|item| item.quantity)
+            .sum();
+        let quantity = equipped_ammunition_capacity(&self.content, &self.items)
+            .saturating_sub(count)
+            .min(50);
+        let ammo = self
+            .items
+            .iter()
+            .filter(|item| matches!(item.location, ItemLocation::Equipped { .. }))
+            .filter_map(|item| {
+                self.content
+                    .item(&item.kind_id)?
+                    .projectile_profile
+                    .as_ref()
+            })
+            .map(|profile| profile.ammunition_type)
+            .next()
+            .unwrap_or(Ammo::Arrow);
+        let kind_id = match ammo {
+            Ammo::Shot => "demo.item.rounded-pebble",
+            Ammo::Arrow => "demo.item.arrow",
+            Ammo::Bolt => "demo.item.bolt",
+        };
+        let mut destination_item_ids = Vec::new();
+        if quantity > 0 {
+            let id = self.allocate_item_instance_id()?;
+            let item = super::loot::GeneratedItemDraft {
+                kind_id: kind_id.to_owned(),
+                quantity,
+                origin_kind: Some(ItemOriginKindDto::EndlessQuiver),
+                quality: ItemQualityDto::Ordinary,
+                affix_ids: Vec::new(),
+                rolled_affixes: Vec::new(),
+                intrinsic_properties: Default::default(),
+                enchantments: Default::default(),
+                curse: None,
+                activation: None,
+                charges: None,
+                fuel: None,
+            }
+            .into_item_instance(id, ItemLocation::Inventory);
+            destination_item_ids = self.carry_shop_purchase_item(item);
+            self.mark_item_aware(kind_id);
+            for id in &destination_item_ids {
+                self.identify_item_instance(id, ItemIdentificationRequest::new(true));
+            }
+        }
+        self.mark_item_aware(source_kind_id);
+        events.push(DomainEvent::AbilityEffectsResolved {
+            ability_id: profile_id.unwrap_or(source_kind_id).to_owned(),
+            resolution: AbilityEffectsResolutionDto {
+                target_entity_id: None,
+                target_kind_id: None,
+                effects: vec![AbilityEffectResolutionDto::CreateAmmunition {
+                    effect_index: 0,
+                    source_item_id: None,
+                    source_position: None,
+                    item_kind_id: kind_id.to_owned(),
+                    quantity,
+                    destination_item_ids,
+                }],
+            },
+            trace: None,
+        });
+        Ok(())
+    }
+
     fn equipped_quiver_protects_ammunition(&self) -> bool {
         self.items
             .iter()
@@ -1385,7 +1489,8 @@ impl Game {
         let item_index = candidates[candidate_index].2;
         let item_id = self.items[item_index].id.clone();
         let item_kind_id = self.items[item_index].kind_id.clone();
-        let blessed = Self::item_has_weapon_trait(&self.items[item_index], WeaponTraitDto::Blessed);
+        let blessed = !request.blast
+            && Self::item_has_weapon_trait(&self.items[item_index], WeaponTraitDto::Blessed);
         let artifact = self
             .content
             .item(&item_kind_id)
@@ -1402,6 +1507,10 @@ impl Game {
             };
         let before = self.items[item_index].curse;
         if !resisted {
+            if request.blast {
+                self.blast_item(item_index);
+                self.add_virtue(rfb_protocol::VirtueKindDto::Enchantment, -5);
+            }
             let severity = if request.heavy_chance_percent > 0
                 && self.rng.bounded(100) < u64::from(request.heavy_chance_percent)
             {
@@ -1419,6 +1528,59 @@ impl Game {
             after: self.items[item_index].curse,
             resisted,
         }
+    }
+
+    fn blast_item(&mut self, index: usize) {
+        let definition = self.content.item(&self.items[index].kind_id).unwrap();
+        let armor = definition.tags.iter().any(|tag| tag == "armor");
+        let weapon = definition.melee_profile.is_some();
+        let base_id = definition
+            .artifact_generation
+            .as_ref()
+            .map(|generation| generation.base_item_kind_id.clone());
+        let item = &mut self.items[index];
+        if let Some(base_id) = base_id {
+            item.kind_id = base_id;
+        }
+        let base = self.content.item(&item.kind_id).unwrap();
+        let mut blasted = crate::state::RolledAffixState {
+            affix_id: "rfb-legacy.affix.blasted".to_owned(),
+            curse_effects: item
+                .rolled_affixes
+                .iter()
+                .flat_map(|rolled| rolled.curse_effects.iter().copied())
+                .collect(),
+            ..Default::default()
+        };
+        // Blasting clears the instance's AC and dice, but base-kind flags survive.
+        blasted.properties.modifiers.defense = -base.modifiers.defense;
+        if weapon {
+            blasted.melee_damage_dice =
+                Some(rfb_protocol::MeleeDamageDiceDto { dice: 0, sides: 0 });
+        }
+        item.affix_ids = vec![blasted.affix_id.clone()];
+        item.rolled_affixes = vec![blasted];
+        item.intrinsic_properties = Default::default();
+        item.permanent_destruction_immunities.clear();
+        item.enchantments.to_hit = item.enchantments.to_hit.min(0);
+        item.enchantments.to_damage = item.enchantments.to_damage.min(0);
+        item.enchantments.to_armor = item.enchantments.to_armor.min(0);
+        if armor {
+            item.enchantments.to_armor -= (self.rng.bounded(5) + self.rng.bounded(5) + 2) as i16;
+        }
+        if weapon {
+            item.enchantments.to_hit -= (self.rng.bounded(5) + self.rng.bounded(5) + 2) as i16;
+            item.enchantments.to_damage -= (self.rng.bounded(5) + self.rng.bounded(5) + 2) as i16;
+        }
+        item.enchantments.to_hit = item.enchantments.to_hit.max(-66);
+        item.enchantments.to_damage = item.enchantments.to_damage.max(-66);
+        item.enchantments.to_armor = item.enchantments.to_armor.max(-66);
+        item.quality = ItemQualityDto::Exceptional;
+        let knowledge = self
+            .item_property_knowledge
+            .entry(item.id.clone())
+            .or_default();
+        knowledge.known_affix_ids = item.affix_ids.iter().cloned().collect();
     }
 
     pub(super) fn remove_equipped_curses(

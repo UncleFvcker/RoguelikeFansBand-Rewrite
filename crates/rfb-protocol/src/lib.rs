@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.233";
-pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 5;
+pub const PROTOCOL_VERSION: &str = "1.234";
+pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 6;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 6;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -564,6 +564,8 @@ pub struct AbilityBanishTargetDto {
 #[serde(rename_all = "camelCase")]
 pub struct EquipmentBonusesDto {
     #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub weapon_dice_bonus: i32,
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
     pub life_percent: i32,
     /// Additive launcher damage multiplier in percentage points. `25` means +x0.25.
     #[serde(default, skip_serializing_if = "is_zero_i32")]
@@ -633,6 +635,8 @@ pub enum EquipmentPassiveDto {
     RevengeAura,
     ManaRegeneration,
     AntiMagic,
+    AntiTeleport,
+    AntiSummoning,
     NightVision,
     DualWielding,
     NoEnchant,
@@ -2403,6 +2407,8 @@ pub enum ItemCurseEffectDto {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ItemIntrinsicPropertiesSaveDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ammunition_capacity: Option<u16>,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
     #[serde(default, skip_serializing_if = "EquipmentBonusesDto::is_empty")]
@@ -2429,6 +2435,10 @@ impl ItemIntrinsicPropertiesSaveDto {
 #[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RolledAffixSaveDto {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub device_pval: Option<u16>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub ammunition_capacity: Option<u16>,
     pub affix_id: String,
     #[serde(default)]
     pub modifiers: StatModifiersDto,
@@ -2468,6 +2478,10 @@ impl<'de> Deserialize<'de> for RolledAffixSaveDto {
         struct Wire {
             affix_id: String,
             #[serde(default)]
+            device_pval: Option<u16>,
+            #[serde(default)]
+            ammunition_capacity: Option<u16>,
+            #[serde(default)]
             modifiers: StatModifiersDto,
             #[serde(default)]
             equipment_bonuses: EquipmentBonusesDto,
@@ -2498,6 +2512,8 @@ impl<'de> Deserialize<'de> for RolledAffixSaveDto {
         let wire = Wire::deserialize(deserializer)?;
         Ok(Self {
             affix_id: wire.affix_id,
+            device_pval: wire.device_pval,
+            ammunition_capacity: wire.ammunition_capacity,
             modifiers: wire.modifiers,
             equipment_bonuses: wire.equipment_bonuses,
             resistances: wire.resistances,
@@ -3811,6 +3827,7 @@ pub enum ItemOriginKindDto {
     Acquire,
     PlayerMade,
     Rubble,
+    EndlessQuiver,
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]

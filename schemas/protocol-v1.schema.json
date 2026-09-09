@@ -7981,6 +7981,10 @@
           "type": "integer",
           "format": "int32",
           "default": 0
+        },
+        "weaponDiceBonus": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -8224,6 +8228,8 @@
         "revenge-aura",
         "mana-regeneration",
         "anti-magic",
+        "anti-teleport",
+        "anti-summoning",
         "night-vision",
         "dual-wielding",
         "no-enchant",

@@ -3,7 +3,7 @@
 use super::*;
 
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-enum Pval {
+pub(super) enum Pval {
     Strength,
     Intelligence,
     Wisdom,
@@ -32,6 +32,8 @@ enum Pval {
     Mastery,
     Capacity,
     Blows,
+    Shots,
+    WeaponMastery,
 }
 
 pub(super) fn can_apply(index: u32, tval: u16, sval: u16) -> bool {
@@ -1123,7 +1125,7 @@ fn witch(
     ignores_elements
 }
 
-fn random_activation(
+pub(super) fn random_activation(
     rng: &mut RfbRng,
     affix: &AffixDefinition,
     level: u16,
@@ -1154,7 +1156,7 @@ fn random_activation(
     })
 }
 
-fn apply_pval(properties: &mut AffixPropertyBundleDefinition, flag: Pval, value: i32) {
+pub(super) fn apply_pval(properties: &mut AffixPropertyBundleDefinition, flag: Pval, value: i32) {
     use Pval::*;
     match flag {
         Strength => properties.modifiers.strength += value,
@@ -1192,6 +1194,8 @@ fn apply_pval(properties: &mut AffixPropertyBundleDefinition, flag: Pval, value:
         Mastery => properties.equipment_bonuses.device_skill += 8 * value,
         Capacity => properties.equipment_bonuses.spell_capacity_bonus += value,
         Blows => properties.equipment_bonuses.melee_attacks_delta_percent += 50 * value,
+        Shots => properties.equipment_bonuses.base_shot_delta_percent += 15 * value,
+        WeaponMastery => properties.equipment_bonuses.weapon_dice_bonus += value,
     }
 }
 
