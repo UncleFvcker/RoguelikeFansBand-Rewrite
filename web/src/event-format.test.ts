@@ -724,7 +724,9 @@ test("damage event formatting preserves typed resistance outcomes", () => {
   localization.setLocale("en-US");
 });
 
-test("inn stay and travel results use focused bilingual messages", () => {
+test("inn meals, stays and travel use focused bilingual messages", () => {
+  const meal = { kind: "inn.food", messageKey: "inn-food-completed", args: { foodKey: "inn-food-water", cost: "2", balance: "8" } };
+  assert.equal(formatter.formatEvent(meal), "The barkeep’s water leaves you fully nourished. Paid 2 gold; 8 remaining.");
   const completed = {
     kind: "inn.stay",
     messageKey: "inn-stay-completed",
@@ -741,6 +743,8 @@ test("inn stay and travel results use focused bilingual messages", () => {
     "You stay overnight and wake refreshed. Paid 25 gold; balance 75.",
   );
   localization.setLocale("zh-CN");
+  assert.equal(formatter.formatEvent(meal), "酒保的清水让你恢复了饱足。 花费 2 金币，剩余 8。");
+  assert.equal(formatter.formatEvent({ kind: "facility.monster-research-unavailable", messageKey: "facility-monster-research-unavailable", args: { reason: "monster-unavailable" } }), "无法研究怪物：没有该怪物的资料。");
   assert.equal(formatter.formatEvent(unavailable), "无法住宿：你需要的是治疗师，而不是房间。");
   assert.equal(
     formatter.formatEvent({

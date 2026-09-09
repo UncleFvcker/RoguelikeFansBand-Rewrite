@@ -9,7 +9,7 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.232";
+pub const PROTOCOL_VERSION: &str = "1.233";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 5;
 pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 6;
 
@@ -246,6 +246,13 @@ pub enum GameCommand {
     ResearchItemAtFacility {
         facility_id: String,
         item_id: String,
+    },
+    ResearchMonsterAtFacility {
+        facility_id: String,
+        actor_kind_id: String,
+    },
+    EatAtInn {
+        facility_id: String,
     },
     IdentifyAllAtFacility {
         facility_id: String,
@@ -4181,6 +4188,8 @@ pub struct ShopDto {
     pub entrance_terrain_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inn_stay_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub inn_food_cost: Option<u32>,
     #[serde(default)]
     pub inn_travel_destinations: Vec<InnTravelDestinationDto>,
     pub visited: bool,
@@ -4245,6 +4254,10 @@ pub struct TaskServiceDto {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub research_item_cost: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub research_monster_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub research_monsters: Vec<ResearchMonsterDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub identify_all_items_cost: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inn_stay_cost: Option<u32>,
@@ -4260,6 +4273,33 @@ pub struct TaskServiceDto {
     pub bounty_office: Option<BountyOfficeDto>,
     #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct ResearchMonsterDto {
+    pub kind_id: String,
+    pub name_key: String,
+    pub glyph: String,
+    pub level: u32,
+    pub unique: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub knowledge: Option<MonsterKindKnowledgeDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MonsterKindKnowledgeDto {
+    pub description_key: String,
+    pub max_hp: i32,
+    pub speed: u16,
+    pub armor_class: i32,
+    pub resistances: Vec<ResistanceDto>,
+    pub status_immunities: Vec<String>,
+    pub melee_routine: MeleeRoutineDto,
+    pub ability_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -4732,6 +4772,8 @@ pub fn generated_typescript() -> String {
     push_declaration!(BountyMissionDto);
     push_declaration!(BountyOfficeDto);
     push_declaration!(TaskServiceDto);
+    push_declaration!(ResearchMonsterDto);
+    push_declaration!(MonsterKindKnowledgeDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
 

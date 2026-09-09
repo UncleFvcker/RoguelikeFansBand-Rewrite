@@ -67,6 +67,213 @@ fn morivant_facility_game(seed: u64, build_id: &str, facility_id: &str) -> Game 
 }
 
 #[test]
+fn morivant_monster_research_reveals_unseen_kinds_only_after_paid_confirmation() {
+    let facility_id = "demo.town-facility.morivant-beastmaster";
+    let mut game = morivant_facility_game(62, "demo.build.warrior", facility_id);
+    game.reveal_current_visibility();
+    let before_browsing = game.state_hash();
+    let snapshot = game.snapshot();
+    let service = snapshot
+        .task_services
+        .iter()
+        .find(|s| s.id == facility_id)
+        .unwrap();
+    assert_eq!(service.research_monster_cost, Some(1500));
+    let candidate = service
+        .research_monsters
+        .iter()
+        .find(|m| m.kind_id == "demo.actor.sheep")
+        .unwrap();
+    assert!(candidate.knowledge.is_none());
+    assert!(service.research_monsters.iter().any(|m| m.unique));
+    assert!(
+        !game
+            .entities
+            .iter()
+            .any(|actor| actor.kind_id == candidate.kind_id)
+    );
+    assert_eq!(game.state_hash(), before_browsing);
+    let command = GameCommand::ResearchMonsterAtFacility {
+        facility_id: facility_id.to_owned(),
+        actor_kind_id: candidate.kind_id.clone(),
+    };
+    game.gold = 1499;
+    let before = game.state_hash();
+    assert_eq!(
+        game.research_monster_at_facility(facility_id, &candidate.kind_id, &mut Vec::new()),
+        Err("insufficient-gold")
+    );
+    assert_eq!(game.state_hash(), before);
+    let business_before = (
+        game.gold,
+        game.world_tick,
+        game.rng.clone(),
+        game.probed_actor_kind_ids.clone(),
+    );
+    let rejected = dispatch_next(&mut game, command.clone());
+    assert_eq!(rejected.events[0].args["reason"], "insufficient-gold");
+    assert_eq!(
+        (
+            game.gold,
+            game.world_tick,
+            game.rng.clone(),
+            game.probed_actor_kind_ids.clone()
+        ),
+        business_before
+    );
+    game.gold = 1500;
+    for kind in ["missing.actor", game.player.kind_id.as_str()].map(str::to_owned) {
+        let before = game.state_hash();
+        assert_eq!(
+            game.research_monster_at_facility(facility_id, &kind, &mut Vec::new()),
+            Err("monster-unavailable")
+        );
+        assert_eq!(game.state_hash(), before);
+    }
+    let entrance = game.player.position;
+    game.player.position.x -= 1;
+    game.reveal_current_visibility();
+    let before = game.state_hash();
+    assert!(
+        game.snapshot()
+            .task_services
+            .iter()
+            .find(|s| s.id == facility_id)
+            .unwrap()
+            .research_monsters
+            .is_empty()
+    );
+    assert_eq!(
+        game.research_monster_at_facility(facility_id, &candidate.kind_id, &mut Vec::new()),
+        Err("facility-unreachable")
+    );
+    assert_eq!(game.state_hash(), before);
+    game.player.position = entrance;
+    let rng = game.rng.clone();
+    let tick = game.world_tick;
+    let update = dispatch_next(&mut game, command);
+    assert_eq!(update.events[0].kind, "facility.monster-researched");
+    assert_eq!(game.gold, 0);
+    assert_eq!(game.rng, rng);
+    assert_eq!(game.world_tick, tick);
+    let knowledge = game
+        .research_monster_dtos()
+        .into_iter()
+        .find(|m| m.kind_id == "demo.actor.sheep")
+        .unwrap()
+        .knowledge
+        .unwrap();
+    let actor = game.content.actor("demo.actor.sheep").unwrap();
+    assert_eq!(knowledge.max_hp, actor.max_hp);
+    assert_eq!(knowledge.armor_class, rating_to_armor_class(actor.defense));
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        restored.research_monster_dtos(),
+        game.research_monster_dtos()
+    );
+}
+
+#[test]
+fn morivant_inn_meals_are_atomic_and_feed_skeletons_without_creating_items() {
+    let mut game = Game::new_with_build_race_and_name(
+        62,
+        "demo.build.warrior",
+        "rfb-legacy.race.skeleton",
+        Game::DEFAULT_PLAYER_NAME,
+    )
+    .unwrap();
+    enter_morivant(&mut game);
+    game.player.position = game
+        .town_local_to_wilderness_view_position(MORIVANT_TOWN_ID, Position { x: 92, y: 43 })
+        .unwrap();
+    game.mark_shop_visited_at_player().unwrap();
+    game.reveal_current_visibility();
+    assert_eq!(
+        projected_shop(&game.snapshot().shops, MORIVANT_INN_ID).inn_food_cost,
+        Some(2)
+    );
+    let command = GameCommand::EatAtInn {
+        facility_id: MORIVANT_INN_ID.to_owned(),
+    };
+    game.gold = 1;
+    let before = game.state_hash();
+    assert_eq!(
+        game.eat_at_inn(MORIVANT_INN_ID, &mut Vec::new()),
+        Err("insufficient-gold")
+    );
+    assert_eq!(game.state_hash(), before);
+    let business_before = (game.gold, game.world_tick, game.rng.clone(), game.nutrition);
+    let rejected = dispatch_next(&mut game, command.clone());
+    assert_eq!(rejected.events[0].args["reason"], "insufficient-gold");
+    assert_eq!(
+        (game.gold, game.world_tick, game.rng.clone(), game.nutrition),
+        business_before
+    );
+    game.gold = 4;
+    let entrance = game.player.position;
+    game.player.position.x -= 1;
+    game.reveal_current_visibility();
+    let before = game.state_hash();
+    assert_eq!(
+        game.eat_at_inn(MORIVANT_INN_ID, &mut Vec::new()),
+        Err("inn-unreachable")
+    );
+    assert_eq!(game.state_hash(), before);
+    game.player.position = entrance;
+    let items = game.items.clone();
+    let rng = game.rng.clone();
+    let tick = game.world_tick;
+    for nutrition in [100, rfb_protocol::PLAYER_NUTRITION_MAXIMUM] {
+        game.nutrition = nutrition;
+        let update = dispatch_next(&mut game, command.clone());
+        let meal = update
+            .events
+            .iter()
+            .find(|event| event.kind == "inn.food")
+            .unwrap();
+        assert_eq!(meal.args["foodKey"], "inn-food-empty-staff");
+        assert_eq!(game.nutrition, rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1);
+    }
+    assert_eq!(game.gold, 0);
+    assert_eq!(game.items, items);
+    assert_eq!(game.rng, rng);
+    assert_eq!(game.world_tick, tick);
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+}
+
+#[test]
+fn inn_meals_use_effective_race_and_the_source_flavour_rng_branches() {
+    let mut game = Game::new_with_build(62, "demo.build.warrior").unwrap();
+    let mut events = Vec::new();
+    let rng = game.rng.clone();
+    assert_eq!(game.consume_inn_meal(&mut events), "inn-food-porridge");
+    assert_eq!(game.rng, rng);
+    let mut form =
+        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.inn-form").status;
+    form.granted_race_id = Some("rfb-legacy.race.balrog".to_owned());
+    game.player.statuses.push(form);
+    assert_eq!(game.consume_inn_meal(&mut events), "inn-food-meat");
+    assert_eq!(game.rng, rng);
+    for (race, seed, expected, draws) in [
+        ("rfb-legacy.race.ent", 0, "inn-food-water", 1),
+        ("rfb-legacy.race.vampire", 0, "inn-food-blood", 1),
+        ("rfb-legacy.race.android", 0, "inn-food-oil", 1),
+        ("demo.race.vampire-lord", 0, "inn-food-empty-staff", 2),
+        ("rfb-legacy.race.ent", 7, "inn-food-buffet", 1),
+        ("rfb-legacy.race.golem", 5, "inn-food-speed-staff", 2),
+        ("rfb-legacy.race.spectre", 0, "inn-food-empty-staff", 2),
+        ("rfb-legacy.race.einheri", 0, "inn-food-porridge", 0),
+    ] {
+        game.player.statuses[0].granted_race_id = Some(race.to_owned());
+        game.rng = RfbRng::seeded(seed);
+        assert_eq!(game.consume_inn_meal(&mut events), expected, "{race}");
+        assert_eq!(game.rng.draw_counter, draws, "{race}");
+    }
+}
+
+#[test]
 fn morivant_identification_uses_the_projected_membership_price() {
     for (facility_id, build_id, membership, cost) in [
         (
@@ -166,7 +373,7 @@ fn morivant_nine_shops_trade_and_save() {
             .all(|shop| !shop.visited && shop.stock.is_empty())
     );
     assert_eq!(snapshot.homes.len(), 1);
-    assert_eq!(snapshot.task_services.len(), 10);
+    assert_eq!(snapshot.task_services.len(), 11);
     game.gold = 1_000_000;
     for shop_id in town
         .shop_ids

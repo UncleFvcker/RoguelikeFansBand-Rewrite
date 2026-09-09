@@ -1093,6 +1093,8 @@ impl Game {
                     | GameAction::EnterWorldMap { .. }
                     | GameAction::IdentifyAtFacility { .. }
                     | GameAction::ResearchItemAtFacility { .. }
+                    | GameAction::ResearchMonsterAtFacility { .. }
+                    | GameAction::EatAtInn { .. }
                     | GameAction::IdentifyAllAtFacility { .. }
                     | GameAction::UseFacilityService { .. }
                     | GameAction::UseBountyOffice { .. }
@@ -1353,6 +1355,27 @@ impl Game {
                         facility_id,
                         reason: reason.to_owned(),
                     }),
+                }
+            }
+            GameAction::EatAtInn { facility_id } => {
+                if let Err(reason) = self.eat_at_inn(&facility_id, &mut events) {
+                    events.push(DomainEvent::InnFoodUnavailable {
+                        facility_id,
+                        reason: reason.to_owned(),
+                    });
+                }
+            }
+            GameAction::ResearchMonsterAtFacility {
+                facility_id,
+                actor_kind_id,
+            } => {
+                if let Err(reason) =
+                    self.research_monster_at_facility(&facility_id, &actor_kind_id, &mut events)
+                {
+                    events.push(DomainEvent::MonsterResearchUnavailable {
+                        facility_id,
+                        reason: reason.to_owned(),
+                    });
                 }
             }
             GameAction::StayAtInn { facility_id } => match self.stay_at_inn(&facility_id) {

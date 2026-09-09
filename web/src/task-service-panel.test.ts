@@ -10,9 +10,25 @@ import {
   facilityMembershipKey,
   facilityServiceActionKey,
   facilityServiceUsesItem,
+  filterResearchMonsters,
   taskActionForStatus,
   taskActionLabelKey,
 } from "./task-service-panel.ts";
+
+test("monster research combines name, symbol and uniqueness filters without changing knowledge", () => {
+  const monsters = [
+    { kindId: "wolf", nameKey: "Wolf", glyph: "C", unique: false },
+    { kindId: "king", nameKey: "Wolf King", glyph: "C", unique: true },
+    { kindId: "spider", nameKey: "Wolf Spider", glyph: "S", unique: false },
+  ];
+  const names = (m) => m.nameKey;
+  const before = structuredClone(monsters);
+  assert.deepEqual(filterResearchMonsters(monsters, " WOLF ", "C", "unique", names), [monsters[1]]);
+  assert.deepEqual(filterResearchMonsters(monsters, "", "", "nonunique", names), [monsters[0], monsters[2]]);
+  assert.deepEqual(filterResearchMonsters(monsters, "missing", "", "all", names), []);
+  assert.deepEqual(filterResearchMonsters(monsters, "", "", "all", names), monsters);
+  assert.deepEqual(monsters, before);
+});
 
 test("task service actions are limited to acceptance and reward claims", () => {
   assert.equal(taskActionForStatus("available"), "accept");

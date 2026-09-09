@@ -8512,3 +8512,9 @@ town-facility-demo-morivant-thieves-guild-owner-name = 帕利罗
 town-facility-demo-morivant-thieves-guild-description = 帕利罗（伊克）：Rest for the night or identify all carried and equipped items.
 terrain-demo-thieves-guild-entrance-name = 盗贼公会入口
 terrain-demo-thieves-guild-entrance-description = This door leads to 盗贼公会.
+
+town-facility-demo-morivant-beastmaster-name = 驯兽师
+town-facility-demo-morivant-beastmaster-owner-name = 德拉克索
+town-facility-demo-morivant-beastmaster-description = 德拉克索 (龙人): Research monster kinds.
+terrain-demo-beastmaster-entrance-name = 驯兽师入口
+terrain-demo-beastmaster-entrance-description = This door leads to 驯兽师.

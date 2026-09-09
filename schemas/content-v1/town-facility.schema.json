@@ -263,6 +263,17 @@
         "null"
       ]
     },
+    "researchMonsterCost": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TownFacilityPrice"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "serviceActions": {
       "default": [],
       "items": {

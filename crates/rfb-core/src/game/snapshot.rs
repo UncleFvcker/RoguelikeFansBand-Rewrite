@@ -1600,6 +1600,16 @@ impl Game {
                     player_at_entrance,
                     identify_item_cost: facility.identify_item_cost,
                     research_item_cost: facility.research_item_cost,
+                    research_monster_cost: facility
+                        .research_monster_cost
+                        .map(|price| self.town_facility_price(facility, price)),
+                    research_monsters: if player_at_entrance
+                        && facility.research_monster_cost.is_some()
+                    {
+                        self.research_monster_dtos()
+                    } else {
+                        Vec::new()
+                    },
                     identify_all_items_cost: facility
                         .identify_all_items_cost
                         .map(|price| self.town_facility_price(facility, price)),

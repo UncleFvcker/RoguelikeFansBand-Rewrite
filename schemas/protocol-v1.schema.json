@@ -9065,6 +9065,42 @@
         {
           "type": "object",
           "properties": {
+            "actorKindId": {
+              "type": "string"
+            },
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "research-monster-at-facility"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "actorKindId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "eat-at-inn"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "facilityId": {
               "type": "string"
             },
@@ -11825,6 +11861,59 @@
         "to"
       ]
     },
+    "MonsterKindKnowledgeDto": {
+      "type": "object",
+      "properties": {
+        "abilityIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "armorClass": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "descriptionKey": {
+          "type": "string"
+        },
+        "maxHp": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "meleeRoutine": {
+          "$ref": "#/$defs/MeleeRoutineDto"
+        },
+        "resistances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResistanceDto"
+          }
+        },
+        "speed": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        },
+        "statusImmunities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "descriptionKey",
+        "maxHp",
+        "speed",
+        "armorClass",
+        "resistances",
+        "statusImmunities",
+        "meleeRoutine",
+        "abilityIds"
+      ]
+    },
     "MutationRatingDto": {
       "type": "string",
       "enum": [
@@ -12747,6 +12836,45 @@
         "floorId"
       ]
     },
+    "ResearchMonsterDto": {
+      "type": "object",
+      "properties": {
+        "glyph": {
+          "type": "string"
+        },
+        "kindId": {
+          "type": "string"
+        },
+        "knowledge": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/MonsterKindKnowledgeDto"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "level": {
+          "type": "integer",
+          "format": "uint32",
+          "minimum": 0
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "unique": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "kindId",
+        "nameKey",
+        "glyph",
+        "level",
+        "unique"
+      ]
+    },
     "ResistanceDto": {
       "type": "object",
       "properties": {
@@ -12941,6 +13069,14 @@
         },
         "id": {
           "type": "string"
+        },
+        "innFoodCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
         },
         "innStayCost": {
           "type": [
@@ -13742,6 +13878,20 @@
           ],
           "format": "uint32",
           "minimum": 0
+        },
+        "researchMonsterCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
+        "researchMonsters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResearchMonsterDto"
+          }
         },
         "serviceActions": {
           "type": "array",

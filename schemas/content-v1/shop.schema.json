@@ -156,6 +156,15 @@
     "id": {
       "type": "string"
     },
+    "innFoodCost": {
+      "default": null,
+      "format": "uint32",
+      "minimum": 0,
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
     "innStayCost": {
       "default": null,
       "format": "uint32",

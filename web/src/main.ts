@@ -334,6 +334,8 @@ const taskServicePanel = new TaskServicePanel({
   dispatch,
   formatEvent,
   visibleItemName,
+  contentName,
+  statusName,
   beforeOpen: () => {
     playerUiLayout.closePage();
     inputController.cancelTargeting(false);

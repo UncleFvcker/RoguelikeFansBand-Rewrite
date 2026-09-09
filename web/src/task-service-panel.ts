@@ -12,12 +12,21 @@ import type {
   FacilityMembershipDto,
   FacilityServiceKindDto,
   ItemIdentificationDto,
+  ResearchMonsterDto,
   TaskServiceDto,
   TaskStatusDto,
   TaskStatusKindDto,
 } from "./protocol";
 
 export type TaskServiceAction = "accept" | "claim";
+
+export function filterResearchMonsters(monsters: readonly ResearchMonsterDto[], name: string, glyph: string,
+  group: string, displayName: (monster: ResearchMonsterDto) => string): ResearchMonsterDto[] {
+  const query = name.trim().toLocaleLowerCase();
+  return monsters.filter((monster) => (!query || displayName(monster).toLocaleLowerCase().includes(query))
+    && (!glyph || monster.glyph === glyph)
+    && (group === "all" || (group === "unique" ? monster.unique : !monster.unique)));
+}
 
 interface TaskServiceDom {
   readonly dialog: HTMLDialogElement;
@@ -35,6 +44,8 @@ export class TaskServicePanel {
   readonly #dispatch: (command: GameCommand) => Promise<void>;
   readonly #formatEvent: (event: GameEventDto) => string;
   readonly #visibleItemName: (displayNameKey: string, kindId: string) => string;
+  readonly #contentName: (id: string) => string;
+  readonly #statusName: (id: string) => string;
   readonly #beforeOpen: () => void;
   readonly #dom: TaskServiceDom;
   #service: TaskServiceDto | undefined;
@@ -42,6 +53,10 @@ export class TaskServicePanel {
   #feedback: GameEventDto | undefined;
   #overviewVisible = false;
   #installed = false;
+  #monsterKindId = "";
+  #monsterName = "";
+  #monsterGlyph = "";
+  #monsterGroup = "all";
 
   constructor(options: {
     document: Document;
@@ -50,6 +65,8 @@ export class TaskServicePanel {
     dispatch: (command: GameCommand) => Promise<void>;
     formatEvent: (event: GameEventDto) => string;
     visibleItemName: (displayNameKey: string, kindId: string) => string;
+    contentName: (id: string) => string;
+    statusName: (id: string) => string;
     beforeOpen: () => void;
   }) {
     this.#state = options.state;
@@ -57,6 +74,8 @@ export class TaskServicePanel {
     this.#dispatch = options.dispatch;
     this.#formatEvent = options.formatEvent;
     this.#visibleItemName = options.visibleItemName;
+    this.#contentName = options.contentName;
+    this.#statusName = options.statusName;
     this.#beforeOpen = options.beforeOpen;
     this.#dom = createTaskServiceDom(options.document);
   }
@@ -146,6 +165,10 @@ export class TaskServicePanel {
             itemId: select.value,
           });
         }
+      } else if (action === "research-monster") {
+        if (this.#monsterKindId) void this.#dispatch({
+          type: "research-monster-at-facility", facilityId: service.id, actorKindId: this.#monsterKindId,
+        });
       } else if (action === "identify-all") {
         void this.#dispatch({
           type: "identify-all-at-facility",
@@ -244,11 +267,99 @@ export class TaskServicePanel {
     for (const task of tasks) this.#dom.list.append(this.#taskRow(task));
   }
 
+  #renderMonsterResearch(): void {
+    const service = this.#service;
+    if (service?.researchMonsterCost == null) return;
+    const monsters = service.researchMonsters ?? [];
+    const document = this.#dom.list.ownerDocument;
+    const row = document.createElement("li");
+    row.className = "task-service-row monster-research-row";
+    const name = document.createElement("input");
+    name.type = "search";
+    name.value = this.#monsterName;
+    name.placeholder = this.#localization.format("monster-research-name");
+    name.setAttribute("aria-label", name.placeholder);
+    const glyph = document.createElement("input");
+    glyph.value = this.#monsterGlyph;
+    glyph.maxLength = 1;
+    glyph.placeholder = this.#localization.format("monster-research-glyph");
+    glyph.setAttribute("aria-label", glyph.placeholder);
+    const group = document.createElement("select");
+    group.setAttribute("aria-label", this.#localization.format("monster-research-group"));
+    for (const value of ["all", "unique", "nonunique"]) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = this.#localization.format(`monster-research-${value}`);
+      group.append(option);
+    }
+    group.value = this.#monsterGroup;
+    const select = document.createElement("select");
+    select.setAttribute("aria-label", this.#localization.format("monster-research-target"));
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "primary-button task-service-action";
+    button.dataset.facilityAction = "research-monster";
+    button.textContent = this.#localization.format("action-monster-research", { cost: service.researchMonsterCost });
+    const detail = document.createElement("div");
+    const renderDetail = (): void => {
+      this.#monsterKindId = select.value;
+      const monster = monsters.find((entry) => entry.kindId === select.value);
+      const knowledge = monster?.knowledge;
+      detail.replaceChildren();
+      button.disabled = this.#state.busy || !monster;
+      const line = (key: string, value: string | number): void => {
+        const p = document.createElement("p");
+        p.textContent = `${this.#localization.format(key)}: ${value}`;
+        detail.append(p);
+      };
+      if (!knowledge) {
+        detail.textContent = this.#localization.format(monster ? "monster-research-unseen" : "monster-research-empty");
+        return;
+      }
+      const description = document.createElement("p");
+      description.textContent = this.#localization.format(knowledge.descriptionKey);
+      detail.append(description);
+      line("monster-research-base-hp", knowledge.maxHp);
+      line("monster-probe-speed", knowledge.speed);
+      line("monster-probe-armor-class", knowledge.armorClass);
+      line("monster-probe-resistances", knowledge.resistances.filter((r) => r.level !== "normal")
+        .map((r) => `${this.#localization.format(`damage-type-${r.damageType}-name`)}: ${this.#localization.format(`resistance-level-${r.level}`)}`).join(", ") || "—");
+      line("monster-probe-status-immunities", knowledge.statusImmunities.map(this.#statusName).join(", ") || "—");
+      line("monster-probe-melee", knowledge.meleeRoutine.blows
+        .map((b) => `${this.#contentName(b.methodId)} ${b.damage.dice}d${b.damage.sides} (${b.toHit >= 0 ? "+" : ""}${b.toHit})`).join(", ") || "—");
+      line("monster-probe-abilities", knowledge.abilityIds.map(this.#contentName).join(", ") || "—");
+    };
+    const filter = (): void => {
+      this.#monsterName = name.value;
+      this.#monsterGlyph = glyph.value;
+      this.#monsterGroup = group.value;
+      const matches = filterResearchMonsters(monsters, name.value, glyph.value, group.value,
+        (entry) => this.#localization.format(entry.nameKey));
+      select.replaceChildren();
+      for (const monster of matches) {
+        const option = document.createElement("option");
+        option.value = monster.kindId;
+        option.textContent = `${monster.glyph} ${this.#localization.format(monster.nameKey)} (${monster.level})`;
+        select.append(option);
+      }
+      if (matches.some((entry) => entry.kindId === this.#monsterKindId)) select.value = this.#monsterKindId;
+      renderDetail();
+    };
+    name.addEventListener("input", filter);
+    glyph.addEventListener("input", filter);
+    group.addEventListener("change", filter);
+    select.addEventListener("change", renderDetail);
+    filter();
+    row.append(name, glyph, group, select, button, detail);
+    this.#dom.list.append(row);
+  }
+
   #renderFacilityActions(): void {
     const service = this.#service;
     if (!service) return;
     const document = this.#dom.list.ownerDocument;
     this.#renderBountyOffice();
+    this.#renderMonsterResearch();
     const renderItemAction = (
       action: "identify" | "research",
       cost: number | null | undefined,
@@ -552,6 +663,8 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "task.reward-claim-unavailable" ||
       event?.kind === "facility.identify-unavailable" ||
       event?.kind === "facility.identified" ||
+      event?.kind === "facility.monster-researched" ||
+      event?.kind === "facility.monster-research-unavailable" ||
       event?.kind === "facility.identify-all-unavailable" ||
       event?.kind === "facility.identified-all" ||
       event?.kind === "facility.service-unavailable" ||

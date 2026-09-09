@@ -713,6 +713,26 @@ pub(crate) enum DomainEvent {
     FacilityPlayerRenamed {
         outcome: FacilityRenameOutcome,
     },
+    InnFoodCompleted {
+        facility_id: String,
+        cost: u32,
+        gold_balance: u32,
+        food_key: &'static str,
+    },
+    InnFoodUnavailable {
+        facility_id: String,
+        reason: String,
+    },
+    MonsterResearchCompleted {
+        facility_id: String,
+        actor_kind_id: String,
+        cost: u32,
+        gold_balance: u32,
+    },
+    MonsterResearchUnavailable {
+        facility_id: String,
+        reason: String,
+    },
     InnStayUnavailable {
         facility_id: String,
         reason: String,
@@ -3277,6 +3297,58 @@ impl DomainEvent {
                     ("name", outcome.name.clone()),
                     ("cost", outcome.cost.to_string()),
                     ("balance", outcome.gold_balance.to_string()),
+                ],
+            ),
+            Self::InnFoodCompleted {
+                facility_id,
+                cost,
+                gold_balance,
+                food_key,
+            } => dto(
+                "inn.food",
+                "inn-food-completed",
+                [
+                    ("facility", facility_id.clone()),
+                    ("cost", cost.to_string()),
+                    ("balance", gold_balance.to_string()),
+                    ("foodKey", (*food_key).to_owned()),
+                ],
+            ),
+            Self::InnFoodUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "inn.food-unavailable",
+                "inn-food-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
+                ],
+            ),
+            Self::MonsterResearchCompleted {
+                facility_id,
+                actor_kind_id,
+                cost,
+                gold_balance,
+            } => dto(
+                "facility.monster-researched",
+                "facility-monster-researched",
+                [
+                    ("facility", facility_id.clone()),
+                    ("actorKind", actor_kind_id.clone()),
+                    ("cost", cost.to_string()),
+                    ("balance", gold_balance.to_string()),
+                ],
+            ),
+            Self::MonsterResearchUnavailable {
+                facility_id,
+                reason,
+            } => dto(
+                "facility.monster-research-unavailable",
+                "facility-monster-research-unavailable",
+                [
+                    ("facility", facility_id.clone()),
+                    ("reason", reason.clone()),
                 ],
             ),
             Self::InnStayUnavailable {

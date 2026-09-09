@@ -47,6 +47,8 @@ pub struct TownFacilityDefinition {
     #[serde(default)]
     pub research_item_cost: Option<u32>,
     #[serde(default)]
+    pub research_monster_cost: Option<TownFacilityPrice>,
+    #[serde(default)]
     pub identify_all_items_cost: Option<TownFacilityPrice>,
     #[serde(default)]
     pub inn_stay_cost: Option<TownFacilityPrice>,
@@ -148,6 +150,8 @@ pub struct ShopDefinition {
     pub entrance_terrain_id: String,
     #[serde(default)]
     pub inn_stay_cost: Option<u32>,
+    #[serde(default)]
+    pub inn_food_cost: Option<u32>,
     pub owner: ShopOwnerDefinition,
     pub stock: Vec<ShopStockDefinition>,
     pub maintenance: ShopMaintenanceDefinition,

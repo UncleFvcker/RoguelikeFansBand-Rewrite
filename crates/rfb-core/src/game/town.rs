@@ -1682,6 +1682,106 @@ impl Game {
         })
     }
 
+    pub(super) fn eat_at_inn(
+        &mut self,
+        facility_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<(), &'static str> {
+        let inn = self.content.shop(facility_id).ok_or("unknown-inn")?;
+        let cost = inn.inn_food_cost.ok_or("service-unavailable")?;
+        if !shop_accessible(self, inn) {
+            return Err("inn-unreachable");
+        }
+        if self.gold < cost {
+            return Err("insufficient-gold");
+        }
+        let food_key = self.consume_inn_meal(events);
+        self.gold -= cost;
+        events.push(DomainEvent::InnFoodCompleted {
+            facility_id: facility_id.to_owned(),
+            cost,
+            gold_balance: self.gold,
+            food_key,
+        });
+        Ok(())
+    }
+
+    pub(super) fn research_monster_at_facility(
+        &mut self,
+        facility_id: &str,
+        actor_kind_id: &str,
+        events: &mut Vec<DomainEvent>,
+    ) -> Result<(), &'static str> {
+        let facility = self
+            .content
+            .town_facility(facility_id)
+            .ok_or("unknown-facility")?;
+        let price = facility
+            .research_monster_cost
+            .ok_or("service-unavailable")?;
+        let cost = self.town_facility_price(facility, price);
+        if !self.town_facility_accessible(facility_id) {
+            return Err("facility-unreachable");
+        }
+        let actor = self
+            .content
+            .actor(actor_kind_id)
+            .filter(|actor| actor.role == rfb_content::ActorRole::Monster)
+            .ok_or("monster-unavailable")?;
+        if self.gold < cost {
+            return Err("insufficient-gold");
+        }
+        self.probed_actor_kind_ids.insert(actor.id.clone());
+        self.gold -= cost;
+        events.push(DomainEvent::MonsterResearchCompleted {
+            facility_id: facility_id.to_owned(),
+            actor_kind_id: actor_kind_id.to_owned(),
+            cost,
+            gold_balance: self.gold,
+        });
+        Ok(())
+    }
+
+    pub(super) fn research_monster_dtos(&self) -> Vec<rfb_protocol::ResearchMonsterDto> {
+        let mut monsters = self
+            .content
+            .actor_definitions()
+            .filter(|actor| actor.role == rfb_content::ActorRole::Monster)
+            .map(|actor| rfb_protocol::ResearchMonsterDto {
+                kind_id: actor.id.clone(),
+                name_key: actor.name_key.clone(),
+                glyph: actor.glyph.clone(),
+                level: actor.level,
+                unique: actor.tags.iter().any(|tag| tag == "unique"),
+                knowledge: self.probed_actor_kind_ids.contains(&actor.id).then(|| {
+                    rfb_protocol::MonsterKindKnowledgeDto {
+                        description_key: actor.description_key.clone(),
+                        max_hp: actor.max_hp,
+                        speed: actor.speed,
+                        armor_class: crate::combat::rating_to_armor_class(actor.defense),
+                        resistances: crate::resistance::definition_resistance_profile(actor)
+                            .to_dtos(),
+                        status_immunities: actor.status_immunities.clone(),
+                        melee_routine: super::actor_melee_routine_dto(actor),
+                        ability_ids: actor
+                            .monster_casting
+                            .as_ref()
+                            .map(|casting| {
+                                casting
+                                    .abilities
+                                    .iter()
+                                    .map(|ability| ability.ability_id.clone())
+                                    .collect()
+                            })
+                            .unwrap_or_default(),
+                    }
+                }),
+            })
+            .collect::<Vec<_>>();
+        monsters.sort_by(|a, b| b.level.cmp(&a.level).then(a.kind_id.cmp(&b.kind_id)));
+        monsters
+    }
+
     pub(super) fn stay_at_inn(
         &mut self,
         facility_id: &str,
@@ -2538,6 +2638,7 @@ impl Game {
                     entrance_position,
                     entrance_terrain_id: shop.entrance_terrain_id.clone(),
                     inn_stay_cost: shop.inn_stay_cost,
+                    inn_food_cost: shop.inn_food_cost,
                     inn_travel_destinations,
                     visited: self
                         .shop_states

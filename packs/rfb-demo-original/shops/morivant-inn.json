@@ -58,5 +58,6 @@
   ],
   "maintenance": {
     "intervalWorldTicks": 10000
-  }
+  },
+  "innFoodCost": 2
 }

@@ -33,6 +33,59 @@ pub(super) fn starting_ration_quantity(
 }
 
 impl Game {
+    pub(super) fn consume_inn_meal(&mut self, events: &mut Vec<DomainEvent>) -> &'static str {
+        // The effective race already includes the active racial form.
+        let race_id = self
+            .character_definitions()
+            .map(|(_, race, _, _)| race.id.clone());
+        let mortal_food = self.character_definitions().is_none_or(|(_, race, _, _)| {
+            (!race.tags.iter().any(|tag| tag == "nonliving")
+                || race.id == "rfb-legacy.race.einheri")
+                && !matches!(
+                    race.id.as_str(),
+                    "rfb-legacy.race.android"
+                        | "rfb-legacy.race.vampire"
+                        | "rfb-legacy.race.ent"
+                        | "rfb-legacy.race.spectre"
+                )
+        });
+        let food_key = match race_id.as_deref() {
+            Some("rfb-legacy.race.balrog") => "inn-food-meat",
+            Some(SKELETON_RACE_ID) => "inn-food-empty-staff",
+            _ if !mortal_food => {
+                if self.rng.bounded(3) == 0 {
+                    "inn-food-buffet"
+                } else if race_id.as_deref() == Some("rfb-legacy.race.android") {
+                    "inn-food-oil"
+                } else if race_id.as_deref() == Some("rfb-legacy.race.vampire") {
+                    "inn-food-blood"
+                } else if race_id.as_deref() == Some("rfb-legacy.race.ent") {
+                    "inn-food-water"
+                } else if self.rng.bounded(27) == 0 {
+                    "inn-food-speed-staff"
+                } else {
+                    "inn-food-empty-staff"
+                }
+            }
+            _ => "inn-food-porridge",
+        };
+        let before = self.nutrition_state();
+        let target = rfb_protocol::PLAYER_NUTRITION_MAXIMUM - 1;
+        if target > self.nutrition {
+            self.fasting = false;
+        }
+        self.nutrition = target;
+        let after = self.nutrition_state();
+        if before != after {
+            events.push(DomainEvent::NutritionStateChanged {
+                from: before,
+                to: after,
+                nutrition: self.nutrition,
+            });
+        }
+        food_key
+    }
+
     pub(super) const fn nutrition_state(&self) -> rfb_protocol::NutritionStateDto {
         nutrition_state(self.nutrition)
     }

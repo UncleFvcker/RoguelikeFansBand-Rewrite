@@ -145,6 +145,7 @@ pub(super) fn validate_towns_and_shops(
                 .identify_all_items_cost
                 .into_iter()
                 .chain(facility.inn_stay_cost)
+                .chain(facility.research_monster_cost)
                 .any(|price| price.owner_cost > 999_999_999 || price.other_cost > 999_999_999)
             || facility.legal_name_change_cost == Some(0)
             || facility.service_actions.iter().any(|service| {
@@ -158,6 +159,7 @@ pub(super) fn validate_towns_and_shops(
                 })
         });
         let has_service = facility.identify_item_cost.is_some()
+            || facility.research_monster_cost.is_some()
             || facility.research_item_cost.is_some()
             || facility.identify_all_items_cost.is_some()
             || facility.inn_stay_cost.is_some()
@@ -178,6 +180,7 @@ pub(super) fn validate_towns_and_shops(
                 || !facility.task_ids.is_empty()
                 || facility.identify_item_cost.is_some()
                 || facility.research_item_cost.is_some()
+                || facility.research_monster_cost.is_some()
                 || facility.identify_all_items_cost.is_some()
                 || facility.inn_stay_cost.is_some()
                 || facility.overview_message_key.is_some()
@@ -231,6 +234,10 @@ pub(super) fn validate_towns_and_shops(
         if !(100..=500).contains(&shop.owner.greed_percent)
             || !(1..=999_999_999).contains(&shop.owner.purchase_price_cap)
             || shop.inn_stay_cost.is_some_and(|cost| cost == 0)
+            || shop
+                .inn_food_cost
+                .is_some_and(|cost| cost == 0 || cost > 999_999_999)
+            || (shop.inn_food_cost.is_some() && shop.inn_stay_cost.is_none())
             || !refs.races.iter().any(|race| race.id == shop.owner.race_id)
             || shop.maintenance.interval_world_ticks == 0
             || shop.maintenance.interval_world_ticks > 1_000_000
