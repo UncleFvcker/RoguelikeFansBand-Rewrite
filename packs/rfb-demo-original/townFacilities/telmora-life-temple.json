@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.telmora-life-temple",
+  "nameKey": "town-facility-demo-telmora-life-temple-name",
+  "descriptionKey": "town-facility-demo-telmora-life-temple-description",
+  "townId": "demo.town.telmora",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-telmora-life-temple-owner-name",
+  "ownerRealmIds": [
+    "life"
+  ],
+  "serviceActions": [
+    {
+      "kind": "heal",
+      "ownerCost": 0,
+      "otherCost": 150
+    },
+    {
+      "kind": "restore-vitality",
+      "ownerCost": 400,
+      "otherCost": 1500
+    }
+  ],
+  "entrancePosition": {
+    "x": 14,
+    "y": 28
+  },
+  "entranceTerrainId": "demo.terrain.life-temple-entrance"
+}

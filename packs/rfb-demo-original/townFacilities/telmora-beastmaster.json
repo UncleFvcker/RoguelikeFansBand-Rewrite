@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.telmora-beastmaster",
+  "nameKey": "town-facility-demo-telmora-beastmaster-name",
+  "descriptionKey": "town-facility-demo-telmora-beastmaster-description",
+  "townId": "demo.town.telmora",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-telmora-beastmaster-owner-name",
+  "entrancePosition": {
+    "x": 29,
+    "y": 18
+  },
+  "entranceTerrainId": "demo.terrain.beastmaster-entrance",
+  "researchMonsterCost": {
+    "ownerCost": 10000,
+    "otherCost": 10000
+  }
+}

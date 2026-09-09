@@ -23,7 +23,7 @@ fn telmora_keeps_the_full_map_and_unopened_quest_terrain() {
         })
         .collect::<BTreeMap<_, _>>();
     assert_eq!(tiles.len(), 198 * 66);
-    // t_telmo.txt defaults; none of these are live quest/building entrances in T1.
+    // t_telmo.txt quest defaults remain closed while the T2 casino is open.
     for (position, terrain) in [
         ((47, 25), "demo.terrain.floor"),
         ((197, 0), "demo.terrain.floor"),
@@ -35,7 +35,7 @@ fn telmora_keeps_the_full_map_and_unopened_quest_terrain() {
         ((157, 58), "demo.terrain.permanent-wall"),
         ((192, 14), "demo.terrain.surface-mountain"),
         ((187, 35), "demo.terrain.surface-mountain"),
-        ((58, 46), "demo.terrain.permanent-wall"),
+        ((58, 46), "demo.terrain.casino-entrance"),
     ] {
         assert_eq!(tiles[&position], terrain);
     }

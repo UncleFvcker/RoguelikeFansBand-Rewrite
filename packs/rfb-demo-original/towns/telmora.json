@@ -6,8 +6,17 @@
   "descriptionKey": "town-demo-telmora-description",
   "floorId": "demo.floor.telmora",
   "facilityIds": [
+    "demo.town-facility.telmora-archer-guild",
+    "demo.town-facility.telmora-beastmaster",
+    "demo.town-facility.telmora-casino",
     "demo.town-facility.telmora-home",
-    "demo.town-facility.telmora-museum"
+    "demo.town-facility.telmora-library",
+    "demo.town-facility.telmora-life-temple",
+    "demo.town-facility.telmora-museum",
+    "demo.town-facility.telmora-paladin-guild",
+    "demo.town-facility.telmora-thieves-guild",
+    "demo.town-facility.telmora-warrior-guild",
+    "demo.town-facility.telmora-weapon-master"
   ],
   "shopIds": [
     "demo.shop.telmora-alchemist",

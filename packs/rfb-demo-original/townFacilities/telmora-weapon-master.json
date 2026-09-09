@@ -1,0 +1,22 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.telmora-weapon-master",
+  "nameKey": "town-facility-demo-telmora-weapon-master-name",
+  "descriptionKey": "town-facility-demo-telmora-weapon-master-description",
+  "townId": "demo.town.telmora",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-telmora-weapon-master-owner-name",
+  "entrancePosition": {
+    "x": 56,
+    "y": 18
+  },
+  "entranceTerrainId": "demo.terrain.weapon-master-entrance",
+  "serviceActions": [
+    {
+      "kind": "assess-armor",
+      "ownerCost": 1000,
+      "otherCost": 1000
+    }
+  ]
+}

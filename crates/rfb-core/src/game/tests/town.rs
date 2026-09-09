@@ -50,17 +50,28 @@ fn enter_town(game: &mut Game, town_id: &str, position: Position) {
     assert_eq!(game.current_town().unwrap().id, town_id);
 }
 
-fn morivant_facility_game(seed: u64, build_id: &str, facility_id: &str) -> Game {
+fn town_facility_game(seed: u64, build_id: &str, facility_id: &str) -> Game {
     let mut game = Game::new_with_build(seed, build_id).unwrap();
-    enter_morivant(&mut game);
-    let entrance = game
-        .content
-        .town_facility(facility_id)
-        .unwrap()
-        .entrance_position;
+    let facility = game.content.town_facility(facility_id).unwrap();
+    let town_id = facility.town_id.clone();
+    let entrance = facility.entrance_position;
+    let position = game
+        .wilderness()
+        .locations
+        .iter()
+        .find_map(|location| match location {
+            rfb_content::WildernessLocationDefinition::Town {
+                town_id: id,
+                position,
+                ..
+            } if id == &town_id => Some(position_from_content(*position)),
+            _ => None,
+        })
+        .unwrap();
+    enter_town(&mut game, &town_id, position);
     game.player.position = game
         .town_local_to_wilderness_view_position(
-            MORIVANT_TOWN_ID,
+            &town_id,
             Position {
                 x: i32::from(entrance.x),
                 y: i32::from(entrance.y),
@@ -72,11 +83,19 @@ fn morivant_facility_game(seed: u64, build_id: &str, facility_id: &str) -> Game 
 
 #[test]
 fn casino_poker_pays_once_resumes_the_deck_and_settles_chance_on_exit() {
+    casino_poker_round_trip("demo.town-facility.morivant-casino");
+}
+
+#[test]
+fn telmora_casino_poker_resumes_at_its_own_facility() {
+    casino_poker_round_trip("demo.town-facility.telmora-casino");
+}
+
+fn casino_poker_round_trip(id: &str) {
     use rfb_protocol::{
         CasinoActionDto as Action, CasinoGameDto, CasinoRoundSaveDto, VirtueKindDto,
     };
-    let id = "demo.town-facility.morivant-casino";
-    let mut game = morivant_facility_game(61, "demo.build.warrior", id);
+    let mut game = town_facility_game(61, "demo.build.warrior", id);
     game.virtues[0] = rfb_protocol::VirtueDto {
         kind: VirtueKindDto::Chance,
         value: 0,
@@ -118,6 +137,19 @@ fn casino_poker_pays_once_resumes_the_deck_and_settles_chance_on_exit() {
     };
     let mut restored = Game::from_save(game.to_save()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.casino.as_ref().unwrap().facility_id, id);
+    let other_casino = if id == "demo.town-facility.morivant-casino" {
+        "demo.town-facility.telmora-casino"
+    } else {
+        "demo.town-facility.morivant-casino"
+    };
+    let before = restored.state_hash();
+    assert!(
+        restored
+            .casino_action(other_casino, Action::Draw { replace_mask: 0 }, &mut events)
+            .is_err()
+    );
+    assert_eq!(restored.state_hash(), before);
     let mut invalid = game.to_save();
     if let CasinoRoundSaveDto::Poker { deck } = &mut invalid.casino.as_mut().unwrap().round {
         deck[1] = deck[0];
@@ -170,7 +202,7 @@ fn casino_poker_pays_once_resumes_the_deck_and_settles_chance_on_exit() {
 fn casino_games_repeat_deterministically_and_craps_resumes_its_point() {
     use rfb_protocol::{CasinoActionDto as Action, CasinoGameDto::*, CasinoRoundSaveDto};
     let id = "demo.town-facility.morivant-casino";
-    let mut template = morivant_facility_game(62, "demo.build.warrior", id);
+    let mut template = town_facility_game(62, "demo.build.warrior", id);
     template.gold = 10_000;
     for kind in [InBetween, Roulette, DiceSlots, Craps] {
         let mut game = Game::from_save(template.to_save()).unwrap();
@@ -610,7 +642,7 @@ fn building_enchantment_quotes_tiers_forces_only_selected_steps_and_preserves_sa
 #[test]
 fn morivant_monster_research_reveals_unseen_kinds_only_after_paid_confirmation() {
     let facility_id = "demo.town-facility.morivant-beastmaster";
-    let mut game = morivant_facility_game(62, "demo.build.warrior", facility_id);
+    let mut game = town_facility_game(62, "demo.build.warrior", facility_id);
     game.reveal_current_visibility();
     let before_browsing = game.state_hash();
     let snapshot = game.snapshot();
@@ -838,8 +870,14 @@ fn morivant_identification_uses_the_projected_membership_price() {
             FacilityMembershipDto::Visitor,
             600,
         ),
+        (
+            "demo.town-facility.telmora-thieves-guild",
+            "demo.build.warrior",
+            FacilityMembershipDto::Visitor,
+            2000,
+        ),
     ] {
-        let mut game = morivant_facility_game(51, build_id, facility_id);
+        let mut game = town_facility_game(51, build_id, facility_id);
         let cost = game.town_service_price(cost);
         let service = game
             .snapshot()
@@ -914,7 +952,7 @@ fn telmora_nine_shops_trade_and_save() {
         "demo.town.telmora",
         "demo.shop.telmora-inn",
         Position { x: 87, y: 49 },
-        0,
+        9,
     );
 }
 
@@ -1229,10 +1267,242 @@ fn telmora_home_and_museum_use_existing_storage() {
 }
 
 #[test]
+fn telmora_research_and_assessment_charge_the_undiscounted_quotes() {
+    for (suffix, base_cost) in [
+        ("library", 2000),
+        ("beastmaster", 10000),
+        ("weapon-master", 1000),
+    ] {
+        let id = format!("demo.town-facility.telmora-{suffix}");
+        let mut game = town_facility_game(51, "demo.build.warrior", &id);
+        let item_id = game
+            .items
+            .iter()
+            .find(|item| item.location == ItemLocation::Inventory)
+            .unwrap()
+            .id
+            .clone();
+        game.item_property_knowledge.remove(&item_id);
+        let projection = game
+            .snapshot()
+            .task_services
+            .into_iter()
+            .find(|service| service.id == id)
+            .unwrap();
+        assert!(projection.player_at_entrance && projection.tasks.is_empty());
+        let cost = match suffix {
+            "library" => projection.research_item_cost.unwrap(),
+            "beastmaster" => projection.research_monster_cost.unwrap(),
+            _ => {
+                projection
+                    .service_actions
+                    .iter()
+                    .find(|service| service.kind == FacilityServiceKindDto::AssessArmor)
+                    .unwrap()
+                    .cost
+            }
+        };
+        assert_eq!(cost, game.town_service_price(base_cost));
+        game.gold = cost - 1;
+        let before = game.state_hash();
+        let rejected = match suffix {
+            "library" => game.research_item_at_facility(&id, &item_id).map(|_| ()),
+            "beastmaster" => {
+                game.research_monster_at_facility(&id, "demo.actor.sheep", &mut Vec::new())
+            }
+            _ => game
+                .use_town_facility_service(
+                    &id,
+                    FacilityServiceKindDto::AssessArmor,
+                    None,
+                    None,
+                    &mut Vec::new(),
+                )
+                .map(|_| ()),
+        };
+        assert_eq!(rejected, Err("insufficient-gold"));
+        assert_eq!(game.state_hash(), before);
+        game.gold = cost;
+        let tick = game.world_tick;
+        let rng = game.rng.clone();
+        let command = match suffix {
+            "library" => GameCommand::ResearchItemAtFacility {
+                facility_id: id.clone(),
+                item_id: item_id.clone(),
+            },
+            "beastmaster" => GameCommand::ResearchMonsterAtFacility {
+                facility_id: id.clone(),
+                actor_kind_id: "demo.actor.sheep".to_owned(),
+            },
+            _ => GameCommand::UseFacilityService {
+                facility_id: id.clone(),
+                service: FacilityServiceKindDto::AssessArmor,
+                item_id: None,
+                enchantment_steps: None,
+            },
+        };
+        dispatch_next(&mut game, command);
+        assert_eq!(game.gold, 0, "{suffix}");
+        assert_eq!(game.world_tick, tick);
+        assert_eq!(game.rng, rng);
+        if suffix == "library" {
+            assert!(game.item_property_knowledge[&item_id].identified);
+        }
+        if suffix == "beastmaster" {
+            assert!(game.probed_actor_kind_ids.contains("demo.actor.sheep"));
+        }
+        assert_eq!(
+            Game::from_save(game.to_save()).unwrap().state_hash(),
+            game.state_hash()
+        );
+    }
+}
+
+#[test]
+fn telmora_paladin_guild_enchants_equipped_armor_at_the_selected_membership_tier() {
+    let id = "demo.town-facility.telmora-paladin-guild";
+    for (build, membership, base_cost) in [
+        (
+            "demo.build.paladin-death",
+            FacilityMembershipDto::Owner,
+            300,
+        ),
+        ("demo.build.warrior", FacilityMembershipDto::Visitor, 600),
+    ] {
+        let mut game = town_facility_game(51, build, id);
+        support::give_inventory_item(&mut game, "test.telmora.food", "demo.item.ration-of-food");
+        let guild = game
+            .snapshot()
+            .task_services
+            .into_iter()
+            .find(|service| service.id == id)
+            .unwrap();
+        assert_eq!(guild.membership, membership);
+        let action = guild
+            .service_actions
+            .iter()
+            .find(|action| action.kind == FacilityServiceKindDto::EnchantArmor)
+            .unwrap();
+        assert_eq!(action.cost, game.town_service_price(base_cost));
+        let target = action
+            .targets
+            .iter()
+            .find(|target| {
+                game.items.iter().any(|item| {
+                    item.id == target.item_id
+                        && matches!(item.location, ItemLocation::Equipped { .. })
+                })
+            })
+            .unwrap();
+        let choice = &target.choices[1];
+        assert_eq!(choice.steps, 2);
+        game.gold = choice.cost;
+        let before = game.state_hash();
+        assert_eq!(
+            game.use_town_facility_service(
+                id,
+                FacilityServiceKindDto::EnchantArmor,
+                Some("test.telmora.food"),
+                Some(2),
+                &mut Vec::new()
+            )
+            .unwrap_err(),
+            "item-unavailable"
+        );
+        assert_eq!(game.state_hash(), before);
+        game.gold -= 1;
+        let before = game.state_hash();
+        assert_eq!(
+            game.use_town_facility_service(
+                id,
+                FacilityServiceKindDto::EnchantArmor,
+                Some(&target.item_id),
+                Some(2),
+                &mut Vec::new()
+            )
+            .unwrap_err(),
+            "insufficient-gold"
+        );
+        assert_eq!(game.state_hash(), before);
+        game.gold += 1;
+        let result = dispatch_next(
+            &mut game,
+            GameCommand::UseFacilityService {
+                facility_id: id.to_owned(),
+                service: FacilityServiceKindDto::EnchantArmor,
+                item_id: Some(target.item_id.clone()),
+                enchantment_steps: Some(2),
+            },
+        );
+        assert!(
+            result
+                .events
+                .iter()
+                .any(|event| event.kind == "facility.item-enchanted")
+        );
+        assert_eq!(game.gold, 0);
+        assert_eq!(
+            game.items
+                .iter()
+                .find(|item| item.id == target.item_id)
+                .unwrap()
+                .enchantments
+                .to_armor,
+            choice.result.to_armor
+        );
+        assert_eq!(
+            Game::from_save(game.to_save()).unwrap().state_hash(),
+            game.state_hash()
+        );
+    }
+}
+
+#[test]
+fn telmora_life_temple_heals_owner_and_visitor_for_the_projected_cost() {
+    let id = "demo.town-facility.telmora-life-temple";
+    for (build, membership, base_cost) in [
+        ("demo.build.high-mage-life", FacilityMembershipDto::Owner, 0),
+        (
+            "demo.build.paladin-death",
+            FacilityMembershipDto::Visitor,
+            150,
+        ),
+    ] {
+        let mut game = town_facility_game(51, build, id);
+        let temple = game
+            .snapshot()
+            .task_services
+            .into_iter()
+            .find(|service| service.id == id)
+            .unwrap();
+        assert_eq!(temple.membership, membership);
+        let heal = temple
+            .service_actions
+            .iter()
+            .find(|action| action.kind == FacilityServiceKindDto::Heal)
+            .unwrap();
+        assert_eq!(heal.cost, game.town_service_price(base_cost));
+        game.gold = heal.cost;
+        game.player.hp = 1;
+        dispatch_next(
+            &mut game,
+            GameCommand::UseFacilityService {
+                facility_id: id.to_owned(),
+                service: FacilityServiceKindDto::Heal,
+                item_id: None,
+                enchantment_steps: None,
+            },
+        );
+        assert_eq!(game.gold, 0);
+        assert_eq!(game.player.hp, game.effective_player_max_hp());
+    }
+}
+
+#[test]
 fn morivant_level_teleport_validates_choices_before_charging_and_resumes_after_save() {
     let facility_id = "demo.town-facility.morivant-trump-tower";
     let dungeon_id = "demo.dungeon.tidal-cave";
-    let mut game = morivant_facility_game(51, "demo.build.warrior", facility_id);
+    let mut game = town_facility_game(51, "demo.build.warrior", facility_id);
     let departure = game.player.position;
     game.gold = game.town_service_price(100_000);
     assert!(game.teleport_dungeon_dtos().is_empty());
@@ -1811,7 +2081,7 @@ fn stored_blood_sours_and_only_museum_donations_clear_inscriptions() {
         (MORIVANT_HOME_ID, false),
         ("demo.town-facility.morivant-museum", true),
     ] {
-        let mut game = morivant_facility_game(109, "demo.build.warrior", facility);
+        let mut game = town_facility_game(109, "demo.build.warrior", facility);
         game.mark_shop_visited_at_player().unwrap();
         game.reveal_current_visibility();
         support::give_inventory_item(&mut game, "test.blood", "demo.item.blood-potion");
@@ -1850,7 +2120,7 @@ fn stored_blood_sours_and_only_museum_donations_clear_inscriptions() {
 #[test]
 fn shared_museum_import_preserves_instances_and_knowledge_without_id_collisions() {
     let facility = "demo.town-facility.morivant-museum";
-    let mut donor = morivant_facility_game(109, "demo.build.warrior", facility);
+    let mut donor = town_facility_game(109, "demo.build.warrior", facility);
     donor.mark_shop_visited_at_player().unwrap();
     donor.reveal_current_visibility();
     support::give_inventory_item(&mut donor, "test.device", "demo.item.magic-missile-wand");
@@ -1880,7 +2150,7 @@ fn shared_museum_import_preserves_instances_and_knowledge_without_id_collisions(
         donor.deposit_at_home(facility, id, 1).unwrap();
     }
     let museum = donor.shared_museum().unwrap();
-    let mut recipient = morivant_facility_game(110, "demo.build.warrior", facility);
+    let mut recipient = town_facility_game(110, "demo.build.warrior", facility);
     recipient.mark_shop_visited_at_player().unwrap();
     recipient.reveal_current_visibility();
     support::give_inventory_item(&mut recipient, "test.device", "demo.item.dagger");
@@ -2052,11 +2322,15 @@ fn inn_stays_use_content_prices_and_restore_the_player_at_half_day() {
         (ANAMBAR_INN_ID, 100, 25),
         (WHITE_HORSE_INN_ID, 20, 20),
         (MORIVANT_THIEVES_GUILD_ID, 50, 50),
+        ("demo.town-facility.telmora-thieves-guild", 100, 100),
     ] {
         let mut game = if facility_id == ANAMBAR_INN_ID {
             anambar_inn_game(42)
-        } else if facility_id == MORIVANT_THIEVES_GUILD_ID {
-            morivant_facility_game(42, "demo.build.warrior", facility_id)
+        } else if matches!(
+            facility_id,
+            MORIVANT_THIEVES_GUILD_ID | "demo.town-facility.telmora-thieves-guild"
+        ) {
+            town_facility_game(42, "demo.build.warrior", facility_id)
         } else {
             white_horse_inn_game(42)
         };
@@ -2151,7 +2425,7 @@ fn inn_and_guild_rejections_do_not_charge_or_advance_time() {
         (ANAMBAR_INN_ID, anambar_inn_game(42), 25),
         (
             MORIVANT_THIEVES_GUILD_ID,
-            morivant_facility_game(42, "demo.build.warrior", MORIVANT_THIEVES_GUILD_ID),
+            town_facility_game(42, "demo.build.warrior", MORIVANT_THIEVES_GUILD_ID),
             50,
         ),
     ] {
