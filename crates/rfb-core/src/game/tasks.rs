@@ -428,15 +428,18 @@ fn plan_task_event_reduction(
     let increment = match objective.kind {
         TaskObjectiveKind::ClearFloor => clear_floor_completed as u32,
         TaskObjectiveKind::CollectItem => events.iter().any(|event| {
-            matches!(event, DomainEvent::ItemPickedUp { .. })
-                && objective.item_instance_id.as_ref().is_some_and(|id| {
-                    items.iter().any(|item| {
-                        &item.id == id
-                            && matches!(
-                                item.location,
-                                ItemLocation::Inventory | ItemLocation::Equipped { .. }
-                            )
-                    })
+            matches!(event, DomainEvent::ItemPickedUp { target_kind_id, .. }
+                if objective.item_kind_id.as_ref() == Some(target_kind_id))
+                && items.iter().any(|item| {
+                    objective.item_kind_id.as_ref() == Some(&item.kind_id)
+                        && objective
+                            .item_instance_id
+                            .as_ref()
+                            .is_none_or(|id| &item.id == id)
+                        && matches!(
+                            item.location,
+                            ItemLocation::Inventory | ItemLocation::Equipped { .. }
+                        )
                 })
         }) as u32,
         TaskObjectiveKind::EnterFloor => events.iter().any(|event| {
@@ -1189,5 +1192,53 @@ impl Game {
         )?;
         self.campaign_state = plan.state;
         Some(plan.score)
+    }
+}
+
+#[cfg(test)]
+mod collect_item_tests {
+    use super::*;
+
+    #[test]
+    fn collect_item_keeps_bound_instances_and_requires_the_matching_pickup_kind() {
+        let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
+        let mut world = game.content.world(&game.world_id).unwrap().clone();
+        let task_id = "demo.task.morivant-snakes";
+        let floor_id = "demo.floor.morivant-snakes";
+        let state = game.task_states.get_mut(task_id).unwrap();
+        state.status = TaskStatusKindDto::Active;
+        state.active_floor_id = Some(floor_id.to_owned());
+        let mut item = game.items[0].clone();
+        item.id = "test.other-whip".to_owned();
+        item.kind_id = "demo.item.dr-jones-whip".to_owned();
+        item.location = ItemLocation::Inventory;
+        for (bound_id, pickup_kind, completes) in [
+            (Some("test.expected-whip"), "demo.item.dr-jones-whip", false),
+            (Some("test.other-whip"), "demo.item.dr-jones-whip", true),
+            (None, "demo.item.dr-jones-whip", true),
+            (None, "demo.item.whip", false),
+        ] {
+            world
+                .tasks
+                .iter_mut()
+                .find(|task| task.id == task_id)
+                .unwrap()
+                .objectives[0]
+                .item_instance_id = bound_id.map(str::to_owned);
+            let plan = plan_task_event_reduction(
+                &world,
+                &game.task_states,
+                floor_id,
+                std::slice::from_ref(&item),
+                false,
+                &[],
+                &[DomainEvent::ItemPickedUp {
+                    target_kind_id: pickup_kind.to_owned(),
+                    quantity: 1,
+                }],
+            )
+            .unwrap();
+            assert_eq!(plan.is_some_and(|plan| plan.state.current == 1), completes);
+        }
     }
 }

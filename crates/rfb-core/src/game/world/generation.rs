@@ -694,6 +694,32 @@ fn generated_wall_positions(
 }
 
 impl Game {
+    pub(in crate::game) fn inline_floor_artifacts_available(
+        &self,
+        definition: &ProceduralFloorDefinition,
+    ) -> bool {
+        let Some(map) = &definition.inline_map else {
+            return true;
+        };
+        let mut seen = BTreeSet::new();
+        map.item_spawns
+            .iter()
+            .chain(map.scrambled_item_pair.iter().flatten())
+            .chain(
+                map.scrambled_item_loot_pair
+                    .iter()
+                    .flat_map(|pair| &pair.item_spawns),
+            )
+            .filter(|spawn| {
+                self.content
+                    .item(&spawn.kind_id)
+                    .is_some_and(|item| item.artifact_generation.is_some())
+            })
+            .all(|spawn| {
+                !self.generated_artifact_ids.contains(&spawn.kind_id) && seen.insert(&spawn.kind_id)
+            })
+    }
+
     fn inline_item_instance(
         &mut self,
         definition: &ProceduralFloorDefinition,
@@ -735,6 +761,7 @@ impl Game {
             }),
         };
         materialization.apply_to(&mut item);
+        self.register_generated_artifact(&item.kind_id);
         item
     }
 
@@ -744,6 +771,13 @@ impl Game {
         inline_map: &InlineFloorMapDefinition,
         dungeon_instance_id: Option<String>,
     ) -> Result<FloorState, CoreError> {
+        // RFB rooms.c replaces an already generated ART with a random artifact.
+        // Until replacements exist, reject instead of duplicating a fixed artifact.
+        if !self.inline_floor_artifacts_available(definition) {
+            return Err(CoreError::InvalidSave(
+                "inline floor fixed artifact is already generated",
+            ));
+        }
         let width = definition.width;
         let height = definition.height;
         let mut terrain =

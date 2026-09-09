@@ -21,13 +21,13 @@
       "revision": 0,
       "turn": 0,
       "lastCommandSeq": 0,
-      "stateHash": "173bb1707c0f33d19223465bef0f5bfd46bf0dcb991c4f1df7b9bfd0c9523231"
+      "stateHash": "9af923c6f85657374c78bfe9a23df3755c31fedc5a2518660e7b81c3e87cad2c"
     },
     "errors": [
       {
         "step": 1,
         "kind": "revision-mismatch",
-        "stateHash": "173bb1707c0f33d19223465bef0f5bfd46bf0dcb991c4f1df7b9bfd0c9523231"
+        "stateHash": "9af923c6f85657374c78bfe9a23df3755c31fedc5a2518660e7b81c3e87cad2c"
       }
     ]
   }

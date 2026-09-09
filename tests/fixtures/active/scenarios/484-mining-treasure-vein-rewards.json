@@ -51,7 +51,7 @@
       "revision": 2,
       "turn": 2,
       "lastCommandSeq": 2,
-      "stateHash": "6b8ef26ba9e86f9ff24b5f75482f64d6209ce5e5a412b9f1bdaeadb16d1a3457",
+      "stateHash": "b14d3ea6fb4de942d79c1c1b972939c8deea7ab404ab687574ffad636ac29dee",
       "playerAttributes": {
         "miningProficiency": {
           "current": 4059,
@@ -106,6 +106,6 @@
         "args": {}
       }
     ],
-    "saveRoundTripStateHash": "6b8ef26ba9e86f9ff24b5f75482f64d6209ce5e5a412b9f1bdaeadb16d1a3457"
+    "saveRoundTripStateHash": "b14d3ea6fb4de942d79c1c1b972939c8deea7ab404ab687574ffad636ac29dee"
   }
 }

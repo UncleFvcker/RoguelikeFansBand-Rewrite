@@ -776,6 +776,14 @@ impl Game {
         if !self.stored_floors.contains_key(&target_storage_key) && target_definition.is_none() {
             return Err(CoreError::InvalidSave("return floor state is missing"));
         }
+        let regenerating = one_shot_arrival
+            .as_ref()
+            .is_some_and(|arrival| !arrival.regenerate_members.is_empty());
+        if (regenerating || !self.stored_floors.contains_key(&target_storage_key))
+            && target_definition.is_some_and(|floor| !self.inline_floor_artifacts_available(floor))
+        {
+            return Ok(None);
+        }
 
         let expedition_end = if target_is_surface
             && source_definition.is_some_and(|floor| floor.lifecycle == FloorLifecycle::Dungeon)

@@ -464,14 +464,14 @@ fn validate_task_objective(
             }
         }
         TaskObjectiveKind::CollectItem => {
-            let (Some(instance_id), Some(kind_id)) =
-                (&objective.item_instance_id, &objective.item_kind_id)
-            else {
+            let Some(kind_id) = &objective.item_kind_id else {
                 return Err(ContentError::InvalidTask(owner_id.to_owned()));
             };
-            validate_id(instance_id)?;
-            if !instance_ids.insert(instance_id.clone()) {
-                return Err(ContentError::DuplicateInstanceId(instance_id.clone()));
+            if let Some(instance_id) = &objective.item_instance_id {
+                validate_id(instance_id)?;
+                if !instance_ids.insert(instance_id.clone()) {
+                    return Err(ContentError::DuplicateInstanceId(instance_id.clone()));
+                }
             }
             if !item_limits.contains_key(kind_id) {
                 return Err(ContentError::DanglingReference {

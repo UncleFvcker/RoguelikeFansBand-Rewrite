@@ -3,6 +3,120 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn morivant_snakes_map_and_find_artifact_match_rfb_master() {
+    // master a0d92b6378d148c5262cc236b8fa6ed2ca06a54c: q_info N:51, q_snakes.txt.
+    // ':' retains the default FLOOR; '+' is the historical secret-door glyph (rooms.c).
+    let rows = [
+        "################################",
+        "####-,,,,------,,,,-----------##",
+        "##-,,,,c----####;;;##;;;;##-;-##",
+        "#---;;------#acadacdcadaca#--b-#",
+        "#------;;;--;babcbdkdbcbab;--;-#",
+        "#-,,--------#acabacdcabaca#--;-#",
+        "#---;;;;----;##;;;#+#;;##;#-;;-#",
+        "#--b,,------,,,,,--c--,,,---a--#",
+        "#-------:::::-:::---;-----;;---#",
+        "#----------,,,--------;;d-----##",
+        "#<-----;;;;-------------;;;;-###",
+        "################################",
+    ];
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let world = artifact
+        .content
+        .worlds
+        .iter()
+        .find(|world| world.id == "demo.world.middle-earth")
+        .unwrap();
+    let task = world
+        .tasks
+        .iter()
+        .find(|task| task.id == "demo.task.morivant-snakes")
+        .unwrap();
+    assert!(task.source_facility_id.is_none() && task.reward.is_none());
+    let [objective] = task.objectives.as_slice() else {
+        panic!("one FIND_ART goal")
+    };
+    assert_eq!(objective.kind, TaskObjectiveKind::CollectItem);
+    assert_eq!(
+        objective.item_kind_id.as_deref(),
+        Some("demo.item.dr-jones-whip")
+    );
+    assert!(objective.item_instance_id.is_none());
+    let floor = world
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.morivant-snakes")
+        .unwrap();
+    assert_eq!((floor.width, floor.height, floor.depth), (32, 12, 15));
+    assert_eq!(floor.lifecycle, FloorLifecycle::OneShot);
+    assert!(!floor.retakeable);
+    let map = floor.inline_map.as_ref().unwrap();
+    assert_eq!(map.player_position, ContentPosition { x: 1, y: 10 });
+    assert_eq!(map.actor_spawns.len(), 44);
+    let [whip] = map.item_spawns.as_slice() else {
+        panic!("one fixed artifact")
+    };
+    assert_eq!(whip.kind_id, "demo.item.dr-jones-whip");
+    assert_eq!(whip.position, ContentPosition { x: 19, y: 4 });
+    for (y, row) in rows.iter().enumerate() {
+        assert_eq!(row.len(), 32);
+        for (x, glyph) in row.chars().enumerate() {
+            let position = ContentPosition {
+                x: x as u16,
+                y: y as u16,
+            };
+            let expected = match glyph {
+                '#' => "permanent-wall",
+                '-' => "surface-grass",
+                ',' => "dirt",
+                ';' => "rubble",
+                '+' => "door-secret",
+                '<' => "stairs-up",
+                _ => "floor",
+            };
+            let terrain = map
+                .terrain_overrides
+                .iter()
+                .find(|entry| entry.positions.contains(&position))
+                .map_or(floor.wall_terrain_id.as_str(), |entry| {
+                    entry.terrain_id.as_str()
+                });
+            assert_eq!(terrain, format!("demo.terrain.{expected}"), "at {x},{y}");
+            let actor_kind = match glyph {
+                'a' => Some("copperhead-snake"),
+                'b' => Some("rattlesnake"),
+                'c' => Some("king-cobra"),
+                'd' => Some("black-mamba"),
+                _ => None,
+            };
+            if let Some(kind) = actor_kind {
+                assert!(
+                    map.actor_spawns
+                        .iter()
+                        .any(|actor| actor.position == position
+                            && actor.kind_id == format!("demo.actor.{kind}"))
+                );
+            }
+        }
+    }
+    let entry_id = floor.entry_terrain_id.as_ref().unwrap();
+    assert!(
+        world
+            .terrain_overrides
+            .iter()
+            .all(|entry| &entry.terrain_id != entry_id)
+    );
+    assert!(
+        world
+            .procedural_floors
+            .iter()
+            .filter_map(|floor| floor.inline_map.as_ref())
+            .flat_map(|map| &map.terrain_overrides)
+            .all(|entry| &entry.terrain_id != entry_id)
+    );
+}
+
+#[test]
 fn loot_table_allocations_and_quality_sources_are_validated() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 

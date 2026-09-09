@@ -29,7 +29,7 @@
       "revision": 1,
       "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "0bd8408be5bf0ff561cf8c0ecb0ebd5d9f5f002183e919be292851c596a86cab",
+      "stateHash": "9cb215fc5826c62de8d3b442f98dd7192b7df0a1f74b89a9c4dfaaf67b2dcd41",
       "homes": {
         "demo.town-facility.outpost-home": {
           "visited": true,

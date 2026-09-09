@@ -5,6 +5,245 @@ use crate::game::tasks::{
     TaskResolution, TaskRewardOutcome, TaskServiceCompletionOutcome, task_resolution_for_departure,
 };
 
+const SNAKES_TASK: &str = "demo.task.morivant-snakes";
+const SNAKES_FLOOR: &str = "demo.floor.morivant-snakes";
+const JONES_WHIP: &str = "demo.item.dr-jones-whip";
+
+fn morivant_snakes_game() -> Game {
+    let mut game = test_caster_game(51);
+    clear_monsters(&mut game);
+    choose_human_talent_if_pending(&mut game);
+    // Test-only entry precondition; the town entrance is deferred to the town batch.
+    let entry = game.player.position;
+    replace_terrain(&mut game, entry, "demo.terrain.morivant-snakes-entry");
+    game
+}
+
+#[test]
+fn morivant_snakes_fetch_pickup_save_and_exit_keep_one_artifact() {
+    let mut game = morivant_snakes_game();
+    let entry = game.player.position;
+    dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(game.current_floor_id, SNAKES_FLOOR);
+    assert_eq!(game.entities.len(), 44);
+    assert!(game.generated_artifact_ids.contains(JONES_WHIP));
+    let whip_id = game
+        .items
+        .iter()
+        .find(|item| item.kind_id == JONES_WHIP)
+        .unwrap()
+        .id
+        .clone();
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == whip_id)
+            .unwrap()
+            .location,
+        ItemLocation::Ground(Position { x: 19, y: 4 })
+    );
+    clear_monsters(&mut game);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(
+        game.task_states[SNAKES_TASK].current, 0,
+        "clearing snakes is not FIND_ART"
+    );
+
+    game.player.position = Position { x: 18, y: 4 };
+    give_inventory_item(&mut game, "test.snakes.plain-whip", "demo.item.whip");
+    dispatch_next(
+        &mut game,
+        GameCommand::Drop {
+            item_ids: vec!["test.snakes.plain-whip".to_owned()],
+        },
+    );
+    dispatch_next(&mut game, GameCommand::PickUp);
+    assert_eq!(game.task_states[SNAKES_TASK].current, 0);
+    game.progress.level = 9;
+    game.progress.max_level = 9;
+    game.refresh_character_skills();
+    assert!(game.gain_mutation("rfb.mutation.telekinesis", &mut Vec::new()));
+    game.debug_set_ability_casts_succeed(true);
+    let mana = game.resources.get_mut("demo.resource.mana").unwrap();
+    mana.current = mana.maximum;
+    game.reveal_current_visibility();
+    dispatch_next(
+        &mut game,
+        GameCommand::CastAbility {
+            ability_id: "rfb.ability.mutation.telekinesis".to_owned(),
+            target: TargetSelection::Direction {
+                direction: Direction::East,
+            },
+        },
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == whip_id)
+            .unwrap()
+            .location,
+        ItemLocation::Ground(game.player.position)
+    );
+    assert_eq!(
+        game.task_states[SNAKES_TASK].current, 0,
+        "fetch is not pickup"
+    );
+    let mut game = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(game.task_states[SNAKES_TASK].current, 0);
+    dispatch_next(&mut game, GameCommand::PickUp);
+    assert_eq!(game.task_states[SNAKES_TASK].current, 1);
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == JONES_WHIP)
+            .count(),
+        1
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::Drop {
+            item_ids: vec![whip_id.clone()],
+        },
+    );
+    dispatch_next(&mut game, GameCommand::PickUp);
+    assert_eq!(game.task_states[SNAKES_TASK].current, 1);
+    game.items
+        .iter_mut()
+        .find(|item| item.id == "test.snakes.plain-whip")
+        .unwrap()
+        .location = ItemLocation::Ground(Position { x: 19, y: 4 });
+    game.rng = RfbRng::seeded(
+        (0..1_000)
+            .find(|seed| RfbRng::seeded(*seed).bounded(100) < 5)
+            .unwrap(),
+    );
+    dispatch_next(
+        &mut game,
+        GameCommand::UseItem {
+            item_id: whip_id.clone(),
+            target: Some(TargetSelection::Position {
+                position: Position { x: 19, y: 4 },
+            }),
+        },
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == whip_id)
+            .unwrap()
+            .charges
+            .unwrap()
+            .current,
+        0
+    );
+    game.player.position = Position { x: 1, y: 10 };
+    let exited = dispatch_next(&mut game, GameCommand::TraverseStairs);
+    assert_eq!(
+        game.task_states[SNAKES_TASK].status,
+        TaskStatusKindDto::Completed
+    );
+    assert!(
+        exited
+            .events
+            .iter()
+            .all(|event| event.kind != "task.rewarded")
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .filter(|item| item.kind_id == JONES_WHIP)
+            .count(),
+        1
+    );
+    let mut restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(
+        restored
+            .items
+            .iter()
+            .find(|item| item.id == whip_id)
+            .unwrap()
+            .charges
+            .unwrap()
+            .current,
+        0
+    );
+    restored.player.position = entry;
+    let before = restored.current_floor_id.clone();
+    dispatch_next(&mut restored, GameCommand::TraverseStairs);
+    assert_eq!(restored.current_floor_id, before);
+    assert_eq!(
+        restored.task_states[SNAKES_TASK].status,
+        TaskStatusKindDto::Completed
+    );
+    assert_eq!(
+        restored
+            .items
+            .iter()
+            .filter(|item| item.kind_id == JONES_WHIP)
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn morivant_snakes_failed_and_abandoned_floors_stay_closed_after_save() {
+    for abandon in [false, true] {
+        let mut game = morivant_snakes_game();
+        let entry = game.player.position;
+        dispatch_next(&mut game, GameCommand::TraverseStairs);
+        clear_monsters(&mut game);
+        let action = if abandon {
+            GameCommand::AbandonTask
+        } else {
+            GameCommand::TraverseStairs
+        };
+        dispatch_next(&mut game, action);
+        let expected = if abandon {
+            TaskStatusKindDto::Abandoned
+        } else {
+            TaskStatusKindDto::Failed
+        };
+        assert_eq!(game.task_states[SNAKES_TASK].status, expected);
+        assert!(game.generated_artifact_ids.contains(JONES_WHIP));
+        assert!(game.items.iter().all(|item| item.kind_id != JONES_WHIP));
+        let mut restored =
+            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(restored.task_states[SNAKES_TASK].status, expected);
+        restored.player.position = entry;
+        let before = restored.current_floor_id.clone();
+        dispatch_next(&mut restored, GameCommand::TraverseStairs);
+        assert_eq!(restored.current_floor_id, before);
+        assert_eq!(restored.task_states[SNAKES_TASK].status, expected);
+    }
+}
+
+#[test]
+fn morivant_snakes_preexisting_artifact_rejects_entry_without_mutation() {
+    let mut game = morivant_snakes_game();
+    game.generated_artifact_ids.insert(JONES_WHIP.to_owned());
+    let before = game.state_hash();
+    let draws = game.rng_draw_counter();
+    assert!(
+        game.transition_floor(SNAKES_FLOOR.to_owned(), None, None, false)
+            .unwrap()
+            .is_none()
+    );
+    assert_eq!(game.state_hash(), before);
+    assert_eq!(game.rng_draw_counter(), draws);
+    let definition = game
+        .content
+        .world(&game.world_id)
+        .unwrap()
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == SNAKES_FLOOR)
+        .unwrap()
+        .clone();
+    assert!(game.generate_procedural_floor(&definition, None).is_err());
+    assert_eq!(game.state_hash(), before);
+}
+
 fn item_reward(outcome: TaskServiceCompletionOutcome) -> TaskRewardOutcome {
     match outcome {
         TaskServiceCompletionOutcome::Rewarded(reward) => reward,
