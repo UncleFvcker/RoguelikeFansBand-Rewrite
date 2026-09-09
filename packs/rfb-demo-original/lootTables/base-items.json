@@ -2178,7 +2178,10 @@
       "weight": 33,
       "quantity": 1,
       "minDepth": 40
-    }
+    },
+    {"itemKindId":"demo.item.law-dragon-scale-mail","minDepth":60,"quantity":1,"weight":12},
+    {"itemKindId":"demo.item.gold-dragon-scale-mail","minDepth":50,"quantity":1,"weight":20},
+    {"itemKindId":"demo.item.chaos-dragon-scale-mail","minDepth":65,"quantity":1,"weight":10}
   ],
   "qualityPolicy": {
     "kind": "rfb-depth",

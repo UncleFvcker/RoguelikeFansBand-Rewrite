@@ -7917,6 +7917,10 @@
           "format": "int32",
           "default": 0
         },
+        "meleeAttacksDeltaPercent": {
+          "type": "integer",
+          "format": "int32"
+        },
         "meleeDamage": {
           "type": "integer",
           "format": "int32",
@@ -7953,6 +7957,10 @@
           "type": "integer",
           "format": "int32",
           "default": 0
+        },
+        "spellCapacityBonus": {
+          "type": "integer",
+          "format": "int32"
         },
         "stealthSkill": {
           "type": "integer",
@@ -8199,6 +8207,13 @@
         "levitation",
         "warning",
         "slow-digestion",
+        "reflects-bolts",
+        "fire-aura",
+        "shards-aura",
+        "reduced-mana-cost",
+        "easy-spell",
+        "auto-identify",
+        "blessed",
         "esp-animal",
         "esp-undead",
         "esp-demon",

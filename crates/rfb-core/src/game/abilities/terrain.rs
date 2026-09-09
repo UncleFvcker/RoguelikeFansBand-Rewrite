@@ -27,7 +27,7 @@ use rfb_protocol::{
 };
 use std::collections::{BTreeMap, BTreeSet};
 
-pub(super) enum EarthquakeSource {
+pub(in crate::game) enum EarthquakeSource {
     Ability(String),
     Monster(String),
     Weapon(String),
@@ -852,7 +852,7 @@ impl Game {
     }
 
     #[allow(clippy::too_many_arguments)]
-    pub(super) fn resolve_earthquake(
+    pub(in crate::game) fn resolve_earthquake(
         &mut self,
         center: Position,
         radius: u8,

@@ -23,10 +23,10 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "0c6886584a18d0c02292a234d0497d9f96ccef87993f16082dcc037cdb3afb57"
+      "revision": 1,
+      "stateHash": "0a9b30fc68e26d4d31b5d1521eaae495748caf8450460ff441bfd0265a51caf4",
+      "turn": 1
     },
     "events": [
       {
@@ -39,7 +39,7 @@
       {
         "step": 2,
         "kind": "command-sequence",
-        "stateHash": "0c6886584a18d0c02292a234d0497d9f96ccef87993f16082dcc037cdb3afb57"
+        "stateHash": "0a9b30fc68e26d4d31b5d1521eaae495748caf8450460ff441bfd0265a51caf4"
       }
     ]
   }

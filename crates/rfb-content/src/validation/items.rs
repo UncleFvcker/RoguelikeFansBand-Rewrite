@@ -108,6 +108,11 @@ pub(crate) fn valid_item_effect(
             duration_sides,
             duration_bonus,
         }
+        | ItemUseEffectDefinition::ApplyHeroicSpeed {
+            duration_dice,
+            duration_sides,
+            duration_bonus,
+        }
         | ItemUseEffectDefinition::ApplyHeroism {
             duration_dice,
             duration_sides,
@@ -633,6 +638,7 @@ pub(super) fn validate_items(
                     | ItemUseEffectDefinition::Bless { .. }
                     | ItemUseEffectDefinition::ApplySlowness { .. }
                     | ItemUseEffectDefinition::ApplySpeed { .. }
+                    | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
                     | ItemUseEffectDefinition::ApplyHeroism { .. }
                     | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                     | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
@@ -1037,6 +1043,7 @@ pub(super) fn validate_items(
                         | ItemUseEffectDefinition::IncreaseNutrition { .. }
                         | ItemUseEffectDefinition::ApplySlowness { .. }
                         | ItemUseEffectDefinition::ApplySpeed { .. }
+                        | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
                         | ItemUseEffectDefinition::ApplyHeroism { .. }
                         | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                         | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
@@ -1191,6 +1198,7 @@ pub(super) fn validate_items(
                             ItemUseEffectDefinition::IncreaseSpellLearningCapacity
                                 | ItemUseEffectDefinition::ApplySlowness { .. }
                                 | ItemUseEffectDefinition::ApplySpeed { .. }
+                                | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
                                 | ItemUseEffectDefinition::ApplyHeroism { .. }
                                 | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }

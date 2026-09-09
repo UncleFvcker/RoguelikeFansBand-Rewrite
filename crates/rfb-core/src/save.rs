@@ -335,7 +335,14 @@ pub(crate) fn item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
-        item_device_generation(content, &item.kind_id, &item.affix_ids),
+        item_device_generation(
+            content,
+            &item.kind_id,
+            &item.affix_ids,
+            item.activation
+                .as_ref()
+                .map(|activation| activation.profile_id.as_str()),
+        ),
         item.activation.as_ref(),
         item.charges,
         fuel,
@@ -390,7 +397,14 @@ pub(crate) fn inventory_item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
-        item_device_generation(content, &item.kind_id, &item.affix_ids),
+        item_device_generation(
+            content,
+            &item.kind_id,
+            &item.affix_ids,
+            item.activation
+                .as_ref()
+                .map(|activation| activation.profile_id.as_str()),
+        ),
         item.activation.as_ref(),
         item.charges,
         fuel,
@@ -450,7 +464,14 @@ pub(crate) fn equipment_item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
-        item_device_generation(content, &item.kind_id, &item.affix_ids),
+        item_device_generation(
+            content,
+            &item.kind_id,
+            &item.affix_ids,
+            item.activation
+                .as_ref()
+                .map(|activation| activation.profile_id.as_str()),
+        ),
         item.activation.as_ref(),
         item.charges,
         fuel,
@@ -507,7 +528,14 @@ pub(crate) fn carried_item_from_dto(
     let fuel = item.fuel.or_else(|| item_fuel_from_definition(definition));
     validate_item_runtime_state(
         definition,
-        item_device_generation(content, &item.kind_id, &item.affix_ids),
+        item_device_generation(
+            content,
+            &item.kind_id,
+            &item.affix_ids,
+            item.activation
+                .as_ref()
+                .map(|activation| activation.profile_id.as_str()),
+        ),
         item.activation.as_ref(),
         item.charges,
         fuel,
@@ -659,7 +687,17 @@ fn validate_item_runtime_state(
         }
     };
     let valid_recovery_progress = match (
-        device_generation.and_then(|generation| generation.recovery),
+        device_generation.and_then(|generation| {
+            activation
+                .and_then(|activation| {
+                    generation
+                        .activations
+                        .iter()
+                        .find(|profile| profile.id == activation.profile_id)
+                })
+                .and_then(|profile| profile.recovery)
+                .or(generation.recovery)
+        }),
         charges,
     ) {
         (Some(_), Some(charges)) => {
@@ -668,9 +706,17 @@ fn validate_item_runtime_state(
         }
         _ => device_recovery_progress == 0,
     };
-    if !(-15..=15).contains(&enchantments.to_hit)
-        || !(-15..=15).contains(&enchantments.to_damage)
-        || !(-15..=15).contains(&enchantments.to_armor)
+    let limit = if definition
+        .rfb_base_kind
+        .is_some_and(|base| matches!(base.tval, 16..=23 | 34 | 36..=38))
+    {
+        255
+    } else {
+        15
+    };
+    if !(-limit..=limit).contains(&enchantments.to_hit)
+        || !(-limit..=limit).contains(&enchantments.to_damage)
+        || !(-limit..=limit).contains(&enchantments.to_armor)
     {
         return Err(CoreError::InvalidSave("item enchantment state is invalid"));
     }
@@ -1045,6 +1091,7 @@ fn rolled_affixes_to_save(rolled_affixes: &[RolledAffixState]) -> Vec<RolledAffi
                     .collect(),
                 enchantment_delta: rolled.enchantment_delta,
                 melee_damage_dice: rolled.melee_damage_dice,
+                weight_tenths_pound: rolled.weight_tenths_pound,
                 weapon_traits: rolled.weapon_traits.iter().copied().collect(),
                 curse_effects: rolled.curse_effects.iter().copied().collect(),
             }
@@ -1199,9 +1246,12 @@ fn rolled_affixes_from_save(
                 || rolled
                     .melee_damage_dice
                     .is_some_and(|dice| dice.dice == 0 || dice.sides == 0)
-                || !(-15..=15).contains(&rolled.enchantment_delta.to_hit)
-                || !(-15..=15).contains(&rolled.enchantment_delta.to_damage)
-                || !(-15..=15).contains(&rolled.enchantment_delta.to_armor)
+                || !(-255..=255).contains(&rolled.enchantment_delta.to_hit)
+                || !(-255..=255).contains(&rolled.enchantment_delta.to_damage)
+                || !(-255..=255).contains(&rolled.enchantment_delta.to_armor)
+                || rolled
+                    .weight_tenths_pound
+                    .is_some_and(|weight| weight == 0 || weight > 10_000)
             {
                 return Err(CoreError::InvalidSave(
                     "rolled affix instance state is invalid",
@@ -1239,6 +1289,7 @@ fn rolled_affixes_from_save(
                 properties,
                 enchantment_delta: rolled.enchantment_delta,
                 melee_damage_dice: rolled.melee_damage_dice,
+                weight_tenths_pound: rolled.weight_tenths_pound,
                 weapon_traits: rolled.weapon_traits.into_iter().collect(),
                 curse_effects: rolled.curse_effects.into_iter().collect(),
             };
@@ -1292,6 +1343,8 @@ fn equipment_bonuses_to_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
         life_percent: bonuses.life_percent,
         launcher_multiplier_delta_percent: bonuses.launcher_multiplier_delta_percent,
         base_shot_delta_percent: bonuses.base_shot_delta_percent,
+        melee_attacks_delta_percent: bonuses.melee_attacks_delta_percent,
+        spell_capacity_bonus: bonuses.spell_capacity_bonus,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -1315,6 +1368,8 @@ fn equipment_bonuses_from_dto(bonuses: EquipmentBonusesDto) -> EquipmentBonuses 
         life_percent: bonuses.life_percent,
         launcher_multiplier_delta_percent: bonuses.launcher_multiplier_delta_percent,
         base_shot_delta_percent: bonuses.base_shot_delta_percent,
+        melee_attacks_delta_percent: bonuses.melee_attacks_delta_percent,
+        spell_capacity_bonus: bonuses.spell_capacity_bonus,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -1357,6 +1412,8 @@ fn affix_property_bundle_out_of_range(properties: &AffixPropertyBundleDefinition
         || !(-100..=100).contains(&bonuses.life_percent)
         || !(-1_000..=1_000).contains(&bonuses.launcher_multiplier_delta_percent)
         || !(-1_000..=1_000).contains(&bonuses.base_shot_delta_percent)
+        || !(-800..=800).contains(&bonuses.melee_attacks_delta_percent)
+        || !(-100..=100).contains(&bonuses.spell_capacity_bonus)
         || [
             modifiers.strength,
             modifiers.intelligence,
@@ -1553,6 +1610,13 @@ const fn equipment_passive_dto(value: EquipmentPassive) -> EquipmentPassiveDto {
         EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
         EquipmentPassive::Warning => EquipmentPassiveDto::Warning,
         EquipmentPassive::SlowDigestion => EquipmentPassiveDto::SlowDigestion,
+        EquipmentPassive::ReflectsBolts => EquipmentPassiveDto::ReflectsBolts,
+        EquipmentPassive::FireAura => EquipmentPassiveDto::FireAura,
+        EquipmentPassive::ShardsAura => EquipmentPassiveDto::ShardsAura,
+        EquipmentPassive::ReducedManaCost => EquipmentPassiveDto::ReducedManaCost,
+        EquipmentPassive::EasySpell => EquipmentPassiveDto::EasySpell,
+        EquipmentPassive::AutoIdentify => EquipmentPassiveDto::AutoIdentify,
+        EquipmentPassive::Blessed => EquipmentPassiveDto::Blessed,
         EquipmentPassive::EspAnimal => EquipmentPassiveDto::EspAnimal,
         EquipmentPassive::EspUndead => EquipmentPassiveDto::EspUndead,
         EquipmentPassive::EspDemon => EquipmentPassiveDto::EspDemon,
@@ -1584,6 +1648,13 @@ const fn equipment_passive(value: EquipmentPassiveDto) -> EquipmentPassive {
         EquipmentPassiveDto::Levitation => EquipmentPassive::Levitation,
         EquipmentPassiveDto::Warning => EquipmentPassive::Warning,
         EquipmentPassiveDto::SlowDigestion => EquipmentPassive::SlowDigestion,
+        EquipmentPassiveDto::ReflectsBolts => EquipmentPassive::ReflectsBolts,
+        EquipmentPassiveDto::FireAura => EquipmentPassive::FireAura,
+        EquipmentPassiveDto::ShardsAura => EquipmentPassive::ShardsAura,
+        EquipmentPassiveDto::ReducedManaCost => EquipmentPassive::ReducedManaCost,
+        EquipmentPassiveDto::EasySpell => EquipmentPassive::EasySpell,
+        EquipmentPassiveDto::AutoIdentify => EquipmentPassive::AutoIdentify,
+        EquipmentPassiveDto::Blessed => EquipmentPassive::Blessed,
         EquipmentPassiveDto::EspAnimal => EquipmentPassive::EspAnimal,
         EquipmentPassiveDto::EspUndead => EquipmentPassive::EspUndead,
         EquipmentPassiveDto::EspDemon => EquipmentPassive::EspDemon,

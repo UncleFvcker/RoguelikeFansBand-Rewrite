@@ -422,7 +422,7 @@ impl Game {
         let mut from = None;
         let mut moved = false;
         if let Some((index, id, position)) = candidate {
-            let weight = u32::from(self.item_weight_tenths_pound(&self.items[index].kind_id))
+            let weight = u32::from(self.item_instance_weight(&self.items[index]))
                 .saturating_mul(self.items[index].quantity);
             item_id = Some(id);
             from = Some(position);

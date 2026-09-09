@@ -27,22 +27,22 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
+      "inventoryStackCount": 6,
+      "itemKnowledge": {
+        "demo.item.flicker-scroll": {
+          "aware": true,
+          "kindId": "demo.item.flicker-scroll",
+          "tried": true
+        }
+      },
       "lastCommandSeq": 1,
-      "stateHash": "d435aef4147fa6ee258eb374696aba7e88ad2d83f0bf94e3bd7ccbb01fee5814",
       "playerPosition": {
         "x": 34,
         "y": 14
       },
-      "inventoryStackCount": 6,
-      "itemKnowledge": {
-        "demo.item.flicker-scroll": {
-          "kindId": "demo.item.flicker-scroll",
-          "tried": true,
-          "aware": true
-        }
-      }
+      "revision": 1,
+      "stateHash": "48512082f1f260c19497ffa166441c3a080ee831f755b8ed32d6dc48849b4949",
+      "turn": 1
     },
     "events": [
       {
@@ -70,6 +70,6 @@
         }
       }
     ],
-    "saveRoundTripStateHash": "d435aef4147fa6ee258eb374696aba7e88ad2d83f0bf94e3bd7ccbb01fee5814"
+    "saveRoundTripStateHash": "48512082f1f260c19497ffa166441c3a080ee831f755b8ed32d6dc48849b4949"
   }
 }

@@ -4076,6 +4076,10 @@
           "format": "int32",
           "type": "integer"
         },
+        "meleeAttacksDeltaPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
         "meleeDamage": {
           "default": 0,
           "format": "int32",
@@ -4114,6 +4118,10 @@
           "format": "int32",
           "type": "integer"
         },
+        "spellCapacityBonus": {
+          "format": "int32",
+          "type": "integer"
+        },
         "stealthSkill": {
           "default": 0,
           "format": "int32",
@@ -4136,6 +4144,13 @@
         "levitation",
         "warning",
         "slow-digestion",
+        "reflects-bolts",
+        "fire-aura",
+        "shards-aura",
+        "reduced-mana-cost",
+        "easy-spell",
+        "auto-identify",
+        "blessed",
         "esp-animal",
         "esp-undead",
         "esp-demon",
@@ -4621,6 +4636,38 @@
             },
             "type": {
               "const": "apply-speed",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "durationDice",
+            "durationSides",
+            "durationBonus"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "durationBonus": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationDice": {
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "durationSides": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "type": {
+              "const": "apply-heroic-speed",
               "type": "string"
             }
           },
@@ -6797,6 +6844,7 @@
     },
     "RfbActivationBiasDefinition": {
       "enum": [
+        "warrior",
         "mage",
         "chaos",
         "acid",

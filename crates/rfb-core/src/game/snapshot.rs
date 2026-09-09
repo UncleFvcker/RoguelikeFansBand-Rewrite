@@ -999,7 +999,7 @@ impl Game {
                         .copied()
                         .map(item_destruction_element_to_dto)
                         .collect(),
-                    weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
+                    weight_tenths_pound: self.item_instance_weight(item),
                     equipment_slot: self
                         .content
                         .item(&item.kind_id)
@@ -1068,7 +1068,7 @@ impl Game {
                         .copied()
                         .map(item_destruction_element_to_dto)
                         .collect(),
-                    weight_tenths_pound: self.item_weight_tenths_pound(&item.kind_id),
+                    weight_tenths_pound: self.item_instance_weight(item),
                     slot_id: slot_id.clone(),
                     modifiers: self.visible_item_modifiers(item),
                     equipment_bonuses: self.visible_item_equipment_bonuses(item),

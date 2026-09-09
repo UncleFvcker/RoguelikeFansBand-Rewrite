@@ -1,0 +1,202 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-dwarven-70-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 50,
+        "effect": {
+          "effect": {
+            "type": "melee-adjacent"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-70-whirlwind-attack",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-whirlwind-attack-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 63
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 25,
+        "effect": {
+          "durationBonus": 20,
+          "durationDice": 1,
+          "durationSides": 20,
+          "type": "apply-stone-skin"
+        },
+        "id": "rfb.device-activation.ego-70-stone-skin",
+        "maxDepth": 77,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-stone-skin-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1500
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 15,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 25,
+            "durationTicks": 25,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.heroism",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-70-heroism",
+        "maxDepth": 47,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-heroism-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "warrior",
+          "priestly",
+          "demon"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 255
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 20,
+        "effect": {
+          "durationBonus": 25,
+          "durationDice": 1,
+          "durationSides": 25,
+          "type": "apply-berserk-strength"
+        },
+        "id": "rfb.device-activation.ego-70-berserk",
+        "maxDepth": 62,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-berserk-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 1000
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 127
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 35,
+        "effect": {
+          "durationBonus": 17,
+          "durationDice": 1,
+          "durationSides": 17,
+          "type": "apply-heroic-speed"
+        },
+        "id": "rfb.device-activation.ego-70-speed-hero",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-speed-hero-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 2000
+        },
+        "rfbBiases": [
+          "warrior"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 42
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.dwarven-70",
+  "nameKey": "affix-legacy-dwarven-70-name",
+  "rfbEgo": {
+    "rarity": 3,
+    "sourceIndex": 70,
+    "types": [
+      "body-armor"
+    ]
+  },
+  "tags": [
+    "body-armor",
+    "legacy-import"
+  ]
+}

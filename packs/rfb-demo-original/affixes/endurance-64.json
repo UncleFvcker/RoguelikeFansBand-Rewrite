@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-endurance-64-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "generationMaxLevel": 70,
+  "id": "rfb-legacy.affix.endurance-64",
+  "nameKey": "affix-legacy-endurance-64-name",
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 64,
+    "types": [
+      "shield"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "shield"
+  ]
+}

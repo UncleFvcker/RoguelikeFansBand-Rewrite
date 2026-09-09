@@ -64,6 +64,13 @@ pub enum EquipmentPassive {
     Levitation,
     Warning,
     SlowDigestion,
+    ReflectsBolts,
+    FireAura,
+    ShardsAura,
+    ReducedManaCost,
+    EasySpell,
+    AutoIdentify,
+    Blessed,
     EspAnimal,
     EspUndead,
     EspDemon,
@@ -473,6 +480,11 @@ pub enum ItemUseEffectDefinition {
         duration_sides: u32,
         duration_bonus: u32,
     },
+    ApplyHeroicSpeed {
+        duration_dice: u16,
+        duration_sides: u32,
+        duration_bonus: u32,
+    },
     ApplyHeroism {
         duration_dice: u16,
         duration_sides: u32,
@@ -865,6 +877,7 @@ pub struct ItemDeviceChargeRangeDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "kebab-case")]
 pub enum RfbActivationBiasDefinition {
+    Warrior,
     Mage,
     Chaos,
     Acid,

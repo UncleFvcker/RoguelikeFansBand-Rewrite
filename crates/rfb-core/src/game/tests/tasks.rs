@@ -75,7 +75,7 @@ fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
     let mut saw_rfb_ammunition_ego = false;
     let mut saw_rfb_harp_ego = false;
     let mut saw_rolled_rfb_ego = false;
-    let mut saw_protection = false;
+    let mut saw_armor = false;
     let mut saw_fine_incompatible_fallback = false;
     // Named seeds cover each natural-ego pool and the incompatible-quality fallback.
     for (seed, kind_id, affix_id) in [
@@ -83,7 +83,11 @@ fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
         (9, "demo.item.hard-leather-armour", ""),
         (44, "demo.item.sling", "rfb-legacy.affix.the-hunter"),
         (114, "demo.item.scimitar", "rfb-legacy.affix.slaying"),
-        (248, "demo.item.filthy-rag", "rfb-legacy.affix.protection"),
+        (
+            248,
+            "demo.item.filthy-rag",
+            "rfb-legacy.affix.celestial-protection",
+        ),
         (305, "demo.item.pick", "rfb-legacy.affix.digging"),
         (1124, "demo.item.harp", "rfb-legacy.affix.erebor"),
         (9477, "demo.item.sling", "rfb-legacy.affix.buckland"),
@@ -122,6 +126,10 @@ fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
                     .rfb_base_kind
                     .expect("RFB ego target should retain source base identity");
                 match rfb_ego.source_index {
+                    50..=53 | 60..=64 | 70..=77 | 80..=82 | 85..=92 => {
+                        saw_armor = true;
+                        assert!(matches!(base_kind.tval, 34 | 36..=38));
+                    }
                     1..=27 | 40..=42 => {
                         saw_rfb_weapon_or_digger_ego = true;
                         assert!(matches!(base_kind.tval, 20..=23));
@@ -149,14 +157,6 @@ fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
                     }
                     index => panic!("unexpected natural RFB ego source index {index}"),
                 }
-            } else if item.affix_ids == ["rfb-legacy.affix.protection"] {
-                saw_protection = true;
-                assert!(matches!(
-                    definition.equipment_slot.as_deref(),
-                    Some("body" | "shield" | "cloak" | "head" | "gloves" | "boots")
-                ));
-                let defense = item.rolled_affixes[0].properties.modifiers.defense;
-                assert!((1..=10).contains(&defense));
             } else if item.quality == ItemQualityDto::Fine
                 && definition.equipment_slot.as_deref() != Some("weapon")
             {
@@ -170,7 +170,7 @@ fn base_item_natural_egos_cover_completed_weapon_digger_and_ranged_types() {
     assert!(saw_rfb_ammunition_ego);
     assert!(saw_rfb_harp_ego);
     assert!(saw_rolled_rfb_ego);
-    assert!(saw_protection);
+    assert!(saw_armor);
     assert!(saw_fine_incompatible_fallback);
 }
 

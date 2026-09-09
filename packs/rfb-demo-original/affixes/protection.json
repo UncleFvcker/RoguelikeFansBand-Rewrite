@@ -1,28 +1,120 @@
 {
   "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
-  "formatVersion": 1,
-  "id": "rfb-legacy.affix.protection",
-  "nameKey": "affix-legacy-protection-name",
   "descriptionKey": "affix-legacy-protection-description",
+  "elementalDestructionImmunities": [
+    "acid"
+  ],
+  "formatVersion": 1,
   "generationLevel": 0,
   "generationMaxLevel": 30,
-  "elementalDestructionImmunities": ["acid"],
+  "id": "rfb-legacy.affix.protection",
+  "nameKey": "affix-legacy-protection-name",
+  "rfbEgo": {
+    "rarity": 2,
+    "sourceIndex": 50,
+    "types": [
+      "body-armor",
+      "shield",
+      "cloak",
+      "helmet",
+      "gloves",
+      "boots"
+    ]
+  },
   "rollGroups": [
     {
-      "rolls": 1,
       "candidates": [
-        { "weight": 1, "properties": { "modifiers": { "defense": 1 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 2 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 3 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 4 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 5 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 6 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 7 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 8 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 9 } } },
-        { "weight": 1, "properties": { "modifiers": { "defense": 10 } } }
-      ]
+        {
+          "properties": {
+            "modifiers": {
+              "defense": 1
+            }
+          },
+          "weight": 1
+        },
+        {
+          "properties": {
+            "modifiers": {
+              "defense": 2
+            }
+          },
+          "weight": 1
+        },
+        {
+          "properties": {
+            "modifiers": {
+              "defense": 3
+            }
+          },
+          "weight": 1
+        },
+        {
+          "properties": {
+            "modifiers": {
+              "defense": 4
+            }
+          },
+          "weight": 1
+        },
+        {
+          "properties": {
+            "modifiers": {
+              "defense": 5
+            }
+          },
+          "weight": 1
+        },
+        {
+          "properties": {
+            "modifiers": {
+              "defense": 6
+            }
+          },
+          "weight": 1
+        },
+        {
+          "properties": {
+            "modifiers": {
+              "defense": 7
+            }
+          },
+          "weight": 1
+        },
+        {
+          "properties": {
+            "modifiers": {
+              "defense": 8
+            }
+          },
+          "weight": 1
+        },
+        {
+          "properties": {
+            "modifiers": {
+              "defense": 9
+            }
+          },
+          "weight": 1
+        },
+        {
+          "properties": {
+            "modifiers": {
+              "defense": 10
+            }
+          },
+          "weight": 1
+        }
+      ],
+      "rolls": 1
     }
   ],
-  "tags": ["body-armor", "boots", "cloak", "gloves", "helmet", "legacy-import", "shield"]
+  "tags": [
+    "body-armor",
+    "boots",
+    "cloak",
+    "gloves",
+    "helmet",
+    "legacy-import",
+    "shield"
+  ]
 }

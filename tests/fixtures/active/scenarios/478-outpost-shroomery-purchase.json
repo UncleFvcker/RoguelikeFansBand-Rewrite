@@ -26,28 +26,28 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
-      "lastCommandSeq": 1,
-      "stateHash": "cb3999c19fb44ea9f2ddd45a3ea884d5597320bc5d0bf19a186102b69979811c",
-      "playerPosition": {
-        "x": 61,
-        "y": 19
-      },
-      "playerGold": 999880,
-      "inventoryStackCount": 9,
       "inventory": {
         "generated.item.203": {
           "kindId": "demo.item.cure-poison-mushroom",
           "quantity": 1
         }
       },
+      "inventoryStackCount": 9,
+      "lastCommandSeq": 1,
+      "playerGold": 999880,
+      "playerPosition": {
+        "x": 61,
+        "y": 19
+      },
+      "revision": 1,
       "shops": {
         "demo.shop.outpost-shroomery": {
-          "visited": true,
-          "playerAtEntrance": true
+          "playerAtEntrance": true,
+          "visited": true
         }
-      }
+      },
+      "stateHash": "f868de6e059270cf8e83a3cdd03a7847470bc9fe0d25574812ff77c9f491e95c",
+      "turn": 1
     },
     "events": [
       {

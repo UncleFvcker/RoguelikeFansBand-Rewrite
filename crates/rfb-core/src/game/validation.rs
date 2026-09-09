@@ -116,10 +116,19 @@ pub(super) fn rolled_affixes_are_valid(item: &ItemInstance) -> bool {
                 && rolled
                     .melee_damage_dice
                     .is_none_or(|dice| dice.dice > 0 && dice.sides > 0)
-                && (-15..=15).contains(&rolled.enchantment_delta.to_hit)
-                && (-15..=15).contains(&rolled.enchantment_delta.to_damage)
-                && (-15..=15).contains(&rolled.enchantment_delta.to_armor)
+                && (-255..=255).contains(&rolled.enchantment_delta.to_hit)
+                && (-255..=255).contains(&rolled.enchantment_delta.to_damage)
+                && (-255..=255).contains(&rolled.enchantment_delta.to_armor)
+                && rolled
+                    .weight_tenths_pound
+                    .is_none_or(|weight| (1..=10_000).contains(&weight))
         })
+        && item
+            .rolled_affixes
+            .iter()
+            .filter(|rolled| rolled.weight_tenths_pound.is_some())
+            .count()
+            <= 1
 }
 
 fn item_creation_state_is_valid(
@@ -141,7 +150,25 @@ fn item_creation_state_is_valid(
     let damage_override_is_valid = item.damage_dice_override.is_none_or(|dice| {
         (1..=9).contains(&dice) && definition.tags.iter().any(|tag| tag == "ammunition")
     });
-    let enchantments_are_valid = [-15..=15, -15..=15, -15..=15]
+    let armor = definition
+        .rfb_base_kind
+        .is_some_and(|base| matches!(base.tval, 34 | 36..=38));
+    let limit = if definition
+        .rfb_base_kind
+        .is_some_and(|base| matches!(base.tval, 16..=23 | 34 | 36..=38))
+    {
+        255
+    } else {
+        15
+    };
+    let weight_is_valid = item.rolled_affixes.iter().all(|rolled| {
+        rolled.weight_tenths_pound.is_none_or(|weight| {
+            armor
+                && (weight == definition.weight_tenths_pound * 2 / 3
+                    || weight == definition.weight_tenths_pound / 2)
+        })
+    });
+    let enchantments_are_valid = [-limit..=limit, -limit..=limit, -limit..=limit]
         .into_iter()
         .zip([
             item.enchantments.to_hit,
@@ -149,7 +176,10 @@ fn item_creation_state_is_valid(
             item.enchantments.to_armor,
         ])
         .all(|(range, value)| range.contains(&value));
-    player_made_state_is_valid && damage_override_is_valid && enchantments_are_valid
+    player_made_state_is_valid
+        && damage_override_is_valid
+        && enchantments_are_valid
+        && weight_is_valid
 }
 
 pub(super) fn floor_regions_are_valid(

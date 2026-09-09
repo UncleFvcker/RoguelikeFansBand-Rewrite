@@ -23,7 +23,7 @@ fn mattock_natural_disruption_activation_round_trips() {
             actor_id: "test.loot-source".to_owned(),
         },
     };
-    game.rng = RfbRng::seeded(1927);
+    game.rng = RfbRng::seeded(4924);
     let mut drops = game
         .generate_loot_instances(&context, ItemLocation::Inventory)
         .unwrap();
@@ -38,8 +38,8 @@ fn mattock_natural_disruption_activation_round_trips() {
         rolled.melee_damage_dice,
         Some(rfb_protocol::MeleeDamageDiceDto { dice: 3, sides: 9 })
     );
-    assert_eq!(rolled.properties.modifiers.strength, 2);
-    assert_eq!(rolled.properties.equipment_bonuses.digging_skill, 2);
+    assert_eq!(rolled.properties.modifiers.strength, 4);
+    assert_eq!(rolled.properties.equipment_bonuses.digging_skill, 4);
     assert_eq!(item.enchantments.to_damage, 7);
     assert_eq!(
         item.activation.as_ref().unwrap().profile_id,

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MPL-2.0
 
 use super::*;
+mod ty_curse;
 
 const EQUIPMENT_CURSE_INTERVAL_TICKS: u32 = 10;
 const RANDOM_TELEPORT_ONE_IN: u64 = 200;
@@ -10,6 +11,10 @@ fn rfb_ego_intrinsic_curse_effect(source_index: Option<u32>, effect: ItemCurseEf
         (source_index, effect),
         (Some(11 | 21 | 27), ItemCurseEffectDto::Aggravate)
             | (Some(15), ItemCurseEffectDto::Teleport)
+            | (
+                Some(74),
+                ItemCurseEffectDto::Aggravate | ItemCurseEffectDto::TyCurse
+            )
     )
 }
 
@@ -71,12 +76,28 @@ impl Game {
         &mut self,
         events: &mut Vec<DomainEvent>,
         changed: &mut BTreeSet<Position>,
-    ) {
+        removed_entities: &mut Vec<String>,
+    ) -> Result<(), CoreError> {
         if !self
             .world_tick
             .is_multiple_of(EQUIPMENT_CURSE_INTERVAL_TICKS)
         {
-            return;
+            return Ok(());
+        }
+        if let Some(source) = self
+            .items
+            .iter()
+            .find(|item| {
+                self.item_has_active_equipped_curse_effect(item, ItemCurseEffectDto::TyCurse)
+            })
+            .map(|item| item.kind_id.clone())
+            && self.rng.bounded(200) == 0
+        {
+            self.resolve_equipped_ty_curse(&source, events, changed, removed_entities)?;
+            changed.insert(self.player.position);
+            if self.player_is_dead() {
+                return Ok(());
+            }
         }
         let cursed_teleport = self.items.iter().any(|item| {
             item.curse.is_some()
@@ -93,16 +114,17 @@ impl Game {
         if (!cursed_teleport && !intrinsic_teleport)
             || self.rng.bounded(RANDOM_TELEPORT_ONE_IN) != 0
         {
-            return;
+            return Ok(());
         }
 
         let candidates = self.random_teleport_candidates(if cursed_teleport { 40 } else { 50 });
         if candidates.is_empty() {
-            return;
+            return Ok(());
         }
         let index = usize::try_from(self.rng.bounded(candidates.len() as u64))
             .expect("bounded equipment teleport candidate index must fit usize");
         events.extend(self.relocate_player(candidates[index], changed));
+        Ok(())
     }
 }
 
@@ -330,12 +352,14 @@ mod tests {
         game.rng = RfbRng::seeded(seed);
         game.world_tick = 9;
         let draws_before = game.rng_draw_counter();
-        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new());
+        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
         assert_eq!(game.player.position, Position { x: 3, y: 3 });
         assert_eq!(game.rng_draw_counter(), draws_before);
 
         game.world_tick = 10;
-        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new());
+        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
         assert_ne!(game.player.position, Position { x: 3, y: 3 });
 
         game.remove_equipped_curses(RemoveEquippedCursesRequest::new(true));
@@ -343,7 +367,8 @@ mod tests {
         game.rng = RfbRng::seeded(seed);
         game.world_tick = 20;
         let draws_before = game.rng_draw_counter();
-        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new());
+        game.process_equipped_curse_effects(&mut Vec::new(), &mut BTreeSet::new(), &mut Vec::new())
+            .unwrap();
         assert_eq!(game.player.position, Position { x: 3, y: 3 });
         assert_eq!(game.rng_draw_counter(), draws_before);
     }

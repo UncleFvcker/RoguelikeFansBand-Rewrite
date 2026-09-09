@@ -123,6 +123,10 @@
     { "sourceIndex": 722, "id": "fabric-bag" },
     { "sourceIndex": 723, "id": "leather-pouch" },
     { "sourceIndex": 724, "id": "dwarven-backpack" },
-    { "sourceIndex": 310, "id": "ring" }
+    { "sourceIndex": 310, "id": "ring" },
+    {"id":"yoiyami-robe","sourceId":"robe","sourceIndex":261},
+    {"id":"law-dragon-scale-mail","sourceId":"law-dragon-scale-mail","sourceIndex":299},
+    {"id":"gold-dragon-scale-mail","sourceId":"gold-dragon-scale-mail","sourceIndex":302},
+    {"id":"chaos-dragon-scale-mail","sourceId":"chaos-dragon-scale-mail","sourceIndex":303}
   ]
 }

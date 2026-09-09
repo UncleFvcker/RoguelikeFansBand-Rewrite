@@ -122,6 +122,7 @@ pub(crate) struct RolledAffixState {
     pub(crate) properties: AffixPropertyBundleDefinition,
     pub(crate) enchantment_delta: ItemEnchantmentsDto,
     pub(crate) melee_damage_dice: Option<MeleeDamageDiceDto>,
+    pub(crate) weight_tenths_pound: Option<u16>,
     pub(crate) weapon_traits: BTreeSet<WeaponTraitDto>,
     pub(crate) curse_effects: BTreeSet<ItemCurseEffectDto>,
 }
@@ -131,6 +132,7 @@ impl RolledAffixState {
         self.properties != AffixPropertyBundleDefinition::default()
             || !self.enchantment_delta.is_empty()
             || self.melee_damage_dice.is_some()
+            || self.weight_tenths_pound.is_some()
             || !self.weapon_traits.is_empty()
             || !self.curse_effects.is_empty()
     }

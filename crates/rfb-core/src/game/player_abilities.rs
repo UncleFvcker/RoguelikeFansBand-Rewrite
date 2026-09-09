@@ -440,6 +440,10 @@ impl Game {
         let proficiency = self.ability_progress_value(ability).proficiency;
         let proficiency_adjustment =
             i32::from(proficiency >= SPELL_EXP_EXPERT) + i32::from(proficiency >= SPELL_EXP_MASTER);
+        let easy_spell = i32::from(
+            self.player_equipment_passives()
+                .contains(&EquipmentPassive::EasySpell),
+        );
         let chance = match profile.failure_formula {
             CastingFailureFormula::Linear => i32::from(player.base_failure_percent)
                 .saturating_sub(level_adjustment)
@@ -468,8 +472,10 @@ impl Game {
                     .saturating_sub(attribute_adjustment)
                     .saturating_add(modifier_percent)
                     .saturating_add(i32::try_from(resource_penalty).unwrap_or(i32::MAX))
+                    .saturating_sub(4 * easy_spell)
                     .clamp(i32::from(minimum_failure_percent), 95)
                     .saturating_sub(proficiency_adjustment)
+                    .saturating_sub(easy_spell)
                     .max(0)
             }
         };
@@ -535,19 +541,22 @@ impl Game {
                 let ItemLocation::Equipped { .. } = &item.location else {
                     return None;
                 };
-                self.content.item(&item.kind_id)
+                self.content
+                    .item(&item.kind_id)
+                    .map(|definition| (item, definition))
             });
             let mut weight = 0_u32;
             let mut cumbersome_gloves = false;
-            for item in equipped {
+            for (instance, item) in equipped {
                 match item.equipment_slot.as_deref() {
                     Some("body" | "head" | "shield" | "cloak" | "gloves" | "boots") => {
-                        weight = weight.saturating_add(u32::from(item.weight_tenths_pound));
+                        weight =
+                            weight.saturating_add(u32::from(self.item_instance_weight(instance)));
                         cumbersome_gloves |= item.equipment_slot.as_deref() == Some("gloves");
                     }
                     Some("weapon") => {
                         weight = weight.saturating_add(
-                            u32::from(item.weight_tenths_pound)
+                            u32::from(self.item_instance_weight(instance))
                                 .saturating_mul(u32::from(encumbrance.weapon_weight_percent))
                                 / 100,
                         );
@@ -569,6 +578,7 @@ impl Game {
             .saturating_mul(5);
         let capacity_percent = i32::from(profile.capacity_percent)
             .saturating_add(racial_capacity_percent)
+            .saturating_add(self.player_equipment_bonuses().spell_capacity_bonus * 5)
             .max(0);
         maximum.saturating_mul(u32::try_from(capacity_percent).unwrap_or(u32::MAX)) / 100
     }
@@ -1146,8 +1156,16 @@ impl Game {
         let numerator = u64::from(player.resource_cost)
             .saturating_mul(factor)
             .saturating_add(SPELL_MANA_CONST.saturating_sub(1));
-        u32::try_from((numerator / SPELL_MANA_CONST).max(1))
-            .expect("validated ability mana cost must fit u32")
+        let cost = u32::try_from((numerator / SPELL_MANA_CONST).max(1))
+            .expect("validated ability mana cost must fit u32");
+        if self
+            .player_equipment_passives()
+            .contains(&EquipmentPassive::ReducedManaCost)
+        {
+            (cost * 3 / 4).max(1)
+        } else {
+            cost
+        }
     }
 
     pub(super) fn ability_cooldown_turns(&self, ability_id: &str) -> u16 {

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-augmentation-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.augmentation",
+  "nameKey": "affix-legacy-augmentation-name",
+  "rfbEgo": {
+    "rarity": 10,
+    "sourceIndex": 76,
+    "types": [
+      "body-armor"
+    ]
+  },
+  "tags": [
+    "body-armor",
+    "legacy-import"
+  ]
+}

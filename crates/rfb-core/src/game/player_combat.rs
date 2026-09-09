@@ -1495,7 +1495,7 @@ impl Game {
             .item(&item.kind_id)
             .expect("throwable item definition must remain available");
         let mighty_throw = self.player_has_mighty_throw();
-        let range = throw_range(definition.weight_tenths_pound, mighty_throw);
+        let range = throw_range(self.item_instance_weight(item), mighty_throw);
         let profile = definition
             .throw_profile
             .as_ref()
@@ -1839,6 +1839,11 @@ impl Game {
             });
             let vampiric_weapon =
                 matches!(strike_mode, Some(DraconianStrikeModeDefinition::Vampiric))
+                    || (profile.source_item_id.is_some() && self.items.iter().any(|item| {
+                        matches!(&item.location, ItemLocation::Equipped { slot_id }
+                            if matches!(self.body_slot_type(slot_id), Some("body" | "shield" | "head" | "cloak" | "gloves" | "boots")))
+                            && self.item_passives(item).contains(&EquipmentPassive::Vampiric)
+                    }))
                     || profile.source_item_id.as_ref().is_some_and(|item_id| {
                         self.items
                             .iter()

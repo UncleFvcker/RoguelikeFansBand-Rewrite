@@ -2,6 +2,8 @@
 
 use std::collections::BTreeSet;
 
+mod armor;
+
 use rfb_content::{
     ActorDamageType, ActorResistanceLevel, AffixDefinition, AffixPropertyBundleDefinition,
     ContentCatalog, EquipmentPassive, ItemDefinition, ItemDeviceActivationDefinition,
@@ -24,6 +26,8 @@ use super::{initial_item_runtime_state, merge_equipment_bonuses, roll_weighted_i
 /// Complete generated affix state shared by content-driven consumers.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(super) struct EgoMaterialization {
+    pub(super) kind_id_override: Option<String>,
+    pub(super) clear_armor_enchantment: bool,
     pub(super) affix_ids: Vec<String>,
     pub(super) rolled_affixes: Vec<RolledAffixState>,
     pub(super) intrinsic_properties: Option<AffixPropertyBundleDefinition>,
@@ -79,6 +83,8 @@ impl EgoMaterialization {
             .flat_map(|rolled| rolled.curse_effects.iter().copied())
             .collect();
         Self {
+            kind_id_override: None,
+            clear_armor_enchantment: false,
             affix_ids,
             rolled_affixes,
             intrinsic_properties,
@@ -95,6 +101,12 @@ impl EgoMaterialization {
 
     /// Commits a fully prepared materialization to an existing item in one step.
     pub(super) fn apply_to(self, item: &mut ItemInstance) {
+        if let Some(kind_id) = self.kind_id_override {
+            item.kind_id = kind_id;
+        }
+        if self.clear_armor_enchantment {
+            item.enchantments.to_armor = 0;
+        }
         let enchantments = ItemEnchantmentsDto {
             to_hit: item
                 .enchantments
@@ -136,6 +148,19 @@ pub(super) fn materialize_ego_with_rng(
     activation_depth: u16,
 ) -> EgoMaterialization {
     affix_ids.sort();
+    if let [affix_id] = affix_ids.as_slice()
+        && let Some(item) = content.item(kind_id)
+        && let Some(affix) = content.affix(affix_id)
+        && let Some(ego) = affix.rfb_ego.as_ref()
+        && let Some(base) = item.rfb_base_kind
+        && armor::can_apply(ego.source_index, base.tval, base.sval)
+    {
+        loop {
+            if let Some(result) = armor::materialize(rng, item, affix, roll_depth(affix)) {
+                return result;
+            }
+        }
+    }
     debug_assert!(affix_ids.windows(2).all(|pair| pair[0] != pair[1]));
     let rolled_affixes = roll_affix_properties_with_rng(content, rng, &affix_ids, roll_depth);
     let (activation, charges) =
@@ -1141,6 +1166,20 @@ fn materialize_rfb_activation(
     )
 }
 
+pub(super) fn roll_rfb_armor_enchantment(
+    rng: &mut RfbRng,
+    level: u16,
+    quality: rfb_protocol::ItemQualityDto,
+) -> i16 {
+    let first = randint1(rng, 5) + rfb_m_bonus(rng, 5, level);
+    let second = rfb_m_bonus(rng, 10, level);
+    match quality {
+        rfb_protocol::ItemQualityDto::Ordinary => 0,
+        rfb_protocol::ItemQualityDto::Fine => first as i16,
+        rfb_protocol::ItemQualityDto::Exceptional => (first + second) as i16,
+    }
+}
+
 pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
     rng: &mut RfbRng,
     item: &ItemDefinition,
@@ -1159,6 +1198,16 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
         RfbEgoTypeDefinition::Harp
     } else if base_kind.tval == TV_BOW {
         RfbEgoTypeDefinition::Bow
+    } else if base_kind.tval == 34 {
+        RfbEgoTypeDefinition::Shield
+    } else if base_kind.tval == 38 {
+        RfbEgoTypeDefinition::DragonArmor
+    } else if matches!(base_kind.tval, 36 | 37) {
+        if base_kind.tval == 36 && base_kind.sval == 2 && generation_level >= 30 && one_in(rng, 7) {
+            RfbEgoTypeDefinition::Robe
+        } else {
+            RfbEgoTypeDefinition::BodyArmor
+        }
     } else {
         return None;
     };
@@ -1188,6 +1237,12 @@ pub(super) fn roll_and_materialize_rfb_ego_from_affixes_with_rng<'a>(
             .find(|affix| affix.id == affix_id)
             .expect("selected ego affix remains available");
         let materialized = match allowed_type {
+            RfbEgoTypeDefinition::Shield
+            | RfbEgoTypeDefinition::BodyArmor
+            | RfbEgoTypeDefinition::Robe
+            | RfbEgoTypeDefinition::DragonArmor => {
+                armor::materialize(rng, item, affix, generation_level)
+            }
             RfbEgoTypeDefinition::Ammo => {
                 materialize_rfb_ammunition_ego_with_rng(rng, item, affix, generation_level)
             }
@@ -1216,6 +1271,7 @@ fn rfb_ego_can_apply_to_base(
         .map(|profile| profile.damage_dice.saturating_mul(profile.damage_sides))
         .unwrap_or_default();
     match source_index {
+        50..=92 => armor::can_apply(source_index, tval, sval),
         2 => matches!(tval, TV_POLEARM | TV_SWORD),
         6 => tval == TV_HAFTED && sval == SV_WIZSTAFF,
         23 => tval == TV_SWORD && sval != SV_BLADE_OF_CHAOS && dice_product >= 10,
@@ -2227,12 +2283,12 @@ mod tests {
     }
 
     #[test]
-    fn armor_base_identities_do_not_open_ego_generation_or_consume_rng() {
+    fn unfinished_armor_types_do_not_open_ego_generation_or_consume_rng() {
         let game = Game::new(1);
         let mut checked = 0;
         for item in game.content.item_definitions().filter(|item| {
             item.rfb_base_kind
-                .is_some_and(|kind| (30..=38).contains(&kind.tval))
+                .is_some_and(|kind| matches!(kind.tval, 30..=33 | 35))
         }) {
             for level in [1, 30, 80, 100] {
                 let mut rng = RfbRng::seeded(0xE5_0000);
@@ -2252,7 +2308,7 @@ mod tests {
             }
             checked += 1;
         }
-        assert_eq!(checked, 38);
+        assert_eq!(checked, 16);
     }
 
     fn rfb_weapon_item(tval: u16, sval: u16) -> ItemDefinition {
@@ -3034,19 +3090,19 @@ mod tests {
     }
 
     #[test]
-    fn ego_materialization_preserves_roll_then_activation_rng_order() {
+    fn fixed_armor_rewards_use_the_same_materializer_as_natural_egos() {
         let game = Game::new(91);
         let affix_ids = vec!["rfb-legacy.affix.olog-hai".to_owned()];
         let mut expected_rng = RfbRng::seeded(91);
-        let expected_rolls =
-            roll_affix_properties_with_rng(&game.content, &mut expected_rng, &affix_ids, |_| 36);
-        let (expected_activation, expected_charges) = initial_item_runtime_state(
-            &game.content,
+        let expected = armor::materialize(
             &mut expected_rng,
-            "demo.item.metal-lamellar-armour",
-            &affix_ids,
+            game.content
+                .item("demo.item.metal-lamellar-armour")
+                .unwrap(),
+            game.content.affix(&affix_ids[0]).unwrap(),
             36,
-        );
+        )
+        .unwrap();
 
         let mut rng = RfbRng::seeded(91);
         let materialized = materialize_ego_with_rng(
@@ -3059,9 +3115,7 @@ mod tests {
         );
 
         assert_eq!(materialized.affix_ids, affix_ids);
-        assert_eq!(materialized.rolled_affixes, expected_rolls);
-        assert_eq!(materialized.activation, expected_activation);
-        assert_eq!(materialized.charges, expected_charges);
+        assert_eq!(materialized, expected);
         assert_eq!(rng, expected_rng);
     }
 
@@ -3209,7 +3263,7 @@ mod tests {
 
     #[test]
     fn ranged_materialization_state_is_atomic_projected_and_save_stable() {
-        assert_eq!(STATE_HASH_SCHEMA_VERSION, 108);
+        assert_eq!(STATE_HASH_SCHEMA_VERSION, 109);
         let intrinsic_properties = AffixPropertyBundleDefinition {
             modifiers: StatModifiers {
                 charisma: 2,

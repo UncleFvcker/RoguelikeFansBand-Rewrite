@@ -10,6 +10,7 @@ mod armor_ego_audit;
 mod mutation_audit;
 
 pub use armor_ego_audit::sync_demo_armor_ego_identities;
+pub use armor_ego_audit::sync_demo_front_armor_egos;
 pub use mutation_audit::{DemoMutationCoverageReport, audit_demo_mutations};
 
 use std::{
@@ -4686,6 +4687,12 @@ fn equipment_fold(flags: &[String], pval: i32) -> EquipmentFold {
     }
     for (flag, passive) in [
         ("REGEN", "regeneration"),
+        ("REFLECT", "reflects-bolts"),
+        ("AURA_FIRE", "fire-aura"),
+        ("AURA_SHARDS", "shards-aura"),
+        ("DEC_MANA", "reduced-mana-cost"),
+        ("EASY_SPELL", "easy-spell"),
+        ("LORE2", "auto-identify"),
         ("SEE_INVIS", "see-invisible"),
         ("BRAND_VAMP", "vampiric"),
         ("HOLD_LIFE", "hold-life"),
@@ -4945,11 +4952,12 @@ fn weapon_ego_device_generation(
 }
 
 fn uses_shared_ego_materialization(entry: &LegacyEgoEntry) -> bool {
-    (matches!(entry.index, 1..=27 | 40..=42)
-        && entry
-            .slots
-            .iter()
-            .any(|slot| matches!(slot.as_str(), "WEAPON" | "DIGGER")))
+    matches!(entry.index, 50..=53 | 60..=64 | 70..=77 | 80..=82 | 85..=92)
+        || (matches!(entry.index, 1..=27 | 40..=42)
+            && entry
+                .slots
+                .iter()
+                .any(|slot| matches!(slot.as_str(), "WEAPON" | "DIGGER")))
         || (matches!(entry.index, 160..=167 | 180..=185 | 195..=196)
             && entry
                 .slots

@@ -1616,7 +1616,7 @@ impl Game {
         None
     }
 
-    fn original_scatter_position(
+    pub(super) fn original_scatter_position(
         &mut self,
         terrain: &[String],
         width: u16,

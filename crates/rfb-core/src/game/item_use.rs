@@ -2510,6 +2510,7 @@ impl Game {
                     &self.content,
                     &self.items[index].kind_id,
                     &self.items[index].affix_ids,
+                    Some(&activation.profile_id),
                 )
                 .and_then(|generation| {
                     generation
@@ -2705,6 +2706,7 @@ impl Game {
                 | ItemUseEffectDefinition::Bless { .. }
                 | ItemUseEffectDefinition::ApplySlowness { .. }
                 | ItemUseEffectDefinition::ApplySpeed { .. }
+                | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
                 | ItemUseEffectDefinition::ApplyHeroism { .. }
                 | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
                 | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
@@ -3178,6 +3180,7 @@ impl Game {
             | ItemUseEffectDefinition::Bless { .. }
             | ItemUseEffectDefinition::ApplySlowness { .. }
             | ItemUseEffectDefinition::ApplySpeed { .. }
+            | ItemUseEffectDefinition::ApplyHeroicSpeed { .. }
             | ItemUseEffectDefinition::ApplyHeroism { .. }
             | ItemUseEffectDefinition::ApplyBerserkStrength { .. }
             | ItemUseEffectDefinition::ApplyPoeticInspiration { .. }
@@ -4029,7 +4032,7 @@ impl Game {
         noticed
     }
 
-    fn resolve_item_experience_loss(
+    pub(super) fn resolve_item_experience_loss(
         &mut self,
         source_kind_id: &str,
         divisor: u8,
@@ -5069,6 +5072,43 @@ impl Game {
                 *duration_bonus,
                 events,
             ),
+            ItemUseEffectDefinition::ApplyHeroicSpeed {
+                duration_dice,
+                duration_sides,
+                duration_bonus,
+            } => {
+                let duration = self.roll_damage(*duration_dice, *duration_sides as u16) as u32
+                    + *duration_bonus;
+                let mut haste =
+                    super::monster_combat::melee_status(STATUS_HASTE, duration, source_kind_id);
+                haste.stacking = StatusStacking::KeepStrongest;
+                let speed = matches!(
+                    apply_status_application(&mut self.player.statuses, haste).change,
+                    StatusChange::Added
+                );
+                events.push(DomainEvent::ItemSpeedResolved {
+                    source_kind_id: source_kind_id.to_owned(),
+                    display_name_key: self.item_display_name_key(source_kind_id),
+                    duration,
+                });
+                let existing = self
+                    .player
+                    .statuses
+                    .iter()
+                    .find(|status| status.kind_id == "rfb.status.hero")
+                    .map_or(0, |status| status.remaining_ticks);
+                let heroism = self.resolve_item_heroism(
+                    source_kind_id,
+                    0,
+                    0,
+                    duration.saturating_sub(existing),
+                    events,
+                );
+                if speed {
+                    self.mark_item_aware(source_kind_id);
+                }
+                speed || heroism
+            }
             ItemUseEffectDefinition::ApplyHeroism {
                 duration_dice,
                 duration_sides,

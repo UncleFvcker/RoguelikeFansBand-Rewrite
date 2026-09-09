@@ -1,0 +1,31 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-the-uruk-hai-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.the-uruk-hai",
+  "nameKey": "affix-legacy-the-uruk-hai-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 8,
+    "sourceIndex": 71,
+    "types": [
+      "body-armor"
+    ]
+  },
+  "tags": [
+    "body-armor",
+    "legacy-import"
+  ]
+}

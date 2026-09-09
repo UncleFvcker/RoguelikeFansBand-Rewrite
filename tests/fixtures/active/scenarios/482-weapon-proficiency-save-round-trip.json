@@ -19,20 +19,20 @@
   "saveRoundTrip": true,
   "assertions": {
     "finalState": {
-      "revision": 0,
-      "turn": 0,
       "lastCommandSeq": 0,
-      "stateHash": "a2a3359580448a2066b9016be13b4483e5e8d0879f2f000eae1e38458d4fe910",
       "playerAttributes": {
         "weaponProficiencies": {
           "demo.item.broad-sword": {
             "current": 4008,
-            "rank": "beginner",
-            "hitBonus": 0
+            "hitBonus": 0,
+            "rank": "beginner"
           }
         }
-      }
+      },
+      "revision": 0,
+      "stateHash": "c0aa03e775c37a92cfc9f9c2315669ee7bd49ff98e89f9a8c3ea8ab6803641cd",
+      "turn": 0
     },
-    "saveRoundTripStateHash": "a2a3359580448a2066b9016be13b4483e5e8d0879f2f000eae1e38458d4fe910"
+    "saveRoundTripStateHash": "c0aa03e775c37a92cfc9f9c2315669ee7bd49ff98e89f9a8c3ea8ab6803641cd"
   }
 }

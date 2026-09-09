@@ -26,28 +26,28 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
-      "lastCommandSeq": 1,
-      "stateHash": "4aeb22c773a52e58e14a0e9785fe49d122c725fcc480a3bb4d0e685bb6713523",
-      "playerPosition": {
-        "x": 32,
-        "y": 13
-      },
-      "playerGold": 999997,
-      "inventoryStackCount": 8,
       "inventory": {
         "generated.item.1": {
           "kindId": "demo.item.ration-of-food",
           "quantity": 8
         }
       },
+      "inventoryStackCount": 8,
+      "lastCommandSeq": 1,
+      "playerGold": 999997,
+      "playerPosition": {
+        "x": 32,
+        "y": 13
+      },
+      "revision": 1,
       "shops": {
         "demo.shop.outpost-general-store": {
-          "visited": true,
-          "playerAtEntrance": true
+          "playerAtEntrance": true,
+          "visited": true
         }
-      }
+      },
+      "stateHash": "ae9eb646b2b832d90334d44e2e3175374a8653348da8cb03aedabc40c762f93a",
+      "turn": 1
     },
     "events": [
       {

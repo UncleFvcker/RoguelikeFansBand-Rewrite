@@ -226,7 +226,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 108;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 109;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -680,15 +680,25 @@ pub(crate) fn item_device_generation<'a>(
     content: &'a ContentCatalog,
     kind_id: &str,
     affix_ids: &[String],
+    profile_id: Option<&str>,
 ) -> Option<&'a ItemDeviceGenerationDefinition> {
     let definition = content.item(kind_id)?;
-    definition.device_generation.as_ref().or_else(|| {
-        affix_ids.iter().find_map(|affix_id| {
+    definition
+        .device_generation
+        .iter()
+        .chain(affix_ids.iter().filter_map(|affix_id| {
             content
                 .affix(affix_id)
                 .and_then(|affix| affix.device_generation.as_ref())
+        }))
+        .find(|generation| {
+            profile_id.is_none_or(|id| {
+                generation
+                    .activations
+                    .iter()
+                    .any(|profile| profile.id == id)
+            })
         })
-    })
 }
 
 fn initial_item_runtime_state(
@@ -701,7 +711,7 @@ fn initial_item_runtime_state(
     if content.item(kind_id).is_none() {
         return (None, None);
     }
-    let Some(generation) = item_device_generation(content, kind_id, affix_ids) else {
+    let Some(generation) = item_device_generation(content, kind_id, affix_ids, None) else {
         return (None, initial_item_charges(content, kind_id));
     };
     let power = depth.clamp(1, 100);
@@ -3353,14 +3363,21 @@ impl Game {
             return Ok(None);
         }
         if let Some(activation) = &item.activation
-            && item_device_generation(&self.content, &item.kind_id, &item.affix_ids)
-                .and_then(|generation| {
-                    generation
-                        .activations
-                        .iter()
-                        .find(|profile| profile.id == activation.profile_id)
-                })
-                .is_none()
+            && item_device_generation(
+                &self.content,
+                &item.kind_id,
+                &item.affix_ids,
+                item.activation
+                    .as_ref()
+                    .map(|activation| activation.profile_id.as_str()),
+            )
+            .and_then(|generation| {
+                generation
+                    .activations
+                    .iter()
+                    .find(|profile| profile.id == activation.profile_id)
+            })
+            .is_none()
         {
             return Err(CoreError::Invariant(format!(
                 "dynamic item {} references missing activation profile {}",
@@ -3383,10 +3400,17 @@ impl Game {
         })?;
         let definition = self.content.item(&item.kind_id)?;
         if let Some(activation) = &item.activation {
-            let profile = item_device_generation(&self.content, &item.kind_id, &item.affix_ids)?
-                .activations
-                .iter()
-                .find(|candidate| candidate.id == activation.profile_id)?;
+            let profile = item_device_generation(
+                &self.content,
+                &item.kind_id,
+                &item.affix_ids,
+                item.activation
+                    .as_ref()
+                    .map(|activation| activation.profile_id.as_str()),
+            )?
+            .activations
+            .iter()
+            .find(|candidate| candidate.id == activation.profile_id)?;
             Some((&profile.effect, Some(&profile.target)))
         } else {
             definition
@@ -4346,6 +4370,8 @@ fn equipment_bonuses_dto(bonuses: &EquipmentBonuses) -> EquipmentBonusesDto {
         life_percent: bonuses.life_percent,
         launcher_multiplier_delta_percent: bonuses.launcher_multiplier_delta_percent,
         base_shot_delta_percent: bonuses.base_shot_delta_percent,
+        melee_attacks_delta_percent: bonuses.melee_attacks_delta_percent,
+        spell_capacity_bonus: bonuses.spell_capacity_bonus,
         melee_attacks: bonuses.melee_attacks,
         melee_skill: bonuses.melee_skill,
         melee_damage: bonuses.melee_damage,
@@ -4373,6 +4399,13 @@ const fn equipment_passive_dto(passive: EquipmentPassive) -> EquipmentPassiveDto
         EquipmentPassive::Levitation => EquipmentPassiveDto::Levitation,
         EquipmentPassive::Warning => EquipmentPassiveDto::Warning,
         EquipmentPassive::SlowDigestion => EquipmentPassiveDto::SlowDigestion,
+        EquipmentPassive::ReflectsBolts => EquipmentPassiveDto::ReflectsBolts,
+        EquipmentPassive::FireAura => EquipmentPassiveDto::FireAura,
+        EquipmentPassive::ShardsAura => EquipmentPassiveDto::ShardsAura,
+        EquipmentPassive::ReducedManaCost => EquipmentPassiveDto::ReducedManaCost,
+        EquipmentPassive::EasySpell => EquipmentPassiveDto::EasySpell,
+        EquipmentPassive::AutoIdentify => EquipmentPassiveDto::AutoIdentify,
+        EquipmentPassive::Blessed => EquipmentPassiveDto::Blessed,
         EquipmentPassive::EspAnimal => EquipmentPassiveDto::EspAnimal,
         EquipmentPassive::EspUndead => EquipmentPassiveDto::EspUndead,
         EquipmentPassive::EspDemon => EquipmentPassiveDto::EspDemon,
@@ -4420,6 +4453,8 @@ fn roll_weighted_index_with_rng(rng: &mut RfbRng, weights: &[u32]) -> usize {
 }
 
 fn merge_equipment_bonuses(total: &mut EquipmentBonuses, addition: &EquipmentBonuses) {
+    total.melee_attacks_delta_percent += addition.melee_attacks_delta_percent;
+    total.spell_capacity_bonus += addition.spell_capacity_bonus;
     total.life_percent = total.life_percent.saturating_add(addition.life_percent);
     total.launcher_multiplier_delta_percent = total
         .launcher_multiplier_delta_percent

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-celestial-protection-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "id": "rfb-legacy.affix.celestial-protection",
+  "nameKey": "affix-legacy-celestial-protection-name",
+  "rfbEgo": {
+    "rarity": 4,
+    "sourceIndex": 52,
+    "types": [
+      "body-armor",
+      "shield",
+      "crown"
+    ]
+  },
+  "tags": [
+    "body-armor",
+    "crown",
+    "legacy-import",
+    "shield"
+  ]
+}

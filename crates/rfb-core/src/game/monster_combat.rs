@@ -2019,7 +2019,11 @@ impl Game {
             })
             .map(|mutation| vec![mutation.id.clone()])
             .collect();
-        if self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE) {
+        if matches!(
+            damage_type,
+            DamageType::Fire | DamageType::Electricity | DamageType::Cold
+        ) && self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
+        {
             groups.push(vec![STATUS_ULTIMATE_RESISTANCE.to_owned()]);
         }
         if damage_type == DamageType::Fire {
@@ -2032,6 +2036,17 @@ impl Game {
                 groups.push(timed);
             }
         }
+        let passive = match damage_type {
+            DamageType::Fire => Some(EquipmentPassive::FireAura),
+            DamageType::Shards => Some(EquipmentPassive::ShardsAura),
+            _ => None,
+        };
+        if let Some(passive) = passive {
+            groups.extend(self.items.iter().filter(|item| {
+                matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+                    && self.item_passives(item).contains(&passive)
+            }).map(|item| vec![item.id.clone()]));
+        }
         groups
     }
 
@@ -2042,7 +2057,12 @@ impl Game {
         changed: &mut BTreeSet<Position>,
         removed_entities: &mut Vec<String>,
     ) -> Result<bool, CoreError> {
-        for damage_type in [DamageType::Fire, DamageType::Electricity, DamageType::Cold] {
+        for damage_type in [
+            DamageType::Fire,
+            DamageType::Electricity,
+            DamageType::Cold,
+            DamageType::Shards,
+        ] {
             let level = self
                 .player_elemental_contact_aura_sources(damage_type)
                 .len();

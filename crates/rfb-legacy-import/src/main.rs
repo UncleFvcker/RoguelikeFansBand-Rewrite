@@ -27,10 +27,10 @@ fn main() -> ExitCode {
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut args = env::args_os().skip(1);
     let mode = args.next().ok_or(
-        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content|audit-egos|sync-demo-polymorph-races|sync-demo-armor-ego-identities|sync-demo-ranged-ego-identities|sync-demo-ranged-egos|sync-demo-weapon-digger-egos> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | sync-demo-item-destruction <selection> <adaptations> <items> | sync-demo-ability-ground-items <abilities> <programs> | audit-demo-monsters <selection> <minimum-level> <maximum-level> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
+        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content|audit-egos|sync-demo-polymorph-races|sync-demo-armor-ego-identities|sync-demo-front-armor-egos|sync-demo-ranged-ego-identities|sync-demo-ranged-egos|sync-demo-weapon-digger-egos> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | sync-demo-item-destruction <selection> <adaptations> <items> | sync-demo-ability-ground-items <abilities> <programs> | audit-demo-monsters <selection> <minimum-level> <maximum-level> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
     )?;
     let path = PathBuf::from(args.next().ok_or(
-        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content|audit-egos|sync-demo-armor-ego-identities|sync-demo-ranged-ego-identities|sync-demo-ranged-egos|sync-demo-weapon-digger-egos> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | sync-demo-item-destruction <selection> <adaptations> <items> | sync-demo-ability-ground-items <abilities> <programs> | audit-demo-monsters <selection> <minimum-level> <maximum-level> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
+        "usage: rfb-legacy-import <inspect-prefix|record-catalog|verify-catalog|import-content|audit-egos|sync-demo-armor-ego-identities|sync-demo-front-armor-egos|sync-demo-ranged-ego-identities|sync-demo-ranged-egos|sync-demo-weapon-digger-egos> <path> | <sync-demo-items|sync-demo-monsters|sync-demo-wilderness> <selection> <output> | sync-demo-item-destruction <selection> <adaptations> <items> | sync-demo-ability-ground-items <abilities> <programs> | audit-demo-monsters <selection> <minimum-level> <maximum-level> | audit-demo-mutations <plan> | audit-demo-item-names <selection> <en-content.ftl> <zh-content.ftl> | audit-demo-items <selection> <adaptations> <plan> <items>",
     )?);
     match mode.to_string_lossy().as_ref() {
         "inspect-prefix" => {
@@ -74,6 +74,13 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
                 "sync-demo-weapon-digger-egos requires RFB_LEGACY_SOURCE to point at the legacy repository",
             )?);
             println!("{}", sync_demo_weapon_digger_egos(&source, &path)?);
+        }
+        "sync-demo-front-armor-egos" => {
+            let source = PathBuf::from(std::env::var("RFB_LEGACY_SOURCE")?);
+            println!(
+                "{}",
+                rfb_legacy_import::content::sync_demo_front_armor_egos(&source, &path)?
+            );
         }
         "sync-demo-armor-ego-identities" => {
             if args.next().is_some() {

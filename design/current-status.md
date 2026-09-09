@@ -17,12 +17,12 @@
 
 | 项目 | 值 | 来源 |
 | --- | --- | --- |
-| 协议 | 1.230 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
-| State Hash Schema | v108 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
+| 协议 | 1.231 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
+| State Hash Schema | v109 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload | v5 / v5；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.386.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
-| 行为基线 | contract-v306，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
-| 内容定义数量 | 地形 201、角色 1402、物品 357、能力 1838、词缀 65、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
+| 内容包 | 1.387.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 行为基线 | contract-v307，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
+| 内容定义数量 | 地形 201、角色 1402、物品 361、能力 1838、词缀 91、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
 
 版本与哈希以源文件为准。玩家入口以 [PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS](../web/src/session-shell.ts) 和 [新游戏表单](../web/index.html) 为准。
@@ -59,6 +59,15 @@
 内容引用见 [builds](../packs/rfb-demo-original/builds/) 和 [abilityBooks](../packs/rfb-demo-original/abilityBooks/)。领域身份、源码核对与机制边界见[法术领域交接](spell-realm-import-handoff.md)。未开放领域需要单独安排入口变更与玩家流程验收，本文不改变开放范围。
 
 ## 版本验收与限制
+
+2026-09-09，`codex/realms-items` 完成 E5 前半：开放盾牌 9 条、身体护甲 12 条、长袍 3 条、
+龙鳞甲 8 条的完整类型池，共享 4 条去重后共 28 条。生成按 RFB `master`
+`a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 的分支、底材限制、pval、随机属性和激活处理；
+新增 sval 60 的长袍底材及 3 件龙鳞甲，中文名及新增激活名直接读取源版表和运行时字符串。
+装备消费者接入实例减重、反射、火焰/碎片光环、法力容量/节省/易施法、自动鉴定、半次追加攻击、
+护甲吸血与周期太古诅咒。固定护甲奖励复用同一物化入口。聚焦测试覆盖全部 28 条自然可达、
+生成存档往返、底材限制、装备效果及诅咒；公共存档/属性投影变更统一刷新并复验 26 条 active fixture。
+本批未做桌面或人工试玩。下一批为头冠、头盔、斗篷、手套和靴子，共 48 条。
 
 2026-09-09，`codex/realms-items` 完成 [E5.0 护甲 Ego 审计](armor-ego-import-audit.md)：
 核对 76 条权威 Ego、稳定 ID、subtype 限制、动态分支、激活与消费者缺口，为现有 38 件普通护甲

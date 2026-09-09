@@ -24,20 +24,20 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "ddf2255b11753e753d58a4020b01b96e45cb82c89a48724cd3cba60e7ae722fa",
       "playerPosition": {
         "x": 32,
         "y": 13
       },
+      "revision": 1,
       "shops": {
         "demo.shop.outpost-general-store": {
-          "visited": true,
-          "playerAtEntrance": true
+          "playerAtEntrance": true,
+          "visited": true
         }
-      }
+      },
+      "stateHash": "5f677655623c37852f2d683b666c10a46c295d2e68690668100d984320f3aa60",
+      "turn": 1
     },
     "changedCells": [
       {

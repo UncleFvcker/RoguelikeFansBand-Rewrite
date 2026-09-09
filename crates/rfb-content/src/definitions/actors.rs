@@ -651,6 +651,10 @@ pub struct EquipmentBonuses {
     /// Additive RFB `base_shot` value in hundredths of a shot. `15` means +0.15 shots.
     #[serde(default, skip_serializing_if = "is_zero_i32")]
     pub base_shot_delta_percent: i32,
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub melee_attacks_delta_percent: i32,
+    #[serde(default, skip_serializing_if = "is_zero_i32")]
+    pub spell_capacity_bonus: i32,
     #[serde(default)]
     pub melee_attacks: i32,
     #[serde(default)]

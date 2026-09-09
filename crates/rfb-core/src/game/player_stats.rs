@@ -654,7 +654,8 @@ impl Game {
     }
 
     pub(super) fn player_reflects_bolts(&self) -> bool {
-        self.character_definitions().is_some_and(|(_, race, _, _)| {
+        self.player_equipment_passives().contains(&EquipmentPassive::ReflectsBolts)
+        || self.character_definitions().is_some_and(|(_, race, _, _)| {
             race.reflects_bolts_minimum_level
                 .is_some_and(|minimum_level| self.progress.level >= minimum_level)
         }) || self.player_has_status_kind(STATUS_ULTIMATE_RESISTANCE)
@@ -823,6 +824,15 @@ impl Game {
             ]);
         }
         passives
+    }
+
+    pub(super) fn player_equipment_bonuses(&self) -> EquipmentBonuses {
+        self.items.iter().filter(|item| {
+            matches!(&item.location, ItemLocation::Equipped { slot_id } if self.body_slot_type(slot_id) != Some("tool"))
+        }).fold(EquipmentBonuses::default(), |mut total, item| {
+            merge_equipment_bonuses(&mut total, &self.item_equipment_bonuses(item));
+            total
+        })
     }
 
     pub(super) fn player_sustains_attribute(&self, attribute: AttributeKind) -> bool {
@@ -1193,6 +1203,13 @@ impl Game {
             .map_or(0, |definition| definition.weight_tenths_pound)
     }
 
+    pub(super) fn item_instance_weight(&self, item: &ItemInstance) -> u16 {
+        item.rolled_affixes
+            .iter()
+            .find_map(|rolled| rolled.weight_tenths_pound)
+            .unwrap_or_else(|| self.item_weight_tenths_pound(&item.kind_id))
+    }
+
     pub(super) fn carried_weight_tenths_pound(&self) -> u32 {
         self.items
             .iter()
@@ -1204,8 +1221,7 @@ impl Game {
             })
             .fold(0_u32, |total, item| {
                 total.saturating_add(
-                    u32::from(self.item_weight_tenths_pound(&item.kind_id))
-                        .saturating_mul(item.quantity),
+                    u32::from(self.item_instance_weight(item)).saturating_mul(item.quantity),
                 )
             })
     }
@@ -1228,7 +1244,7 @@ impl Game {
             .as_ref()
             .map(|profile| ThrowProfileDto {
                 range: throw_range(
-                    definition.weight_tenths_pound,
+                    self.item_instance_weight(item),
                     self.player_has_mighty_throw(),
                 ),
                 to_hit: profile
@@ -1627,10 +1643,14 @@ impl Game {
             to_hit = to_hit.saturating_sub(2);
             to_damage = to_damage.saturating_sub(2);
         }
+        let extra_blows = self
+            .player_equipment_bonuses()
+            .melee_attacks_delta_percent
+            .max(0);
         ResolvedAttackProfile {
-            attacks: u16::try_from(stats.melee_attacks.value)
+            attacks: u16::try_from(stats.melee_attacks.value + extra_blows / 100)
                 .expect("derived melee attack count must fit u16"),
-            extra_attack_chance_percent: 0,
+            extra_attack_chance_percent: (extra_blows % 100) as u8,
             melee_skill,
             to_hit,
             to_damage,
@@ -1717,6 +1737,16 @@ impl Game {
             profiles.extend(
                 self.draconian_metamorphosis_attack_profiles(&innate_skill, innate_damage_bonus),
             );
+            if let Some(profile) = profiles.first_mut() {
+                let blows = u32::from(profile.attacks) * 100
+                    + u32::from(profile.extra_attack_chance_percent)
+                    + self
+                        .player_equipment_bonuses()
+                        .melee_attacks_delta_percent
+                        .max(0) as u32;
+                profile.attacks = (blows / 100) as u16;
+                profile.extra_attack_chance_percent = (blows % 100) as u8;
+            }
         }
         profiles
     }

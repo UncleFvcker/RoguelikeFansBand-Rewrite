@@ -1537,7 +1537,15 @@ impl Game {
 
     fn item_has_recharge_capacity(&self, item: &ItemInstance) -> bool {
         item.activation.is_some()
-            && item_device_generation(&self.content, &item.kind_id, &item.affix_ids).is_some()
+            && item_device_generation(
+                &self.content,
+                &item.kind_id,
+                &item.affix_ids,
+                item.activation
+                    .as_ref()
+                    .map(|activation| activation.profile_id.as_str()),
+            )
+            .is_some()
             && item
                 .charges
                 .is_some_and(|charges| charges.current < charges.maximum)

@@ -574,7 +574,14 @@ impl Game {
                 if let (Some(activation), Some(charges), Some(generation)) = (
                     item.activation.as_ref(),
                     item.charges,
-                    item_device_generation(&self.content, &item.kind_id, &item.affix_ids),
+                    item_device_generation(
+                        &self.content,
+                        &item.kind_id,
+                        &item.affix_ids,
+                        item.activation
+                            .as_ref()
+                            .map(|activation| activation.profile_id.as_str()),
+                    ),
                 ) && let Some(profile) = generation.activations.iter().find(|profile| {
                     profile.id == activation.profile_id
                         && matches!(profile.effect, ItemUseEffectDefinition::IdentifyItem { .. })

@@ -1109,7 +1109,8 @@ export class InventoryPanel {
   ): void {
     if (!bonuses) return;
     this.#appendSignedEntries(container, [
-      ["item-bonus-melee-attacks", bonuses.meleeAttacks],
+      ["item-bonus-melee-attacks", bonuses.meleeAttacks + (bonuses.meleeAttacksDeltaPercent ?? 0) / 100],
+      ["item-bonus-spell-capacity", (bonuses.spellCapacityBonus ?? 0) * 5],
       ["item-bonus-melee-skill", bonuses.meleeSkill],
       ["item-bonus-ranged-skill", bonuses.rangedSkill],
       ["item-bonus-throwing-skill", bonuses.throwingSkill],

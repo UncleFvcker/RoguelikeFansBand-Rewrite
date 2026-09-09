@@ -8,7 +8,7 @@ mod items;
 mod restoration;
 mod summoning;
 mod targeting;
-mod terrain;
+pub(in crate::game) mod terrain;
 mod travel;
 
 pub(super) use casting::nature_wrath_direction_roll;

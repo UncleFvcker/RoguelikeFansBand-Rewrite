@@ -3723,6 +3723,10 @@
           "format": "int32",
           "type": "integer"
         },
+        "meleeAttacksDeltaPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
         "meleeDamage": {
           "default": 0,
           "format": "int32",
@@ -3758,6 +3762,10 @@
         },
         "searchSkill": {
           "default": 0,
+          "format": "int32",
+          "type": "integer"
+        },
+        "spellCapacityBonus": {
           "format": "int32",
           "type": "integer"
         },

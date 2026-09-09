@@ -668,6 +668,14 @@ fn p101d_representative_witch_wood_and_plains_of_oz_floors_generate_their_outdoo
     let mut brakes = 0;
     let mut water = 0;
     for definition in definitions {
+        let seed = if definition.dungeon_id.as_deref() == Some("demo.dungeon.plains-of-oz")
+            && definition.depth == 35
+        {
+            21 // Includes a river; other floors cover the ordinary outdoor layers.
+        } else {
+            201 + u64::from(definition.depth)
+        };
+        game.rng = RfbRng::seeded(seed);
         let generated = game
             .generate_procedural_floor(&definition, None)
             .unwrap_or_else(|error| panic!("{} should generate: {error}", definition.id));
@@ -718,7 +726,10 @@ fn p101d_representative_witch_wood_and_plains_of_oz_floors_generate_their_outdoo
             );
         }
     }
-    assert!(flowers > 0 && swamps > 0 && dirt > 0 && brakes > 0 && water > 0);
+    assert!(
+        flowers > 0 && swamps > 0 && dirt > 0 && brakes > 0 && water > 0,
+        "flowers={flowers} swamps={swamps} dirt={dirt} brakes={brakes} water={water}"
+    );
 }
 
 #[test]

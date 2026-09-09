@@ -611,6 +611,18 @@ impl Game {
             } else {
                 ItemQualityDto::Ordinary
             };
+            let rfb_armor = table.rfb_ego_policy
+                == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
+                && self
+                    .content
+                    .item(&entry.item_kind_id)
+                    .and_then(|item| item.rfb_base_kind)
+                    .is_some_and(|base| matches!(base.tval, 34 | 36..=38));
+            let armor_enchantment = if rfb_armor {
+                super::ego::roll_rfb_armor_enchantment(&mut self.rng, generation_depth, quality)
+            } else {
+                0
+            };
             let rfb_materialization = (table.rfb_ego_policy
                 == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)
                 && quality_allows_natural_affix(table.quality_policy, quality))
@@ -626,8 +638,11 @@ impl Game {
                 })
             })
             .flatten();
-            let materialization = rfb_materialization.unwrap_or_else(|| {
+            let mut materialization = rfb_materialization.unwrap_or_else(|| {
                 let rolled_affix_id = preselected_generic_affix_id.unwrap_or_else(|| {
+                    if rfb_armor {
+                        return None;
+                    }
                     let eligible_affixes = table
                         .affix_weights
                         .iter()
@@ -670,7 +685,11 @@ impl Game {
                     generation_depth,
                 )
             });
+            if !materialization.clear_armor_enchantment {
+                materialization.enchantment_delta.to_armor += armor_enchantment;
+            }
             let EgoMaterialization {
+                kind_id_override,
                 affix_ids,
                 rolled_affixes,
                 intrinsic_properties: ego_intrinsic_properties,
@@ -694,7 +713,7 @@ impl Game {
                 },
             );
             generated.push(GeneratedItemDraft {
-                kind_id: entry.item_kind_id.clone(),
+                kind_id: kind_id_override.unwrap_or_else(|| entry.item_kind_id.clone()),
                 quantity: entry.quantity,
                 origin_kind: match &context.source {
                     LootSource::Rubble { .. } => Some(ItemOriginKindDto::Rubble),

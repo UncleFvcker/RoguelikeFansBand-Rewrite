@@ -267,6 +267,10 @@
           "format": "int32",
           "type": "integer"
         },
+        "meleeAttacksDeltaPercent": {
+          "format": "int32",
+          "type": "integer"
+        },
         "meleeDamage": {
           "default": 0,
           "format": "int32",
@@ -305,6 +309,10 @@
           "format": "int32",
           "type": "integer"
         },
+        "spellCapacityBonus": {
+          "format": "int32",
+          "type": "integer"
+        },
         "stealthSkill": {
           "default": 0,
           "format": "int32",
@@ -327,6 +335,13 @@
         "levitation",
         "warning",
         "slow-digestion",
+        "reflects-bolts",
+        "fire-aura",
+        "shards-aura",
+        "reduced-mana-cost",
+        "easy-spell",
+        "auto-identify",
+        "blessed",
         "esp-animal",
         "esp-undead",
         "esp-demon",
@@ -759,6 +774,7 @@
     },
     "RfbActivationBiasDefinition": {
       "enum": [
+        "warrior",
         "mage",
         "chaos",
         "acid",

@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 4,
+  "descriptionKey": "item-demo-yoiyami-robe-description",
+  "elementalDestructionVulnerabilities": [
+    "acid",
+    "fire"
+  ],
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 1,
+  "glyph": "(",
+  "id": "demo.item.yoiyami-robe",
+  "maxStack": 1,
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-yoiyami-robe-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 261,
+    "sval": 60,
+    "tval": 36
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility"
+  ],
+  "weightTenthsPound": 20
+}

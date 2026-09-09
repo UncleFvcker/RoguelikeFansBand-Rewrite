@@ -1,0 +1,73 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 40000,
+  "descriptionKey": "item-demo-gold-dragon-scale-mail-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 30,
+        "effectProgramId": "rfb.effect.dragon-breath-302",
+        "id": "rfb.device-activation.dragon-breath-302",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-breathe-sound-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 400
+        },
+        "target": {
+          "modes": [
+            "direction"
+          ],
+          "range": 18,
+          "requiresLineOfEffect": true
+        },
+        "weight": 1
+      }
+    ]
+  },
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "elementalDestructionVulnerabilities": [
+    "acid"
+  ],
+  "equipmentBonuses": {
+    "meleeSkill": -2
+  },
+  "equipmentSlot": "body",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "[",
+  "id": "demo.item.gold-dragon-scale-mail",
+  "maxStack": 1,
+  "modifiers": {
+    "defense": 50
+  },
+  "mogaminatorRare": true,
+  "nameKey": "item-demo-gold-dragon-scale-mail-name",
+  "resistances": {
+    "sound": "resistant"
+  },
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 302,
+    "sval": 16,
+    "tval": 38
+  },
+  "tags": [
+    "armor",
+    "equipment",
+    "rfb-compatibility",
+    "activatable"
+  ],
+  "weightTenthsPound": 200
+}

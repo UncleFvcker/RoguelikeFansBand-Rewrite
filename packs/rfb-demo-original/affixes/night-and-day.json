@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-night-and-day-description",
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.night-and-day",
+  "nameKey": "affix-legacy-night-and-day-name",
+  "resistances": {
+    "dark": "resistant",
+    "light": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 6,
+    "sourceIndex": 63,
+    "types": [
+      "shield"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "shield"
+  ]
+}

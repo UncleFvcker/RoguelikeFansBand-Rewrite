@@ -1,0 +1,40 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-permanence-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 30,
+  "id": "rfb-legacy.affix.permanence",
+  "nameKey": "affix-legacy-permanence-name",
+  "passives": [
+    "hold-life",
+    "sustain-charisma",
+    "sustain-constitution",
+    "sustain-dexterity",
+    "sustain-intelligence",
+    "sustain-strength",
+    "sustain-wisdom"
+  ],
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 1,
+    "sourceIndex": 80,
+    "types": [
+      "robe"
+    ]
+  },
+  "tags": [
+    "legacy-import",
+    "robe"
+  ]
+}

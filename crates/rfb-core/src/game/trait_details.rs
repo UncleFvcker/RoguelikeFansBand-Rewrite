@@ -336,6 +336,10 @@ impl Game {
         let mut passive_values: Vec<_> = [
             EquipmentPassive::Regeneration,
             EquipmentPassive::Warning,
+            EquipmentPassive::ReducedManaCost,
+            EquipmentPassive::EasySpell,
+            EquipmentPassive::AutoIdentify,
+            EquipmentPassive::Blessed,
             EquipmentPassive::EspAnimal,
             EquipmentPassive::EspUndead,
             EquipmentPassive::EspDemon,
@@ -569,7 +573,12 @@ impl Game {
             }
         }
         let mut auras = Vec::new();
-        for damage_type in [DamageType::Fire, DamageType::Electricity, DamageType::Cold] {
+        for damage_type in [
+            DamageType::Fire,
+            DamageType::Electricity,
+            DamageType::Cold,
+            DamageType::Shards,
+        ] {
             let mut source_ids: Vec<_> = self
                 .player_elemental_contact_aura_sources(damage_type)
                 .into_iter()
@@ -601,7 +610,11 @@ impl Game {
             let curse = self.visible_item_curse(item);
             let knowledge = self.item_property_knowledge.get(&item.id);
             let mut effects = Vec::new();
-            for effect in [ItemCurseEffectDto::Aggravate, ItemCurseEffectDto::Teleport] {
+            for effect in [
+                ItemCurseEffectDto::Aggravate,
+                ItemCurseEffectDto::Teleport,
+                ItemCurseEffectDto::TyCurse,
+            ] {
                 let known = item.rolled_affixes.iter().any(|rolled| {
                     rolled.curse_effects.contains(&effect)
                         && knowledge

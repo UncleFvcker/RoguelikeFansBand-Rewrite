@@ -153,7 +153,10 @@ impl Game {
             }
             self.process_equipped_light_fuel(events);
             if local_floor_active {
-                self.process_equipped_curse_effects(events, changed);
+                self.process_equipped_curse_effects(events, changed, removed_entities)?;
+                if self.player_is_dead() {
+                    return Ok(());
+                }
             }
             self.process_periodic_mutations(
                 local_floor_active,
@@ -381,20 +384,26 @@ impl Game {
             ) {
                 continue;
             }
-            let Some(recovery) = item_device_generation(content, &item.kind_id, &item.affix_ids)
-                .and_then(|generation| {
-                    item.activation
-                        .as_ref()
-                        .and_then(|activation| {
-                            generation
-                                .activations
-                                .iter()
-                                .find(|profile| profile.id == activation.profile_id)
-                        })
-                        .and_then(|profile| profile.recovery)
-                        .or(generation.recovery)
-                })
-            else {
+            let Some(recovery) = item_device_generation(
+                content,
+                &item.kind_id,
+                &item.affix_ids,
+                item.activation
+                    .as_ref()
+                    .map(|activation| activation.profile_id.as_str()),
+            )
+            .and_then(|generation| {
+                item.activation
+                    .as_ref()
+                    .and_then(|activation| {
+                        generation
+                            .activations
+                            .iter()
+                            .find(|profile| profile.id == activation.profile_id)
+                    })
+                    .and_then(|profile| profile.recovery)
+                    .or(generation.recovery)
+            }) else {
                 continue;
             };
             if !world_tick.is_multiple_of(u32::from(recovery.interval_ticks)) {

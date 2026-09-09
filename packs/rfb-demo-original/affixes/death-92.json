@@ -1,0 +1,169 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-death-92-description",
+  "deviceGeneration": {
+    "activations": [
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "power": 210,
+          "type": "genocide"
+        },
+        "id": "rfb.device-activation.ego-92-genocide",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-genocide-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "necromantic"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 15
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 80,
+        "effect": {
+          "power": 340,
+          "radius": 20,
+          "type": "mass-genocide"
+        },
+        "id": "rfb.device-activation.ego-92-mass-genocide",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-mass-genocide-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 7500
+        },
+        "rfbBiases": [
+          "necromantic"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 15
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 90,
+        "effect": {
+          "effect": {
+            "durationDice": 1,
+            "durationSides": 90,
+            "durationTicks": 90,
+            "grantsWallPassage": true,
+            "incomingDamagePercent": 50,
+            "intensity": 1,
+            "stacking": "extend",
+            "statusKindId": "rfb.status.wraithform",
+            "type": "apply-status"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-92-wraithform",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-wraithform-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 6660
+        },
+        "rfbBiases": [
+          "necromantic"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 15
+      },
+      {
+        "charges": {
+          "cost": 1,
+          "maximum": 1,
+          "minimum": 1
+        },
+        "deviceCheckDifficulty": 70,
+        "effect": {
+          "affectsGroundItems": true,
+          "effect": {
+            "damageBonus": 750,
+            "damageDice": 0,
+            "damageSides": 0,
+            "damageType": "dark",
+            "radius": 5,
+            "type": "area-damage"
+          },
+          "type": "ability-effect"
+        },
+        "id": "rfb.device-activation.ego-92-darkness-storm",
+        "maxDepth": 100,
+        "minDepth": 1,
+        "nameKey": "device-activation-e5-darkness-storm-name",
+        "recovery": {
+          "energyPerMille": 1000,
+          "intervalTicks": 5000
+        },
+        "rfbBiases": [
+          "necromantic"
+        ],
+        "target": {
+          "modes": [
+            "self"
+          ],
+          "range": 0,
+          "requiresLineOfEffect": false
+        },
+        "weight": 7
+      }
+    ]
+  },
+  "formatVersion": 1,
+  "generationLevel": 0,
+  "id": "rfb-legacy.affix.death-92",
+  "nameKey": "affix-legacy-death-92-name",
+  "resistances": {
+    "nether": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 3,
+    "sourceIndex": 92,
+    "types": [
+      "dragon-armor"
+    ]
+  },
+  "tags": [
+    "dragon-armor",
+    "legacy-import"
+  ]
+}

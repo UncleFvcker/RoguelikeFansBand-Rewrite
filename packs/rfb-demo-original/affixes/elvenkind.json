@@ -1,0 +1,33 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/affix.schema.json",
+  "descriptionKey": "affix-legacy-elvenkind-description",
+  "elementalDestructionImmunities": [
+    "acid",
+    "electricity",
+    "fire",
+    "cold"
+  ],
+  "formatVersion": 1,
+  "generationLevel": 40,
+  "id": "rfb-legacy.affix.elvenkind",
+  "nameKey": "affix-legacy-elvenkind-name",
+  "resistances": {
+    "acid": "resistant",
+    "cold": "resistant",
+    "electricity": "resistant",
+    "fire": "resistant"
+  },
+  "rfbEgo": {
+    "rarity": 8,
+    "sourceIndex": 53,
+    "types": [
+      "body-armor",
+      "shield"
+    ]
+  },
+  "tags": [
+    "body-armor",
+    "legacy-import",
+    "shield"
+  ]
+}

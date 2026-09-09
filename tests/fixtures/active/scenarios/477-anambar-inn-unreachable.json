@@ -21,16 +21,16 @@
   ],
   "assertions": {
     "finalState": {
-      "revision": 1,
-      "turn": 1,
       "lastCommandSeq": 1,
-      "stateHash": "181f11b3faec78022928a0d496c731e5a3f979150fd453c85cc9a725bc85a977",
+      "playerGold": 100,
+      "playerNutrition": 9999,
       "playerPosition": {
         "x": 44,
         "y": 16
       },
-      "playerGold": 100,
-      "playerNutrition": 9999
+      "revision": 1,
+      "stateHash": "2e068a31befecc0adf589b28327d6d4b6b45e83593abb748cf976da8fb8242eb",
+      "turn": 1
     },
     "events": [
       {
