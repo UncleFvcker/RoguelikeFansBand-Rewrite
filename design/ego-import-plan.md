@@ -1,25 +1,27 @@
 # Ego 词条导入计划
 
-更新时间：2026-08-15
+更新时间：2026-09-09
 
-工作分支：`codex/items-next`
+工作树：`D:/codex/RoguelikeFansBand-Rewrite-realms-items`；工作分支：`codex/realms-items`。
+代码基线：`16334d288`，起始 main：`62f959f3b`。E0–E4 的完成说明保留历史批次版本；
+本页当前基线和 E5–E8 是后续执行安排。本次只更新计划，没有实现新规则或推进内容版本。
 
 本计划把 ego 作为独立的物品生成里程碑推进，并优先闭合 Craft 第四册「工艺」所依赖的
 武器、护甲与弹药候选。领域内容在 ego 候选与实例化行为完整以前不开放「工艺」。
 
 ## 1. 当前基线
 
-本次审计读取 `D:/codex/Frogcomposband` 的 Git `master` 对象；审计时解析到提交
-`efd63661302866038f58d8cd2553b23e6af3bf9d`。后续实现仍以执行时最新的 `master` 为权威，
+本次实跑 `audit-egos D:/codex/Frogcomposband/master`，通过 Git 对象读取 `master`；解析到提交
+`a0d92b6378d148c5262cc236b8fa6ed2ca06a54c`。后续实现仍以执行时最新的 `master` 为权威，
 不能改读其工作树。
 
 | 项目 | 当前结果 |
 | --- | ---: |
 | `e_info.txt` ego 总数 | 160 |
-| 当前 importer 可生成 affix | 129 |
-| 当前 importer 的 `ego-inexpressible` | 31 |
-| 当前 importer 未实现的 ego activation | 13 |
-| demo pack 正式 affix | 15 |
+| audit 的 currentImporterExpressible / Inexpressible | 134 / 26；不是运行时完成数 |
+| e_info 显式 E: activation 记录 | 13；不含 ego.c 分支随机激活，也不是未实现数 |
+| demo pack 正式 affix | 65；含旧适配及非完整权威定义 |
+| 武器/工具、远程/竖琴 source-index 物化及自然生成路径 | 30 + 16；见 E3/E4 的入口限制 |
 | 权威中文名 | 160 |
 | 中文名 unresolved | 0 |
 | Craft 类型兼容 ego | 122 |
@@ -33,19 +35,23 @@ Craft 类型兼容的 122 条记录按权威 `T:` 分类为：
 | `AMMO` / `BOW` / `HARP` | 16 |
 | 各护甲类型 | 76 |
 
-其余 38 条属于 `RING`、`AMULET`、`LITE`、`QUIVER`、`DEVICE` 等非 Craft 类型。
+其余 38 条为首饰 17、光源 9、箭袋 4、装置 7，以及 `SPECIAL` 1 条。
 这些记录仍属于完整 ego 方向，但不阻塞「工艺」。
 
-当前 importer 的 129 条不是可直接整体接入正式掉落池的完成品：
+当前已具备权威中文表、rarity/source-order 选择核、共享原子物化、武器与远程消费者。
+`base-items` 的现有 policy 已覆盖 WEAPON/DIGGER/BOW/AMMO/HARP；不重新实现 E0–E4。
 
-- `W:` 第三项是 rarity；当前 parser 读取但未保存，运行时也没有使用；
-- RFB 用等级偏差增加 rarity，仍保留至少 1 点权重；当前
-  `affix_is_compatible_with_item` 把 `generationLevel/generationMaxLevel` 当作硬过滤；
-- 当前 importer 把多数 `C:` 最大值直接写成固定顶格属性，未还原 `ego.c` 的实际随机实例化；
-- 当前 loot table 只支持显式 `affixWeights`，`base-items` 只列出 Slaying 与 Protection，
-  不能表达按物品类型从完整 e_info 集合选择；
-- 当前 `craft-item` 从显式武器/护甲 ID 列表等概率选择，不能表达 RFB 的类型、等级和 rarity 权重；
-- importer 尚未读取 `master:src/ego_name_zh.inc`，因此不能保证正式中文名与权威表逐项对齐。
+剩余缺口：
+
+- `ego.rs::roll_and_materialize_rfb_ego_from_affixes_with_rng` 尚不分派护甲、首饰、光源、箭袋或装置；
+- 已有部分护甲/首饰 affix 供旧适配或固定消费者使用，不能据此把整类判为已完成；
+- `item_use.rs::resolve_item_crafting` 仍从显式列表等概率选择，且使用楼层深度；E6 才迁移至原版权重和玩家等级；
+- 鹤嘴锄已在 `16334d288` 打通 Disruption 自然生成。Arcane 仍缺 Wizardstaff，后者基础 `DEC_MANA`
+  需要真实费用消费者，不能照搬鹤嘴锄的纯内容补法；
+- 本次 160 个权威中文名全部可解；新基础物品仍需单独核对 `kind_name_zh.inc`。
+
+建议顺序：**E5.0 审计 → E5 护甲逐类闭合 → E6 工艺事务 → E7 非 Craft → E8 整体验收**。
+Wizardstaff 随 E5 的法力消耗机制补齐，不阻塞先行的盾牌批次。Craft 领域本身仍按领域流程另外导入。
 
 ## 2. 唯一权威来源
 
@@ -201,36 +207,58 @@ E2 已把内容驱动 affix 的静态 ID、动态 `rollGroups`、activation 与 
 物品或 RNG。该批未增加持久字段，也未给尚未导入的 ego 添加占位行为；法术烙印和造箭的专用动态
 分支将在对应 ego 行为批次迁移，避免当前重复执行 `Slaying` 等 roll group。
 
-### E3：近战武器与挖掘工具 30 条
+### E3：近战武器与挖掘工具 30 条（已完成，保留基础物品入口缺口）
 
 逐 index 审查与提交级实施方案见
 [`design/weapon-digger-ego-import-plan.md`](weapon-digger-ego-import-plan.md)。审查确认 27 条含 `WEAPON`、
-6 条含 `DIGGER`（其中 3 条跨类型、3 条仅 `DIGGER`），共 30 条且 rarity 全部大于 0；当前没有一条
-可按权威行为直接开放。审计报告中的 28 条
-“可表达”只表示至少生成了一项属性，不是完成度。
+6 条含 `DIGGER`（其中 3 条跨类型、3 条仅 `DIGGER`），共 30 条且 rarity 全部大于 0。
+source 1–27、40–42 的选择、拒绝重试、物化和相关消费者已实现。
 
-本批需闭合普通属性、精确 Slaying/Craft、共享 pval、独立附魔、基础物品拒绝重试、近战骰面、
+本批已闭合普通属性、精确 Slaying/Craft、共享 pval、独立附魔、基础物品拒绝重试、近战骰面、
 Mana/Vorpal/Order/Wild/Impact/Stun/Blessed、装备副作用、具体重诅咒和 activation。4 条显式 `E:`
-之外还有 9 条分支随机 activation，去重后共 12 条可能带 activation；必须作为独立子批完成，不能用
-占位效果绕过。只有全部消费者完成后才给自然掉落开放 `WEAPON/DIGGER` policy。
+之外还有 9 条分支随机 activation，去重后共 12 条可能带 activation；已有专用实例化和激活测试。
+`WEAPON/DIGGER` policy 已开放。Mattock 已补入；Wizardstaff 和 Mauler-only 重量调整仍按专题说明保留缺口。
 
-### E4：弹药、发射器与竖琴 16 条
+### E4：弹药、发射器与竖琴 16 条（已完成）
 
 逐 index 审查与提交级实施方案见
 [`design/ammo-launcher-harp-ego-import-plan.md`](ammo-launcher-harp-ego-import-plan.md)。审查确认 8 条
-`BOW`、6 条 `AMMO`、2 条 `HARP`，16 条 rarity 均大于 0 且没有显式 activation。本批先补齐 18 个
-基础物品身份和 Harp 的生成期 pval，再闭合发射器倍率/射程/额外射击、完整六候选弹药池，以及
-Returning、Exploding、Endurance 的发射与毁坏时点。整堆弹药只选择和物化一次；Archer 迁移到共享
-选择器后才开放 `BOW/AMMO/HARP` 自然生成。
+`BOW`、6 条 `AMMO`、2 条 `HARP`，16 条 rarity 均大于 0 且没有显式 activation。18 个基础物品身份、
+Harp 生成期 pval、发射器倍率/射程/额外射击、完整六候选弹药池，以及 Returning、Exploding、Endurance
+消费者均已接入。Archer 已复用共享选择器；`BOW/AMMO/HARP` 自然生成已开放。Bard 专属竖琴 pval
+仍待职业实际接入时补齐，不宣称该职业已验收。
 
 ### E5：护甲 76 条
 
-先实现 28 条涉及 body armor、dragon armor、shield、robe 的记录，再实现剩余 48 条仅属于
-crown/helmet/cloak/gloves/boots 的记录；3 条跨组记录由前一批拥有，后一批不得重复定义。
+先完成 body armor/dragon armor/shield/robe 的 28 条，再完成剩余 48 条。
+source 50/51/52 是跨组共享定义，由第一组负责；第二组只补对应类型的行为，不复制定义。
 
-本阶段重点闭合 reflection、元素伤害光环、revenge aura、随机抗性/高抗、sustain、telepathy、
-levitation、magic resistance、spell/device power、诅咒和 activation。`ego_name_zh.inc` 名称、类型组合
-和 property knowledge 必须随每个子批一起完成。
+| 子批 | 范围与交付 | 开放条件 |
+| --- | --- | --- |
+| E5.0 | 76 条逐 index 审计；回填本批基础物品身份；列出限制、动态分支、固定/随机 activation、消费者和既有稳定 ID | 首批只交付审计、身份和聚焦测试，不开放不完整候选池 |
+| E5.1 | 按已确认缺口扩展共享物化/装备聚合：affix 反射、必要光环、重量和基础 AC 变化；复用抗性、sustain、ESP、诅咒与 activation helper | 真实新增持久字段时独立交付公共底座，先合入 main，再继续依赖批次 |
+| E5.2 | 盾牌 9 条：50–53、60–64；完整类型限制、随机抗性、反射、pval、附魔和 activation | SHIELD 池全部闭合后单独开放，不把 50–52 提前用于未完成的其他类型 |
+| E5.3 | 身体护甲新增 70–77，加复用 50–53；长袍 80–82；可拆多个实现提交 | BODY/ROBE 调度一起验收后开放，保留 robe 的等级 30、1/7 特殊选择入口 |
+| E5.4 | 龙鳞甲 85–92：子类型限制、基础吐息继承/替换、伤害和冷却修改、属性及光环 | DRAGON_ARMOR 完整池和所需基础龙甲接通后开放 |
+| E5.5 | 剩余 48 条分头部、披风、手套、靴子批次；每批先补真实消费者再物化内容 | 每次开放一个完整类型池；跨类型的同一 source index 使用唯一 ID |
+| E5.6 | 汇总 76 条、跨类型排除、普通获取、鉴定/属性知识、固定引用及存档；移除已替代的旧近似 | 122 条 Craft 类型全部有行为，121 条非零 rarity 的合法候选完整 |
+
+第一组的准确身份集合为 `50–53, 60–64, 70–77, 80–82, 85–92`。
+第二组为 `54–56, 95–104, 110–122, 125–130, 135–142, 145–152`；其中 source 103
+rarity 为 0，保留真实强制用途，不能进入标准随机池。
+
+本次源码核对发现的实际难点，必须写入 E5.0 审计：
+
+- `ego.c:2851` 起的身体护甲分支会改变重量和基础 AC；不能只加一个固定 defense 顶值。
+- `ego.c:2711` 的 Twilight 会改变基础 kind/sval 并清零基础 AC/to_a；不能只更换 affix 名称。
+- `ego.c:2548` 的龙甲 Breath 继承基础 activation 后修改冷却和伤害，Lore/Death 可替换它；
+  需要追到具体基础龙甲和激活消费者，不能把两次 activation 叠加。
+- 当前 `player_reflects_bolts` 只读取基础物品/种族/状态；“基础物品已有反射”不代表 affix 反射已接通。
+- `DEC_MANA`、`EASY_SPELL`、`SPELL_CAP` 分别追到费用、失败率和法力上限路径；复用后补 Wizardstaff
+  的权威物品、中文名、获取、熟练度和 Arcane 生成。不能仅赋予显示词条。
+- 第二组继续核对复仇/元素光环、双持、额外攻击、反魔法、自动鉴定和具体诅咒；已有能力只扩消费者缺口。
+
+本页不预先规定一套“护甲状态框架”。每批按实际源码选择已有字段或最窄扩展，所有随机结果只在生成时物化。
 
 ### E6：Craft「工艺」解锁
 
@@ -240,21 +268,36 @@ levitation、magic resistance、spell/device power、诅咒和 activation。`ego
 - 成功后完全鉴定、记录 crafting origin 和 virtue；失败不留下 affix 或部分属性；
 - 与自然生成共享选择和实例化，且明确断言不会生成神器。
 
-该批完成后才继续 Craft 第四册和领域收口。
+先让现有 crafting scroll 走完整事务，删除被替代的显式等概率候选路径。
+Craft 领域当前尚未导入；本批只完成「工艺」所需的共享行为，不等于第四册或新游戏入口已开放。
+后续领域工作仍先审计完整 32 法术，再按四册实施，不能直接挂一个孤立的第四册法术。
 
 ### E7：非 Craft ego 38 条
 
-- 按 ring/amulet、lite/quiver、device 三个子批完成；
-- 继续复用同一选择核和实例化入口；
-- 只为真实 source 分支增加消费者，不因“凑齐 160”保留 no-op affix。
+| 子批 | 去重条数 | 范围 |
+| --- | ---: | --- |
+| E7.1 首饰 | 17 | 200–201、205–211、220–227；已有 sacred-pendant、magi-amulet、wizardry-ring 等先审计并复用 ID |
+| E7.2 光源 | 9 | 235–243；光照/黑暗、燃料或持续时间、感知和激活的实际消费者 |
+| E7.3 箭袋 | 4 | 265–268；容量、保护、无尽/相位箭袋行为，保持发射与弹药存量时点 |
+| E7.4 装置 | 7 | 250–256；容量、恢复、难度、威力、保护和速度，按设备生成路径接入 |
+| E7.5 特殊 | 1 | 260 `(Blasted)`；`spells3.c:4127` 的强制身份及实际状态变化，禁止加入普通随机池 |
+
+总计 38。按实际类型调度复用选择核与物化，不把首饰/装置强行套入普通武器的 great-item 门槛。
+已有定义不重复创建；rarity 0、强制生成和职业专属路径分别记录。E7 不阻塞 E6，但依赖的公共能力应复用 E5 底座。
 
 ### E8：自然掉落与完整验收
 
-- 为 `base-items` 增加 RFB ego policy，替代当前只有 Slaying/Protection 的演示池；
-- 保留现有 quality、神器和 luck 调用顺序，对齐 great item 才进入 ego 的边界；
+- 收口各批已经开放的自然生成 policy，删除残留的旧近似随机池，不等到最后才一次性开放全部类型；
+- 按 `obj_create_weapon/armor`、首饰、光源、箭袋和装置各自的源码调度核对 quality、神器和 luck/RNG 顺序；
 - 审计所有正式基础装备至少有正确类型映射，特殊/rarity 0 ego 不会自然出现；
-- importer 达到 160 条有定义、标准池只含 rarity > 0，未实现 ego flag/activation 缺口归零；
+- 160 条 source 身份均有明确实现或原版特殊用途；标准池只含对应类型合法且 rarity > 0 的候选；
+- 对每个剩余审计 flag/activation 记录“真实消费者、声明但无消费者、或明确未实现”；不得靠生成非空 JSON
+  把完成数刷到 160，也不为 AWARE 这类源端无消费者标记编造功能；
 - 删除被完整正式定义取代的重复 demo affix，只在 ID/行为确实相同且无调用冲突时合并。
+
+E8 是明确的集成里程碑：运行 workspace/内容/生成物检查、完整契约回放，并安排代表性的桌面
+“获得→鉴定→装备→触发效果/激活→保存恢复→工艺”流程。人工试玩由用户执行，单独记录。
+Mauler/Bard 等尚未接入职业的专属行为仍需列明依赖，不能以当前职业测试声称所有原版职业均已覆盖。
 
 ## 6. 每批验证矩阵
 
@@ -278,7 +321,8 @@ git diff --check
 - 新持久字段：推进 save schema 与 State Hash Schema，运行聚焦 save/replay；
 - 纯内容数量变化：只提升 pack 版本、刷新 content lock 和 README 数量；
 - 共同初始化、RNG 主流程或共享投影变化：按基线策略刷新受影响 fixture 类别；
-- 完整 160 与自然掉落接通的 E8 才做一次里程碑级全量验收。
+- 日常不做全量验收。状态哈希输入结构、共同初始化/RNG 或共享投影变化时，按根目录 AGENTS.md
+  和 baseline-update-policy 执行所需完整验证；E8 另做一次明确的集成里程碑验收。
 
 ## 7. 完成定义
 
@@ -290,6 +334,6 @@ ego 方向完成时必须同时满足：
 - [ ] 动态结果在物品实例中物化并经 save/state hash 稳定往返，不在读档时重掷；
 - [ ] 自然掉落、Craft 和显式强制 ego 共用一个选择/实例化 owner；
 - [ ] Craft 的 121 条标准候选完整，且永不生成神器；
-- [ ] importer 的 `ego-inexpressible`、`unmappedEgoFlags` 和 `ego-activation` 归零；
+- [ ] importer 的每项未映射记录都有可核查分类，真实行为缺口归零；原版无消费者标记与 SPECIAL 不靠 no-op 消数；
 - [ ] demo pack、内容锁、必要 schema/bindings 和直接受影响 fixtures 已按真实变化收口；
 - [ ] 每个实施批次均有独立提交，没有混入其他领域或无关重构。
