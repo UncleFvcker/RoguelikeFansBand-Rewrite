@@ -157,6 +157,10 @@ export function renderCharacterTraitsDetails(
       ["basics", "growth", "digging", "fire", "diet", "forest", "power", "birth"].map((rule) => f(`trait-ent-rule-${rule}`)), undefined, true), grid);
   }
   const offense = section("trait-attack-sources");
+  if (data.sources.some((source) => source.kind === "race" && source.sourceId === "rfb-legacy.race.spectre")) {
+    defenses.insertBefore(row("spectre-rules", f("race-legacy-spectre-name"), f("trait-race-effects"),
+      ["basics", "defenses", "senses", "passage", "density", "diet", "power", "birth"].map((rule) => f(`trait-spectre-rule-${rule}`)), undefined, true), grid);
+  }
   data.attacks.forEach((entry, index) => {
     const lines = entry.slays.map((slay) => f(slay.level === "kill" ? "item-kill-label" : "item-slay-label", { target: f(`slay-target-${slay.target}-name`) }));
     lines.push(...entry.brands.map((brand) => f("item-brand-label", { brand: f(`weapon-brand-${brand}-name`) })));

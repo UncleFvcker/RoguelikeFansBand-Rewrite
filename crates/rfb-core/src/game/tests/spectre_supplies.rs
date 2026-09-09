@@ -2,40 +2,13 @@
 use super::support::*;
 use super::*;
 use crate::game::{hunger, lighting};
-use std::sync::OnceLock;
 
 const SPECTRE: &str = "rfb-legacy.race.spectre";
 const HUMAN: &str = "demo.race.rfb-human";
 const STAFF: &str = "demo.item.staff-of-nothing";
 
 pub(super) fn birth(seed: u64, build: &str) -> Game {
-    static CONTENT: OnceLock<Arc<rfb_content::ContentCatalog>> = OnceLock::new();
-    let content = CONTENT.get_or_init(|| {
-        let root =
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
-        let mut artifact = rfb_content::compile_pack_dir(&root).unwrap();
-        // Exercise the real initialization pipeline before step five opens creation.
-        artifact
-            .content
-            .races
-            .iter_mut()
-            .find(|race| race.id == SPECTRE)
-            .unwrap()
-            .tags
-            .push("rfb-compatibility".to_owned());
-        Arc::new(rfb_content::ContentCatalog::from_artifact(
-            rfb_content::encode_content(artifact.content).unwrap(),
-        ))
-    });
-    Game::from_content_internal(
-        seed,
-        content.clone(),
-        DEFAULT_WORLD_ID,
-        Some(build),
-        Some(SPECTRE),
-        Game::DEFAULT_PLAYER_NAME,
-    )
-    .unwrap()
+    Game::new_with_build_race_and_name(seed, build, SPECTRE, Game::DEFAULT_PLAYER_NAME).unwrap()
 }
 
 fn form(game: &mut Game, race: &str) {
@@ -130,15 +103,6 @@ fn spectre_night_birth_preserves_all_six_class_kits_and_supplies_full_staff_and_
         let restored = Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
         assert_eq!(restored.snapshot(), game.snapshot());
     }
-    assert!(
-        Game::new_with_build_race_and_name(
-            83,
-            "demo.build.warrior",
-            SPECTRE,
-            Game::DEFAULT_PLAYER_NAME
-        )
-        .is_err()
-    );
 }
 
 #[test]

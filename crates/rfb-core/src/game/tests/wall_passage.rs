@@ -28,7 +28,7 @@ fn prepare(game: &mut Game, native: bool) {
             replace_terrain(game, Position { x, y }, FLOOR);
         }
     }
-    // Step two exercises body/form rules without opening the creation whitelist.
+    // Share terrain preconditions between native and temporary body cases.
     if native {
         game.build.as_mut().unwrap().race_id = SPECTRE.to_owned();
     }
@@ -104,15 +104,6 @@ fn spectre_passives_follow_current_form_and_consume_existing_stat_and_hunger_rul
         game.process_hunger(&mut Vec::new());
         assert_eq!(game.nutrition, 4990);
     }
-    assert!(
-        Game::new_with_build_race_and_name(
-            83,
-            "demo.build.warrior",
-            SPECTRE,
-            Game::DEFAULT_PLAYER_NAME
-        )
-        .is_err()
-    );
 }
 
 #[test]

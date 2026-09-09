@@ -53,6 +53,135 @@ fn cast(game: &mut Game) -> Vec<DomainEvent> {
 }
 
 #[test]
+fn spectre_six_classes_complete_absorb_level_scare_wall_and_save_sequence() {
+    for build in [
+        "demo.build.warrior",
+        "demo.build.high-mage-death",
+        "demo.build.archer",
+        "demo.build.paladin-death",
+        "demo.build.cavalry",
+        "demo.build.sniper",
+    ] {
+        // Choose a normal seeded run with a successful fear result, without bypassing checks.
+        let mut game = (0..100)
+            .find_map(|seed| {
+                let mut game = birth(seed, build);
+                clear_monsters(&mut game);
+                game.player.position = START;
+                for y in 14..=18 {
+                    for x in 46..=52 {
+                        replace_terrain(&mut game, Position { x, y }, "demo.terrain.floor");
+                    }
+                }
+                let staff = game
+                    .items
+                    .iter()
+                    .find(|item| item.kind_id == "demo.item.staff-of-nothing")
+                    .unwrap()
+                    .id
+                    .clone();
+                let nutrition = game.nutrition;
+                dispatch_next(
+                    &mut game,
+                    GameCommand::AbsorbDevice {
+                        item_id: staff.clone(),
+                    },
+                );
+                assert_eq!(game.nutrition, nutrition + 5000);
+                assert_eq!(
+                    game.items
+                        .iter()
+                        .find(|item| item.id == staff)
+                        .unwrap()
+                        .charges
+                        .unwrap()
+                        .current,
+                    20
+                );
+                // XP and a nearby sheep are explicit core-test preconditions, not desktop play.
+                game.apply_unscaled_player_experience(
+                    crate::stats::experience_required_for_level(4),
+                    &mut Vec::new(),
+                );
+                assert_eq!(game.progress.level, 4);
+                game.player.hp = game.effective_player_max_hp();
+                game.push_generated_actor(
+                    "test.spectre.target".to_owned(),
+                    "demo.actor.sheep",
+                    EAST,
+                );
+                let cast = dispatch_next(
+                    &mut game,
+                    GameCommand::CastAbility {
+                        ability_id: SCARE.to_owned(),
+                        target: TargetSelection::Direction {
+                            direction: Direction::East,
+                        },
+                    },
+                );
+                let afraid = cast.events.iter().any(|event| {
+                    let Some(GameEventOutcomeDto::AbilityEffects { resolution }) = &event.outcome
+                    else {
+                        return false;
+                    };
+                    resolution.effects.iter().any(|effect| {
+                        matches!(effect,
+                            rfb_protocol::AbilityEffectResolutionDto::ApplyStatus {
+                                status_kind_id, applied_duration_ticks, ..
+                            } if status_kind_id == STATUS_FEAR && *applied_duration_ticks > 0
+                        )
+                    })
+                });
+                afraid.then_some(game)
+            })
+            .unwrap_or_else(|| panic!("{build}: successful fear must be reachable"));
+        clear_monsters(&mut game);
+        replace_terrain(&mut game, EAST, "demo.terrain.wall");
+        let before_tick = game.world_tick;
+        let before_hp = game.player.hp;
+        let entry = dispatch_next(
+            &mut game,
+            GameCommand::Move {
+                direction: Direction::East,
+            },
+        );
+        assert_eq!(game.player.position, EAST);
+        assert_eq!(game.world_tick - before_tick, 15);
+        assert!(game.player.hp < before_hp);
+        assert!(
+            entry
+                .events
+                .iter()
+                .any(|event| event.message_key == "player-wall-density")
+        );
+        let before_hp = game.player.hp;
+        dispatch_next(&mut game, GameCommand::Wait);
+        assert_eq!(game.player.hp, before_hp - 1);
+        let leave = dispatch_next(
+            &mut game,
+            GameCommand::Move {
+                direction: Direction::West,
+            },
+        );
+        assert_eq!(game.player.position, START);
+        assert!(
+            !leave
+                .events
+                .iter()
+                .any(|event| event.message_key == "player-wall-density")
+        );
+        let mut restored =
+            Game::from_save_with_content(game.to_save(), game.content.clone()).unwrap();
+        assert_eq!(restored.snapshot(), game.snapshot());
+        assert_eq!(
+            dispatch_next(&mut restored, GameCommand::Wait),
+            dispatch_next(&mut game, GameCommand::Wait)
+        );
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
+}
+
+#[test]
 fn spectre_scare_unlocks_at_four_uses_intelligence_and_keeps_charisma_effect_power() {
     let mut game = ready();
     let activation = game.race_ability_activation(SCARE).unwrap();

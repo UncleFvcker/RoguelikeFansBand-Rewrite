@@ -7524,6 +7524,7 @@ fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
             "night-start",
             "nonliving",
             "polymorph-candidate",
+            "rfb-compatibility",
             "slow-digestion",
             "undead",
         ];
@@ -25001,7 +25002,7 @@ static power_info _wood_elf_get_powers[] =
     }
 
     #[test]
-    fn spectre_passives_and_supplies_are_mapped_without_opening_creation() {
+    fn spectre_formal_race_preserves_passives_supplies_and_power_mapping() {
         const SOURCE: &str = r#"
 static power_info _spectre_get_powers[] =
 {
@@ -25067,6 +25068,7 @@ me.get_powers = _spectre_get_powers;
                 "night-start",
                 "nonliving",
                 "polymorph-candidate",
+                "rfb-compatibility",
                 "slow-digestion",
                 "undead"
             ]

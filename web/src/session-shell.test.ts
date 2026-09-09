@@ -46,10 +46,11 @@ test("the New Game race options match the formal race list", () => {
   const raceIds = [...select.matchAll(/<option\b[^>]*\bvalue="([^"]+)"/g)]
     .map((match) => match[1]);
   assert.deepEqual(raceIds, PLAYTEST_RACE_IDS);
-  assert.equal(raceIds.length, 45);
+  assert.equal(raceIds.length, 46);
   assert.ok(raceIds.includes("rfb-legacy.race.tomte"));
   assert.ok(raceIds.includes("rfb-legacy.race.tonberry"));
   assert.ok(raceIds.includes("rfb-legacy.race.ent"));
+  assert.ok(raceIds.includes("rfb-legacy.race.spectre"));
 });
 
 test("the New Game form groups all nine formal Draconian subraces", () => {

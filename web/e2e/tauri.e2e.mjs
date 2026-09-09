@@ -50,6 +50,7 @@ const renderProfileOnly = process.argv.includes("--render-profile");
 const tomteOnly = process.argv.includes("--tomte");
 const tonberryOnly = process.argv.includes("--tonberry");
 const entOnly = process.argv.includes("--ent");
+const spectreOnly = process.argv.includes("--spectre");
 const logs = [];
 let child;
 let client;
@@ -90,8 +91,8 @@ async function main() {
     client = await WebDriverClient.create(port, child);
     if (renderProfileOnly) {
       await runRendererProfile(client, artifactDirectory);
-    } else if (tomteOnly || tonberryOnly || entOnly) {
-      await runRaceScenario(client, entOnly ? "ent" : tonberryOnly ? "tonberry" : "tomte");
+    } else if (tomteOnly || tonberryOnly || entOnly || spectreOnly) {
+      await runRaceScenario(client, spectreOnly ? "spectre" : entOnly ? "ent" : tonberryOnly ? "tonberry" : "tomte");
     } else {
       await runScenario(client);
     }
@@ -104,7 +105,7 @@ async function main() {
       );
     }
     process.stdout.write(
-      renderProfileOnly ? "Renderer profile passed.\n" : tomteOnly || tonberryOnly || entOnly ? "Race desktop acceptance passed.\n" : "Tauri desktop E2E passed.\n",
+      renderProfileOnly ? "Renderer profile passed.\n" : tomteOnly || tonberryOnly || entOnly || spectreOnly ? "Race desktop acceptance passed.\n" : "Tauri desktop E2E passed.\n",
     );
   } catch (error) {
     await mkdir(artifactDirectory, { recursive: true });
@@ -319,9 +320,10 @@ async function runScenario(driver) {
 async function runRaceScenario(driver, raceId) {
   const isTomte = raceId === "tomte";
   const isEnt = raceId === "ent";
-  const raceName = isEnt ? "树人" : isTomte ? "托姆特" : "冬贝利";
+  const isSpectre = raceId === "spectre";
+  const raceName = isSpectre ? "幽灵" : isEnt ? "树人" : isTomte ? "托姆特" : "冬贝利";
   const slot = isTomte ? "head" : "right-hand";
-  const trait = isEnt ? "ent-rules" : isTomte ? "tomte-headgear" : "tonberry-rules";
+  const trait = isSpectre ? "spectre-rules" : isEnt ? "ent-rules" : isTomte ? "tomte-headgear" : "tonberry-rules";
   const builds = ["warrior", "high-mage-death", "archer"];
   const expected = await loadExpectedIdentity();
   const report = { identity: expected, checks: [] };
@@ -354,15 +356,16 @@ async function runRaceScenario(driver, raceId) {
     assert.equal(description.name, raceName);
     assert.equal(description.visible, true);
     assert.equal(description.descriptionId, `session-${raceId}-description`);
-    assert.ok(isEnt ? description.text.includes("4200") && description.text.includes("14999") && description.text.includes("召唤树人")
+    assert.ok(isSpectre ? description.text.includes("150") && description.text.includes("5000") && description.text.includes("恐吓怪物")
+      : isEnt ? description.text.includes("4200") && description.text.includes("14999") && description.text.includes("召唤树人")
       : isTomte ? description.text.includes("1.0 磅") && description.text.includes("40")
       : description.text.includes("偏爱菜刀和宽刃刀") && description.text.includes("0.04") && description.text.includes("军刀"));
-    if (isEnt) {
+    if (isEnt || isSpectre) {
       const layout = await driver.execute(`
-        const note = document.querySelector("#session-ent-description");
+        const note = document.querySelector("#session-" + arguments[0] + "-description");
         note.scrollIntoView({ block: "start" });
         return { bullets: note.querySelectorAll("li").length, fits: note.scrollWidth <= note.clientWidth };
-      `);
+      `, [raceId]);
       assert.deepEqual(layout, { bullets: 8, fits: true });
       await writeFile(path.join(artifactDirectory, `${raceId}-${build}-creation.png`), await driver.screenshot(), "base64");
     }
@@ -373,10 +376,10 @@ async function runRaceScenario(driver, raceId) {
     assert.equal(await driver.execute(`return document.querySelector("#map-host").dataset.protocolVersion;`), expected.protocolVersion);
     await click(driver, "#player-ui-character-open");
     await click(driver, "#character-tab-details");
-    await click(driver, isTomte || isEnt ? "#character-detail-tab-defenses" : "#character-detail-tab-offense");
-    await driver.waitFor(`return document.querySelector('[data-trait="' + arguments[0] + '"]')?.textContent.includes(arguments[1])`, "racial trait projection", 10_000, [trait, isEnt ? "14999" : isTomte ? "头饰未超重" : "0.04"]);
+    await click(driver, isTomte || isEnt || isSpectre ? "#character-detail-tab-defenses" : "#character-detail-tab-offense");
+    await driver.waitFor(`return document.querySelector('[data-trait="' + arguments[0] + '"]')?.textContent.includes(arguments[1])`, "racial trait projection", 10_000, [trait, isSpectre ? "5000" : isEnt ? "14999" : isTomte ? "头饰未超重" : "0.04"]);
     if (!isTomte) {
-      assert.equal(await driver.execute(`return document.querySelectorAll('[data-trait="' + arguments[0] + '"] .race-effects-list > li').length;`, [trait]), isEnt ? 8 : 6);
+      assert.equal(await driver.execute(`return document.querySelectorAll('[data-trait="' + arguments[0] + '"] .race-effects-list > li').length;`, [trait]), isEnt || isSpectre ? 8 : 6);
     }
     await driver.execute(`const row = document.querySelector('[data-trait="' + arguments[0] + '"]'); row.open = true; row.scrollIntoView({ block: "center" }); return true;`, [trait]);
     await writeFile(path.join(artifactDirectory, `${raceId}-${build}.png`), await driver.screenshot(), "base64");
@@ -395,6 +398,32 @@ async function runRaceScenario(driver, raceId) {
       await driver.execute(`if (document.querySelector("#player-page-dialog").open) document.querySelector("#player-page-close").click(); return true;`);
     }
     await click(driver, "#player-ui-inventory-open");
+    if (isSpectre) {
+      const staffState = () => driver.execute(`
+        const rows = [...document.querySelectorAll("#inventory-list .inventory-item")];
+        const staff = rows.find(row => row.dataset.itemKindId === "demo.item.staff-of-nothing");
+        return { charges: staff.querySelector(".inventory-item-status").textContent,
+          nutrition: document.querySelector("#nutrition-value").textContent,
+          hasRations: rows.some(row => row.dataset.itemKindId === "demo.item.ration-of-food"),
+          hasTorches: rows.some(row => row.textContent.includes("火把")) };
+      `);
+      const before = await staffState();
+      assert.equal(before.hasRations, false);
+      assert.equal(before.hasTorches, true);
+      await driver.execute(`document.querySelector('#inventory-list [data-item-kind-id="demo.item.staff-of-nothing"] input[type="checkbox"]').click(); return true;`);
+      const turn = (await state()).turn;
+      await click(driver, "#inventory-absorb");
+      await driver.waitFor(`return document.querySelector(".item-target-dialog")?.open`, "absorption device choice");
+      await click(driver, ".item-target-dialog .item-target-actions button:last-child");
+      await afterTurn(turn);
+      const after = await staffState();
+      assert.match(before.charges, /21/);
+      assert.match(after.charges, /20/);
+      assert.match(before.nutrition, /99/);
+      assert.match(after.nutrition, /149/);
+      await driver.execute(`for (const input of document.querySelectorAll('#inventory-list input[type="checkbox"]:checked')) input.click(); return true;`);
+      report.checks.push({ build, absorption: { before, after } });
+    }
     if (isEnt) {
       const beforeWater = await driver.execute(`
         const rows = [...document.querySelectorAll("#inventory-list .inventory-item")];
@@ -433,6 +462,35 @@ async function runRaceScenario(driver, raceId) {
     await click(driver, "#inventory-equip");
     await driver.waitFor(`return document.querySelector('#equipment-list [data-slot-id="' + arguments[0] + '"] .equipment-slot-name')?.textContent === arguments[1]`, "equipment equipped", 10_000, [slot, equipmentName]);
     await click(driver, "#player-page-close");
+    if (isSpectre) {
+      const wallState = () => driver.execute(`return {
+        position: document.querySelector("#position-value").textContent,
+        hp: parseInt(document.querySelector("#hp-value").textContent, 10),
+        densityMessage: document.body.textContent.includes("密度使你受到了"),
+      };`);
+      const step = async (code, key) => {
+        const turn = (await state()).turn;
+        await dispatchKey(driver, code, key);
+        await afterTurn(turn);
+        return wallState();
+      };
+      // Outpost's fixed map starts at (44,16), with a passable building wall at (44,13).
+      assert.equal((await wallState()).position, "44, 16");
+      await step("Numpad8", "8");
+      const before = await step("Numpad8", "8");
+      assert.equal(before.position, "44, 14");
+      const inside = await step("Numpad8", "8");
+      assert.equal(inside.position, "44, 13");
+      assert.ok(inside.hp < before.hp);
+      assert.equal(inside.densityMessage, true);
+      const waited = await step("Numpad5", "5");
+      assert.equal(waited.hp, inside.hp - 1);
+      await writeFile(path.join(artifactDirectory, `${raceId}-${build}-wall.png`), await driver.screenshot(), "base64");
+      const outside = await step("Numpad2", "2");
+      assert.equal(outside.position, "44, 14");
+      assert.ok(outside.hp >= waited.hp);
+      report.checks.push({ build, wall: { before, inside, waited, outside } });
+    }
     await driver.execute(`
       window.__rfbE2eDownloads = [];
       URL.createObjectURL = blob => { window.__rfbE2eDownloads.push({ blob, size: blob.size }); return "blob:race-acceptance"; };
@@ -456,7 +514,7 @@ async function runRaceScenario(driver, raceId) {
     assert.deepEqual(await state(), saved);
     await dispatchKey(driver, "Numpad5", "5"); await afterTurn(saved.turn);
     assert.deepEqual((await state()).errors, []);
-    report.checks.push({ build, race: saved.race, saveHash: saved.hash, checks: ["create", "Chinese description", "racial traits", ...(isTomte ? ["probe"] : isEnt ? ["birth water/torches/no rations", "drink water"] : []), "unequip/equip", "save/restore", "continue"] });
+    report.checks.push({ build, race: saved.race, saveHash: saved.hash, checks: ["create", "Chinese description", "racial traits", ...(isSpectre ? ["birth staff/torches/no rations", "absorb device", "enter wall", "wait for density damage", "leave wall"] : isTomte ? ["probe"] : isEnt ? ["birth water/torches/no rations", "drink water"] : []), "unequip/equip", "save/restore", "continue"] });
     process.stdout.write(`${raceId}: ${build} passed.\n`);
     if (build !== builds.at(-1)) {
       await driver.execute(`setTimeout(() => location.reload(), 100); return true;`);
