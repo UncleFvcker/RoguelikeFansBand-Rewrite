@@ -2,6 +2,20 @@
 
 use super::*;
 
+pub(super) fn resisted_status_duration_with_percent(requested: u32, percent: i32) -> u32 {
+    if percent == 100 {
+        return 0;
+    }
+    let multiplier = 100_i64.saturating_sub(i64::from(percent));
+    u32::try_from(
+        i64::from(requested)
+            .saturating_mul(multiplier)
+            .saturating_div(100)
+            .clamp(1, i64::from(u32::MAX)),
+    )
+    .expect("clamped status duration must fit u32")
+}
+
 pub(super) fn ability_status_stacking_dto(
     stacking: AbilityStatusStackingDefinition,
 ) -> AbilityStatusStackingDto {
@@ -52,7 +66,7 @@ pub(super) fn apply_ability_status_effect(
     grants_wall_passage: bool,
     incoming_damage_percent: u8,
     target_level: Option<u32>,
-    defenses: Option<(&ResistanceProfile, &BTreeSet<String>)>,
+    defenses: Option<(&ResistanceProfile, &BTreeSet<String>, Option<i32>)>,
     rng: &mut RfbRng,
 ) -> AbilityEffectResolutionDto {
     let granted_resistances_dto = granted_resistances
@@ -69,7 +83,7 @@ pub(super) fn apply_ability_status_effect(
         .collect::<Vec<_>>();
     // Gear- or race-granted immunity blocks the status outright before any
     // resistance scaling; the resolution reuses the immune shape.
-    if defenses.is_some_and(|(_, immunities)| immunities.contains(status_kind_id)) {
+    if defenses.is_some_and(|(_, immunities, _)| immunities.contains(status_kind_id)) {
         return AbilityEffectResolutionDto::ApplyStatus {
             effect_index,
             status_kind_id: status_kind_id.to_owned(),
@@ -139,11 +153,14 @@ pub(super) fn apply_ability_status_effect(
     let resistance = resistance_type.map(DamageType::from).map(|damage_type| {
         defenses.map_or_else(
             || actor.resistances.level(damage_type),
-            |(profile, _)| profile.level(damage_type),
+            |(profile, _, _)| profile.level(damage_type),
         )
     });
     let applied_duration_ticks = resistance.map_or(requested_duration_ticks, |level| {
-        resisted_status_duration(requested_duration_ticks, level)
+        let percent = defenses
+            .and_then(|(_, _, percent)| percent)
+            .unwrap_or_else(|| level.reduction_percent());
+        resisted_status_duration_with_percent(requested_duration_ticks, percent)
     });
     if applied_duration_ticks == 0 {
         return AbilityEffectResolutionDto::ApplyStatus {

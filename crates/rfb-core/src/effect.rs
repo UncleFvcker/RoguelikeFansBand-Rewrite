@@ -245,10 +245,18 @@ pub struct EffectTarget<'a> {
 
 #[must_use]
 pub fn resolve_damage(packet: DamagePacket, resistance: ResistanceLevel) -> DamageOutcome {
+    resolve_damage_with_resistance_percent(packet, resistance, resistance.reduction_percent())
+}
+
+pub(crate) fn resolve_damage_with_resistance_percent(
+    packet: DamagePacket,
+    resistance: ResistanceLevel,
+    reduction_percent: i32,
+) -> DamageOutcome {
     let raw = packet.amount.max(0);
     let armor_reduction = packet.armor_reduction.clamp(0, raw);
     let requested = raw.saturating_sub(armor_reduction);
-    let reduction = i64::from(resistance.reduction_percent());
+    let reduction = i64::from(reduction_percent);
     let prevented = i64::from(requested).saturating_mul(reduction) / 100;
     let applied = i64::from(requested)
         .saturating_sub(prevented)

@@ -271,11 +271,7 @@ impl Game {
         if self.player_status_immunities().contains(status_kind_id) {
             return true;
         }
-        let percent = self
-            .effective_player_resistances()
-            .level(damage_type)
-            .reduction_percent()
-            .max(0);
+        let percent = self.player_resistance_percent(damage_type).max(0);
         self.rng.bounded(ELDRITCH_HIGH_RESISTANCE_ROLL) < u64::try_from(percent).unwrap_or(0)
     }
 

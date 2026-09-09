@@ -302,7 +302,7 @@ impl Game {
                             *grants_wall_passage,
                             *incoming_damage_percent,
                             target_level,
-                            Some((&target_resistances, &target_immunities)),
+                            Some((&target_resistances, &target_immunities, None)),
                             &mut self.rng,
                         )
                     }
@@ -398,7 +398,7 @@ impl Game {
             *grants_wall_passage,
             *incoming_damage_percent,
             succeeded.then_some(target_level),
-            (!succeeded).then_some((&forced_resistances, &forced_immunities)),
+            (!succeeded).then_some((&forced_resistances, &forced_immunities, None)),
             &mut self.rng,
         );
         if let AbilityEffectResolutionDto::ApplyStatus {
@@ -824,7 +824,7 @@ impl Game {
                 false,
                 100,
                 target_level,
-                Some((&resistance_profile, &status_immunities)),
+                Some((&resistance_profile, &status_immunities, None)),
                 &mut self.rng,
             );
             changed.insert(self.entities[index].position);

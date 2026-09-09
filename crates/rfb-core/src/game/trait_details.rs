@@ -328,8 +328,9 @@ impl Game {
             .map(|kind| CharacterResistanceDto {
                 damage_type: kind.into(),
                 level: complete.then(|| resistance_profile.level(kind).into()),
-                reduction_percent: complete
-                    .then(|| resistance_profile.level(kind).reduction_percent()),
+                reduction_percent: complete.then(|| {
+                    self.adjust_player_resistance_percent(kind, resistance_profile.level(kind))
+                }),
             })
             .collect();
         let equipment_passives = self.player_equipment_passives();

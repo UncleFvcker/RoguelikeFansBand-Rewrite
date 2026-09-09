@@ -676,7 +676,43 @@ impl Game {
             .unwrap_or(100)
     }
 
-    pub(super) fn reduce_player_damage(&self, damage: DamageOutcome) -> DamageOutcome {
+    pub(super) fn adjust_player_resistance_percent(
+        &self,
+        damage_type: DamageType,
+        resistance: ResistanceLevel,
+    ) -> i32 {
+        let percent = resistance.reduction_percent();
+        // RFB master a0d92b6378: resist.c::res_pct_aux, after merging resistances.
+        // Negative resistance and immunity bypass the Tonberry adjustment.
+        if damage_type == DamageType::Confusion
+            && (0..100).contains(&percent)
+            && self
+                .character_definitions()
+                .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.tonberry")
+        {
+            (percent + 1) / 2
+        } else {
+            percent
+        }
+    }
+
+    pub(super) fn player_resistance_percent(&self, damage_type: DamageType) -> i32 {
+        self.adjust_player_resistance_percent(
+            damage_type,
+            self.effective_player_resistances().level(damage_type),
+        )
+    }
+
+    pub(super) fn reduce_player_damage(&self, mut damage: DamageOutcome) -> DamageOutcome {
+        let percent = self.adjust_player_resistance_percent(damage.damage_type, damage.resistance);
+        if percent != damage.resistance.reduction_percent() {
+            // Re-evaluate resistance on the post-armor amount before incoming-damage modifiers.
+            damage = crate::effect::resolve_damage_with_resistance_percent(
+                DamagePacket::after_armor(damage.raw, damage.requested, damage.damage_type),
+                damage.resistance,
+                percent,
+            );
+        }
         scale_damage_outcome(damage, self.player_incoming_damage_percent())
     }
 

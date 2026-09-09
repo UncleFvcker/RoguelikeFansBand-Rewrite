@@ -2334,7 +2334,7 @@ impl Game {
                 false,
                 100,
                 target_level,
-                Some((&resistances, &status_immunities)),
+                Some((&resistances, &status_immunities, None)),
                 &mut self.rng,
             );
             changed.insert(self.entities[index].position);
@@ -3869,13 +3869,9 @@ impl Game {
         if self.player_status_immunities().contains(status_kind_id) {
             return true;
         }
-        let resistance_threshold = u64::try_from(
-            self.effective_player_resistances()
-                .level(damage_type.into())
-                .reduction_percent()
-                .max(0),
-        )
-        .expect("status resistance threshold must be non-negative");
+        let resistance_threshold =
+            u64::try_from(self.player_resistance_percent(damage_type.into()).max(0))
+                .expect("status resistance threshold must be non-negative");
         self.rng.bounded(55) < resistance_threshold
     }
 

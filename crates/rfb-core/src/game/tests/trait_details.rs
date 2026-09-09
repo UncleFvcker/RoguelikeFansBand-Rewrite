@@ -45,6 +45,178 @@ fn details(game: &Game) -> CharacterTraitDetailsDto {
 }
 
 #[test]
+fn tonberry_confusion_saves_use_adjusted_percent_and_preserve_status_immunity() {
+    let mut base = game();
+    base.build.as_mut().unwrap().race_id = "rfb-legacy.race.tonberry".to_owned();
+    base.player
+        .resistances
+        .set(DamageType::Chaos, ResistanceLevel::Immune);
+    for (level, threshold) in [
+        (ResistanceLevel::Vulnerable, 0),
+        (ResistanceLevel::Normal, 0),
+        (ResistanceLevel::Resistant, 25),
+        (ResistanceLevel::Strong, 33),
+        (ResistanceLevel::Immune, 100),
+    ] {
+        for immune in [false, true] {
+            for seed in 0..32 {
+                let mut game = base.clone();
+                game.player.resistances.set(DamageType::Confusion, level);
+                if immune {
+                    let mut defense = status(STATUS_PLAYER_POLYMORPH);
+                    defense
+                        .granted_status_immunities
+                        .insert(STATUS_CONFUSION.to_owned());
+                    game.player.statuses.push(defense);
+                }
+                game.rng = RfbRng::seeded(seed);
+                let mut expected_rng = game.rng.clone();
+                let resisted = immune || expected_rng.bounded(55) < threshold;
+                let duration = (!resisted).then(|| (expected_rng.bounded(20) + 16) * 10);
+                expected_rng.bounded(55); // Chaos immunity prevents further booze effects.
+                game.resolve_item_booze(
+                    "demo.item.booze-potion",
+                    &mut Vec::new(),
+                    &mut BTreeSet::new(),
+                );
+                assert_eq!(
+                    game.player
+                        .statuses
+                        .iter()
+                        .find(|status| status.kind_id == STATUS_CONFUSION)
+                        .map(|status| u64::from(status.remaining_ticks)),
+                    duration,
+                    "{level:?}, immune={immune}, seed={seed}",
+                );
+                assert_eq!(game.rng, expected_rng);
+            }
+        }
+    }
+}
+
+#[test]
+fn tonberry_confusion_percent_is_shared_by_damage_status_duration_and_known_projection() {
+    for (level, percent, damage, duration) in [
+        (ResistanceLevel::Vulnerable, -50, 76, 150),
+        (ResistanceLevel::Normal, 0, 51, 100),
+        (ResistanceLevel::Resistant, 25, 38, 75),
+        (ResistanceLevel::Strong, 33, 34, 67),
+        (ResistanceLevel::Immune, 100, 0, 0),
+    ] {
+        let mut game = game();
+        let mut form = status(STATUS_PLAYER_POLYMORPH);
+        form.granted_race_id = Some("rfb-legacy.race.tonberry".to_owned());
+        form.incoming_damage_percent = 50;
+        game.player.statuses.push(form);
+        game.player.resistances.set(DamageType::Confusion, level);
+        assert_eq!(
+            game.player_resistance_percent(DamageType::Confusion),
+            percent
+        );
+        assert_eq!(
+            game.adjust_player_resistance_percent(DamageType::Fire, level),
+            level.reduction_percent(),
+        );
+        let rng = game.rng.clone();
+        let row = details(&game)
+            .resistances
+            .into_iter()
+            .find(|row| row.damage_type == rfb_protocol::DamageTypeDto::Confusion)
+            .unwrap();
+        assert_eq!(row.level, Some(level.into()));
+        assert_eq!(row.reduction_percent, Some(percent));
+        assert_eq!(game.rng, rng);
+
+        game.player.hp = 10_000;
+        let result = game.resolve_monster_damage_to_player(
+            "test.source",
+            "demo.actor.small-kobold",
+            "test.confusion",
+            0,
+            203,
+            101,
+            DamageType::Confusion,
+            &mut Vec::new(),
+        );
+        let AbilityEffectResolutionDto::Damage { resolution, .. } = result else {
+            panic!("damage result")
+        };
+        assert_eq!(resolution.raw_damage, 203);
+        assert_eq!(resolution.armor_reduction, 102);
+        assert_eq!(resolution.final_damage, damage);
+        assert_eq!(game.player.hp, 10_000 - damage);
+        assert_eq!(game.rng, rng);
+
+        let mut ability = game
+            .content
+            .ability("rfb-legacy.ability.confuse")
+            .unwrap()
+            .clone();
+        let AbilityEffectDefinition::ApplyStatus {
+            duration_ticks,
+            duration_dice,
+            duration_sides,
+            power,
+            resistance_type,
+            ..
+        } = &mut ability.effect
+        else {
+            panic!("confuse status")
+        };
+        *duration_ticks = 100;
+        *duration_dice = 0;
+        *duration_sides = 0;
+        *power = None;
+        *resistance_type = Some(ActorDamageType::Confusion);
+        let result = game.resolve_monster_player_effects(
+            "test.source",
+            "demo.actor.small-kobold",
+            &ability,
+            &mut Vec::new(),
+            &mut BTreeSet::new(),
+        );
+        let AbilityEffectResolutionDto::ApplyStatus {
+            applied_duration_ticks,
+            ..
+        } = result[0]
+        else {
+            panic!("status result")
+        };
+        assert_eq!(applied_duration_ticks, duration);
+        assert_eq!(game.rng, rng);
+
+        give_inventory_item(&mut game, "test.unknown", "demo.item.short-sword");
+        game.items.last_mut().unwrap().location = ItemLocation::Equipped {
+            slot_id: "right-hand".to_owned(),
+        };
+        let row = details(&game)
+            .resistances
+            .into_iter()
+            .find(|row| row.damage_type == rfb_protocol::DamageTypeDto::Confusion)
+            .unwrap();
+        assert_eq!(row.reduction_percent, None);
+        game.player.statuses.clear();
+        assert_eq!(
+            game.player_resistance_percent(DamageType::Confusion),
+            level.reduction_percent()
+        );
+        // Native-race precondition also uses the current form, not the birth identity alone.
+        game.build.as_mut().unwrap().race_id = "rfb-legacy.race.tonberry".to_owned();
+        assert_eq!(
+            game.player_resistance_percent(DamageType::Confusion),
+            percent
+        );
+        let mut form = status(STATUS_PLAYER_POLYMORPH);
+        form.granted_race_id = Some("demo.race.rfb-human".to_owned());
+        game.player.statuses.push(form);
+        assert_eq!(
+            game.player_resistance_percent(DamageType::Confusion),
+            level.reduction_percent()
+        );
+    }
+}
+
+#[test]
 fn trait_details_auras_share_combat_sources_without_rolling_damage() {
     let mut game = game();
     for id in [

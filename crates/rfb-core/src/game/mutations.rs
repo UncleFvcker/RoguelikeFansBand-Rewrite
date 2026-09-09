@@ -862,10 +862,7 @@ impl Game {
         let percent = if self.player_status_immunities().contains(status_kind_id) {
             100
         } else {
-            self.effective_player_resistances()
-                .level(damage_type)
-                .reduction_percent()
-                .max(0)
+            self.player_resistance_percent(damage_type).max(0)
         };
         self.rng.bounded(33) < u64::try_from(percent).unwrap_or(0)
     }

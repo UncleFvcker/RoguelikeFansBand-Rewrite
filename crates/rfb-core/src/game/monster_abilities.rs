@@ -3105,6 +3105,12 @@ impl Game {
                     } else {
                         let effective = self.effective_player_resistances();
                         let immunities = self.player_status_immunities();
+                        let resistance_percent = resistance_type.map(|kind| {
+                            self.adjust_player_resistance_percent(
+                                kind.into(),
+                                effective.level(kind.into()),
+                            )
+                        });
                         let target_level = u32::from(self.progress.level);
                         let resolution = apply_ability_status_effect(
                             &mut self.player,
@@ -3127,7 +3133,7 @@ impl Game {
                             *grants_wall_passage,
                             *incoming_damage_percent,
                             Some(target_level),
-                            Some((&effective, &immunities)),
+                            Some((&effective, &immunities, resistance_percent)),
                             &mut self.rng,
                         );
                         if let Some(damage_type) = resistance_type.map(DamageType::from) {

@@ -1814,9 +1814,12 @@ impl Game {
                         let raw = (*damage_dice > 0).then(|| {
                             self.roll_monster_melee_effect(index, *damage_dice, *damage_sides, nice)
                         });
-                        let duration = resisted_status_duration(
+                        let duration = status_effects::resisted_status_duration_with_percent(
                             u32::try_from(10 + self.roll_damage(1, 20)).unwrap_or(u32::MAX),
-                            resistance,
+                            self.adjust_player_resistance_percent(
+                                DamageType::Confusion,
+                                resistance,
+                            ),
                         );
                         self.apply_player_melee_status(
                             STATUS_CONFUSION,

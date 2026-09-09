@@ -430,7 +430,7 @@ impl Game {
             false,
             100,
             Some(target_level),
-            Some((&resistances, &immunities)),
+            Some((&resistances, &immunities, None)),
             &mut self.rng,
         );
         events.push(DomainEvent::AbilityEffectsResolved {

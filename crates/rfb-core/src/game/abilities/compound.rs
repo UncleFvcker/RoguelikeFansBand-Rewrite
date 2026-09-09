@@ -1545,7 +1545,7 @@ impl Game {
                 false,
                 100,
                 target_level,
-                Some((&resistance_profile, &immunities)),
+                Some((&resistance_profile, &immunities, None)),
                 &mut self.rng,
             );
             let control = self.resolve_ability_control(index, 2, "any-monster", control_power);

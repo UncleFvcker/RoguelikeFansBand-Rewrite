@@ -4625,17 +4625,7 @@ const fn resistance_rank(level: ResistanceLevel) -> u8 {
 }
 
 fn resisted_status_duration(requested: u32, resistance: ResistanceLevel) -> u32 {
-    if resistance == ResistanceLevel::Immune {
-        return 0;
-    }
-    let multiplier = 100_i64.saturating_sub(i64::from(resistance.reduction_percent()));
-    u32::try_from(
-        i64::from(requested)
-            .saturating_mul(multiplier)
-            .saturating_div(100)
-            .clamp(1, i64::from(u32::MAX)),
-    )
-    .expect("clamped status duration must fit u32")
+    status_effects::resisted_status_duration_with_percent(requested, resistance.reduction_percent())
 }
 
 fn squared_distance(left: Position, right: Position) -> i32 {
