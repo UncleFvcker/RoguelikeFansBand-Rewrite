@@ -47,7 +47,9 @@ pub struct TownFacilityDefinition {
     #[serde(default)]
     pub research_item_cost: Option<u32>,
     #[serde(default)]
-    pub identify_all_items_cost: Option<u32>,
+    pub identify_all_items_cost: Option<TownFacilityPrice>,
+    #[serde(default)]
+    pub inn_stay_cost: Option<TownFacilityPrice>,
     #[serde(default)]
     pub overview_message_key: Option<String>,
     #[serde(default)]
@@ -79,6 +81,14 @@ impl TownFacilityDefinition {
         std::iter::once(self.entrance_position)
             .chain(self.additional_entrance_positions.iter().copied())
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "schemas", derive(JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct TownFacilityPrice {
+    pub owner_cost: u32,
+    pub other_cost: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

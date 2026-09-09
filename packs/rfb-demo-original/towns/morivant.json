@@ -14,7 +14,9 @@
     "demo.town-facility.morivant-inner-sanctum",
     "demo.town-facility.morivant-archer-guild",
     "demo.town-facility.morivant-paladin-guild",
-    "demo.town-facility.morivant-trump-tower"
+    "demo.town-facility.morivant-trump-tower",
+    "demo.town-facility.morivant-sorcery-tower",
+    "demo.town-facility.morivant-thieves-guild"
   ],
   "shopIds": [
     "demo.shop.morivant-shroomery",

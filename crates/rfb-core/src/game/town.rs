@@ -4,7 +4,7 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use rfb_content::{
     ContentCatalog, ShopCategory, ShopDefinition, ShopStockDefinition, TownDefinition,
-    TownFacilityCategory, TownFacilityDefinition, TownFacilityServiceDefinition,
+    TownFacilityCategory, TownFacilityDefinition, TownFacilityPrice, TownFacilityServiceDefinition,
     TownFacilityServiceKind, WildernessLocationDefinition, WorldDefinition,
 };
 use rfb_protocol::{
@@ -1200,6 +1200,18 @@ impl Game {
         }
     }
 
+    pub(super) fn town_facility_price(
+        &self,
+        facility: &TownFacilityDefinition,
+        price: TownFacilityPrice,
+    ) -> u32 {
+        if self.town_facility_membership(facility) == FacilityMembershipDto::Owner {
+            price.owner_cost
+        } else {
+            price.other_cost
+        }
+    }
+
     fn town_facility_service_cost(
         &self,
         definition: TownFacilityServiceDefinition,
@@ -1421,9 +1433,10 @@ impl Game {
         let Some(facility) = self.content.town_facility(facility_id) else {
             return Err("unknown-facility");
         };
-        let Some(cost) = facility.identify_all_items_cost else {
+        let Some(price) = facility.identify_all_items_cost else {
             return Err("service-unavailable");
         };
+        let cost = self.town_facility_price(facility, price);
         if !self.town_facility_accessible(facility_id) {
             return Err("facility-unreachable");
         }
@@ -1673,15 +1686,29 @@ impl Game {
         &mut self,
         facility_id: &str,
     ) -> Result<InnStayOutcome, &'static str> {
-        let Some(inn) = self.content.shop(facility_id).cloned() else {
+        let cost = if let Some(inn) = self.content.shop(facility_id) {
+            let cost = inn.inn_stay_cost.ok_or("unknown-inn")?;
+            if !shop_accessible(self, inn) {
+                return Err("inn-unreachable");
+            }
+            cost
+        } else if let Some(facility) = self.content.town_facility(facility_id) {
+            let price = facility.inn_stay_cost.ok_or("unknown-inn")?;
+            if !self.town_facility_accessible(facility_id) {
+                return Err("inn-unreachable");
+            }
+            self.town_facility_price(facility, price)
+        } else {
             return Err("unknown-inn");
         };
-        let Some(cost) = inn.inn_stay_cost else {
-            return Err("unknown-inn");
-        };
-        if !shop_accessible(self, &inn) {
-            return Err("inn-unreachable");
-        }
+        self.rest_at_inn(facility_id, cost)
+    }
+
+    fn rest_at_inn(
+        &mut self,
+        facility_id: &str,
+        cost: u32,
+    ) -> Result<InnStayOutcome, &'static str> {
         if self.player_has_status_kind(STATUS_POISON)
             || self.player_has_status_kind(STATUS_BLEEDING)
         {

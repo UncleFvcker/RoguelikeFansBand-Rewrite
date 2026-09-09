@@ -13700,6 +13700,14 @@
           "format": "uint32",
           "minimum": 0
         },
+        "innStayCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
+        },
         "legalNameChangeCost": {
           "type": [
             "integer",

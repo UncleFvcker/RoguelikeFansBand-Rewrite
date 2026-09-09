@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town-facility.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town-facility.morivant-thieves-guild",
+  "nameKey": "town-facility-demo-morivant-thieves-guild-name",
+  "descriptionKey": "town-facility-demo-morivant-thieves-guild-description",
+  "townId": "demo.town.morivant",
+  "category": "service",
+  "ownerNameKey": "town-facility-demo-morivant-thieves-guild-owner-name",
+  "entrancePosition": {
+    "x": 122,
+    "y": 43
+  },
+  "entranceTerrainId": "demo.terrain.thieves-guild-entrance",
+  "identifyAllItemsCost": {
+    "ownerCost": 100,
+    "otherCost": 600
+  },
+  "innStayCost": {
+    "ownerCost": 0,
+    "otherCost": 50
+  }
+}

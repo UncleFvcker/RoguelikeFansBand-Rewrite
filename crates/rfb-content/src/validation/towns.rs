@@ -138,7 +138,14 @@ pub(super) fn validate_towns_and_shops(
             || !facility.member_realm_ids.is_empty();
         let invalid_service_cost = facility.identify_item_cost == Some(0)
             || facility.research_item_cost == Some(0)
-            || facility.identify_all_items_cost == Some(0)
+            || facility
+                .identify_all_items_cost
+                .is_some_and(|price| price.owner_cost == 0 || price.other_cost == 0)
+            || facility
+                .identify_all_items_cost
+                .into_iter()
+                .chain(facility.inn_stay_cost)
+                .any(|price| price.owner_cost > 999_999_999 || price.other_cost > 999_999_999)
             || facility.legal_name_change_cost == Some(0)
             || facility.service_actions.iter().any(|service| {
                 service.owner_cost > 999_999_999 || service.other_cost > 999_999_999
@@ -153,6 +160,7 @@ pub(super) fn validate_towns_and_shops(
         let has_service = facility.identify_item_cost.is_some()
             || facility.research_item_cost.is_some()
             || facility.identify_all_items_cost.is_some()
+            || facility.inn_stay_cost.is_some()
             || facility.overview_message_key.is_some()
             || facility.legal_name_change_cost.is_some()
             || !facility.service_actions.is_empty()
@@ -171,6 +179,7 @@ pub(super) fn validate_towns_and_shops(
                 || facility.identify_item_cost.is_some()
                 || facility.research_item_cost.is_some()
                 || facility.identify_all_items_cost.is_some()
+                || facility.inn_stay_cost.is_some()
                 || facility.overview_message_key.is_some()
                 || facility.legal_name_change_cost.is_some()
                 || has_membership

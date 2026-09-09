@@ -13345,7 +13345,13 @@ fn anambar_service_roles_and_rewards_match_source() {
         );
         assert_eq!(library.identify_item_cost, Some(50));
         assert_eq!(library.research_item_cost, Some(1_300));
-        assert_eq!(library.identify_all_items_cost, Some(350));
+        assert_eq!(
+            library.identify_all_items_cost,
+            Some(TownFacilityPrice {
+                owner_cost: 350,
+                other_cost: 350,
+            })
+        );
         assert_eq!(
             library.overview_message_key.as_deref(),
             Some("town-facility-demo-anambar-library-overview")

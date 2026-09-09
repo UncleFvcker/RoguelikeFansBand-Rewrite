@@ -30,6 +30,8 @@ const OUTPOST_BOUNTY_OFFICE_ID: &str = "demo.town-facility.outpost-bounty-office
 const MORIVANT_TOWN_ID: &str = "demo.town.morivant";
 const MORIVANT_INN_ID: &str = "demo.shop.morivant-inn";
 const MORIVANT_HOME_ID: &str = "demo.town-facility.morivant-home";
+const MORIVANT_SORCERY_TOWER_ID: &str = "demo.town-facility.morivant-sorcery-tower";
+const MORIVANT_THIEVES_GUILD_ID: &str = "demo.town-facility.morivant-thieves-guild";
 
 fn enter_morivant(game: &mut Game) {
     dispatch_next(
@@ -42,6 +44,106 @@ fn enter_morivant(game: &mut Game) {
     game.wilderness_position = Some(Position { x: 47, y: 50 });
     dispatch_next(game, GameCommand::LeaveWorldMap);
     assert_eq!(game.current_town().unwrap().id, MORIVANT_TOWN_ID);
+}
+
+fn morivant_facility_game(seed: u64, build_id: &str, facility_id: &str) -> Game {
+    let mut game = Game::new_with_build(seed, build_id).unwrap();
+    enter_morivant(&mut game);
+    let entrance = game
+        .content
+        .town_facility(facility_id)
+        .unwrap()
+        .entrance_position;
+    game.player.position = game
+        .town_local_to_wilderness_view_position(
+            MORIVANT_TOWN_ID,
+            Position {
+                x: i32::from(entrance.x),
+                y: i32::from(entrance.y),
+            },
+        )
+        .unwrap();
+    game
+}
+
+#[test]
+fn morivant_identification_uses_the_projected_membership_price() {
+    for (facility_id, build_id, membership, cost) in [
+        (
+            MORIVANT_SORCERY_TOWER_ID,
+            "demo.build.high-mage-sorcery",
+            FacilityMembershipDto::Owner,
+            100,
+        ),
+        (
+            MORIVANT_SORCERY_TOWER_ID,
+            "demo.build.warrior",
+            FacilityMembershipDto::Visitor,
+            500,
+        ),
+        (
+            MORIVANT_THIEVES_GUILD_ID,
+            "demo.build.warrior",
+            FacilityMembershipDto::Visitor,
+            600,
+        ),
+    ] {
+        let mut game = morivant_facility_game(51, build_id, facility_id);
+        let service = game
+            .snapshot()
+            .task_services
+            .into_iter()
+            .find(|service| service.id == facility_id)
+            .unwrap();
+        assert!(service.player_at_entrance);
+        assert_eq!(service.membership, membership);
+        assert_eq!(service.identify_all_items_cost, Some(cost));
+        assert!(service.tasks.is_empty());
+        if facility_id == MORIVANT_THIEVES_GUILD_ID {
+            assert_eq!(service.inn_stay_cost, Some(50));
+        }
+        let inventory_ids = game
+            .items
+            .iter()
+            .filter(|item| item.location == ItemLocation::Inventory)
+            .map(|item| item.id.clone())
+            .collect::<Vec<_>>();
+        for id in &inventory_ids {
+            game.item_property_knowledge.remove(id);
+        }
+        game.gold = cost - 1;
+        let before = game.state_hash();
+        assert_eq!(
+            game.identify_all_at_facility(facility_id).unwrap_err(),
+            "insufficient-gold"
+        );
+        assert_eq!(game.state_hash(), before);
+        game.gold = cost;
+        let entrance = game.player.position;
+        game.player.position.x -= 1;
+        let before = game.state_hash();
+        assert_eq!(
+            game.identify_all_at_facility(facility_id).unwrap_err(),
+            "facility-unreachable"
+        );
+        assert_eq!(game.state_hash(), before);
+        game.player.position = entrance;
+        let update = dispatch_next(
+            &mut game,
+            GameCommand::IdentifyAllAtFacility {
+                facility_id: facility_id.to_owned(),
+            },
+        );
+        assert_eq!(game.gold, 0);
+        assert_eq!(update.events[0].args["cost"], cost.to_string());
+        assert!(
+            inventory_ids
+                .iter()
+                .all(|id| game.item_property_knowledge[id].appraised)
+        );
+        let restored = Game::from_save(game.to_save()).unwrap();
+        assert_eq!(restored.state_hash(), game.state_hash());
+    }
 }
 
 #[test]
@@ -64,7 +166,7 @@ fn morivant_nine_shops_trade_and_save() {
             .all(|shop| !shop.visited && shop.stock.is_empty())
     );
     assert_eq!(snapshot.homes.len(), 1);
-    assert_eq!(snapshot.task_services.len(), 8);
+    assert_eq!(snapshot.task_services.len(), 10);
     game.gold = 1_000_000;
     for shop_id in town
         .shop_ids
@@ -721,11 +823,15 @@ fn shroomery_refuses_formal_and_temporary_snotlings() {
 
 #[test]
 fn inn_stays_use_content_prices_and_restore_the_player_at_half_day() {
-    for (facility_id, starting_gold, cost) in
-        [(ANAMBAR_INN_ID, 100, 25), (WHITE_HORSE_INN_ID, 20, 20)]
-    {
+    for (facility_id, starting_gold, cost) in [
+        (ANAMBAR_INN_ID, 100, 25),
+        (WHITE_HORSE_INN_ID, 20, 20),
+        (MORIVANT_THIEVES_GUILD_ID, 50, 50),
+    ] {
         let mut game = if facility_id == ANAMBAR_INN_ID {
             anambar_inn_game(42)
+        } else if facility_id == MORIVANT_THIEVES_GUILD_ID {
+            morivant_facility_game(42, "demo.build.warrior", facility_id)
         } else {
             white_horse_inn_game(42)
         };
@@ -738,6 +844,11 @@ fn inn_stays_use_content_prices_and_restore_the_player_at_half_day() {
         game.minor_slow = 3;
         game.minor_slow_energy = 41;
         game.reality_change_ticks = 20;
+        game.recall = Some(RecallStateDto {
+            dungeon_id: "demo.dungeon.warrens".to_owned(),
+            floor_id: "demo.floor.warrens-depth-1".to_owned(),
+            remaining_turns: Some(2),
+        });
         game.resources
             .values_mut()
             .for_each(|pool| pool.current = 0);
@@ -785,6 +896,7 @@ fn inn_stays_use_content_prices_and_restore_the_player_at_half_day() {
         assert!(game.player.statuses.is_empty());
         assert_eq!((game.minor_slow, game.minor_slow_energy), (0, 0));
         assert_eq!(game.reality_change_ticks, 0);
+        assert!(!game.recall_is_active());
         assert!(
             game.resources
                 .values()
@@ -807,48 +919,64 @@ fn inn_stays_use_content_prices_and_restore_the_player_at_half_day() {
 }
 
 #[test]
-fn anambar_inn_rejections_do_not_charge_or_advance_time() {
-    let base = anambar_inn_game(42);
-    for status_kind_id in [STATUS_POISON, STATUS_BLEEDING] {
-        let mut game = base.clone();
-        game.gold = 100;
-        game.world_tick = 12_345;
-        game.player
-            .statuses
-            .push(monster_combat::melee_status(status_kind_id, 20, "test.inn-rest").status);
-        let draws = game.rng_draw_counter();
+fn inn_and_guild_rejections_do_not_charge_or_advance_time() {
+    for (facility_id, base, cost) in [
+        (ANAMBAR_INN_ID, anambar_inn_game(42), 25),
+        (
+            MORIVANT_THIEVES_GUILD_ID,
+            morivant_facility_game(42, "demo.build.warrior", MORIVANT_THIEVES_GUILD_ID),
+            50,
+        ),
+    ] {
+        for status_kind_id in [STATUS_POISON, STATUS_BLEEDING] {
+            let mut game = base.clone();
+            game.gold = 100;
+            game.world_tick = 12_345;
+            game.player
+                .statuses
+                .push(monster_combat::melee_status(status_kind_id, 20, "test.inn-rest").status);
+            let draws = game.rng_draw_counter();
 
+            let update = dispatch_next(
+                &mut game,
+                GameCommand::StayAtInn {
+                    facility_id: facility_id.to_owned(),
+                },
+            );
+
+            let event = update
+                .events
+                .iter()
+                .find(|event| event.kind == "inn.stay-unavailable")
+                .expect("unsafe inn stay should be rejected");
+            assert_eq!(event.args["reason"], "needs-healer");
+            assert_eq!(game.gold, 100);
+            assert_eq!(game.world_tick, 12_345);
+            assert_eq!(game.rng_draw_counter(), draws);
+            assert!(game.player_has_status_kind(status_kind_id));
+        }
+
+        let mut poor = base.clone();
+        poor.gold = cost - 1;
+        let tick = poor.world_tick;
         let update = dispatch_next(
-            &mut game,
+            &mut poor,
             GameCommand::StayAtInn {
-                facility_id: ANAMBAR_INN_ID.to_owned(),
+                facility_id: facility_id.to_owned(),
             },
         );
-
-        let event = update
-            .events
-            .iter()
-            .find(|event| event.kind == "inn.stay-unavailable")
-            .expect("unsafe inn stay should be rejected");
-        assert_eq!(event.args["reason"], "needs-healer");
-        assert_eq!(game.gold, 100);
-        assert_eq!(game.world_tick, 12_345);
-        assert_eq!(game.rng_draw_counter(), draws);
-        assert!(game.player_has_status_kind(status_kind_id));
+        assert_eq!(update.events[0].args["reason"], "insufficient-gold");
+        assert_eq!(poor.gold, cost - 1);
+        assert_eq!(poor.world_tick, tick);
+        let mut outside = base;
+        outside.player.position.x -= 1;
+        let before = outside.state_hash();
+        assert_eq!(
+            outside.stay_at_inn(facility_id).unwrap_err(),
+            "inn-unreachable"
+        );
+        assert_eq!(outside.state_hash(), before);
     }
-
-    let mut poor = base.clone();
-    poor.gold = 24;
-    let tick = poor.world_tick;
-    let update = dispatch_next(
-        &mut poor,
-        GameCommand::StayAtInn {
-            facility_id: ANAMBAR_INN_ID.to_owned(),
-        },
-    );
-    assert_eq!(update.events[0].args["reason"], "insufficient-gold");
-    assert_eq!(poor.gold, 24);
-    assert_eq!(poor.world_tick, tick);
 }
 
 #[test]

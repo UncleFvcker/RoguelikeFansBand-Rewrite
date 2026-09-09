@@ -1600,7 +1600,12 @@ impl Game {
                     player_at_entrance,
                     identify_item_cost: facility.identify_item_cost,
                     research_item_cost: facility.research_item_cost,
-                    identify_all_items_cost: facility.identify_all_items_cost,
+                    identify_all_items_cost: facility
+                        .identify_all_items_cost
+                        .map(|price| self.town_facility_price(facility, price)),
+                    inn_stay_cost: facility
+                        .inn_stay_cost
+                        .map(|price| self.town_facility_price(facility, price)),
                     overview_message_key: facility.overview_message_key.clone(),
                     legal_name_change_cost: facility.legal_name_change_cost,
                     membership: self.town_facility_membership(facility),

@@ -46,6 +46,26 @@
       ],
       "type": "string"
     },
+    "TownFacilityPrice": {
+      "additionalProperties": false,
+      "properties": {
+        "otherCost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "ownerCost": {
+          "format": "uint32",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ownerCost",
+        "otherCost"
+      ],
+      "type": "object"
+    },
     "TownFacilityServiceDefinition": {
       "additionalProperties": false,
       "properties": {
@@ -132,13 +152,15 @@
       "type": "string"
     },
     "identifyAllItemsCost": {
-      "default": null,
-      "format": "uint32",
-      "minimum": 0,
-      "type": [
-        "integer",
-        "null"
-      ]
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TownFacilityPrice"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "identifyItemCost": {
       "default": null,
@@ -148,6 +170,17 @@
         "integer",
         "null"
       ]
+    },
+    "innStayCost": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TownFacilityPrice"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "legalNameChangeCost": {
       "default": null,

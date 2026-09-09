@@ -151,6 +151,8 @@ export class TaskServicePanel {
           type: "identify-all-at-facility",
           facilityId: service.id,
         });
+      } else if (action === "stay") {
+        void this.#dispatch({ type: "stay-at-inn", facilityId: service.id });
       } else if (action === "overview") {
         this.#overviewVisible = true;
         this.#renderPanel();
@@ -292,6 +294,20 @@ export class TaskServicePanel {
         .some((item) => facilityIdentificationCandidate(item.identification, false));
       button.textContent = this.#localization.format("action-facility-identify-all", {
         cost: service.identifyAllItemsCost,
+      });
+      row.append(button);
+      this.#dom.list.append(row);
+    }
+    if (service.innStayCost !== undefined && service.innStayCost !== null) {
+      const row = document.createElement("li");
+      row.className = "task-service-row";
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "primary-button task-service-action";
+      button.dataset.facilityAction = "stay";
+      button.disabled = this.#state.busy;
+      button.textContent = this.#localization.format("action-inn-stay", {
+        cost: service.innStayCost,
       });
       row.append(button);
       this.#dom.list.append(row);
@@ -547,6 +563,8 @@ function lastTaskServiceEvent(state: GameSnapshot | GameUpdate): GameEventDto | 
       event?.kind === "facility.recall-started" ||
       event?.kind === "facility.rename-unavailable" ||
       event?.kind === "facility.renamed" ||
+      event?.kind === "inn.stay" ||
+      event?.kind === "inn.stay-unavailable" ||
       event?.kind.startsWith("bounty.")
     ) {
       return event;
