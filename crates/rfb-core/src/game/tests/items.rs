@@ -3110,7 +3110,12 @@ fn item_generation_modes_keep_drafts_unallocated_until_commit() {
     let serial_before = artifact.next_item_instance_serial;
     let fallback = (0..10_000).find_map(|seed| {
         artifact.rng = RfbRng::seeded(seed);
-        let draft = artifact.generate_one_loot_draft(&context, ItemGenerationMode::Artifact)?;
+        let draft = artifact.generate_one_loot_draft(
+            &context,
+            ItemGenerationMode::Artifact {
+                no_fixed_artifact: false,
+            },
+        )?;
         artifact
             .content
             .item(&draft.kind_id)

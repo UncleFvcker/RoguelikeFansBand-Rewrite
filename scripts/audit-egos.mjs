@@ -99,11 +99,11 @@ const report = {
   runtimeRoundTripTest: "game::ego::contracts::all_160_source_egos_have_an_effect_and_save_stable_instances",
   runtimeParityComplete: false,
   negativeEquipmentContract: "contract-v313-negative-equipment: ordinary/Ego generation, 1216 independent C cases and 26 curse consumers; negative random artifacts remain pending",
+  dragonBaseContract: "contract-v314-dragon-base-equipment: six source bases, 2048 independent C cases, power suppression, Craft and save; random-artifact integration remains E8.5",
   naturalTablesUsingSharedPolicy: naturalTables.map(table => table.id).sort(),
   unresolvedSharedGenerationContracts: [
     { scope: "non-ammunition random artifacts", contract: "_check_rand_art / _art_create_random", source: "src/ego.c:303" },
     { scope: "rings and amulets", contract: "value limits and up to 1000 candidate retries (real scoring implemented in E8.1)", source: "src/ego.c:411" },
-    { scope: "dragon base kinds", contract: "dragon_resist and its pre-ego suppression roll", source: "src/object2.c:2312" },
     { scope: "bags", contract: "SV_BAG capacity and quiver-ego behavior in the container system", source: "src/ego.c:3691" },
     { scope: "unavailable classes and races", contract: "Mauler, Bard and Monster Ring special generation modifiers", source: "src/ego.c; src/object2.c" },
   ],

@@ -1001,7 +1001,9 @@ fn rfb_depth_quality_short_circuits_good_and_great_rolls() {
             15,
             false,
             false,
-            crate::game::loot::ItemGenerationMode::Artifact
+            crate::game::loot::ItemGenerationMode::Artifact {
+                no_fixed_artifact: false
+            }
         ),
         3
     );

@@ -38,7 +38,9 @@ pub(super) enum ItemGenerationMode {
     /// AM_GREAT without AM_GOOD, present on six original monster definitions.
     GreatOnly,
     Great,
-    Artifact,
+    Artifact {
+        no_fixed_artifact: bool,
+    },
 }
 
 impl ItemGenerationMode {
@@ -47,14 +49,14 @@ impl ItemGenerationMode {
             Self::Ordinary | Self::GreatOnly => 0,
             Self::Good => 1,
             Self::Great => 2,
-            Self::Artifact => 3,
+            Self::Artifact { .. } => 3,
         }
     }
     const fn minimum_quality(self) -> rfb_content::ItemQuality {
         match self {
             Self::Ordinary | Self::GreatOnly => rfb_content::ItemQuality::Ordinary,
             Self::Good => rfb_content::ItemQuality::Fine,
-            Self::Great | Self::Artifact => rfb_content::ItemQuality::Exceptional,
+            Self::Great | Self::Artifact { .. } => rfb_content::ItemQuality::Exceptional,
         }
     }
 }
@@ -371,7 +373,9 @@ impl Game {
                 );
             } else if let Some(context) = context {
                 let mode = if artifact_reward {
-                    ItemGenerationMode::Artifact
+                    ItemGenerationMode::Artifact {
+                        no_fixed_artifact: false,
+                    }
                 } else {
                     ItemGenerationMode::Ordinary
                 };
@@ -550,7 +554,7 @@ impl Game {
         }
         let mut generated = Vec::with_capacity(usize::from(roll_count));
         for _ in 0..roll_count {
-            if (rfb_generation || mode == ItemGenerationMode::Artifact)
+            if (rfb_generation || matches!(mode, ItemGenerationMode::Artifact { .. }))
                 && let Some(kind_id) = self.roll_instant_fixed_artifact_kind_id(
                     context,
                     if mode.minimum_power() == 0 { 1_000 } else { 10 },
@@ -590,12 +594,20 @@ impl Game {
                 })
                 .max(mode.minimum_power()),
             };
-            let artifact_rolls = if mode == ItemGenerationMode::Artifact
+            let artifact_rolls = if matches!(
+                mode,
+                ItemGenerationMode::Artifact {
+                    no_fixed_artifact: true
+                }
+            ) {
+                0
+            } else if matches!(mode, ItemGenerationMode::Artifact { .. })
                 || (rfb_generation
                     && matches!(
                         mode,
                         ItemGenerationMode::Great | ItemGenerationMode::GreatOnly
-                    )) {
+                    ))
+            {
                 4
             } else if rfb_generation && rolled_power >= 2 {
                 1
@@ -697,6 +709,24 @@ impl Game {
                     ammunition_capacity: Some(capacity),
                     ..Default::default()
                 });
+            }
+            if rfb_generation
+                && let Some(properties) = super::ego::dragon::materialize(
+                    &mut self.rng,
+                    self.content.item(&entry.item_kind_id).unwrap(),
+                    &mut power,
+                    matches!(
+                        mode,
+                        ItemGenerationMode::Artifact {
+                            no_fixed_artifact: true
+                        }
+                    ),
+                )
+            {
+                merge_affix_properties(
+                    base_intrinsic_properties.get_or_insert_with(Default::default),
+                    &properties,
+                );
             }
             let rfb_armor = table.rfb_ego_policy
                 == Some(rfb_content::LootRfbEgoPolicyDefinition::WeaponDigger)

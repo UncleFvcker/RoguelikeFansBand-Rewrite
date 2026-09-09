@@ -246,12 +246,14 @@ impl ValueObject {
                 .to_owned(),
             );
         }
-        if properties
-            .status_immunities
-            .iter()
-            .any(|id| id == crate::effect::STATUS_PARALYSIS)
-        {
-            self.flags.insert("FREE_ACT".to_owned());
+        for status in &properties.status_immunities {
+            let flag = match status.as_str() {
+                crate::effect::STATUS_PARALYSIS => "FREE_ACT",
+                crate::effect::STATUS_BLINDNESS => "RES_BLIND",
+                crate::effect::STATUS_FEAR => "RES_FEAR",
+                _ => continue,
+            };
+            self.flags.insert(flag.to_owned());
         }
         for passive in &properties.passives {
             self.flags.insert(passive_flag(*passive).to_owned());

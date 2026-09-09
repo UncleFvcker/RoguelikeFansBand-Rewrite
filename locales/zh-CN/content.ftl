@@ -8840,3 +8840,16 @@ affix-legacy-dissolving-description = RFB 武器或挖掘工具的权威 ego 属
 affix-legacy-disruption-name = 瓦解之
 affix-legacy-disruption-description = RFB 武器或挖掘工具的权威 ego 属性。
 # /E3 weapon and digger egos
+
+item-demo-dragon-fang-name = 龙牙
+item-demo-dragon-fang-description = 生成时获得随机属性的 RFB 龙系装备。
+item-demo-dragon-wings-name = 龙翼
+item-demo-dragon-wings-description = 生成时获得随机属性的 RFB 龙系装备。
+item-demo-dragon-boots-name = 龙靴
+item-demo-dragon-boots-description = 生成时获得随机属性的 RFB 龙系装备。
+item-demo-dragon-helm-name = 龙盔
+item-demo-dragon-helm-description = 生成时获得随机属性的 RFB 龙系装备。
+item-demo-dragon-gloves-name = 龙皮手套
+item-demo-dragon-gloves-description = 生成时获得随机属性的 RFB 龙系装备。
+item-demo-dragon-shield-name = 龙皮盾
+item-demo-dragon-shield-description = 生成时获得随机属性的 RFB 龙系装备。

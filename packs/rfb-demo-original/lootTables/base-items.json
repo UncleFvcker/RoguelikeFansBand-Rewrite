@@ -4,6 +4,12 @@
   "id": "demo.loot-table.base-items",
   "rolls": 1,
   "entries": [
+    {"itemKindId":"demo.item.dragon-fang","weight":6,"quantity":1,"minDepth":40},
+    {"itemKindId":"demo.item.dragon-wings","weight":20,"quantity":1,"minDepth":60},
+    {"itemKindId":"demo.item.dragon-boots","weight":20,"quantity":1,"minDepth":60},
+    {"itemKindId":"demo.item.dragon-helm","weight":20,"quantity":1,"minDepth":60},
+    {"itemKindId":"demo.item.dragon-gloves","weight":20,"quantity":1,"minDepth":60},
+    {"itemKindId":"demo.item.dragon-shield","weight":20,"quantity":1,"minDepth":60},
     {
       "itemKindId": "demo.item.amulet",
       "weight": 100,

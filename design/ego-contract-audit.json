@@ -6,6 +6,7 @@
   "runtimeRoundTripTest": "game::ego::contracts::all_160_source_egos_have_an_effect_and_save_stable_instances",
   "runtimeParityComplete": false,
   "negativeEquipmentContract": "contract-v313-negative-equipment: ordinary/Ego generation, 1216 independent C cases and 26 curse consumers; negative random artifacts remain pending",
+  "dragonBaseContract": "contract-v314-dragon-base-equipment: six source bases, 2048 independent C cases, power suppression, Craft and save; random-artifact integration remains E8.5",
   "naturalTablesUsingSharedPolicy": [
     "demo.loot-table.archer",
     "demo.loot-table.base-items",
@@ -33,11 +34,6 @@
       "source": "src/ego.c:411"
     },
     {
-      "scope": "dragon base kinds",
-      "contract": "dragon_resist and its pre-ego suppression roll",
-      "source": "src/object2.c:2312"
-    },
-    {
       "scope": "bags",
       "contract": "SV_BAG capacity and quiver-ego behavior in the container system",
       "source": "src/ego.c:3691"
@@ -59,6 +55,48 @@
     "rfb-legacy.affix.lite-am-quest"
   ],
   "equipmentBases": [
+    {
+      "itemId": "demo.item.dragon-fang",
+      "status": "source-type-verified",
+      "sourceIndex": 78,
+      "tval": 23,
+      "sval": 35
+    },
+    {
+      "itemId": "demo.item.dragon-wings",
+      "status": "source-type-verified",
+      "sourceIndex": 200,
+      "tval": 35,
+      "sval": 7
+    },
+    {
+      "itemId": "demo.item.dragon-boots",
+      "status": "source-type-verified",
+      "sourceIndex": 207,
+      "tval": 30,
+      "sval": 4
+    },
+    {
+      "itemId": "demo.item.dragon-helm",
+      "status": "source-type-verified",
+      "sourceIndex": 218,
+      "tval": 32,
+      "sval": 8
+    },
+    {
+      "itemId": "demo.item.dragon-gloves",
+      "status": "source-type-verified",
+      "sourceIndex": 232,
+      "tval": 31,
+      "sval": 6
+    },
+    {
+      "itemId": "demo.item.dragon-shield",
+      "status": "source-type-verified",
+      "sourceIndex": 239,
+      "tval": 34,
+      "sval": 6
+    },
     {
       "itemId": "demo.item.amulet",
       "status": "source-type-verified",

@@ -20,9 +20,9 @@
 | 协议 | 1.236 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | v113 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload | v8 / v8；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.393.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
-| 行为基线 | contract-v313，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
-| 内容定义数量 | 地形 201、角色 1402、物品 363、能力 1838、词缀 168、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
+| 内容包 | 1.394.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 行为基线 | contract-v314，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
+| 内容定义数量 | 地形 201、角色 1402、物品 369、能力 1838、词缀 168、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
 
 版本与哈希以源文件为准。玩家入口以 [PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS](../web/src/session-shell.ts) 和 [新游戏表单](../web/index.html) 为准。
@@ -33,6 +33,9 @@ E8.2 已接入普通/Ego 负向生成、价值驱动诅咒及 26 种 CF 消费�
 终态对照通过。五类装备通过自然生成、装备、解咒和保存闭环，未鉴定动态属性不提前投影。
 具体模型边界见 [E8.2 记录](contract-v313-negative-equipment.md)；负向随机神器及首饰筛选
 继续按[共享生成计划](ego-shared-generation-plan.md)推进，不代表完整 E8 完成。
+
+E8.3 已补入六种龙系底材及随机基础抗性/品牌、power 抑制与特殊模式例外；龙鳞甲排除。
+2,048 组独立 C 对照、自然装备/伤害/Craft/存档闭环通过，详见 [E8.3](contract-v314-dragon-base-equipment.md)。
 
 ## 职业与玩家入口
 

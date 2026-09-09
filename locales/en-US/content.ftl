@@ -8836,3 +8836,16 @@ affix-legacy-dissolving-description = An authoritative RFB weapon or digger ego.
 affix-legacy-disruption-name = of Disruption
 affix-legacy-disruption-description = An authoritative RFB weapon or digger ego.
 # /E3 weapon and digger egos
+
+item-demo-dragon-fang-name = Dragon Fang
+item-demo-dragon-fang-description = RFB dragon equipment with properties rolled on generation.
+item-demo-dragon-wings-name = Pair of Dragon Wings
+item-demo-dragon-wings-description = RFB dragon equipment with properties rolled on generation.
+item-demo-dragon-boots-name = Pair of Dragon Boots
+item-demo-dragon-boots-description = RFB dragon equipment with properties rolled on generation.
+item-demo-dragon-helm-name = Dragon Helm
+item-demo-dragon-helm-description = RFB dragon equipment with properties rolled on generation.
+item-demo-dragon-gloves-name = Set of Dragon Gloves
+item-demo-dragon-gloves-description = RFB dragon equipment with properties rolled on generation.
+item-demo-dragon-shield-name = Dragon Shield
+item-demo-dragon-shield-description = RFB dragon equipment with properties rolled on generation.

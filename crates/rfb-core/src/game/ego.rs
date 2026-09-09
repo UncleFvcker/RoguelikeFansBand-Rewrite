@@ -8,6 +8,7 @@ mod jewelry;
 pub(super) use jewelry::roll as roll_jewelry;
 #[cfg(test)]
 mod contracts;
+pub(super) mod dragon;
 mod noncraft;
 pub(super) use noncraft::item_has_ego;
 pub(super) use noncraft::roll_quiver_capacity;

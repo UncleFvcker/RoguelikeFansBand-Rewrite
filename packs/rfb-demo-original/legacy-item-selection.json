@@ -1,6 +1,12 @@
 {
   "schemaVersion": 1,
   "items": [
+    {"sourceIndex":78,"id":"dragon-fang"},
+    {"sourceIndex":200,"sourceId":"pair-of-dragon-wings","id":"dragon-wings"},
+    {"sourceIndex":207,"sourceId":"pair-of-dragon-boots","id":"dragon-boots"},
+    {"sourceIndex":218,"id":"dragon-helm"},
+    {"sourceIndex":232,"sourceId":"set-of-dragon-gloves","id":"dragon-gloves"},
+    {"sourceIndex":239,"id":"dragon-shield"},
     { "sourceIndex": 45, "id": "broken-dagger" },
     { "sourceIndex": 46, "id": "broken-sword" },
     { "sourceIndex": 47, "id": "dagger" },

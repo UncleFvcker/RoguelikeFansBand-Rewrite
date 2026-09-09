@@ -6,11 +6,16 @@
 
 contract fixture 是规则兼容边界，不能把测试失败简单处理为“刷新预期结果”。政策用于保证每次规则变化只修改真正受影响的场景，同时保留可审查的失败原因。
 
-当前逻辑基线是 `contract-v313`，机器可读政策固定在：
+当前逻辑基线是 `contract-v314`，机器可读政策固定在：
 
 ```text
 tests/fixtures/active/baseline-policy.json
 ```
+
+`contract-v314` 接入六种龙系底材的自然分配、基础属性抽样和 power 抑制，修正动态抗盲与
+抗恐惧的真实估值读取。公共掉落/RNG 行为改变，统一刷新并验证 26 条 active exact fixture，
+保留场景命令和前置条件、零 waiver。Protocol 1.236、hash v113、save v8 不变，包为 1.394.0；
+详见 [E8.3](contract-v314-dragon-base-equipment.md)。
 
 `contract-v313` 接入自然负向装备、价值驱动诅咒及其消费者，新增独立 HEAVY 诅咒状态。
 State Hash Schema v113、Protocol 1.236、save header/payload v8；内容包 1.393.0。

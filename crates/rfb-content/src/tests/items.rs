@@ -925,7 +925,7 @@ fn equipment_and_ego_identities_match_source() {
             .filter_map(|item| item.rfb_base_kind)
             .filter(|kind| matches!(kind.tval, 20..=23))
             .collect::<Vec<_>>();
-        assert_eq!(base_kinds.len(), 68);
+        assert_eq!(base_kinds.len(), 69);
         assert_eq!(
             base_kinds
                 .iter()

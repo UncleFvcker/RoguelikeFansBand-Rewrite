@@ -99,7 +99,9 @@ fn negative_generation_matches_1216_independent_c_cases_and_rng_states() {
                     2 => ItemGenerationMode::Good,
                     4 => ItemGenerationMode::GreatOnly,
                     6 => ItemGenerationMode::Great,
-                    14 => ItemGenerationMode::Artifact,
+                    14 => ItemGenerationMode::Artifact {
+                        no_fixed_artifact: false,
+                    },
                     _ => unreachable!(),
                 };
                 let power = game.roll_rfb_depth_loot_power(

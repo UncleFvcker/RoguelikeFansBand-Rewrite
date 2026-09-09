@@ -189,7 +189,9 @@ impl Game {
         let great = scaled(20);
         let good = scaled(40);
         if roll < artifact {
-            return ItemGenerationMode::Artifact;
+            return ItemGenerationMode::Artifact {
+                no_fixed_artifact: false,
+            };
         }
         roll -= artifact;
         if roll < great {
@@ -207,7 +209,7 @@ impl Game {
         context: &LootContext,
         mode: ItemGenerationMode,
     ) -> Option<GeneratedItemDraft> {
-        if mode != ItemGenerationMode::Artifact {
+        if !matches!(mode, ItemGenerationMode::Artifact { .. }) {
             return self.generate_one_loot_draft(context, mode);
         }
         for _ in 0..20 {
@@ -401,8 +403,18 @@ mod tests {
             );
         }
         for (roll, expected) in [
-            (0, ItemGenerationMode::Artifact),
-            (4, ItemGenerationMode::Artifact),
+            (
+                0,
+                ItemGenerationMode::Artifact {
+                    no_fixed_artifact: false,
+                },
+            ),
+            (
+                4,
+                ItemGenerationMode::Artifact {
+                    no_fixed_artifact: false,
+                },
+            ),
             (5, ItemGenerationMode::Great),
             (24, ItemGenerationMode::Great),
             (25, ItemGenerationMode::Good),
@@ -426,7 +438,12 @@ mod tests {
                 probe.rng = RfbRng::seeded(*seed);
                 (1..=20).find(|_| {
                     probe
-                        .generate_one_loot_draft(&context, ItemGenerationMode::Artifact)
+                        .generate_one_loot_draft(
+                            &context,
+                            ItemGenerationMode::Artifact {
+                                no_fixed_artifact: false,
+                            },
+                        )
                         .is_some_and(|draft| formal_artifact(&probe, &draft))
                 }) == Some(20)
             })
@@ -437,7 +454,12 @@ mod tests {
         game.rng = RfbRng::seeded(seed);
         let serial_before = game.next_item_instance_serial;
         let draft = game
-            .generate_mining_item_draft(&context, ItemGenerationMode::Artifact)
+            .generate_mining_item_draft(
+                &context,
+                ItemGenerationMode::Artifact {
+                    no_fixed_artifact: false,
+                },
+            )
             .expect("the twentieth attempt should produce a fixed artifact");
         assert!(formal_artifact(&game, &draft));
         assert_eq!(game.next_item_instance_serial, serial_before);
@@ -469,7 +491,12 @@ mod tests {
             let context = artifact_context(&game);
             let serial_before = game.next_item_instance_serial;
             let draft = game
-                .generate_mining_item_draft(&context, ItemGenerationMode::Artifact)
+                .generate_mining_item_draft(
+                    &context,
+                    ItemGenerationMode::Artifact {
+                        no_fixed_artifact: false,
+                    },
+                )
                 .expect("Great fallback should produce an item");
             assert!(!formal_artifact(&game, &draft));
             assert!(

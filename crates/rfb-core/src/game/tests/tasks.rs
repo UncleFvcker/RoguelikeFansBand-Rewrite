@@ -61,6 +61,20 @@ fn direct_warrens_death_drops(
 #[test]
 fn natural_ammunition_damage_dice_survive_generation_and_save() {
     let mut game = Game::new(67);
+    let original = game.content.clone();
+    let path =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../packs/rfb-demo-original");
+    let mut artifact = rfb_content::compile_pack_dir(&path).unwrap();
+    let table = artifact
+        .content
+        .loot_tables
+        .iter_mut()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
+    table
+        .entries
+        .retain(|entry| entry.item_kind_id == "demo.item.sheaf-arrow");
+    game.content = Arc::new(rfb_content::ContentCatalog::from_artifact(artifact));
     let context = LootContext {
         table_id: "demo.loot-table.base-items".into(),
         floor_id: "demo.floor.orc-cave-depth-32".into(),
@@ -70,10 +84,11 @@ fn natural_ammunition_damage_dice_survive_generation_and_save() {
             themed: false,
         },
     };
-    game.rng = RfbRng::seeded(11640);
+    game.rng = RfbRng::seeded(41);
     let drops = game
         .generate_loot_instances(&context, ItemLocation::Inventory)
         .unwrap();
+    game.content = original;
     let expected = drops[0].clone();
     assert_eq!(expected.kind_id, "demo.item.sheaf-arrow");
     assert_eq!(expected.damage_dice_override, Some(5));
