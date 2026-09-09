@@ -604,6 +604,14 @@ impl Game {
 
     pub(super) fn player_attributes_with_sources(
         &self,
+        breakdown: Option<&mut Vec<AttributeBreakdownDto>>,
+    ) -> AttributeSet {
+        self.player_attributes_at_level(self.progress.level, breakdown)
+    }
+
+    fn player_attributes_at_level(
+        &self,
+        level: u16,
         mut breakdown: Option<&mut Vec<AttributeBreakdownDto>>,
     ) -> AttributeSet {
         let cap = CharacterProgress::attribute_cap(self.victory_level_cap_unlocked());
@@ -615,7 +623,7 @@ impl Game {
         let normal_appearance_minimum = active_mutations
             .iter()
             .any(|mutation| mutation.normal_appearance)
-            .then(|| 8_u16.saturating_add(self.progress.level.saturating_mul(2)));
+            .then(|| 8_u16.saturating_add(level.saturating_mul(2)));
         let mut steps = Vec::new();
         let headgear_excess = self.player_tomte_headgear_excess_weight();
         if let Some((_, race, class, personality)) = self.character_definitions() {
@@ -642,6 +650,16 @@ impl Game {
                 let mut modifiers = stat_modifiers_dto(modifiers);
                 if kind == AttributeSourceKindDto::Race && headgear_excess > 0 {
                     modifiers.intelligence -= i32::from(headgear_excess / 10) + 1;
+                }
+                if kind == AttributeSourceKindDto::Race && race.id == "rfb-legacy.race.ent" {
+                    // RFB master a0d92b6378: races_a.c::ent_get_race.
+                    let growth = [26, 41, 46]
+                        .into_iter()
+                        .map(|threshold| i32::from(level >= threshold))
+                        .sum::<i32>();
+                    modifiers.strength += growth;
+                    modifiers.constitution += growth;
+                    modifiers.dexterity -= growth;
                 }
                 steps.push(AttributeStep {
                     kind,
@@ -841,7 +859,10 @@ impl Game {
             &self.progress.hp_progression,
             level,
             self.character_definitions(),
-            i32::from(self.effective_player_attributes().constitution_hp_percent()),
+            i32::from(
+                self.player_attributes_at_level(level, None)
+                    .constitution_hp_percent(),
+            ),
         )
     }
 

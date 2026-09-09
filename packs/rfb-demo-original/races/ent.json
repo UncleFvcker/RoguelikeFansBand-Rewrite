@@ -83,6 +83,7 @@
   "shopAdjustPercent": 95,
   "skillSetId": "rfb-legacy.skill-set.race-ent",
   "tags": [
+    "forest-adapted",
     "legacy-import",
     "polymorph-candidate"
   ]

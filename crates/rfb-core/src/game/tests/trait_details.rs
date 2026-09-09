@@ -45,6 +45,77 @@ fn details(game: &Game) -> CharacterTraitDetailsDto {
 }
 
 #[test]
+fn ent_fire_percent_matches_damage_and_known_projection_for_native_and_temporary_races() {
+    for native in [false, true] {
+        for (resistance, percent, damage) in [
+            (ResistanceLevel::Vulnerable, -50, 150),
+            (ResistanceLevel::Normal, 0, 100),
+            (ResistanceLevel::Resistant, 35, 65),
+            (ResistanceLevel::Strong, 45, 55),
+            (ResistanceLevel::Immune, 100, 0),
+        ] {
+            let mut game = game();
+            if native {
+                game.build.as_mut().unwrap().race_id = "rfb-legacy.race.ent".to_owned();
+            } else {
+                let mut form = status(STATUS_PLAYER_POLYMORPH);
+                form.granted_race_id = Some("rfb-legacy.race.ent".to_owned());
+                game.player.statuses.push(form);
+            }
+            game.player.resistances.set(DamageType::Fire, resistance);
+            assert_eq!(game.player_resistance_percent(DamageType::Fire), percent);
+            assert_eq!(
+                game.adjust_player_resistance_percent(DamageType::Cold, resistance),
+                resistance.reduction_percent()
+            );
+            let row = details(&game)
+                .resistances
+                .into_iter()
+                .find(|row| row.damage_type == rfb_protocol::DamageTypeDto::Fire)
+                .unwrap();
+            assert_eq!(row.level, Some(resistance.into()));
+            assert_eq!(row.reduction_percent, Some(percent));
+            game.player.hp = 10_000;
+            let result = game.resolve_monster_damage_to_player(
+                "test.source",
+                "demo.actor.small-kobold",
+                "test.ent-fire",
+                0,
+                203,
+                100,
+                DamageType::Fire,
+                &mut Vec::new(),
+            );
+            let AbilityEffectResolutionDto::Damage { resolution, .. } = result else {
+                panic!("fire damage result");
+            };
+            assert_eq!(resolution.armor_reduction, 103);
+            assert_eq!(resolution.final_damage, damage);
+            assert_eq!(game.player.hp, 10_000 - damage);
+            game.player.statuses.clear();
+            game.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
+            assert_eq!(
+                game.player_resistance_percent(DamageType::Fire),
+                resistance.reduction_percent()
+            );
+        }
+    }
+    let mut game = game();
+    let mut form = status(STATUS_PLAYER_POLYMORPH);
+    form.granted_race_id = Some("rfb-legacy.race.ent".to_owned());
+    game.player.statuses.push(form);
+    equip(
+        &mut game,
+        "test.ent.fire-ring",
+        "demo.item.warding-band",
+        "ring",
+    );
+    assert_eq!(game.player_resistance_percent(DamageType::Fire), 35);
+    game.items.last_mut().unwrap().location = ItemLocation::Inventory;
+    assert_eq!(game.player_resistance_percent(DamageType::Fire), 0);
+}
+
+#[test]
 fn tonberry_confusion_saves_use_adjusted_percent_and_preserve_status_immunity() {
     let mut base = game();
     base.build.as_mut().unwrap().race_id = "rfb-legacy.race.tonberry".to_owned();

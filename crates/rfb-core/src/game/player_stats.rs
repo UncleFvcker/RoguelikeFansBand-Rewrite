@@ -683,16 +683,19 @@ impl Game {
     ) -> i32 {
         let percent = resistance.reduction_percent();
         // RFB master a0d92b6378: resist.c::res_pct_aux, after merging resistances.
-        // Negative resistance and immunity bypass the Tonberry adjustment.
-        if damage_type == DamageType::Confusion
-            && (0..100).contains(&percent)
-            && self
-                .character_definitions()
-                .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.tonberry")
+        // Negative resistance and immunity bypass racial percentage adjustments.
+        if !(0..100).contains(&percent) {
+            return percent;
+        }
+        match self
+            .character_definitions()
+            .map(|(_, race, _, _)| race.id.as_str())
         {
-            (percent + 1) / 2
-        } else {
-            percent
+            Some("rfb-legacy.race.tonberry") if damage_type == DamageType::Confusion => {
+                (percent + 1) / 2
+            }
+            Some("rfb-legacy.race.ent") if damage_type == DamageType::Fire => percent * 7 / 10,
+            _ => percent,
         }
     }
 
@@ -2099,6 +2102,24 @@ impl Game {
         let Some((_, race, class, personality)) = self.character_definitions() else {
             return;
         };
+        if race.id == "rfb-legacy.race.ent"
+            && !self.items.iter().any(|item| {
+                matches!(item.location, ItemLocation::Equipped { .. })
+                    && self
+                        .content
+                        .item(&item.kind_id)
+                        .is_some_and(|definition| definition.melee_profile.is_some())
+            })
+        {
+            // RFB's object_is_melee_weapon includes equipped digging tools.
+            add_nonzero_stat(
+                pipeline,
+                StatKind::DigSkill,
+                StatLayer::Species,
+                &race.id,
+                i32::from(self.progress.level) * 10,
+            );
+        }
         let headgear_excess = self.player_tomte_headgear_excess_weight();
         for (layer, source_id, skill_set_id) in [
             (

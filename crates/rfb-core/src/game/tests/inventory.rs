@@ -852,6 +852,89 @@ fn p88b_protection_quiver_skips_quivered_ammunition_without_rng() {
 }
 
 #[test]
+fn ent_inventory_fire_saves_use_adjusted_resistance_and_original_random_bound() {
+    let mut base = Game::new_with_build(427, "demo.build.warrior").unwrap();
+    base.items.clear();
+    p88b_add_item(
+        &mut base,
+        "test.ent.arrows",
+        "demo.item.arrow",
+        64,
+        ItemLocation::Inventory,
+        &[],
+    );
+    for (native, temporary) in [(false, false), (true, false), (false, true)] {
+        for (damage_type, resistance, ent_percent, protected) in [
+            (DamageType::Fire, ResistanceLevel::Vulnerable, 0, false),
+            (DamageType::Fire, ResistanceLevel::Normal, 0, false),
+            (DamageType::Fire, ResistanceLevel::Resistant, 35, false),
+            (DamageType::Fire, ResistanceLevel::Strong, 45, false),
+            (DamageType::Fire, ResistanceLevel::Immune, 100, false),
+            (DamageType::Fire, ResistanceLevel::Resistant, 35, true),
+            (DamageType::Acid, ResistanceLevel::Resistant, 50, false),
+        ] {
+            for seed in 0..16 {
+                let mut game = base.clone();
+                if native {
+                    game.build.as_mut().unwrap().race_id = "rfb-legacy.race.ent".to_owned();
+                }
+                if temporary {
+                    let mut form =
+                        monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100, "test.ent")
+                            .status;
+                    form.granted_race_id = Some("rfb-legacy.race.ent".to_owned());
+                    game.player.statuses.push(form);
+                }
+                if protected {
+                    game.player.statuses.push(
+                        monster_combat::melee_status(
+                            STATUS_INVENTORY_PROTECTION,
+                            100,
+                            "test.protection",
+                        )
+                        .status,
+                    );
+                }
+                game.player.resistances.set(damage_type, resistance);
+                game.rng = RfbRng::seeded(seed);
+                let mut expected_rng = game.rng.clone();
+                let ent_fire = (native || temporary) && damage_type == DamageType::Fire;
+                let percent = if ent_fire {
+                    ent_percent
+                } else {
+                    resistance.reduction_percent().max(0)
+                };
+                let mut destroyed = 0;
+                for _ in 0..64 {
+                    if expected_rng.bounded(100) < 3 {
+                        if protected {
+                            expected_rng.bounded(100);
+                        } else if expected_rng.bounded(if ent_fire { 54 } else { 66 })
+                            >= percent as u64
+                        {
+                            destroyed += 1;
+                        }
+                    }
+                }
+                game.damage_player_inventory(
+                    "test.ent-fire",
+                    damage_type,
+                    false,
+                    1,
+                    &mut Vec::new(),
+                );
+                assert_eq!(
+                    game.items[0].quantity,
+                    64 - destroyed,
+                    "native={native}, temporary={temporary}, {damage_type:?}, {resistance:?}, seed={seed}"
+                );
+                assert_eq!(game.rng, expected_rng);
+            }
+        }
+    }
+}
+
+#[test]
 fn p88b_quiver_overflow_remains_vulnerable_and_emits_partial_destruction() {
     let mut game = Game::new(0);
     game.items.clear();

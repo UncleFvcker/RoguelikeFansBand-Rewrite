@@ -658,6 +658,303 @@ fn tonberry_passives_and_level_slowing_follow_the_effective_race() {
     }
 }
 
+fn ent_passive_game(native: bool) -> Game {
+    let mut game = Game::new_with_build(426, "demo.build.warrior").unwrap();
+    clear_monsters(&mut game);
+    game.items.clear();
+    if native {
+        // Birth remains closed until the Ent's supplies and power are implemented.
+        game.build.as_mut().unwrap().race_id = "rfb-legacy.race.ent".to_owned();
+    } else {
+        let mut form =
+            monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100_000, "test.ent").status;
+        form.granted_race_id = Some("rfb-legacy.race.ent".to_owned());
+        game.player.statuses.push(form);
+    }
+    game
+}
+
+#[test]
+fn ent_growth_tracks_level_thresholds_drain_and_current_form() {
+    let check_growth = |game: &Game, growth: i32| {
+        let cap = CharacterProgress::attribute_cap(false);
+        let mut rows = Vec::new();
+        let attributes = game.player_attributes_with_sources(Some(&mut rows));
+        for (kind, modifier) in [
+            (AttributeKindDto::Strength, 2 + growth),
+            (AttributeKindDto::Constitution, 2 + growth),
+            (AttributeKindDto::Dexterity, -3 - growth),
+        ] {
+            let row = rows.iter().find(|row| row.attribute == kind).unwrap();
+            let source = row
+                .sources
+                .iter()
+                .find(|source| source.source_id.as_deref() == Some("rfb-legacy.race.ent"))
+                .unwrap();
+            assert_eq!(
+                source.modifier, modifier,
+                "level {}, {kind:?}",
+                game.progress.level
+            );
+            assert!(source.complete);
+        }
+        assert_eq!(
+            attributes.strength,
+            modify_attribute_value(
+                modify_attribute_value(game.progress.attributes.strength, 2 + growth, cap),
+                4,
+                cap
+            )
+        );
+        assert_eq!(
+            attributes.constitution,
+            modify_attribute_value(
+                modify_attribute_value(game.progress.attributes.constitution, 2 + growth, cap),
+                2,
+                cap
+            )
+        );
+        assert_eq!(
+            attributes.dexterity,
+            modify_attribute_value(
+                modify_attribute_value(game.progress.attributes.dexterity, -3 - growth, cap),
+                2,
+                cap
+            )
+        );
+        assert_eq!(
+            game.effective_player_resistances()
+                .level(DamageType::Poison),
+            ResistanceLevel::Resistant
+        );
+        assert_eq!(
+            game.effective_player_max_hp(),
+            game.player_max_hp_at_level(game.progress.level)
+        );
+    };
+    for native in [false, true] {
+        let mut game = ent_passive_game(native);
+        for (level, growth) in [
+            (1, 0),
+            (25, 0),
+            (26, 1),
+            (40, 1),
+            (41, 2),
+            (45, 2),
+            (46, 3),
+            (50, 3),
+        ] {
+            game.apply_unscaled_player_experience(
+                experience_required_for_level(level) - game.progress.experience,
+                &mut Vec::new(),
+            );
+            assert_eq!(game.progress.level, level);
+            check_growth(&game, growth);
+        }
+        for (level, growth) in [(45, 2), (40, 1), (25, 0)] {
+            game.apply_player_experience_drain(
+                game.progress.experience - experience_required_for_level(level),
+                "test.ent-drain",
+                &mut Vec::new(),
+            );
+            assert_eq!(game.progress.level, level);
+            check_growth(&game, growth);
+        }
+        let mut human = game.clone();
+        human.player.statuses.clear();
+        human.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
+        if native {
+            let mut form =
+                monster_combat::melee_status(STATUS_PLAYER_POLYMORPH, 100_000, "test.human").status;
+            form.granted_race_id = Some("demo.race.rfb-human".to_owned());
+            game.player.statuses.push(form);
+        } else {
+            game.player.statuses.clear();
+        }
+        assert_eq!(
+            game.effective_player_attributes(),
+            human.effective_player_attributes()
+        );
+        assert_eq!(
+            game.effective_player_max_hp(),
+            human.effective_player_max_hp()
+        );
+        assert_eq!(game.player_resistance_percent(DamageType::Poison), 0);
+    }
+}
+
+#[test]
+fn ent_level_events_use_each_levels_constitution_and_form_round_trips() {
+    let mut game = ent_passive_game(false);
+    let mut events = Vec::new();
+    game.apply_unscaled_player_experience(experience_required_for_level(46), &mut events);
+    for level in [25, 26, 40, 41, 45, 46] {
+        let mut at_level = game.clone();
+        at_level.progress.level = level;
+        let expected = at_level.effective_player_max_hp();
+        let reported = events.iter().find_map(|event| match event {
+            DomainEvent::PlayerLevelGained {
+                level: reported_level,
+                max_hp,
+                ..
+            } if *reported_level == level => Some(*max_hp),
+            _ => None,
+        });
+        assert_eq!(reported, Some(expected), "HP reported at level {level}");
+    }
+    let restored = Game::from_save(game.to_save()).unwrap();
+    assert_eq!(restored.state_hash(), game.state_hash());
+    assert_eq!(restored.snapshot(), game.snapshot());
+    assert_eq!(
+        restored.effective_player_attributes(),
+        game.effective_player_attributes()
+    );
+}
+
+#[test]
+fn ent_digging_bonus_reacts_to_weapons_tools_and_form_changes() {
+    for native in [false, true] {
+        let mut game = ent_passive_game(native);
+        // Keep the Human control below its unrelated level-20 talent choice.
+        game.progress.level = 19;
+        let bonus = |game: &Game| {
+            species_contribution(
+                &game.player_derived_stats().dig_skill,
+                "rfb-legacy.race.ent",
+            )
+        };
+        assert_eq!(bonus(&game), 190);
+        for (id, kind, slot, expected) in [
+            (
+                "test.ent.shield",
+                "demo.item.small-leather-shield",
+                "left-hand",
+                190,
+            ),
+            ("test.ent.bow", "demo.item.short-bow", "shooting", 190),
+            ("test.ent.sword", "demo.item.broad-sword", "right-hand", 0),
+            ("test.ent.shovel", "demo.item.shovel", "tool", 0),
+        ] {
+            give_inventory_item(&mut game, id, kind);
+            dispatch_next(
+                &mut game,
+                GameCommand::Equip {
+                    item_id: id.to_owned(),
+                    slot_id: Some(slot.to_owned()),
+                },
+            );
+            assert!(
+                matches!(&game.items.iter().find(|item| item.id == id).unwrap().location,
+                ItemLocation::Equipped { slot_id } if slot_id == slot)
+            );
+            assert_eq!(bonus(&game), expected, "equipped {kind}");
+            dispatch_next(
+                &mut game,
+                GameCommand::Unequip {
+                    slot_id: slot.to_owned(),
+                },
+            );
+            assert_eq!(bonus(&game), 190, "unequipped {kind}");
+        }
+        game.progress.level = 1;
+        assert_eq!(bonus(&game), 10);
+        game.player.statuses.clear();
+        game.build.as_mut().unwrap().race_id = "demo.race.rfb-human".to_owned();
+        assert_eq!(bonus(&game), 0);
+    }
+}
+
+#[test]
+fn ent_and_wood_elf_tree_travel_preserves_normal_cost_on_foot_and_mounted() {
+    for race in ["rfb-legacy.race.ent", "rfb-legacy.race.wood-elf"] {
+        for mounted in [false, true] {
+            let mut game = ent_passive_game(false);
+            game.player.statuses[0].granted_race_id = Some(race.to_owned());
+            let start = Position { x: 48, y: 16 };
+            let target = Position { x: 49, y: 16 };
+            game.player.position = start;
+            replace_terrain(&mut game, start, "demo.terrain.floor");
+            replace_terrain(&mut game, target, "demo.terrain.surface-tree");
+            let index = game.index(target).unwrap();
+            game.explored[index] = true;
+            if mounted {
+                game.push_generated_actor("test.ent.mount".to_owned(), "demo.actor.horse", start);
+                game.entities[0].controller_id = Some(game.player.id.clone());
+                game.riding_actor_id = Some("test.ent.mount".to_owned());
+            }
+            assert_eq!(
+                game.next_local_travel_direction(target),
+                Some(Direction::East)
+            );
+            let mut floor = game.clone();
+            replace_terrain(&mut floor, target, "demo.terrain.floor");
+            let before = game.world_tick;
+            dispatch_next(
+                &mut game,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            );
+            dispatch_next(
+                &mut floor,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            );
+            assert_eq!(game.player.position, target);
+            assert!(game.world_tick > before);
+            assert_eq!(
+                game.world_tick, floor.world_tick,
+                "{race}, mounted={mounted}"
+            );
+            if mounted {
+                assert_eq!(game.entities[0].position, target);
+            }
+            game.player.position = start;
+            if mounted {
+                game.entities[0].position = start;
+            }
+            game.player.statuses.clear();
+            assert_eq!(game.next_local_travel_direction(target), None);
+            dispatch_next(
+                &mut game,
+                GameCommand::Move {
+                    direction: Direction::East,
+                },
+            );
+            assert_eq!(game.player.position, start);
+        }
+    }
+}
+
+#[test]
+fn ent_forest_adaptation_does_not_allow_an_aquatic_mount_onto_land() {
+    let mut game = ent_passive_game(false);
+    let start = Position { x: 48, y: 16 };
+    let target = Position { x: 49, y: 16 };
+    game.player.position = start;
+    replace_terrain(&mut game, start, "demo.terrain.surface-water-deep");
+    replace_terrain(&mut game, target, "demo.terrain.surface-tree");
+    game.push_generated_actor(
+        "test.ent.aquatic-mount".to_owned(),
+        "demo.actor.hippocampus",
+        start,
+    );
+    game.entities[0].controller_id = Some(game.player.id.clone());
+    game.riding_actor_id = Some("test.ent.aquatic-mount".to_owned());
+    let tree = game.content.terrain("demo.terrain.surface-tree").unwrap();
+    assert!(!game.player_can_cross_surface_terrain(tree));
+    assert!(!game.actor_can_enter_position(0, target));
+    dispatch_next(
+        &mut game,
+        GameCommand::Move {
+            direction: Direction::East,
+        },
+    );
+    assert_eq!(game.player.position, start);
+    assert_eq!(game.entities[0].position, start);
+}
+
 #[test]
 fn race_level_stat_scaling_preserves_klackon_and_enables_formal_golem_intrinsics() {
     for level in [1, 3, 5, 9, 10, 15, 16, 31, 32, 34, 35, 47, 48, 50] {

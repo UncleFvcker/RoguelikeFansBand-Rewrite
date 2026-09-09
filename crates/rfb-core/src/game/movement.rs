@@ -300,7 +300,12 @@ impl Game {
             .and_then(|actor| {
                 self.content
                     .terrain(&self.terrain[terrain_index])
-                    .map(|terrain| actor_can_cross_terrain(actor, terrain))
+                    .map(|terrain| {
+                        actor_can_cross_terrain(actor, terrain)
+                            || (self.riding_actor_id.as_deref()
+                                == Some(self.entities[index].id.as_str())
+                                && self.player_can_cross_tree_terrain(terrain))
+                    })
             })
             .unwrap_or(false)
     }

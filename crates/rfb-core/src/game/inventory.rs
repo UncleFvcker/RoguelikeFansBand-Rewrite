@@ -10,7 +10,7 @@ use rfb_protocol::{
 use crate::{
     error::CoreError,
     event::DomainEvent,
-    resistance::{DamageType, ResistanceLevel},
+    resistance::DamageType,
     state::{EquipOutcome, ItemInstance, ItemLocation},
 };
 
@@ -441,16 +441,6 @@ fn inventory_resistance_power(damage_type: DamageType) -> u64 {
     } else {
         41
     }
-}
-
-fn inventory_resistance_save(
-    rng: &mut crate::rng::RfbRng,
-    resistance: ResistanceLevel,
-    damage_type: DamageType,
-) -> bool {
-    let power = inventory_resistance_power(damage_type);
-    let resistance = u64::try_from(resistance.reduction_percent().max(0)).unwrap_or(0);
-    rng.bounded(power) < resistance
 }
 
 fn equipped_ammunition_capacity(content: &ContentCatalog, items: &[ItemInstance]) -> u32 {
@@ -901,9 +891,19 @@ impl Game {
         let inventory_protected = self.player_has_status_kind(STATUS_INVENTORY_PROTECTION);
 
         for profile in inventory_damage_profiles(damage_type, touch) {
-            let resistance = self
-                .effective_player_resistances()
-                .level(profile.resistance);
+            let resistance =
+                u64::try_from(self.player_resistance_percent(profile.resistance).max(0))
+                    .expect("nonnegative resistance must fit u64");
+            // RFB master a0d92b6378: resist.c::res_save_inventory.
+            let power = if profile.resistance == DamageType::Fire
+                && self
+                    .character_definitions()
+                    .is_some_and(|(_, race, _, _)| race.id == "rfb-legacy.race.ent")
+            {
+                54
+            } else {
+                inventory_resistance_power(profile.resistance)
+            };
             let candidates = self
                 .items
                 .iter()
@@ -929,7 +929,7 @@ impl Game {
                         let _protection_roll = self.rng.bounded(100);
                         continue;
                     }
-                    if inventory_resistance_save(&mut self.rng, resistance, profile.resistance) {
+                    if self.rng.bounded(power) < resistance {
                         continue;
                     }
                     destroyed += 1;

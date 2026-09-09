@@ -7510,6 +7510,9 @@ fn legacy_race_kin_glyph(id: &str) -> char {
 }
 
 fn legacy_race_tags(entry: &LegacyCharacterEntry) -> Vec<&'static str> {
+    if entry.id == "ent" {
+        return vec!["forest-adapted", "legacy-import", "polymorph-candidate"];
+    }
     if entry.id == "tonberry" {
         return vec![
             "humanoid",
@@ -25068,6 +25071,19 @@ static void _sprite_calc_bonuses(void)
             ]
         );
         assert_eq!(legacy_race_kin_glyph("tonberry"), 'h');
+    }
+
+    #[test]
+    fn ent_forest_adaptation_preserves_kin_without_opening_birth() {
+        let entry = LegacyCharacterEntry {
+            id: "ent".to_owned(),
+            ..Default::default()
+        };
+        assert_eq!(
+            legacy_race_tags(&entry),
+            ["forest-adapted", "legacy-import", "polymorph-candidate"]
+        );
+        assert_eq!(legacy_race_kin_glyph("ent"), '#');
     }
 
     #[test]
