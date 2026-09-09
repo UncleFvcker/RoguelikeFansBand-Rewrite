@@ -8560,3 +8560,10 @@ town-facility-demo-telmora-paladin-guild-name = Paladin Guild
 town-facility-demo-telmora-paladin-guild-description = 兰戈达图尔爵士（人类）：Improve armor and receive healing.
 town-facility-demo-telmora-paladin-guild-owner-name = 兰戈达图尔爵士
 town-facility-demo-telmora-library-overview = Telmora has nine shop types, a shared Home, a Museum, and an Inn. The Library, Beastmaster, Weaponmaster, Warrior Guild, Life Temple, Thieves Guild, Archer Guild, Paladin Guild, and Casino offer their respective services. The Castle is not yet accepting quests.
+
+town-demo-angwil-name = Angwil
+town-demo-angwil-description = Shops, an inn, and a museum sit among the forest trees.
+floor-demo-angwil-name = Angwil
+shop-demo-angwil-inn-name = Inn
+shop-demo-angwil-inn-description = 多切尔 offers meals, rest, reputation inquiries, and travel to visited towns.
+shop-owner-demo-angwil-duchel-name = 多切尔

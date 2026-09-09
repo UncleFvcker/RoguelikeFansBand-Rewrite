@@ -314,6 +314,7 @@ fn validate_town_surface_placement(
     map_origin: ContentPosition,
     town_width: u16,
     town_height: u16,
+    inherit_wilderness_terrain: bool,
     town_fill_terrain_id: &str,
     town_border_terrain_id: &str,
     town_terrain: &BTreeMap<ContentPosition, &str>,
@@ -328,6 +329,12 @@ fn validate_town_surface_placement(
         return Err(ContentError::InvalidTown(town_id.to_owned()));
     }
 
+    // Open forest templates have no enclosing wall or tagged town gates.
+    // Their unpainted cells use seeded wilderness, so the static gate-to-road
+    // check below applies only to self-contained town maps.
+    if inherit_wilderness_terrain {
+        return Ok(());
+    }
     let surface_width = usize::from(WILDERNESS_WORLD_CELL_WIDTH);
     let surface_height = usize::from(WILDERNESS_WORLD_CELL_HEIGHT);
     let mut walkable = vec![false; surface_width * surface_height];
@@ -1988,6 +1995,10 @@ pub(super) fn validate_world(
             return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
         }
         if let Some(inline_map) = &mut procedural.inline_map {
+            if inline_map.inherit_wilderness_terrain && procedural.lifecycle != FloorLifecycle::Town
+            {
+                return Err(ContentError::InvalidProceduralFloor(procedural.id.clone()));
+            }
             validate_position(
                 inline_map.player_position,
                 procedural.width,
@@ -3177,6 +3188,12 @@ pub(super) fn validate_world(
             map_origin,
             town_width,
             town_height,
+            world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == town.floor_id)
+                .and_then(|floor| floor.inline_map.as_ref())
+                .is_some_and(|map| map.inherit_wilderness_terrain),
             town_fill_terrain_id,
             town_border_terrain_id,
             &town_terrain,

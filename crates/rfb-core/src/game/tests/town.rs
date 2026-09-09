@@ -956,6 +956,16 @@ fn telmora_nine_shops_trade_and_save() {
     );
 }
 
+#[test]
+fn angwil_nine_shops_trade_and_save() {
+    nine_shops_trade_and_save(
+        "demo.town.angwil",
+        "demo.shop.angwil-inn",
+        Position { x: 74, y: 23 },
+        0,
+    );
+}
+
 fn nine_shops_trade_and_save(
     town_id: &str,
     inn_id: &str,
@@ -965,6 +975,22 @@ fn nine_shops_trade_and_save(
     let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
     let town = game.content.town(town_id).unwrap().clone();
     assert!(!game.shop_states.keys().any(|id| town.shop_ids.contains(id)));
+    let entrance = game
+        .content
+        .shop(GENERAL_STORE_ID)
+        .unwrap()
+        .entrance_position;
+    game.player.position = game
+        .town_local_to_wilderness_view_position(
+            "demo.town.outpost",
+            Position {
+                x: i32::from(entrance.x),
+                y: i32::from(entrance.y),
+            },
+        )
+        .unwrap();
+    game.mark_shop_visited_at_player().unwrap();
+    let outpost_stock = game.shop_states[GENERAL_STORE_ID].inventory.clone();
     enter_town(&mut game, town_id, position);
     let snapshot = game.snapshot();
     assert_eq!(snapshot.shops.len(), 10);
@@ -1026,6 +1052,7 @@ fn nine_shops_trade_and_save(
             "{shop_id}: {:?}",
             sale.events
         );
+        assert_eq!(game.shop_states[GENERAL_STORE_ID].inventory, outpost_stock);
     }
     let restored = Game::from_save(game.to_save()).unwrap();
     assert_eq!(restored.state_hash(), game.state_hash());
@@ -1115,8 +1142,33 @@ fn morivant_shares_home_rests_and_revisits_through_inns() {
 
 #[test]
 fn telmora_inn_services_and_visited_travel_survive_save() {
-    let town = "demo.town.telmora";
-    let inn = "demo.shop.telmora-inn";
+    inn_services_and_visited_travel_survive_save(
+        "demo.town.telmora",
+        "demo.shop.telmora-inn",
+        Position { x: 87, y: 49 },
+        1,
+        20,
+    );
+}
+
+#[test]
+fn angwil_inn_services_and_visited_travel_survive_save() {
+    inn_services_and_visited_travel_survive_save(
+        "demo.town.angwil",
+        "demo.shop.angwil-inn",
+        Position { x: 74, y: 23 },
+        3,
+        25,
+    );
+}
+
+fn inn_services_and_visited_travel_survive_save(
+    town: &str,
+    inn: &str,
+    world_position: Position,
+    food: u32,
+    stay: u32,
+) {
     let mut game = white_horse_inn_game(51);
     assert!(
         projected_shop(&game.snapshot().shops, WHITE_HORSE_INN_ID)
@@ -1124,16 +1176,23 @@ fn telmora_inn_services_and_visited_travel_survive_save() {
             .iter()
             .all(|destination| destination.town_id != town)
     );
-    enter_town(&mut game, town, Position { x: 87, y: 49 });
+    enter_town(&mut game, town, world_position);
     assert!(game.town_states[town].visited);
     assert_eq!(game.player.position, Position { x: 99, y: 33 });
+    let entrance = game.content.shop(inn).unwrap().entrance_position;
     game.player.position = game
-        .town_local_to_wilderness_view_position(town, Position { x: 56, y: 28 })
+        .town_local_to_wilderness_view_position(
+            town,
+            Position {
+                x: i32::from(entrance.x),
+                y: i32::from(entrance.y),
+            },
+        )
         .unwrap();
     game.mark_shop_visited_at_player().unwrap();
     let projected = projected_shop(&game.snapshot().shops, inn).clone();
-    assert_eq!(projected.inn_food_cost, Some(game.town_service_price(1)));
-    assert_eq!(projected.inn_stay_cost, Some(game.town_service_price(20)));
+    assert_eq!(projected.inn_food_cost, Some(game.town_service_price(food)));
+    assert_eq!(projected.inn_stay_cost, Some(game.town_service_price(stay)));
     let destination = projected
         .inn_travel_destinations
         .iter()
@@ -1203,23 +1262,46 @@ fn telmora_inn_services_and_visited_travel_survive_save() {
 }
 
 #[test]
-fn telmora_home_and_museum_use_existing_storage() {
-    for (facility, storage, position) in [
+fn telmora_and_angwil_home_and_museum_use_existing_storage() {
+    for (town, world_position, facility, storage) in [
         (
+            "demo.town.telmora",
+            Position { x: 87, y: 49 },
             "demo.town-facility.telmora-home",
             HOME_ID,
-            Position { x: 33, y: 50 },
         ),
         (
+            "demo.town.telmora",
+            Position { x: 87, y: 49 },
             "demo.town-facility.telmora-museum",
             THALOS_MUSEUM_ID,
-            Position { x: 22, y: 18 },
+        ),
+        (
+            "demo.town.angwil",
+            Position { x: 74, y: 23 },
+            "demo.town-facility.angwil-home",
+            HOME_ID,
+        ),
+        (
+            "demo.town.angwil",
+            Position { x: 74, y: 23 },
+            "demo.town-facility.angwil-museum",
+            THALOS_MUSEUM_ID,
         ),
     ] {
         let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
-        enter_town(&mut game, "demo.town.telmora", Position { x: 87, y: 49 });
+        enter_town(&mut game, town, world_position);
+        let entrance = game
+            .content
+            .town_facility(facility)
+            .unwrap()
+            .entrance_position;
+        let position = Position {
+            x: i32::from(entrance.x),
+            y: i32::from(entrance.y),
+        };
         game.player.position = game
-            .town_local_to_wilderness_view_position("demo.town.telmora", position)
+            .town_local_to_wilderness_view_position(town, position)
             .unwrap();
         game.mark_shop_visited_at_player().unwrap();
         let home = game

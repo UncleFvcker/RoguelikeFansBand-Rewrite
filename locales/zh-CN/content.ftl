@@ -8564,3 +8564,10 @@ town-facility-demo-telmora-paladin-guild-name = 圣武士公会
 town-facility-demo-telmora-paladin-guild-description = 兰戈达图尔爵士（人类）：提供护甲强化与治疗服务。
 town-facility-demo-telmora-paladin-guild-owner-name = 兰戈达图尔爵士
 town-facility-demo-telmora-library-overview = 泰尔莫拉设有九类商店、家、博物馆与旅店；图书馆、驯兽师、武器大师、战士公会、生命神殿、盗贼公会、弓箭手公会、圣武士公会及赌场提供各自的服务。城堡暂不受理任务。
+
+town-demo-angwil-name = 安格维尔
+town-demo-angwil-description = 森林中的商铺、旅店与博物馆。
+floor-demo-angwil-name = 安格维尔
+shop-demo-angwil-inn-name = 旅店
+shop-demo-angwil-inn-description = 多切尔提供餐饮、住宿、声望查询及前往已访问城镇的传送。
+shop-owner-demo-angwil-duchel-name = 多切尔

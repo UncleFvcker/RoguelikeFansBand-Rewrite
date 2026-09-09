@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/town.schema.json",
+  "formatVersion": 1,
+  "id": "demo.town.angwil",
+  "nameKey": "town-demo-angwil-name",
+  "descriptionKey": "town-demo-angwil-description",
+  "floorId": "demo.floor.angwil",
+  "facilityIds": [
+    "demo.town-facility.angwil-home",
+    "demo.town-facility.angwil-museum"
+  ],
+  "shopIds": [
+    "demo.shop.angwil-alchemist",
+    "demo.shop.angwil-armoury",
+    "demo.shop.angwil-black-market",
+    "demo.shop.angwil-bookstore",
+    "demo.shop.angwil-general-store",
+    "demo.shop.angwil-inn",
+    "demo.shop.angwil-magic-shop",
+    "demo.shop.angwil-shroomery",
+    "demo.shop.angwil-temple",
+    "demo.shop.angwil-weaponsmith"
+  ]
+}

@@ -437,6 +437,8 @@ pub struct ProceduralFloorDefinition {
 #[cfg_attr(feature = "schemas", derive(JsonSchema))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct InlineFloorMapDefinition {
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub inherit_wilderness_terrain: bool,
     pub player_position: ContentPosition,
     pub terrain_overrides: Vec<InlineTerrainOverrideDefinition>,
     #[serde(default)]

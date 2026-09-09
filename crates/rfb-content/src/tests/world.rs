@@ -3,6 +3,68 @@ use std::collections::{BTreeMap, BTreeSet};
 use super::*;
 
 #[test]
+fn angwil_inherits_forest_and_preserves_unopened_entrances() {
+    let artifact = compile_pack_dir(&original_pack_path()).unwrap();
+    let floor = artifact.content.worlds[0]
+        .procedural_floors
+        .iter()
+        .find(|floor| floor.id == "demo.floor.angwil")
+        .unwrap();
+    assert_eq!((floor.width, floor.height), (112, 54));
+    let map = floor.inline_map.as_ref().unwrap();
+    assert!(map.inherit_wilderness_terrain);
+    let tiles = map
+        .terrain_overrides
+        .iter()
+        .flat_map(|entry| {
+            entry
+                .positions
+                .iter()
+                .map(|p| ((p.x, p.y), entry.terrain_id.as_str()))
+        })
+        .collect::<BTreeMap<_, _>>();
+    assert_eq!(tiles.len(), 1854);
+    assert!(!tiles.contains_key(&(0, 0)));
+    for (position, terrain) in [
+        ((1, 8), "demo.terrain.surface-tree"),
+        ((67, 49), "demo.terrain.surface-tree"),
+        ((40, 52), "demo.terrain.surface-tree"),
+        ((5, 4), "demo.terrain.surface-grass"),
+        ((53, 2), "demo.terrain.permanent-wall"),
+        ((28, 44), "demo.terrain.dirt"),
+        ((35, 22), "demo.terrain.permanent-wall"),
+        ((24, 9), "demo.terrain.permanent-wall"),
+        ((24, 5), "demo.terrain.inn-entrance"),
+    ] {
+        assert_eq!(tiles[&position], terrain);
+    }
+    let mut content = artifact.content.clone();
+    let non_town = content.worlds[0]
+        .procedural_floors
+        .iter_mut()
+        .find(|floor| floor.lifecycle != FloorLifecycle::Town && floor.inline_map.is_some())
+        .unwrap();
+    non_town
+        .inline_map
+        .as_mut()
+        .unwrap()
+        .inherit_wilderness_terrain = true;
+    let invalid_id = non_town.id.clone();
+    assert!(
+        matches!(validate_and_normalize(&mut content), Err(ContentError::InvalidProceduralFloor(id)) if id == invalid_id)
+    );
+    let mut content = artifact.content;
+    let location = content.worlds[0].wilderness.as_mut().unwrap().locations.iter_mut()
+        .find(|location| matches!(location, WildernessLocationDefinition::Town {town_id, ..} if town_id == "demo.town.angwil")).unwrap();
+    if let WildernessLocationDefinition::Town { map_origin, .. } = location {
+        map_origin.x = 100;
+    }
+    assert!(
+        matches!(validate_and_normalize(&mut content), Err(ContentError::InvalidTown(id)) if id == "demo.town.angwil")
+    );
+}
+
+#[test]
 fn telmora_keeps_the_full_map_and_unopened_quest_terrain() {
     let artifact = compile_pack_dir(&original_pack_path()).unwrap();
     let floor = artifact.content.worlds[0]
@@ -10296,6 +10358,16 @@ fn town_entrances_and_shared_facilities_match_source() {
                     map_origin: ContentPosition { x: 0, y: 0 },
                     town_id: "demo.town.morivant".to_owned(),
                 },
+                WildernessLocationDefinition::Town {
+                    position: ContentPosition { x: 74, y: 23 },
+                    map_origin: ContentPosition { x: 0, y: 0 },
+                    town_id: "demo.town.angwil".to_owned(),
+                },
+                WildernessLocationDefinition::Town {
+                    position: ContentPosition { x: 87, y: 49 },
+                    map_origin: ContentPosition { x: 0, y: 0 },
+                    town_id: "demo.town.telmora".to_owned(),
+                },
                 WildernessLocationDefinition::Dungeon {
                     position: ContentPosition { x: 5, y: 48 },
                     dungeon_id: "demo.dungeon.labyrinth".to_owned(),
@@ -13247,6 +13319,7 @@ fn wilderness_towns_accept_fixed_town_floors_and_derive_world_ownership() {
     floor.abandoned_entry_terrain_id = None;
     floor.task_id = None;
     floor.inline_map = Some(InlineFloorMapDefinition {
+        inherit_wilderness_terrain: false,
         player_position: ContentPosition { x: 1, y: 1 },
         terrain_overrides: vec![
             InlineTerrainOverrideDefinition {

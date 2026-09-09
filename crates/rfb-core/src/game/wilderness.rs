@@ -2,8 +2,9 @@
 
 use super::*;
 use rfb_content::{
-    ActorHabitat, ActorMovementMode, WILDERNESS_WORLD_CELL_HEIGHT, WILDERNESS_WORLD_CELL_WIDTH,
-    WildernessDefinition, WildernessLegendEntry, WildernessLocationDefinition, WildernessTerrain,
+    ActorHabitat, ActorMovementMode, ProceduralFloorDefinition, WILDERNESS_WORLD_CELL_HEIGHT,
+    WILDERNESS_WORLD_CELL_WIDTH, WildernessDefinition, WildernessLegendEntry,
+    WildernessLocationDefinition, WildernessTerrain,
 };
 
 pub(super) const WILDERNESS_FLOOR_ID: &str = "core.floor.wilderness";
@@ -1742,6 +1743,67 @@ impl Game {
         Ok(loaded_actor_ids)
     }
 
+    pub(super) fn inline_floor_base_terrain(
+        &self,
+        floor: &ProceduralFloorDefinition,
+    ) -> Vec<String> {
+        let mut terrain = vec![
+            floor.wall_terrain_id.clone();
+            usize::from(floor.width) * usize::from(floor.height)
+        ];
+        if !floor
+            .inline_map
+            .as_ref()
+            .expect("inline floor must retain its map")
+            .inherit_wilderness_terrain
+        {
+            return terrain;
+        }
+        let (position, origin) = self
+            .wilderness()
+            .locations
+            .iter()
+            .find_map(|location| {
+                if let WildernessLocationDefinition::Town {
+                    position,
+                    map_origin,
+                    town_id,
+                } = location
+                {
+                    if self
+                        .content
+                        .town(town_id)
+                        .is_some_and(|town| town.floor_id == floor.id)
+                    {
+                        return Some((*position, *map_origin));
+                    }
+                }
+                None
+            })
+            .expect("validated inherited town floor must have a wilderness location");
+        let chunk_width = i32::from(WILDERNESS_CHUNK_WIDTH);
+        let chunk_height = i32::from(WILDERNESS_CHUNK_HEIGHT);
+        let mut chunks = BTreeMap::new();
+        for y in 0..floor.height {
+            for x in 0..floor.width {
+                let surface_x = i32::from(origin.x) + i32::from(x);
+                let surface_y = i32::from(origin.y) + i32::from(y);
+                let chunk = Position {
+                    x: i32::from(position.x) * 3 - 1 + surface_x / chunk_width,
+                    y: i32::from(position.y) * 3 - 1 + surface_y / chunk_height,
+                };
+                let source = chunks.entry(chunk).or_insert_with(|| {
+                    generate_wilderness_chunk(self.wilderness(), self.wilderness_seed, chunk)
+                });
+                let source_index =
+                    (surface_y % chunk_height) * chunk_width + surface_x % chunk_width;
+                terrain[usize::from(y) * usize::from(floor.width) + usize::from(x)] =
+                    source[source_index as usize].clone();
+            }
+        }
+        terrain
+    }
+
     fn town_template_terrain(&self, town_id: &str) -> (u16, u16, Vec<String>) {
         let world = self
             .content
@@ -1782,10 +1844,7 @@ impl Game {
             .inline_map
             .as_ref()
             .expect("validated town floor must retain its inline map");
-        let mut terrain = vec![
-            floor.wall_terrain_id.clone();
-            usize::from(floor.width) * usize::from(floor.height)
-        ];
+        let mut terrain = self.inline_floor_base_terrain(floor);
         for terrain_override in &inline_map.terrain_overrides {
             debug_assert_eq!(terrain_override.chance_percent, 100);
             for position in &terrain_override.positions {
@@ -2318,6 +2377,109 @@ mod w3_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn angwil_forest_inherits_seeded_chunks_and_survives_scroll_and_save() {
+        use crate::game::tests::support::dispatch_next;
+        use rfb_protocol::GameCommand;
+        let town = "demo.town.angwil";
+        let world_position = Position { x: 74, y: 23 };
+        let mut game = Game::new_with_build(42, "demo.build.warrior").unwrap();
+        dispatch_next(
+            &mut game,
+            GameCommand::EnterWorldMap {
+                leave_pets: false,
+                cancel_recall: false,
+            },
+        );
+        game.wilderness_position = Some(world_position);
+        dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+        assert_eq!(game.current_town().unwrap().id, town);
+        let floor = game
+            .content
+            .world(&game.world_id)
+            .unwrap()
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.id == "demo.floor.angwil")
+            .unwrap();
+        let painted = floor
+            .inline_map
+            .as_ref()
+            .unwrap()
+            .terrain_overrides
+            .iter()
+            .flat_map(|entry| entry.positions.iter().map(|p| (p.x, p.y)))
+            .collect::<BTreeSet<_>>();
+        let mut inherited = 0;
+        for y in 0..54_u16 {
+            for x in 0..112_u16 {
+                if painted.contains(&(x, y)) {
+                    continue;
+                }
+                let chunk = Position {
+                    x: 74 * 3 - 1 + i32::from(x / WILDERNESS_CHUNK_WIDTH),
+                    y: 23 * 3 - 1 + i32::from(y / WILDERNESS_CHUNK_HEIGHT),
+                };
+                let index = usize::from(y % WILDERNESS_CHUNK_HEIGHT)
+                    * usize::from(WILDERNESS_CHUNK_WIDTH)
+                    + usize::from(x % WILDERNESS_CHUNK_WIDTH);
+                assert_eq!(
+                    game.terrain_at(Position {
+                        x: i32::from(x),
+                        y: i32::from(y)
+                    }),
+                    game.wilderness_terrain_cache[&chunk][index]
+                );
+                inherited += 1;
+            }
+        }
+        assert_eq!(inherited, 4194);
+        // A changed forest cell belongs to the same persistent town floor as its buildings.
+        let local = Position { x: 0, y: 0 };
+        let index = game.index(local).unwrap();
+        game.terrain[index] = SURFACE_PATH_ID.to_owned();
+        game.explored[index] = true;
+        game.player.position = Position { x: 131, y: 33 };
+        game.scroll_wilderness_for_player_entry(Position { x: 132, y: 33 }, &mut Vec::new())
+            .unwrap();
+        let mut game = Game::from_save(game.to_save()).unwrap();
+        game.player.position = Position { x: 66, y: 33 };
+        game.scroll_wilderness_for_player_entry(Position { x: 65, y: 33 }, &mut Vec::new())
+            .unwrap();
+        assert_eq!(game.wilderness_view_offset, Position::default());
+        assert_eq!(game.terrain_at(local), SURFACE_PATH_ID);
+        assert!(game.explored[game.index(local).unwrap()]);
+        game.player.position = Position { x: 99, y: 33 };
+        dispatch_next(
+            &mut game,
+            GameCommand::EnterWorldMap {
+                leave_pets: false,
+                cancel_recall: false,
+            },
+        );
+        game.wilderness_position = Some(Position { x: 28, y: 52 });
+        dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+        dispatch_next(
+            &mut game,
+            GameCommand::EnterWorldMap {
+                leave_pets: false,
+                cancel_recall: false,
+            },
+        );
+        game.wilderness_position = Some(world_position);
+        dispatch_next(&mut game, GameCommand::LeaveWorldMap);
+        assert_eq!(game.terrain_at(local), SURFACE_PATH_ID);
+        assert!(game.explored[game.index(local).unwrap()]);
+        assert_eq!(
+            game.terrain_at(Position { x: 24, y: 5 }),
+            "demo.terrain.inn-entrance"
+        );
+        assert_eq!(
+            Game::from_save(game.to_save()).unwrap().state_hash(),
+            game.state_hash()
+        );
+    }
 
     #[test]
     fn exposed_wilderness_area_is_one_third_or_five_ninths() {

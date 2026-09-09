@@ -404,6 +404,9 @@
           },
           "type": "array"
         },
+        "inheritWildernessTerrain": {
+          "type": "boolean"
+        },
         "itemSpawns": {
           "default": [],
           "items": {

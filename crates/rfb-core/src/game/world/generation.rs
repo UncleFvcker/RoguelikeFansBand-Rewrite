@@ -780,8 +780,7 @@ impl Game {
         }
         let width = definition.width;
         let height = definition.height;
-        let mut terrain =
-            vec![definition.wall_terrain_id.clone(); usize::from(width) * usize::from(height)];
+        let mut terrain = self.inline_floor_base_terrain(definition);
         for terrain_override in &inline_map.terrain_overrides {
             for position in &terrain_override.positions {
                 let terrain_id = if terrain_override.chance_percent == 100
