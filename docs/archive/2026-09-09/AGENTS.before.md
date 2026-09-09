@@ -1,0 +1,12 @@
+> 历史快照（2026-09-09 归档）：本文保留当时的设计、版本与验收记录，不作为当前工作指令或待办。现行说明见 [文档索引](../../README.md)。
+
+# Project Working Rules
+
+- The project is in active development and test sessions always start from a new save. Do not add or preserve compatibility for older development saves unless the user explicitly requests it.
+- Use focused tests, content validation, type checking, and relevant builds for routine changes. Do not run the full desktop or other large E2E suites by default; run them only when investigating a related failure, when the user requests them, or for an explicit milestone acceptance pass.
+- When producing a playable desktop build, use the standalone Tauri build command. A plain Cargo build may still depend on the Vite development server.
+- Keep contract fixtures focused on one minimal behavior. Do not add movement commands when movement is not the subject; use the direct player-position precondition for location-dependent actions, and do not combine visits to multiple facilities in one fixture.
+- Generic shop purchase fixtures should select the first projected stock entry instead of binding a generated item instance ID. Bind a specific item only when that item's identity or behavior is the subject of the test.
+- The authoritative RFB original for all new rule and content work is the `master` Git ref in `D:/codex/Frogcomposband/master`. Read that ref through Git objects; do not use the repository's currently checked-out branch or working-tree files. Older pinned commits remain authoritative only for historical contracts and legacy-save fixtures that explicitly name them.
+- Chinese display names for content imported or adapted from RFB, including items, monsters, classes, races, personalities, abilities, books, and device activations, must exactly follow the Chinese name used by the authoritative RFB `master` ref. Never translate the English name or invent a replacement. Treat that ref's runtime Chinese tables and source strings as authoritative; when no Chinese name is defined there, record the item as unresolved instead of naming it locally.
+- State-hash Schema v62 is the one-time migration that removes `contentHash` from the state-hash input. For later content-only changes, update the pack version and content lock, then verify or refresh only fixture categories whose behavior actually changes. Use `verify-all`, `refresh-all`, or the ignored full replay test only when the state-hash input structure, shared protocol projections, common initialization or RNG behavior changes, or for explicit milestone acceptance.

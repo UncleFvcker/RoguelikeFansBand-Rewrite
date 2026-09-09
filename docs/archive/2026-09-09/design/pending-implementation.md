@@ -1,0 +1,995 @@
+> 历史快照（2026-09-09 归档）：本文保留当时的设计、版本与验收记录，不作为当前工作指令或待办。现行说明见 [文档索引](../../../README.md)。
+
+# 待实现内容清单
+
+状态：历史缺口与逐批处理记录，主要基于 contract-v1–v274 的审计。2026-09-09 统一当前状态入口为[当前状态](current-status.md)；本文旧章节中的“未实现”不自动视为当前仍缺失，排期前须核对现有代码和后续 contract。
+
+本文件保留现有设计或原版对比中提出过的缺口及其处理历史。长期设想仍保留在 [RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)。历史列表不作为当前排期队列。
+
+当前已核对的入口与验收缺口：高阶法师其余七领域已有内容与规则路径，但新游戏只开放死亡领域；其余七领域的入口与玩家流程验收尚未完成。已开放的其他职业、种族和全部法术也没有本次全量玩家验收记录。两类缺口分别记录，不重新把已有领域规则列为“待实现”。
+
+contract-v172 已把玩家施法策略从通用 Ability Program 中改为按需选配。当前由能力书或职业先天列表引用的能力必须拥有 `player` 策略；其他能力默认无绑定，但未来种族或怪物模式要授予玩家时可直接补充策略。存档与回放继续独立精确匹配内容，state hash 不再包含 `contentHash`，后续纯内容 hash 更新不需要全量刷新 fixture。
+
+contract-v173 已按固定原版来源完成 Warrens 的 W1-W6 与运行时自然补怪；contract-v174-v176 完成 W7-W9，contract-v177-v180 继续完成 W10 特殊近战/死亡爆炸、W11 地形/物品破坏、W12 怪物光源和 W13 完整死亡掉落；contract-v182 已完成 W14 Pest Control 任务生态，详见 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md) 和 [Contract v182](contract-v182-pest-control.md)。
+
+contract-v181 已接通 Outpost 通用任务设施和首个可玩“盗贼藏身处”：伯爵处接取、东北入口、任务专属 21x8 地图、清层/失败、回城领奖及前端任务面板。contract-v182 在同一设施接入原版“害虫控制”：Warrens 5 的 8 只 Warg、完成后魔法楼梯、未完成离层失败、回城领取毛皮披风。地图的永久墙和八处独立 50% 陷阱候选已按原版定义；尚未支持的盗贼藏身处原版语义继续列在下表，不以近似攻击冒充完成。
+
+contract-v183 已开始把 W1-W13 可承载的浅层怪物和物品加入正式包；
+contract-v184 进一步完成 `NEVER_MOVE` 与怪物 `BLINK` 绑定，并正式接入
+灰霉菌和闪烁的圆点。actor 的特殊心智、AI 学习提示和荒野 habitat 旗标
+仍按 [Warrens 怪物机制实现清单](warrens-monster-mechanism-backlog.md) 保留。
+contract-v185 增加固定索引的正式怪物选择/同步护栏，并接入 14 只 2–3 级
+机制完备怪物；四件已经固定源化的低层护具同时进入通用 Warrens 掉落。
+contract-v186 继续接入 13 只机制完备的 4–5 级怪物，并把正式
+`DROP_WARRIOR` 绑定复用于新手战士；需要主动施法、aquatic-only 分配、
+穿墙、拾物、偷窃、骑乘或特殊 Unique 行为的同级记录继续后置。
+contract-v187 让正式同步护栏复用现有怪物法术映射并拒绝任何未映射
+`S:` token，接入 10 只浅层施法怪物和紧咬、野狼、毒牙、东方人布罗达
+4 只简单 Unique。偷窃、荒野专属、特殊近战、专属物品和未支持召唤类型
+仍继续后置。
+contract-v188 接入 10 只机制完备的 6–7 级怪物；同级的睡眠 AI、特殊近战、
+银质交互、`KILL_BODY`、荒野专属、穿墙、拾物和职业主题掉落记录继续后置，
+不以 `omittedFlags` 删除主动行为。
+contract-v189 接入 12 只机制完备的 8–9 级怪物，并完成 1–9 级原版记录的
+浅层普查收口：173 条记录中 95 条已有正式 actor 和对应原版索引，63 条由
+严格选择/同步路径维护；其余 78 条均已归入明确机制缺口，不以近似内容
+冒充完成。
+contract-v190 按原版 `FORCE_SLEEP → MFLAG_NICE` 完成一次玩家行动的出生宽限，
+并建立 Mage、Archer、Priest、Evil Priest、Paladin 五类浅层职业掉落表；由此
+解锁 13 只此前因出生宽限或职业掉落后置的怪物。浅层正式 actor 增至 108 条，
+其中 76 条由严格同步维护；剩余 65 条继续绑定偷窃、特殊状态近战、穿墙、
+水生/骑乘、荒野限定、特殊召唤等真实能力缺口。
+contract-v191 完成 `BLIND/CONFUSE/PARALYZE/SLOW/STUN/TERRIFY` 六类非伤害或
+附带状态近战，复用现有状态免疫、混乱抗性与状态堆叠，并让 actor 对 actor
+的近战走同一语义。由此再接入 10 只完整可表达的浅层怪物；浅层正式 actor
+增至 118 条，严格同步增至 86 条，剩余 55 条继续等待偷窃、穿墙、地面拾物、
+水生限定、骑乘、荒野限定、特殊召唤及其他独立机制。
+contract-v194 完成 `PASS_WALL`、`AQUATIC`、`INVISIBLE`、装备看破隐形和
+Outpost `WILD_*` habitat 分配，并接入 19 只浅层怪物；浅层正式 actor 增至
+148 条、严格同步增至 116 条，剩余 25 条继续等待骑乘、特殊召唤、主动陷阱、
+房间暗化、银质交互和其他独立机制。
+contract-v195 完成 `KILL_BODY`、`RANGED_MELEE`、`RIDING` 和 `SILVER` 权威
+事实记录，并接入 7 只浅层怪物；浅层正式 actor 增至 155 条、严格同步增至
+123 条，剩余 18 条继续等待特殊召唤、主动陷阱/暗化和其他独立机制。银质当前
+没有脆弱角色消费者，明确不提前建立通用材质伤害系统。
+contract-v196 完成 `FRIENDLY` 自主友方、怪物 `TRAPS` 与 Shadower 外观覆盖，
+并接入航海士娜美、追踪者和板栗崽；浅层正式 actor 增至 158 条、严格同步
+增至 126 条。5 条 `DEPRECATED` 旧记录由严格清单绑定到活跃同名索引并永久
+排除；剩余 10 条活跃浅层记录继续按各自内容边界处理。
+contract-v197 直接接入其中 7 条：高阶地狱兽、黄色果冻、佐格虫、巧言、
+罗宾汉、虱子王劳西和鸭子。零骰 `HURT` 严格表达为受护甲减免的 `0d0`；
+`S_LOUSE` 复用既有类别召唤，唯一候选为巨型白虱。浅层正式 actor 增至
+165 条、严格同步增至 133 条；只剩 Silver jelly、Disenchanter eye 和
+Dark elf 3 条。
+contract-v198 将无骰 `DISENCHANT` 收窄为已有抗性、正面状态移除和装备
+强化削减的近战 effect，接入解除附魔之眼及其 3 点吸取法力；浅层正式 actor
+增至 166 条、严格同步增至 134 条。只剩 Silver jelly 和 Dark elf 2 条。
+contract-v199 为程序化房间增加持久 `glow`，以窄 `darken-room` 清除目标所在
+连通房间的永久光，并让怪物黑暗源只压制永久房间光；银色果冻和黑暗精灵
+进入严格同步。浅层正式 actor 增至 168 条、严格同步增至 136 条，浅层普查
+剩余活跃记录清零。
+contract-v200 开始推进下一段十级内容，直接接入 20 只不需要新增主动施法或
+运行时机制的怪物。正式包 actor 增至 221 条、严格同步增至 156 条；猞猁按
+原版保留 `WILD_ONLY`，其余 19 条可参与现有全局地牢分配。协议与 State Hash
+Schema 均不变。
+contract-v201 接入 7 只十级施法怪物，并让 demo 严格 actor 保留通用导入器
+已经使用的 `legacy-import` 类别，以承载欧法克斯的原作 `S_MONSTER(1d1)`。
+所有法术继续使用现有 effect；正式包 actor 增至 228、ability 增至 112、
+严格同步增至 163，协议与 State Hash Schema 均不变。
+contract-v202 将原版近战元素名 `LIGHT` 收窄为既有 `LITE`/`light` 语义，
+接入伪龙以及生命比例式光明、黑暗吐息。正式包 actor 增至 229、ability
+增至 114、严格同步增至 164；协议与 State Hash Schema 均不变。
+contract-v203 接入多彩龙幼龙、锋锐兔、马头鱼尾怪、僵尸兽人、浅水洼和
+怪诞者卢格 6 只十一级怪物，全部复用既有字段与 effect。正式包 actor 增至
+235、ability 保持 114、严格同步增至 170；协议与 State Hash Schema 均不变。
+contract-v205 以五个窄契约完成经验吸取、毒素接触光环、外观变形、弓手特殊
+掉落别名和地牢索引限定，接入 6 只十一至十二级怪物，并恢复既有黏糊糊的
+软体接触光环。正式包 actor 增至 241、ability 增至 116、严格同步增至 176；
+协议保持 1.147，State Hash Schema 保持 v70。瘟疫鼠的 `COMPOST` 仍等待真实
+下水道任务消费者，不作为掉落或通用区域规则近似实现。
+contract-v206 直接接入 20 只十二级非施法怪物，全部复用既有 actor 字段。
+正式包 actor 增至 261、ability 保持 116、严格同步增至 196；协议保持 1.147，
+State Hash Schema 保持 v70。`S:BERSERK` 和 `S:MULTIPLY` 仍按原版边界只作为
+附身者提示，不生成怪物主动能力。
+contract-v207 接入 7 只十二级施法怪物，按完整参数签名共享或生成 ability。
+正式包 actor 增至 268、ability 增至 124、严格同步增至 203；协议保持 1.147，
+State Hash Schema 保持 v70。没有引入怪物数值覆盖、模板或第二条施法路径。
+contract-v208 接入 10 只十三级怪物，复用现有运行时并生成 5 条 ability 内容记录。
+正式包 actor 增至 278、ability 增至 129、严格同步增至 213；协议保持 1.147，
+State Hash Schema 保持 v70。没有引入新 effect、数值覆盖或兼容路径。
+contract-v209 为所有当前层受伤怪物接入每 100 world ticks 一次的基础再生，
+`REGENERATE` 只将结果翻倍并共享 400 上限；`MOVE_BODY` 以经验值、阵营与
+双向地形通行为窄换位条件。黏菌进入严格同步，正式包 actor 增至 279、
+ability 增至 130、严格同步增至 214；协议 1.147 与 State Hash Schema v70 不变。
+
+contract-v210 直接接入 19 只十四级怪物，正式包 actor 增至 298、ability 保持
+130、严格同步增至 233；协议 1.147 与 State Hash Schema v70 不变。座狼继续
+复用 Pest Control 的手写身份，瘟疫武僧与斯卡文刺客等待真实 `COMPOST` 任务
+消费者，祝融夫人与火焰乌鸦等待火焰接触光环，维护者等待 `POLYMORPH` 与
+软件漏洞定点召唤，均不以重复 actor 或近似规则提前接入。
+
+contract-v211 直接接入 23 只十五级怪物，正式包 actor 增至 321、ability 保持
+130、严格同步增至 256；协议 1.147 与 State Hash Schema v70 不变。幻术师、
+光明/暗影猎犬、时间学徒和鸭鸣鸭嘴兽只引用已有能力内容；附身者专用的
+`DETECT_MONSTERS`、`BERSERK` 与 `MULTIPLY` 提示仍不生成怪物能力。
+
+contract-v212 接入 8 只十五级参数化施法怪物，正式包 actor 增至 329、ability
+增至 141、严格同步增至 264；协议 1.147 与 State Hash Schema v70 不变。
+11 条新 ability 只携带权威数值并复用现有 effect；`BLESS` 与 `HEROISM` 仍按
+附身者提示处理，不生成怪物能力。
+
+contract-v213 接入纳垢携疫者和侏儒法师，正式包 actor 增至 331、ability
+增至 143、严格同步增至 266。`S_ANT` 复用分类召唤；`BLINK_OTHER` 使用新增的
+怪物专用十格目标闪现，不以远距放逐近似。协议升至 1.148，State Hash Schema
+保持 v70。
+
+contract-v214 接入铁甲虫，正式包 actor 增至 332、ability 保持 143、严格同步
+增至 267。`REFLECTING` 使用 actor 事实和既有投射/伤害路径，只反射单体
+ability/device bolt；协议 1.148 与 State Hash Schema v70 不变。黏土魔像仍等待
+玩家侧碎岩攻击，魔法蘑菇丛仍等待 `ANTI_MAGIC`/`POLYMORPH`，鼠巨魔仍等待
+真实下水道任务的 `COMPOST` 分配。
+
+contract-v216 直接接入粉红惧妖、铁锈怪、兽人队长、凝胶方块、巨型绿蜻蜓、
+巨鸣蜂、蜥蜴人、乌尔方之子乌尔法斯特、锤头鲨、狂战士、食人魔兽人和
+半兽人狂战士。正式包 actor 增至 344、ability 保持 143、严格同步增至 279；
+全部复用既有机制，协议 1.151 与 State Hash Schema v72 不变。十六级剩余的
+恐爪怪、夸塞魔、南蛮大王木鹿大王、老鼠王子尼祖基尔和布伦比野马继续按
+`HURT_ROCK`、`TELE_LEVEL`、`S_SPIDER`、下水道归属和 `CAN_CLIMB` 分批收口。
+
+contract-v217 以现有 `summon-category` 接入南蛮大王木鹿大王，并给导入器增加
+`S_SPIDER → spider` 的单条窄映射；正式包 actor 增至 345、ability 增至 145、
+严格同步增至 280。
+
+contract-v218 完成这四项十六级阻塞：恐爪怪以现有解离伤害记录 `HURT_ROCK`
+易伤，布伦比野马通过 `climb` 进入山地/冰川，夸塞魔以协议 1.152 的窄
+`teleport-level` effect 跨层，尼祖基尔和既有瘟疫鼠以 allocation `taskId`
+限定到 `demo.task.the-sewer`。完整下水道任务、地图和奖励仍是独立后续切片。
+
+contract-v219 直接接入斯芬克斯、森林巨魔、2头海德拉、沼泽怪物、
+水元素精灵、巨型粉红蝎、土元素精灵和南蛮大王兀突骨。正式包 actor 增至
+357、ability 保持 147、严格同步增至 292；全部复用现有能力和机制，协议
+1.152 与 State Hash Schema v72 不变。十七级剩余参数化施法、元素接触光环
+和矮人掉落主题继续分批收口。
+
+contract-v220 接入丘陵巨人、小恶魔、猫又、灰先知和矮人纳尔。正式包 actor
+增至 362、ability 增至 152、严格同步增至 297；五条新 ability 只参数化现有
+伤害、召唤和治疗 effect。`DROP_DWARF` 只增加一张引用现有物品的 Dwarf 掉落
+表，不建立新掉落框架。
+
+contract-v221 接入冰冻球、跳跃火球和球状闪电，正式包 actor 增至 365、严格
+同步增至 300，ability 保持 152。现有 `contactAura` 只窄扩展火焰、冰冷和闪电
+即时抗性伤害，复用伤害事务与事件；原有毒素持续状态和三只怪物的 `8d8` 同元素
+死亡爆炸保持不变。十七级怪物完成收口。
+
+contract-v222 按机制风险而非等级直接接入 33 只无怪物施法怪物，正式包 actor
+增至 398、严格同步增至 333 条，ability 保持 152。现有接触光环、繁殖、死亡
+爆炸、碎岩易伤、毁墙/换位、骑乘、水生与掉落结构直接承载，协议 1.152、
+State Hash Schema v72 不变。带参数施法、跳跃光、复合光环、变色龙和恐怖凝视
+继续留在 P38–P41。
+
+contract-v223 接入 15 只只使用现有怪物能力的 P37B 怪物，正式包 actor 增至
+413、严格同步增至 348 条，ability 保持 152。火、冰、闪电、酸、毒素和声音
+吐息，以及 `blink`、`drag`、`shriek`、状态与诅咒能力全部直接复用；附身者
+`DETECT_MONSTERS` 不进入 casting profile。协议 1.152、State Hash Schema v72
+不变。
+
+contract-v224 接入 11 只 P38A 参数化伤害怪物，正式包 actor 增至 424、严格
+同步增至 359 条，ability 增至 163。新增内容记录只承载既有 bolt、ball 和
+breath effect 的权威骰值或生命比例上限；附身者 `DETECT_MONSTERS`、
+`DETECT_TRAPS` 不进入 casting profile。协议 1.152、State Hash Schema v72
+不变。
+
+contract-v225 接入 6 只 P38B 治疗与召唤参数怪物，正式包 actor 增至 430、
+严格同步增至 365 条，ability 增至 171。新增内容只承载既有治疗、分类召唤、
+同族召唤和伤害 effect 的权威参数；附身者侦测、地图和祝福令牌不进入 casting
+profile。协议 1.152、State Hash Schema v72 不变。
+
+contract-v226 接入闪烁的灯光与黏糊恶心女王，正式包 actor 增至 432、严格同步
+增至 367 条，ability 增至 174。`jump-damage` 只承载原版“施法者中心范围光伤后
+闪现”的固定顺序；`contactAuras` 只把单光环字段迁移为声明有序列表，并按毒素、
+酸性顺序复用现有抗性、状态、伤害和死亡中止。协议 1.152、State Hash Schema v72
+不变。
+
+contract-v228 接入变色龙，正式包 actor 增至 433、严格同步增至 368 条，ability
+保持 174。每次清醒行动以 `1/13` 判定真实换形；当前形态通过既有
+`appearanceKindId` 保存并进入 State Hash，驱动 HP、速度、抗性、属性、近战、
+移动和施法，本体 `kindId` 保持变色龙。协议 1.157、State Hash Schema v77 不变。
+
+contract-v229 接入妖鬼，正式包 actor 增至 434、严格同步增至 369 条，ability
+保持 174。`ELDRITCH_HORROR` 使用新进入视野的窄触发点和实例级重复触发标记，
+后果复用混乱、幻觉、麻痹、属性损伤、地图失忆与既有精神变异。协议 1.158、
+State Hash Schema v78；没有建立独立理智资源或通用精神状态框架。
+
+荒野 W0 已导入 `master:w_info.txt` 的 `99x66` normal 世界图、15 类地形、
+危险等级、道路和起点，并只把现有 Outpost/Warrens 绑定为正式地点。W1 已完成
+权威地图尺度、荒野位置/种子保存、协议投影、现有 Pixi 渲染与 `x` 查看。W2
+已完成 132 倍耗时的世界格移动、地形通行、坐标种子局部荒野、四向地形/道路
+衔接、P10 habitat 怪物分配和局部边缘换格。W3 已完成从 `worldTick` 派生的
+昼夜、地表环境光、白昼惧光怪物过滤、原版世界旅行伏击公式、20 次伏击分配、
+怪物先手和威胁解除前的大地图锁定。W4 已把现有 Outpost/Warrens 绑定成正式
+地点闭环：世界图不能直接进入地牢，返回局部地图后只有匹配当前世界坐标的入口
+可进入，离开地牢恢复原世界坐标、入口格、任务和商店状态。Orc Cave 及其他
+原版城镇/地牢仍未激活，等待相应等级怪物、地牢内容和地点切片。W5 已接入
+低层 `Ruined Home` 特殊遭遇、可跨伏击/读档恢复的自动寻路、深水/熔岩/雪地
+规则和宠物/坐骑/召回确认；随机 20–50 级单层地下城与城镇传送继续等待真实
+高层生态和第二座正式城镇。
+
+contract-v231 已把动态荒野层调整为 96×33，并增加必填、可保存、进入 State
+Hash 的 `wildernessViewOffset`，固定 3×3 个 32×11 区块及 `-1..=1` 偏移边界。
+contract-v232 已把世界格与偏移映射为绝对区块，同代相邻视口共享重叠地形，
+并加入最多 5×5 区块的派生缓存；进入世界地图会清缓存并推进 `wildernessSeed`，
+再次进入同一位置可得到新一代植被、边界细节和特殊房间。contract-v233 已在玩家
+进入最外侧区块时平移 32×11：重叠地形、探索状态、怪物、坐骑、物品、金币和
+召唤警戒点同步迁移，离屏对象裁剪，pack 整组处理；世界格与偏移跨界正规化，
+客户端本地旅行目标通过 `mapTranslation` 保持同一绝对目的地。contract-v234 已将
+初次进入的道路 4 轮、非道路 10 轮按新暴露面积折算，只在横纵 1/3 或对角 5/9
+条带生成怪物；重叠区域不重刷，伏击只由世界地图判定并继续使用独立 20 轮规则。
+contract-v235 已让查看、瞄准和本地旅行坐标跟随 `mapTranslation`，打开中的对象
+列表会按最新权威投影重建，并以稳定对象 ID 保留选择；地图仍使用全量格刷新。
+contract-v236 曾以正规化跨格恢复独立城镇层。contract-v237 已将可变尺寸城镇按
+`mapOrigin` 直接合成到连续荒野视口，并复用既有 `FloorState` 在原尺寸城镇坐标与
+活动视口之间同步地形、探索和动态对象。玩家按实际城镇矩形进入或离开城镇，
+设施坐标随视口换算；本地切换不清缓存、不推进 `wildernessSeed`。世界图、地下城
+和存档往返均恢复同一世界位置与视口偏移，随机荒野怪物只排除实际城镇矩形。
+
+## 盗贼藏身处后续机制
+
+| 机制 | 原版来源 | 当前状态 |
+| --- | --- | --- |
+| `BEG` 乞讨攻击 | `r_info.txt` 的 Filthy street urchin | 未实现；该怪物保持空普通近战，不自创伤害 |
+| `EAT_GOLD` 近战偷金 | Filthy street urchin、Novice rogue、Scruffy looking hobbit、Nibelung、Bandit、Tax collector | 未实现；需要玩家金币损失、怪物逃跑和防偷判定的通用事务 |
+| `EAT_ITEM` 近战偷物 | Agent of black market、Tax collector | 未实现；需要合法背包候选、artifact/保护边界和怪物携带物状态 |
+| `TAKE_ITEM` 地面拾取 | 七种候选怪物 | 未实现；不同于 W11 `KILL_ITEM`，需要怪物持有并在死亡时归还物品 |
+| `TRAP(*)` 随机陷阱种类 | `q_thieves.txt` 的 `TRAP(*, 50)` | 50% 独立放置已完成；当前只使用已支持的兽穴陷阱，仍缺深度过滤的原版陷阱分配池 |
+| `$:OBJ(*)` 随机物品 | `q_thieves.txt` 的四个 `$` | 当前走已有兽穴战利品表；仍缺完整深度 5 原版物品分配器 |
+| 条件奖励矩阵 | `q_thieves.txt` 的默认及 Race/Class 条件 `R:` | 当前 Warrior 阶段锁定原版阔剑；其他种族/职业奖励未接入 |
+
+## Warrens 当前优先级
+
+| 优先级 | 机制 | 状态 |
+| --- | --- | --- |
+| W1-W6 | 分配、越级、群体、Unique、escort、繁殖、随机移动与自然补怪 | 已由 contract-v173 完成 |
+| W7-W9 | 怪物门交互、飞行/游泳移动域、个体 HP 骰 | 已由 contract-v174-v176 完成 |
+| W10-W13 | 特殊近战、地图/物品破坏、怪物光源与完整掉落旗标 | 已由 contract-v177-v180 完成 |
+| W14 | Pest Control 专属 Warg 生态 | 已由 contract-v182 完成；原版目标为 8 只 Warg，`FRIENDS(3d3)` 不改变任务目标数量 |
+
+## 历史推进顺序
+
+| 优先级 | 候选纵切 | 状态 | 边界 |
+| --- | --- | --- | --- |
+| P0 | 暂停任务管理 | 已由 contract-v61 完成 | 地表直接放弃、重接次数限制和保留进度的确定性重建 |
+| P1 | 区域组合扩展 | 已由 contract-v62 完成 | 区域与 Vault、pit、动态群体、feature、分阶段地貌和多连接组合 |
+| P2 | 树状地牢与共享守护者镜像 | 已由 contract-v63 完成 | 不同楼梯进入不同子层、多个程序化最终叶层和一次性共享征服 |
+| P3 | Vault 多入口与连通拼接 | 已由 contract-v64 完成 | 1–8 个边界入口、模板/整层连通证明和确定性 BFS connector |
+| P4 | 地牢实例身份与生命周期 | 已由 contract-v65 完成 | 实例序号、实例+floor 仓库键、实例级清理和 v64 存档迁移 |
+| P5 | 动态探索树连接解析 | 已由 contract-v66 完成 | 加权楼梯候选、同层目标去重、解析目标持久化与旧存档固定目标回退 |
+| P6 | 地牢入口守卫与可选进入条件 | 已由 contract-v67 完成 | 原版式可绕过软门槛、原创内容硬条件、原子拒绝和旧存档抑制迁移 |
+| P7 | 胜利、退休与角色评分 | 已由 contract-v68 完成 | campaign victory dungeon、胜利/退休状态、确定性评分、存档迁移和 UI 结算 |
+| P8 | 可配置实例生命周期 | 已由 contract-v69 完成 | `reset-on-surface`、`persistent`、`turn-ttl`、retained 存档字段、惰性 TTL 淘汰和实例级物品属性知识清理；普通地牢继续回地表即清空 |
+| P9 | 运行时连通修复 | 明确不实现 | 地形破坏直接成为权威状态，不做自动重连、楼梯迁移或整层修复；玩家可使用挖掘能力自行恢复通路 |
+| P10 | 角色成长基础 | 已由 contract-v70 完成 | 击杀经验、RFB 1–50 阈值、未胜利 50 级封顶、胜利后 100 级与 `18/820` 解锁、六维自然/有效属性、HP 序列、装备 modifier、属性点命令和存档迁移 |
+| P11 | 角色创建与构筑基础 | 已由 contract-v71 完成 | Race/Class/Personality、技能集合、五个代表性初始构筑、出生装备、来源可解释的派生属性、技能成长和 v70 存档迁移 |
+| P12 | 可观察技能检定 | 已由 contract-v72 完成 | device、saving-throw、stealth、perception 的权威消费、结构化事件、警戒存档和相同 seed 构筑对照 |
+| P13 | 法术与能力书基础 | 已由 contract-v73 完成 | resource/ability/ability-book 内容根、Class casting profile、可保存 Mana/已学能力、学习/失败率/目标施法、Web 面板和旧存档迁移 |
+| P14 | 法术恢复与多效果能力 | 已由 contract-v74 完成 | Mana 等待/休息恢复、真实调度与危险中断、稳定自身目标、Stillwater Notes 和固定治疗 |
+| P15 | 能力熟练度与冷却 | 已由 contract-v75 完成 | RFB 五档熟练度、Mana 成本/失败率修正、成功/失败统计、独立/共享冷却、零 RNG 拒绝、存档迁移和 Web 展示 |
+| P16 | 学习容量与遗忘 | 已由 contract-v76 完成 | 独立学习容量、等级/属性修正、容量投影、主动遗忘、零 RNG 拒绝、进度保留、重新学习与旧存档兼容 |
+| P17 | RFB 式范围爆发伤害 | 已由 contract-v77 完成 | 定点穿透/方向停止、墙体遮挡、整数距离衰减、稳定由内向外顺序、逐 actor 抗性/击杀管线、零目标与无效目标 RNG 边界、Echo Burst 与 replay/save 基准 |
+| P18 | 方向射线能力效果 | 已由 contract-v78 完成 | RFB `fire_beam()` 式方向射线，穿透 actor、墙体/边界截断、近到远顺序、共享一次基础伤害骰、空射/无效模式 RNG 边界、Echo Lance 与 replay/save 基准 |
+| P19 | 锥形能力效果 | 已由 contract-v79 完成 | 复用目标验证与伤害管线，固定八向锥形 footprint、逐层展开、墙体遮挡、横向整数衰减、目标顺序和事件/RNG 语义；Echo Fan、replay/save 与八向几何基准已建立 |
+| P20 | 定点延长射线 | 已由 contract-v80 完成 | RFB `project_hook()`/`PROJECT_THRU` 语义，支持 direction/position/entity，定点或实体目标后沿稳定整数斜率延长到最大射程；actor 穿透、墙体截断、共享伤害骰、无效目标零资源零 RNG；Echo Lance、replay/save 与 202 个 exact fixtures 已建立 |
+| P21 | 首个位移能力 | 已由 contract-v81 完成 | Echo Step 内容驱动 teleport；仅 position 目标，落点需非当前格、在图内、可见、满足 line of effect、可行走且无存活 actor；无效落点零资源/零 RNG，成功精确移动并复用普通移动到达管线；协议 1.81、内容包 1.73.0、209 个 exact fixtures |
+| P22 | 首个召唤能力 | 已由 contract-v82 完成 | Echo Companion 内容驱动 summon；稳定 actor ID、玩家阵营/所有者、数量/半径、确定性落位、玩家回合生命周期、空间不足原子回退、失败率资源语义、save/replay 与 Schema v35 |
+| P23 | 首个侦测能力 | 已由 contract-v83 完成 | Echo Pulse/Echo Sight 内容驱动 detect；category/radius、FOV 与隐藏投影过滤、稳定顺序、持久/瞬时知识、空结果、非法目标/资源不足 RNG 边界、save/replay 与 Schema v36 |
+| P24 | 首个地形改变能力 | 已由 contract-v84 完成 | Echo Delving/Echo Rampart 内容驱动 transform-terrain；来源/目标 terrain 集、position/FOV/line of effect、稳定原子提交、占用格与连接/边界保护、空结果、changed cells、save/replay 与 Schema v36 |
+| P25 | 状态能力与多 effect 组合 | 已由 contract-v85 完成 | Echo Quickening/Echo Binding；状态添加/移除、2–8 个有序同目标 actor 效果、堆叠、抗性缩时、免疫、部分无效、目标死亡/无目标跳过、save/replay 与结构化 Web outcome |
+| P26 | 首个怪物施法与能力选择 AI | 已由 contract-v86 完成 | Monster 百分比频率与加权能力集合、射程/墙体/友军 clean-shot、频率失败普通行动回退、伤害/状态/有序效果复用、逆频率自身行动冷却、save/replay 与 Schema v37 |
+| P27 | 怪物施法效用与目标扩展 | 已由 contract-v87 完成 | HP/状态/距离有效权重、自身治疗/增益、范围/射线/锥形、保守 footprint 风险、敌对召唤、逐候选协议观察与 257 个 exact fixtures |
+| P28 | 怪物目标选择与施法记忆 | 已由 contract-v88 完成 | 玩家阵营召唤物目标、敌我多目标评分与实际结算、保持距离/25% HP 撤退、smart caster 已观察抗性记忆、save/replay、Schema v38 与 265 个 exact fixtures |
+| P29 | 友方召唤物行动与首版命令 | 已由 contract-v89 完成 | Follow/Attack/Keep Distance/Guard、零时间全局命令、能量调度、近战归属、2 格跨层跟随、save/replay 与 Schema v39 |
+| P30 | 首个非 Mana 职业资源 | 已由 contract-v90 完成 | 多资源底子（ResourceDefinition 行为字段 + techniqueProfiles）、节奏/决斗家纵切、命中/击杀获得、闲置衰减、先天技法、save/replay、旧存档子集迁移、Schema v40 与 282 个 exact fixtures |
+| P31 | 旧版内容导入管线 v1 | 已完成（纯工具，不动契约基线） | f_info/r_info 只读导入 .local 本地包（地形 180/188、怪物 1332/1396），缺口报告按缺失法术/效果/flag 计数，后续规则族按报告排期 |
+| P32 | 多 blow → meleeRoutine 映射 | 已完成（纯工具） | 1124/1332 导入怪物获得完整多段近战 routine，逐 blow 伤害类型，107 条无骰副攻计入缺口 |
+| P33 | 导入器法术映射 v1 | 已完成（纯工具） | SCARE/SLOW/HASTE/HEAL + 1_IN_N 频率 → monsterCasting，454 只导入怪物成为施法者，78 个共享生成能力 |
+| P34 | 怪物位移法术族 | 已由 contract-v91 完成 | blink-self/teleport-self/teleport-target 三效果、rift-stalker 纵切、导入映射 455 实例（casting 怪物 553）、288 个 exact fixtures |
+| P35 | 新状态族（混乱/致盲/麻痹） | 已由 contract-v92 完成 | 三个新状态种类 + 玩家侧效果（移动重定向/禁施法、FOV 压制、行动浪费）、gloom-weaver 纵切、导入映射 548 实例（casting 怪物 586）、299 个 exact fixtures |
+| P36 | 怪物直伤弹族（bolt/ball）与伤害平坦加值 | 已由 contract-v93 完成 | 四伤害效果加 damageBonus、1d1+(F-1) 平坦恒等式、cinder-adept 纵切、导入映射 BO_/BA_ 622 实例（casting 怪物 696、共享能力 502）、303 个 exact fixtures。原候选 DETECT 族经源码核实为 `MST_POSSESSOR` 附身专用组（怪物不施放，共 522 个 token 实例含 MAPPING/BERSERK/BLESS 等），按不适用归档 |
+| P37 | BR_ 吐息族 | 已由 contract-v94 完成 | breath-damage 效果（当前 HP×pct% 封顶 max、零伤害骰、锥形复用 v79）、ash-drake 纵切、fixtures 304-306（封顶/残血衰减/致死闭环）、306 个 exact fixtures。导入映射吐息 337 实例（casting 怪 696→765）+ FREQ_N 频率修复（297 实例消化）+ 附身组 522 实例重分类 notApplicable；施法表上限 32→64（旧版最大杂烩 34 技能悉数保留，导入器仍留 64 截断守卫） |
+| P38 | S_ 召唤族 | 已由 contract-v95 完成 | summon-category 效果（标签+等级上限候选、数量骰、逐只有界抽 kind、落位/生命周期复用既有召唤）、mote-binder 纵切、fixtures 307-308、308 个 exact fixtures。导入器类型旗标→标签（undead/demon/dragon/animal）+ S_ 映射 493 实例（casting 怪 765→783、S_KIN 76 用固定召唤映射召唤同类）；源包文件预算 2048→4096 |
+| P39 | 伤害类型扩展（RFB 原版元素表） | 已完成（纯枚举+导入器，无契约迁移） | 按 gf.h 原序新增 22 类（light/dark/confusion/nether/nexus/sound/shards/chaos/disenchant/time/mana/gravity/inertia/plasma/force/nuke/disintegrate/storm/holy-fire/hell-fire/ice/water），协议 1.96；导入器近似转正 + 异种元素/吐息全解锁 + blow 元素名直映——法术映射 3849（+778）、casting 怪 829、未映射 1379。见 [damage-type-roster-v1](damage-type-roster-v1.md) |
+| P40 | 抗性档导入 | 已由 contract-v96 完成 | actor 内容层 resistances 字段（类型→档位，normal 缺省）、11 处生成路径盖章（存档保持权威）、slag-crawler kin 召唤纵切、fixtures 309-310（盖章召唤体电弹减半 / 显式免疫覆盖）、310 个 exact fixtures。导入器 RES_/IM_/HURT_ → resistant/immune/vulnerable：1023 只怪 3842 条条目 |
+| P41 | 心灵族 | 已由 contract-v97 完成 | psi 伤害类型（协议 1.97）、MIND_BLAST/BRAIN_SMASH→Sequence[psi 伤害+骑手]（既有白名单零新机制）、PSY_SPEAR→首个导入 beam、mind-lasher 纵切、fixtures 311-312（同种子孪生：Normal 全额 vs psi 抗性减伤+缩时）、312 个 exact fixtures。导入 248 实例全数（casting 怪 831、映射累计 4097、未映射 1131） |
+| P42 | 诅咒族与豁免门 | 已由 contract-v98 完成 | curse-damage 效果（豁免成功全免零后续 RNG、失败全额无护甲无抗性；难度=施法者等级；复用 v72 saving-throw 检定与 SavingThrowChecked 事件）+ curse 伤害类型（协议 1.98）、hex-chanter 纵切、fixtures 313-314（同设置双种子：成功 skip saved / 对抗失败 raw=final 全额）、314 个 exact fixtures。导入 CAUSE_1-4 240 实例全数（casting 怪 832、映射累计 4337、未映射 891） |
+| P43 | 小型效果杂项包 | 已由 contract-v99 完成 | teleport-away（BanishTarget 专用计划、候选规划期收集+减半回退、复用 relocate 管线与 v91 位移事件族）、drain-resource（吸施法档资源池+施法者回血封顶）、amnesia（豁免门+清当前层 explored/revealedTerrain）、DISPEL→既有 remove-status haste；veil-warden 四式纵切、fixtures 315-318、318 个 exact fixtures。导入 264 实例全数（casting 怪 844、映射累计 4601、未映射 627） |
+| P44 | k_info 物品导入 | 已完成（纯工具，见 [legacy-item-import-v2](legacy-item-import-v2.md)） | 545 条中 544 条落地：武器 meleeProfile、发射器按 sval 配对典型弹药（乐器类 5 件降级为壳）、护甲/首饰槽位+防御/六维修正、光源标签、消耗品/设备/魔典壳+行为缺口按类计数（consumable-effect 95/book 72/device 64 等）；产物过全量校验 |
+| P45 | ego 词条 + 固定神器导入 | 已完成（纯工具，见 [legacy-item-import-v2](legacy-item-import-v2.md)） | e_info 160 条中 88 条成 affix（C: 上限取确定性顶格、六维含 DEC_ 负向按 pval 折算；72 条力量全在不可表达旗标按 ego-inexpressible 跳过入报告）；a_info 392 条神器全数落地（固定 pval/骰/修正，哨兵 pval 钳制 ±100，INSTA_ART 不计缺口，激活计 artifact-activation 180）；**同轮修正：普通戒指/护符为无属性通用壳**（属性只来自词条/神器，与原版生成模型一致）；产物 936 items + 88 affixes 过全量校验 |
+| P46 | fake bow 修正（未配对发射器保槽） | 已完成（纯工具，见 [legacy-item-import-v2](legacy-item-import-v2.md)） | 未配对发射器（基础 5 + 神器 7）从"去槽壳"改为原版 `obj_is_fake_bow` 语义：保 launcher 槽、不带射击档、神器固定修正全保留（阿波罗竖琴取回六维 +5×3）；P: 射击加成随射击档舍弃；依据：契约物品规则均为单向、launcher 槽无射击档合法，运行时查无射击档仅拒绝开火 |
+| P47 | 身体/槽位模板 | 已由 contract-v100 完成 | RaceDefinition.bodySlots 槽实例表（空=标准身体）+ 核心标准身体 13 槽（**ring-1/ring-2 双戒指、light 光源槽**，单实例 id=类型名故旧档零迁移）+ 装备按类型找空实例/满则顶替首实例（item.equip.swap）+ 存档权威（Schema v41）/旧档零 RNG 派生 + 快照 bodySlots（协议 1.100）+ 前端全槽位面板（空槽"空缺"、同类型序号）+ 导入器光源接 light 槽（帕蓝提尔等 8 件神器六维回收）。demo 新增共鸣指环（包 1.91.0），fixtures 319-320（双戒指/顶替），320 个 exact。记录差异：双持手与箭袋未纳入（待各自系统） |
+| P48 | b_info+种族+性格导入（T1） | 已完成（纯工具，见 [legacy-character-import-v1](legacy-character-import-v1.md)） | 代码侧结构化提取（函数头识别+花括号配平+赋值行解析，rank 动态右值标记跳过）：**67/88 种族**（21 怪物种族 race-code-dynamic）、**20/21 性格**、113 身体模板全解析（缺口普查 any 76/quiver 13/capture-ball 4）；玩家种族绑 Standard 12 槽（刻意无 charm）；八技能花名册 1:1 映射+87 skillSets；钩子缺口 calc_bonuses 76/birth 27 为 T2/种族能力线提供覆盖数；霍比特抽查逐项一致 |
+| P49 | 装备/内在旗标系统·防御面（T2 前半） | 已由 contract-v101 完成 | 装备/词条/种族三处统一 resistances/statusImmunities/modifiers.speed 声明表面；有效抗性确定性合并（immune 胜、正档遇 vulnerable 降档）、免疫查表跳过、装备速度进派生管线；协议 1.101（物品 DTO 知识门控暴露）、包 1.92.0（御火指环/疾行靴/镇静吊坠）、fixtures 321-323 共 323 exact、Schema 保持 v41。回灌收割：ego 105/160（+17）、神器 392/392、35 词条/33 种族/321 物品带防御表面，RES_*/IM_*/SPEED/FREE_ACT 清零。进攻面（SLAY_/BRAND_）留 T2 后半 |
+| P50 | 进攻面旗标（T2 后半） | 已由 contract-v102 完成 | Item/Affix 统一 slays（11 类目标，slay/kill 两档）+ brands（酸电火冷毒）；玩家持武器近战按原版 tier 只放大武器骰、多项取最高、元素 immune 压制对应 brand，零额外 RNG；协议 1.102、包 1.93.0、Schema 保持 v41、fixtures 324-326 共 326 exact。回灌：ego 107/160、神器 392/392，12 词条/130 物品带 slay，5 词条/90 物品带基础 brand |
+| P51 | 动态 affix 实例 + 装备被动属性 | 已由 contract-v103 完成 | Item/Affix 统一 equipmentBonuses/passives，Affix rollGroups 按深度过滤并加权抽取，物品实例保存 materialized rolledAffixes；旧档缺字段保持空且零 RNG。技能/额外攻击进入派生管线，regeneration 每 10 world ticks 恢复 1 HP；协议 1.103、包 1.94.0、Schema v42、fixtures 327-328 共 328 exact。真实导入 ego 128/160（+21），其余 32 个主要依赖反射、光环、诅咒、额外射击/威力与高级品牌 |
+| P52 | 职业壳 + m_info 施法档案导入（T3） | 已完成（纯工具，见 [legacy-class-import-v1](legacy-class-import-v1.md)） | 固定 commit Git 对象读取；53 个当前注册职业 + m_info 遗留 Imitator = 54 个职业壳，54 个职业 skillSet；53 份 m_info 生成 636 领域行/144 可读行/4608 逐法术参数，另提取 46 个 C caster_info 壳（5 个动态）；s_info 的 16640 武器熟练 + 156 专项熟练进入缺口报告；本地包 54 classes/141 skillSets 通过内容编译 |
+| P53 | 玩家领域法术首批映射（T4） | 已完成（见 [legacy-player-spell-import-v1](legacy-player-spell-import-v1.md)） | Class castingProfile 新增逐 ability 的职业参数覆盖；Death 第一册生成 3 abilities、1 ability book、Mana 与实体书绑定，12 个静态职业共 36 行覆盖；学习/显示/失败率/耗魔/施放/读档统一读取覆盖。Rogue/Blood Mage/Skillmaster 显式排除；真实包 4157 文件通过编译，源文件预算 4096→32768 |
+| P54 | 玩家等级效果缩放 + Death 第一册收尾 | 已由 contract-v104 完成 | Ability `levelScaling` 覆盖 7 类标量；actor Detect、状态 power、sleep/受伤唤醒、状态授予临时抗性、Control/controller identity/pack 解散/友方 AI 全部接入协议、存档和 Schema v43。Death 第一册 8/8 ability、12 个静态职业 96 条覆盖；协议 1.104、包 1.95.0、fixtures 329-334 共 334 exact。真实 Death 效果缺口 480→384，等级缩放与状态 power 缺口清零 |
+| P55 | Death 第二册系统盘点与纵切 | 已由 contract-v105 完成 | 第二册 8/8 ability、两本实体书总计 16 个 Death ability、12 个静态职业 192 条覆盖；新增活体限定、bolt-or-beam、职业 beam 档案、自身中心 AoE、单体/字形 Genocide、临时品牌、Drain Life、尸体与永久 Animate Dead。协议 1.105、包 1.96.0、Schema v44、fixtures 335-343 共 343 exact；真实 Death 效果缺口 384→288 |
+| P56 | Death 第三册系统盘点与纵切 | 已由 contract-v106 完成 | 第三册 8/8 ability、三本实体书总计 24 个 Death ability、12 个静态职业 288 条覆盖；新增随机状态时长、状态派生加值/免疫、RandomChoice/NoOp、敌对固定召唤、永久武器 affix、Vampiric 近战吸血、重复追踪 Drain Life、全可见目标共享伤害骰及 linear/prorated 曲线。协议 1.106、包 1.97.0、Schema v45、fixtures 344-353 共 353 exact；真实 Death 效果缺口 288→192 |
+| P57 | Death 第四册系统盘点与纵切 | 已由 contract-v107 完成 | 第四册 8/8 ability、四本实体书总计 32 个 Death ability、12 个静态职业 384 条覆盖；新增物品目标/鉴定、Death Ray、升级类别与敌友群体召唤、临时 Race、历史最高经验/生命力、邻域灭绝、穿墙与入伤比例。协议 1.107、包 1.98.0、Schema v46、fixtures 354-365 共 365 exact；真实 Death 效果缺口 192→96 |
+| P58 | 充能物品实例与首批治疗消耗品 | 已由 contract-v108 完成 | `heal-dice`、实例级 initial/maximum/cost 充能、成功扣费/失败保留/耗尽零世界时间、知识门控 DTO 和严格回档；demo Resonance Mender；六种原版治疗药水接入，`consumable-effect` 95→89。协议 1.108、包 1.99.0、Schema v47、fixtures 366-368 共 368 exact |
+| P59 | 动态设备效果身份与首批 staff/wand/rod 激活 | 已由 contract-v109 完成 | `deviceGeneration.activations` 深度过滤/稳定加权、profile/power/目标/成本/随机容量实例化、错误目标零 RNG、成功扣费、damage/detect/heal、知识门控和严格回档；demo Wand/Staff/Rod；原版通用壳接入后 `device-effect` 64→61。协议 1.109、包 1.100.0、Schema v48、fixtures 369-373 共 373 exact |
+| P60 | 设备自然恢复与主动充能 | 已由 contract-v110 完成 | `deviceGeneration.recovery` interval/per-mille 与确定性余数、背包自然恢复、四类物品严格回档；职业 recharge profile、资源/设备来源、资源失败清空、设备来源损毁与 artifact 免毁；Web/事件/调试开关。协议 1.110、包 1.101.0、Schema v49、fixtures 374-379 共 379 exact |
+| P61 | 有序恢复型消耗品效果 | 已由 contract-v111 完成 | `remove-status`、固定/骰值/回满资源及 2–8 步非嵌套恢复序列；顺序事件、正式 RNG、缺池消费与物品知识边界；demo 两种恢复药水，legacy 四种食物 + Boldness/Vigor/Restore Mana/Clarity 及六种治疗药水异常清除，`consumable-effect` 89→81。协议 1.111、包 1.102.0、Schema v49、fixtures 380-383 共 383 exact |
+| P62 | 卷轴效果重分类与首批鉴定事务 | 已由 contract-v112 完成 | tval 70/71 缺口统一为 `scroll-effect`；sval 12/13 映射普通/完全鉴定；固定/动态 item-only 目标校验、消费/RNG/world tick 前原子拒绝、appraised/identified/affix 知识、来源 aware、结构化事件、Death helper 复用与 Web 物品选择器。`scroll-effect` 61→59，`device-effect` 退出报告。协议 1.112、包 1.103.0、Schema v49、fixtures 384-386 共 386 exact |
+| P63 | 卷轴地图与侦测事务 | 已由 contract-v113 完成 | 新增 item detect 主体与显式 `throughWalls`；Mapping 写 explored，隐藏地形写 revealedTerrain，actor/item 保持瞬时；静态卷轴事件、Web 文案与 Legacy gold/passage/invisible 标签贯通。sval 25–30/57 共七条使 `scroll-effect` 59→52。协议 1.113、包 1.104.0、Schema v49、fixtures 387-389 共 389 exact |
+| P64 | 卷轴传送与回城事务 | 已由 contract-v114 完成 | `random-teleport`、`teleport-level`、`recall`、`reset-recall`；最远半数合法格、上下方向/树连接、稳定 dungeon+floor 目的地、延迟/取消/重设、实例生命周期、原子拒绝与 v113 存档迁移。sval 8–11/53 使 `scroll-effect` 52→47；协议 1.114、包 1.105.0、Schema v50、fixtures 390-398 共 398 exact |
+| P65 | 装备附魔卷轴与实例强化 | 已由 contract-v115 完成 | `enchant-item` 的 to-hit/to-damage/to-AC 尝试骰、原版千分递减表、+15 上限、神器 50% 门、普通/弹药堆门、实例/save/战斗派生、原子拒绝和 Web 投影。sval 16/17/18/20/21 使 `scroll-effect` 47→42；协议 1.115、包 1.106.0、Schema v51、fixtures 399-405 共 405 exact |
+| P66 | 装备诅咒与解除卷轴 | 已由 contract-v116 完成 | normal/heavy/permanent 实例诅咒、武器/护甲施咒、神器 50% 抵抗、普通/强力解除、永久诅咒保留、卸装/替换零时间拒绝、四类 save 与 Web 投影。sval 2/3/14/15 使 `scroll-effect` 42→38；协议 1.116、包 1.107.0、Schema v52、fixtures 406-413 共 413 exact |
+| P67 | 怪物、亡灵、宠物与同族召唤卷轴 | 已由 contract-v117 完成 | 物品召唤 selector、地牢深度/玩家等级来源、Race `kinCategory`、敌对 unique/guardian 过滤、永久玩家控制、零候选/零空间消费与知识/RNG 边界。sval 4/5/6/54 使 `scroll-effect` 38→34；协议 1.117、包 1.108.0、Schema v52、fixtures 414-420 共 420 exact |
+| P68 | 可见目标驱散与放逐卷轴 | 已由 contract-v119 完成 | 共享可见/line-of-effect actor 快照；Dispel Undead 固定 80 点并跳过 `resist-all`；Banishment 按 guardian、unique+`resist-teleport`、普通等级抵抗逐目标结算并逐目标抽落点。sval 42/62 使 `scroll-effect` 34→32；协议保持 1.118、包 1.110.0、Schema v52、fixtures 421-422 共 422 exact |
+| P69 | 祝福卷轴族 | 已由 contract-v120 完成 | 窄 `bless` 物品效果复用 self-target 与既有状态结算，固定 blessed/Extend、defense +5、melee/ranged skill +10；sval 33/34/35 分别映射 `6+1d12`、`12+1d24`、`24+1d48`，使 `scroll-effect` 32→29。协议保持 1.118、包 1.111.0、Schema v52、fixture 423，共 423 exact |
+| P70 | 相邻陷阱与门破坏卷轴 | 已由 contract-v121 完成 | 窄 `destroy-adjacent-traps-and-doors` 物品效果按固定八方向扫描权威地形；陷阱直达 disarm target，封闭门直达 bash target，开启/破损门不变；空用消费、Aware、零 RNG。sval 39 使 `scroll-effect` 29→28；协议保持 1.118、包 1.112.0、Schema v52、fixture 424，共 424 exact |
+| P71 | 火焰与寒冰卷轴 | 已由 contract-v122 完成 | 窄 `self-centered-elemental-blast` 复用 self-target、既有范围格/墙阻挡/衰减、actor 抗性/死亡和玩家入伤管线；Fire 666/r4/`25+1d25`，Ice 800/r4/`30+1d30`。sval 58/59 使 `scroll-effect` 28→26；协议保持 1.118、包 1.113.0、Schema v52、fixture 425，共 425 exact |
+| P72 | Mana 卷轴 | 已由 contract-v123 完成 | 复用 `self-centered-elemental-blast` 并增加必填 `backlashUsesResistance`；1100/r4 mana 爆发尊重 actor Mana 抗性，玩家 `50+1d50` 反噬忽略玩家 Mana 抗性但保留 incoming-damage 百分比。sval 61 使 `scroll-effect` 26→25；协议保持 1.118、包 1.114.0、Schema v52、fixture 426，共 426 exact |
+| P73 | 激怒怪物卷轴 | 已由 contract-v124 完成 | 窄 `aggravate-monsters` 按当前视距 8 唤醒距离 <16 的存活 actor，并为距离 ≤8 且有几何 LOS 的敌对 actor 延长 100 ticks haste；玩家阵营只唤醒。sval 1 使 `scroll-effect` 25→24；协议保持 1.118、包 1.115.0、Schema v52、fixture 427，共 427 exact |
+| P74 | Mass Genocide 卷轴 | 已由 contract-v125 完成 | 窄 `mass-genocide` 以稳定实体 ID 顺序结算半径 20 内存活 actor；普通目标按 power 300 对抗直接移除，unique/guardian 必定抵抗，每候选 `1d3` 疲劳；空候选消费、Aware、零效果 RNG。sval 45 使 `scroll-effect` 24→23；协议保持 1.118、包 1.116.0、Schema v52、fixture 428，共 428 exact |
+| P75 | Forest Creation 与 Wall Creation 卷轴 | 已由 contract-v126 完成 | 窄 `create-adjacent-terrain` 固定八邻格，只替换显式源地形；跳过玩家、存活 actor、地面物品和权威楼层连接，不作连通修复。空结果消费、Tried-only、零效果 RNG。sval 48/49 使 `scroll-effect` 23→21；协议保持 1.118、包 1.117.0、Schema v52、fixture 429，共 429 exact |
+| P76 | Vengeance 卷轴 | 已由 contract-v127 完成 | 窄 `vengeance` 按 `25+1d25` 施加 KeepStrongest 状态；完整怪物 melee routine/spell cast 后按实际玩家 HP 损失反击来源一次，零伤害/玩家死亡抑制，每次扣 5 ticks；反击零 RNG、跳过抗性并复用统一 death 事务。sval 50 使 `scroll-effect` 21→20；协议保持 1.118、包 1.118.0、Schema v52、fixture 430，共 430 exact |
+| P77 | Monster Confusion 卷轴 | 已由 contract-v128 完成 | 无参数 `prepare-confusing-strike` 写入玩家专属准备态；miss/致死命中保留，首个非致死命中先清态，再按 `NO_CONF`、`bounded(100) < actor.level`、`10 + bounded(player.level) / 5` 顺序结算。sval 36 使 `scroll-effect` 20→19；协议 1.119、包 1.119.0、Schema v53、fixture 431，共 431 exact |
+| P78 | Protection from Evil 卷轴 | 已由 contract-v129 完成 | 无参数 `protection-from-evil` 以 Extend 施加 `3 * level + 1d25`；仅 evil 怪物在近战命中后、伤害骰前进入 Wisdom/等级对抗与 `one_in(3)` 绕过，成功击退整段 blow；非 evil 零保护 RNG。sval 37 使 `scroll-effect` 19→18；协议保持 1.119、包 1.120.0、Schema 保持 v53、fixture 432，共 432 exact |
+| P79 | Genocide 卷轴 | 已由 contract-v130 完成 | 窄 `genocide { power }` 使用单字符 glyph 选择当前楼层存活 actor，按稳定实体 ID 复用 `1d4` 疲劳、unique/guardian 保护和 power 对抗；非法输入原子拒绝，合法空选择消费、Aware、零效果 RNG。sval 44 使 `scroll-effect` 18→17；协议 1.120、包 1.121.0、Schema 保持 v53、fixture 433，共 433 exact |
+| P80 | Recharging 卷轴 | 已由 contract-v131 完成 | 窄 `recharge-from-device { power }` 接受互异的卷轴/来源设备/目标设备背包 ID；非法组合零时间零 RNG，合法事务消费卷轴后先支付来源损毁或能量，再复用 P60 目标失败检定。sval 22 使 `scroll-effect` 17→16；协议 1.121、包 1.122.0、Schema 保持 v53、fixture 434，共 434 exact |
+| P81 | Spell 卷轴 | 已由 contract-v132 完成 | Class `usesSpellScrolls` 声明资格；无参数 `increase-spell-learning-capacity` 固定永久 +1，无资格职业仍消费/Aware/推进时间且零效果 RNG。bonus 进入存档，sval 43 使 `scroll-effect` 16→15；协议保持 1.121、包 1.123.0、Schema v54、fixture 435，共 435 exact |
+| P82 | Slowness 药水 | 已由 contract-v133 完成 | 窄 `apply-slowness` 静态消耗品效果固定 `15+1d25`，总是掷持续时间并以 KeepStrongest 合并 Slow；只有首次新增状态才 Aware，已有 Slow 即使延长也保持 Tried-only。tval 75/sval 4 使 `consumable-effect` 81→80；协议保持 1.121、包 1.124.0、Schema 保持 v54、fixture 436，共 436 exact |
+| P83 | Death 药水 | 已由 contract-v134 完成 | 窄 `self-life-loss { amount: 5000 }` 静态消耗品效果直接扣除生命，绕过护甲、抗性与 incoming-damage 缩放，零效果 RNG 且总是 Aware。tval 75/sval 23 使 `consumable-effect` 80→79；协议保持 1.121、包 1.125.0、Schema 保持 v54、fixture 437，共 437 exact |
+| P84 | Poison 药水 | 已由 contract-v135 完成 | 窄 `apply-poison` 先抽 `bounded(55)` 并与既有 Poison 抗性阈值比较；成功抵抗保持 Tried-only 且不抽持续时间，失败后才抽 `1d15+9`、Extend Poison 并 Aware。tval 75/sval 6 使 `consumable-effect` 79→78；协议保持 1.121、包 1.126.0、Schema 保持 v54、fixtures 438–439，共 439 exact |
+| P85 | Thermal 药水 | 已由 contract-v136 完成 | 窄 `apply-thermal-resistance` 只抽一次 `1d10+10`，以 Extend 应用一个同时授予 Fire/Cold Resistant 的状态；首次新增才 Aware，已有状态延长保持 Tried-only。tval 75/sval 30 使 `consumable-effect` 78→77；协议保持 1.121、包 1.127.0、Schema 保持 v54、fixture 440，共 440 exact |
+| P86 | Resistance 药水 | 已由 contract-v137 完成 | 窄 `apply-basic-resistance` 每次只抽一次 `1d20+20`，以 KeepStrongest 应用一个同时授予 Acid/Electricity/Fire/Cold/Poison Resistant 的状态；合法使用无条件 Aware。tval 75/sval 60 使 `consumable-effect` 77→76；协议保持 1.121、包 1.128.0、Schema 保持 v54、fixture 441，共 441 exact |
+| P87 | Speed 药水 | 已由 contract-v138 完成 | 窄 `apply-speed` 在没有 Haste 时抽一次 `1d25+15` 并 Aware，已有 Haste 时零 RNG、固定延长 5 ticks。tval 75/sval 29 使 `consumable-effect` 76→75；协议保持 1.121、包 1.129.0、Schema 保持 v54、fixture 442，共 442 exact |
+| P88 | Heroism 药水 | 已由 contract-v139 完成 | 窄 `apply-heroism` 每次抽取 `1d25+25` 并 Extend Hero，授予 max HP +10、melee/ranged skill +12 与 Fear 免疫；首次新增才 Aware，已有状态延长保持 Tried-only。tval 75/sval 32 使 `consumable-effect` 75→74；协议保持 1.121、包 1.130.0、Schema 保持 v54、fixture 443，共 443 exact |
+| P90 | Berserk Strength 药水 | 已由 contract-v140 完成 | 窄 `apply-berserk-strength` 先按 `1d25+25` Extend Berserk，再治疗 30；首次新增状态或实际治疗任一成立即 Aware，仅延长保持 Tried-only。tval 75/sval 33 使 `consumable-effect` 73→72；协议保持 1.121、包 1.131.0、Schema 保持 v54、fixture 444，共 444 exact |
+| P91 | Poetic Inspiration 药水 | 已由 contract-v141 完成 | 窄 `apply-poetic-inspiration` 每次按 `1d100+100` Extend 状态并授予 Wisdom/Charisma 各 +5；首次新增才 Aware，重复延长保持 Tried-only。tval 75/sval 14 使 `consumable-effect` 72→71；协议保持 1.121、包 1.132.0、Schema 保持 v54、fixture 445，共 445 exact |
+| P92 | Stone Skin 药水 | 已由 contract-v142 完成 | 窄 `apply-stone-skin` 每次按 `1d20+20` 以 KeepStrongest 应用状态，并按饮用时等级授予 `10 + 40 * level / 50` defense；首次新增才 Aware，更长刷新保持无新效果。tval 75/sval 69 使 `consumable-effect` 70→69；协议保持 1.121、包 1.133.0、Schema 保持 v54、fixture 446，共 446 exact |
+| P93 | Restore Life Levels 药水 | 已由 contract-v143 完成 | 窄 `restore-life-levels { lifeForceAmount: 150 }` 先恢复当前经验至历史最高值并重算等级，再增加生命力并封顶 1000；任一变化才 Aware，完全无变化保持 Tried-only，零效果 RNG。tval 75/sval 41 使 `consumable-effect` 69→68；协议保持 1.121、包 1.134.0、Schema 保持 v54、fixture 447，共 447 exact |
+| P94 | Blindness 药水与食物 | 已由 contract-v144 完成 | 窄 `apply-blindness` 先抽固定 `bounded(55)` 抗性 RNG；免疫时短路持续时间，未抵抗时按来源掷 `1d100+99` 或 `1d25+24` 并 Extend Blindness。首次新增才 Aware，已有状态延长保持 Tried-only。tval 75/sval 7 与 tval 80/sval 1 使 `consumable-effect` 68→66，`food-nutrition` 保持 28；协议保持 1.121、包 1.135.0、Schema 保持 v54、fixture 448，共 448 exact |
+| P95 | Detonations 药水 | 已由 contract-v145 完成 | 窄 `apply-detonation` 按 `50d20` 伤害，绕过护甲与 Physical resistance、保留 `incomingDamagePercent`；存活时以 KeepStrongest 施加 75 ticks Stun、以 Extend 施加 5000 ticks Bleeding，致死时不施加后续状态，合法使用无条件 Aware。tval 75/sval 22 使 `consumable-effect` 66→65；协议保持 1.121、包 1.136.0、Schema 保持 v54、fixture 449，共 449 exact |
+| P96 | 属性损伤与恢复药水 | 已由 contract-v146/v147 完成 | 当前属性与历史最大属性分离；六种损伤、六种恢复和六种装备 sustain 已接入。资源池按变化前 current/max 只缩放一次；被维持的损伤零效果 RNG、属性不变但药水 Aware。fixture schema 2 将旧投影迁移限定在 schema 1 的六项全缺失情况；Web 按 `maximumNatural` 判断提升上限。`consumable-effect` 保持 53；协议 1.123、包 1.138.0、Schema v55、fixture 451，共 451 exact |
+| P97 | 属性永久增长药水 | 已由 contract-v148 完成 | 六种 `increase-attribute` 与 `augment-attributes` 复用当前/历史最大属性、原版三段增长公式及胜利前后上限；先恢复损伤，封顶跳过 RNG，Augmentation 固定六维顺序且只刷新一次派生。`consumable-effect` 53→46；协议保持 1.123、包 1.139.0、Schema 保持 v55、fixture 452，共 452 exact |
+| P98 | 组合恢复消耗品 | 已由 contract-v149 完成 | Restoring Food、Restoring Potion、Ambrosia 与 Life Potion 使用四种窄效果，复用六维属性恢复、经验/生命力恢复、状态清除与治疗；不建立通用成长或任意效果序列。`consumable-effect` 46→41，`food-nutrition` 保持 28；协议保持 1.123、包 1.140.0、Schema 保持 v55、fixtures 453–454，共 454 exact |
+
+contract-v139 后的 importer 维护复用 P61 已有 `sequence`，将 tval 75/sval 67 映射为固定治疗 200，随后依次解除 Blindness、Confusion 与 Stun；没有新增权威行为、demo 内容或 fixture。`consumable-effect` 74→73，真实包源码校验、编译与二进制回读 hash 均为 `50318233b8a4df980ac2b5c3492a8633a4a0b6536d5cd65ed62aaf23a21ac282`。
+
+contract-v141 后的 importer 维护复用 P84 已有 `apply-poison`，将 tval 80/sval 0 映射为相同 Poison 抗性检定与 `1d10+9` 持续时间；没有新增权威行为、demo 内容或 fixture。`consumable-effect` 71→70，真实包源码校验、编译与二进制回读 hash 均为 `f916b49530a6eebe54908ecdc18ab32360e17dd3177d759df68b4003e8abe602`。
+
+## contract-v146 明确遗留
+
+- Race-to-glyph 表对动态怪物种族使用稳定代表值，没有复制依赖运行时形态的原版全局 glyph 切换；后续若导入完整形态系统，应由有效 Race/形态定义直接提供 `kinCategory`；
+- 物品召唤首版只允许永久结果；临时物品召唤若需要加入，必须使用独立稳定来源身份，不能把 item kind ID 伪装成 ability ID；
+- 永久宠物复用首版召唤物 AI 与全局指令；contract-v282 已完成维护费、冷落后的消失/敌对和显式解散，宠物容量、独立成长和主人死亡联动尚未建立；
+- Dispel/Banishment 只消费当前可见且 line of effect 可达的 actor 快照，不建立怪物回忆、跨层感知或通用 actor-effect DSL；
+- Banishment 的 guardian、unique/`RES_TELE` 和普通等级抵抗已固定；反传送区域、玩家反制和追踪传送仍不在本轮；
+- Trap/Door Destruction 只处理相邻权威 terrain；原版箱锁/箱子陷阱分支等待箱子实例事务，不把 kind 或地形 tag 伪装成箱子状态；
+- Fire/Ice/Mana 当前只覆盖 actor AoE 与玩家反噬；`_scroll_power`、Devicemaster Scrolls 特例及投射对物品/地形的副作用继续留在缺口；
+- Mana 反噬只通过必填内容字段跳过元素抗性，没有新增通用穿透枚举、职业特例或第二套伤害管线；
+- Aggravate Monster 复用当前权威视距与几何 LOS；原版 `MFLAG2_NOPET` 驯服关系副作用、`very_nice_summon_hack` 和骑乘刷新等待对应系统，不在本轮伪造字段；
+- Mass Genocide 与普通 Genocide 只复用既有 Nearby/Glyph 候选结算；`NOGENO`、questor、骑乘和 virtues 仍不在本轮，也不新增通用 actor-removal 框架；
+- Forest/Wall Creation 只支持固定八邻格和显式源/目标地形；不开放 radius、shape、LOS、随机地形、通用 selector、连通性证明或自动修复；
+- Vengeance 只响应怪物 melee/spell 直接造成的实际 HP 损失，不提前建立环境、状态伤害、陷阱或玩家自身反噬的通用伤害监听器；
+- Monster Confusion 只响应玩家近战；miss/致死保留、NO_CONF 免疫和等级抵抗已固定，不建立通用 on-hit/prepared-effect 系统；
+- Protection from Evil 只拦截怪物对玩家的近战 blow；法术、远程、环境伤害、反击和玩家阵营 actor 不提前接入；
+- Genocide 只增加窄命令和单字符 Web 输入，不新增通用 glyph target、actor selector 或跨效果输入框架；
+- Recharging 当前只选择背包中的卷轴、来源和目标；原版地面设备、`_scroll_power` 与 Devicemaster Scrolls 专精等待对应系统，不扩展通用多物品 target；
+- Spell 只固定增加职业许可的学习容量；不改变学习来源、书本/领域限制、遗忘或熟练度，也不建立通用永久成长 effect；
+- Slowness Potion 只增加静态消耗品的 self-only Slow 事务；不建立通用物品状态 DSL、能力状态复用层、设备激活入口或额外 debug 开关；
+- 未受 Slow 时首次应用才可察觉并 Aware；已有 Slow 的更长持续时间仍可刷新，但遵循原版 `set_slow` 返回值保持 Tried-only，免疫和更短/相等持续时间同样只记 Tried；
+- Death Potion 只增加固定 `self-life-loss`；不建立通用伤害 DSL、伤害类型、穿透开关、属性损失或 Ruination/Detonations 预备结构；
+- Poison Potion 只增加低抗性检定与既有 Poison Extend；不建立通用状态保存 DSL、第二份抗性映射或 status-immunity 入口；
+- 抵抗成功时的原版逐装备抗性学习等待单项属性知识模型，不把整件装备标为 identified；
+- Thermal Potion 只增加单一双抗 bundle 状态；不提前建立独立 Fire/Cold 临时计时器、跨来源共享 oppose 计时器或通用物品状态 DSL；
+- Resistance Potion 只增加单一五抗 bundle 状态；不把 Thermal 改写为通用 resistance 列表，不建立五个独立计时器或共享物品状态 helper；
+- Speed Potion 只实现普通职业的首次持续时间与重复 `+5`；原版 `_potion_power` 和 Mauler 重复使用 `+10` 等待各自纵切，不建立职业覆盖表；
+- Heroism Potion 只实现普通职业 Hero 状态；原版 `_potion_power` 与职业特例等待对应纵切，不建立药水能力倍率框架；
+- Berserk Strength Potion 只实现普通职业的 Berserk + 治疗事务；原版 `_potion_power`、Alchemist 等职业特例与全局 10000-tick 上限继续留在缺口，不提前建立职业覆盖表或通用时长上限层；
+- Poetic Inspiration Potion 只实现普通 `1d100+100` Extend 与 Wisdom/Charisma 各 +5；原版 `_potion_power`、Potion Devicemaster 特例和全局 10000-tick 上限继续留在缺口；
+- Stone Skin Potion 只实现普通 `1d20+20` KeepStrongest 与饮用时等级防御；原版 `_potion_power`、持续期间升级重算、Magic Defense、Kata Musou 和职业特例继续留在缺口；
+- Restore Life Levels Potion 只恢复既有 `maximumExperience` 并增加 150 生命力；经验吸取已由 contract-v205 作为怪物近战窄路径建立，生命力损伤、Possessor/Mimic 上限与 Android 特例仍等待各自纵切，也不提前开放设备 activation；
+- 属性增长药水只覆盖六种单属性增长和固定六维 Augmentation；不建立可配置属性列表、通用成长事务或与等级提升点合流，也不提前加入 `_potion_power` 和职业特例；
+- 剩余 `scroll-effect` 15 继续按世界/地形、状态和物品/成长事务分组；Understanding 和 Inventory Protection 不并入本轮。
+- `consumable-effect` 现为 46，只统计缺少主动使用效果的药水和食物；全部 28 种食物另以 `food-nutrition` 记录尚未实现的营养/饥饿事务。装备属性损伤、临时属性修改和更一般的成长事务继续按独立纵切，不扩展通用序列或属性 effect DSL。
+
+## contract-v116 明确遗留
+
+- 原版施咒的 `blast_object` 还会抹除 ego/artifact、基础骰与加值；当前 immutable kind ID 不承担物品损坏，去词条、负强化和重铸需独立事务；
+- permanent 只能由内容/生成期盖章，卷轴解除永远保留；解除永久诅咒的能力、服务或剧情规则尚未建立；
+- 诅咒只约束卸装/替换，没有额外属性惩罚、随机诅咒副作用、诅咒知识鉴定或批量目标 UI；
+- 四种召唤卷轴和两种可见目标卷轴已由 contract-v117/v119 完成；剩余 `scroll-effect` 32 转入世界/状态/物品效果分组。
+
+## contract-v115 明确遗留
+
+- 附魔只增加正向 to-hit/to-damage/to-AC；装备诅咒与解除已由 contract-v116 独立完成，负强化和按职业/服务调整概率仍未建立；
+- 神器二次门、普通堆叠和弹药堆叠已按原版固定；神器保护目前由 item `artifact` tag 判定，随机神器与重铸尚未建立；
+- 地面目标只允许玩家脚下，Web 当前通用物品选择器主要覆盖背包/装备；批量选择、自动选装和商店强化服务尚未建立；
+- 四种召唤卷轴和两种可见目标卷轴已由 contract-v117/v119 完成；剩余 `scroll-effect` 32 转入世界效果候选。
+
+## contract-v114 明确遗留
+
+- Recall 只保存一个稳定 dungeon/floor 目的地；跨世界召回、多个召回槽、城镇服务和目的地选择 UI 尚未建立；
+- 倒计时按完成的玩家行动周期推进，再次使用可取消；受伤中断、反召回区域和怪物干扰尚未建立；
+- Teleport Level 使用当前实例的树连接和方向边界回退；地表向下要求已有召回目的地并继续遵守地牢进入条件，不绕过入口规则；
+- 普通 `reset-on-surface` 地牢召回地表会清旧实例，地表召回创建新实例；persistent/TTL 仍沿用各自内容生命周期；
+- 装备附魔、施咒/解除、召唤和可见目标卷轴已由 contract-v115–v119 完成；剩余 32 条进入世界/状态/物品效果重分组。
+
+## contract-v113 明确遗留
+
+- Mapping 只写当前层 explored，不揭露隐藏 terrain 真值；persistent terrain detect 只把 concealed 命中写入 revealedTerrain；actor/item detect 不建立长期实体知识或怪物回忆；
+- item 的 `detectedEntityIds` 复用通用侦测结果字段承载物品实例 ID；自动拾取、地图标记与侦测结果列表 UI 未建立；
+- `throughWalls` 只绕过 FOV/LOS，不绕过当前楼层和半径；对应法术与既有动态设备缺省 false，语义不回归；
+- 传送/回城、装备附魔、施咒/解除和召唤卷轴已由 contract-v114–v117 完成；地图结果列表 UI、自动拾取和怪物回忆仍保留。
+
+## contract-v112 明确遗留
+
+- 动态 profile、power、目标规格、成本和随机容量已是实例权威状态，自然恢复与主动充能也已建立，但激活仍只接入首批 bolt、自疗和陷阱侦测；
+- rod 与 wand/staff 已按内容 interval 区分恢复速度，恢复余数持久化且零 RNG；首版只恢复玩家背包设备，不恢复地面、装备或怪物携带设备；
+- 主动充能支持职业资源与设备来源，已固定失败清空/保留、来源损毁和 artifact 免毁；强行使用、desperation、更多来源类型、按设备等级变化的成本仍未建立；
+- 恢复型消耗品已支持状态、资源、经验/生命力和属性恢复；增益/减益药水等仍在 `consumable-effect` 53 条缺口中，全部 28 种食物的营养/饥饿事务独立记录为 `food-nutrition`；
+- 卷轴缺口已经独立为 `scroll-effect`；鉴定、地图/侦测、传送/回城、附魔、诅咒、召唤、亡灵驱散、放逐、祝福、相邻陷阱/门破坏、元素爆发、激怒怪物、Mass/普通 Genocide、相邻树/墙创建、Vengeance、Monster Confusion、Protection from Evil、Recharging 和 Spell 完成后剩余 15 条，世界/状态/物品效果仍需按真实 sval 分组；`artifact-activation` 180、`ego-activation` 13 继续保留；
+- 未鉴定动态设备不公开 profile、power、成本或精确充能，但目标规格必须投影给 UI 才能完成合法选择；`usable=false` 仍会暴露“当前无法使用”的必要操作边界；
+- 普通/完全鉴定已覆盖单实例目标；批量鉴定、自动选择、地面物品选择 UI、商店服务和鉴定失败率尚未建立；
+- 地图/侦测、传送/回城、附魔、施咒/解除、召唤、可见目标、祝福、相邻地形破坏、元素爆发、激怒怪物、Mass/普通 Genocide、相邻树/墙创建、Vengeance、Monster Confusion 和 Protection from Evil 卷轴已由 contract-v113–v130 完成；剩余 17 条按世界/状态/物品效果继续推进。
+
+## contract-v107 明确遗留
+
+- Death Ray 首版按活体、unique 门和等级对抗决定即死；尚无更一般的即死抗性、怪物知识或跨效果统一死亡抗性表；
+- Raise Dead 已覆盖升级类别、敌友、群体和敌对 unique，并自动进入 contract-v282 的宠物维持、冷落和解散规则；召唤种群上限与主人死亡联动尚未建立；
+- Esoteria 的物品目标必须在玩家背包/装备中；当前仅复用普通鉴定/完整鉴定知识，不包含批量选择或自动选择 UI；
+- 临时 Race 只覆盖 RaceDefinition 的派生表面，不改身体槽、不写持久技能；叠加多个形态时仍按状态的稳定顺序选择一个有效覆盖；
+- Wraithform 到期时不搬移玩家、不修地图，即使玩家仍位于墙格；后续移动按当时 terrain 与状态规则处理；
+- Rogue（Dexterity）、Blood Mage（HP）和 Skillmaster（动态 caster_info）仍等待对应施法资源/属性表面；
+- P58 已转入设备/消耗品线并由 contract-v108 完成首个纵切；本节其余差异继续保留。
+
+## contract-v106 明确遗留
+
+- Invoke Spirits 的 actor polymorph、line light、earthquake、destroy area 尚无通用系统，四个分支明确返回 `NoOp`，导入报告各保留 12 条行为缺口；
+- `vampiric` 首版只消费持用武器的近战实际伤害；远程、投掷、法术伤害和非武器装备不会触发；
+- 永久 Vampiric Branding 直接写入当前武器实例，不包含附魔失败、词条容量、冲突或费用系统；重复施放同一 affix 是可观察但无重复实例的成功；
+- VisibleDamage 只按当前权威 FOV 选择目标，不建立跨层感知或怪物回忆；
+- Rogue（Dexterity）、Blood Mage（HP）和 Skillmaster（动态 caster_info）仍等待对应施法资源/属性表面；
+- Death 第四册已由 contract-v107 完成；本节其余差异继续保留。
+
+## contract-v105 明确遗留
+
+- Poison Branding 按路线要求实现为临时状态品牌，不永久改写当前武器；原版永久品牌物品的事务与保存边界留给后续物品强化系统；
+- Animate Dead 生成永久受控亡灵并自动进入 contract-v282 的宠物维持、冷落和解散规则；独立成长、召唤种群上限和主人死亡联动尚未建立；
+- corpse 首版是不可堆叠通用物品，不保存死者个体属性、装备、腐烂时间或复活原身身份；
+- Genocide 直接移除且不触发普通死亡事务；独立的怪物知识、唯一生态和跨层种群记忆仍未建立；
+- Rogue（Dexterity）、Blood Mage（HP）与 Skillmaster（dynamic caster）继续显式排除，等待通用施法资源与动态档案表面；
+- Death 第三册已由 contract-v106 完成；本节其余差异继续保留。
+
+## contract-v104 明确遗留
+
+- Necromantic Resistance 固定 300 ticks，尚未复刻 `20+1d20` 回合；随机持续时间继续留在真实导入报告；
+- status power 采用稳定的 power/target 双有界骰中性公式，Control 采用 `power-10` 对目标等级的有界检定；两者不是原版所有 GF 的逐函数概率公式；
+- Control 保存 controller identity 并复用召唤物 AI，也自动进入 contract-v282 的宠物维持、冷落和解散规则；解除控制时限、召唤种群上限和主人死亡联动尚未建立；
+- actor Detect 只返回瞬时位置与 entity ID，不写地图记忆；怪物回忆/长期知识仍是独立系统；
+- 玩家法术的 `to_d_spell`、施法负重、精确 Mana 容量和学习容量公式仍未接入。
+
+## contract-v103 明确遗留
+
+- contract-v118 后装备 passive 只保留已有权威消费者的 regeneration 与 vampiric；see-invisible、telepathy、levitation、hold-life、六维 sustain、blessed、easy-spell 与 device-power 回到真实导入 gap report，未来必须随实际规则消费者和 exact contract 一起重新接入；
+- equipmentBonuses 中近战攻击次数与现有十类技能已经进入派生管线；infravision/light-radius 已保存和显示，但真实视觉半径消费仍待多视觉通道迭代；
+- 旧存档缺 rolledAffixes 时刻意保持空，绝不按当前 rollGroups 补抽；内容作者修改候选只影响未来生成的物品；
+- 剩余 32/160 ego 的主要系统缺口是反射、伤害光环、诅咒、额外射击/威力、高级品牌、随机抗性/维持配方与设备/法术威力。
+
+## contract-v99 明确遗留
+
+- amnesia 只清当前层地图记忆（原版 lose_all_info 忘全部楼层与物品感知；物品知识按长期约束保持存档级权威）；
+- drain-resource 吸取施法档资源池（原版限 SP 且有 mana_loss_save 二段豁免；吸取量固定非随机）；无池玩家吸取 0；
+- teleport-away 对玩家召唤物直接重定位（原版决斗家 30 级可对抗传送——反制机制未建立）；
+- DISPEL 仅驱散加速（玩家增益现役唯一）；增益族扩展后驱散列表同步扩展；
+- DARKNESS 85（房间光照状态未建立）、ANIM_DEAD 58（无尸体）、ANTI_MAGIC 47、TELE_LEVEL 25（跨层强制传送）、HAND_DOOM 30 继续留缺口。
+
+## contract-v98 明确遗留
+
+- 豁免公式为 v72 中性检定（技能 vs 3/4 难度阈值 + 5%/5% 自动窗口），非原版连续概率（sav×100/(100+rlev/2+dam/5)）；dam/5 难度加成未纳入；
+- P66 已建立装备实例诅咒，但 curse-damage 的 `curse_equipment` 副作用尚未挂接该事务；HAND_DOOM（当前 HP 百分比 + 豁免，30 实例）留缺口；
+- 玩家召唤物作为诅咒目标时无豁免（无豁免技能概念），直接全额；
+- 心灵族（MIND_BLAST dam/5、BRAIN_SMASH dam/3）的豁免门回补待排期——机制已就位，只差在 Sequence 骑手前插入豁免检定的形态设计。
+
+## contract-v97 明确遗留
+
+- 心灵族的原版豁免门（MIND_BLAST dam/5、BRAIN_SMASH dam/3 全免）未复刻：骑手恒定施加、psi 抗性缩时减伤代偿；未来 CAUSE 豁免迭代建立中性豁免检定后可回补；
+- 吸蓝副作用（MIND_BLAST 50 / BRAIN_SMASH 100）归 DRAIN_MANA 资源吸取族；幻觉（chaos image）无对应状态，均留缺口；
+- PSI/PSI_DRAIN/PSI_EGO_WHIP/PSI_STORM/DOMINATION/SUBJUGATION 等进阶心灵 GF 未出现在 r_info S: 行（多为玩家侧异能），暂不映射。
+
+## contract-v96 明确遗留
+
+- 玩家侧抗性来源（种族/职业/装备的内容层声明）未建立；玩家 resistances 仍只由既有运行时来源决定；
+- 抗性档只在生成时盖章；临时抗性 buff、装备切换即时重算等动态来源等实际内容需要时接入；
+- RES_TELE 238 已由 contract-v119 映射为放逐抵抗 tag；RES_WALL 34（语义待核）、HURT_ROCK 29（削岩弱点）继续留缺口；
+- 怪物抗性对玩家不可见（快照不暴露）；玩家侧的怪物回忆/知识系统仍未建立。
+
+## contract-v95 明确遗留
+
+- 类别召唤首版仅限 monsterCasting；玩家侧类别召唤等实际内容需要时开放；
+- 落点沿用 v82 的自身半径规范序（原版优先玩家附近），召唤物时长以 10 000 玩家回合近似原版永久，均记为已知中性化差异；
+- HI_ 系折算为同类别同等级上限（原版为更深怪物类选择）；S_ANGEL（无类型旗标）、S_HOUND/S_SPIDER 等字形子类与 S_SPECIAL/UNIQUE/CYBER/PANTHEON/AMBERITE 等特殊类共 177 实例留缺口——字形子类可考虑按 glyph 派生标签的后续小步；
+- 尚无召唤物种群上限、繁殖与 unique 过滤；原版 S_UNIQUE/S_GUARDIAN 依赖 unique 生态。
+
+## contract-v94 明确遗留
+
+- 吐息首版仅限 monsterCasting（玩家目标规划层拒绝）；玩家侧吐息（龙形态等）等身体/变身系统再开放；
+- 吐息锥形沿用 v79 横向整数衰减；原版吐息在锥内不衰减的差异记为已知近似；
+- 异种元素吐息（BR_NETHER 51/DARK 50/CHAOS 36/NEXUS 35/SOUND 29/DISEN 27/DISI 27/LITE 26/SHARDS 24/CONF 26/TIME 22/FORCE 21/MANA 21/INERTIA 18/GRAVITY 17/STORM 16 等约 453 实例）与异种直伤（BO 135+BA 167）等待「伤害类型扩展」迭代：物理/五元素之外的伤害类型需要核心 DamageType、抗性档与存档扩展，硬折 physical 会让护甲错误参与减免；
+- CAUSE_1–4 诅咒直伤（240 实例，固定骰 3d8/8d8/10d15/15d15）原版走豁免检定而非护甲/抗性，需先决定中性豁免机制归属；
+- MIND_BLAST（63）/BRAIN_SMASH（123）为心灵伤害 + 状态骑手组合，伤害类型与豁免同上，组合形态可复用既有 Sequence 白名单；
+- S_ 召唤族（670 实例）需要按类别/深度选择怪物的新召唤形态（现有 Summon 只支持固定 actor kind）；S_KIN（76）可率先映射为召唤施法者同类；
+- TELE_OTHER（69，把玩家推远）、TELE_LEVEL（25，跨层）、DRAIN_MANA（83，吸资源）、DARKNESS（85，压制光照）、AMNESIA（64，清除知识）各需小型新效果形态，按覆盖数排期；
+- 施法表上限已提至 64（当前旧版最大者 34 技能，零截断）；导入器保留 64 截断守卫，若未来映射族继续扩张再评估上限或按权重挑选保留集。
+
+## contract-v90 明确遗留
+
+- 玩家召唤物已执行 Follow/Attack/Keep Distance/Guard 全局命令，但尚无单体点名、召回、永久宠物、物品交互、法术施放或更复杂阵形；
+- 选择层已按 HP、状态、距离、敌我目标数量和已观察抗性调整有效权重，但尚未按精确伤害期望、逃跑路径长度、协同法术或群体角色建立更完整评分；
+- 怪物召唤物已是 hostile 并可执行普通 AI，但没有召唤命令、主人死亡联动、种群上限、unique 过滤或繁殖规则；
+- 怪物位移、地形、侦测、反制和特殊投射效果仍未开放；
+- 怪物首版不消费 Mana、学习、熟练度、失败率或玩家能力冷却；只使用百分比频率与按自身行动计数的逆频率冷却；
+- smart caster 只学习当前六类伤害抗性；原版更广的反射、自由行动、传送抗性、遗忘/误导，以及反制、沉默、施法打断、领域协同和完整怪物法术表仍未建立；
+- 多职业资源底子已建立并接入首个技法资源，但受击获得、持续吟唱逐回合扣费、姿态切换与资源联动（例如满值增益）尚未实现；
+- 装备激活与设备共享能力继续后置。
+
+contract-v89 已将玩家召唤物行动与全局命令接入协议 1.89、内容包 1.80.0、save v1 与 state hash Schema v39。命令零世界时间；移动和目标选择零 RNG；近战复用 actor routine 与玩家击杀归属。切层时仅 2 格内召唤物跟随，远处实体留层，Guard 锚点重置为到达位置。active baseline 为 272 个 exact fixtures、零 waiver。详细边界见 [contract-v89](contract-v89-friendly-summon-commands.md)。
+
+## contract-v85 明确遗留
+
+- sequence 首版只组合同一 actor 目标上的伤害、治疗和状态；多目标、terrain、召唤、侦测、位移等专用效果尚未进入组合器；
+- 状态持续时间当前为固定整数并通过既有元素抗性确定性缩放；随机持续时间、独立 saving throw 和更复杂驱散优先级尚未建立；
+- 仍缺 confusion、paralysis、blindness、sleep 等完整状态族及其对应行动规则；
+- 怪物施法、HP/状态/距离/敌我/抗性能力选择、战术移动与友方召唤命令已由 contract-v86–v89 建立；装备激活、设备共享能力与多资源职业仍未实现；
+- 原版完整法术书、法术顺序和按等级自动遗忘/记起模型尚未建立。
+
+contract-v85 已将 Echo Quickening/Echo Binding 接入协议 1.85、内容包 1.77.0、save v1 与 state hash Schema v36。整次施法只支付一次资源并先抽一次失败率，子效果按声明顺序结算；前序击杀会把后续效果标为 `target-dead`，无 actor 命中标为 `no-target`，且不抽取被跳过的伤害骰。状态沿用既有 actor status 存档与 tick 管线，cold 抗性确定性缩短 slow，免疫返回零持续时间。该历史 baseline 为 242 个 exact fixtures、零 waiver。详细边界见 [contract-v85](contract-v85-ordered-status-effects.md)。
+
+## contract-v84 明确遗留
+
+- terrain 变换沿射线、锥形或任意图案传播，以及随机地震、塌方、液体流动和持续环境效果；
+- 对 actor/物品造成伴随伤害、掩埋、推动或销毁的复合 terrain 效果；
+- 玩家施法以外的挖掘设备、装备激活、怪物破墙/造墙和 AI 决策；
+- 状态能力和首版多 effect 组合已由 contract-v85 完成；多资源职业仍未实现；
+- 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
+
+contract-v84 已将 Echo Delving/Echo Rampart 接入协议 1.84、内容包 1.76.0、save v1 与 state hash Schema v36。候选按 RFB 距离与坐标稳定排序，只处理当前 FOV 和合法来源 terrain，并跳过占用格、连接、入口标签和地图边界；候选在资源/RNG 前收集，成功后一次提交，失败不改 terrain，空结果仍正常施法。该历史 baseline 为 231 个 exact fixtures、零 waiver。详细边界见 [contract-v84](contract-v84-terrain-transform-ability.md)。
+
+## contract-v83 明确遗留
+
+- 完整地图、怪物、物品、楼梯和陷阱等更多侦测类别及对应知识菜单；
+- 侦测范围的特殊穿墙、全层感知、持续 buff、黑暗/失明/反侦测修正；
+- 地形改变已由 contract-v84 完成，状态能力和首版多 effect 组合已由 contract-v85 完成；多资源职业仍未实现；
+- 怪物更完整的目标/知识 AI、装备激活与设备共享能力；
+- 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
+
+contract-v83 已将 Echo Pulse/Echo Sight 接入协议 1.83、内容包 1.75.0、save v1 与 state hash Schema v36。侦测只考虑当前地图、半径、玩家 FOV、隐藏投影与 category tag，按距离/坐标稳定排序；瞬时结果只进入事件，持久结果写入 `revealedTerrain`。空结果仍按正常施法消费资源和 RNG，非法目标与资源不足不推进 RNG。active baseline 为 221 个 exact fixtures、零 waiver。详细边界见 [contract-v83](contract-v83-detection-ability.md)。
+
+## contract-v82 明确遗留
+
+- 跟随、攻击、保持距离、守卫、玩家命令与附近跨层跟随已由 contract-v89 完成；仍缺单体命令、召回和永久宠物；
+- 敌对/中立召唤、怪物召唤能力和能力选择 AI；
+- 召唤物跨楼层、召回、永久宠物、繁殖、唯一性与复杂 pack/formation 组合；
+- 侦测已由 contract-v83 完成，地形改变已由 contract-v84 完成，状态能力和首版多 effect 组合已由 contract-v85 完成；多资源职业仍未实现；
+- 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
+
+contract-v82 已将 Echo Companion 接入协议 1.82、内容包 1.74.0、save v1 与 state hash Schema v35。空间候选按距离/坐标稳定排序，玩家、actor 与地面物品都占用格；空间不足在 Mana、施法 RNG 与熟练度前原子拒绝。成功召唤保存 owner/source/lifetime，召唤物不参加敌对 AI或可见敌人判断，并按玩家回合到期移除。active baseline 为 213 个 exact fixtures、零 waiver。详细边界见 [contract-v82](contract-v82-summon-ability.md)。
+
+## contract-v81 明确遗留
+
+- 召唤、侦测和地形改变已由 contract-v82–v84 完成；
+- 传送到不可见、不可行走或被 actor 占用格以外的复杂位移规则（随机传送、穿墙、跨层和群体传送）；
+- 射线范围内物品破坏、地形变更或玩家伤害；
+- 射线反射、穿透墙体例外；怪物对玩家召唤物的目标选择已由 contract-v88 完成；
+- 多资源职业和怪物能力选择/施法 AI；
+- 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
+
+contract-v81 已将内容驱动的 Echo Step 接入协议 1.81、内容包 1.73.0、save v1 与 state hash Schema v34。position 落点的地图内、Chebyshev 射程、可见性、line of effect、可行走和 actor 占用验证在 Mana、施法 RNG 与熟练度前执行；成功传送复用普通移动的被动感知、陷阱触发和死亡处理。active baseline 为 209 个 exact fixtures、零 waiver。详细边界见 [contract-v81](contract-v81-teleport-ability.md)。
+
+## contract-v80 明确遗留
+
+- 位移、召唤、侦测和地形改变已由 contract-v81–v84 完成；
+- 射线范围内物品破坏、地形变更或玩家伤害；
+- 射线反射、穿透墙体例外和怪物多目标价值评分；
+- 多资源职业和怪物能力选择/施法 AI；
+- 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
+
+RFB 式方向射线、actor 穿透、墙体截断、近到远顺序、共享单次伤害骰、空射/无效模式 RNG 边界和 Echo Lance 已由 contract-v78 建立；固定八向锥形已由 contract-v79 建立；定点/实体延长射线、稳定整数斜率、目标验证和延长后的墙体截断已进入协议 1.80、内容包 1.72.0、save v1 与 state hash Schema v34；active baseline 为 202 个 exact fixtures、零 waiver。详细边界见 [contract-v80](contract-v80-targeted-beam-extension.md)。
+
+## contract-v77 明确遗留
+
+- 锥形、定点延长射线、位移、召唤、侦测和地形改变已由 contract-v79–v84 完成；
+- 范围内物品破坏、地形变更或玩家伤害；
+- 多资源职业和怪物能力选择/施法 AI；
+- 原版完整法术书、法术顺序和按等级自动遗忘/记起模型。
+
+RFB 式范围爆发、目标停止策略、墙体遮挡、距离衰减、空爆/无效目标 RNG 边界和 Echo Burst 已进入协议 1.77、内容包 1.69.0、save v1 与 state hash Schema v34；active baseline 为 190 个 exact fixtures、零 waiver。详细边界见 [contract-v77](contract-v77-area-damage.md)。
+
+## contract-v76 明确遗留
+
+- 随机学习、首次成功奖励，以及原版按 `spell_order` 自动暂时遗忘/记起；
+- 怒气、专注、鲜血等多种职业资源，资源互转与职业专属恢复条件；
+- 范围、锥形、位移、召唤、侦测和地形改变已由 contract-v77–v84 完成；状态能力和首版多 effect 组合已由 contract-v85 完成；
+- 装备负重、状态、环境与职业规则对失败率、恢复率和效果强度的完整修正；
+- 怪物基础施法/效用已完成；仍缺智能学习和完整领域/职业矩阵；
+- 饥饿、HP 自然恢复、旅行、自动探索和更高层的安全休息策略。
+
+v76 的独立学习容量、能力容量投影、主动遗忘、重新学习进度保留、容量满零 RNG 拒绝和旧存档兼容已进入协议 1.76、内容包 1.68.0、save v1 与 state hash Schema v34；active baseline 为 186 个 exact fixtures、零 waiver。详细边界见 [contract-v76](contract-v76-learning-capacity-and-forgetting.md)。
+
+## contract-v73 明确遗留
+
+- Mana 等待/休息恢复、恢复中断、自身目标和固定治疗已由 contract-v74 完成；多种职业资源仍未实现；
+- 学习容量、随机学习、遗忘、首次施放奖励、熟练度和冷却；
+- 自身目标与治疗已由 contract-v74 完成；范围爆发、方向射线、锥形、定点/实体延长射线、位移、召唤、侦测和地形改变已由 contract-v77–v84 完成；状态能力和首版多 effect 组合已由 contract-v85 完成；
+- 装备负重、状态、环境和职业规则对失败率的完整修正；
+- 怪物基础施法/效用已完成；仍缺智能学习和完整领域/职业矩阵。
+
+v73 的 Mana、能力书、学习、失败率、目标施法、结构化 ability-cast outcome、旧存档满资源/空已学迁移和 166 个 exact fixtures 已进入协议 1.73、save v1 与 state hash Schema v32。详细边界见 [contract-v73](contract-v73-ability-books.md)。
+
+## contract-v72 明确遗留
+
+- 技能练习/下降、属性损伤/恢复、职业专属资源和更复杂等级奖励；
+- 失明、无光、混乱、幻觉、距离、噪声和环境亮度对技能检定的完整修正；
+- 怪物警戒传播、睡眠深度、气味/flow、智能学习和完整潜行模式；
+- 法力、能力书、学习、失败率、恢复、熟练度和冷却已由 contract-v73–v75 完成；玩家/怪物完整施法系统仍未实现；
+- 完整原版 Race/Class/Personality 名单、创建 UI 和角色重建流程。
+
+v72 的四类技能消费、结构化 check outcome、actor `alerted` 兼容恢复和 160 个 exact fixtures 已进入协议 1.72、save v1 与 state hash Schema v31。详细边界见 [contract-v72](contract-v72-observable-skill-checks.md)。
+
+## contract-v71 明确遗留
+
+- 完整原版 Race/Class/Personality 名单、职业选择界面和角色重建流程；
+- 技能练习/下降、属性损伤/恢复、职业专属资源和更复杂的等级奖励；
+- device、saving-throw、stealth、perception 的实际检定消费已由 contract-v72 完成；
+- Mana、能力书、失败率、恢复、自身治疗、熟练度、冷却、学习容量和遗忘已由 contract-v73–v76 完成；随机学习、完整法术系统和职业专属资源仍未实现。
+
+v71 的构筑身份、技能聚合、出生装备和 v70 缺字段迁移已进入协议 1.71、save v1 与 state hash Schema v30；v72 在其上补齐四类首轮技能消费。详细边界见 [contract-v71](contract-v71-rfb-character-builds.md)。
+
+## contract-v70 明确遗留
+
+- Race/Class/Personality 角色创建、种族/职业成长曲线和初始装备模板；
+- 属性损伤、临时恢复、技能熟练、经验倍率和职业专属资源；
+- Mana、能力书、失败率、恢复、自身治疗、熟练度和冷却已由 contract-v73–v75 完成；职业专属资源仍未实现；
+- 属性点重置、自动分配策略和更复杂的等级奖励节点。
+
+v70 的经验、HP 序列、自然属性、装备 modifier 和胜利解锁已进入协议 1.70、save v1 与 state hash Schema v29；v71 已在其上补齐角色来源层。详细边界见 [contract-v70](contract-v70-rfb-character-progression.md)。
+
+## contract-v69 明确遗留
+
+- 运行时地形破坏不触发自动重连；破坏结果直接写入地图，玩家可使用挖掘能力自行恢复通路；
+- 非楼梯回忆、传送、死亡退出与实例生命周期的统一结算；
+- 并行实例 UI 选择、跨实例传送和多 retained 实例并存仍不在当前规则内。
+
+Archive Depths 是 `turn-ttl=3` 的 demo 验证包；Echo/Resonance 继续使用默认 reset。来源：[contract-v69](contract-v69-configurable-instance-lifecycle.md)。
+
+## contract-v68 明确遗留
+
+- 原创 dungeon 的可配置永久实例、TTL/淘汰与显式生命周期策略已由 contract-v69 完成；
+- 运行时地形破坏不触发自动重连；破坏结果直接写入地图，玩家可使用挖掘能力自行恢复通路。
+
+原版 demo dungeon 不使用硬进入条件；玩家仍可绕过入口守卫直接进入。Resonance 是 demo campaign 唯一 victory dungeon；Echo 征服只增加分数。胜利后必须在地表退休，退休冻结最终分数并结束 dispatch。普通 dungeon 返回地表即清理，下一次进入重新生成。
+
+来源：[contract-v68](contract-v68-victory-retirement-scoring.md)。
+
+## contract-v67 明确遗留
+
+- 地牢征服后的胜利/退休结算和角色评分已由 contract-v68 完成；
+- 原创 dungeon 的可配置永久实例、TTL/淘汰与显式实例选择；
+- 运行时地形破坏不触发自动重连；破坏结果直接写入地图，玩家可使用挖掘能力自行恢复通路。
+
+来源：[contract-v67](contract-v67-dungeon-entrance-guardians.md)。
+
+## contract-v66 明确遗留
+
+- 多 dungeon 的可选进入条件已由 contract-v67 完成，胜利/退休评分已由 contract-v68 完成；仍缺面向未来原创内容的可配置生命周期策略；
+- 运行时地形破坏不触发自动重连；破坏结果直接写入地图，玩家可使用挖掘能力自行恢复通路。
+
+同一 dungeon 的暂停实例 UI 选择、并行访问和跨实例传送不在当前规则内：普通 dungeon 返回地表即清理，下一次进入重新生成。
+
+来源：[contract-v66](contract-v66-dynamic-exploration-tree.md)。
+
+## contract-v65 明确遗留
+
+- 动态楼梯目标与实例级探索树已由 contract-v66 完成；
+- 可配置实例生命周期策略；多 dungeon 进入条件与胜利/退休评分已由 contract-v67/v68 完成；
+- 运行时地形破坏不触发自动重连；破坏结果直接写入地图，玩家可使用挖掘能力自行恢复通路。
+
+来源：[contract-v65](contract-v65-dungeon-instance-identity.md)。
+
+## contract-v64 明确遗留
+
+- 同一楼层模板生成多个运行时实例、显式 `DungeonInstanceId`、楼层淘汰和更一般的动态探索树；
+- 多座地牢同时存在的探索实例和可配置重置策略；进入条件、胜利/退休与角色分数已由 contract-v67/v68 完成；
+- 运行时地形破坏不触发自动重连；任意多边形/噪声区域连接和跨区域群体协作仍不在规则内。
+
+来源：[contract-v64](contract-v64-multi-entry-vault-connectivity.md)。
+
+## contract-v63 明确遗留
+
+- Vault 多入口、大模板成功落位后的连通性证明与跨走廊拼接已由 contract-v64 完成；
+- 同一楼层模板生成多个运行时实例、楼层淘汰和更一般的动态探索树；
+- 多座地牢同时存在的探索实例与可配置重置策略；显式 `DungeonInstanceId`、进入条件、胜利/退休和角色分数已由 contract-v65/v67/v68 建立。
+
+来源：[contract-v63](contract-v63-dungeon-tree-guardian-mirrors.md)。
+
+## contract-v62 明确遗留
+
+- 任意多边形/噪声区域边界、走廊区域归属、区域专属门和跨区域群体协作；
+- 多个 pit、独立 nest 房间、任意 formation 模板、召唤、繁殖与种群上限；
+- 树状地牢与不同楼梯进入不同子层已由 contract-v63 完成；Vault 多入口、大模板连通性证明和跨走廊拼接已由 contract-v64 完成。
+
+来源：[contract-v62](contract-v62-regional-composition.md)。
+
+## contract-v61 明确遗留
+
+- 超时、失败惩罚、任务接取确认和脚本回调；
+- 重接后重置进度、按目标类型选择性重建，以及运行时手动选择重建策略；
+- 分支/并行阶段、单阶段多目标、任务内部上下层连接和独立 quest 模块。
+
+来源：[contract-v61](contract-v61-retake-management.md)。
+
+## contract-v60 明确遗留
+
+- 区域与 Vault、pit、dynamic formation、terrain feature 和分阶段地貌的组合已由 contract-v62 完成；独立 nest 房间仍未实现；
+- 任意多边形/噪声边界、走廊区域归属、区域专属门和跨区域群体协作；
+- cavern/lake/river 等非房间空间的区域归属，以及更一般的多入口连通图。
+
+来源：[contract-v60](contract-v60-regional-themes.md)。
+
+## contract-v59 明确遗留
+
+- 怪物开门/破门、远程攻击选择、逃跑、召唤、繁殖、种群上限和 unique 过滤；
+- 任意半径/模板 formation、跨房间群体和跨阻断区域连通性修复；
+- 更复杂的阵营关系、气味/flow、特殊感知和 pack 间战术协作。
+
+来源：[contract-v59](contract-v59-pack-ai.md)。
+
+## contract-v32 明确遗留
+
+- 解除失败触发陷阱、重复解除命令和经验奖励；
+- 箱子陷阱、随机陷阱类型、状态/传送/落层等复杂效果；
+- 移动后邻近 terrain 的 perception 已由 contract-v72 建立；仍缺隐藏陷阱的被动发现、失明/无光/混乱/幻觉修正，以及怪物触发或规避陷阱；
+- 一次性/耗尽陷阱、陷阱生成密度和多深度内容表。
+
+来源：[contract-v32](contract-v32-hidden-traps-disarm.md)。
+
+## contract-v33 明确遗留
+
+- 镐、铲、重武器等装备提供的挖掘能力与物品描述；
+- 自动重复挖掘、疲劳、声音、德行和挖掘秘密门时的偶发搜索；
+- 树木、矿脉、玻璃、永久岩石等不同破坏规则与产物；
+- 原版“怪物挡路时转为攻击”的兼容语义；当前核心与权威查询统一拒绝被占据目标。
+
+来源：[contract-v33](contract-v33-diggable-terrain.md)。
+
+## contract-v34 明确遗留
+
+- 分支楼梯已由 contract-v63 完成；同层多个连接点、连接 ID 与到达点分别建模已由 contract-v58 完成；
+- 随机楼梯位置、回忆/传送等非楼梯跨层入口；
+- 深度相关 encounter/loot/theme 表已由 contract-v48 完成；树状分支、多个最终层和共享守护者镜像已由 contract-v63 完成；
+- 旧 v33 已访问深度 1 不补下楼梯，因此不能从旧存档进入新深度 2；需要正式存档迁移策略。
+
+来源：[contract-v34](contract-v34-multi-depth-floors.md)。
+
+## contract-v35 明确遗留
+
+- 多座地牢各自独立的活跃探索实例与同时存在规则；
+- 地牢中途传送回城、回忆、死亡或任务退出时统一结束探索；
+- 明确的 `DungeonInstanceId`，以及分支入口对应不同实例；稳定 `dungeonId` 与持久守护者状态已由 contract-v46 完成；
+- 可配置的永久地牢或重置策略；当前所有程序化地牢从入口返回地表都会清除。
+
+来源：[contract-v35](contract-v35-dungeon-expedition-lifecycle.md)。
+
+## contract-v36 明确遗留
+
+- 当前退出一次性任务层即关闭入口，尚未区分完成、失败和放弃；
+- 护送和到达位置目标；有序多阶段任务已由 contract-v45 完成，击杀与收集目标已由 contract-v37/v39 建立；
+- 任务奖励、任务日志、重新接取和可重复任务；
+- 固定手工地图、任务专属生成器及禁止离开的任务规则。
+
+来源：[contract-v36](contract-v36-one-shot-task-floor.md)。
+
+## contract-v37 明确遗留
+
+- 计数收集、护送和到达位置目标；有序多阶段任务已由 contract-v45 完成，单实例击杀已由 contract-v39 完成；
+- 主动放弃与失败的区分、禁止提前退出已由 contract-v40 完成；尚缺超时失败；
+- 任务奖励、任务日志、重新接取和可重复任务；
+- 目标物被丢弃、销毁、投掷或带出后再处理的完整规则。
+
+来源：[contract-v37](contract-v37-task-objective-resolution.md)。
+
+## contract-v38 明确遗留
+
+- 奖励选择、随机奖励、领取确认和容量不足处理；
+- 多任务排序、任务详情与历史记录；目标进度数字已由 contract-v39 完成；
+- 可重复任务、重新接取、奖励已领取状态；
+- 奖励和任务状态改为独立领域状态，而不是完全由 terrain/物品派生。
+
+来源：[contract-v38](contract-v38-task-reward-journal.md)。
+
+## contract-v39 明确遗留
+
+- 按怪物种类累计多次击杀与持久计数已由 contract-v41 完成；尚缺跨楼层共享同一任务进度；
+- 清空楼层、unique、随机目标、召唤物过滤和更通用的死亡订阅边界；
+- 主动放弃与退出限制已由 contract-v40 完成，可重接暂离由 contract-v42 完成；尚缺超时失败和失败后的重新接取；
+- 一个阶段内的多目标、分支阶段，以及独立 quest 模块；有序多阶段任务和持久任务状态已由 contract-v45/v44 完成。
+
+来源：[contract-v39](contract-v39-kill-objective-progress.md)。
+
+## contract-v40 明确遗留
+
+- 可重接任务和保留任务层已由 contract-v42 完成；尚缺失败后的重新接取流程；
+- 离开前确认对话框，以及失败/放弃后的惩罚或脚本回调；
+- 死亡、回忆、传送和其他非楼梯离开方式统一进入任务结算；
+- 超时失败，以及禁止离开但仍允许主动放弃之外的更多退出政策。
+
+来源：[contract-v40](contract-v40-task-abandon-exit-policy.md)。
+
+## contract-v41 明确遗留
+
+- 多个入口楼层共享任务 ID 和计数状态已由 contract-v43 完成；尚缺任务内部的上下层连接；
+- 可重接任务离开、重新进入后继续累计已由 contract-v42 完成，暂停时在地表主动最终放弃已由 contract-v61 完成；
+- 召唤物、复制体、非玩家击杀和环境击杀的可配置计数规则；
+- unique、随机任务、清空楼层和阶段内多目标；有序多阶段任务已由 contract-v45 完成。
+
+来源：[contract-v41](contract-v41-counted-kill-progress.md)。
+
+## contract-v42 明确遗留
+
+- 独立于 floor ID 的任务 ID 和多个入口楼层共享任务已由 contract-v43 完成；
+- 暂停状态下从地表直接最终放弃与重接次数限制已由 contract-v61 完成；尚缺超时；
+- 保留完整楼层和“保留进度、重建成员层/剩余计数目标”已由 contract-v61 完成；尚缺重置进度、按目标类型选择性重建和玩家手动选择；
+- 任务接取确认、失败惩罚和脚本回调。
+
+来源：[contract-v42](contract-v42-retakeable-task.md)。
+
+## contract-v43 明确遗留
+
+- 同一任务内的直接上下层连接；并列入口之间的有序阶段已由 contract-v45 完成；
+- 一个阶段内声明多个同时目标；跨成员楼层的收集、进入和击杀组合已由 contract-v45 完成；
+- 独立任务名称、描述、接取来源和任务详情领域实体；
+- 多任务并行追踪、排序、筛选和当前追踪目标。
+
+来源：[contract-v43](contract-v43-shared-task-id.md)。
+
+## contract-v44 明确遗留
+
+- 分支、可选、并行阶段和一个阶段内的多个同时目标；有序单目标阶段已由 contract-v45 完成；
+- 将任务状态机从游戏聚合继续拆分为独立 quest 模块；
+- 任务接取来源、详情、脚本回调、超时与失败惩罚；
+- 多任务追踪选择，以及非玩家/环境击杀的可配置计数来源。
+
+来源：[contract-v44](contract-v44-task-state-machine.md)。
+
+## contract-v45 明确遗留
+
+- 分支、可选和并行阶段，以及一个阶段内的多个同时目标；
+- 阶段级奖励、失败政策、脚本回调与阶段描述文本；
+- 暂停状态下从地表主动放弃、重接次数限制和保留进度的成员楼层重建已由 contract-v61 完成；尚缺重置进度和选择性重建；
+- 独立 quest 模块、任务接取来源与多任务追踪选择；
+- 更通用的到达位置目标，以及环境/非玩家击杀的可配置计数来源。
+
+来源：[contract-v45](contract-v45-ordered-task-stages.md)。
+
+## contract-v46 明确遗留
+
+- 单根树状分支、普通楼梯与 shaft 已由 contract-v58/v63 完成，跨走廊连接与 Vault 多入口已由 contract-v64 完成；仍缺运行时动态探索树；
+- vault 内的深度 encounter、主题 terrain/loot 和固定群体已由 contract-v47 建立；楼层级表、多个 vault 加权选择和第一类巢穴已由 contract-v48 建立；十层规模、actor/loot 预算和深度区域主题已由 contract-v49 建立；旋转/镜像、自由落位、多 Vault 空间预算和失败回退已由 contract-v50 建立；动态 friends/escort formation 与群体预算已由 contract-v51 建立；多入口与大模板成功落位后的连通性证明已由 contract-v64 完成；
+- 入口守护者、守护者 unique 世界生态，以及神器、声望和属性奖励；
+- 多座地牢、进入条件、显式 `DungeonInstanceId`、胜利/退休和角色分数；
+- 回忆、传送、死亡等非楼梯方式结束探索时的统一生命周期。
+
+来源：[contract-v46](contract-v46-final-floor-guardian.md)。
+
+## contract-v47 明确遗留
+
+- 按深度和地牢主题加权选择多个 vault、无候选回退已由 contract-v48 建立；旋转、镜像、自由 wall 区落位、多 Vault 同层和生成失败回退已由 contract-v50 建立，多入口和跨走廊拼接已由 contract-v64 完成；
+- 普通房间可引用的独立 encounter/loot/theme 表已由 contract-v48 建立，actor/loot 总预算与深度区域主题已由 contract-v49 建立，第一版 Vault 数量/面积预算已由 contract-v50 建立，额外 trap/door/rubble 表与 feature 预算已由 contract-v52 建立，房间数量/形状/面积预算与连通 cavern 基础地貌已由 contract-v53 建立，深浅 lake/river 水文阶段已由 contract-v54 建立，maze/destroyed/streamer 阶段已由 contract-v55 建立，完全替代房间的 maze-only 专用楼层已由 contract-v57 建立，同层房间区域与局部表已由 contract-v60 建立，区域与 Vault、pit、地貌、feature 和群体的组合已由 contract-v62 建立，多入口与跨走廊拼接已由 contract-v64 完成；
+- 第一类同类巢穴已由 contract-v48 建立，动态 friends/escort、`cluster/ring` formation 和群体预算已由 contract-v51 建立，原版式独立复合 pit 与等级阵列已由 contract-v56 建立，持久 pack identity 与首版 AI 已由 contract-v59 建立；尚缺任意模板 formation、多个 pit、召唤、繁殖、种群上限、unique 过滤和更复杂 AI；
+- vault 越级强敌/掉落、专属陷阱、神器、来源标签和探索奖励；
+- 十层规模压力场景已由 contract-v49 建立，多 Vault 楼层已由 contract-v50 建立，更大模板成功落位后的连通性证明和多入口已由 contract-v64 完成。
+
+来源：[contract-v47](contract-v47-themed-vault.md)。
+
+## contract-v48 明确遗留
+
+- 十层地牢、actor/loot 生成预算和深度区域主题已由 contract-v49 建立，多个 Vault 同层和第一版面积预算已由 contract-v50 建立，额外陷阱/门/障碍空间预算已由 contract-v52 建立，房间几何预算与 cavern 基底已由 contract-v53 建立，lake/river/maze/destroyed/streamer 已由 contract-v54–v55 建立；尚缺机器性能计时基线与更大地图压力场景；
+- Vault 旋转、镜像、自由 wall 区落位和失败重试已由 contract-v50 建立；多入口与大模板成功落位后的连通性证明已由 contract-v64 完成；
+- 动态 friends/escort、`cluster/ring` formation 与领袖/随从预算已由 contract-v51 建立，pit 专属表与等级阵列已由 contract-v56 建立，持久 pack identity 与首版 AI 已由 contract-v59 建立；尚缺独立 nest 房间、任意模板 formation、主题掉落和跨房间协作；
+- unique/守护者过滤、召唤物与繁殖种群上限、越级强敌/掉落和神器来源标签；
+- 树状分支已由 contract-v63 完成；跨走廊拼接和 Vault 多入口已由 contract-v64 完成，shaft、随机楼梯、同层多个连接点与显式到达点已由 contract-v58 建立。
+
+来源：[contract-v48](contract-v48-floor-generation-tables.md)。
+
+## contract-v49–v53 明确遗留
+
+- Vault 旋转、镜像、自由 wall 区落位、多 Vault 预算竞争、重叠拒绝和稳定失败回退已由 contract-v50 建立；多入口、大模板成功落位后的连通性证明和跨走廊拼接已由 contract-v64 完成；
+- 额外陷阱、门与可挖掘特殊地形表、room/corridor 放置、空间预算和失败回退已由 contract-v52 建立；房间数量/尺寸/rectangle-cross 形状/面积预算、连通 cavern 基地貌和跨房间内容分布已由 contract-v53 建立；深浅 lake/river 与结构连通保护已由 contract-v54 建立；maze/destroyed/streamer 与墙体限定回退已由 contract-v55 建立；maze-only、远距锚点和区域内容落位已由 contract-v57 建立；同层区域主题与走廊拼接带已由 contract-v60 建立，与区域组合已由 contract-v62 完成；尚缺 feature 分类型配额和相邻限制；
+- friends/escort、`cluster/ring` formation、群体数量/随从预算、空间缩减和原子回退已由 contract-v51 建立，复合 pit、单入口、专属表和中心等级阵列已由 contract-v56 建立，持久 pack identity 与首版 AI 已由 contract-v59 建立；尚缺任意模板 formation、多个 pit、召唤、繁殖、种群上限、unique 过滤和更复杂 AI；
+- 更一般的分支连接仍缺；Vault 跨走廊拼接已由 contract-v64 完成，shaft、随机楼梯、同层多个连接点与独立到达点已由 contract-v58 建立；
+- 跨机器性能计时基线；当前十层 fixture 只锁定规模、状态和确定性。
+
+来源：[contract-v49](contract-v49-budgeted-pressure-dungeon.md)、[contract-v50](contract-v50-spatial-vault-placement.md)、[contract-v51](contract-v51-dynamic-encounter-groups.md)、[contract-v52](contract-v52-terrain-feature-budgets.md)、[contract-v53](contract-v53-staged-cavern-layout.md)、[contract-v54](contract-v54-lake-river-hydrology.md)、[contract-v55](contract-v55-maze-destroyed-streamers.md)、[contract-v56](contract-v56-classic-monster-pit.md)、[contract-v57](contract-v57-maze-only-floor.md)、[contract-v58](contract-v58-floor-connections.md)、[contract-v59](contract-v59-pack-ai.md)。
+
+## contract-v25–v29 明确遗留
+
+### 怪物携带物与掉落
+
+- 偷窃、缴械、怪物主动拾物和怪物使用物品；
+- 多次掉落、区域主题掉落、unique 过滤和特殊怪物掉落规则；楼层 loot 表引用已由 contract-v48 建立，vault 专属 loot 已由 contract-v47 建立；
+- 统一 `DeathOutcome` 订阅边界，以及经验、任务、统计等死亡消费者。
+
+来源：[contract-v25](contract-v25-monster-carried-items.md)、[contract-v24](contract-v24-deterministic-loot-generation.md)。
+
+### 楼层与生成
+
+- 多深度连接与树状分支已由 contract-v34/v58/v63 完成；Vault 跨走廊拼接已由 contract-v64 完成，仍缺旧层淘汰、同一模板多实例和更一般的动态探索树；
+- 动态朋友/护卫群体、`cluster/ring` formation 与群体预算已由 contract-v51 完成，额外陷阱/门/可挖掘障碍表与空间预算已由 contract-v52 完成，房间几何预算、连通 cavern 基底与跨房间内容分布已由 contract-v53 完成，深浅 lake/river 生成阶段已由 contract-v54 完成，maze/destroyed/streamer 已由 contract-v55 完成，原版式复合 pit 与等级阵列已由 contract-v56 完成，maze-only 专用楼层已由 contract-v57 完成，多楼梯/shaft/独立到达点已由 contract-v58 完成，持久 pack identity 与首版 AI 已由 contract-v59 完成，同层房间区域与局部表已由 contract-v60 完成，区域与现有特殊阶段组合已由 contract-v62 完成，树状地牢、多个最终叶层与共享守护者镜像已由 contract-v63 完成，Vault 多入口已由 contract-v64 完成。第一类固定主题 vault/group 已由 contract-v47 完成，多 Vault 加权选择与第一类巢穴已由 contract-v48 完成，actor/loot 总预算和十层压力链已由 contract-v49 完成，Vault 变换、自由落位、多模板面积预算与失败回退已由 contract-v50 完成；
+- 陷阱、秘密门和其他可变地形进入生成管线。
+
+来源：[contract-v26](contract-v26-floor-lifecycle.md)、[contract-v27](contract-v27-procedural-room-content.md)。
+
+### 门与地形交互
+
+- 原版 easy-open/自动选方向；权威可查询交互列表已由 [contract-v30](contract-v30-authoritative-terrain-interactions.md) 完成；
+- 卡死门、玻璃门、更复杂的秘密门变体和门上的声音/经验反馈；
+- 开锁受失明、无光、混乱、幻觉影响；
+- 撞门成功后自动进入门洞、普通开启/破损随机分支；
+- 撞门失败后的失衡/麻痹；
+- 怪物挡门时是否显式转为近战，以及怪物自身开门/破门 AI。
+
+来源：[contract-v28](contract-v28-door-terrain-state.md)、[contract-v29](contract-v29-locked-door-checks.md)。
+
+### 搜索与地形知识
+
+- 基础秘密门、主动搜索和知识安全投影已由 [contract-v31](contract-v31-secret-door-search.md) 完成；
+- contract-v72 已建立成功移动后的邻近 perception 检定；仍缺搜索模式/命令重复、玩家自身格搜索和原版固定 3×3 RNG 扫描；
+- 失明、无光、混乱、幻觉对搜索能力的修正；
+- 隐藏陷阱和箱子陷阱发现。
+
+## 更早纵切遗留
+
+### 战斗、状态与效果
+
+- 玩家 on-hit effect、暴击、品牌、克制、吸血等武器效果；
+- 怪物 blow 的多 effect 列表、位移与中断；
+- 失明、混乱、麻痹，以及这些状态对行动和检定的统一修正；
+- Mana 等待/休息恢复已由 contract-v74 完成；HP 自然恢复、饥饿、环境伤害和更一般的世界级 tick 回调仍未实现；
+- 抗性与感知进入更完整的多来源派生属性。
+
+来源：[contract-v9](contract-v9-status-resistance-effects.md) 至 [contract-v13](contract-v13-monster-melee-routines.md)。
+
+### 射击、投掷与目标选择
+
+- 特殊返回弹药/武器、职业折损修正和职业射击修正；
+- 药水投掷破裂与落点 effect；
+- 投掷目标模式、鼠标点选、路径/范围预览和投射物动画；
+- 自身 `TargetSpec` 已由 contract-v74 完成；范围、锥形等模式仍未实现。
+
+来源：[contract-v14](contract-v14-projectile-foundation.md) 至 [contract-v18](contract-v18-thrown-attacks.md)、[前端目标模式 v1](frontend-targeting-v1.md)。
+
+### 背包、装备、鉴定与物品
+
+- 身体槽位扩展、箭袋、容器、槽位容量和负重分级惩罚；
+- 鉴定卷轴、鉴定技能、诅咒知识、伪鉴定来源和逐项属性发现；
+- unique、诅咒、固定神器、随机能力、随机神器和重铸；
+- 消耗品的目标、状态 effect 与多 effect 组合。
+
+来源：[contract-v19](contract-v19-inventory-capacity.md) 至 [contract-v24](contract-v24-deterministic-loot-generation.md)。
+
+### 怪物 AI 与知识界面
+
+- `AiIntent`、保持距离、逃跑、守卫、射击、能力选择、气味/flow 和特殊感知；
+- 怪物开门、破门、拾物、偷窃和缴械决策；
+- 怪物、物品、神器、ego、地形、地牢、宠物和统计知识菜单。
+
+来源：[RFB 全系统梳理与重构实现路线](rfb-system-implementation-roadmap.md)。
+
+## 维护规则
+
+- 新纵切开始时，先依据[当前状态](current-status.md)核对内容、规则、入口与验收四层；确认仍缺失后再安排，完成时记录具体范围与证据。
+- 每次原版对比发现主动差异时，必须判断它是永久设计差异还是未来缺口；未来缺口写入本文件。
+- 不把“可能有用”的新功能直接加入清单；必须能追溯到既有规划、已完成 contract 的延后说明或原版对比。

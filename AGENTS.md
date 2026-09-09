@@ -1,10 +1,35 @@
-# Project Working Rules
+# 项目工作约定
 
-- The project is in active development and test sessions always start from a new save. Do not add or preserve compatibility for older development saves unless the user explicitly requests it.
-- Use focused tests, content validation, type checking, and relevant builds for routine changes. Do not run the full desktop or other large E2E suites by default; run them only when investigating a related failure, when the user requests them, or for an explicit milestone acceptance pass.
-- When producing a playable desktop build, use the standalone Tauri build command. A plain Cargo build may still depend on the Vite development server.
-- Keep contract fixtures focused on one minimal behavior. Do not add movement commands when movement is not the subject; use the direct player-position precondition for location-dependent actions, and do not combine visits to multiple facilities in one fixture.
-- Generic shop purchase fixtures should select the first projected stock entry instead of binding a generated item instance ID. Bind a specific item only when that item's identity or behavior is the subject of the test.
-- The authoritative RFB original for all new rule and content work is the `master` Git ref in `D:/codex/Frogcomposband/master`. Read that ref through Git objects; do not use the repository's currently checked-out branch or working-tree files. Older pinned commits remain authoritative only for historical contracts and legacy-save fixtures that explicitly name them.
-- Chinese display names for content imported or adapted from RFB, including items, monsters, classes, races, personalities, abilities, books, and device activations, must exactly follow the Chinese name used by the authoritative RFB `master` ref. Never translate the English name or invent a replacement. Treat that ref's runtime Chinese tables and source strings as authoritative; when no Chinese name is defined there, record the item as unresolved instead of naming it locally.
-- State-hash Schema v62 is the one-time migration that removes `contentHash` from the state-hash input. For later content-only changes, update the pack version and content lock, then verify or refresh only fixture categories whose behavior actually changes. Use `verify-all`, `refresh-all`, or the ignored full replay test only when the state-hash input structure, shared protocol projections, common initialization or RNG behavior changes, or for explicit milestone acceptance.
+本文件约定如何工作；当前实现以代码、配置和测试为准。用户本次明确要求优先于文档中的旧安排。`docs/archive/` 是历史资料，不是现行指令或待办；不要默认通读档案。
+
+## 开始与实现
+
+- 先确认工作树、分支和已有修改，再读本批调用链与必要资料。保留其他人的改动，不自动 stash、reset、清理文件或改写共享提交。
+- 在已授权范围内完成工作，常规实现选择自主决定。只有真实需求缺失、相互冲突的目标或并发写入阻塞才询问，不把每步变成审批。
+- 选择最小完整实现，先复用现有类型、函数和状态。没有当前需求或已观察到的问题，不增加兼容层、回退链、重试、配置开关、管理器或为未来预造的抽象。
+- 校验放在真实输入和状态边界；内部复用已成立的约束。不得为省代码削弱存档完整性、内容引用、事务、并发、隐私或安全要求，也不得吞错补默认值。
+- Rust `Game` 是规则、状态、RNG 和 ID 的权威。前端消费投影，不复制规则。新增能力进入现有职责模块，不重新堆回 `game/mod.rs` 或另建规则系统。
+- 开发测试从新存档开始。除非用户明确要求，不维护旧开发存档兼容。
+
+## 原版与内容
+
+- 新规则/内容的 RFB 来源是 `D:/codex/Frogcomposband/master` 仓库的 `master` Git ref；使用 `git show` / `git grep` 读取 Git 对象，不读取该仓库当前检出的文件。记录本批实际来源提交；历史契约显式固定的提交只用于该契约。
+- 导入或改编内容的中文显示名逐字采用该 ref 的中文表或源字符串。没有权威中文名就记为 unresolved，不自行翻译。沿用已存在的稳定 ID、内容入口与来源记录。
+- 内容变化更新正式包版本和 lock；类型变化才生成相应 Schema/协议绑定，不手改生成物。命令见 [内容开发](docs/content-development.md)。
+- 保留许可证及来源声明，不把历史文档中的授权判断当作对新材料的自动授权。
+
+## 验证与完成
+
+- 按本批改变的行为和实际调用者选择检查，优先复用已有覆盖，只补缺失的有效测试。不要每层各添一套，不复制静态矩阵凑数量，也不漏掉直接受影响的既有测试。
+- 相关检查通过后交付。没有新修改、失败或尚未覆盖的真实影响，不扩大或重复测试；纯文档变更只查文档。相同目标已经由测试编译时，不机械再跑一次同范围编译检查。
+- 完整 workspace、全量前端、桌面 E2E、Android 构建只在实际影响范围、相关失败、用户要求或明确里程碑需要时执行。普通 merge 不是全量验收的理由，CI 自身要求不变。
+- fixture 只表达一个最小行为。非移动场景直接设玩家位置，不串联多个设施。通用购买选第一项投影库存，只有物品身份本身是主题时才绑定具体实例。
+- `contentHash` 不在状态哈希输入中。纯内容变化不因此升级 State Hash Schema 或全量刷新 fixture；按行为影响验证/刷新。状态哈希输入、共享协议投影、公共初始化或 RNG 改变时，按实际范围做全局契约验证。刷新必须解释行为差异，不得掩盖失败。
+- 可玩桌面产物使用 Tauri standalone 构建，不能用普通 Cargo build 代替。验证选择与命令见 [验证与契约](docs/testing.md)。
+- 交付说明改了什么、实际检查与结果、仍存在的相关限制。区分内容已定义、规则已实现、入口已开放和实际验收，不以数量或构建成功替代行为证据。
+
+## 并行与文档
+
+- 当前种族职业与集成对话共用 `main` 工作树。日常由种族职业写入；集成前交接已提交状态并暂停另一方写入，集成后交回新的 HEAD。另两个方向在独立工作树开发，见 [并行协作](docs/parallel-development.md)。
+- 共享文件不是审批点。只有真实交叉依赖或并发重叠才协调；只在两方确实需要同一新机制时安排先行底座。
+- 日常指南放 `docs/`，版本与入口快照集中在 `docs/status.md`。完成的批次以提交说明记录；确有长期参考价值再留文档，不持续向当前指南追加版本流水账。
