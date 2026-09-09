@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-set-of-gauntlets-name",
+  "rfbBaseKind": {
+    "sourceIndex": 229,
+    "sval": 3,
+    "tval": 31
+  },
   "tags": [
     "armor",
     "equipment",

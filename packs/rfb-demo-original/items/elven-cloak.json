@@ -27,6 +27,11 @@
   },
   "mogaminatorRare": true,
   "nameKey": "item-demo-elven-cloak-name",
+  "rfbBaseKind": {
+    "sourceIndex": 196,
+    "sval": 2,
+    "tval": 35
+  },
   "tags": [
     "armor",
     "equipment",

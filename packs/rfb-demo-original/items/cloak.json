@@ -17,6 +17,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-cloak-name",
+  "rfbBaseKind": {
+    "sourceIndex": 195,
+    "sval": 1,
+    "tval": 35
+  },
   "tags": [
     "armor",
     "equipment",

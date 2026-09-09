@@ -20,7 +20,7 @@
 | 协议 | 1.230 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | v108 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload | v5 / v5；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.385.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.386.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
 | 行为基线 | contract-v306，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
 | 内容定义数量 | 地形 201、角色 1402、物品 357、能力 1838、词缀 65、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
@@ -59,6 +59,12 @@
 内容引用见 [builds](../packs/rfb-demo-original/builds/) 和 [abilityBooks](../packs/rfb-demo-original/abilityBooks/)。领域身份、源码核对与机制边界见[法术领域交接](spell-realm-import-handoff.md)。未开放领域需要单独安排入口变更与玩家流程验收，本文不改变开放范围。
 
 ## 版本验收与限制
+
+2026-09-09，`codex/realms-items` 完成 [E5.0 护甲 Ego 审计](armor-ego-import-audit.md)：
+核对 76 条权威 Ego、稳定 ID、subtype 限制、动态分支、激活与消费者缺口，为现有 38 件普通护甲
+补齐 `rfbBaseKind`。内容为 1.386.0，仍为 357 件物品、65 个 affix。护甲 Ego 入口未开放；
+新增身份的零 RNG/拒绝提前生成测试、原有自然掉落测试及 equipment/inventory/tasks/town 的
+11 个 fixture 通过，没有刷新行为基线。下一步为 E5.1 共享机制缺口，不记作护甲玩家流程验收。
 
 2026-09-09，`codex/realms-items` 从 `main@62f959f3b` 增补鹤嘴锄（`demo.item.mattock`，
 RFB master `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 的 k_info 156）：正式物品数增加至 357，

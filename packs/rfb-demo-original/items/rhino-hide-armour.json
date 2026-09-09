@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-rhino-hide-armour-name",
+  "rfbBaseKind": {
+    "sourceIndex": 253,
+    "sval": 8,
+    "tval": 36
+  },
   "tags": [
     "armor",
     "equipment",

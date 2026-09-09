@@ -16,6 +16,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-small-leather-shield-name",
+  "rfbBaseKind": {
+    "sourceIndex": 235,
+    "sval": 2,
+    "tval": 34
+  },
   "tags": [
     "armor",
     "equipment",

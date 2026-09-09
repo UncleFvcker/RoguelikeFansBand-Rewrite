@@ -16,6 +16,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-iron-helm-name",
+  "rfbBaseKind": {
+    "sourceIndex": 215,
+    "sval": 5,
+    "tval": 32
+  },
   "tags": [
     "armor",
     "equipment",

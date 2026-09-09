@@ -19,6 +19,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-augmented-chain-mail-name",
+  "rfbBaseKind": {
+    "sourceIndex": 275,
+    "sval": 6,
+    "tval": 37
+  },
   "tags": [
     "armor",
     "equipment",

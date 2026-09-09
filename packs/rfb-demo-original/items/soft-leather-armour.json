@@ -17,6 +17,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-soft-leather-armour-name",
+  "rfbBaseKind": {
+    "sourceIndex": 249,
+    "sval": 4,
+    "tval": 36
+  },
   "tags": [
     "armor",
     "equipment",

@@ -16,6 +16,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-jingasa-name",
+  "rfbBaseKind": {
+    "sourceIndex": 214,
+    "sval": 4,
+    "tval": 32
+  },
   "tags": [
     "armor",
     "equipment",

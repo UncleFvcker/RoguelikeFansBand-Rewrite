@@ -16,6 +16,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-large-leather-shield-name",
+  "rfbBaseKind": {
+    "sourceIndex": 237,
+    "sval": 4,
+    "tval": 34
+  },
   "tags": [
     "armor",
     "equipment",

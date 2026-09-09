@@ -17,6 +17,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-fur-cloak-name",
+  "rfbBaseKind": {
+    "sourceIndex": 197,
+    "sval": 3,
+    "tval": 35
+  },
   "tags": [
     "armor",
     "equipment",

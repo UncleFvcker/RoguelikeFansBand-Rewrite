@@ -2226,6 +2226,35 @@ mod tests {
         }
     }
 
+    #[test]
+    fn armor_base_identities_do_not_open_ego_generation_or_consume_rng() {
+        let game = Game::new(1);
+        let mut checked = 0;
+        for item in game.content.item_definitions().filter(|item| {
+            item.rfb_base_kind
+                .is_some_and(|kind| (30..=38).contains(&kind.tval))
+        }) {
+            for level in [1, 30, 80, 100] {
+                let mut rng = RfbRng::seeded(0xE5_0000);
+                assert!(
+                    roll_and_materialize_rfb_ego_from_affixes_with_rng(
+                        &mut rng,
+                        item,
+                        game.content.affix_definitions(),
+                        level,
+                        None,
+                    )
+                    .is_none(),
+                    "{} must remain outside armor ego generation",
+                    item.id
+                );
+                assert_eq!(rng.draw_counter, 0);
+            }
+            checked += 1;
+        }
+        assert_eq!(checked, 38);
+    }
+
     fn rfb_weapon_item(tval: u16, sval: u16) -> ItemDefinition {
         let game = Game::new(1);
         let mut item = game

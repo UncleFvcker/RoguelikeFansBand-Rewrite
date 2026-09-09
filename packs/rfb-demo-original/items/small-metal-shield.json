@@ -16,6 +16,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-small-metal-shield-name",
+  "rfbBaseKind": {
+    "sourceIndex": 236,
+    "sval": 3,
+    "tval": 34
+  },
   "tags": [
     "armor",
     "equipment",

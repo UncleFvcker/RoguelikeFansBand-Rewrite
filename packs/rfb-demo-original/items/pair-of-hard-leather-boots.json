@@ -17,6 +17,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-pair-of-hard-leather-boots-name",
+  "rfbBaseKind": {
+    "sourceIndex": 206,
+    "sval": 3,
+    "tval": 30
+  },
   "tags": [
     "armor",
     "equipment",

@@ -16,6 +16,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-metal-cap-name",
+  "rfbBaseKind": {
+    "sourceIndex": 213,
+    "sval": 3,
+    "tval": 32
+  },
   "tags": [
     "armor",
     "equipment",

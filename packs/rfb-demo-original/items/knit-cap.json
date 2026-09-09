@@ -16,6 +16,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-knit-cap-name",
+  "rfbBaseKind": {
+    "sourceIndex": 224,
+    "sval": 1,
+    "tval": 32
+  },
   "tags": [
     "armor",
     "equipment",

@@ -19,6 +19,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-metal-lamellar-armour-name",
+  "rfbBaseKind": {
+    "sourceIndex": 282,
+    "sval": 13,
+    "tval": 37
+  },
   "tags": [
     "armor",
     "equipment",

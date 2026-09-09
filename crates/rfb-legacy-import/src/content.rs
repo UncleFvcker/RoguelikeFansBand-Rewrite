@@ -6,8 +6,10 @@
 //! report so rule work can be prioritised from data. No legacy text enters
 //! the repository: unit tests use synthetic samples only.
 
+mod armor_ego_audit;
 mod mutation_audit;
 
+pub use armor_ego_audit::sync_demo_armor_ego_identities;
 pub use mutation_audit::{DemoMutationCoverageReport, audit_demo_mutations};
 
 use std::{
@@ -17976,6 +17978,7 @@ pub fn audit_egos(source: &Path) -> Result<EgoAuditReport, LegacyImportError> {
     )?)?;
     validate_weapon_digger_ego_contract(&egos, &chinese_names)?;
     validate_ranged_ego_contract(&egos, &chinese_names)?;
+    armor_ego_audit::validate_armor_ego_contract(&egos, &chinese_names)?;
     validate_weapon_ego_activation_contract(&activation_candidates)?;
     audit_ego_sources(source_commit, &egos, &chinese_names)
 }

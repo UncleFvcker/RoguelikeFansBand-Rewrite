@@ -17,6 +17,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-cord-armour-name",
+  "rfbBaseKind": {
+    "sourceIndex": 254,
+    "sval": 9,
+    "tval": 36
+  },
   "tags": [
     "armor",
     "equipment",

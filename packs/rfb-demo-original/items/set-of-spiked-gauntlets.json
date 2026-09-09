@@ -21,6 +21,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-set-of-spiked-gauntlets-name",
+  "rfbBaseKind": {
+    "sourceIndex": 230,
+    "sval": 4,
+    "tval": 31
+  },
   "tags": [
     "armor",
     "equipment",

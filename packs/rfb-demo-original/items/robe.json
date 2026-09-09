@@ -17,6 +17,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-robe-name",
+  "rfbBaseKind": {
+    "sourceIndex": 247,
+    "sval": 2,
+    "tval": 36
+  },
   "tags": [
     "armor",
     "equipment",

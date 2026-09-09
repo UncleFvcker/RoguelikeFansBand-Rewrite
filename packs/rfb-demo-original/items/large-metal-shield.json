@@ -16,6 +16,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-large-metal-shield-name",
+  "rfbBaseKind": {
+    "sourceIndex": 238,
+    "sval": 5,
+    "tval": 34
+  },
   "tags": [
     "armor",
     "equipment",

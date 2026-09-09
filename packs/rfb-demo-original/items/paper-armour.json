@@ -17,6 +17,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-paper-armour-name",
+  "rfbBaseKind": {
+    "sourceIndex": 248,
+    "sval": 3,
+    "tval": 36
+  },
   "tags": [
     "armor",
     "equipment",

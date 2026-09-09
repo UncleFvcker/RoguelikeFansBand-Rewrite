@@ -17,6 +17,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-leather-gloves-name",
+  "rfbBaseKind": {
+    "sourceIndex": 227,
+    "sval": 1,
+    "tval": 31
+  },
   "tags": [
     "armor",
     "equipment",

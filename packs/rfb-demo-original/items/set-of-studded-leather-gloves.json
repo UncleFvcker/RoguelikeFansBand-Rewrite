@@ -20,6 +20,11 @@
   },
   "mogaminatorRare": false,
   "nameKey": "item-demo-set-of-studded-leather-gloves-name",
+  "rfbBaseKind": {
+    "sourceIndex": 228,
+    "sval": 2,
+    "tval": 31
+  },
   "tags": [
     "armor",
     "equipment",
