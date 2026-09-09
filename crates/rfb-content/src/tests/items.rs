@@ -2,6 +2,57 @@ use super::*;
 use std::collections::BTreeSet;
 
 #[test]
+fn mattock_identity_and_allocation_match_authoritative_source() {
+    let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
+    let item = artifact
+        .content
+        .items
+        .iter()
+        .find(|item| item.id == "demo.item.mattock")
+        .unwrap();
+    assert_eq!(
+        item.rfb_base_kind,
+        Some(RfbBaseKindDefinition {
+            source_index: 156,
+            tval: 20,
+            sval: 7
+        })
+    );
+    assert_eq!(
+        (
+            item.generation_level,
+            item.base_value,
+            item.weight_tenths_pound
+        ),
+        (50, 700, 250)
+    );
+    assert_eq!(item.equipment_slot.as_deref(), Some("tool"));
+    assert_eq!(item.tunneling_pval, 3);
+    let melee = item.melee_profile.as_ref().unwrap();
+    assert_eq!((melee.damage_dice, melee.damage_sides), (1, 9));
+    let table = artifact
+        .content
+        .loot_tables
+        .iter()
+        .find(|table| table.id == "demo.loot-table.base-items")
+        .unwrap();
+    let entries = table
+        .entries
+        .iter()
+        .filter(|entry| entry.item_kind_id == item.id)
+        .collect::<Vec<_>>();
+    assert_eq!(entries.len(), 1);
+    assert_eq!(
+        (
+            entries[0].weight,
+            entries[0].min_depth,
+            entries[0].max_depth
+        ),
+        (100, 50, u16::MAX)
+    );
+}
+
+#[test]
 fn fixed_artifact_combat_and_activation_data_match_source() {
     let artifact = compile_pack_dir(&original_pack_path()).expect("original pack should compile");
 
@@ -840,7 +891,7 @@ fn equipment_and_ego_identities_match_source() {
             .filter_map(|item| item.rfb_base_kind)
             .filter(|kind| matches!(kind.tval, 20..=23))
             .collect::<Vec<_>>();
-        assert_eq!(base_kinds.len(), 62);
+        assert_eq!(base_kinds.len(), 63);
         assert_eq!(
             base_kinds
                 .iter()

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://raw.githubusercontent.com/UncleFvcker/RoguelikeFansBand-Rewrite/main/schemas/content-v1/item.schema.json",
+  "baseValue": 700,
+  "descriptionKey": "item-demo-mattock-description",
+  "equipmentSlot": "tool",
+  "formatVersion": 1,
+  "generationLevel": 50,
+  "glyph": "\\",
+  "id": "demo.item.mattock",
+  "maxStack": 1,
+  "meleeProfile": {
+    "attacks": 1,
+    "damageDice": 1,
+    "damageSides": 9,
+    "toDamage": 0,
+    "toHit": 0
+  },
+  "mogaminatorRare": false,
+  "nameKey": "item-demo-mattock-name",
+  "resistsEnchantment": false,
+  "rfbBaseKind": {
+    "sourceIndex": 156,
+    "sval": 7,
+    "tval": 20
+  },
+  "tags": [
+    "equipment",
+    "rfb-compatibility",
+    "tool",
+    "weapon"
+  ],
+  "tunnelingPval": 3,
+  "weightTenthsPound": 250
+}

@@ -5,6 +5,12 @@
   "rolls": 1,
   "entries": [
     {
+      "itemKindId": "demo.item.mattock",
+      "weight": 100,
+      "quantity": 1,
+      "minDepth": 50
+    },
+    {
       "itemKindId": "demo.item.accuracy-scroll",
       "weight": 100,
       "quantity": 1,

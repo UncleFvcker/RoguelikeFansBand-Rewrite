@@ -11,6 +11,119 @@ const ABILITY_EFFECT_AFFIX_ID: &str = "test.affix.ability-effect";
 const ABILITY_EFFECT_ACTIVATION_ID: &str = "test.device-activation.ability-effect";
 const ABILITY_EFFECT_ITEM_ID: &str = "test.item.ability-effect";
 
+#[test]
+fn mattock_natural_disruption_activation_round_trips() {
+    let mut game = Game::new_with_build(67, RFB_WARRIOR_BUILD_ID).unwrap();
+    clear_monsters(&mut game);
+    let context = LootContext {
+        table_id: "demo.loot-table.base-items".to_owned(),
+        floor_id: game.current_floor_id.clone(),
+        depth: 50,
+        source: LootSource::MonsterDeath {
+            actor_id: "test.loot-source".to_owned(),
+        },
+    };
+    game.rng = RfbRng::seeded(1927);
+    let mut drops = game
+        .generate_loot_instances(&context, ItemLocation::Inventory)
+        .unwrap();
+    assert_eq!(drops.len(), 1);
+    let item = drops.remove(0);
+    assert_eq!(item.kind_id, "demo.item.mattock");
+    assert_eq!(item.quality, ItemQualityDto::Exceptional);
+    assert_eq!(item.affix_ids, ["rfb-legacy.affix.disruption"]);
+    assert_eq!(item.rolled_affixes.len(), 1);
+    let rolled = &item.rolled_affixes[0];
+    assert_eq!(
+        rolled.melee_damage_dice,
+        Some(rfb_protocol::MeleeDamageDiceDto { dice: 3, sides: 9 })
+    );
+    assert_eq!(rolled.properties.modifiers.strength, 2);
+    assert_eq!(rolled.properties.equipment_bonuses.digging_skill, 2);
+    assert_eq!(item.enchantments.to_damage, 7);
+    assert_eq!(
+        item.activation.as_ref().unwrap().profile_id,
+        "rfb.device-activation.ego-42-stone-to-mud"
+    );
+    assert_eq!(item.charges.unwrap().current, 1);
+    let item_id = item.id.clone();
+    game.items.push(item);
+
+    let save = game.to_save();
+    let mut game = Game::from_save_with_content(save.clone(), game.content.clone())
+        .expect("natural ego rolls and activation should survive a save round-trip");
+    assert_eq!(game.to_save(), save);
+    game.use_inventory_item(
+        &item_id,
+        None,
+        None,
+        &mut Vec::new(),
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .unwrap();
+    assert_eq!(
+        game.to_save(),
+        save,
+        "missing direction must preserve item, resources, and RNG"
+    );
+
+    let target = Position {
+        x: game.player.position.x + 1,
+        y: game.player.position.y,
+    };
+    replace_terrain(&mut game, target, "demo.terrain.quartz-vein");
+    game.rng = RfbRng::seeded(0);
+    let mut events = Vec::new();
+    game.use_inventory_item(
+        &item_id,
+        Some(&TargetSelection::Direction {
+            direction: Direction::East,
+        }),
+        None,
+        &mut events,
+        &mut BTreeSet::new(),
+        &mut Vec::new(),
+    )
+    .unwrap();
+    assert!(
+        events.iter().any(|event| matches!(
+            event,
+            DomainEvent::DeviceSkillChecked {
+                succeeded: true,
+                ..
+            }
+        )),
+        "{events:?}"
+    );
+    assert_eq!(
+        game.terrain[game.index(target).unwrap()],
+        "demo.terrain.floor"
+    );
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == item_id)
+            .unwrap()
+            .charges
+            .unwrap()
+            .current,
+        0
+    );
+    game.world_tick = 50;
+    game.process_inventory_device_recovery(&mut events);
+    assert_eq!(
+        game.items
+            .iter()
+            .find(|item| item.id == item_id)
+            .unwrap()
+            .charges
+            .unwrap()
+            .current,
+        1
+    );
+}
+
 fn riding_charge_game(seed: u64) -> Game {
     let pack_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .parent()

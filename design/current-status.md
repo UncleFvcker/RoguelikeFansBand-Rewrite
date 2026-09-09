@@ -20,9 +20,9 @@
 | 协议 | 1.230 | [协议常量](../crates/rfb-protocol/src/lib.rs) |
 | State Hash Schema | v108 | [核心常量](../crates/rfb-core/src/game/mod.rs) |
 | save header / payload | v5 / v5；容器 v1 | [协议常量](../crates/rfb-protocol/src/lib.rs)、[存档格式](save-format-v1.md) |
-| 内容包 | 1.384.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
+| 内容包 | 1.385.0 | [pack.json](../packs/rfb-demo-original/pack.json)、[content.lock.json](../packs/rfb-demo-original/content.lock.json) |
 | 行为基线 | contract-v306，26 个 exact fixture | [baseline-policy.json](../tests/fixtures/active/baseline-policy.json) |
-| 内容定义数量 | 地形 201、角色 1402、物品 356、能力 1838、词缀 65、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
+| 内容定义数量 | 地形 201、角色 1402、物品 357、能力 1838、词缀 65、能力书 32、掉落表 34、变异 152 | [正式内容目录](../packs/rfb-demo-original/) |
 | 角色配置数量 | Class 6、Build 13、Race 57、SkillSet 65 | 同上；这些是定义数量，不是菜单选项数量 |
 
 版本与哈希以源文件为准。玩家入口以 [PLAYTEST_BUILD_IDS / PLAYTEST_RACE_IDS](../web/src/session-shell.ts) 和 [新游戏表单](../web/index.html) 为准。
@@ -59,6 +59,13 @@
 内容引用见 [builds](../packs/rfb-demo-original/builds/) 和 [abilityBooks](../packs/rfb-demo-original/abilityBooks/)。领域身份、源码核对与机制边界见[法术领域交接](spell-realm-import-handoff.md)。未开放领域需要单独安排入口变更与玩家流程验收，本文不改变开放范围。
 
 ## 版本验收与限制
+
+2026-09-09，`codex/realms-items` 从 `main@62f959f3b` 增补鹤嘴锄（`demo.item.mattock`，
+RFB master `a0d92b6378d148c5262cc236b8fa6ed2ca06a54c` 的 k_info 156）：正式物品数增加至 357，
+内容包为 1.385.0。规则复用已有挖掘、DIGGER ego 选择/物化与化石为泥激活；普通掉落在生成等级
+50 起可获得，权重为 100。核心测试已覆盖工具槽挖掘加成 85、自然生成瓦解词条、固定随机属性、
+保存恢复、取消目标、定向移除岩石及 50 tick 充能恢复。中文名直接采用 `kind_name_zh.inc` 的
+“鹤嘴锄”，像素映射复用已有挖掘工具图块。本批未做桌面或人工试玩，也未扩大领域入口。
 
 | 环境 / 检查 | 已通过范围 | 证据或限制 |
 | --- | --- | --- |

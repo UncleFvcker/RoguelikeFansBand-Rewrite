@@ -63,6 +63,7 @@
     { "sourceIndex": 151, "id": "gnomish-shovel" },
     { "sourceIndex": 153, "id": "pick" },
     { "sourceIndex": 154, "id": "orcish-pick" },
+    { "sourceIndex": 156, "id": "mattock" },
     { "sourceIndex": 160, "id": "sling" },
     { "sourceIndex": 161, "id": "short-bow" },
     { "sourceIndex": 162, "id": "long-bow" },

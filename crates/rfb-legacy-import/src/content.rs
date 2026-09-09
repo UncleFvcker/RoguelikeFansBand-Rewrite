@@ -3855,6 +3855,13 @@ fn item_json_with_terrain(
     } else {
         EquipmentFold::default()
     };
+    if matches!(shape.slot, Some("weapon" | "tool"))
+        && entry.flags.iter().any(|flag| flag == "TUNNEL")
+    {
+        value["tunnelingPval"] = serde_json::json!(entry.pval);
+        equipment.bonuses.remove("diggingSkill");
+        equipment.consumed.insert("TUNNEL".to_owned());
+    }
     if shape.slot.is_some() && !shape.melee && !shape.launcher {
         add_equipment_bonus(
             &mut equipment,
@@ -23752,6 +23759,23 @@ A:1/1
                 assert_eq!(item["initialCurse"], "permanent");
             }
         }
+    }
+
+    #[test]
+    fn mattock_import_preserves_base_tunneling_pval() {
+        // master:lib/edit/k_info.txt, source 156 (2026-09-09).
+        let entries = parse_k_info(
+            "N:156:& Mattock~\nG:\\:D\nI:20:7:3\nW:50:0:0:250:700\nA:50/1\nP:0:1d9:0:0:0\nF:SHOW_MODS | TUNNEL\n",
+        )
+        .expect("authoritative Mattock record should parse");
+        let item = demo_item_json(&entries[0], "mattock", &LauncherAmmoIndex::default())
+            .expect("Mattock should have no unresolved import behavior");
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../packs/rfb-demo-original/items/mattock.json");
+        let formal: serde_json::Value = serde_json::from_slice(&fs::read(path).unwrap()).unwrap();
+        assert_eq!(item, formal);
+        assert_eq!(item["tunnelingPval"], 3);
+        assert!(item["equipmentBonuses"]["diggingSkill"].is_null());
     }
 
     #[test]

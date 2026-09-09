@@ -113,6 +113,7 @@ fn original_diggers_use_weight_and_tunneling_pval_without_stacking_with_weapons(
         ("demo.item.pick", 55),
         ("demo.item.gnomish-shovel", 66),
         ("demo.item.orcish-pick", 75),
+        ("demo.item.mattock", 85),
     ] {
         let mut game = Game::new(42);
         game.items.clear();

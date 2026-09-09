@@ -621,6 +621,10 @@
       "foreground": "#a7acba",
       "tile": { "x": 7, "y": 7 }
     },
+    "demo.item.mattock": {
+      "foreground": "#a7acba",
+      "tile": { "x": 7, "y": 7 }
+    },
     "demo.item.boldness-potion": {
       "foreground": "#af69bf",
       "tile": { "x": 0, "y": 11 }
