@@ -9,9 +9,9 @@ use thiserror::Error;
 #[cfg(feature = "bindings")]
 use ts_rs::{Config, TS};
 
-pub const PROTOCOL_VERSION: &str = "1.235";
+pub const PROTOCOL_VERSION: &str = "1.236";
 pub const SAVE_HEADER_SCHEMA_VERSION: u16 = 6;
-pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 6;
+pub const SAVE_PAYLOAD_SCHEMA_VERSION: u16 = 7;
 
 const fn default_actor_speed() -> u16 {
     110
@@ -250,6 +250,11 @@ pub enum GameCommand {
     ResearchMonsterAtFacility {
         facility_id: String,
         actor_kind_id: String,
+    },
+    TeleportToDungeonLevelAtFacility {
+        facility_id: String,
+        dungeon_id: String,
+        depth: u16,
     },
     EatAtInn {
         facility_id: String,
@@ -4262,6 +4267,10 @@ pub struct TaskServiceDto {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub research_monsters: Vec<ResearchMonsterDto>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub teleport_level_cost: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub teleport_dungeons: Vec<TeleportDungeonDto>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub identify_all_items_cost: Option<u32>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub inn_stay_cost: Option<u32>,
@@ -4277,6 +4286,16 @@ pub struct TaskServiceDto {
     pub bounty_office: Option<BountyOfficeDto>,
     #[serde(default)]
     pub tasks: Vec<TaskStatusDto>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "bindings", derive(JsonSchema, TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TeleportDungeonDto {
+    pub dungeon_id: String,
+    pub name_key: String,
+    pub recall_depth: u16,
+    pub depths: Vec<u16>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -4777,6 +4796,7 @@ pub fn generated_typescript() -> String {
     push_declaration!(BountyOfficeDto);
     push_declaration!(TaskServiceDto);
     push_declaration!(ResearchMonsterDto);
+    push_declaration!(TeleportDungeonDto);
     push_declaration!(MonsterKindKnowledgeDto);
     push_declaration!(GameSnapshot);
     push_declaration!(GameUpdate);
@@ -5392,6 +5412,8 @@ pub struct BountyMissionSaveDto {
 pub struct DungeonStateSaveDto {
     pub dungeon_id: String,
     pub suppressed: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recall_floor_id: Option<String>,
     #[serde(default, skip_serializing_if = "is_false")]
     pub guardian_defeated: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]

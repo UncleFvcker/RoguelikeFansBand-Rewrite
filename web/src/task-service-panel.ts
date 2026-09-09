@@ -57,6 +57,8 @@ export class TaskServicePanel {
   #monsterName = "";
   #monsterGlyph = "";
   #monsterGroup = "all";
+  #teleportDungeonId = "";
+  #teleportDepth = "";
 
   constructor(options: {
     document: Document;
@@ -110,6 +112,8 @@ export class TaskServicePanel {
     const changed = this.#service?.id !== service.id;
     this.#service = service;
     if (changed) {
+      this.#teleportDungeonId = "";
+      this.#teleportDepth = "";
       this.#feedback = undefined;
       this.#overviewVisible = false;
     }
@@ -168,6 +172,11 @@ export class TaskServicePanel {
       } else if (action === "research-monster") {
         if (this.#monsterKindId) void this.#dispatch({
           type: "research-monster-at-facility", facilityId: service.id, actorKindId: this.#monsterKindId,
+        });
+      } else if (action === "teleport-level") {
+        if (this.#teleportDungeonId && this.#teleportDepth) void this.#dispatch({
+          type: "teleport-to-dungeon-level-at-facility", facilityId: service.id,
+          dungeonId: this.#teleportDungeonId, depth: Number(this.#teleportDepth),
         });
       } else if (action === "identify-all") {
         void this.#dispatch({
@@ -354,12 +363,68 @@ export class TaskServicePanel {
     this.#dom.list.append(row);
   }
 
+  #renderTeleportLevel(): void {
+    const service = this.#service;
+    if (service?.teleportLevelCost == null) return;
+    const dungeons = service.teleportDungeons ?? [];
+    const document = this.#dom.list.ownerDocument;
+    const row = document.createElement("li");
+    row.className = "task-service-row";
+    const dungeon = document.createElement("select");
+    dungeon.setAttribute("aria-label", this.#localization.format("teleport-level-dungeon"));
+    const placeholder = document.createElement("option");
+    placeholder.value = "";
+    placeholder.textContent = this.#localization.format(dungeons.length ? "teleport-level-dungeon" : "teleport-level-empty");
+    dungeon.append(placeholder);
+    for (const entry of dungeons) {
+      const option = document.createElement("option");
+      option.value = entry.dungeonId;
+      option.textContent = this.#localization.format("teleport-level-dungeon-option", {
+        name: this.#localization.format(entry.nameKey), depth: entry.recallDepth,
+      });
+      dungeon.append(option);
+    }
+    dungeon.value = this.#teleportDungeonId;
+    dungeon.disabled = this.#state.busy || !dungeons.length;
+    const depth = document.createElement("select");
+    depth.setAttribute("aria-label", this.#localization.format("teleport-level-depth"));
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "primary-button task-service-action";
+    button.dataset.facilityAction = "teleport-level";
+    button.textContent = this.#localization.format("action-teleport-level", { cost: service.teleportLevelCost });
+    const update = (): void => {
+      this.#teleportDepth = depth.value;
+      button.disabled = this.#state.busy || !depth.value;
+    };
+    const selectDungeon = (): void => {
+      this.#teleportDungeonId = dungeon.value;
+      depth.replaceChildren();
+      const entry = dungeons.find((entry) => entry.dungeonId === dungeon.value);
+      for (const value of entry?.depths ?? []) {
+        const option = document.createElement("option");
+        option.value = String(value);
+        option.textContent = this.#localization.format("teleport-level-depth-option", { depth: value });
+        depth.append(option);
+      }
+      if (entry?.depths.includes(Number(this.#teleportDepth))) depth.value = this.#teleportDepth;
+      depth.disabled = this.#state.busy || !entry;
+      update();
+    };
+    dungeon.addEventListener("change", selectDungeon);
+    depth.addEventListener("change", update);
+    selectDungeon();
+    row.append(dungeon, depth, button);
+    this.#dom.list.append(row);
+  }
+
   #renderFacilityActions(): void {
     const service = this.#service;
     if (!service) return;
     const document = this.#dom.list.ownerDocument;
     this.#renderBountyOffice();
     this.#renderMonsterResearch();
+    this.#renderTeleportLevel();
     const renderItemAction = (
       action: "identify" | "research",
       cost: number | null | undefined,

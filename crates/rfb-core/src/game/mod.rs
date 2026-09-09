@@ -228,7 +228,7 @@ pub const DEFAULT_WORLD_ID: &str = "demo.world.middle-earth";
 const EQUIPMENT_REGENERATION_INTERVAL_TICKS: u32 = 10;
 const BUILT_IN_CONTENT_BYTES: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/rfb-demo-original.rfbcontent"));
-pub const STATE_HASH_SCHEMA_VERSION: u16 = 109;
+pub const STATE_HASH_SCHEMA_VERSION: u16 = 110;
 #[cfg(test)]
 const RFB_WARRIOR_BUILD_ID: &str = "demo.build.warrior";
 const BASE_THROW_RANGE_BUDGET: u16 = 50;
@@ -480,6 +480,7 @@ fn monster_plan_target(target: &MonsterAbilityTargetPlan) -> Option<&MonsterHost
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct DungeonState {
     suppressed: bool,
+    recall_floor_id: Option<String>,
     guardian_defeated: bool,
     entrance_guardian_defeated: bool,
     next_instance_ordinal: u32,
@@ -496,6 +497,7 @@ fn base_dungeon_states(world: &rfb_content::WorldDefinition) -> BTreeMap<String,
                 dungeon.id.clone(),
                 DungeonState {
                     suppressed: false,
+                    recall_floor_id: None,
                     guardian_defeated: false,
                     entrance_guardian_defeated: false,
                     next_instance_ordinal: 0,
@@ -1096,6 +1098,7 @@ impl Game {
                     | GameAction::IdentifyAtFacility { .. }
                     | GameAction::ResearchItemAtFacility { .. }
                     | GameAction::ResearchMonsterAtFacility { .. }
+                    | GameAction::TeleportToDungeonLevelAtFacility { .. }
                     | GameAction::EatAtInn { .. }
                     | GameAction::IdentifyAllAtFacility { .. }
                     | GameAction::UseFacilityService { .. }
@@ -1378,6 +1381,20 @@ impl Game {
                         facility_id,
                         reason: reason.to_owned(),
                     });
+                }
+            }
+            GameAction::TeleportToDungeonLevelAtFacility {
+                facility_id,
+                dungeon_id,
+                depth,
+            } => {
+                match self.teleport_to_dungeon_level_at_facility(&facility_id, &dungeon_id, depth) {
+                    Ok(outcome) => events.push(DomainEvent::FacilityServiceCompleted { outcome }),
+                    Err(reason) => events.push(DomainEvent::FacilityServiceUnavailable {
+                        facility_id,
+                        service: rfb_protocol::FacilityServiceKindDto::Recall,
+                        reason: reason.to_owned(),
+                    }),
                 }
             }
             GameAction::StayAtInn { facility_id } => match self.stay_at_inn(&facility_id) {

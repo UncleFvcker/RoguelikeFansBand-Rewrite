@@ -130,6 +130,11 @@ pub(crate) enum GameAction {
         facility_id: String,
         actor_kind_id: String,
     },
+    TeleportToDungeonLevelAtFacility {
+        facility_id: String,
+        dungeon_id: String,
+        depth: u16,
+    },
     EatAtInn {
         facility_id: String,
     },
@@ -243,6 +248,7 @@ impl GameAction {
             | Self::IdentifyAtFacility { .. }
             | Self::ResearchItemAtFacility { .. }
             | Self::ResearchMonsterAtFacility { .. }
+            | Self::TeleportToDungeonLevelAtFacility { .. }
             | Self::EatAtInn { .. }
             | Self::IdentifyAllAtFacility { .. }
             | Self::UseFacilityService { .. }
@@ -445,6 +451,15 @@ impl From<GameCommand> for GameAction {
             } => Self::ResearchMonsterAtFacility {
                 facility_id,
                 actor_kind_id,
+            },
+            GameCommand::TeleportToDungeonLevelAtFacility {
+                facility_id,
+                dungeon_id,
+                depth,
+            } => Self::TeleportToDungeonLevelAtFacility {
+                facility_id,
+                dungeon_id,
+                depth,
             },
             GameCommand::TravelFromInn {
                 facility_id,

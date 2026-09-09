@@ -357,37 +357,6 @@ fn plan_retained_instance_action(
     }
 }
 
-fn recall_destination_for_current_floor(
-    world: &WorldDefinition,
-    current_floor_id: &str,
-    recall: Option<&RecallStateDto>,
-) -> Option<RecallStateDto> {
-    let current = world
-        .procedural_floors
-        .iter()
-        .find(|floor| floor.id == current_floor_id && floor.lifecycle == FloorLifecycle::Dungeon)?;
-    let dungeon_id = current
-        .dungeon_id
-        .as_ref()
-        .expect("validated dungeon floor must retain its dungeon ID")
-        .clone();
-    let should_update = recall.is_none_or(|recall| {
-        if recall.dungeon_id != dungeon_id {
-            return true;
-        }
-        world
-            .procedural_floors
-            .iter()
-            .find(|floor| floor.id == recall.floor_id)
-            .is_none_or(|destination| current.depth >= destination.depth)
-    });
-    should_update.then(|| RecallStateDto {
-        dungeon_id,
-        floor_id: current.id.clone(),
-        remaining_turns: recall.and_then(|recall| recall.remaining_turns),
-    })
-}
-
 impl Game {
     pub(super) fn dungeon_entry_requirements_met(&self, dungeon: &DungeonDefinition) -> bool {
         self.dungeon_is_active(&dungeon.id)
@@ -570,6 +539,10 @@ impl Game {
     }
 
     pub(super) fn reset_recall(&mut self, destination: RecallDestination) {
+        self.dungeon_states
+            .get_mut(&destination.dungeon_id)
+            .expect("recall destination must retain its dungeon")
+            .recall_floor_id = Some(destination.floor_id.clone());
         self.recall = Some(RecallStateDto {
             dungeon_id: destination.dungeon_id,
             floor_id: destination.floor_id,
@@ -1447,13 +1420,40 @@ impl Game {
             .content
             .world(&self.world_id)
             .expect("active world must remain available");
-        if let Some(recall) = recall_destination_for_current_floor(
-            world,
-            &self.current_floor_id,
-            self.recall.as_ref(),
-        ) {
-            self.recall = Some(recall);
+        let Some(current) = world.procedural_floors.iter().find(|floor| {
+            floor.id == self.current_floor_id && floor.lifecycle == FloorLifecycle::Dungeon
+        }) else {
+            return;
+        };
+        let dungeon_id = current
+            .dungeon_id
+            .as_ref()
+            .expect("dungeon floor must retain its dungeon");
+        let state = self
+            .dungeon_states
+            .get_mut(dungeon_id)
+            .expect("dungeon state must exist");
+        let recorded = state.recall_floor_id.as_ref().map(|id| {
+            world
+                .procedural_floors
+                .iter()
+                .find(|floor| floor.id == *id)
+                .expect("recall record must retain its floor")
+        });
+        if recorded.is_none_or(|floor| current.depth >= floor.depth) {
+            state.recall_floor_id = Some(current.id.clone());
         }
+        self.recall = Some(RecallStateDto {
+            dungeon_id: dungeon_id.clone(),
+            floor_id: state
+                .recall_floor_id
+                .clone()
+                .expect("visited dungeon must retain its recall floor"),
+            remaining_turns: self
+                .recall
+                .as_ref()
+                .and_then(|recall| recall.remaining_turns),
+        });
     }
 
     fn recall_advance_plan(&self) -> Option<RecallAdvancePlan> {

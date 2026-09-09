@@ -295,6 +295,17 @@
       },
       "type": "array"
     },
+    "teleportLevelCost": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/TownFacilityPrice"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "townId": {
       "type": "string"
     }

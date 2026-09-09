@@ -89,6 +89,7 @@ fn restore_dungeon_states(
                     saved.dungeon_id.clone(),
                     DungeonState {
                         suppressed: saved.suppressed,
+                        recall_floor_id: saved.recall_floor_id.clone(),
                         guardian_defeated: saved.guardian_defeated,
                         entrance_guardian_defeated: if allow_missing_states {
                             saved
@@ -1824,6 +1825,7 @@ impl Game {
             .map(|(dungeon_id, state)| DungeonStateSaveDto {
                 dungeon_id: dungeon_id.clone(),
                 suppressed: state.suppressed,
+                recall_floor_id: state.recall_floor_id.clone(),
                 guardian_defeated: state.guardian_defeated,
                 entrance_guardian_defeated: Some(state.entrance_guardian_defeated),
                 next_instance_ordinal: state.next_instance_ordinal,

@@ -146,6 +146,7 @@ pub(super) fn validate_towns_and_shops(
                 .into_iter()
                 .chain(facility.inn_stay_cost)
                 .chain(facility.research_monster_cost)
+                .chain(facility.teleport_level_cost)
                 .any(|price| price.owner_cost > 999_999_999 || price.other_cost > 999_999_999)
             || facility.legal_name_change_cost == Some(0)
             || facility.service_actions.iter().any(|service| {
@@ -159,6 +160,7 @@ pub(super) fn validate_towns_and_shops(
                 })
         });
         let has_service = facility.identify_item_cost.is_some()
+            || facility.teleport_level_cost.is_some()
             || facility.research_monster_cost.is_some()
             || facility.research_item_cost.is_some()
             || facility.identify_all_items_cost.is_some()
@@ -181,6 +183,7 @@ pub(super) fn validate_towns_and_shops(
                 || facility.identify_item_cost.is_some()
                 || facility.research_item_cost.is_some()
                 || facility.research_monster_cost.is_some()
+                || facility.teleport_level_cost.is_some()
                 || facility.identify_all_items_cost.is_some()
                 || facility.inn_stay_cost.is_some()
                 || facility.overview_message_key.is_some()

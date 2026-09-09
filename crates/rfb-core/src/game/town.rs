@@ -1706,6 +1706,100 @@ impl Game {
         Ok(())
     }
 
+    pub(super) fn teleport_dungeon_dtos(&self) -> Vec<rfb_protocol::TeleportDungeonDto> {
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must exist");
+        world
+            .dungeons
+            .iter()
+            .filter_map(|dungeon| {
+                let recall_id = self.dungeon_states[&dungeon.id].recall_floor_id.as_ref()?;
+                if !self.dungeon_entry_requirements_met(dungeon) {
+                    return None;
+                }
+                let root = world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == dungeon.root_floor_id)
+                    .expect("dungeon root must exist");
+                let recall = world
+                    .procedural_floors
+                    .iter()
+                    .find(|floor| floor.id == *recall_id)
+                    .expect("dungeon recall floor must exist");
+                let mut depths = world
+                    .procedural_floors
+                    .iter()
+                    .filter(|floor| floor.dungeon_id.as_ref() == Some(&dungeon.id))
+                    .map(|floor| floor.depth)
+                    .collect::<Vec<_>>();
+                depths.sort_unstable();
+                depths.dedup();
+                Some(rfb_protocol::TeleportDungeonDto {
+                    dungeon_id: dungeon.id.clone(),
+                    name_key: root.name_key.clone(),
+                    recall_depth: recall.depth,
+                    depths,
+                })
+            })
+            .collect()
+    }
+
+    pub(super) fn teleport_to_dungeon_level_at_facility(
+        &mut self,
+        facility_id: &str,
+        dungeon_id: &str,
+        depth: u16,
+    ) -> Result<FacilityServiceOutcome, &'static str> {
+        let facility = self
+            .content
+            .town_facility(facility_id)
+            .ok_or("unknown-facility")?;
+        let price = facility.teleport_level_cost.ok_or("service-unavailable")?;
+        let cost = self.town_facility_price(facility, price);
+        if !self.town_facility_accessible(facility_id) {
+            return Err("facility-unreachable");
+        }
+        if !self
+            .teleport_dungeon_dtos()
+            .iter()
+            .any(|dungeon| dungeon.dungeon_id == dungeon_id && dungeon.depths.contains(&depth))
+        {
+            return Err("recall-unavailable");
+        }
+        let world = self
+            .content
+            .world(&self.world_id)
+            .expect("active world must exist");
+        let floor_id = world
+            .procedural_floors
+            .iter()
+            .find(|floor| floor.dungeon_id.as_deref() == Some(dungeon_id) && floor.depth == depth)
+            .expect("projected teleport floor must exist")
+            .id
+            .clone();
+        if self.gold < cost {
+            return Err("insufficient-gold");
+        }
+        self.reset_recall(super::floor::RecallDestination {
+            dungeon_id: dungeon_id.to_owned(),
+            floor_id: floor_id.clone(),
+        });
+        // BACT_TELEPORT_LEVEL replaces even an already pending recall with a one-turn recall.
+        // Facility commands do not advance time, so start_recall's extra tick is the whole delay.
+        self.start_recall(0);
+        self.gold -= cost;
+        Ok(FacilityServiceOutcome::RecallStarted {
+            facility_id: facility_id.to_owned(),
+            dungeon_id: dungeon_id.to_owned(),
+            floor_id,
+            cost,
+            gold_balance: self.gold,
+        })
+    }
+
     pub(super) fn research_monster_at_facility(
         &mut self,
         facility_id: &str,

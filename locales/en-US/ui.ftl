@@ -1109,3 +1109,10 @@ monster-research-empty = No monsters match these filters.
 facility-monster-researched = Researched { $monster } for { $cost } gold; { $balance } remaining.
 facility-monster-research-unavailable = Cannot research this monster: { $reason }
 facility-service-reason-monster-unavailable = No information exists for this monster.
+
+teleport-level-dungeon = Choose a visited dungeon
+teleport-level-empty = No visited dungeons available
+teleport-level-dungeon-option = { $name } (recall depth: { $depth })
+teleport-level-depth = Choose destination depth
+teleport-level-depth-option = Depth { $depth }
+action-teleport-level = Confirm dungeon level teleport ({ $cost } gold)

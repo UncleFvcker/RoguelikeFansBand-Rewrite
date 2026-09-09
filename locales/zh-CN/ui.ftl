@@ -1105,3 +1105,10 @@ monster-research-empty = 没有符合条件的怪物。
 facility-monster-researched = 已研究{ $monster }，花费 { $cost } 金币，剩余 { $balance }。
 facility-monster-research-unavailable = 无法研究怪物：{ $reason }
 facility-service-reason-monster-unavailable = 没有该怪物的资料。
+
+teleport-level-dungeon = 选择已访问的地牢
+teleport-level-empty = 尚无可传送的已访问地牢
+teleport-level-dungeon-option = { $name }（召回层：{ $depth }）
+teleport-level-depth = 选择目标层
+teleport-level-depth-option = 第 { $depth } 层
+action-teleport-level = 确认传送至指定地牢层（{ $cost } 金币）

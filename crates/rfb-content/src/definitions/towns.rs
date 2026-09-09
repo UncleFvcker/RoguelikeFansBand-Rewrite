@@ -49,6 +49,8 @@ pub struct TownFacilityDefinition {
     #[serde(default)]
     pub research_monster_cost: Option<TownFacilityPrice>,
     #[serde(default)]
+    pub teleport_level_cost: Option<TownFacilityPrice>,
+    #[serde(default)]
     pub identify_all_items_cost: Option<TownFacilityPrice>,
     #[serde(default)]
     pub inn_stay_cost: Option<TownFacilityPrice>,

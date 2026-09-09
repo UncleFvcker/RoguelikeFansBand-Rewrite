@@ -9085,6 +9085,33 @@
         {
           "type": "object",
           "properties": {
+            "depth": {
+              "type": "integer",
+              "format": "uint16",
+              "maximum": 65535,
+              "minimum": 0
+            },
+            "dungeonId": {
+              "type": "string"
+            },
+            "facilityId": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "const": "teleport-to-dungeon-level-at-facility"
+            }
+          },
+          "required": [
+            "type",
+            "facilityId",
+            "dungeonId",
+            "depth"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
             "facilityId": {
               "type": "string"
             },
@@ -13918,6 +13945,20 @@
           "items": {
             "$ref": "#/$defs/TaskStatusDto"
           }
+        },
+        "teleportDungeons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TeleportDungeonDto"
+          }
+        },
+        "teleportLevelCost": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "format": "uint32",
+          "minimum": 0
         }
       },
       "required": [
@@ -14021,6 +14062,38 @@
         "paused",
         "reward-available",
         "taken"
+      ]
+    },
+    "TeleportDungeonDto": {
+      "type": "object",
+      "properties": {
+        "depths": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint16",
+            "maximum": 65535,
+            "minimum": 0
+          }
+        },
+        "dungeonId": {
+          "type": "string"
+        },
+        "nameKey": {
+          "type": "string"
+        },
+        "recallDepth": {
+          "type": "integer",
+          "format": "uint16",
+          "maximum": 65535,
+          "minimum": 0
+        }
+      },
+      "required": [
+        "dungeonId",
+        "nameKey",
+        "recallDepth",
+        "depths"
       ]
     },
     "TerrainInteractionDto": {

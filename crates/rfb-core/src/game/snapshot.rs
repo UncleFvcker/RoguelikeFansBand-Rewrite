@@ -1601,6 +1601,16 @@ impl Game {
                     research_monster_cost: facility
                         .research_monster_cost
                         .map(|price| self.town_facility_price(facility, price)),
+                    teleport_level_cost: facility
+                        .teleport_level_cost
+                        .map(|price| self.town_facility_price(facility, price)),
+                    teleport_dungeons: if player_at_entrance
+                        && facility.teleport_level_cost.is_some()
+                    {
+                        self.teleport_dungeon_dtos()
+                    } else {
+                        Vec::new()
+                    },
                     research_monsters: if player_at_entrance
                         && facility.research_monster_cost.is_some()
                     {

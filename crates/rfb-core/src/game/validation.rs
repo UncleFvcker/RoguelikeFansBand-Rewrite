@@ -1266,6 +1266,7 @@ impl Game {
                     || state.entrance_guardian_defeated
                     || state.next_instance_ordinal != 0
                     || state.retained_instance_id.is_some()
+                    || state.recall_floor_id.is_some()
                     || state.retained_at_turn.is_some())
             {
                 return Err(CoreError::InvalidSave(
@@ -1277,6 +1278,15 @@ impl Game {
                 .iter()
                 .find(|dungeon| dungeon.id == *dungeon_id)
                 .expect("validated dungeon state must retain its definition");
+            if state.recall_floor_id.as_ref().is_some_and(|id| {
+                !world.procedural_floors.iter().any(|floor| {
+                    floor.id == *id
+                        && floor.lifecycle == FloorLifecycle::Dungeon
+                        && floor.dungeon_id.as_ref() == Some(dungeon_id)
+                })
+            }) {
+                return Err(CoreError::InvalidSave("dungeon recall floor is invalid"));
+            }
             if dungeon.entrance_guardian.is_none() && state.entrance_guardian_defeated {
                 return Err(CoreError::InvalidSave(
                     "dungeon entrance guardian state is invalid",

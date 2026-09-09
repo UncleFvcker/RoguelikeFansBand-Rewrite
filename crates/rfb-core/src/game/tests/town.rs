@@ -516,6 +516,135 @@ fn morivant_shares_home_rests_and_revisits_through_inns() {
 }
 
 #[test]
+fn morivant_level_teleport_validates_choices_before_charging_and_resumes_after_save() {
+    let facility_id = "demo.town-facility.morivant-trump-tower";
+    let dungeon_id = "demo.dungeon.tidal-cave";
+    let mut game = morivant_facility_game(51, "demo.build.warrior", facility_id);
+    let departure = game.player.position;
+    game.gold = 100_000;
+    assert!(game.teleport_dungeon_dtos().is_empty());
+    let before = game.state_hash();
+    assert_eq!(
+        game.teleport_to_dungeon_level_at_facility(facility_id, dungeon_id, 20),
+        Err("recall-unavailable")
+    );
+    assert_eq!(game.state_hash(), before);
+    game.reset_recall(super::super::floor::RecallDestination {
+        dungeon_id: dungeon_id.to_owned(),
+        floor_id: "demo.floor.tidal-cave-depth-15".to_owned(),
+    });
+    let before = game.state_hash();
+    let service = game
+        .snapshot()
+        .task_services
+        .into_iter()
+        .find(|service| service.id == facility_id)
+        .unwrap();
+    assert_eq!(service.teleport_level_cost, Some(100_000));
+    let dungeon = &service.teleport_dungeons[0];
+    assert_eq!(dungeon.recall_depth, 15);
+    assert_eq!(dungeon.depths, (15..=27).collect::<Vec<_>>());
+    // Browsing/closing the chooser never dispatches a paid action.
+    assert_eq!(game.state_hash(), before);
+    for depth in [0, 14, 28, u16::MAX] {
+        assert_eq!(
+            game.teleport_to_dungeon_level_at_facility(facility_id, dungeon_id, depth),
+            Err("recall-unavailable")
+        );
+        assert_eq!(game.state_hash(), before);
+    }
+    game.dungeon_states.get_mut(dungeon_id).unwrap().suppressed = true;
+    assert!(game.teleport_dungeon_dtos().is_empty());
+    assert_eq!(
+        game.teleport_to_dungeon_level_at_facility(facility_id, dungeon_id, 20),
+        Err("recall-unavailable")
+    );
+    game.dungeon_states.get_mut(dungeon_id).unwrap().suppressed = false;
+    game.gold -= 1;
+    assert_eq!(
+        game.teleport_to_dungeon_level_at_facility(facility_id, dungeon_id, 20),
+        Err("insufficient-gold")
+    );
+    game.gold += 1;
+    game.player.position.x += 1;
+    assert_eq!(
+        game.teleport_to_dungeon_level_at_facility(facility_id, dungeon_id, 20),
+        Err("facility-unreachable")
+    );
+    game.player.position = departure;
+    game.start_recall(25);
+    dispatch_next(
+        &mut game,
+        GameCommand::TeleportToDungeonLevelAtFacility {
+            facility_id: facility_id.to_owned(),
+            dungeon_id: dungeon_id.to_owned(),
+            depth: 20,
+        },
+    );
+    assert_eq!(game.gold, 0);
+    assert_eq!(game.recall.as_ref().unwrap().remaining_turns, Some(1));
+    assert_eq!(
+        game.dungeon_states[dungeon_id].recall_floor_id.as_deref(),
+        Some("demo.floor.tidal-cave-depth-20")
+    );
+    let mut game = Game::from_save(game.to_save()).unwrap();
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.current_floor_id, "demo.floor.tidal-cave-depth-20");
+    let mut game = Game::from_save(game.to_save()).unwrap();
+    game.entities.clear();
+    game.start_recall(0);
+    dispatch_next(&mut game, GameCommand::Wait);
+    assert_eq!(game.current_town().unwrap().id, MORIVANT_TOWN_ID);
+    assert_eq!(game.player.position, departure);
+    assert_eq!(game.wilderness_position, Some(Position { x: 47, y: 50 }));
+    assert_eq!(
+        Game::from_save(game.to_save()).unwrap().state_hash(),
+        game.state_hash()
+    );
+}
+
+#[test]
+fn dungeon_recall_records_survive_switching_dungeons_and_allow_explicit_lowering() {
+    let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
+    let surface = game.current_floor_id.clone();
+    for floor_id in [
+        "demo.floor.tidal-cave-depth-20",
+        "demo.floor.warrens-depth-1",
+        "demo.floor.tidal-cave-depth-15",
+    ] {
+        game.current_floor_id = floor_id.to_owned();
+        game.update_recall_destination_for_current_floor();
+    }
+    assert_eq!(
+        game.recall.as_ref().unwrap().floor_id,
+        "demo.floor.tidal-cave-depth-20"
+    );
+    game.reset_recall(game.recall_reset_plan().unwrap());
+    assert_eq!(
+        game.dungeon_states["demo.dungeon.tidal-cave"]
+            .recall_floor_id
+            .as_deref(),
+        Some("demo.floor.tidal-cave-depth-15")
+    );
+    game.current_floor_id = surface;
+    let mut saved = game.to_save();
+    assert_eq!(
+        Game::from_save(saved.clone()).unwrap().state_hash(),
+        game.state_hash()
+    );
+    saved
+        .dungeon_states
+        .iter_mut()
+        .find(|state| state.dungeon_id == "demo.dungeon.tidal-cave")
+        .unwrap()
+        .recall_floor_id = Some("demo.floor.warrens-depth-1".to_owned());
+    assert!(matches!(
+        Game::from_save(saved),
+        Err(CoreError::InvalidSave("dungeon recall floor is invalid"))
+    ));
+}
+
+#[test]
 fn morivant_recall_resumes_after_save_and_returns_to_the_departure_position() {
     let mut game = Game::new_with_build(51, "demo.build.warrior").unwrap();
     enter_morivant(&mut game);

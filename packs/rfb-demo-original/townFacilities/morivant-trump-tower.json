@@ -21,5 +21,9 @@
   ],
   "ownerRealmIds": [
     "trump"
-  ]
+  ],
+  "teleportLevelCost": {
+    "ownerCost": 50000,
+    "otherCost": 100000
+  }
 }

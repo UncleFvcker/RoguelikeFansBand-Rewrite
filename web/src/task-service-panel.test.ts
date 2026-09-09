@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  TaskServicePanel,
   bountyMissionAction,
   facilityIdentificationCandidate,
   facilityMembershipKey,
@@ -14,6 +15,72 @@ import {
   taskActionForStatus,
   taskActionLabelKey,
 } from "./task-service-panel.ts";
+
+test("level teleport selection and closing are free; only confirmation dispatches the selected projection", (t) => {
+  class Element extends EventTarget {
+    children = [];
+    dataset = {};
+    open = false;
+    selected = undefined;
+    constructor(tag = "div") { super(); this.tag = tag; }
+    get ownerDocument() { return document; }
+    get value() { return this.selected ?? (this.tag === "select" ? this.children[0]?.value : "") ?? ""; }
+    set value(value) { this.selected = value; }
+    append(...children) { this.children.push(...children); }
+    replaceChildren(...children) { this.children = children; this.selected = undefined; }
+    setAttribute() {}
+    querySelector() { return undefined; }
+    closest(selector) { return selector === "[data-facility-action]" && this.dataset.facilityAction ? this : undefined; }
+    showModal() { this.open = true; }
+    close() { this.open = false; this.dispatchEvent(new Event("close")); }
+  }
+  const elements = new Map();
+  const document = {
+    createElement: (tag) => new Element(tag),
+    getElementById: (id) => {
+      if (!elements.has(id)) elements.set(id, new Element());
+      return elements.get(id);
+    },
+  };
+  const previous = globalThis.HTMLElement;
+  globalThis.HTMLElement = Element;
+  t.after(() => { globalThis.HTMLElement = previous; });
+  const commands = [];
+  const state = { busy: false, inventory: [], equipment: [] };
+  const panel = new TaskServicePanel({
+    document, state, localization: { format: (key) => key },
+    dispatch: async (command) => { commands.push(command); }, beforeOpen: () => {},
+  });
+  panel.install();
+  t.after(() => panel.dispose());
+  const snapshot = { taskServices: [{ id: "tower", playerAtEntrance: true, membership: "visitor", tasks: [],
+    teleportLevelCost: 100000, teleportDungeons: [{ dungeonId: "cave", nameKey: "cave-name", recallDepth: 15, depths: [15, 20, 27] }],
+  }] };
+  panel.render(snapshot);
+  const list = elements.get("task-service-list");
+  const [dungeon, depth, confirm] = list.children[0].children;
+  assert.equal(confirm.disabled, true);
+  dungeon.value = "cave";
+  dungeon.dispatchEvent(new Event("change"));
+  assert.deepEqual(depth.children.map((option) => option.value), ["15", "20", "27"]);
+  depth.value = "27";
+  depth.dispatchEvent(new Event("change"));
+  assert.equal(confirm.disabled, false);
+  assert.deepEqual(commands, []);
+  elements.get("task-service-dialog").close();
+  assert.deepEqual(commands, []);
+  const click = new Event("click");
+  Object.defineProperty(click, "target", { value: confirm });
+  state.busy = true;
+  list.dispatchEvent(click);
+  assert.deepEqual(commands, []);
+  state.busy = false;
+  list.dispatchEvent(click);
+  assert.deepEqual(commands, [{ type: "teleport-to-dungeon-level-at-facility", facilityId: "tower", dungeonId: "cave", depth: 27 }]);
+  snapshot.taskServices[0].teleportDungeons = [];
+  panel.render(snapshot);
+  assert.equal(list.children[0].children[2].disabled, true);
+});
 
 test("monster research combines name, symbol and uniqueness filters without changing knowledge", () => {
   const monsters = [

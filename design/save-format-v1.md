@@ -29,7 +29,7 @@ payload_msgpack    payload_length bytes
 
 ## 3. Header
 
-Header 包含显示元数据和桌面馆藏事务绑定。当前 header / payload 为 v6 / v6，容器保持 v1；以下是字段节选。当前开发存档不做旧 schema 迁移。
+Header 包含显示元数据和桌面馆藏事务绑定。当前 header / payload 为 v6 / v7，容器保持 v1；以下是字段节选。当前开发存档不做旧 schema 迁移。
 
 ```ts
 interface SaveHeaderV1 {
@@ -59,11 +59,13 @@ Tauri 新角色必须绑定本地馆藏资料；原生槽、备份及手动文�
 
 `slotName` 是桌面原生槽使用的可选显示元数据。Rust 反序列化对缺失字段使用空字符串默认值，因此本字段的加入不破坏已经生成的 v1 存档；手动导出的存档当前写入空名称。桌面目录事务和恢复行为见 [桌面原生存档与诊断 v1](desktop-native-storage-v1.md)。
 
+当前 payload schema 为 v7：每座地牢状态保存可选 `recallFloorId`，用于已访问地牢列表及各自可重设的召回层。读取时校验楼层属于该地牢，受抑制地牢不得保留召回记录；不迁移旧开发存档。Header 仍为 v6。
+
 ## 4. Payload
 
 ```ts
 interface SavePayloadV1 {
-  schemaVersion: 1;
+  schemaVersion: 7;
   revision: number;
   turn: number;
   worldTick: number;
